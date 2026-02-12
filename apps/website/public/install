@@ -82,7 +82,8 @@ detect_platform() {
     Darwin)
       case "$arch" in
         arm64)   echo "darwin-arm64" ;;
-        *)       error "Only Apple Silicon (arm64) is supported on macOS. Detected: $arch" ;;
+        x86_64)  echo "darwin-x64" ;;
+        *)       error "Unsupported macOS architecture: $arch" ;;
       esac
       ;;
     Linux)
