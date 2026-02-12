@@ -23,6 +23,7 @@ export type SkillsPath = string
  */
 export type VaultSetupStatus = 'completed' | 'skipped' | 'no-docker' | 'error' | 'pending'
 export type KeyringSetupStatus = 'completed' | 'skipped' | 'unavailable' | 'error' | 'pending'
+export type WalletConnectSetupStatus = 'completed' | 'skipped' | 'error' | 'pending'
 
 export interface SetupContext {
   os: OS
@@ -36,6 +37,7 @@ export interface SetupContext {
   dockerRunning: boolean
   vaultStatus: VaultSetupStatus
   keyringStatus: KeyringSetupStatus
+  walletConnectStatus: WalletConnectSetupStatus
   kappaAuthStatus: StepStatus
   dispenserAuthStatus: StepStatus
 }

@@ -52,6 +52,7 @@ Test the MCP atomic transaction tools on localnet. Report PASS/FAIL for each tes
 ### Atomic Asset Transfer
 
 7. Use send_atomic_group with payment + asset transfer:
+
    ```json
    {
      "transactions": [
@@ -78,6 +79,7 @@ Test the MCP atomic transaction tools on localnet. Report PASS/FAIL for each tes
 ### Atomic Swap Pattern
 
 8. Use send_atomic_group for an atomic swap (USER1 sends ALGO, USER2 sends tokens):
+
    ```json
    {
      "transactions": [
@@ -105,6 +107,7 @@ Test the MCP atomic transaction tools on localnet. Report PASS/FAIL for each tes
 9. Deploy a simple app (if not already deployed)
 
 10. Use send_atomic_group with payment + app call:
+
     ```json
     {
       "transactions": [

@@ -10,10 +10,7 @@ import {
   sendGroupTransactionsTool,
   handleSendGroupTransactions,
 } from './send-group-transactions.js'
-import {
-  simulateTransactionsTool,
-  handleSimulateTransactions,
-} from './simulate-transactions.js'
+import { simulateTransactionsTool, handleSimulateTransactions } from './simulate-transactions.js'
 
 export const transactionTools: ToolRegistration[] = [
   { definition: sendGroupTransactionsTool, handler: handleSendGroupTransactions },

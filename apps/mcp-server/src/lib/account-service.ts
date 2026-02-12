@@ -5,7 +5,7 @@
  * Abstracts appState interactions from MCP tools.
  *
  * Architecture:
- * - AccountProvider (Vault/Keyring): Key management and signing
+ * - AccountProvider (Vault/Keyring/WalletConnect): Key management and signing
  * - DispenserProvider: Funding accounts (network-dependent)
  *
  * Layer hierarchy: appState → account-service → MCP tools
@@ -26,10 +26,19 @@ export interface AccountInfo {
 }
 
 /**
+ * Account match result from provider lookups.
+ */
+interface AccountMatch {
+  name: string
+  address: string
+  provider: AccountProviderType
+}
+
+/**
  * Get the default sender account based on network configuration.
  *
- * - Localnet: Uses active Vault account or falls back to KMD dispenser for signing
- * - Testnet/Mainnet: Uses Vault account (required)
+ * - Localnet: Uses active account or falls back to KMD dispenser for signing
+ * - Testnet/Mainnet: Requires an active account
  *
  * @param algorand - AlgorandClient instance
  * @param config - MCP configuration
@@ -43,7 +52,7 @@ export async function getDefaultSender(
   const activeAccount = appState.getActiveAccount()
 
   if (activeAccount) {
-    const provider = appState.getAccountProvider()
+    const provider = await appState.getProvider()
     const accountWithSigner = await provider.getAccountWithSigner(activeAccount)
     algorand.account.setSigner(accountWithSigner.address, accountWithSigner.signer)
     return { addr: { toString: () => accountWithSigner.address } }
@@ -83,12 +92,53 @@ export async function getKmdDispenserAccount(
 }
 
 /**
- * Get an account with signer from Vault by address.
- * Searches all accounts to find the address and returns an account
+ * Fetch account balance, returning 0n if account doesn't exist on chain.
+ *
+ * @param algorand - AlgorandClient instance
+ * @param address - Account address to query
+ * @returns Balance in microALGO, or 0n if account not found
+ */
+async function getAccountBalance(algorand: AlgorandClient, address: string): Promise<bigint> {
+  try {
+    const info = await algorand.account.getInformation(address)
+    return info.balance.microAlgo
+  } catch {
+    return 0n // Account may not exist on chain yet
+  }
+}
+
+/**
+ * Get dispenser address and balance, with KMD fallback for localnet.
+ *
+ * @param algorand - AlgorandClient instance
+ * @returns Dispenser address and balance
+ */
+async function getDispenserAddressAndBalance(
+  algorand: AlgorandClient
+): Promise<{ address: string; balance: bigint }> {
+  const dispenser = appState.getDispenser()
+  const dispenserInfo = await dispenser.getInfo()
+
+  if (dispenserInfo.address) {
+    return {
+      address: dispenserInfo.address,
+      balance: dispenserInfo.balance ?? 0n,
+    }
+  }
+
+  // Fallback to KMD dispenser account directly
+  const kmdDispenser = await algorand.account.kmd.getLocalNetDispenserAccount()
+  const address = kmdDispenser.addr.toString()
+  const balance = await getAccountBalance(algorand, address)
+  return { address, balance }
+}
+
+/**
+ * Get an account with signer by address.
+ * Searches provider accounts to find the address and returns an account
  * that can sign transactions.
  *
- * Optimization: First checks active account before listing all accounts.
- * This avoids requiring list permission for common operations.
+ * Checks active account first to avoid requiring list permission.
  *
  * @param algorand - AlgorandClient instance
  * @param address - The address to find
@@ -99,9 +149,7 @@ export async function getAccountFromProvider(
   algorand: AlgorandClient,
   address: string
 ): Promise<{ addr: { toString(): string } }> {
-  const provider = appState.getAccountProvider()
-
-  // Optimization: Check active account first to avoid requiring list permission
+  const provider = await appState.getProvider()
   const activeAccountName = appState.getActiveAccount()
   if (activeAccountName) {
     const activeAccountInfo = await provider.getAccount(activeAccountName)
@@ -143,9 +191,7 @@ export async function getAccountFromProvider(
 }
 
 /**
- * List available accounts.
- *
- * Lists Vault accounts if configured. On localnet, also includes dispenser info.
+ * List available accounts from providers and dispenser.
  *
  * @param algorand - AlgorandClient instance
  * @param config - MCP configuration
@@ -159,18 +205,13 @@ export async function listAccounts(
 
   if (appState.isProviderAvailable()) {
     try {
-      const provider = appState.getAccountProvider()
+      const provider = await appState.getProvider()
       const providerAccounts = await provider.listAccounts()
       for (const account of providerAccounts) {
-        let info: Awaited<ReturnType<typeof algorand.account.getInformation>> | undefined
-        try {
-          info = await algorand.account.getInformation(account.address)
-        } catch {
-          // algod may be unreachable
-        }
+        const balance = await getAccountBalance(algorand, account.address)
         accounts.push({
           address: account.address,
-          balance: info?.balance.microAlgo ?? 0n,
+          balance,
           name: `${account.name} (${provider.type})`,
         })
       }
@@ -270,29 +311,25 @@ export function getAvailableProviders(): AccountProviderType[] {
  * @param providerType - Optional specific provider to check
  */
 export function requireProviderAvailable(providerType?: AccountProviderType): void {
-  if (providerType) {
-    if (!appState.isProviderAvailable(providerType)) {
-      if (providerType === 'vault') {
-        throw new Error(
-          'Vault is not available. Make sure Vault is running and unsealed:\n' +
-            '  vibekit vault start'
-        )
-      } else {
-        throw new Error(
-          `Account provider "${providerType}" is not available.\n` + 'Run: vibekit init'
-        )
-      }
+  if (!providerType) {
+    const availableProviders = appState.getAvailableProviderTypes()
+    if (availableProviders.length === 0) {
+      throw new Error('No account provider is available.\n' + 'Run: vibekit init')
     }
     return
   }
 
-  const availableProviders = appState.getAvailableProviderTypes()
-  if (availableProviders.length > 0) {
+  if (appState.isProviderAvailable(providerType)) {
     return
   }
 
-  // No available provider found
-  throw new Error('No account provider is available.\n' + 'Run: vibekit init')
+  if (providerType === 'vault') {
+    throw new Error(
+      'Vault is not available. Make sure Vault is running and unsealed:\n' + '  vibekit vault start'
+    )
+  }
+
+  throw new Error(`Account provider "${providerType}" is not available.\n` + 'Run: vibekit init')
 }
 
 /**
@@ -323,8 +360,8 @@ export async function createAccount(
   // Determine which provider to use
   let targetProvider: AccountProviderType
 
+  // Case 1: Provider explicitly specified
   if (provider) {
-    // Validate requested provider is available
     if (!appState.isProviderAvailable(provider)) {
       throw new Error(
         `Provider "${provider}" is not available.\n` +
@@ -333,18 +370,42 @@ export async function createAccount(
       )
     }
     targetProvider = provider
-  } else if (availableProviders.length === 1) {
-    // Only one provider available - use it
-    targetProvider = availableProviders[0]
-  } else {
-    // Multiple providers available - require explicit choice
-    throw new Error(
-      `Multiple providers available: ${availableProviders.join(', ')}.\n` +
-        `Please specify which provider to create the account in using the 'provider' parameter.`
-    )
   }
 
-  const accountProvider = appState.getAccountProvider(targetProvider)
+  // Case 2: Only one provider available - use it
+  else if (availableProviders.length === 1) {
+    targetProvider = availableProviders[0]
+  }
+
+  // Case 3: Multiple providers - filter to those that can create accounts
+  else {
+    const creatableProviders = availableProviders.filter((p) => p !== 'walletconnect')
+
+    if (creatableProviders.length === 0) {
+      throw new Error(
+        `No provider can create accounts.\n` +
+          `Wallet accounts are managed in the mobile wallet app.\n` +
+          `Use connect_walletconnect to connect a mobile wallet.`
+      )
+    }
+
+    if (creatableProviders.length > 1) {
+      throw new Error(
+        `Multiple providers available: ${creatableProviders.join(', ')}.\n` +
+          `Please specify which provider to create the account in using the 'provider' parameter.`
+      )
+    }
+
+    targetProvider = creatableProviders[0]
+  }
+
+  const accountProvider = await appState.getProvider(targetProvider)
+  if (!accountProvider.canCreateAccounts()) {
+    throw new Error(
+      `Cannot create accounts in ${targetProvider} provider.\n` +
+        `Wallet accounts are managed in the mobile wallet app.`
+    )
+  }
   const accountInfo = await accountProvider.createAccount(name)
 
   if (switchTo) {
@@ -386,21 +447,7 @@ export async function switchAccount(
   if (name === 'default') {
     const previousAccount = appState.getActiveAccount()
     appState.setActiveAccount(null) // Will throw if not on localnet
-    const dispenser = appState.getDispenser()
-    const dispenserInfo = await dispenser.getInfo()
-    let address: string
-    let balance: bigint
-
-    if (dispenserInfo.address) {
-      address = dispenserInfo.address
-      balance = dispenserInfo.balance ?? 0n
-    } else {
-      // Fallback to KMD dispenser account directly
-      const kmdDispenser = await algorand.account.kmd.getLocalNetDispenserAccount()
-      address = kmdDispenser.addr.toString()
-      const info = await algorand.account.getInformation(address)
-      balance = info.balance.microAlgo
-    }
+    const { address, balance } = await getDispenserAddressAndBalance(algorand)
 
     return {
       previousAccount,
@@ -412,11 +459,6 @@ export async function switchAccount(
   }
 
   const availableProviders = appState.getAvailableProviderTypes()
-  interface AccountMatch {
-    name: string
-    address: string
-    provider: AccountProviderType
-  }
   const matches: AccountMatch[] = []
 
   for (const providerType of availableProviders) {
@@ -428,7 +470,7 @@ export async function switchAccount(
       if (!appState.isProviderAvailable(providerType)) {
         continue
       }
-      const accountProvider = appState.getAccountProvider(providerType)
+      const accountProvider = await appState.getProvider(providerType)
       const accountInfo = await accountProvider.getAccount(name)
       if (accountInfo) {
         matches.push({
@@ -444,16 +486,11 @@ export async function switchAccount(
 
   // Handle no matches
   if (matches.length === 0) {
-    if (provider) {
-      throw new Error(
-        `Account "${name}" not found in ${provider} provider. ` +
-          `Use list_accounts to see available accounts.`
-      )
-    }
-    throw new Error(
-      `Account "${name}" not found in any provider. ` +
-        `Use list_accounts to see available accounts, or create_account to create a new one.`
-    )
+    const location = provider ? `${provider} provider` : 'any provider'
+    const suggestion = provider
+      ? 'Use list_accounts to see available accounts.'
+      : 'Use list_accounts to see available accounts, or create_account to create a new one.'
+    throw new Error(`Account "${name}" not found in ${location}. ${suggestion}`)
   }
 
   // Handle multiple matches (same name in different providers)
@@ -469,14 +506,7 @@ export async function switchAccount(
   const match = matches[0]
   const previousAccount = appState.getActiveAccount()
   appState.setActiveAccount(match.name, match.provider)
-
-  let balance: bigint
-  try {
-    const info = await algorand.account.getInformation(match.address)
-    balance = info.balance.microAlgo
-  } catch {
-    balance = 0n // Account may not exist on chain yet
-  }
+  const balance = await getAccountBalance(algorand, match.address)
 
   return {
     previousAccount,
@@ -501,54 +531,48 @@ export async function getActiveAccountDetails(algorand: AlgorandClient): Promise
 }> {
   const currentAccount = appState.getActiveAccount()
 
-  let address: string
-  let balance: bigint
-
-  if (currentAccount) {
-    if (!appState.isProviderAvailable()) {
-      throw new Error(
-        `Active account "${currentAccount}" is set but no provider is available.\n` +
-          'Run: vibekit init'
-      )
-    }
-    const provider = appState.getAccountProvider()
-    const accountInfo = await provider.getAccount(currentAccount)
-    if (accountInfo) {
-      address = accountInfo.address
-      try {
-        const info = await algorand.account.getInformation(address)
-        balance = info.balance.microAlgo
-      } catch {
-        balance = 0n // Account may not exist on chain yet
-      }
-    } else {
-      throw new Error(
-        `Active account "${currentAccount}" not found. Use switch_account to select a valid account.`
-      )
-    }
-  } else if (appState.isLocalnet()) {
-    const dispenser = appState.getDispenser()
-    const dispenserInfo = await dispenser.getInfo()
-    if (dispenserInfo.address) {
-      address = dispenserInfo.address
-      balance = dispenserInfo.balance ?? 0n
-    } else {
-      // Fallback to KMD dispenser account directly
-      const kmdDispenser = await algorand.account.kmd.getLocalNetDispenserAccount()
-      address = kmdDispenser.addr.toString()
-      const info = await algorand.account.getInformation(address)
-      balance = info.balance.microAlgo
-    }
-  } else {
+  // Case 1: No account selected and not on localnet
+  if (!currentAccount && !appState.isLocalnet()) {
     throw new Error(
       'No account selected. Use switch_account to select an account or create_account to create one.\n' +
         'The "default" dispenser is only available on localnet.'
     )
   }
 
+  // Case 2: No account selected but on localnet - use dispenser
+  if (!currentAccount) {
+    const { address, balance } = await getDispenserAddressAndBalance(algorand)
+    return {
+      name: null,
+      address,
+      balance,
+      isDefault: true,
+    }
+  }
+
+  // Case 3: Account selected but provider not available
+  if (!appState.isProviderAvailable()) {
+    throw new Error(
+      `Active account "${currentAccount}" is set but no provider is available.\n` +
+        'Run: vibekit init'
+    )
+  }
+
+  // Case 4: Account selected - look it up
+  const provider = await appState.getProvider()
+  const accountInfo = await provider.getAccount(currentAccount)
+
+  if (!accountInfo) {
+    throw new Error(
+      `Active account "${currentAccount}" not found. Use switch_account to select a valid account.`
+    )
+  }
+
+  const balance = await getAccountBalance(algorand, accountInfo.address)
+
   return {
     name: currentAccount,
-    address,
+    address: accountInfo.address,
     balance,
     isDefault: appState.isUsingDispenser(),
   }
@@ -603,23 +627,16 @@ export async function listAccountsForTools(
   const availableProviders = appState.getAvailableProviderTypes()
   const activeAccount = appState.getActiveAccount()
 
-  // List accounts from each available provider
   for (const providerType of availableProviders) {
     try {
       if (!appState.isProviderAvailable(providerType)) {
         continue
       }
-      const provider = appState.getAccountProvider(providerType)
+      const provider = await appState.getProvider(providerType)
       const providerAccounts = await provider.listAccounts()
 
       for (const account of providerAccounts) {
-        let balance = 0n
-        try {
-          const info = await algorand.account.getInformation(account.address)
-          balance = info.balance.microAlgo
-        } catch {
-          // algod may be unreachable
-        }
+        const balance = await getAccountBalance(algorand, account.address)
         accounts.push({
           name: account.name,
           address: account.address,

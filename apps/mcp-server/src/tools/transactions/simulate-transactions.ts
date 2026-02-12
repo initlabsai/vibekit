@@ -109,8 +109,13 @@ export async function handleSimulateTransactions(
   ctx: ToolContext
 ): Promise<SimulateTransactionsResult> {
   const { algorand, config } = ctx
-  const { transactions, allowMoreLogging, allowUnnamedResources, extraOpcodeBudget, execTraceConfig } =
-    parseArgs<SimulateArgs>(args)
+  const {
+    transactions,
+    allowMoreLogging,
+    allowUnnamedResources,
+    extraOpcodeBudget,
+    execTraceConfig,
+  } = parseArgs<SimulateArgs>(args)
 
   return simulateTransactions(
     { transactions, allowMoreLogging, allowUnnamedResources, extraOpcodeBudget, execTraceConfig },

@@ -16,9 +16,9 @@ import type { TransactionSigner } from 'algosdk'
  * Supported account provider types.
  * - 'vault': HashiCorp Vault Transit engine (keys never leave Vault)
  * - 'keyring': OS keyring (macOS Keychain, Linux libsecret)
- * - 'wallet': Mobile wallet via WalletConnect (Pera, Defly, etc.)
+ * - 'walletconnect': Mobile wallet via WalletConnect (Pera, Defly, etc.)
  */
-export type AccountProviderType = 'vault' | 'keyring' | 'wallet'
+export type AccountProviderType = 'vault' | 'keyring' | 'walletconnect'
 
 /**
  * Supported wallet identifiers for mobile wallet providers.

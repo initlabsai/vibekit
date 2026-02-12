@@ -79,8 +79,16 @@ export async function handleAppOptIn(
 }> {
   const { algorand, config } = ctx
   const typedArgs = parseArgs<OptInArgs>(args)
-  const { appId, appSpec, appSpecPath, method, args: methodArgs, sender, extraFee, maxFee } =
-    typedArgs
+  const {
+    appId,
+    appSpec,
+    appSpecPath,
+    method,
+    args: methodArgs,
+    sender,
+    extraFee,
+    maxFee,
+  } = typedArgs
 
   const result = await sendTransactions(
     {

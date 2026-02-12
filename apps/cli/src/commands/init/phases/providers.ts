@@ -10,10 +10,11 @@ import type { AccountProviderType } from '@vibekit/provider-interface'
 import { isKeyringAvailable } from '@vibekit/keyring'
 
 import { hasMcpToken, isVaultSealed } from '../../../lib/vault'
-import type { VaultSetupStatus, KeyringSetupStatus } from '../../../types'
+import type { VaultSetupStatus, KeyringSetupStatus, WalletConnectSetupStatus } from '../../../types'
 import { multiselect } from '../../../utils/prompts'
 import { vaultBootstrapStep } from './vault'
 import { keyringBootstrapStep } from './keyring'
+import { walletConnectBootstrapStep } from './walletconnect'
 
 // --- Provider Selection ---
 
@@ -58,6 +59,13 @@ function buildProviderOptions(
       hint: dockerAvailable ? 'Start Docker first' : 'Install Docker first',
     })
   }
+
+  // WalletConnect is always available - network check happens at runtime
+  options.push({
+    value: 'walletconnect',
+    label: 'WalletConnect',
+    hint: 'Connect mobile wallets (Pera, Defly) - testnet/mainnet only',
+  })
 
   return { options, initialValues }
 }
@@ -129,6 +137,7 @@ async function selectProviderStep(
 export interface ProviderSetupResult {
   vaultStatus: VaultSetupStatus
   keyringStatus: KeyringSetupStatus
+  walletConnectStatus: WalletConnectSetupStatus
 }
 
 export async function setupProvidersStep(
@@ -145,6 +154,7 @@ export async function setupProvidersStep(
     return {
       vaultStatus: 'completed',
       keyringStatus: keyringAvailable ? (await keyringBootstrapStep()).status : 'skipped',
+      walletConnectStatus: 'skipped',
     }
   }
 
@@ -159,5 +169,9 @@ export async function setupProvidersStep(
     ? (await keyringBootstrapStep()).status
     : 'skipped'
 
-  return { vaultStatus, keyringStatus }
+  const walletConnectStatus: WalletConnectSetupStatus = providers.includes('walletconnect')
+    ? (await walletConnectBootstrapStep()).status
+    : 'skipped'
+
+  return { vaultStatus, keyringStatus, walletConnectStatus }
 }

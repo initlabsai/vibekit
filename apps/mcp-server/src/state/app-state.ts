@@ -9,9 +9,11 @@ import { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import type { DispenserProvider } from '@vibekit/dispenser-interface'
 import { KmdDispenser } from '@vibekit/dispenser-kmd'
 import { TestNetDispenser, NoDispenser } from '@vibekit/dispenser-testnet'
-import type { AccountProvider, AccountProviderType } from '@vibekit/provider-interface'
+import type { AccountProvider, AccountProviderType, WalletId } from '@vibekit/provider-interface'
 import { VaultProvider } from '@vibekit/provider-vault'
 import { KeyringProvider } from '@vibekit/provider-keyring'
+import type { WalletProvider } from '@vibekit/provider-walletconnect'
+import { getSetting, setSetting } from '@vibekit/db'
 import { NETWORK_PRESETS, type NetworkType, type NetworkPreset } from '../config.js'
 import type { NetworkConfig, InitConfig, VaultProviderConfig } from './types.js'
 
@@ -86,6 +88,7 @@ export class AppState {
 
   private vaultProvider: VaultProvider | null = null
   private keyringProvider: KeyringProvider | null = null
+  private walletProvider: WalletProvider | null = null
   private vaultConfig: VaultProviderConfig | null = null
   private dispenser: DispenserProvider | null = null
   private dispenserToken: string | null = null
@@ -95,25 +98,39 @@ export class AppState {
   /**
    * Initialize application state from environment variables.
    * Called once at MCP server startup.
+   *
+   * Network selection priority:
+   * 1. ALGORAND_NETWORK env var (explicit override, also uses endpoint env vars)
+   * 2. Saved network from database (user's last selection, uses presets)
+   * 3. Default to 'localnet'
+   *
+   * When ALGORAND_NETWORK is explicitly set, endpoint env vars are also used.
+   * When using saved/default network, presets are used to avoid endpoint mismatch.
    */
   initialize(config?: InitConfig): void {
     this.vaultConfig = config?.vaultConfig || null
     this.dispenserToken = config?.dispenserToken || null
 
-    const networkEnv = (process.env.ALGORAND_NETWORK || 'localnet') as NetworkType
-    const preset = NETWORK_PRESETS[networkEnv] || NETWORK_PRESETS.localnet
+    const envNetwork = process.env.ALGORAND_NETWORK as NetworkType | undefined
+    const savedNetwork = getSetting('network') as NetworkType | null
+    const network = envNetwork || savedNetwork || 'localnet'
+    const preset = NETWORK_PRESETS[network] || NETWORK_PRESETS.localnet
+
+    // Only use endpoint env vars when ALGORAND_NETWORK is explicitly set.
+    // This prevents mismatch where saved network is testnet but endpoints point to localnet.
+    const useEnvEndpoints = !!envNetwork
 
     this.networkConfig = {
-      network: networkEnv,
-      algodServer: process.env.ALGORAND_ALGOD || preset.algodServer,
-      algodToken: process.env.ALGORAND_TOKEN || preset.algodToken,
-      kmdServer: process.env.ALGORAND_KMD || preset.kmdServer,
-      kmdToken: process.env.ALGORAND_KMD_TOKEN || preset.kmdToken,
-      indexerServer: process.env.ALGORAND_INDEXER || preset.indexerServer,
+      network,
+      algodServer: useEnvEndpoints ? (process.env.ALGORAND_ALGOD || preset.algodServer) : preset.algodServer,
+      algodToken: useEnvEndpoints ? (process.env.ALGORAND_TOKEN ?? preset.algodToken) : preset.algodToken,
+      kmdServer: useEnvEndpoints ? (process.env.ALGORAND_KMD || preset.kmdServer) : preset.kmdServer,
+      kmdToken: useEnvEndpoints ? (process.env.ALGORAND_KMD_TOKEN || preset.kmdToken) : preset.kmdToken,
+      indexerServer: useEnvEndpoints ? (process.env.ALGORAND_INDEXER || preset.indexerServer) : preset.indexerServer,
     }
 
     this.algorandClient = createAlgorandClient(this.networkConfig)
-    this.dispenser = this.createDispenser(networkEnv)
+    this.dispenser = this.createDispenser(network)
   }
 
   /**
@@ -179,6 +196,9 @@ export class AppState {
     this.algorandClient = createAlgorandClient(this.networkConfig)
     this.dispenser = this.createDispenser(network)
 
+    // Persist network selection for next startup
+    setSetting('network', network)
+
     return { config: this.networkConfig, clearedWallet }
   }
 
@@ -233,6 +253,71 @@ export class AppState {
   }
 
   /**
+   * Get an account provider with async initialization.
+   * Preferred method for accessing providers - handles wallet initialization.
+   *
+   * @param type - Optional provider type to get
+   * @returns Initialized AccountProvider
+   */
+  async getProvider(type?: AccountProviderType): Promise<AccountProvider> {
+    const availableProviders = this.getAvailableProviderTypes()
+    const targetType = type ?? this.activeAccountProvider ?? availableProviders[0]
+
+    if (targetType === 'walletconnect') {
+      return this.getWalletProvider()
+    }
+
+    // Existing sync providers - initialize() is no-op
+    const provider = this.getAccountProvider(targetType)
+    await provider.initialize()
+    return provider
+  }
+
+  /**
+   * Get the wallet provider for mobile wallet connections.
+   * Lazily initializes the wallet provider on first access.
+   *
+   * @param walletId - Wallet to use (default: pera)
+   * @returns Initialized WalletProvider
+   * @throws Error if on localnet (wallets can't connect to local networks)
+   */
+  async getWalletProvider(walletId: WalletId = 'pera'): Promise<WalletProvider> {
+    if (this.isLocalnet()) {
+      throw new Error(
+        'Wallet connections are not available on localnet.\n' +
+          'Mobile wallets cannot connect to your local network.\n' +
+          'Switch to testnet: switch_network testnet'
+      )
+    }
+
+    if (!this.walletProvider || this.walletProvider.walletId !== walletId) {
+      const { createWalletProvider } = await import('@vibekit/provider-walletconnect')
+      this.walletProvider = createWalletProvider(walletId, {
+        network: this.getWalletNetwork(),
+      })
+      await this.walletProvider.initialize()
+    }
+
+    return this.walletProvider
+  }
+
+  /**
+   * Check if wallet connections are available.
+   * Returns false on localnet since mobile wallets can't connect to local networks.
+   */
+  isWalletAvailable(): boolean {
+    return !this.isLocalnet()
+  }
+
+  /**
+   * Get the network for wallet connections.
+   * Maps the current network to WalletConnect network identifiers.
+   */
+  getWalletNetwork(): 'mainnet' | 'testnet' {
+    return this.networkConfig?.network === 'mainnet' ? 'mainnet' : 'testnet'
+  }
+
+  /**
    * Check if Vault provider is available (has MCP token).
    */
   isVaultAvailable(): boolean {
@@ -251,19 +336,15 @@ export class AppState {
    * Check if any provider is available.
    */
   isProviderAvailable(type?: AccountProviderType): boolean {
-    if (type === 'vault') {
-      return this.vaultConfig !== null
-    }
-    if (type === 'keyring') {
-      return true
-    }
-    return this.getAvailableProviderTypes().length > 0
+    const available = this.getAvailableProviderTypes()
+    return type ? available.includes(type) : available.length > 0
   }
 
   /**
    * Get all available provider types.
    * Vault is available if MCP token exists.
    * Keyring is always available.
+   * Wallet is available on testnet/mainnet (not localnet).
    */
   getAvailableProviderTypes(): AccountProviderType[] {
     const providers: AccountProviderType[] = []
@@ -271,6 +352,9 @@ export class AppState {
       providers.push('vault')
     }
     providers.push('keyring')
+    if (this.isWalletAvailable()) {
+      providers.push('walletconnect')
+    }
     return providers
   }
 
@@ -368,6 +452,7 @@ export class AppState {
     // Provider fields
     this.vaultProvider = null
     this.keyringProvider = null
+    this.walletProvider = null
     this.vaultConfig = null
   }
 }

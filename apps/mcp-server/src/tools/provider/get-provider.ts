@@ -14,7 +14,7 @@ export const getProviderTool: Tool = {
   name: 'get_provider',
   description:
     'Get all available account providers and their status. ' +
-    'Shows which providers are available for key management (Vault or Keyring).',
+    'Shows which providers are available for key management (Vault, Keyring, or WalletConnect).',
   inputSchema: {
     type: 'object',
     properties: {},
@@ -42,6 +42,9 @@ export async function handleGetProvider(
     },
     keyring: {
       available: appState.isProviderAvailable('keyring'),
+    },
+    walletconnect: {
+      available: appState.isProviderAvailable('walletconnect'),
     },
   }
 

@@ -14,7 +14,7 @@ export const listAccountsTool: Tool = {
   name: 'list_accounts',
   description:
     'List all available accounts from all configured providers with their balances. ' +
-    'Each account shows which provider it belongs to (vault or keyring).',
+    'Each account shows which provider it belongs to (vault, keyring, or walletconnect).',
   inputSchema: {
     type: 'object',
     properties: {},
