@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect Wallet - VibeKit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!--CONFIG_PLACEHOLDER-->
+  <style>
+    :root {
+      --vk-accent: #5de4c7;
+      --vk-accent-light: #7aead3;
+      --vk-bg: #121212;
+      --vk-bg-card: #171717;
+      --vk-border: #333;
+      --vk-text: #ffffff;
+      --vk-text-muted: #888;
+      --vk-text-subtle: #666;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--vk-bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--vk-text);
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 400px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--vk-text);
+    }
+
+    .network-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      border: 1px solid transparent;
+    }
+
+    .network-badge.testnet {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .network-badge.mainnet {
+      background: rgba(93, 228, 199, 0.15);
+      color: var(--vk-accent);
+      border-color: rgba(93, 228, 199, 0.3);
+    }
+
+    .qr-container {
+      background: var(--vk-bg-card);
+      border: 2px solid var(--vk-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .qr-container img {
+      width: 256px;
+      height: 256px;
+      display: block;
+      border-radius: 8px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      margin-bottom: 2rem;
+    }
+
+    .logo svg {
+      height: 28px;
+      width: auto;
+    }
+
+    .instructions {
+      color: var(--vk-text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .instructions strong {
+      color: var(--vk-accent);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--vk-text-subtle);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--vk-text-subtle);
+    }
+
+    .status-dot.waiting {
+      animation: pulse 2s infinite;
+      background: var(--vk-accent);
+    }
+
+    .status-dot.connected {
+      background: var(--vk-accent);
+    }
+
+    .status-dot.error {
+      background: #ef4444;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Success state */
+    .success-container {
+      display: none;
+    }
+
+    .success-container.visible {
+      display: block;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(93, 228, 199, 0.15);
+      border: 2px solid var(--vk-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .success-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--vk-accent);
+    }
+
+    .account-info {
+      background: var(--vk-bg-card);
+      border: 2px solid var(--vk-border);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .account-label {
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--vk-text-muted);
+    }
+
+    .account-address {
+      font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+      font-size: 0.75rem;
+      word-break: break-all;
+      color: var(--vk-accent);
+    }
+
+    .close-hint {
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--vk-text-subtle);
+    }
+
+    /* Error state */
+    .error-container {
+      display: none;
+    }
+
+    .error-container.visible {
+      display: block;
+    }
+
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 2px solid #ef4444;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .error-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: #ef4444;
+    }
+
+    .error-message {
+      color: #f87171;
+      margin-bottom: 1rem;
+    }
+
+    .retry-button {
+      background: var(--vk-accent);
+      color: var(--vk-bg);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .retry-button:hover {
+      background: var(--vk-accent-light);
+    }
+
+    /* Pending (QR) state */
+    .pending-container {
+      display: block;
+    }
+
+    .pending-container.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Pending state: QR code -->
+    <div class="pending-container" id="pending">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
+          <text x="70" y="24" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="24" fill="#5de4c7">VibeKit</text>
+        </svg>
+      </div>
+      <h1>Connect Your Wallet</h1>
+      <span class="network-badge testnet" id="network-badge">TestNet</span>
+
+      <div class="qr-container">
+        <img id="qr-image" alt="QR Code" />
+      </div>
+
+      <p class="instructions">
+        Open <strong id="wallet-name">Pera Wallet</strong> on your mobile device and scan this QR code to connect.
+      </p>
+
+      <div class="status">
+        <span class="status-dot waiting" id="status-dot"></span>
+        <span id="status-text">Waiting for connection...</span>
+      </div>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-container" id="success">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
+          <text x="70" y="24" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="24" fill="#5de4c7">VibeKit</text>
+        </svg>
+      </div>
+      <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      </div>
+
+      <h1>Connected!</h1>
+      <span class="network-badge testnet" id="success-network-badge">TestNet</span>
+
+      <div class="account-info">
+        <p class="account-label">Account</p>
+        <p class="account-address" id="account-address"></p>
+      </div>
+
+      <p class="close-hint">You can close this tab and return to your terminal.</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-container" id="error">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
+          <text x="70" y="24" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="24" fill="#5de4c7">VibeKit</text>
+        </svg>
+      </div>
+      <div class="error-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
+
+      <h1>Connection Failed</h1>
+
+      <p class="error-message" id="error-message">The connection was rejected or timed out.</p>
+
+      <button class="retry-button" onclick="location.reload()">Try Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Configuration injected by server via CONFIG_PLACEHOLDER
+    const CONFIG = window.__PAIRING_CONFIG__ || {
+      uri: '',
+      qrDataUrl: '',
+      network: 'testnet',
+      walletName: 'Pera Wallet',
+      wsUrl: ''
+    };
+
+    // Set initial state
+    document.getElementById('qr-image').src = CONFIG.qrDataUrl;
+    document.getElementById('wallet-name').textContent = CONFIG.walletName;
+
+    const networkBadge = document.getElementById('network-badge');
+    const successNetworkBadge = document.getElementById('success-network-badge');
+
+    if (CONFIG.network === 'mainnet') {
+      networkBadge.textContent = 'MainNet';
+      networkBadge.className = 'network-badge mainnet';
+      successNetworkBadge.textContent = 'MainNet';
+      successNetworkBadge.className = 'network-badge mainnet';
+    } else {
+      networkBadge.textContent = 'TestNet';
+      networkBadge.className = 'network-badge testnet';
+      successNetworkBadge.textContent = 'TestNet';
+      successNetworkBadge.className = 'network-badge testnet';
+    }
+
+    // WebSocket connection for real-time updates
+    if (CONFIG.wsUrl) {
+      const ws = new WebSocket(CONFIG.wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleStatusUpdate(data);
+        } catch (e) {
+          console.error('Failed to parse WebSocket message:', e);
+        }
+      };
+
+      ws.onerror = () => {
+        console.error('WebSocket error');
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed');
+      };
+    }
+
+    function handleStatusUpdate(data) {
+      const pendingEl = document.getElementById('pending');
+      const successEl = document.getElementById('success');
+      const errorEl = document.getElementById('error');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+
+      if (data.status === 'connected') {
+        // Show success state
+        pendingEl.classList.add('hidden');
+        errorEl.classList.remove('visible');
+        successEl.classList.add('visible');
+
+        // Display account info
+        if (data.accounts && data.accounts.length > 0) {
+          document.getElementById('account-address').textContent = data.accounts[0].address;
+        }
+      } else if (data.status === 'error' || data.status === 'timeout') {
+        // Show error state
+        pendingEl.classList.add('hidden');
+        successEl.classList.remove('visible');
+        errorEl.classList.add('visible');
+
+        if (data.message) {
+          document.getElementById('error-message').textContent = data.message;
+        }
+      } else if (data.status === 'waiting') {
+        // Update waiting status
+        statusDot.className = 'status-dot waiting';
+        statusText.textContent = data.message || 'Waiting for connection...';
+      }
+    }
+  </script>
+</body>
+</html>

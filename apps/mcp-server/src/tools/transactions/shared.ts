@@ -419,8 +419,11 @@ export async function sendTransactions(
     sender?: string
   ) => Promise<{ address: string }>
 ): Promise<SendTransactionsResult> {
-  const { transactions, populateAppCallResources = true, coverAppCallInnerTransactionFees = false } =
-    args
+  const {
+    transactions,
+    populateAppCallResources = true,
+    coverAppCallInnerTransactionFees = false,
+  } = args
 
   if (!transactions || transactions.length === 0) {
     throw new Error('At least one transaction is required')

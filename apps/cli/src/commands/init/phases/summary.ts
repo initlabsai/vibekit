@@ -26,6 +26,9 @@ function formatProviderStatus(context: SetupContext): string {
   if (context.keyringStatus === 'completed') {
     configured.push('Keyring')
   }
+  if (context.walletConnectStatus === 'completed') {
+    configured.push('WalletConnect')
+  }
 
   if (configured.length === 0) {
     return pc.yellow('none (run: vibekit init)')
@@ -64,10 +67,7 @@ function buildToolCommand(context: SetupContext): string | undefined {
 export async function showSummaryStep(context: SetupContext): Promise<void> {
   const toolCmd = buildToolCommand(context)
 
-  const lines = [
-    `${pc.bold('Status:')}`,
-    `  MCPs:       ${formatMCPStatus(context)}`,
-  ]
+  const lines = [`${pc.bold('Status:')}`, `  MCPs:       ${formatMCPStatus(context)}`]
 
   if (requiresAccountProvider(context.mcps)) {
     lines.push(`  Provider:   ${formatProviderStatus(context)}`)
@@ -85,11 +85,7 @@ export async function showSummaryStep(context: SetupContext): Promise<void> {
     lines.push(`  Dispenser:  ${formatStatus(context.dispenserAuthStatus === 'completed')}`)
   }
 
-  lines.push(
-    '',
-    `${pc.bold('Next Steps:')}`,
-    `  ${pc.cyan('cd')} ${context.skillsPath}`,
-  )
+  lines.push('', `${pc.bold('Next Steps:')}`, `  ${pc.cyan('cd')} ${context.skillsPath}`)
 
   if (toolCmd) {
     lines.push(`  ${pc.cyan(toolCmd)}`)

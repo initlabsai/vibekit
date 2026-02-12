@@ -79,8 +79,16 @@ export async function handleAppCloseOut(
 }> {
   const { algorand, config } = ctx
   const typedArgs = parseArgs<CloseOutArgs>(args)
-  const { appId, appSpec, appSpecPath, method, args: methodArgs, sender, extraFee, maxFee } =
-    typedArgs
+  const {
+    appId,
+    appSpec,
+    appSpecPath,
+    method,
+    args: methodArgs,
+    sender,
+    extraFee,
+    maxFee,
+  } = typedArgs
 
   const result = await sendTransactions(
     {

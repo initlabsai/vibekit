@@ -16,8 +16,32 @@ import type { TransactionSigner } from 'algosdk'
  * Supported account provider types.
  * - 'vault': HashiCorp Vault Transit engine (keys never leave Vault)
  * - 'keyring': OS keyring (macOS Keychain, Linux libsecret)
+ * - 'walletconnect': Mobile wallet via WalletConnect (Pera, Defly, etc.)
  */
-export type AccountProviderType = 'vault' | 'keyring'
+export type AccountProviderType = 'vault' | 'keyring' | 'walletconnect'
+
+/**
+ * Supported wallet identifiers for mobile wallet providers.
+ */
+export type WalletId = 'pera' | 'defly'
+
+/**
+ * Provider status information.
+ * Used by getStatus() to provide detailed provider state.
+ */
+export interface ProviderStatus {
+  /** Whether the provider is ready to use */
+  ready: boolean
+  /** Human-readable status message */
+  message: string
+  /** Connection details (wallet-specific) */
+  connection?: {
+    walletId: WalletId
+    walletName: string
+    accounts: AccountInfo[]
+    network: string
+  }
+}
 
 /**
  * Information about a named account.
@@ -55,6 +79,24 @@ export interface AccountWithSigner {
 export interface AccountProvider {
   /** Provider type identifier */
   readonly type: AccountProviderType
+
+  /**
+   * Initialize the provider.
+   * For sync providers (Vault, Keyring) this is a no-op.
+   * For async providers (Wallet) this sets up connections.
+   */
+  initialize(): Promise<void>
+
+  /**
+   * Get detailed status information about the provider.
+   */
+  getStatus(): Promise<ProviderStatus>
+
+  /**
+   * Check if this provider can create new accounts.
+   * Returns false for wallet providers (accounts are managed by mobile app).
+   */
+  canCreateAccounts(): boolean
 
   /**
    * List all accounts managed by this provider.

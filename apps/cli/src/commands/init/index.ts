@@ -111,10 +111,12 @@ export async function runSetupWizard(): Promise<void> {
   // Phase 8: Account provider selection (conditional - only if any MCP requires it)
   let vaultStatus: SetupContext['vaultStatus'] = 'skipped'
   let keyringStatus: SetupContext['keyringStatus'] = 'skipped'
+  let walletConnectStatus: SetupContext['walletConnectStatus'] = 'skipped'
   if (requiresAccountProvider(mcps)) {
     const providerResult = await setupProvidersStep(dockerResult.available, dockerResult.running)
     vaultStatus = providerResult.vaultStatus
     keyringStatus = providerResult.keyringStatus
+    walletConnectStatus = providerResult.walletConnectStatus
   }
 
   // Phase 9: Preview & Confirm
@@ -140,6 +142,7 @@ export async function runSetupWizard(): Promise<void> {
     dockerRunning: dockerResult.running,
     vaultStatus,
     keyringStatus,
+    walletConnectStatus,
     kappaAuthStatus: 'skipped',
     dispenserAuthStatus: 'skipped',
   }

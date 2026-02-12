@@ -19,7 +19,12 @@
 
 import { encodeAddress } from 'algosdk'
 import type { TransactionSigner, Transaction } from 'algosdk'
-import type { AccountProvider, AccountInfo, AccountWithSigner } from '@vibekit/provider-interface'
+import type {
+  AccountProvider,
+  AccountInfo,
+  AccountWithSigner,
+  ProviderStatus,
+} from '@vibekit/provider-interface'
 import type { VaultProviderConfig } from './types.js'
 import { VaultClient } from './client.js'
 
@@ -39,6 +44,35 @@ export class VaultProvider implements AccountProvider {
   constructor(config: VaultProviderConfig) {
     this.config = config
     this.client = new VaultClient(config)
+  }
+
+  /**
+   * Initialize the provider.
+   * No-op for Vault provider - it's initialized synchronously.
+   */
+  async initialize(): Promise<void> {
+    // No-op - Vault provider is sync initialized
+  }
+
+  /**
+   * Get detailed status information about the provider.
+   */
+  async getStatus(): Promise<ProviderStatus> {
+    const ready = await this.isAvailable()
+    const accounts = ready ? await this.listAccounts() : []
+    return {
+      ready,
+      message: ready
+        ? `Vault connected with ${accounts.length} account(s)`
+        : 'Vault is not available. Run: vibekit vault start',
+    }
+  }
+
+  /**
+   * Check if this provider can create new accounts.
+   */
+  canCreateAccounts(): boolean {
+    return true
   }
 
   /**

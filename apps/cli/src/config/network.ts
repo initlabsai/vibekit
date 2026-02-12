@@ -1,32 +1,24 @@
 /**
  * Algorand Network Configuration
  *
- * Network settings used by the vibekit-mcp server.
- */
-
-/**
- * Algorand localnet configuration
- */
-const ALGORAND_LOCALNET = {
-  network: 'localnet',
-  algodUrl: 'http://localhost:4001',
-  algodToken: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-  kmdUrl: 'http://localhost:4002',
-  kmdToken: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-  indexerUrl: 'http://localhost:8980',
-} as const
-
-/**
- * Environment variables for native MCP execution
+ * The MCP server has built-in presets for localnet, testnet, and mainnet.
+ * No env vars are needed for default operation - the server will:
+ * 1. Use saved network from DB (if user previously switched networks)
+ * 2. Default to localnet with standard AlgoKit endpoints
  *
- * Note: Provider type (vault/keyring) is auto-detected by the MCP server
- * based on which credentials exist, so we don't need to specify it here.
+ * Env vars are only needed for custom network configurations (e.g., custom nodes).
  */
-export const MCP_ENV_VARS = {
-  ALGORAND_NETWORK: ALGORAND_LOCALNET.network,
-  ALGORAND_ALGOD: ALGORAND_LOCALNET.algodUrl,
-  ALGORAND_TOKEN: ALGORAND_LOCALNET.algodToken,
-  ALGORAND_KMD: ALGORAND_LOCALNET.kmdUrl,
-  ALGORAND_KMD_TOKEN: ALGORAND_LOCALNET.kmdToken,
-  ALGORAND_INDEXER: ALGORAND_LOCALNET.indexerUrl,
-} as const
+
+/**
+ * Environment variables for MCP execution.
+ * Empty by default - MCP server uses built-in presets.
+ *
+ * To use a custom network configuration, set these env vars in your MCP config:
+ * - ALGORAND_NETWORK: 'localnet' | 'testnet' | 'mainnet'
+ * - ALGORAND_ALGOD: Algod server URL
+ * - ALGORAND_TOKEN: Algod auth token
+ * - ALGORAND_KMD: KMD server URL (localnet only)
+ * - ALGORAND_KMD_TOKEN: KMD auth token (localnet only)
+ * - ALGORAND_INDEXER: Indexer server URL
+ */
+export const MCP_ENV_VARS = {} as const

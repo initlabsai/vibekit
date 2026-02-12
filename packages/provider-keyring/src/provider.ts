@@ -29,6 +29,7 @@ import type {
   AccountInfo,
   AccountWithSigner,
   AccountProviderType,
+  ProviderStatus,
 } from '@vibekit/provider-interface'
 import {
   createKeyringStore,
@@ -77,6 +78,35 @@ export class KeyringProvider implements AccountProvider {
 
   constructor() {
     this.keyring = createKeyringStore()
+  }
+
+  /**
+   * Initialize the provider.
+   * No-op for Keyring provider - it's initialized synchronously.
+   */
+  async initialize(): Promise<void> {
+    // No-op - Keyring provider is sync initialized
+  }
+
+  /**
+   * Get detailed status information about the provider.
+   */
+  async getStatus(): Promise<ProviderStatus> {
+    const ready = await this.isAvailable()
+    const accounts = ready ? await this.listAccounts() : []
+    return {
+      ready,
+      message: ready
+        ? `Keyring connected with ${accounts.length} account(s)`
+        : 'Keyring is not available',
+    }
+  }
+
+  /**
+   * Check if this provider can create new accounts.
+   */
+  canCreateAccounts(): boolean {
+    return true
   }
 
   /**

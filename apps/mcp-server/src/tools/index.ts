@@ -8,6 +8,7 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import type { McpConfig } from '../config.js'
 import type { ToolContext, ToolHandler, ToolRegistration } from './types.js'
+import { isResultWithImage } from './types.js'
 
 import { contractTools } from './contracts/index.js'
 import { stateTools } from './state/index.js'
@@ -19,6 +20,7 @@ import { providerTools } from './provider/index.js'
 import { indexerTools } from './indexer/index.js'
 import { transactionTools } from './transactions/index.js'
 import { utilityTools } from './utilities/index.js'
+import { walletconnectTools } from './walletconnect/index.js'
 
 // Combine all tool registrations
 const allToolRegistrations: ToolRegistration[] = [
@@ -32,6 +34,7 @@ const allToolRegistrations: ToolRegistration[] = [
   ...indexerTools,
   ...transactionTools,
   ...utilityTools,
+  ...walletconnectTools,
 ]
 
 // Export tool definitions for MCP server registration
@@ -42,9 +45,24 @@ const handlers: Record<string, ToolHandler> = Object.fromEntries(
   allToolRegistrations.map((t) => [t.definition.name, t.handler])
 )
 
+// MCP content block types
+type TextContent = { type: 'text'; text: string }
+type ImageContent = { type: 'image'; data: string; mimeType: string }
+type ContentBlock = TextContent | ImageContent
+
 interface ToolResult {
-  content: Array<{ type: string; text: string }>
+  content: ContentBlock[]
   isError?: boolean
+}
+
+/**
+ * Create an image content block from a data URL.
+ * Parses "data:image/png;base64,..." format into MCP image content.
+ */
+export function imageContent(dataUrl: string): ImageContent {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/)
+  if (!match) throw new Error('Invalid data URL format')
+  return { type: 'image', data: match[2], mimeType: match[1] }
 }
 
 export async function handleToolCall(
@@ -62,6 +80,18 @@ export async function handleToolCall(
 
     const ctx: ToolContext = { algorand, config }
     const result = await handler(args, ctx)
+
+    // Handle results that include image content
+    if (isResultWithImage(result)) {
+      const content: ContentBlock[] = [
+        {
+          type: 'text',
+          text: JSON.stringify(result.data, bigIntReplacer, 2),
+        },
+        imageContent(result.imageDataUrl),
+      ]
+      return { content }
+    }
 
     return {
       content: [

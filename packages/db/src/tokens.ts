@@ -23,9 +23,9 @@ export type TokenKey = (typeof TOKEN_KEYS)[keyof typeof TOKEN_KEYS]
 
 export function getToken(key: string): string | null {
   try {
-    const row = getDb()
-      .query('SELECT value FROM tokens WHERE key = ?')
-      .get(key) as { value: string } | null
+    const row = getDb().query('SELECT value FROM tokens WHERE key = ?').get(key) as {
+      value: string
+    } | null
     return row?.value ?? null
   } catch {
     return null

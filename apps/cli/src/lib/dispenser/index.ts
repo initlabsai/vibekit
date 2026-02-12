@@ -8,10 +8,7 @@
 export * from './auth'
 export * from './login'
 
-import {
-  hasDispenserToken as dbHasDispenserToken,
-  getDispenserToken,
-} from '@vibekit/db'
+import { hasDispenserToken as dbHasDispenserToken, getDispenserToken } from '@vibekit/db'
 
 export function hasDispenserToken(): boolean {
   return dbHasDispenserToken()
