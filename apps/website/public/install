@@ -8,10 +8,14 @@
 #   curl -fsSL https://getvibekit.ai/install | sh
 #
 # Or with a specific version:
-#   VIBEKIT_VERSION=v0.1.0 curl -fsSL https://getvibekit.ai/install | sh
+#   VIBEKIT_VERSION=cli-v0.1.0 curl -fsSL https://getvibekit.ai/install | sh
+#
+# Or install alpha/beta releases:
+#   VIBEKIT_CHANNEL=alpha curl -fsSL https://getvibekit.ai/install | sh
 #
 # Environment variables:
 #   VIBEKIT_VERSION       - Install a specific version (default: latest)
+#   VIBEKIT_CHANNEL       - Release channel: stable (default), alpha, or beta
 #   VIBEKIT_INSTALL_DIR   - Custom install directory (default: ~/.local/bin)
 #   VIBEKIT_FORCE_INSTALL - Skip confirmation prompts if set
 #
@@ -21,11 +25,9 @@ set -eu
 # GitHub repository
 REPO="gabrielkuettel/vibekit"
 
-if [ -n "${VIBEKIT_VERSION:-}" ]; then
-  RELEASE_URL="https://github.com/$REPO/releases/download/$VIBEKIT_VERSION"
-else
-  RELEASE_URL="${VIBEKIT_RELEASE_URL:-https://github.com/$REPO/releases/latest/download}"
-fi
+# Track the resolved version for display
+RESOLVED_VERSION=""
+RESOLVED_CHANNEL=""
 
 # Installation directory (XDG standard for user binaries)
 INSTALL_DIR="${VIBEKIT_INSTALL_DIR:-$HOME/.local/bin}"
@@ -64,6 +66,58 @@ warn() {
 error() {
   printf '%b\n' "${Red}ERROR${Reset}: $*" >&2
   exit 1
+}
+
+# Fetch latest pre-release tag matching channel pattern
+fetch_latest_prerelease() {
+  channel="$1"
+  api_url="https://api.github.com/repos/$REPO/releases"
+  info "Fetching latest $channel release..."
+
+  if command -v curl >/dev/null 2>&1; then
+    response=$(curl -fsSL "$api_url" 2>/dev/null) || error "Failed to fetch releases from GitHub API"
+  elif command -v wget >/dev/null 2>&1; then
+    response=$(wget -qO- "$api_url" 2>/dev/null) || error "Failed to fetch releases from GitHub API"
+  else
+    error "Neither curl nor wget found. Please install one and try again."
+  fi
+
+  # Find first tag matching channel pattern (e.g., cli-v0.2.0-alpha.1)
+  tag=$(printf '%s' "$response" | grep -o "\"tag_name\": *\"cli-v[^\"]*-${channel}\\.[^\"]*\"" | head -1 | sed 's/.*"cli-v/cli-v/' | sed 's/".*//')
+
+  if [ -z "$tag" ]; then
+    error "No $channel release found. See: https://github.com/$REPO/releases"
+  fi
+
+  printf '%b\n' "${Green}Found:${Reset} $tag"
+  RESOLVED_VERSION="$tag"
+  echo "https://github.com/$REPO/releases/download/$tag"
+}
+
+# Determine release URL based on version or channel
+determine_release_url() {
+  if [ -n "${VIBEKIT_VERSION:-}" ]; then
+    RESOLVED_VERSION="$VIBEKIT_VERSION"
+    RESOLVED_CHANNEL="specific"
+    echo "https://github.com/$REPO/releases/download/$VIBEKIT_VERSION"
+    return
+  fi
+
+  channel="${VIBEKIT_CHANNEL:-stable}"
+  RESOLVED_CHANNEL="$channel"
+
+  case "$channel" in
+    stable)
+      RESOLVED_VERSION="latest"
+      echo "https://github.com/$REPO/releases/latest/download"
+      ;;
+    alpha|beta)
+      fetch_latest_prerelease "$channel"
+      ;;
+    *)
+      error "Unknown channel: $channel. Use 'stable', 'alpha', or 'beta'."
+      ;;
+  esac
 }
 
 # Detect platform
@@ -207,6 +261,9 @@ main() {
   printf '%b\n' "${Bold}VibeKit Installer${Reset}"
   echo ""
 
+  # Determine release URL (handles version/channel logic)
+  RELEASE_URL=$(determine_release_url)
+
   ensure_install_dir
   check_existing
 
@@ -215,7 +272,13 @@ main() {
   download "$platform"
 
   echo ""
-  success "Installed: vibekit ($platform)"
+  if [ "$RESOLVED_CHANNEL" = "specific" ]; then
+    success "Installed: vibekit $RESOLVED_VERSION ($platform)"
+  elif [ "$RESOLVED_CHANNEL" = "stable" ]; then
+    success "Installed: vibekit ($platform)"
+  else
+    success "Installed: vibekit $RESOLVED_VERSION ($platform) [$RESOLVED_CHANNEL]"
+  fi
   printf '%b\n' "${Dim}Location:${Reset} $INSTALL_DIR/vibekit"
   echo ""
 
