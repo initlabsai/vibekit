@@ -8,10 +8,10 @@
 #   curl -fsSL https://getvibekit.ai/install | sh
 #
 # Or with a specific version:
-#   VIBEKIT_VERSION=cli-v0.1.0 curl -fsSL https://getvibekit.ai/install | sh
+#   curl -fsSL https://getvibekit.ai/install | VIBEKIT_VERSION=cli-v0.1.0 sh
 #
 # Or install alpha/beta releases:
-#   VIBEKIT_CHANNEL=alpha curl -fsSL https://getvibekit.ai/install | sh
+#   curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
 #
 # Environment variables:
 #   VIBEKIT_VERSION       - Install a specific version (default: latest)
