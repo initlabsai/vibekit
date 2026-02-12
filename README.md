@@ -80,14 +80,6 @@ vibekit --version          # Show version
 vibekit --help             # Show help
 ```
 
-## Known Issues
-
-### macOS Keychain Prompts
-
-On macOS, you may see multiple password prompts when the MCP server starts. This happens because macOS Keychain requires separate permissions for "accessing" a key and "reading" its value — so each stored secret triggers two prompts.
-
-Click **"Always Allow"** on each prompt to grant permanent access. This is a one-time setup; subsequent launches won't prompt again.
-
 ## Development
 
 See [AGENTS.md](./AGENTS.md) for development guidance.
