@@ -15,7 +15,7 @@ jobs:
             target: linux-x64
           - os: macos-latest
             target: darwin-arm64
-          - os: macos-13
+          - os: macos-latest
             target: darwin-x64
 
     steps:
@@ -26,6 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Install darwin-x64 native bindings (cross-compile)
+        if: matrix.target == 'darwin-x64'
+        run: bun add @napi-rs/keyring-darwin-x64@1.2.0
 
       - name: Bundle skills
         run: bun run bundle-skills
