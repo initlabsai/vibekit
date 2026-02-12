@@ -28,6 +28,7 @@ REPO="gabrielkuettel/vibekit"
 # Track the resolved version for display
 RESOLVED_VERSION=""
 RESOLVED_CHANNEL=""
+RELEASE_URL=""
 
 # Installation directory (XDG standard for user binaries)
 INSTALL_DIR="${VIBEKIT_INSTALL_DIR:-$HOME/.local/bin}"
@@ -69,6 +70,7 @@ error() {
 }
 
 # Fetch latest pre-release tag matching channel pattern
+# Sets RESOLVED_VERSION and RELEASE_URL globals
 fetch_latest_prerelease() {
   channel="$1"
   api_url="https://api.github.com/repos/$REPO/releases"
@@ -91,15 +93,16 @@ fetch_latest_prerelease() {
 
   printf '%b\n' "${Green}Found:${Reset} $tag"
   RESOLVED_VERSION="$tag"
-  echo "https://github.com/$REPO/releases/download/$tag"
+  RELEASE_URL="https://github.com/$REPO/releases/download/$tag"
 }
 
 # Determine release URL based on version or channel
+# Sets RELEASE_URL, RESOLVED_VERSION, and RESOLVED_CHANNEL globals
 determine_release_url() {
   if [ -n "${VIBEKIT_VERSION:-}" ]; then
     RESOLVED_VERSION="$VIBEKIT_VERSION"
     RESOLVED_CHANNEL="specific"
-    echo "https://github.com/$REPO/releases/download/$VIBEKIT_VERSION"
+    RELEASE_URL="https://github.com/$REPO/releases/download/$VIBEKIT_VERSION"
     return
   fi
 
@@ -109,7 +112,7 @@ determine_release_url() {
   case "$channel" in
     stable)
       RESOLVED_VERSION="latest"
-      echo "https://github.com/$REPO/releases/latest/download"
+      RELEASE_URL="https://github.com/$REPO/releases/latest/download"
       ;;
     alpha|beta)
       fetch_latest_prerelease "$channel"
@@ -261,8 +264,8 @@ main() {
   printf '%b\n' "${Bold}VibeKit Installer${Reset}"
   echo ""
 
-  # Determine release URL (handles version/channel logic)
-  RELEASE_URL=$(determine_release_url)
+  # Determine release URL (sets RELEASE_URL, RESOLVED_VERSION, RESOLVED_CHANNEL)
+  determine_release_url
 
   ensure_install_dir
   check_existing
