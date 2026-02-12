@@ -56,9 +56,20 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
+      - name: Determine release type
+        id: release_type
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if [[ "$TAG" =~ -(alpha|beta|rc)\. ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
           files: |
             vibekit-linux-x64/vibekit-linux-x64
             vibekit-darwin-arm64/vibekit-darwin-arm64
