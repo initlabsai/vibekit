@@ -20,6 +20,7 @@
 #
 
 $ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # GitHub repository
 $Repo = "gabrielkuettel/vibekit"
