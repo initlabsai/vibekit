@@ -25,9 +25,10 @@ import { agentsMdContent } from '../../../config/agents-md'
 // --- Config Generation ---
 
 function getVibekitPath(): string {
-  const { basename } = require('path')
+  const { basename, extname } = require('path')
+  const name = basename(process.execPath, extname(process.execPath))
 
-  if (basename(process.execPath) !== 'vibekit') {
+  if (name !== 'vibekit') {
     // Dev mode: point to the compiled binary in the CLI package
     return join(import.meta.dir, '..', '..', '..', '..', 'bin', 'vibekit')
   }
