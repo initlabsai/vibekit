@@ -30,7 +30,7 @@ $InstallDir = if ($env:VIBEKIT_INSTALL_DIR) { $env:VIBEKIT_INSTALL_DIR } else { 
 function Write-Info($msg) { Write-Host $msg -ForegroundColor DarkGray }
 function Write-Success($msg) { Write-Host $msg -ForegroundColor Green }
 function Write-Warn($msg) { Write-Host "WARN: $msg" -ForegroundColor Yellow }
-function Write-Err($msg) { Write-Host "ERROR: $msg" -ForegroundColor Red; exit 1 }
+function Write-Err($msg) { Write-Host "ERROR: $msg" -ForegroundColor Red; throw $msg }
 
 # Fetch latest pre-release tag matching channel pattern
 function Get-LatestPrerelease($Channel) {
@@ -98,7 +98,7 @@ function Ensure-InstallDir {
     }
 }
 
-# Check for existing installation
+# Check for existing installation. Returns $false if user chose to keep existing.
 function Check-Existing {
     $InstallPath = Join-Path $InstallDir "vibekit.exe"
 
@@ -108,7 +108,7 @@ function Check-Existing {
         if ($env:VIBEKIT_FORCE_INSTALL) {
             Write-Info "VIBEKIT_FORCE_INSTALL is set, replacing existing installation..."
             Remove-Item $InstallPath -Force
-            return
+            return $true
         }
 
         $Response = Read-Host "Do you want to replace it? (y/N)"
@@ -116,9 +116,10 @@ function Check-Existing {
             Remove-Item $InstallPath -Force
         } else {
             Write-Info "Keeping existing installation."
-            exit 0
+            return $false
         }
     }
+    return $true
 }
 
 # Add install directory to user PATH if not already present
@@ -169,7 +170,7 @@ function Main {
     $Release = Get-ReleaseInfo
 
     Ensure-InstallDir
-    Check-Existing
+    if (-not (Check-Existing)) { return }
     Download-Vibekit $Release.Url
 
     Write-Host ""
