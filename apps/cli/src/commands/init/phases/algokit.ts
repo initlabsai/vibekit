@@ -87,7 +87,12 @@ async function installWindows(): Promise<void> {
         fail: 'AlgoKit installation failed',
       },
       async () => {
-        const result = await runCommand('winget', ['install', '--id', 'AlgorandFoundation.AlgoKit', '-e'])
+        const result = await runCommand('winget', [
+          'install',
+          'algokit',
+          '--accept-source-agreements',
+          '--accept-package-agreements',
+        ])
         if (!result.success) throw new Error('winget install failed')
       }
     )
