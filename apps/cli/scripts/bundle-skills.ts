@@ -137,7 +137,7 @@ export const BUNDLED_SKILLS: SkillDirectory[] = ${JSON.stringify(skills, null, 2
 export const BUNDLED_AT = '${new Date().toISOString()}'
 `
 
-  const outputPath = new URL('../src/lib/skills/bundled.ts', import.meta.url).pathname
+  const outputPath = Bun.fileURLToPath(new URL('../src/lib/skills/bundled.ts', import.meta.url))
   await Bun.write(outputPath, output)
 
   console.log(`Bundled ${skills.length} skills to src/lib/skills/bundled.ts`)
