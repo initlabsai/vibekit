@@ -144,7 +144,13 @@ export async function setupProvidersStep(
   dockerAvailable: boolean,
   dockerRunning: boolean
 ): Promise<ProviderSetupResult> {
-  const hasToken = await hasMcpToken()
+  // hasMcpToken uses the keyring which may not be available (e.g. missing native binding on Windows)
+  let hasToken = false
+  try {
+    hasToken = await hasMcpToken()
+  } catch {
+    // Keyring unavailable — skip fast path
+  }
   const vaultUnsealed = hasToken && !(await isVaultSealed())
   const keyringAvailable = await isKeyringAvailable()
 

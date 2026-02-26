@@ -25,6 +25,10 @@ curl -fsSL https://getvibekit.ai/install | sh
 Windows (alpha):
 
 ```powershell
+# Install the Visual C++ Redistributable (required for OS keyring support)
+winget install Microsoft.VCRedist.2015+.x64
+
+# Install VibeKit
 $env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
 ```
 

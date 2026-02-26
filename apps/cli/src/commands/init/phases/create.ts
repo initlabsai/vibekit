@@ -134,7 +134,7 @@ async function installSkillsToDir(targetDir: string, skills: SkillDirectory[]): 
     for (const file of skill.files) {
       // Handle nested paths (e.g., references/REFERENCE.md)
       const filePath = join(skillDir, file.path)
-      const fileDir = filePath.substring(0, filePath.lastIndexOf('/'))
+      const fileDir = dirname(filePath)
       if (fileDir !== skillDir) {
         await ensureDir(fileDir)
       }
