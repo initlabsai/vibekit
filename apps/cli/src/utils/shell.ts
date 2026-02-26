@@ -45,8 +45,15 @@ export async function runCommand(
 }
 
 export async function commandExists(cmd: string): Promise<boolean> {
-  const whichCmd = process.platform === 'win32' ? 'where' : 'which'
-  const result = await runCommand(whichCmd, [cmd], { silent: true })
+  if (process.platform === 'win32') {
+    // `where` doesn't resolve Windows App Execution Aliases (e.g. winget/MSIX installs),
+    // so fall back to running the command directly if `where` fails
+    const whereResult = await runCommand('where', [cmd], { silent: true })
+    if (whereResult.success) return true
+    const result = await runCommand(cmd, ['--version'], { silent: true })
+    return result.success
+  }
+  const result = await runCommand('which', [cmd], { silent: true })
   return result.success
 }
 
