@@ -19,11 +19,13 @@ Early release — [feedback welcome](https://github.com/gabrielkuettel/vibekit/i
 Install VibeKit:
 
 ```bash
-# macOS / Linux
 curl -fsSL https://getvibekit.ai/install | sh
+```
 
-# Windows (PowerShell)
-irm https://getvibekit.ai/install.ps1 | iex
+Windows (alpha):
+
+```powershell
+$env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
 ```
 
 Run the setup wizard:
@@ -47,7 +49,7 @@ Open your AI tool and start building.
 | macOS (Apple Silicon) | Tested |
 | macOS (Intel)         | Tested |
 | Linux (x64)           | Tested |
-| Windows (x64)         | Tested |
+| Windows (x64)         | Alpha  |
 
 ## Why VibeKit
 

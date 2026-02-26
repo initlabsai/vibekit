@@ -23,12 +23,16 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 
     This downloads the binary for your platform and installs it to `~/.local/bin/vibekit`.
   </TabItem>
-  <TabItem label="Windows">
+  <TabItem label="Windows (alpha)">
     ```powershell
-    irm https://getvibekit.ai/install.ps1 | iex
+    $env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
     ```
 
     This downloads the binary and installs it to `~/.vibekit/bin/vibekit.exe`. The installer automatically adds this to your user PATH.
+
+    :::note
+    Windows support is currently in alpha. Once stable, you can install without setting the channel.
+    :::
   </TabItem>
 </Tabs>
 

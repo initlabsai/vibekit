@@ -13,9 +13,9 @@ import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
     curl -fsSL https://getvibekit.ai/install | sh
     ```
   </TabItem>
-  <TabItem label="Windows">
+  <TabItem label="Windows (alpha)">
     ```powershell
-    irm https://getvibekit.ai/install.ps1 | iex
+    $env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
     ```
   </TabItem>
 </Tabs>
