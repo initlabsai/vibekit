@@ -7,6 +7,8 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     if (process.platform === 'darwin') {
       await execAsync(`echo -n ${JSON.stringify(text)} | pbcopy`)
+    } else if (process.platform === 'win32') {
+      await execAsync(`powershell -NoProfile -Command "Set-Clipboard -Value ${JSON.stringify(text)}"`)
     } else {
       // Linux - try Wayland first (wl-copy), then X11 tools (xclip, xsel)
       const commands = [

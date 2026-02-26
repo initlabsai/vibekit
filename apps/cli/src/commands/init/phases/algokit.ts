@@ -78,6 +78,47 @@ async function installLinux(): Promise<void> {
   )
 }
 
+async function installWindows(): Promise<void> {
+  if (await commandExists('winget')) {
+    await withSpinner(
+      {
+        start: 'Installing AlgoKit via winget...',
+        success: 'AlgoKit installed',
+        fail: 'AlgoKit installation failed',
+      },
+      async () => {
+        const result = await runCommand('winget', ['install', 'algokit'])
+        if (!result.success) throw new Error('winget install failed')
+      }
+    )
+  } else if (await commandExists('pipx')) {
+    await withSpinner(
+      {
+        start: 'Installing AlgoKit via pipx...',
+        success: 'AlgoKit installed',
+        fail: 'AlgoKit installation failed',
+      },
+      async () => {
+        const result = await runCommand('pipx', ['install', 'algokit'])
+        if (!result.success) throw new Error('pipx install failed')
+      }
+    )
+  } else {
+    p.log.error('winget or pipx is required to install AlgoKit on Windows.')
+    p.note(
+      [
+        'Install using one of:',
+        `1. winget (included in modern Windows)`,
+        `2. pipx`,
+        '',
+        'Then re-run VibeKit.',
+      ].join('\n'),
+      'Missing Prerequisites'
+    )
+    process.exit(1)
+  }
+}
+
 export async function installAlgokitStep(os: OS): Promise<void> {
   const version = await checkAlgoKit()
 
@@ -94,9 +135,15 @@ export async function installAlgokitStep(os: OS): Promise<void> {
     return
   }
 
-  if (os === 'macos') {
-    await installMacOS()
-  } else {
-    await installLinux()
+  switch (os) {
+    case 'macos':
+      await installMacOS()
+      break
+    case 'linux':
+      await installLinux()
+      break
+    case 'windows':
+      await installWindows()
+      break
   }
 }

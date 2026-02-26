@@ -36,7 +36,7 @@ export function welcome(): void {
   )
 }
 
-function detectOS(): OS | 'windows' | null {
+function detectOS(): OS | null {
   switch (process.platform) {
     case 'darwin':
       return 'macos'
@@ -52,13 +52,6 @@ function detectOS(): OS | 'windows' | null {
 export async function detectOSStep(): Promise<OS> {
   const detected = detectOS()
 
-  // Windows not supported
-  if (detected === 'windows') {
-    p.log.error('Windows is not currently supported.')
-    p.log.message(`Use WSL: ${pc.cyan('https://learn.microsoft.com/en-us/windows/wsl/install')}`)
-    process.exit(1)
-  }
-
   if (detected) {
     return detected
   }
@@ -69,6 +62,7 @@ export async function detectOSStep(): Promise<OS> {
     options: [
       { value: 'macos' as const, label: 'macOS' },
       { value: 'linux' as const, label: 'Linux' },
+      { value: 'windows' as const, label: 'Windows' },
     ],
   })
 }

@@ -89,7 +89,7 @@ export async function stopContainers(removeVolumes: boolean = false): Promise<vo
 
 export async function getContainerStatus(name: string): Promise<boolean> {
   try {
-    const { stdout } = await exec(`docker inspect -f '{{.State.Running}}' ${name}`)
+    const { stdout } = await exec(`docker inspect -f "{{.State.Running}}" ${name}`)
     return stdout.trim() === 'true'
   } catch {
     return false

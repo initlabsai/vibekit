@@ -9,8 +9,11 @@ import { homedir } from 'os'
 import { existsSync, mkdirSync } from 'fs'
 import { mkdir } from 'fs/promises'
 
-/** Base config directory: ~/.config/vibekit */
+/** Base config directory: ~/.config/vibekit (Unix) or %APPDATA%/vibekit (Windows) */
 export function getVibekitDir(): string {
+  if (process.platform === 'win32') {
+    return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'vibekit')
+  }
   return join(homedir(), '.config', 'vibekit')
 }
 

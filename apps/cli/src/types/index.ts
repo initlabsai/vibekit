@@ -7,7 +7,7 @@ import type { AgentSelection, MCPSelection } from '../config'
 /** Standardized status for simple steps that complete or skip */
 export type StepStatus = 'completed' | 'skipped'
 
-export type OS = 'macos' | 'linux'
+export type OS = 'macos' | 'linux' | 'windows'
 
 /** Base path for skills and MCP config installation */
 export type SkillsPath = string
