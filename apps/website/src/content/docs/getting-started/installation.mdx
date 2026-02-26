@@ -7,7 +7,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 
 ## Prerequisites
 
-- **macOS or Linux** (x64 or ARM)
+- **macOS, Linux, or Windows** (x64 or ARM)
 - **[Docker](https://www.docker.com/products/docker-desktop)** — for LocalNet and Vault
 - **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** or **[OpenCode](https://opencode.ai)** — your AI coding tool
 
@@ -15,25 +15,51 @@ import { Tabs, TabItem } from '@astrojs/starlight/components'
 
 ## Install
 
-```bash
-curl -fsSL https://getvibekit.ai/install | sh
-```
+<Tabs>
+  <TabItem label="macOS / Linux">
+    ```bash
+    curl -fsSL https://getvibekit.ai/install | sh
+    ```
 
-This downloads the binary for your platform and installs it to `~/.local/bin/vibekit`.
+    This downloads the binary for your platform and installs it to `~/.local/bin/vibekit`.
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    irm https://getvibekit.ai/install.ps1 | iex
+    ```
+
+    This downloads the binary and installs it to `~/.vibekit/bin/vibekit.exe`. The installer automatically adds this to your user PATH.
+  </TabItem>
+</Tabs>
 
 ## Alpha Versions
 
 To test upcoming features:
 
-```bash
-curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
-```
+<Tabs>
+  <TabItem label="macOS / Linux">
+    ```bash
+    curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
+    ```
 
-Or install a specific version:
+    Or install a specific version:
 
-```bash
-curl -fsSL https://getvibekit.ai/install | VIBEKIT_VERSION=cli-v0.1.6-alpha.1 sh
-```
+    ```bash
+    curl -fsSL https://getvibekit.ai/install | VIBEKIT_VERSION=cli-v0.1.6-alpha.1 sh
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    $env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
+    ```
+
+    Or install a specific version:
+
+    ```powershell
+    $env:VIBEKIT_VERSION = "cli-v0.1.6-alpha.1"; irm https://getvibekit.ai/install.ps1 | iex
+    ```
+  </TabItem>
+</Tabs>
 
 :::caution
 Alpha versions may contain bugs. For production, use stable releases.
@@ -43,14 +69,19 @@ Alpha versions may contain bugs. For production, use stable releases.
 
 Download from [GitHub Releases](https://github.com/gabrielkuettel/vibekit/releases/latest), then:
 
-```bash
-chmod +x vibekit-<platform>
-mv vibekit-<platform> ~/.local/bin/vibekit
-```
+<Tabs>
+  <TabItem label="macOS / Linux">
+    ```bash
+    chmod +x vibekit-<platform>
+    mv vibekit-<platform> ~/.local/bin/vibekit
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    Rename the downloaded `vibekit-win32-x64.exe` to `vibekit.exe` and move it to a directory in your PATH.
+  </TabItem>
+</Tabs>
 
 ## PATH Setup
-
-If `~/.local/bin` isn't in your PATH:
 
 <Tabs>
   <TabItem label="Bash">
@@ -67,5 +98,8 @@ If `~/.local/bin` isn't in your PATH:
     ```bash
     fish_add_path ~/.local/bin
     ```
+  </TabItem>
+  <TabItem label="Windows">
+    The PowerShell installer automatically adds `~/.vibekit/bin` to your user PATH. Restart your terminal for the change to take effect.
   </TabItem>
 </Tabs>

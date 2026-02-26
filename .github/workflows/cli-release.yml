@@ -17,6 +17,8 @@ jobs:
             target: darwin-arm64
           - os: macos-15-intel
             target: darwin-x64
+          - os: windows-latest
+            target: win32-x64
 
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vibekit-${{ matrix.target }}
-          path: apps/cli/bin/vibekit-${{ matrix.target }}
+          path: apps/cli/bin/vibekit-${{ matrix.target }}${{ matrix.target == 'win32-x64' && '.exe' || '' }}
 
   release:
     needs: build
@@ -74,3 +76,4 @@ jobs:
             vibekit-linux-x64/vibekit-linux-x64
             vibekit-darwin-arm64/vibekit-darwin-arm64
             vibekit-darwin-x64/vibekit-darwin-x64
+            vibekit-win32-x64/vibekit-win32-x64.exe

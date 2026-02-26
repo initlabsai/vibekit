@@ -150,7 +150,7 @@ detect_platform() {
       esac
       ;;
     MINGW*|MSYS*|CYGWIN*)
-      error "Windows is not supported. Please use WSL with Linux x64."
+      error "Use the PowerShell installer on Windows: irm https://getvibekit.ai/install.ps1 | iex"
       ;;
     *)
       error "Unsupported operating system: $os"

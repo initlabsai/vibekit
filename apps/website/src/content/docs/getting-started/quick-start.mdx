@@ -3,34 +3,39 @@ title: Quick Start
 description: Get up and running with VibeKit in minutes
 ---
 
-import { Steps } from '@astrojs/starlight/components'
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components'
 
-<Steps>
+## 1. Install VibeKit
 
-1. **Install VibeKit**
+<Tabs>
+  <TabItem label="macOS / Linux">
+    ```bash
+    curl -fsSL https://getvibekit.ai/install | sh
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```powershell
+    irm https://getvibekit.ai/install.ps1 | iex
+    ```
+  </TabItem>
+</Tabs>
 
-   ```bash
-   curl -fsSL https://getvibekit.ai/install | sh
-   ```
+## 2. Initialize your project
 
-2. **Initialize your project**
+```bash
+vibekit init
+```
 
-   ```bash
-   vibekit init
-   ```
+The CLI walks you through setup, then creates everything your AI needs. **Skills** teach your AI Algorand patterns. **MCP servers** give it tools to interact with the network.
 
-   The CLI walks you through setup, then creates everything your AI needs. **Skills** teach your AI Algorand patterns. **MCP servers** give it tools to interact with the network.
+## 3. Verify setup
 
-3. **Verify setup**
+```bash
+vibekit status
+```
 
-   ```bash
-   vibekit status
-   ```
+## 4. Start building
 
-4. **Start building**
-
-   Open your AI tool and ask it to create a smart contract project, build and test it, or deploy to localnet.
-
-</Steps>
+Open your AI tool and ask it to create a smart contract project, build and test it, or deploy to localnet.
 
 That's it. Your AI now knows Algorand.
