@@ -58,6 +58,7 @@ GitHub Actions builds binaries for all supported platforms and creates the relea
 
 - Run `bun run typecheck` before commits
 - Use conventional commits (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`)
+- Don't add yourself as co-author
 - Don't commit secrets or hardcode paths
 - Ask before adding dependencies
 - Add JSDocs for shared utilities and APIs, and comments for edge cases and assumptions. Otherwise, let the code speak for itself.
