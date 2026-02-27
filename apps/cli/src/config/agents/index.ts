@@ -8,6 +8,7 @@
  */
 
 import { claude } from './claude'
+import { codex } from './codex'
 import { copilot } from './copilot'
 import { cursor } from './cursor'
 import { opencode } from './opencode'
@@ -19,6 +20,7 @@ export type { AgentDefinition } from './types'
  */
 export const AGENTS = {
   claude,
+  codex,
   copilot,
   cursor,
   opencode,

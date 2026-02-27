@@ -25,6 +25,14 @@ function getAgentConfig(agentId: AgentId): AgentMCPConfig | undefined {
         },
       }
 
+    case 'codex':
+      return {
+        serverKey: 'context7',
+        config: {
+          url: CONTEXT7_URL,
+        },
+      }
+
     case 'opencode':
       return {
         serverKey: 'context7',
