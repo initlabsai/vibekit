@@ -83,7 +83,7 @@ async function promptForPat(): Promise<string | undefined> {
   }
 
   if (!isValidGitHubPATFormat(pat)) {
-    p.log.warn(`PAT doesn't match expected format (ghp_* or github_pat_*)`)
+    p.log.warn(`PAT doesn't match expected format (ghp_*, github_pat_*, or 40-char classic token)`)
 
     const continueAnyway = await confirmContinueWithPat()
     if (!continueAnyway) {
@@ -98,8 +98,22 @@ async function promptForPat(): Promise<string | undefined> {
 
 export async function setupGithubPatStep(): Promise<GitHubPATResult> {
   if (hasGithubToken()) {
-    p.log.success('GitHub PAT already configured')
-    return { configureGithub: true, pat: undefined }
+    const action = await select({
+      message: 'GitHub PAT already configured. Keep existing token or replace it?',
+      options: [
+        { value: 'keep', label: 'Keep existing' },
+        { value: 'replace', label: 'Replace with new token' },
+      ],
+    })
+
+    if (action === 'keep') {
+      p.log.success('Keeping existing GitHub PAT')
+      return { configureGithub: true, pat: undefined }
+    }
+
+    // Fall through to promptForPat() below
+    const pat = await promptForPat()
+    return { configureGithub: true, pat }
   }
 
   const shouldConfigure = await promptConfigureGithub()
