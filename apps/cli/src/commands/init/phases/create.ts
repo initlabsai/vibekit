@@ -16,6 +16,7 @@ import {
   type AgentId,
 } from '../../../config'
 import { ensureDir, writeJsonFile, writeTextFile, fileExists } from '../../../utils/files'
+import { writeTomlFile } from '../../../utils/toml'
 import { saveGithubToken } from '../../../lib/vault'
 import { getSkillsByNames, getSkillsCount, type SkillSelection } from '../../../lib/skills'
 import { select } from '../../../utils/prompts'
@@ -119,7 +120,11 @@ export async function generateConfigsStep(context: SetupContext): Promise<void> 
     }
 
     const outputPath = join(context.skillsPath, agent.configFile)
-    await writeJsonFile(outputPath, config)
+    if (agent.configFormat === 'toml') {
+      await writeTomlFile(outputPath, config as Record<string, unknown>)
+    } else {
+      await writeJsonFile(outputPath, config)
+    }
   }
 }
 

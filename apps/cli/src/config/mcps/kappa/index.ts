@@ -24,6 +24,14 @@ function getAgentConfig(agentId: AgentId): AgentMCPConfig | undefined {
         },
       }
 
+    case 'codex':
+      return {
+        serverKey: 'kappa',
+        config: {
+          url: KAPPA_URL,
+        },
+      }
+
     case 'opencode':
       return {
         serverKey: 'kappa',

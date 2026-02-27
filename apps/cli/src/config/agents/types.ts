@@ -18,6 +18,9 @@ export interface AgentDefinition {
   /** Output config file path (e.g., '.mcp.json', '.cursor/mcp.json') */
   configFile?: string
 
+  /** Config file format ('json' by default, 'toml' for Codex) */
+  configFormat?: 'json' | 'toml'
+
   /** Base MCP config template (contains only kappa server, MCPs are merged in) */
   baseConfigTemplate?: Record<string, unknown>
 

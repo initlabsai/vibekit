@@ -26,6 +26,15 @@ function getAgentConfig(agentId: AgentId): AgentMCPConfig | undefined {
         },
       }
 
+    case 'codex':
+      return {
+        serverKey: 'algorand-remote',
+        config: {
+          command: 'npx',
+          args: ['-y', 'mcp-remote', ALGORAND_REMOTE_URL],
+        },
+      }
+
     case 'opencode':
       return {
         serverKey: 'algorand-remote',

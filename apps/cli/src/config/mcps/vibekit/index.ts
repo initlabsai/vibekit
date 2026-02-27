@@ -25,6 +25,16 @@ function getAgentConfig(agentId: AgentId): AgentMCPConfig | undefined {
         },
       }
 
+    case 'codex':
+      return {
+        serverKey: 'vibekit-mcp',
+        config: {
+          command: '$VIBEKIT_PATH',
+          args: ['mcp'],
+          env: '$MCP_ENV',
+        },
+      }
+
     case 'opencode':
       return {
         serverKey: 'vibekit-mcp',
