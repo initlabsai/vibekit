@@ -8,7 +8,7 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import type { McpConfig } from '../config.js'
 import type { ToolContext, ToolHandler, ToolRegistration } from './types.js'
-import { isResultWithImage } from './types.js'
+import { isResultWithImage, validateArgs } from './types.js'
 
 import { contractTools } from './contracts/index.js'
 import { stateTools } from './state/index.js'
@@ -45,6 +45,11 @@ const handlers: Record<string, ToolHandler> = Object.fromEntries(
   allToolRegistrations.map((t) => [t.definition.name, t.handler])
 )
 
+// Build schema map for argument validation
+const schemas: Record<string, Tool['inputSchema']> = Object.fromEntries(
+  allToolRegistrations.map((t) => [t.definition.name, t.definition.inputSchema])
+)
+
 // MCP content block types
 type TextContent = { type: 'text'; text: string }
 type ImageContent = { type: 'image'; data: string; mimeType: string }
@@ -76,6 +81,13 @@ export async function handleToolCall(
     const handler = handlers[name]
     if (!handler) {
       throw new Error(`Unknown tool: ${name}`)
+    }
+
+    // Validate arguments against the tool's inputSchema before dispatching.
+    // Catches malformed AI-generated arguments early with clear error messages.
+    const schema = schemas[name]
+    if (schema) {
+      validateArgs(args, schema, name)
     }
 
     const ctx: ToolContext = { algorand, config }

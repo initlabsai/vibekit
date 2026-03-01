@@ -38,9 +38,70 @@ export interface ToolRegistration {
 /**
  * Parse tool arguments with type assertion.
  * Reduces boilerplate of `args as unknown as T` pattern.
+ *
+ * Note: structural validation happens in handleToolCall() before handlers
+ * are invoked. This cast is safe because args have already been validated
+ * against the tool's inputSchema.
  */
 export function parseArgs<T>(args: Record<string, unknown>): T {
   return args as unknown as T
+}
+
+/** JSON Schema type for tool inputSchema definitions. */
+interface JsonSchema {
+  type: string
+  properties?: Record<string, { type?: string | string[]; description?: string }>
+  required?: string[]
+}
+
+/**
+ * Validate tool arguments against the tool's inputSchema.
+ *
+ * Checks required fields are present and property types match schema.
+ * Catches malformed AI-generated arguments early with clear error messages
+ * instead of letting them propagate as cryptic runtime errors.
+ *
+ * @throws Error with a descriptive message listing all validation failures
+ */
+export function validateArgs(
+  args: Record<string, unknown>,
+  schema: JsonSchema,
+  toolName: string
+): void {
+  const errors: string[] = []
+
+  // Check required fields
+  if (schema.required) {
+    for (const field of schema.required) {
+      if (args[field] === undefined || args[field] === null) {
+        errors.push(`missing required field '${field}'`)
+      }
+    }
+  }
+
+  // Check property types for provided fields
+  if (schema.properties) {
+    for (const [key, prop] of Object.entries(args)) {
+      const schemaProp = schema.properties[key]
+      if (!schemaProp?.type) continue
+
+      const actualType = Array.isArray(prop) ? 'array' : typeof prop
+      const allowedTypes = Array.isArray(schemaProp.type) ? schemaProp.type : [schemaProp.type]
+
+      // JSON Schema 'integer' maps to JS 'number'
+      const normalizedAllowed = allowedTypes.map((t) => (t === 'integer' ? 'number' : t))
+
+      if (!normalizedAllowed.includes(actualType)) {
+        errors.push(
+          `'${key}' expected ${allowedTypes.join(' | ')}, got ${actualType}`
+        )
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid arguments for ${toolName}: ${errors.join('; ')}`)
+  }
 }
 
 /**
