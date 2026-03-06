@@ -1,0 +1,108 @@
+import type algosdk from 'algosdk'
+import { formatAccount, formatTransaction } from '../formatters.js'
+import type { FormattedAccount, FormattedTransaction, AccountAsset } from '../types.js'
+import { DEFAULT_LIMIT } from '../types.js'
+
+export interface LookupAccountArgs {
+  address: string
+}
+
+export async function lookupAccount(
+  indexer: algosdk.Indexer,
+  args: LookupAccountArgs
+): Promise<FormattedAccount> {
+  const response = await indexer.lookupAccountByID(args.address).do()
+  return formatAccount(response.account)
+}
+
+export interface SearchAccountTransactionsArgs {
+  address: string
+  limit?: number
+  nextToken?: string
+  assetId?: number
+  txType?: string
+  minRound?: number
+  maxRound?: number
+  beforeTime?: string
+  afterTime?: string
+  minAmount?: number
+}
+
+export async function searchAccountTransactions(
+  indexer: algosdk.Indexer,
+  args: SearchAccountTransactionsArgs
+): Promise<{ transactions: FormattedTransaction[]; nextToken?: string }> {
+  const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
+  let query = indexer.searchForTransactions().address(args.address).limit(limit)
+
+  if (args.nextToken) query = query.nextToken(args.nextToken)
+  if (args.assetId) query = query.assetID(args.assetId)
+  if (args.txType) query = query.txType(args.txType)
+  if (args.minRound) query = query.minRound(args.minRound)
+  if (args.maxRound) query = query.maxRound(args.maxRound)
+  if (args.beforeTime) query = query.beforeTime(args.beforeTime)
+  if (args.afterTime) query = query.afterTime(args.afterTime)
+  if (args.minAmount) query = query.currencyGreaterThan(args.minAmount - 1)
+
+  const response = await query.do()
+  return {
+    transactions: (response.transactions ?? []).map(formatTransaction),
+    nextToken: response.nextToken,
+  }
+}
+
+export interface SearchAccountsArgs {
+  limit?: number
+  nextToken?: string
+  assetId?: number
+  applicationId?: number
+  currencyGreaterThan?: number
+  currencyLessThan?: number
+}
+
+export async function searchAccounts(
+  indexer: algosdk.Indexer,
+  args: SearchAccountsArgs
+): Promise<{ accounts: FormattedAccount[]; nextToken?: string }> {
+  const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
+  let query = indexer.searchAccounts().limit(limit)
+
+  if (args.nextToken) query = query.nextToken(args.nextToken)
+  if (args.assetId) query = query.assetID(args.assetId)
+  if (args.applicationId) query = query.applicationID(args.applicationId)
+  if (args.currencyGreaterThan !== undefined)
+    query = query.currencyGreaterThan(args.currencyGreaterThan)
+  if (args.currencyLessThan !== undefined) query = query.currencyLessThan(args.currencyLessThan)
+
+  const response = await query.do()
+  return {
+    accounts: (response.accounts ?? []).map(formatAccount),
+    nextToken: response.nextToken,
+  }
+}
+
+export interface GetAccountAssetsArgs {
+  address: string
+  limit?: number
+  nextToken?: string
+}
+
+export async function getAccountAssets(
+  indexer: algosdk.Indexer,
+  args: GetAccountAssetsArgs
+): Promise<{ assets: AccountAsset[]; nextToken?: string }> {
+  const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
+  let query = indexer.lookupAccountAssets(args.address).limit(limit)
+
+  if (args.nextToken) query = query.nextToken(args.nextToken)
+
+  const response = await query.do()
+  return {
+    assets: (response.assets ?? []).map((a) => ({
+      assetId: Number(a.assetId),
+      amount: String(a.amount),
+      isFrozen: a.isFrozen,
+    })),
+    nextToken: response.nextToken,
+  }
+}
