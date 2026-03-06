@@ -1,0 +1,83 @@
+'use client'
+
+import { AccountSummary } from '../explorer/account-summary'
+import { TransactionList } from '../explorer/transaction-list'
+import { TransactionDetail } from '../explorer/transaction-detail'
+import { AssetInfo } from '../explorer/asset-info'
+import { AssetHolders } from '../explorer/asset-holders'
+import { BlockInfo } from '../explorer/block-info'
+import { ApplicationInfo } from '../explorer/application-info'
+import { AssetList } from '../explorer/asset-list'
+import { NfdResult } from '../explorer/nfd-result'
+
+interface ToolResultProps {
+  toolName: string
+  result: unknown
+}
+
+export function ToolResult({ toolName, result }: ToolResultProps) {
+  // Surface tool errors with distinct styling
+  if (result && typeof result === 'object' && 'error' in result) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 my-2">
+        <p className="text-xs font-medium text-red-400">Tool error: {toolName}</p>
+        <p className="text-xs text-red-400/70 mt-1">{(result as { error: string }).error}</p>
+      </div>
+    )
+  }
+
+  switch (toolName) {
+    case 'lookup_account':
+      return <AccountSummary data={result as Record<string, unknown>} />
+
+    case 'search_account_transactions':
+    case 'search_transactions':
+    case 'search_asset_transactions':
+      return <TransactionList data={result as Record<string, unknown>} />
+
+    case 'lookup_transaction':
+      return <TransactionDetail data={result as Record<string, unknown>} />
+
+    case 'lookup_asset':
+      return <AssetInfo data={result as Record<string, unknown>} />
+
+    case 'search_asset_balances':
+      return <AssetHolders data={result as Record<string, unknown>} />
+
+    case 'lookup_block':
+      return <BlockInfo data={result as Record<string, unknown>} />
+
+    case 'lookup_application':
+      return <ApplicationInfo data={result as Record<string, unknown>} />
+
+    case 'get_account_assets':
+    case 'search_assets':
+      return <AssetList data={result as Record<string, unknown>} />
+
+    case 'resolve_nfd':
+    case 'reverse_resolve_nfd':
+      return <NfdResult data={result as Record<string, unknown>} />
+
+    case 'search_accounts':
+      return <GenericResult data={result} />
+
+    case 'search_applications':
+      return <GenericResult data={result} />
+
+    case 'search_block_headers':
+      return <GenericResult data={result} />
+
+    default:
+      return <GenericResult data={result} />
+  }
+}
+
+function GenericResult({ data }: { data: unknown }) {
+  return (
+    <div className="rounded-lg border border-algo-border bg-algo-card p-3 my-2 overflow-x-auto">
+      <pre className="text-xs text-algo-muted whitespace-pre-wrap">
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    </div>
+  )
+}

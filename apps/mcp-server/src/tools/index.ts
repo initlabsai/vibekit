@@ -18,6 +18,7 @@ import { githubTools } from './github/index.js'
 import { networkTools } from './network/index.js'
 import { providerTools } from './provider/index.js'
 import { indexerTools } from './indexer/index.js'
+import { nfdTools } from './nfd/index.js'
 import { transactionTools } from './transactions/index.js'
 import { utilityTools } from './utilities/index.js'
 import { walletconnectTools } from './walletconnect/index.js'
@@ -32,6 +33,7 @@ const allToolRegistrations: ToolRegistration[] = [
   ...providerTools,
   ...githubTools,
   ...indexerTools,
+  ...nfdTools,
   ...transactionTools,
   ...utilityTools,
   ...walletconnectTools,

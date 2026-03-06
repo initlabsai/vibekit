@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-algo-teal: #00d4aa;
+  --color-algo-dark: #0d1117;
+  --color-algo-card: #161b22;
+  --color-algo-border: #30363d;
+  --color-algo-text: #e6edf3;
+  --color-algo-muted: #8b949e;
+}

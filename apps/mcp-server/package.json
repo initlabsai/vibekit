@@ -16,6 +16,8 @@
     "@algorandfoundation/algokit-utils": "^9.2.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@vibekit/db": "workspace:*",
+    "@vibekit/indexer": "workspace:*",
+    "@vibekit/nfd": "workspace:*",
     "@vibekit/dispenser-interface": "workspace:*",
     "@vibekit/dispenser-kmd": "workspace:*",
     "@vibekit/dispenser-testnet": "workspace:*",
@@ -25,7 +27,8 @@
     "@vibekit/provider-vault": "workspace:*",
     "@vibekit/provider-walletconnect": "workspace:*",
     "algosdk": "^3.5.2",
-    "zod": "^3.22.0"
+    "zod": "^3.22.0",
+    "zod-to-json-schema": "^3.22.0"
   },
   "devDependencies": {
     "@types/bun": "^1.3.6",
