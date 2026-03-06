@@ -5,6 +5,11 @@ import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
 import { Search } from 'lucide-react'
 import { useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Bot } from 'lucide-react'
 
 const SUGGESTIONS = [
   'Show me the latest block',
@@ -48,15 +53,28 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
             {SUGGESTIONS.map((suggestion) => (
-              <button
+              <Button
                 key={suggestion}
+                variant="outline"
+                size="sm"
                 onClick={() => append({ role: 'user', content: suggestion })}
-                className="px-3 py-1.5 text-xs rounded-full border border-algo-border text-algo-muted hover:border-algo-teal hover:text-algo-teal transition-colors"
+                className="rounded-full border-algo-border text-algo-muted hover:border-algo-teal hover:text-algo-teal"
               >
                 {suggestion}
-              </button>
+              </Button>
             ))}
           </div>
+          <p className="text-center text-xs text-algo-muted">
+            Alpha release &mdash;{' '}
+            <a
+              href="https://github.com/gabrielkuettel/vibekit/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-algo-teal transition-colors"
+            >
+              report an issue
+            </a>
+          </p>
         </div>
       </div>
     )
@@ -69,37 +87,52 @@ export default function Home() {
           <span className="font-mono">VibeKit</span> Explorer
         </h1>
       </header>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
-          {isLoading && messages[messages.length - 1]?.role === 'user' && (
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-algo-teal/20 flex items-center justify-center shrink-0">
-                <div className="w-2 h-2 rounded-full bg-algo-teal animate-pulse" />
+      <ScrollArea className="flex-1">
+        <div ref={scrollRef} className="px-4 py-6 space-y-6">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+            {isLoading && messages[messages.length - 1]?.role === 'user' && (
+              <div className="flex gap-3">
+                <Avatar size="sm" className="bg-algo-teal/20">
+                  <AvatarFallback className="bg-algo-teal/20">
+                    <div className="w-2 h-2 rounded-full bg-algo-teal animate-pulse" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="rounded-lg border border-algo-border bg-algo-card p-4">
+                  <Skeleton className="h-3 w-48 bg-algo-border" />
+                </div>
               </div>
-              <div className="rounded-lg border border-algo-border bg-algo-card p-4 animate-pulse">
-                <div className="h-3 bg-algo-border rounded w-48" />
+            )}
+            {error && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <p className="font-medium">Something went wrong</p>
+                <p className="text-red-400/70 mt-1">{error.message}</p>
               </div>
-            </div>
-          )}
-          {error && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              <p className="font-medium">Something went wrong</p>
-              <p className="text-red-400/70 mt-1">{error.message}</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
       <div className="border-t border-algo-border px-4 py-4">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto space-y-2">
           <ChatInput
             input={input}
             setInput={setInput}
             onSubmit={handleSubmit}
             isLoading={isLoading}
           />
+          <p className="text-center text-xs text-algo-muted">
+            Alpha release &mdash;{' '}
+            <a
+              href="https://github.com/gabrielkuettel/vibekit/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-algo-teal transition-colors"
+            >
+              report an issue
+            </a>
+          </p>
         </div>
       </div>
     </div>
