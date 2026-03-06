@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/formatters'
+import { decodeStateValue } from '@/lib/decode-state'
 import { Code2 } from 'lucide-react'
 
 interface ApplicationInfoProps {
@@ -66,9 +67,7 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
                     <tr key={entry.key} className="border-t border-algo-border/30">
                       <td className="pr-4 py-1 font-mono">{decodeKey(entry.key)}</td>
                       <td className="py-1 font-mono">
-                        {entry.value.type === 1
-                          ? entry.value.bytes ?? ''
-                          : String(entry.value.uint ?? 0)}
+                        <StateValueCell entry={entry} />
                       </td>
                     </tr>
                   ))}
@@ -80,6 +79,29 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
       </div>
     </div>
   )
+}
+
+function StateValueCell({ entry }: { entry: GlobalStateEntry }) {
+  if (entry.value.type !== 1) {
+    return <span>{formatNumber(entry.value.uint ?? 0)}</span>
+  }
+
+  const decoded = decodeStateValue(entry.value.bytes ?? '')
+
+  switch (decoded.type) {
+    case 'string':
+      return <span className="text-algo-teal-light">{decoded.display}</span>
+    case 'uint':
+      return <span>{decoded.display}</span>
+    case 'address':
+      return (
+        <span className="text-algo-muted" title={decoded.full}>
+          {decoded.display}
+        </span>
+      )
+    default:
+      return <span className="text-algo-muted">{decoded.display}</span>
+  }
 }
 
 function decodeKey(base64: string): string {
