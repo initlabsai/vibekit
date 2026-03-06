@@ -36,7 +36,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }:
         onKeyDown={handleKeyDown}
         placeholder={placeholder ?? 'Ask about the Algorand blockchain...'}
         rows={1}
-        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg px-4 py-3 text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal"
+        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-3 text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal"
       />
       <Button
         type="submit"
