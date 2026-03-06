@@ -1,6 +1,6 @@
 import type algosdk from 'algosdk'
 import { formatAccount, formatTransaction } from '../formatters.js'
-import type { FormattedAccount, FormattedTransaction, AccountAsset } from '../types.js'
+import type { FormattedAccount, FormattedTransaction, AccountAsset, AccountAppLocalState } from '../types.js'
 import { DEFAULT_LIMIT } from '../types.js'
 
 export interface LookupAccountArgs {
@@ -102,6 +102,44 @@ export async function getAccountAssets(
       assetId: Number(a.assetId),
       amount: String(a.amount),
       isFrozen: a.isFrozen,
+    })),
+    nextToken: response.nextToken,
+  }
+}
+
+export interface GetAccountAppLocalStatesArgs {
+  address: string
+  limit?: number
+  nextToken?: string
+  applicationId?: number
+}
+
+export async function getAccountAppLocalStates(
+  indexer: algosdk.Indexer,
+  args: GetAccountAppLocalStatesArgs
+): Promise<{ appLocalStates: AccountAppLocalState[]; nextToken?: string }> {
+  const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
+  let query = indexer.lookupAccountAppLocalStates(args.address).limit(limit)
+
+  if (args.nextToken) query = query.nextToken(args.nextToken)
+  if (args.applicationId) query = query.applicationID(args.applicationId)
+
+  const response = await query.do()
+  return {
+    appLocalStates: (response.appsLocalStates ?? []).map((state) => ({
+      applicationId: Number(state.id),
+      schema: {
+        numByteSlice: Number(state.schema.numByteSlice),
+        numUint: Number(state.schema.numUint),
+      },
+      keyValue: (state.keyValue ?? []).map((kv) => ({
+        key: Buffer.from(kv.key).toString('base64'),
+        value: {
+          type: kv.value.type,
+          bytes: kv.value.bytes ? Buffer.from(kv.value.bytes).toString('base64') : undefined,
+          uint: kv.value.uint !== undefined ? Number(kv.value.uint) : undefined,
+        },
+      })),
     })),
     nextToken: response.nextToken,
   }

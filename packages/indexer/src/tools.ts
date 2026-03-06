@@ -6,8 +6,10 @@ import {
   searchAccountTransactions,
   searchAccounts,
   getAccountAssets,
+  getAccountAppLocalStates,
   lookupTransaction,
   searchTransactions,
+  lookupTransactionGroup,
   lookupAsset,
   searchAssetBalances,
   searchAssetTransactions,
@@ -94,6 +96,17 @@ export const indexerTools: IndexerToolDefinition[] = [
     }),
     handler: async (indexer, args) => getAccountAssets(indexer, args),
   },
+  {
+    name: 'get_account_app_local_states',
+    description: 'Get application local state for an account (the key-value data stored by apps the account has opted into)',
+    parameters: z.object({
+      address: z.string().describe('The Algorand address'),
+      limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
+      nextToken: z.string().optional().describe('Pagination token'),
+      applicationId: z.number().optional().describe('Filter by specific application ID'),
+    }),
+    handler: async (indexer, args) => getAccountAppLocalStates(indexer, args),
+  },
 
   // Transactions
   {
@@ -121,6 +134,14 @@ export const indexerTools: IndexerToolDefinition[] = [
       applicationId: z.number().optional().describe('Filter by application ID'),
     }),
     handler: async (indexer, args) => searchTransactions(indexer, args),
+  },
+  {
+    name: 'lookup_transaction_group',
+    description: 'Look up all transactions in an atomic transaction group by group ID',
+    parameters: z.object({
+      groupId: z.string().describe('The base64-encoded group ID'),
+    }),
+    handler: async (indexer, args) => lookupTransactionGroup(indexer, args),
   },
 
   // Assets
@@ -191,12 +212,7 @@ export const indexerTools: IndexerToolDefinition[] = [
       beforeTime: z.string().optional().describe('Include blocks before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include blocks after this RFC 3339 time'),
     }),
-    handler: async (indexer, args) => {
-      // Extract base URL from the indexer client for raw fetch
-      const baseUrl = (indexer as any).c.bc.baseURL.toString().replace(/\/$/, '')
-      const token = (indexer as any).c?.tokenHeader?.['X-Indexer-API-Token']
-      return searchBlockHeaders(indexer, args, baseUrl, token)
-    },
+    handler: async (indexer, args) => searchBlockHeaders(indexer, args),
   },
 
   // Applications

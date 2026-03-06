@@ -4,8 +4,9 @@ export {
   searchAccountTransactions,
   searchAccounts,
   getAccountAssets,
+  getAccountAppLocalStates,
 } from './accounts.js'
-export { lookupTransaction, searchTransactions } from './transactions.js'
+export { lookupTransaction, searchTransactions, lookupTransactionGroup } from './transactions.js'
 export {
   lookupAsset,
   searchAssetBalances,
