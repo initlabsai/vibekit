@@ -15,7 +15,7 @@ export function AssetHolders({ data }: AssetHoldersProps) {
   const balances = (data.balances ?? []) as HolderRow[]
 
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card my-3 overflow-hidden">
+    <div className="rounded-lg border border-algo-border bg-algo-card overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-algo-border">
         <Users className="w-4 h-4 text-algo-teal" />
         <h3 className="text-sm font-semibold text-algo-teal">

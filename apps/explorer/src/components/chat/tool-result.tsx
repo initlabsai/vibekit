@@ -22,7 +22,7 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
   // Surface tool errors with distinct styling
   if (result && typeof result === 'object' && 'error' in result) {
     return (
-      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 my-2">
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
         <p className="text-xs font-medium text-red-400">Tool error: {toolName}</p>
         <p className="text-xs text-red-400/70 mt-1">{(result as { error: string }).error}</p>
         <p className="text-xs text-red-400/50 mt-2">
@@ -88,7 +88,7 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
 
 function GenericResult({ data }: { data: unknown }) {
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card p-3 my-2 overflow-x-auto">
+    <div className="rounded-lg border border-algo-border bg-algo-card p-3 overflow-x-auto">
       <pre className="text-xs text-algo-muted whitespace-pre-wrap">
         {JSON.stringify(data, null, 2)}
       </pre>
