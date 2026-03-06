@@ -12,3 +12,4 @@ export {
 export * from './handlers/index.js'
 export * from './types.js'
 export { sanitizeBigInts } from './sanitize.js'
+export { decodeStateValue, type DecodedValue } from './decode-state.js'

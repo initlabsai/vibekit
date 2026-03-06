@@ -87,6 +87,20 @@ export interface AccountAsset {
   isFrozen: boolean
 }
 
+/** Account application local state. */
+export interface AccountAppLocalState {
+  applicationId: number
+  schema: { numByteSlice: number; numUint: number }
+  keyValue: Array<{
+    key: string
+    value: {
+      type: number
+      bytes?: string
+      uint?: number
+    }
+  }>
+}
+
 /** Application log entry. */
 export interface LogEntry {
   applicationId: number

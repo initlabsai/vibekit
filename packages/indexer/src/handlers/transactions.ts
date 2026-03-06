@@ -51,3 +51,22 @@ export async function searchTransactions(
     nextToken: response.nextToken,
   }
 }
+
+export interface LookupTransactionGroupArgs {
+  groupId: string
+}
+
+export async function lookupTransactionGroup(
+  indexer: algosdk.Indexer,
+  args: LookupTransactionGroupArgs
+): Promise<{ transactions: FormattedTransaction[]; nextToken?: string }> {
+  const response = await indexer
+    .searchForTransactions()
+    .groupid(args.groupId)
+    .limit(100)
+    .do()
+  return {
+    transactions: (response.transactions ?? []).map(formatTransaction),
+    nextToken: response.nextToken,
+  }
+}
