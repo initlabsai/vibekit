@@ -22,6 +22,17 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
       <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 my-2">
         <p className="text-xs font-medium text-red-400">Tool error: {toolName}</p>
         <p className="text-xs text-red-400/70 mt-1">{(result as { error: string }).error}</p>
+        <p className="text-xs text-red-400/50 mt-2">
+          Something wrong?{' '}
+          <a
+            href="https://github.com/gabrielkuettel/vibekit/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-red-400 transition-colors"
+          >
+            Report an issue
+          </a>
+        </p>
       </div>
     )
   }

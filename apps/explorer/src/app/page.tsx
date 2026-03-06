@@ -7,9 +7,6 @@ import { Search } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Bot } from 'lucide-react'
 
 const SUGGESTIONS = [
   'Show me the latest block',
@@ -91,18 +88,7 @@ export default function Home() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
-            {isLoading && messages[messages.length - 1]?.role === 'user' && (
-              <div className="flex gap-3">
-                <Avatar size="sm" className="bg-algo-teal/20">
-                  <AvatarFallback className="bg-algo-teal/20">
-                    <div className="w-2 h-2 rounded-full bg-algo-teal animate-pulse" />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="rounded-lg border border-algo-border bg-algo-card p-4">
-                  <Skeleton className="h-3 w-48 bg-algo-border" />
-                </div>
-              </div>
-            )}
+
             {error && (
               <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                 <p className="font-medium">Something went wrong</p>

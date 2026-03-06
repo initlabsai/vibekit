@@ -70,6 +70,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {message.content}
           </div>
         )}
+        {/* Pulsing dot while waiting for assistant content */}
+        {!isUser && !message.parts?.some(p => (p.type === 'text' && p.text) || p.type === 'tool-invocation') && !message.content && (
+          <div className="rounded-lg px-4 py-3">
+            <div className="w-2 h-2 rounded-full bg-algo-teal animate-pulse" />
+          </div>
+        )}
       </div>
       {isUser && (
         <Avatar size="sm" className="mt-1">
