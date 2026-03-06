@@ -3,6 +3,8 @@ import { getLLM } from '@/lib/llm'
 import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
 
+const REQUEST_TIMEOUT_MS = 60_000
+
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json()
@@ -15,6 +17,7 @@ export async function POST(req: Request) {
       messages,
       tools,
       maxSteps: 5,
+      abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
 
     return result.toDataStreamResponse()
