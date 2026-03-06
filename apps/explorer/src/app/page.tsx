@@ -29,7 +29,9 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center space-y-3">
-            <h1 className="text-4xl font-bold text-algo-teal">Algorand Explorer</h1>
+            <h1 className="text-4xl font-bold text-algo-teal">
+              <span className="font-mono">VibeKit</span> Explorer
+            </h1>
             <p className="text-algo-muted">
               AI-powered blockchain explorer. Ask about accounts, transactions, assets, and more.
             </p>
@@ -63,7 +65,9 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen">
       <header className="border-b border-algo-border px-4 py-3">
-        <h1 className="text-sm font-semibold text-algo-teal">Algorand Explorer</h1>
+        <h1 className="text-sm font-semibold text-algo-teal">
+          <span className="font-mono">VibeKit</span> Explorer
+        </h1>
       </header>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         <div className="max-w-3xl mx-auto space-y-6">

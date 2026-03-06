@@ -31,6 +31,7 @@ bun.lockb
 
 # Build artifacts
 dist/
+.next/
 apps/cli/bin/
 apps/cli/src/lib/skills/bundled.ts
 
