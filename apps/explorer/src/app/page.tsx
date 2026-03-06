@@ -31,15 +31,13 @@ export default function Home() {
 
   if (!hasMessages) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+      <div className="relative overflow-hidden flex flex-col items-center justify-center min-h-screen px-4 hero-grain hero-glow">
         <div className="max-w-2xl w-full space-y-8">
           <div className="text-center space-y-3">
-            <h1 className="text-4xl font-bold text-algo-teal">
+            <h1 className="text-5xl font-bold text-algo-teal text-glow">
               <span className="font-mono">VibeKit</span> Explorer
             </h1>
-            <p className="text-algo-muted">
-              AI-powered blockchain explorer. Ask about accounts, transactions, assets, and more.
-            </p>
+            <p className="text-algo-muted/80 max-w-md mx-auto">The Agentic Explorer for Algorand</p>
           </div>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-algo-muted" />
@@ -58,7 +56,7 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={() => append({ role: 'user', content: suggestion })}
-                className="rounded-full border-algo-border text-algo-muted hover:border-algo-teal hover:text-algo-teal"
+                className="cursor-pointer rounded-full border-algo-border text-algo-muted hover:border-algo-teal hover:text-algo-teal"
               >
                 {suggestion}
               </Button>
