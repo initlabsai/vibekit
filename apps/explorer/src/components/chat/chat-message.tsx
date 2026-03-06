@@ -3,6 +3,8 @@
 import type { Message } from 'ai'
 import { ToolResult } from './tool-result'
 import { User, Bot } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface ChatMessageProps {
   message: Message
@@ -14,9 +16,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div className={`flex gap-3 ${isUser ? 'justify-end' : ''}`}>
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-algo-teal/20 flex items-center justify-center shrink-0 mt-1">
-          <Bot className="w-4 h-4 text-algo-teal" />
-        </div>
+        <Avatar size="sm" className="mt-1 bg-algo-teal/20">
+          <AvatarFallback className="bg-algo-teal/20">
+            <Bot className="w-3.5 h-3.5 text-algo-teal" />
+          </AvatarFallback>
+        </Avatar>
       )}
       <div className={`max-w-[85%] space-y-2 ${isUser ? 'order-first' : ''}`}>
         {message.parts?.map((part, i) => {
@@ -44,14 +48,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 />
               )
             }
-            // Loading state
             return (
               <div
                 key={i}
-                className="rounded-lg border border-algo-border bg-algo-card p-4 animate-pulse"
+                className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2"
               >
-                <div className="h-3 bg-algo-border rounded w-1/3 mb-2" />
-                <div className="h-3 bg-algo-border rounded w-2/3" />
+                <Skeleton className="h-3 w-1/3 bg-algo-border" />
+                <Skeleton className="h-3 w-2/3 bg-algo-border" />
               </div>
             )
           }
@@ -69,9 +72,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
       </div>
       {isUser && (
-        <div className="w-7 h-7 rounded-full bg-algo-border flex items-center justify-center shrink-0 mt-1">
-          <User className="w-4 h-4 text-algo-muted" />
-        </div>
+        <Avatar size="sm" className="mt-1">
+          <AvatarFallback className="bg-algo-border">
+            <User className="w-3.5 h-3.5 text-algo-muted" />
+          </AvatarFallback>
+        </Avatar>
       )}
     </div>
   )

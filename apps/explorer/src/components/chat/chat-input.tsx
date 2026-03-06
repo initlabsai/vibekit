@@ -2,6 +2,7 @@
 
 import { useRef, useCallback } from 'react'
 import { Send } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ChatInputProps {
   input: string
@@ -37,13 +38,14 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }:
         rows={1}
         className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg px-4 py-3 text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal"
       />
-      <button
+      <Button
         type="submit"
+        size="icon"
         disabled={!input.trim() || isLoading}
-        className="p-3 rounded-lg bg-algo-teal text-algo-dark disabled:opacity-40 hover:opacity-90 transition-opacity"
+        className="bg-algo-teal text-algo-dark hover:bg-algo-teal/90 disabled:opacity-40"
       >
         <Send className="w-4 h-4" />
-      </button>
+      </Button>
     </form>
   )
 }
