@@ -8,7 +8,10 @@ import { AssetHolders } from '../explorer/asset-holders'
 import { BlockInfo } from '../explorer/block-info'
 import { ApplicationInfo } from '../explorer/application-info'
 import { AssetList } from '../explorer/asset-list'
-import { NfdResult } from '../explorer/nfd-result'
+import { NfdCard } from '../explorer/nfd-card'
+import { AccountList } from '../explorer/account-list'
+import { ApplicationList } from '../explorer/application-list'
+import { BlockList } from '../explorer/block-list'
 
 interface ToolResultProps {
   toolName: string
@@ -67,16 +70,16 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
 
     case 'resolve_nfd':
     case 'reverse_resolve_nfd':
-      return <NfdResult data={result as Record<string, unknown>} />
+      return <NfdCard data={result as Record<string, unknown>} />
 
     case 'search_accounts':
-      return <GenericResult data={result} />
+      return <AccountList data={result as Record<string, unknown>} />
 
     case 'search_applications':
-      return <GenericResult data={result} />
+      return <ApplicationList data={result as Record<string, unknown>} />
 
     case 'search_block_headers':
-      return <GenericResult data={result} />
+      return <BlockList data={result as Record<string, unknown>} />
 
     default:
       return <GenericResult data={result} />

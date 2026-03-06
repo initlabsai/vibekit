@@ -14,11 +14,11 @@ const PROPERTY_LABELS: Record<string, string> = {
   bio: 'Bio',
 }
 
-interface NfdResultProps {
+interface NfdCardProps {
   data: Record<string, unknown>
 }
 
-export function NfdResult({ data }: NfdResultProps) {
+export function NfdCard({ data }: NfdCardProps) {
   const name = data.name as string | null
   const address = data.address as string
   const owner = data.owner as string | undefined
