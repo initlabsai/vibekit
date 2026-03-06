@@ -21,7 +21,7 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
   const globalState = data.globalState as GlobalStateEntry[] | undefined
 
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card p-4 my-3">
+    <div className="rounded-lg border border-algo-border bg-algo-card p-4">
       <div className="flex items-center gap-2 mb-3">
         <Code2 className="w-4 h-4 text-algo-teal" />
         <h3 className="text-sm font-semibold text-algo-teal">
