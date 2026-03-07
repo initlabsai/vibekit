@@ -12,7 +12,7 @@ const components: Components = {
       return <code className={className}>{children}</code>
     }
     return (
-      <code className="rounded bg-algo-dark px-1.5 py-0.5 font-mono text-[0.85em] text-algo-teal-light">
+      <code className="rounded bg-algo-dark px-1.5 py-0.5 font-mono text-[0.85em] text-algo-teal-light break-all">
         {children}
       </code>
     )

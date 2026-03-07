@@ -20,11 +20,14 @@ export function createExplorerTools() {
       description: t.description,
       parameters: t.parameters,
       execute: async (args) => {
+        const start = Date.now()
         try {
-          return sanitizeBigInts(await t.handler(indexer, args))
+          const result = sanitizeBigInts(await t.handler(indexer, args))
+          console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
+          return result
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
-          console.error(`[tool:${t.name}]`, message)
+          console.error(`[tool:${t.name}] ${Date.now() - start}ms error:`, message)
           return { error: message }
         }
       },
@@ -36,11 +39,14 @@ export function createExplorerTools() {
       description: t.description,
       parameters: t.parameters,
       execute: async (args) => {
+        const start = Date.now()
         try {
-          return sanitizeBigInts(await t.handler(nfdApi, args))
+          const result = sanitizeBigInts(await t.handler(nfdApi, args))
+          console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
+          return result
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
-          console.error(`[tool:${t.name}]`, message)
+          console.error(`[tool:${t.name}] ${Date.now() - start}ms error:`, message)
           return { error: message }
         }
       },

@@ -7,7 +7,7 @@ interface AccountSummaryProps {
 
 export function AccountSummary({ data }: AccountSummaryProps) {
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card p-4">
+    <div className="rounded-lg border border-algo-border bg-algo-card p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
         <Wallet className="w-4 h-4 text-algo-teal" />
         <h3 className="text-sm font-semibold text-algo-teal">Account</h3>
@@ -26,7 +26,7 @@ export function AccountSummary({ data }: AccountSummaryProps) {
       <p className="font-mono text-xs text-algo-muted mb-3 break-all">
         {data.address as string}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <Stat
           icon={<Coins className="w-3.5 h-3.5" />}
           label="Balance"
@@ -60,12 +60,12 @@ export function AccountSummary({ data }: AccountSummaryProps) {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="bg-algo-dark rounded-md p-2">
+    <div className="bg-algo-dark rounded-md p-1.5 sm:p-2">
       <div className="flex items-center gap-1 text-algo-muted text-xs mb-1">
         {icon}
         {label}
       </div>
-      <p className="text-sm font-medium">{value}</p>
+      <p className="text-xs sm:text-sm font-medium">{value}</p>
     </div>
   )
 }

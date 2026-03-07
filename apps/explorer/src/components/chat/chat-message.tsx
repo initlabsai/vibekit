@@ -43,7 +43,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   // Assistant message
   return (
     <div className="flex gap-3">
-      <Avatar size="sm" className="mt-1 shrink-0">
+      <Avatar size="sm" className="mt-1 shrink-0 hidden sm:flex">
         <AvatarFallback className="bg-algo-teal/10">
           <Bot className="w-3.5 h-3.5 text-algo-teal" />
         </AvatarFallback>
@@ -67,7 +67,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           if (part.type === 'tool-invocation') {
             if (part.toolInvocation.state === 'result') {
               return (
-                <div key={i}>
+                <div key={i} className="overflow-hidden">
                   <ToolResult
                     toolName={part.toolInvocation.toolName}
                     result={part.toolInvocation.result}

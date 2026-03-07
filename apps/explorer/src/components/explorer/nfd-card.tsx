@@ -29,7 +29,7 @@ export function NfdCard({ data }: NfdCardProps) {
   const avatar = properties?.avatar
 
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card p-4">
+    <div className="rounded-lg border border-algo-border bg-algo-card p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
         <Globe className="w-4 h-4 text-algo-teal" />
         <h3 className="text-sm font-semibold text-algo-teal">NFD</h3>
@@ -48,13 +48,13 @@ export function NfdCard({ data }: NfdCardProps) {
           />
         ) : null}
         <div>
-          <p className="text-base font-semibold">
+          <p className="text-sm sm:text-base font-semibold">
             {name ?? <span className="text-algo-muted">No NFD found</span>}
           </p>
           <p className="font-mono text-xs text-algo-muted break-all">{address}</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
         {owner && owner !== address ? (
           <Field label="Owner" value={<CopyableAddress address={owner} />} />
         ) : null}
@@ -78,9 +78,9 @@ export function NfdCard({ data }: NfdCardProps) {
 
 function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
-    <div className="bg-algo-dark rounded-md p-2">
+    <div className="bg-algo-dark rounded-md p-1.5 sm:p-2">
       <div className="text-algo-muted text-[11px] mb-0.5">{label}</div>
-      <div className={`text-sm ${mono ? 'font-mono' : ''} break-all`}>{value}</div>
+      <div className={`text-xs sm:text-sm ${mono ? 'font-mono' : ''} break-all`}>{value}</div>
     </div>
   )
 }
