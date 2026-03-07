@@ -51,7 +51,13 @@ export async function POST(req: Request) {
       abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
 
-    return result.toDataStreamResponse()
+    return result.toDataStreamResponse({
+      getErrorMessage: (error) => {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        console.error('[chat:stream]', message)
+        return message
+      },
+    })
   } catch (err) {
     console.error('[chat]', err instanceof Error ? err.message : String(err))
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
