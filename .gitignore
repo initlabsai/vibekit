@@ -34,6 +34,7 @@ dist/
 .next/
 apps/cli/bin/
 apps/cli/src/lib/skills/bundled.ts
+apps/website/public/og-image.png
 
 # Test output
 *.log

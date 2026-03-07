@@ -25,7 +25,7 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
     sender: String(tx.sender),
     fee: microalgosToAlgos(tx.fee),
     confirmedRound: tx.confirmedRound != null ? Number(tx.confirmedRound) : undefined,
-    roundTime: tx.roundTime,
+    roundTime: tx.roundTime != null ? Number(tx.roundTime) : undefined,
   }
 
   if (tx.paymentTransaction) {
@@ -108,7 +108,7 @@ export function formatAsset(asset: IndexerAsset): FormattedAsset {
 export function formatBlock(block: IndexerBlock): FormattedBlock {
   return {
     round: Number(block.round),
-    timestamp: block.timestamp!,
+    timestamp: Number(block.timestamp!),
     transactionCount: block.transactions?.length ?? 0,
     proposer: block.proposer ? String(block.proposer) : undefined,
     previousBlockHash: block.previousBlockHash

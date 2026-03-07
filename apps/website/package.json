@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "generate:og": "bun run scripts/generate-og-image.ts",
+    "build": "bun run generate:og && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -16,5 +17,8 @@
     "astro": "^5.2.3",
     "sharp": "^0.33.4",
     "tailwindcss": "^3.4.17"
+  },
+  "devDependencies": {
+    "satori": "^0.25.0"
   }
 }

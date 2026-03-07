@@ -53,6 +53,20 @@ export default defineConfig({
             content: 'https://getvibekit.ai/og-image.png',
           },
         },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'twitter:card',
+            content: 'summary_large_image',
+          },
+        },
+        {
+          tag: 'meta',
+          attrs: {
+            name: 'twitter:image',
+            content: 'https://getvibekit.ai/og-image.png',
+          },
+        },
       ],
     }),
     tailwind({

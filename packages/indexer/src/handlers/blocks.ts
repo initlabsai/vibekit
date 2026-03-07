@@ -42,7 +42,7 @@ export async function searchBlockHeaders(
   return {
     blocks: (response.blocks ?? []).map((block) => ({
       round: Number(block.round),
-      timestamp: block.timestamp,
+      timestamp: Number(block.timestamp),
       transactionCount: block.transactions?.length ?? 0,
       proposer: block.proposer?.toString(),
     })),
