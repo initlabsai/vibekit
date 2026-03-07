@@ -13,9 +13,9 @@ export const nfdTools: NfdToolDefinition[] = [
   {
     name: 'resolve_nfd',
     description:
-      'Resolve an NFD name (e.g. "gabe.algo") to its Algorand deposit address. Use this when a user refers to an account by name instead of address.',
+      'Resolve an NFD name (e.g. "vibekit.algo") to its Algorand deposit address. Use this when a user refers to an account by name instead of address.',
     parameters: z.object({
-      name: z.string().describe('The NFD name to resolve (e.g. "gabe.algo")'),
+      name: z.string().describe('The NFD name to resolve (e.g. "vibekit.algo")'),
     }),
     handler: async (api, args) => resolveNfd(api, args),
   },

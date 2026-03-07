@@ -1,10 +1,11 @@
 import { tool, type CoreTool } from 'ai'
 import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts } from '@vibekit/indexer'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
+import { env } from '@/lib/env'
 
 /** Wrap @vibekit/indexer and @vibekit/nfd tools as AI SDK tool definitions. */
 export function createExplorerTools() {
-  const network = process.env.ALGORAND_NETWORK ?? 'mainnet'
+  const network = env.ALGORAND_NETWORK
   const preset = INDEXER_PRESETS[network] ?? INDEXER_PRESETS.mainnet
   const url = process.env.ALGORAND_INDEXER_URL ?? preset.url
   const token = process.env.ALGORAND_INDEXER_TOKEN ?? preset.token
