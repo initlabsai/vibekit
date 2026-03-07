@@ -14,7 +14,7 @@ export function AssetInfo({ data }: AssetInfoProps) {
   )
 
   return (
-    <div className="rounded-lg border border-algo-border bg-algo-card p-4">
+    <div className="rounded-lg border border-algo-border bg-algo-card p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
         <Gem className="w-4 h-4 text-algo-teal" />
         <h3 className="text-sm font-semibold text-algo-teal">
@@ -23,7 +23,7 @@ export function AssetInfo({ data }: AssetInfoProps) {
         </h3>
         <span className="ml-auto text-xs text-algo-muted">ID: {data.assetId as number}</span>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
         <Field label="Total Supply" value={displaySupply} />
         <Field label="Decimals" value={String(data.decimals)} />
         <Field
@@ -53,9 +53,9 @@ export function AssetInfo({ data }: AssetInfoProps) {
 
 function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
-    <div className="bg-algo-dark rounded-md p-2">
+    <div className="bg-algo-dark rounded-md p-1.5 sm:p-2">
       <div className="text-algo-muted text-[11px] mb-0.5">{label}</div>
-      <div className={`text-sm ${mono ? 'font-mono' : ''}`}>{value}</div>
+      <div className={`text-xs sm:text-sm ${mono ? 'font-mono' : ''}`}>{value}</div>
     </div>
   )
 }

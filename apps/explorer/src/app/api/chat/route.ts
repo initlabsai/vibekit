@@ -6,7 +6,7 @@ import { rateLimit, retryAfter } from '@/lib/rate-limit'
 
 export const maxDuration = 300
 
-const REQUEST_TIMEOUT_MS = 60_000
+const REQUEST_TIMEOUT_MS = 120_000
 const MAX_MESSAGES = 50
 
 export async function POST(req: Request) {
