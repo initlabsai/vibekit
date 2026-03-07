@@ -14,6 +14,16 @@ export const metadata: Metadata = {
   title: 'VibeKit Explorer',
   description: 'AI-powered Algorand blockchain explorer',
   icons: { icon: '/favicon.svg' },
+  openGraph: {
+    title: 'VibeKit Explorer',
+    description: 'AI-powered Algorand blockchain explorer',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'VibeKit Explorer',
+    description: 'AI-powered Algorand blockchain explorer',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

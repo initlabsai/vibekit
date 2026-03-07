@@ -12,8 +12,8 @@ const SUGGESTIONS = [
   'Show me the latest block',
   'Look up USDC asset info',
   'Show me recent application calls',
-  'Look up the account gabe.algo',
-  'Resolve the NFD gabe.algo',
+  'Look up the account vibekit.algo',
+  'Resolve the NFD vibekit.algo',
 ]
 
 export default function Home() {
