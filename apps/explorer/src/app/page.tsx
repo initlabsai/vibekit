@@ -7,6 +7,7 @@ import { Search } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { TypingDots } from '@/components/chat/typing-dots'
 
 const SUGGESTIONS = [
   'Show me the latest block',
@@ -21,7 +22,7 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'instant' })
   }, [messages])
 
   const hasMessages = messages.length > 0
@@ -88,6 +89,12 @@ export default function Home() {
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
+
+            {isLoading && messages.at(-1)?.role === 'user' && (
+              <div className="rounded-lg px-4 py-3">
+                <TypingDots />
+              </div>
+            )}
 
             {error && (
               <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
