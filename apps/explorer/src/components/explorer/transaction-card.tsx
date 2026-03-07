@@ -1,4 +1,5 @@
-import { truncateAddress, formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { ArrowRightLeft } from 'lucide-react'
 
 interface TransactionCardProps {
@@ -21,16 +22,16 @@ export function TransactionCard({ data }: TransactionCardProps) {
         <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted text-[11px]">
           {txTypeLabel(type)}
         </span>
-        <span className="ml-auto font-mono text-xs text-algo-teal truncate">
-          {truncateAddress(id, 8)}
+        <span className="ml-auto text-xs text-algo-teal truncate">
+          <CopyableAddress address={id} chars={8} />
         </span>
       </div>
       <div className="text-xs">
-        <span className="font-mono">{truncateAddress(sender)}</span>
+        <CopyableAddress address={sender} />
         {receiver && (
           <>
             <span className="text-algo-muted mx-1">&rarr;</span>
-            <span className="font-mono">{truncateAddress(receiver)}</span>
+            <CopyableAddress address={receiver} />
           </>
         )}
       </div>

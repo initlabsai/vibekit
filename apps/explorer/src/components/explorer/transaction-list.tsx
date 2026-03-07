@@ -1,4 +1,5 @@
-import { formatAlgos, truncateAddress, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { ArrowRightLeft } from 'lucide-react'
 
 interface TransactionListProps {
@@ -44,17 +45,19 @@ export function TransactionList({ data }: TransactionListProps) {
                 key={tx.id}
                 className="border-b border-algo-border/50 hover:bg-algo-dark/50"
               >
-                <td className="px-4 py-2 font-mono text-algo-teal">
-                  {truncateAddress(tx.id, 8)}
+                <td className="px-4 py-2 text-algo-teal">
+                  <CopyableAddress address={tx.id} chars={8} />
                 </td>
                 <td className="px-4 py-2">
                   <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted">
                     {txTypeLabel(tx.type)}
                   </span>
                 </td>
-                <td className="px-4 py-2 font-mono">{truncateAddress(tx.sender)}</td>
-                <td className="px-4 py-2 font-mono">
-                  {tx.receiver ? truncateAddress(tx.receiver) : '\u2014'}
+                <td className="px-4 py-2">
+                  <CopyableAddress address={tx.sender} />
+                </td>
+                <td className="px-4 py-2">
+                  {tx.receiver ? <CopyableAddress address={tx.receiver} /> : '\u2014'}
                 </td>
                 <td className="px-4 py-2 text-right">
                   {tx.paymentAmount != null

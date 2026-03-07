@@ -1,4 +1,4 @@
-import { truncateAddress } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Users } from 'lucide-react'
 
 interface AssetHoldersProps {
@@ -39,7 +39,7 @@ export function AssetHolders({ data }: AssetHoldersProps) {
                 className="border-b border-algo-border/50 hover:bg-algo-dark/50"
               >
                 <td className="px-4 py-2 text-algo-muted">{i + 1}</td>
-                <td className="px-4 py-2 font-mono">{truncateAddress(holder.address)}</td>
+                <td className="px-4 py-2"><CopyableAddress address={holder.address} /></td>
                 <td className="px-4 py-2 text-right font-mono">{holder.amount}</td>
                 <td className="px-4 py-2 text-right">
                   {holder.isFrozen ? 'Yes' : 'No'}

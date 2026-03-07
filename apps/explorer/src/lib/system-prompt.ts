@@ -19,7 +19,7 @@ export const SYSTEM_PROMPT = `You are an Algorand blockchain explorer assistant.
 
 ## Workflow tips
 
-- To find the latest block: call get_network_status first to get the latest round, then lookup_block with that round
+- To find the latest block: call lookup_block with no arguments
 - To find transactions in a block: use search_transactions with minRound and maxRound set to the same round number
 - To explore an account: start with lookup_account, then search_account_transactions for activity
 

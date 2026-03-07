@@ -1,5 +1,7 @@
-import { truncateAddress, formatNumber, formatAssetAmount } from '@/lib/formatters'
+import { formatNumber, formatAssetAmount } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Gem } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface AssetInfoProps {
   data: Record<string, unknown>
@@ -26,20 +28,19 @@ export function AssetInfo({ data }: AssetInfoProps) {
         <Field label="Decimals" value={String(data.decimals)} />
         <Field
           label="Creator"
-          value={truncateAddress(data.creator as string)}
-          mono
+          value={<CopyableAddress address={data.creator as string} />}
         />
         {data.manager ? (
-          <Field label="Manager" value={truncateAddress(data.manager as string)} mono />
+          <Field label="Manager" value={<CopyableAddress address={data.manager as string} />} />
         ) : null}
         {data.reserve ? (
-          <Field label="Reserve" value={truncateAddress(data.reserve as string)} mono />
+          <Field label="Reserve" value={<CopyableAddress address={data.reserve as string} />} />
         ) : null}
         {data.freeze ? (
-          <Field label="Freeze" value={truncateAddress(data.freeze as string)} mono />
+          <Field label="Freeze" value={<CopyableAddress address={data.freeze as string} />} />
         ) : null}
         {data.clawback ? (
-          <Field label="Clawback" value={truncateAddress(data.clawback as string)} mono />
+          <Field label="Clawback" value={<CopyableAddress address={data.clawback as string} />} />
         ) : null}
         {data.url ? <Field label="URL" value={data.url as string} /> : null}
         {data.defaultFrozen != null && (
@@ -50,7 +51,7 @@ export function AssetInfo({ data }: AssetInfoProps) {
   )
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="bg-algo-dark rounded-md p-2">
       <div className="text-algo-muted text-[11px] mb-0.5">{label}</div>

@@ -1,4 +1,5 @@
-import { formatTimestamp, formatNumber, truncateAddress } from '@/lib/formatters'
+import { formatTimestamp, formatNumber } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Box } from 'lucide-react'
 
 interface BlockCardProps {
@@ -25,7 +26,7 @@ export function BlockCard({ data }: BlockCardProps) {
       <div className="flex items-center gap-3 text-xs text-algo-muted">
         <span>{formatTimestamp(timestamp)}</span>
         {proposer && (
-          <span className="font-mono">{truncateAddress(proposer)}</span>
+          <CopyableAddress address={proposer} />
         )}
       </div>
     </div>
