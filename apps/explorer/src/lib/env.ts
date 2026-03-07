@@ -1,5 +1,7 @@
 /** Validated environment variables. Validates lazily on first access to avoid build-time errors. */
 
+import { ALGOD_PRESETS } from '@vibekit/indexer'
+
 function requireEnv(name: string): string {
   const value = process.env[name]
   if (!value) throw new Error(`Missing required environment variable: ${name}`)
@@ -21,4 +23,9 @@ export const env = {
   get LLM_API_KEY() { return requireEnv('LLM_API_KEY') },
   get LLM_MODEL() { return process.env.LLM_MODEL ?? 'gpt-4o' },
   get ALGORAND_NETWORK() { return process.env.ALGORAND_NETWORK ?? 'mainnet' },
+  get ALGORAND_ALGOD_URL() {
+    if (process.env.ALGORAND_ALGOD_URL) return process.env.ALGORAND_ALGOD_URL
+    const preset = ALGOD_PRESETS[this.ALGORAND_NETWORK] ?? ALGOD_PRESETS.mainnet
+    return preset.url
+  },
 }

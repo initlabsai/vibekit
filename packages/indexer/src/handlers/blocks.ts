@@ -2,18 +2,16 @@ import type algosdk from 'algosdk'
 import { formatBlock } from '../formatters.js'
 import type { FormattedBlock } from '../types.js'
 import { DEFAULT_LIMIT } from '../types.js'
-import { getNetworkStatus } from './status.js'
 
 export interface LookupBlockArgs {
-  round?: number
+  round: number
 }
 
 export async function lookupBlock(
   indexer: algosdk.Indexer,
   args: LookupBlockArgs
 ): Promise<FormattedBlock> {
-  const round = args.round ?? (await getNetworkStatus(indexer)).latestRound
-  const response = await indexer.lookupBlock(round).do()
+  const response = await indexer.lookupBlock(args.round).do()
   return formatBlock(response)
 }
 

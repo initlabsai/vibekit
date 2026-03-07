@@ -1,5 +1,5 @@
 export { createIndexerClient } from './client.js'
-export { INDEXER_PRESETS, type IndexerPreset } from './networks.js'
+export { INDEXER_PRESETS, ALGOD_PRESETS, type IndexerPreset } from './networks.js'
 export { indexerTools, type IndexerToolDefinition } from './tools.js'
 export {
   microalgosToAlgos,

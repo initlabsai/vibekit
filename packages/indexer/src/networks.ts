@@ -12,3 +12,13 @@ export const INDEXER_PRESETS: Record<string, IndexerPreset> = {
     token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   },
 }
+
+/** Default algod endpoints for each Algorand network (Nodely free tier). */
+export const ALGOD_PRESETS: Record<string, { url: string; token: string }> = {
+  mainnet: { url: 'https://mainnet-api.4160.nodely.dev', token: '' },
+  testnet: { url: 'https://testnet-api.4160.nodely.dev', token: '' },
+  localnet: {
+    url: 'http://localhost:4001',
+    token: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  },
+}
