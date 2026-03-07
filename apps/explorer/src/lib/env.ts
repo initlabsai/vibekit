@@ -1,4 +1,4 @@
-/** Validated environment variables. Throws at import time if required vars are missing. */
+/** Validated environment variables. Validates lazily on first access to avoid build-time errors. */
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -17,8 +17,8 @@ function requireUrl(name: string): string {
 }
 
 export const env = {
-  LLM_BASE_URL: requireUrl('LLM_BASE_URL'),
-  LLM_API_KEY: requireEnv('LLM_API_KEY'),
-  LLM_MODEL: process.env.LLM_MODEL ?? 'gpt-4o',
-  ALGORAND_NETWORK: process.env.ALGORAND_NETWORK ?? 'mainnet',
+  get LLM_BASE_URL() { return requireUrl('LLM_BASE_URL') },
+  get LLM_API_KEY() { return requireEnv('LLM_API_KEY') },
+  get LLM_MODEL() { return process.env.LLM_MODEL ?? 'gpt-4o' },
+  get ALGORAND_NETWORK() { return process.env.ALGORAND_NETWORK ?? 'mainnet' },
 }
