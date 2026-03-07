@@ -199,7 +199,10 @@ export const indexerTools: IndexerToolDefinition[] = [
     parameters: z.object({
       round: z.number().optional().describe('The round number of the block (omit for latest)'),
     }),
-    handler: async (indexer, args) => lookupBlock(indexer, args),
+    handler: async (indexer, args) => {
+      const round = args.round ?? (await getNetworkStatus(indexer)).latestRound
+      return lookupBlock(indexer, { round })
+    },
   },
   {
     name: 'search_block_headers',
