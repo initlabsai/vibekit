@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     type: 'website',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'VibeKit Explorer',
     description: 'AI-powered Algorand blockchain explorer',
   },
