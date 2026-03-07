@@ -1,6 +1,7 @@
 'use client'
 
-import type { Message } from 'ai'
+import type { UIMessage } from 'ai'
+import { isToolUIPart, getToolName } from 'ai'
 import { ToolResult } from './tool-result'
 import { Markdown } from './markdown'
 import { User, Bot } from 'lucide-react'
@@ -9,14 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { TypingDots } from './typing-dots'
 
 interface ChatMessageProps {
-  message: Message
+  message: UIMessage
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
-  const hasToolInvocations = message.parts?.some(
-    (p) => p.type === 'tool-invocation',
-  )
+  const hasToolInvocations = message.parts?.some((p) => isToolUIPart(p))
 
   if (isUser) {
     return (
@@ -27,8 +26,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               part.type === 'text' && part.text ? (
                 <span key={i}>{part.text}</span>
               ) : null,
-            ) ??
-              message.content}
+            )}
           </div>
         </div>
         <Avatar size="sm" className="mt-1">
@@ -64,13 +62,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
               </div>
             )
           }
-          if (part.type === 'tool-invocation') {
-            if (part.toolInvocation.state === 'result') {
+          if (isToolUIPart(part)) {
+            if (part.state === 'output-available') {
               return (
                 <div key={i} className="overflow-hidden">
                   <ToolResult
-                    toolName={part.toolInvocation.toolName}
-                    result={part.toolInvocation.result}
+                    toolName={getToolName(part)}
+                    result={part.output}
                   />
                 </div>
               )
@@ -87,21 +85,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
           }
           return null
         })}
-        {/* Fallback for messages without parts */}
-        {!message.parts?.length && message.content && (
-          <div className="rounded-lg px-4 py-2 text-sm text-algo-text/90">
-            <Markdown>{message.content}</Markdown>
-          </div>
-        )}
         {/* Typing indicator while waiting for assistant content */}
         {!message.parts?.some(
-          (p) => (p.type === 'text' && p.text) || p.type === 'tool-invocation',
-        ) &&
-          !message.content && (
-            <div className="rounded-lg px-4 py-3">
-              <TypingDots />
-            </div>
-          )}
+          (p) => (p.type === 'text' && p.text) || isToolUIPart(p),
+        ) && (
+          <div className="rounded-lg px-4 py-3">
+            <TypingDots />
+          </div>
+        )}
       </div>
     </div>
   )

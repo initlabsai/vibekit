@@ -1,4 +1,4 @@
-import { streamText } from 'ai'
+import { streamText, stepCountIs } from 'ai';
 import { getLLM } from '@/lib/llm'
 import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
@@ -49,17 +49,17 @@ export async function POST(req: Request) {
       system: SYSTEM_PROMPT,
       messages: body.messages,
       tools,
-      maxSteps: 5,
-      abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      stopWhen: stepCountIs(5),
+      abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     })
 
-    return result.toDataStreamResponse({
-      getErrorMessage: (error) => {
+    return result.toUIMessageStreamResponse({
+      onError: (error) => {
         const message = error instanceof Error ? error.message : 'Unknown error'
         console.error('[chat:stream]', message)
         return message
       },
-    })
+    });
   } catch (err) {
     console.error('[chat]', err instanceof Error ? err.message : String(err))
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

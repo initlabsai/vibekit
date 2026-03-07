@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
@@ -16,12 +17,21 @@ const SUGGESTIONS = [
 ]
 
 export default function Home() {
-  const { messages, input, setInput, handleSubmit, isLoading, error, append } = useChat()
+  const [input, setInput] = useState('')
+  const { messages, sendMessage, status, error } = useChat()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const isLoading = status === 'submitted' || status === 'streaming'
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [messages])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim()) return
+    sendMessage({ text: input })
+    setInput('')
+  }
 
   const hasMessages = messages.length > 0
 
@@ -51,7 +61,7 @@ export default function Home() {
                 key={suggestion}
                 variant="outline"
                 size="sm"
-                onClick={() => append({ role: 'user', content: suggestion })}
+                onClick={() => sendMessage({ text: suggestion })}
                 className="cursor-pointer rounded-full border-algo-border text-algo-muted hover:border-algo-teal hover:text-algo-teal"
               >
                 {suggestion}
