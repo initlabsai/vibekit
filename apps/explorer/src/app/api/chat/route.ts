@@ -4,6 +4,8 @@ import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
 import { rateLimit, retryAfter } from '@/lib/rate-limit'
 
+export const maxDuration = 300
+
 const REQUEST_TIMEOUT_MS = 60_000
 const MAX_MESSAGES = 50
 
