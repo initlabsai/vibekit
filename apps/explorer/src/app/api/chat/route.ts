@@ -1,4 +1,4 @@
-import { streamText, stepCountIs } from 'ai';
+import { streamText, stepCountIs, convertToModelMessages } from 'ai';
 import { getLLM } from '@/lib/llm'
 import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     const result = streamText({
       model,
       system: SYSTEM_PROMPT,
-      messages: body.messages,
+      messages: await convertToModelMessages(body.messages),
       tools,
       stopWhen: stepCountIs(5),
       abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
