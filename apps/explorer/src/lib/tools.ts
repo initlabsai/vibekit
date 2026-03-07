@@ -68,7 +68,8 @@ export function createExplorerTools() {
     },
   })
 
-  // lookup_block — resolve latest round via Algod when round is omitted
+  // lookup_block — use block header search (lightweight) instead of full block lookup
+  // to avoid downloading entire transaction bodies, which can be huge on mainnet.
   tools.lookup_block = tool({
     description: 'Look up a block by its round number. If no round is provided, returns the latest block.',
     parameters: indexerTools.find((t) => t.name === 'lookup_block')!.parameters,
@@ -76,8 +77,15 @@ export function createExplorerTools() {
       const start = Date.now()
       try {
         const round = args.round ?? (await getLatestRoundFromAlgod(algodUrl))
-        const handler = indexerTools.find((t) => t.name === 'lookup_block')!.handler
-        const result = sanitizeBigInts(await handler(indexer, { round }))
+        const headers = await indexer.searchForBlockHeaders().minRound(round).maxRound(round).limit(1).do()
+        const block = headers.blocks?.[0]
+        if (!block) throw new Error(`Block ${round} not found`)
+        const result = sanitizeBigInts({
+          round: Number(block.round),
+          timestamp: Number(block.timestamp),
+          transactionCount: block.transactions?.length ?? 0,
+          proposer: block.proposer ? String(block.proposer) : undefined,
+        })
         console.log(`[tool:lookup_block] ${Date.now() - start}ms`)
         return result
       } catch (err) {
