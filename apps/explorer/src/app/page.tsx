@@ -14,15 +14,15 @@ const SUGGESTIONS = [
   'Look up USDC asset info',
   'Show me recent application calls',
   'Look up the account vibekit.algo',
-  'Resolve the NFD vibekit.algo',
+  'What apps were created in the last 100 rounds?',
 ]
 
 export default function Home() {
   const { messages, input, setInput, handleSubmit, isLoading, error, append } = useChat()
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'instant' })
+    bottomRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [messages])
 
   const hasMessages = messages.length > 0
@@ -83,8 +83,8 @@ export default function Home() {
           <span className="font-mono">VibeKit</span> Explorer
         </h1>
       </header>
-      <ScrollArea className="flex-1">
-        <div ref={scrollRef} className="px-4 py-6 space-y-6">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="px-4 py-6 space-y-6">
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
@@ -102,6 +102,8 @@ export default function Home() {
                 <p className="text-red-400/70 mt-1">{error.message}</p>
               </div>
             )}
+
+            <div ref={bottomRef} />
           </div>
         </div>
       </ScrollArea>
