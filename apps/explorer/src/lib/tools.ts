@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { tool, type CoreTool } from 'ai'
 import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts } from '@vibekit/indexer'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
@@ -70,10 +71,14 @@ export function createExplorerTools() {
 
   // lookup_block — use block header search (lightweight) instead of full block lookup
   // to avoid downloading entire transaction bodies, which can be huge on mainnet.
+  // Uses nullish() because some providers (Together AI) send null instead of omitting optional params,
+  // and z.number().optional() rejects null, causing silent stream failures.
   tools.lookup_block = tool({
     description: 'Look up a block by its round number. If no round is provided, returns the latest block.',
-    parameters: indexerTools.find((t) => t.name === 'lookup_block')!.parameters,
-    execute: async (args: { round?: number }) => {
+    parameters: z.object({
+      round: z.number().nullish().describe('The round number of the block (omit for latest)'),
+    }),
+    execute: async (args: { round?: number | null }) => {
       const start = Date.now()
       try {
         const round = args.round ?? (await getLatestRoundFromAlgod(algodUrl))
