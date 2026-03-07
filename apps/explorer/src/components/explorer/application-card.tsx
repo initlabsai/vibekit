@@ -1,4 +1,5 @@
-import { truncateAddress, formatNumber } from '@/lib/formatters'
+import { formatNumber } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Code2 } from 'lucide-react'
 
 interface ApplicationCardProps {
@@ -26,7 +27,7 @@ export function ApplicationCard({ data }: ApplicationCardProps) {
       {creator && (
         <div className="text-xs mb-1">
           <span className="text-algo-muted">Creator: </span>
-          <span className="font-mono">{truncateAddress(creator)}</span>
+          <CopyableAddress address={creator} />
         </div>
       )}
       {(globalStateSchema || localStateSchema) && (

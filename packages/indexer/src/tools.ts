@@ -194,9 +194,10 @@ export const indexerTools: IndexerToolDefinition[] = [
   // Blocks
   {
     name: 'lookup_block',
-    description: 'Look up a block by its round number',
+    description:
+      'Look up a block by its round number. If no round is provided, returns the latest block.',
     parameters: z.object({
-      round: z.number().describe('The round number of the block'),
+      round: z.number().optional().describe('The round number of the block (omit for latest)'),
     }),
     handler: async (indexer, args) => lookupBlock(indexer, args),
   },

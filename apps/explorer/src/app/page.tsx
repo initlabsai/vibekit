@@ -12,9 +12,7 @@ import { TypingDots } from '@/components/chat/typing-dots'
 const SUGGESTIONS = [
   'Show me the latest block',
   'Look up USDC asset info',
-  'Show me recent application calls',
   'Look up the account vibekit.algo',
-  'What apps were created in the last 100 rounds?',
 ]
 
 export default function Home() {

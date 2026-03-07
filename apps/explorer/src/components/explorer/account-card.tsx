@@ -1,4 +1,5 @@
-import { truncateAddress, formatAlgos, formatNumber } from '@/lib/formatters'
+import { formatAlgos, formatNumber } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Wallet } from 'lucide-react'
 
 interface AccountCardProps {
@@ -17,7 +18,7 @@ export function AccountCard({ data }: AccountCardProps) {
     <div className="px-4 py-3">
       <div className="flex items-center gap-2 mb-1">
         <Wallet className="w-3.5 h-3.5 text-algo-teal shrink-0" />
-        <span className="font-mono text-xs text-algo-teal truncate">{truncateAddress(address)}</span>
+        <span className="text-xs text-algo-teal truncate"><CopyableAddress address={address} /></span>
         {status && (
           <span
             className={`ml-auto text-[11px] px-1.5 py-0.5 rounded-full shrink-0 ${

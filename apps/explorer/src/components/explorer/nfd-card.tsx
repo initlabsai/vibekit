@@ -1,5 +1,6 @@
-import { truncateAddress } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Globe } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 const PROPERTY_LABELS: Record<string, string> = {
   twitter: 'Twitter',
@@ -55,7 +56,7 @@ export function NfdCard({ data }: NfdCardProps) {
       </div>
       <div className="grid grid-cols-2 gap-3 text-xs">
         {owner && owner !== address ? (
-          <Field label="Owner" value={truncateAddress(owner)} mono />
+          <Field label="Owner" value={<CopyableAddress address={owner} />} />
         ) : null}
         {appId != null ? <Field label="App ID" value={String(appId)} /> : null}
         {properties
@@ -75,7 +76,7 @@ export function NfdCard({ data }: NfdCardProps) {
   )
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="bg-algo-dark rounded-md p-2">
       <div className="text-algo-muted text-[11px] mb-0.5">{label}</div>

@@ -1,5 +1,7 @@
-import { formatTimestamp, formatNumber, truncateAddress } from '@/lib/formatters'
+import { formatTimestamp, formatNumber } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Box } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface BlockInfoProps {
   data: Record<string, unknown>
@@ -19,7 +21,7 @@ export function BlockInfo({ data }: BlockInfoProps) {
         <Field label="Timestamp" value={formatTimestamp(data.timestamp as number)} />
         <Field label="Transactions" value={formatNumber(data.transactionCount as number)} />
         {data.proposer ? (
-          <Field label="Proposer" value={truncateAddress(data.proposer as string)} mono />
+          <Field label="Proposer" value={<CopyableAddress address={data.proposer as string} />} />
         ) : null}
         {data.previousBlockHash ? (
           <div className="col-span-2">
@@ -31,7 +33,7 @@ export function BlockInfo({ data }: BlockInfoProps) {
   )
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="bg-algo-dark rounded-md p-2">
       <div className="text-algo-muted text-[11px] mb-0.5">{label}</div>

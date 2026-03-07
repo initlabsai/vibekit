@@ -28,7 +28,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }:
   )
 
   return (
-    <form onSubmit={onSubmit} className="flex items-end gap-2">
+    <form onSubmit={onSubmit} className="flex items-center gap-2">
       <textarea
         ref={textareaRef}
         value={input}
@@ -42,9 +42,9 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }:
         type="submit"
         size="icon"
         disabled={!input.trim() || isLoading}
-        className="bg-algo-teal text-algo-dark hover:bg-algo-teal/90 disabled:opacity-40"
+        className="size-10 bg-algo-teal text-algo-dark hover:bg-algo-teal/90 disabled:opacity-40"
       >
-        <Send className="w-4 h-4" />
+        <Send className="!size-5" />
       </Button>
     </form>
   )
