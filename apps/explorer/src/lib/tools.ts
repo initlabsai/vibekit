@@ -53,6 +53,16 @@ export function createExplorerTools() {
     },
   })
 
+  // Add get_network_status back as no-op — model may call it before lookup_block
+  tools.get_network_status = tool({
+    description: 'Get the current network status including the latest round number.',
+    parameters: indexerTools.find((t) => t.name === 'get_network_status')!.parameters,
+    execute: async () => {
+      console.log('[tool:get_network_status] called — returning hardcoded round')
+      return { latestRound: 59024711 }
+    },
+  })
+
   for (const t of nfdTools) {
     tools[t.name] = tool({
       description: t.description,
