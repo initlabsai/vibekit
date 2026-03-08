@@ -84,6 +84,7 @@ export function formatAccount(account: IndexerAccount): FormattedAccount {
     totalCreatedApps: account.totalCreatedApps,
     status: account.status,
     rewardBase: account.rewardBase != null ? Number(account.rewardBase) : undefined,
+    createdAtRound: account.createdAtRound != null ? Number(account.createdAtRound) : undefined,
   }
 }
 

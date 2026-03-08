@@ -32,6 +32,7 @@ export interface FormattedAccount {
   totalCreatedApps?: number
   status?: string
   rewardBase?: number
+  createdAtRound?: number
 }
 
 /** Formatted asset returned by handlers. */

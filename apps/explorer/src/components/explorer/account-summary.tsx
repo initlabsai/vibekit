@@ -1,6 +1,6 @@
 import { formatAlgos, formatNumber } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
-import { Wallet, Coins, Layers, AppWindow } from 'lucide-react'
+import { Wallet, Coins, Layers, AppWindow, Clock } from 'lucide-react'
 
 interface AccountSummaryProps {
   data: Record<string, unknown>
@@ -52,6 +52,13 @@ export function AccountSummary({ data }: AccountSummaryProps) {
             icon={<Layers className="w-3.5 h-3.5" />}
             label="Created Assets"
             value={formatNumber(data.totalCreatedAssets as number)}
+          />
+        )}
+        {data.createdAtRound != null && (
+          <Stat
+            icon={<Clock className="w-3.5 h-3.5" />}
+            label="Created Round"
+            value={formatNumber(data.createdAtRound as number)}
           />
         )}
       </div>
