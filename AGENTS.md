@@ -4,25 +4,39 @@ Guidance for AI agents working on this repo. User docs live at [getvibekit.ai](h
 
 ## What This Is
 
-VibeKit is a CLI that bootstraps AI coding environments for Algorand. It installs agent skills and configures MCP servers. The MCP server is bundled into the CLI binary (`vibekit mcp`).
+VibeKit is a CLI + explorer for Algorand. The CLI bootstraps AI coding environments (agent skills, MCP servers). The explorer is an agentic blockchain explorer powered by LLM tool calling.
 
 ## Architecture
 
 ```
 vibekit/
 ├── apps/
-│   ├── cli/                    # Main CLI binary (Bun, compiles to standalone)
-│   │   ├── src/index.ts        # Entry point, command router
-│   │   ├── src/commands/       # Command handlers (init, status, vault, etc.)
-│   │   └── src/lib/            # Shared utilities
-│   ├── mcp-server/             # MCP server (bundled into CLI)
-│   │   └── src/tools/          # Tool implementations by category
+│   ├── cli/                    # CLI binary (Bun, compiles to standalone)
+│   ├── mcp-server/             # MCP server, started via `vibekit mcp`
+│   ├── explorer/               # Agentic explorer (Next.js, deployed to Vercel)
 │   └── website/                # Docs site (Astro/Starlight, deployed to Vercel)
-├── packages/                   # Shared libraries
-│   ├── provider-*/             # Account providers (vault, keyring)
+├── packages/
+│   ├── indexer/                # Algorand indexer client + tool definitions
+│   ├── nfd/                    # NFD (Algorand name service) client + tools
+│   ├── provider-*/             # Account providers (vault, keyring, walletconnect)
 │   ├── dispenser-*/            # Dispenser providers (kmd, testnet)
-│   └── keyring/                # OS keyring abstraction
+│   ├── keyring/                # OS keyring abstraction
+│   ├── config/                 # Shared config
+│   └── db/                     # Local data store
 ```
+
+### Package conventions
+
+- `indexer` and `nfd` export TypeScript source (`main: src/index.ts`) — they're consumed by the explorer via `transpilePackages` and use extensionless imports.
+- All other packages export compiled output (`main: dist/index.js`) and use `.js` extensions in imports — they're only consumed by the MCP server via `tsx`/bun.
+
+### Explorer
+
+- Next.js app with a chat interface that uses AI SDK (`ai` / `@ai-sdk/*`).
+- LLM provider config in `apps/explorer/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
+- Uses `@ai-sdk/openai` with `.chat()` (Chat Completions API) for OpenAI-compatible providers. Do not use `provider()` directly — it defaults to the Responses API which Ollama doesn't support.
+- Tools from `@vibekit/indexer` and `@vibekit/nfd` are wrapped as AI SDK tools in `apps/explorer/src/lib/tools.ts`.
+- Env vars: see `apps/explorer/.env.example`.
 
 ## Dev Commands
 
@@ -32,6 +46,7 @@ bun run build            # Build everything (uses Turborepo)
 bun run typecheck        # Type check (run before commits)
 bun run dev:cli          # Run CLI from source
 bun run dev:mcp          # Run MCP server from source
+bun run dev:explorer     # Run explorer locally (needs .env.local)
 bun run dev:website      # Run docs site locally
 ```
 
