@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useCallback } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ChatInputProps {
@@ -9,10 +9,11 @@ interface ChatInputProps {
   setInput: (value: string) => void
   onSubmit: (e: React.FormEvent) => void
   isLoading: boolean
+  onStop?: () => void
   placeholder?: string
 }
 
-export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }: ChatInputProps) {
+export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeholder }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleKeyDown = useCallback(
@@ -36,16 +37,28 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, placeholder }:
         onKeyDown={handleKeyDown}
         placeholder={placeholder ?? 'Ask about the Algorand blockchain...'}
         rows={1}
-        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-3 text-xs sm:text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal"
+        disabled={isLoading}
+        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-3 text-xs sm:text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal disabled:opacity-50 disabled:cursor-not-allowed"
       />
-      <Button
-        type="submit"
-        size="icon"
-        disabled={!input.trim() || isLoading}
-        className="size-10 bg-algo-teal text-algo-dark hover:bg-algo-teal/90 disabled:opacity-40"
-      >
-        <Send className="!size-5" />
-      </Button>
+      {isLoading ? (
+        <Button
+          type="button"
+          size="icon"
+          onClick={onStop}
+          className="size-10 bg-red-500/80 text-white hover:bg-red-500 cursor-pointer"
+        >
+          <Square className="!size-4" />
+        </Button>
+      ) : (
+        <Button
+          type="submit"
+          size="icon"
+          disabled={!input.trim()}
+          className="size-10 bg-algo-teal text-algo-dark hover:bg-algo-teal/90 disabled:opacity-40"
+        >
+          <Send className="!size-5" />
+        </Button>
+      )}
     </form>
   )
 }
