@@ -1,4 +1,4 @@
-import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatAssetAmount, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { ArrowRightLeft } from 'lucide-react'
 
@@ -13,11 +13,24 @@ interface TxRow {
   receiver?: string
   paymentAmount?: number
   assetAmount?: number
+  assetUnitName?: string
+  assetDecimals?: number
   roundTime?: number
 }
 
 export function TransactionList({ data }: TransactionListProps) {
   const transactions = (data.transactions ?? []) as TxRow[]
+
+  function getTxAmount(tx: TxRow): { amount: string; unit?: string } | null {
+    if (tx.paymentAmount != null) return { amount: formatAlgos(tx.paymentAmount), unit: 'ALGO' }
+    if (tx.assetAmount != null) {
+      const amount = tx.assetDecimals != null
+        ? formatAssetAmount(String(tx.assetAmount), tx.assetDecimals)
+        : String(tx.assetAmount)
+      return { amount, unit: tx.assetUnitName }
+    }
+    return null
+  }
 
   return (
     <div className="rounded-lg border border-algo-border bg-algo-card overflow-hidden">
@@ -60,11 +73,20 @@ export function TransactionList({ data }: TransactionListProps) {
                   {tx.receiver ? <CopyableAddress address={tx.receiver} /> : '\u2014'}
                 </td>
                 <td className="px-4 py-2 text-right">
-                  {tx.paymentAmount != null
-                    ? `${formatAlgos(tx.paymentAmount)} ALGO`
-                    : tx.assetAmount != null
-                      ? String(tx.assetAmount)
-                      : '\u2014'}
+                  {(() => {
+                    const info = getTxAmount(tx)
+                    if (!info) return '\u2014'
+                    return (
+                      <span className="inline-flex items-center gap-1.5">
+                        {info.amount}
+                        {info.unit && (
+                          <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted text-[10px] font-medium">
+                            {info.unit}
+                          </span>
+                        )}
+                      </span>
+                    )
+                  })()}
                 </td>
                 <td className="px-4 py-2 text-right text-algo-muted">
                   {tx.roundTime ? formatTimestamp(tx.roundTime) : '\u2014'}
