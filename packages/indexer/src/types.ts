@@ -90,6 +90,9 @@ export interface AccountAsset {
   assetId: number
   amount: string
   isFrozen: boolean
+  name?: string
+  unitName?: string
+  decimals?: number
 }
 
 /** Account application local state. */
