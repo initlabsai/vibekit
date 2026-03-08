@@ -38,7 +38,8 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeh
         placeholder={placeholder ?? 'Ask about the Algorand blockchain...'}
         rows={1}
         disabled={isLoading}
-        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-3 text-xs sm:text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal disabled:opacity-50 disabled:cursor-not-allowed"
+        enterKeyHint="send"
+        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-3 text-base sm:text-sm text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal disabled:opacity-50 disabled:cursor-not-allowed"
       />
       {isLoading ? (
         <Button
