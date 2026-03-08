@@ -1,4 +1,5 @@
 import { formatAlgos, formatNumber } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
 import { Wallet, Coins, Layers, AppWindow } from 'lucide-react'
 
 interface AccountSummaryProps {
@@ -23,9 +24,9 @@ export function AccountSummary({ data }: AccountSummaryProps) {
           </span>
         ) : null}
       </div>
-      <p className="font-mono text-xs text-algo-muted mb-3 break-all">
-        {data.address as string}
-      </p>
+      <div className="text-xs text-algo-muted mb-3 break-all">
+        <CopyableAddress address={data.address as string} chars={58} />
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <Stat
           icon={<Coins className="w-3.5 h-3.5" />}

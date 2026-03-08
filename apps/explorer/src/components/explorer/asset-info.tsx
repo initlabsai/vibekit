@@ -1,5 +1,6 @@
 import { formatNumber, formatAssetAmount } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { Gem } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -21,7 +22,9 @@ export function AssetInfo({ data }: AssetInfoProps) {
           {(data.name as string) ?? 'Asset'}
           {data.unitName ? ` (${data.unitName})` : ''}
         </h3>
-        <span className="ml-auto text-xs text-algo-muted">ID: {data.assetId as number}</span>
+        <CopyableValue value={String(data.assetId)}>
+          <span className="text-xs text-algo-muted ml-auto">ID: {data.assetId as number}</span>
+        </CopyableValue>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
         <Field label="Total Supply" value={displaySupply} />

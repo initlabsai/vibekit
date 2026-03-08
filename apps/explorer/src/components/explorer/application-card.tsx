@@ -1,5 +1,6 @@
 import { formatNumber } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { Code2 } from 'lucide-react'
 
 interface ApplicationCardProps {
@@ -20,9 +21,11 @@ export function ApplicationCard({ data }: ApplicationCardProps) {
     <div className="px-4 py-3">
       <div className="flex items-center gap-2 mb-1">
         <Code2 className="w-3.5 h-3.5 text-algo-teal shrink-0" />
-        <span className="text-xs font-medium text-algo-teal">
-          App #{formatNumber(applicationId)}
-        </span>
+        <CopyableValue value={String(applicationId)}>
+          <span className="text-xs font-medium text-algo-teal">
+            App #{formatNumber(applicationId)}
+          </span>
+        </CopyableValue>
       </div>
       {creator && (
         <div className="text-xs mb-1">
