@@ -4,7 +4,7 @@ import type {
   FormattedAsset,
   FormattedBlock,
   FormattedApplication,
-} from './types.js'
+} from './types'
 
 const MICROALGOS_PER_ALGO = 1_000_000
 

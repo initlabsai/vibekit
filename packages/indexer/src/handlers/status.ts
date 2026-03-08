@@ -1,5 +1,5 @@
 import type algosdk from 'algosdk'
-import type { NetworkStatus } from '../types.js'
+import type { NetworkStatus } from '../types'
 
 /**
  * Get network status including latest round.

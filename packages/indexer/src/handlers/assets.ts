@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
-import { formatAsset, formatTransaction } from '../formatters.js'
-import type { FormattedAsset, FormattedTransaction, AssetBalance } from '../types.js'
-import { DEFAULT_LIMIT } from '../types.js'
+import { formatAsset, formatTransaction } from '../formatters'
+import type { FormattedAsset, FormattedTransaction, AssetBalance } from '../types'
+import { DEFAULT_LIMIT } from '../types'
 
 export interface LookupAssetArgs {
   assetId: number
