@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
-import { Search } from 'lucide-react'
+import { Search, TriangleAlert } from 'lucide-react'
 import { useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -96,17 +96,20 @@ export default function Home() {
               </Button>
             ))}
           </div>
-          <p className="text-center text-xs text-algo-muted">
-            Alpha release &mdash;{' '}
-            <a
-              href="https://github.com/gabrielkuettel/vibekit/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-algo-teal transition-colors"
-            >
-              report an issue
-            </a>
-          </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-yellow-500/80">
+            <TriangleAlert className="size-3.5 shrink-0" />
+            <p>
+              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span> and has some issues.{' '}
+              <a
+                href="https://github.com/gabrielkuettel/vibekit/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-algo-teal transition-colors"
+              >
+                Report them
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -157,17 +160,20 @@ export default function Home() {
             isLoading={isLoading}
             onStop={stop}
           />
-          <p className="text-center text-xs text-algo-muted">
-            Alpha release &mdash;{' '}
-            <a
-              href="https://github.com/gabrielkuettel/vibekit/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-algo-teal transition-colors"
-            >
-              report an issue
-            </a>
-          </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-yellow-500/80">
+            <TriangleAlert className="size-3.5 shrink-0" />
+            <p>
+              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span> and has some issues.{' '}
+              <a
+                href="https://github.com/gabrielkuettel/vibekit/issues"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-algo-teal transition-colors"
+              >
+                Report them
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
