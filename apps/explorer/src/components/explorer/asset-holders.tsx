@@ -1,5 +1,11 @@
+'use client'
+
+import { useState, useMemo } from 'react'
 import { CopyableAddress } from './copyable-address'
 import { Users } from 'lucide-react'
+import { TableFilter } from './table-filter'
+import { SortableHeader } from './sortable-header'
+import { useTableSort } from './use-table-sort'
 
 interface AssetHoldersProps {
   data: Record<string, unknown>
@@ -13,14 +19,35 @@ interface HolderRow {
 
 export function AssetHolders({ data }: AssetHoldersProps) {
   const balances = (data.balances ?? []) as HolderRow[]
+  const [filter, setFilter] = useState('')
+  const { sort, onSort, sortData } = useTableSort<HolderRow>()
+
+  const filtered = useMemo(() => {
+    if (!filter) return balances
+    const q = filter.toLowerCase()
+    return balances.filter((h) =>
+      h.address.toLowerCase().includes(q) ||
+      h.amount.toLowerCase().includes(q)
+    )
+  }, [balances, filter])
+
+  const sorted = useMemo(
+    () => sortData(filtered, {
+      amount: (a, b) => parseFloat(a.amount.replace(/,/g, '') || '0') - parseFloat(b.amount.replace(/,/g, '') || '0'),
+    }),
+    [filtered, sortData],
+  )
 
   return (
     <div className="rounded-lg border border-algo-border bg-algo-card overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-algo-border">
-        <Users className="w-4 h-4 text-algo-teal" />
-        <h3 className="text-sm font-semibold text-algo-teal">
-          Asset Holders ({balances.length})
-        </h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-algo-border">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-algo-teal" />
+          <h3 className="text-sm font-semibold text-algo-teal">
+            Asset Holders ({filtered.length})
+          </h3>
+        </div>
+        <TableFilter value={filter} onChange={setFilter} placeholder="Filter holders..." />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
@@ -28,12 +55,12 @@ export function AssetHolders({ data }: AssetHoldersProps) {
             <tr className="text-algo-muted border-b border-algo-border">
               <th className="text-left px-4 py-2 font-medium">#</th>
               <th className="text-left px-4 py-2 font-medium">Address</th>
-              <th className="text-right px-4 py-2 font-medium">Amount</th>
+              <SortableHeader label="Amount" sortKey="amount" currentSort={sort} onSort={onSort} align="right" />
               <th className="text-right px-4 py-2 font-medium">Frozen</th>
             </tr>
           </thead>
           <tbody>
-            {balances.map((holder, i) => (
+            {sorted.map((holder, i) => (
               <tr
                 key={holder.address}
                 className="border-b border-algo-border/50 hover:bg-algo-dark/50"
