@@ -92,7 +92,6 @@ export interface AccountAsset {
   isFrozen: boolean
   name?: string
   unitName?: string
-  decimals?: number
 }
 
 /** Account application local state. */

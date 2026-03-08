@@ -1,5 +1,5 @@
 import type algosdk from 'algosdk'
-import { formatAccount, formatTransaction } from '../formatters'
+import { formatAccount, formatAssetAmount, formatTransaction } from '../formatters'
 import type {
   FormattedAccount,
   FormattedTransaction,
@@ -136,11 +136,12 @@ export async function getAccountAssets(
     const meta = metadataResults[i]
     if (meta.status === 'fulfilled') {
       const params = meta.value.asset?.params
+      const decimals = params?.decimals != null ? Number(params.decimals) : undefined
       return {
         ...h,
+        amount: decimals != null ? formatAssetAmount(h.amount, decimals) : h.amount,
         name: params?.name as string | undefined,
         unitName: params?.unitName as string | undefined,
-        decimals: params?.decimals != null ? Number(params.decimals) : undefined,
       }
     }
     return h
