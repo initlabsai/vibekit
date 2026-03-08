@@ -96,11 +96,6 @@ export function TransactionList({ data }: TransactionListProps) {
           </tbody>
         </table>
       </div>
-      {data.nextToken ? (
-        <div className="px-4 py-2 text-xs text-algo-muted border-t border-algo-border">
-          More results available
-        </div>
-      ) : null}
     </div>
   )
 }
