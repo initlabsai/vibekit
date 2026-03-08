@@ -3,6 +3,16 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
 import { env } from '@/lib/env'
 
+const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
+  'Qwen/Qwen3-235B-A22B-Instruct-2507-tput': 262_144,
+}
+
+const DEFAULT_CONTEXT_WINDOW = 128_000
+
+export function getContextWindowSize(): number {
+  return MODEL_CONTEXT_WINDOWS[env.LLM_MODEL] ?? DEFAULT_CONTEXT_WINDOW
+}
+
 /**
  * Create an LLM provider based on environment config.
  * Uses @ai-sdk/togetherai for Together AI (required for proper tool calling),

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
+import { TokenUsageBar, formatTokenCount } from '@/components/chat/token-usage-bar'
 import { Search, TriangleAlert } from 'lucide-react'
 import { useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
@@ -59,6 +60,22 @@ export default function Home() {
       text: `Load more results from the previous \`${toolName}\` query. Pagination token: \`${nextToken}\``,
     })
   }
+
+  const { usedTokens, contextWindowSize } = useMemo(() => {
+    let used = 0
+    let ctxSize = 128_000
+    for (const msg of messages) {
+      const meta = msg.metadata as Record<string, unknown> | undefined
+      if (meta?.usage) {
+        const usage = meta.usage as { totalTokens?: number }
+        used = usage.totalTokens ?? used
+      }
+      if (meta?.contextWindowSize) {
+        ctxSize = meta.contextWindowSize as number
+      }
+    }
+    return { usedTokens: used, contextWindowSize: ctxSize }
+  }, [messages])
 
   const hasMessages = messages.length > 0
 
@@ -117,10 +134,18 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="border-b border-algo-border px-4 py-3">
-        <h1 className="text-sm font-semibold text-algo-teal">
-          <span className="font-mono">VibeKit</span> Explorer
-        </h1>
+      <header>
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h1 className="text-sm font-semibold text-algo-teal">
+            <span className="font-mono">VibeKit</span> Explorer
+          </h1>
+          {usedTokens > 0 && (
+            <span className="text-xs text-algo-muted">
+              {formatTokenCount(usedTokens)} / {formatTokenCount(contextWindowSize)}
+            </span>
+          )}
+        </div>
+        <TokenUsageBar usedTokens={usedTokens} maxTokens={contextWindowSize} />
       </header>
       <ScrollArea className="flex-1 min-h-0">
         <div className="px-3 py-4 sm:px-4 sm:py-6 space-y-6">
@@ -163,7 +188,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 text-xs text-yellow-500/80">
             <TriangleAlert className="size-3.5 shrink-0" />
             <p>
-              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span>.{' '}
+              She&apos;s a 10 but she&apos;s in <span className="font-bold">early alpha</span>.{' '}
               <a
                 href="https://github.com/gabrielkuettel/vibekit/issues"
                 target="_blank"

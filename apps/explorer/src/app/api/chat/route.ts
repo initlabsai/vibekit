@@ -1,5 +1,5 @@
 import { streamText, stepCountIs, convertToModelMessages } from 'ai';
-import { getLLM } from '@/lib/llm'
+import { getLLM, getContextWindowSize } from '@/lib/llm'
 import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
 import { rateLimit, retryAfter } from '@/lib/rate-limit'
@@ -53,7 +53,25 @@ export async function POST(req: Request) {
       abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     })
 
+    const contextWindowSize = getContextWindowSize()
+
     return result.toUIMessageStreamResponse({
+      messageMetadata(event) {
+        if (event.part.type === 'finish') {
+          const { totalUsage } = event.part
+          const inputTokens = totalUsage.inputTokens ?? 0
+          const outputTokens = totalUsage.outputTokens ?? 0
+          return {
+            usage: {
+              inputTokens,
+              outputTokens,
+              totalTokens: inputTokens + outputTokens,
+            },
+            contextWindowSize,
+          }
+        }
+        return undefined
+      },
       onError: (error) => {
         const message = error instanceof Error ? error.message : 'Unknown error'
         console.error('[chat:stream]', message)
