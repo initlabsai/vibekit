@@ -121,14 +121,32 @@ export async function getAccountAssets(
   if (args.nextToken) query = query.nextToken(args.nextToken)
 
   const response = await query.do()
-  return {
-    assets: (response.assets ?? []).map((a) => ({
-      assetId: Number(a.assetId),
-      amount: String(a.amount),
-      isFrozen: a.isFrozen,
-    })),
-    nextToken: response.nextToken,
-  }
+  const holdings = (response.assets ?? []).map((a) => ({
+    assetId: Number(a.assetId),
+    amount: String(a.amount),
+    isFrozen: a.isFrozen as boolean,
+  }))
+
+  // Enrich holdings with asset metadata (name, unit, decimals)
+  const metadataResults = await Promise.allSettled(
+    holdings.map((h) => indexer.lookupAssetByID(h.assetId).do())
+  )
+
+  const assets: AccountAsset[] = holdings.map((h, i) => {
+    const meta = metadataResults[i]
+    if (meta.status === 'fulfilled') {
+      const params = meta.value.asset?.params
+      return {
+        ...h,
+        name: params?.name as string | undefined,
+        unitName: params?.unitName as string | undefined,
+        decimals: params?.decimals != null ? Number(params.decimals) : undefined,
+      }
+    }
+    return h
+  })
+
+  return { assets, nextToken: response.nextToken }
 }
 
 export interface GetAccountAppLocalStatesArgs {
