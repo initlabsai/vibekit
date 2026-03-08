@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
 import { formatAsset, formatTransaction } from '../formatters'
 import type { FormattedAsset, FormattedTransaction, AssetBalance } from '../types'
-import { DEFAULT_LIMIT } from '../types'
+import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
 export interface LookupAssetArgs {
   assetId: number
@@ -36,13 +36,14 @@ export async function searchAssetBalances(
   if (args.currencyLessThan !== undefined) query = query.currencyLessThan(args.currencyLessThan)
 
   const response = await query.do()
+  const balances = (response.balances ?? []).map((b) => ({
+    address: String(b.address),
+    amount: String(b.amount),
+    isFrozen: b.isFrozen,
+  }))
   return {
-    balances: (response.balances ?? []).map((b) => ({
-      address: String(b.address),
-      amount: String(b.amount),
-      isFrozen: b.isFrozen,
-    })),
-    nextToken: response.nextToken,
+    balances,
+    nextToken: stripFinalToken(balances.length, limit, response.nextToken),
   }
 }
 
@@ -66,9 +67,10 @@ export async function searchAssetTransactions(
   if (args.afterTime) query = query.afterTime(args.afterTime)
 
   const response = await query.do()
+  const transactions = (response.transactions ?? []).map(formatTransaction)
   return {
-    transactions: (response.transactions ?? []).map(formatTransaction),
-    nextToken: response.nextToken,
+    transactions,
+    nextToken: stripFinalToken(transactions.length, limit, response.nextToken),
   }
 }
 
@@ -93,8 +95,9 @@ export async function searchAssets(
   if (args.creator) query = query.creator(args.creator)
 
   const response = await query.do()
+  const assets = (response.assets ?? []).map(formatAsset)
   return {
-    assets: (response.assets ?? []).map(formatAsset),
-    nextToken: response.nextToken,
+    assets,
+    nextToken: stripFinalToken(assets.length, limit, response.nextToken),
   }
 }

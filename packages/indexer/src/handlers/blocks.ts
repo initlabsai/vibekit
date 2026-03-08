@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
 import { formatBlock } from '../formatters'
 import type { FormattedBlock } from '../types'
-import { DEFAULT_LIMIT } from '../types'
+import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
 export interface LookupBlockArgs {
   round: number
@@ -39,13 +39,15 @@ export async function searchBlockHeaders(
 
   const response = await query.do()
 
+  const blocks = (response.blocks ?? []).map((block) => ({
+    round: Number(block.round),
+    timestamp: Number(block.timestamp),
+    transactionCount: block.transactions?.length ?? 0,
+    proposer: block.proposer?.toString(),
+  }))
+
   return {
-    blocks: (response.blocks ?? []).map((block) => ({
-      round: Number(block.round),
-      timestamp: Number(block.timestamp),
-      transactionCount: block.transactions?.length ?? 0,
-      proposer: block.proposer?.toString(),
-    })),
-    nextToken: response.nextToken,
+    blocks,
+    nextToken: stripFinalToken(blocks.length, limit, response.nextToken),
   }
 }

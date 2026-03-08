@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
 import { formatApplication } from '../formatters'
 import type { FormattedApplication } from '../types'
-import { DEFAULT_LIMIT } from '../types'
+import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
 export interface LookupApplicationArgs {
   applicationId: number
@@ -32,9 +32,10 @@ export async function searchApplications(
   if (args.creator) query = query.creator(args.creator)
 
   const response = await query.do()
+  const applications = (response.applications ?? []).map(formatApplication)
   return {
-    applications: (response.applications ?? []).map(formatApplication),
-    nextToken: response.nextToken,
+    applications,
+    nextToken: stripFinalToken(applications.length, limit, response.nextToken),
   }
 }
 
@@ -60,9 +61,10 @@ export async function lookupApplicationLogs(
   if (args.maxRound) query = query.maxRound(args.maxRound)
 
   const response = await query.do()
+  const logData = response.logData ?? []
   return {
     applicationId: args.applicationId,
-    logData: response.logData ?? [],
-    nextToken: response.nextToken,
+    logData,
+    nextToken: stripFinalToken(logData.length, limit, response.nextToken),
   }
 }
