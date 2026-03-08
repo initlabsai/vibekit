@@ -111,6 +111,8 @@ export function formatBlock(block: IndexerBlock): FormattedBlock {
     timestamp: Number(block.timestamp!),
     transactionCount: block.transactions?.length ?? 0,
     proposer: block.proposer ? String(block.proposer) : undefined,
+    feesCollected: block.feesCollected != null ? microalgosToAlgos(block.feesCollected) : undefined,
+    proposerPayout: block.proposerPayout != null ? microalgosToAlgos(block.proposerPayout) : undefined,
     previousBlockHash: block.previousBlockHash
       ? Buffer.from(block.previousBlockHash).toString('base64')
       : undefined,

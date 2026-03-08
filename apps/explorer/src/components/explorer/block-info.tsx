@@ -1,4 +1,4 @@
-import { formatTimestamp, formatNumber } from '@/lib/formatters'
+import { formatTimestamp, formatNumber, formatAlgos } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { CopyableValue } from './copyable-value'
 import { Box } from 'lucide-react'
@@ -23,8 +23,14 @@ export function BlockInfo({ data }: BlockInfoProps) {
         <Field label="Round" value={<CopyableValue value={String(data.round)}>{formatNumber(data.round as number)}</CopyableValue>} />
         <Field label="Timestamp" value={formatTimestamp(data.timestamp as number)} />
         <Field label="Transactions" value={formatNumber(data.transactionCount as number)} />
+        {data.feesCollected != null ? (
+          <Field label="Fees Collected" value={`${formatAlgos(data.feesCollected as number)} ALGO`} />
+        ) : null}
         {data.proposer ? (
           <Field label="Proposer" value={<CopyableAddress address={data.proposer as string} />} />
+        ) : null}
+        {data.proposerPayout != null ? (
+          <Field label="Proposer Payout" value={`${formatAlgos(data.proposerPayout as number)} ALGO`} />
         ) : null}
         {data.previousBlockHash ? (
           <div className="col-span-2">
