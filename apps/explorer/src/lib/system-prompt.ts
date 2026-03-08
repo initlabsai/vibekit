@@ -38,6 +38,7 @@ Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when re
 
 - Balances are in ALGO. Asset amounts are pre-formatted with decimals.
 - Well-known ASA IDs: USDC=31566704
+- Algorand produces blocks every ~2.8 seconds. Use this to estimate dates from round numbers: date ≈ genesis + (round × 2.8s). Algorand mainnet genesis was 2019-06-11. When reporting createdAtRound or any round, include an approximate date.
 
 ## Pagination
 - Make continuation calls back-to-back — do not interleave other tool calls between pages. This allows the UI to merge pages into a single table.
