@@ -15,5 +15,5 @@ export function getLLM(): LanguageModel {
   }
 
   const provider = createOpenAI({ baseURL: env.LLM_BASE_URL, apiKey: env.LLM_API_KEY })
-  return provider(env.LLM_MODEL)
+  return provider.chat(env.LLM_MODEL)
 }
