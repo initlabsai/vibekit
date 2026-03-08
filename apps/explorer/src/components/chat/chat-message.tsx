@@ -11,9 +11,89 @@ import { TypingDots } from './typing-dots'
 
 interface ChatMessageProps {
   message: UIMessage
+  onLoadMore?: (toolName: string, nextToken: string) => void
+  isLoading?: boolean
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+type MessagePart = UIMessage['parts'][number]
+
+/** Tool parts that have been checked via isToolUIPart — may include dynamic tools. */
+type AnyToolPart = Extract<MessagePart, { state: string }>
+
+interface ToolGroup {
+  kind: 'tool-group'
+  toolName: string
+  parts: AnyToolPart[]
+}
+
+function isToolGroup(item: unknown): item is ToolGroup {
+  return (
+    typeof item === 'object' &&
+    item !== null &&
+    'kind' in item &&
+    (item as ToolGroup).kind === 'tool-group'
+  )
+}
+
+/**
+ * Groups consecutive same-tool parts into a single render unit for merged display.
+ * Text parts and different-tool calls break the chain. Structural parts like
+ * step-start boundaries are skipped (they render as null anyway).
+ */
+function groupParts(parts: MessagePart[]): (MessagePart | ToolGroup)[] {
+  const result: (MessagePart | ToolGroup)[] = []
+
+  for (const part of parts) {
+    if (isToolUIPart(part)) {
+      const toolName = getToolName(part)
+      const lastGroup = findLastToolGroup(result)
+      if (lastGroup && lastGroup.toolName === toolName) {
+        lastGroup.parts.push(part)
+      } else {
+        result.push({ kind: 'tool-group', toolName, parts: [part] })
+      }
+    } else if (part.type === 'text' && part.text) {
+      result.push(part)
+    }
+    // Skip structural parts (step-start, etc.) — they don't render
+  }
+
+  return result
+}
+
+/** Walk backwards to find the most recent tool group, stopping at text parts. */
+function findLastToolGroup(items: (MessagePart | ToolGroup)[]): ToolGroup | null {
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i]
+    if (isToolGroup(item)) return item
+    if ('type' in item && item.type === 'text') return null
+  }
+  return null
+}
+
+/**
+ * Merges outputs from multiple paginated tool calls into a single result.
+ * Arrays are concatenated, scalars use last-wins (e.g. nextToken from last page).
+ */
+function mergeToolOutputs(outputs: Record<string, unknown>[]): Record<string, unknown> {
+  if (outputs.length === 1) return outputs[0]
+
+  const merged: Record<string, unknown> = {}
+
+  for (const output of outputs) {
+    for (const [key, value] of Object.entries(output)) {
+      if (Array.isArray(value) && Array.isArray(merged[key])) {
+        merged[key] = [...(merged[key] as unknown[]), ...value]
+      } else {
+        merged[key] = value
+      }
+    }
+  }
+
+  return merged
+}
+
+export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps) {
   const isUser = message.role === 'user'
   const hasToolInvocations = message.parts?.some((p) => isToolUIPart(p))
 
@@ -38,6 +118,8 @@ export function ChatMessage({ message }: ChatMessageProps) {
     )
   }
 
+  const grouped = groupParts(message.parts ?? [])
+
   // Assistant message
   return (
     <div className="flex gap-3">
@@ -47,7 +129,53 @@ export function ChatMessage({ message }: ChatMessageProps) {
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0 space-y-2">
-        {message.parts?.map((part, i) => {
+        {grouped.map((item, i) => {
+          if (isToolGroup(item)) {
+            const group = item
+            const readyParts = group.parts.filter((p) => p.state === 'output-available')
+            const anyLoading = group.parts.some((p) => p.state !== 'output-available')
+
+            if (readyParts.length === 0) {
+              // All parts still loading — show skeleton
+              return (
+                <div
+                  key={i}
+                  className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2"
+                >
+                  <Skeleton className="h-3 w-1/3 bg-algo-border" />
+                  <Skeleton className="h-3 w-2/3 bg-algo-border" />
+                </div>
+              )
+            }
+
+            const outputs = readyParts.map(
+              (p) => p.output as Record<string, unknown>,
+            )
+            const merged = mergeToolOutputs(outputs)
+            const nextToken = merged.nextToken as string | undefined
+
+            return (
+              <div key={i} className="overflow-hidden space-y-2">
+                <ToolResult toolName={group.toolName} result={merged} />
+                {anyLoading && (
+                  <div className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2">
+                    <Skeleton className="h-3 w-1/3 bg-algo-border" />
+                    <Skeleton className="h-3 w-2/3 bg-algo-border" />
+                  </div>
+                )}
+                {nextToken && !isLoading && onLoadMore && (
+                  <button
+                    onClick={() => onLoadMore(group.toolName, nextToken)}
+                    className="text-xs text-algo-muted hover:text-algo-teal transition-colors cursor-pointer"
+                  >
+                    Load more results
+                  </button>
+                )}
+              </div>
+            )
+          }
+
+          const part = item as MessagePart
           if (part.type === 'text' && part.text) {
             return (
               <div
@@ -59,27 +187,6 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 }`}
               >
                 <Markdown>{part.text}</Markdown>
-              </div>
-            )
-          }
-          if (isToolUIPart(part)) {
-            if (part.state === 'output-available') {
-              return (
-                <div key={i} className="overflow-hidden">
-                  <ToolResult
-                    toolName={getToolName(part)}
-                    result={part.output}
-                  />
-                </div>
-              )
-            }
-            return (
-              <div
-                key={i}
-                className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2"
-              >
-                <Skeleton className="h-3 w-1/3 bg-algo-border" />
-                <Skeleton className="h-3 w-2/3 bg-algo-border" />
               </div>
             )
           }

@@ -32,4 +32,8 @@ Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when re
 
 - Balances are already converted from microAlgos to ALGO in tool results
 - For asset amounts, divide raw amounts by 10^decimals
-- Well-known ASA IDs: USDC=31566704, USDT=312769, goETH=386192725, goBTC=386195940`
+- Well-known ASA IDs: USDC=31566704, USDT=312769, goETH=386192725, goBTC=386195940
+
+## Pagination
+- When paginating results, make continuation calls immediately back-to-back — do not interleave other tool calls between pages of the same query. This allows the UI to merge pages into a single table.
+- When the user asks to "load more" with a pagination token, re-invoke the same tool with the same parameters as the previous call, adding the provided nextToken.`

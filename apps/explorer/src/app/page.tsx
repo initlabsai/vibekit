@@ -33,6 +33,12 @@ export default function Home() {
     setInput('')
   }
 
+  const handleLoadMore = (toolName: string, nextToken: string) => {
+    sendMessage({
+      text: `Load more results from the previous \`${toolName}\` query. Pagination token: \`${nextToken}\``,
+    })
+  }
+
   const hasMessages = messages.length > 0
 
   if (!hasMessages) {
@@ -93,9 +99,14 @@ export default function Home() {
       </header>
       <ScrollArea className="flex-1 min-h-0">
         <div className="px-3 py-4 sm:px-4 sm:py-6 space-y-6">
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-5xl mx-auto space-y-6">
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <ChatMessage
+                key={message.id}
+                message={message}
+                onLoadMore={handleLoadMore}
+                isLoading={isLoading}
+              />
             ))}
 
             {isLoading && messages.at(-1)?.role === 'user' && (
@@ -116,7 +127,7 @@ export default function Home() {
         </div>
       </ScrollArea>
       <div className="border-t border-algo-border px-3 py-3 sm:px-4 sm:py-4">
-        <div className="max-w-3xl mx-auto space-y-2">
+        <div className="max-w-5xl mx-auto space-y-2">
           <ChatInput
             input={input}
             setInput={setInput}
