@@ -69,7 +69,7 @@ export function createExplorerTools(): ToolSet {
     },
   })
 
-  // lookup_block — use Algod for latest round, block headers for lightweight response
+  // lookup_block — use Algod for latest round, then full block lookup for transaction count
   tools.lookup_block = tool({
     description: 'Look up a block by its round number. If no round is provided, returns the latest block.',
     inputSchema: z.object({
@@ -79,14 +79,14 @@ export function createExplorerTools(): ToolSet {
       const start = Date.now()
       try {
         const round = args.round ?? (await getLatestRoundFromAlgod(algodUrl))
-        const headers = await indexer.searchForBlockHeaders().minRound(round).maxRound(round).limit(1).do()
-        const block = headers.blocks?.[0]
-        if (!block) throw new Error(`Block ${round} not found`)
+        const block = await indexer.lookupBlock(round).do()
         const result = sanitizeBigInts({
           round: Number(block.round),
           timestamp: Number(block.timestamp),
           transactionCount: block.transactions?.length ?? 0,
           proposer: block.proposer ? String(block.proposer) : undefined,
+          feesCollected: block.feesCollected != null ? Number(block.feesCollected) / 1_000_000 : undefined,
+          proposerPayout: block.proposerPayout != null ? Number(block.proposerPayout) / 1_000_000 : undefined,
         })
         console.log(`[tool:lookup_block] ${Date.now() - start}ms`)
         return result

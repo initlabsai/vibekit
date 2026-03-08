@@ -53,6 +53,8 @@ export interface FormattedBlock {
   timestamp: number
   transactionCount: number
   proposer?: string
+  feesCollected?: number
+  proposerPayout?: number
   previousBlockHash?: string
   seed?: string
 }
