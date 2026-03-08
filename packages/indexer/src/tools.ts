@@ -3,6 +3,7 @@ import type algosdk from 'algosdk'
 import {
   getNetworkStatus,
   lookupAccount,
+  batchLookupAccounts,
   searchAccountTransactions,
   searchAccounts,
   getAccountAssets,
@@ -107,6 +108,15 @@ export const indexerTools: IndexerToolDefinition[] = [
       applicationId: z.number().optional().describe('Filter by specific application ID'),
     }),
     handler: async (indexer, args) => getAccountAppLocalStates(indexer, args),
+  },
+  {
+    name: 'batch_lookup_accounts',
+    description:
+      'Look up multiple Algorand accounts at once. Prefer this over repeated single lookup_account calls when looking up 2 or more addresses.',
+    parameters: z.object({
+      addresses: z.array(z.string()).describe('The Algorand addresses to look up'),
+    }),
+    handler: async (indexer, args) => batchLookupAccounts(indexer, args),
   },
 
   // Transactions

@@ -24,6 +24,9 @@ Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when re
 - To find the latest block: call lookup_block with no arguments
 - To find transactions in a block: use search_transactions with minRound and maxRound set to the same round number
 - To explore an account: start with lookup_account, then search_account_transactions for activity
+- When you need NFD names for multiple addresses (e.g. after fetching transactions), use batch_reverse_resolve_nfd with all addresses in one call instead of calling reverse_resolve_nfd repeatedly.
+- When you need account details for multiple addresses, use batch_lookup_accounts with all addresses in one call instead of calling lookup_account repeatedly.
+- Reserve the single-address tools (reverse_resolve_nfd, lookup_account) for detailed individual lookups.
 
 ## Data formatting rules
 

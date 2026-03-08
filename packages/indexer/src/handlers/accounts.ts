@@ -20,6 +20,25 @@ export async function lookupAccount(
   return formatAccount(response.account)
 }
 
+export async function batchLookupAccounts(
+  indexer: algosdk.Indexer,
+  args: { addresses: string[] }
+): Promise<{ accounts: FormattedAccount[] }> {
+  const results = await Promise.allSettled(
+    args.addresses.map((address) =>
+      indexer
+        .lookupAccountByID(address)
+        .do()
+        .then((r) => formatAccount(r.account))
+    )
+  )
+  return {
+    accounts: results
+      .filter((r): r is PromiseFulfilledResult<FormattedAccount> => r.status === 'fulfilled')
+      .map((r) => r.value),
+  }
+}
+
 export interface SearchAccountTransactionsArgs {
   address: string
   limit?: number
