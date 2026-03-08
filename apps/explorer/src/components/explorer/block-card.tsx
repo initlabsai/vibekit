@@ -1,5 +1,6 @@
 import { formatTimestamp, formatNumber } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { Box } from 'lucide-react'
 
 interface BlockCardProps {
@@ -16,9 +17,11 @@ export function BlockCard({ data }: BlockCardProps) {
     <div className="px-4 py-3">
       <div className="flex items-center gap-2 mb-1">
         <Box className="w-3.5 h-3.5 text-algo-teal shrink-0" />
-        <span className="text-xs font-medium text-algo-teal">
-          Block #{formatNumber(round)}
-        </span>
+        <CopyableValue value={String(round)}>
+          <span className="text-xs font-medium text-algo-teal">
+            Block #{formatNumber(round)}
+          </span>
+        </CopyableValue>
         <span className="text-[11px] text-algo-muted ml-auto">
           {formatNumber(transactionCount)} txns
         </span>

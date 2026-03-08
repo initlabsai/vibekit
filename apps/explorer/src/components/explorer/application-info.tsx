@@ -1,5 +1,7 @@
 import { formatNumber } from '@/lib/formatters'
 import { decodeStateValue } from '@/lib/decode-state'
+import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { Code2 } from 'lucide-react'
 
 interface ApplicationInfoProps {
@@ -24,14 +26,16 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
     <div className="rounded-lg border border-algo-border bg-algo-card p-4">
       <div className="flex items-center gap-2 mb-3">
         <Code2 className="w-4 h-4 text-algo-teal" />
-        <h3 className="text-sm font-semibold text-algo-teal">
-          Application #{formatNumber(data.applicationId as number)}
-        </h3>
+        <CopyableValue value={String(data.applicationId)}>
+          <h3 className="text-sm font-semibold text-algo-teal">
+            Application #{formatNumber(data.applicationId as number)}
+          </h3>
+        </CopyableValue>
       </div>
       <div className="space-y-3 text-xs">
         <div className="flex gap-2">
           <span className="text-algo-muted w-20 shrink-0">Creator</span>
-          <span className="font-mono break-all">{data.creator as string}</span>
+          <span className="break-all"><CopyableAddress address={data.creator as string} chars={58} /></span>
         </div>
         {globalStateSchema && (
           <div className="flex gap-2">

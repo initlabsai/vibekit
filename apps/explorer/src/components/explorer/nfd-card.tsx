@@ -1,4 +1,5 @@
 import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { Globe } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -51,14 +52,16 @@ export function NfdCard({ data }: NfdCardProps) {
           <p className="text-sm sm:text-base font-semibold">
             {name ?? <span className="text-algo-muted">No NFD found</span>}
           </p>
-          <p className="font-mono text-xs text-algo-muted break-all">{address}</p>
+          <div className="text-xs text-algo-muted break-all">
+            <CopyableAddress address={address} chars={58} />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
         {owner && owner !== address ? (
           <Field label="Owner" value={<CopyableAddress address={owner} />} />
         ) : null}
-        {appId != null ? <Field label="App ID" value={String(appId)} /> : null}
+        {appId != null ? <Field label="App ID" value={<CopyableValue value={String(appId)}>{String(appId)}</CopyableValue>} /> : null}
         {properties
           ? Object.entries(properties).map(([key, value]) => {
               if (key === 'avatar' || key === 'name') return null

@@ -1,5 +1,8 @@
 import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { FileText } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface TransactionDetailProps {
   data: Record<string, unknown>
@@ -16,19 +19,19 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
         </span>
       </div>
       <div className="space-y-2 text-xs">
-        <Row label="TX ID" value={data.id as string} mono />
-        <Row label="Sender" value={data.sender as string} mono />
-        {data.receiver ? <Row label="Receiver" value={data.receiver as string} mono /> : null}
+        <Row label="TX ID" value={<CopyableAddress address={data.id as string} chars={12} />} />
+        <Row label="Sender" value={<CopyableAddress address={data.sender as string} chars={58} />} />
+        {data.receiver ? <Row label="Receiver" value={<CopyableAddress address={data.receiver as string} chars={58} />} /> : null}
         {data.paymentAmount != null && (
           <Row label="Amount" value={`${formatAlgos(data.paymentAmount as number)} ALGO`} />
         )}
-        {data.assetId != null && <Row label="Asset ID" value={String(data.assetId)} />}
+        {data.assetId != null && <Row label="Asset ID" value={<CopyableValue value={String(data.assetId)}>{String(data.assetId)}</CopyableValue>} />}
         {data.assetAmount != null && (
           <Row label="Asset Amount" value={String(data.assetAmount)} />
         )}
         <Row label="Fee" value={`${formatAlgos(data.fee as number)} ALGO`} />
         {data.confirmedRound != null && (
-          <Row label="Round" value={String(data.confirmedRound)} />
+          <Row label="Round" value={<CopyableValue value={String(data.confirmedRound)}>{String(data.confirmedRound)}</CopyableValue>} />
         )}
         {data.roundTime != null && (
           <Row label="Time" value={formatTimestamp(data.roundTime as number)} />
@@ -36,7 +39,7 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
         {data.note ? <Row label="Note" value={data.note as string} /> : null}
         {data.group ? <Row label="Group" value={data.group as string} mono /> : null}
         {data.applicationId != null && (
-          <Row label="App ID" value={String(data.applicationId)} />
+          <Row label="App ID" value={<CopyableValue value={String(data.applicationId)}>{String(data.applicationId)}</CopyableValue>} />
         )}
         {Array.isArray(data.innerTxns) && data.innerTxns.length > 0 ? (
           <Row
@@ -57,7 +60,7 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
   )
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start gap-1">
       <span className="text-algo-muted w-28 shrink-0">{label}</span>

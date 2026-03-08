@@ -1,3 +1,4 @@
+import { CopyableValue } from './copyable-value'
 import { Layers } from 'lucide-react'
 
 interface AssetListProps {
@@ -39,7 +40,9 @@ export function AssetList({ data }: AssetListProps) {
                 key={asset.assetId}
                 className="border-b border-algo-border/50 hover:bg-algo-dark/50"
               >
-                <td className="px-4 py-2 font-mono text-algo-teal">{asset.assetId}</td>
+                <td className="px-4 py-2 font-mono text-algo-teal">
+                  <CopyableValue value={String(asset.assetId)}>{asset.assetId}</CopyableValue>
+                </td>
                 <td className="px-4 py-2">
                   {asset.name ?? asset.unitName ?? '\u2014'}
                 </td>
