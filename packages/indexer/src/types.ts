@@ -9,6 +9,9 @@ export interface FormattedTransaction {
   paymentAmount?: number
   receiver?: string
   assetId?: number
+  assetName?: string
+  assetUnitName?: string
+  assetDecimals?: number
   assetAmount?: number
   applicationId?: number
   note?: string

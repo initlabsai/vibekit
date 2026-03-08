@@ -1,4 +1,4 @@
-import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatAssetAmount, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { CopyableValue } from './copyable-value'
 import { FileText } from 'lucide-react'
@@ -25,9 +25,26 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
         {data.paymentAmount != null && (
           <Row label="Amount" value={`${formatAlgos(data.paymentAmount as number)} ALGO`} />
         )}
-        {data.assetId != null && <Row label="Asset ID" value={<CopyableValue value={String(data.assetId)}>{String(data.assetId)}</CopyableValue>} />}
+        {data.assetId != null && (
+          <Row
+            label="Asset"
+            value={
+              <>
+                <CopyableValue value={String(data.assetId)}>{String(data.assetId)}</CopyableValue>
+                {data.assetName ? <span className="ml-1.5 text-algo-muted">({data.assetName as string})</span> : null}
+              </>
+            }
+          />
+        )}
         {data.assetAmount != null && (
-          <Row label="Asset Amount" value={String(data.assetAmount)} />
+          <Row
+            label="Asset Amount"
+            value={
+              data.assetDecimals != null
+                ? `${formatAssetAmount(String(data.assetAmount), data.assetDecimals as number)}${data.assetUnitName ? ` ${data.assetUnitName}` : ''}`
+                : `${String(data.assetAmount)}${data.assetUnitName ? ` ${data.assetUnitName}` : ''}`
+            }
+          />
         )}
         <Row label="Fee" value={`${formatAlgos(data.fee as number)} ALGO`} />
         {data.confirmedRound != null && (
