@@ -26,6 +26,24 @@ interface ToolGroup {
   parts: AnyToolPart[]
 }
 
+function toolDisplayName(toolName: string): string {
+  // Strip any "mcp-server_" or similar prefix to get the bare tool name
+  const bare = toolName.includes('-') ? toolName.split('-').pop()! : toolName
+  const words = bare.split('_')
+  const verb = words[0]
+  const rest = words.slice(1).join(' ')
+
+  if (verb === 'lookup' || verb === 'get') {
+    return `Looking up ${rest}…`
+  }
+  if (verb === 'search') {
+    return `Searching ${rest}…`
+  }
+  // Capitalize first letter and add ellipsis
+  const label = bare.replace(/_/g, ' ')
+  return label.charAt(0).toUpperCase() + label.slice(1) + '…'
+}
+
 function isToolGroup(item: unknown): item is ToolGroup {
   return (
     typeof item === 'object' &&
@@ -142,6 +160,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
                   key={i}
                   className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2"
                 >
+                  <p className="text-xs text-algo-muted">{toolDisplayName(group.toolName)}</p>
                   <Skeleton className="h-3 w-1/3 bg-algo-border" />
                   <Skeleton className="h-3 w-2/3 bg-algo-border" />
                 </div>
@@ -159,6 +178,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
                 <ToolResult toolName={group.toolName} result={merged} />
                 {anyLoading && (
                   <div className="rounded-lg border border-algo-border bg-algo-card p-4 space-y-2">
+                    <p className="text-xs text-algo-muted">{toolDisplayName(group.toolName)}</p>
                     <Skeleton className="h-3 w-1/3 bg-algo-border" />
                     <Skeleton className="h-3 w-2/3 bg-algo-border" />
                   </div>

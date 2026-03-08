@@ -5,7 +5,7 @@ import { useChat } from '@ai-sdk/react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
 import { Search } from 'lucide-react'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TypingDots } from '@/components/chat/typing-dots'
@@ -18,17 +18,38 @@ const SUGGESTIONS = [
 
 export default function Home() {
   const [input, setInput] = useState('')
-  const { messages, sendMessage, status, error } = useChat()
+  const { messages, sendMessage, status, error, stop } = useChat()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScroll = useRef(true)
   const isLoading = status === 'submitted' || status === 'streaming'
 
+  // Track whether user is near the bottom of the scroll area
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    const viewport = bottomRef.current?.closest(
+      '[data-slot="scroll-area-viewport"]'
+    ) as HTMLElement | null
+    if (!viewport) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = viewport
+      shouldAutoScroll.current = scrollHeight - scrollTop - clientHeight < 100
+    }
+
+    viewport.addEventListener('scroll', handleScroll, { passive: true })
+    return () => viewport.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Only auto-scroll if user hasn't scrolled up
+  useEffect(() => {
+    if (shouldAutoScroll.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+    }
   }, [messages])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
+    shouldAutoScroll.current = true
     sendMessage({ text: input })
     setInput('')
   }
@@ -58,6 +79,7 @@ export default function Home() {
               setInput={setInput}
               onSubmit={handleSubmit}
               isLoading={isLoading}
+              onStop={stop}
               placeholder="Search the Algorand blockchain..."
             />
           </div>
@@ -133,6 +155,7 @@ export default function Home() {
             setInput={setInput}
             onSubmit={handleSubmit}
             isLoading={isLoading}
+            onStop={stop}
           />
           <p className="text-center text-xs text-algo-muted">
             Alpha release &mdash;{' '}
