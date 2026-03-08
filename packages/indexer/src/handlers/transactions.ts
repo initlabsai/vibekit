@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
 import { formatTransaction } from '../formatters'
 import type { FormattedTransaction } from '../types'
-import { DEFAULT_LIMIT } from '../types'
+import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
 export interface LookupTransactionArgs {
   txid: string
@@ -46,9 +46,10 @@ export async function searchTransactions(
   if (args.applicationId) query = query.applicationID(args.applicationId)
 
   const response = await query.do()
+  const transactions = (response.transactions ?? []).map(formatTransaction)
   return {
-    transactions: (response.transactions ?? []).map(formatTransaction),
-    nextToken: response.nextToken,
+    transactions,
+    nextToken: stripFinalToken(transactions.length, limit, response.nextToken),
   }
 }
 
@@ -61,8 +62,9 @@ export async function lookupTransactionGroup(
   args: LookupTransactionGroupArgs
 ): Promise<{ transactions: FormattedTransaction[]; nextToken?: string }> {
   const response = await indexer.searchForTransactions().groupid(args.groupId).limit(100).do()
+  const transactions = (response.transactions ?? []).map(formatTransaction)
   return {
-    transactions: (response.transactions ?? []).map(formatTransaction),
-    nextToken: response.nextToken,
+    transactions,
+    nextToken: stripFinalToken(transactions.length, 100, response.nextToken),
   }
 }

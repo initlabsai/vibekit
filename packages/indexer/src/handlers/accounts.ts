@@ -6,7 +6,7 @@ import type {
   AccountAsset,
   AccountAppLocalState,
 } from '../types'
-import { DEFAULT_LIMIT } from '../types'
+import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
 export interface LookupAccountArgs {
   address: string
@@ -69,9 +69,10 @@ export async function searchAccountTransactions(
   if (args.minAmount) query = query.currencyGreaterThan(args.minAmount - 1)
 
   const response = await query.do()
+  const transactions = (response.transactions ?? []).map(formatTransaction)
   return {
-    transactions: (response.transactions ?? []).map(formatTransaction),
-    nextToken: response.nextToken,
+    transactions,
+    nextToken: stripFinalToken(transactions.length, limit, response.nextToken),
   }
 }
 
@@ -99,9 +100,10 @@ export async function searchAccounts(
   if (args.currencyLessThan !== undefined) query = query.currencyLessThan(args.currencyLessThan)
 
   const response = await query.do()
+  const accounts = (response.accounts ?? []).map(formatAccount)
   return {
-    accounts: (response.accounts ?? []).map(formatAccount),
-    nextToken: response.nextToken,
+    accounts,
+    nextToken: stripFinalToken(accounts.length, limit, response.nextToken),
   }
 }
 
@@ -147,7 +149,7 @@ export async function getAccountAssets(
     return h
   })
 
-  return { assets, nextToken: response.nextToken }
+  return { assets, nextToken: stripFinalToken(holdings.length, limit, response.nextToken) }
 }
 
 export interface GetAccountAppLocalStatesArgs {
@@ -168,8 +170,7 @@ export async function getAccountAppLocalStates(
   if (args.applicationId) query = query.applicationID(args.applicationId)
 
   const response = await query.do()
-  return {
-    appLocalStates: (response.appsLocalStates ?? []).map((state) => ({
+  const appLocalStates = (response.appsLocalStates ?? []).map((state) => ({
       applicationId: Number(state.id),
       schema: {
         numByteSlice: Number(state.schema.numByteSlice),
@@ -183,7 +184,10 @@ export async function getAccountAppLocalStates(
           uint: kv.value.uint !== undefined ? Number(kv.value.uint) : undefined,
         },
       })),
-    })),
-    nextToken: response.nextToken,
+    }))
+
+  return {
+    appLocalStates,
+    nextToken: stripFinalToken(appLocalStates.length, limit, response.nextToken),
   }
 }
