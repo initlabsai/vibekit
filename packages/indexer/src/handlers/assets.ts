@@ -1,5 +1,5 @@
 import type algosdk from 'algosdk'
-import { formatAsset, formatTransaction } from '../formatters'
+import { formatAsset, formatAssetAmount, formatTransaction } from '../formatters'
 import type { FormattedAsset, FormattedTransaction, AssetBalance } from '../types'
 import { DEFAULT_LIMIT, stripFinalToken } from '../types'
 
@@ -28,7 +28,8 @@ export async function searchAssetBalances(
   args: SearchAssetBalancesArgs
 ): Promise<{ balances: AssetBalance[]; nextToken?: string }> {
   const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
-  let query = indexer.lookupAssetBalances(args.assetId).limit(limit)
+  // Always fetch max from API so client-side sort has the largest pool
+  let query = indexer.lookupAssetBalances(args.assetId).limit(100)
 
   if (args.nextToken) query = query.nextToken(args.nextToken)
   if (args.currencyGreaterThan !== undefined)
@@ -36,14 +37,32 @@ export async function searchAssetBalances(
   if (args.currencyLessThan !== undefined) query = query.currencyLessThan(args.currencyLessThan)
 
   const response = await query.do()
-  const balances = (response.balances ?? []).map((b) => ({
-    address: String(b.address),
-    amount: String(b.amount),
-    isFrozen: b.isFrozen,
-  }))
+
+  // Fetch asset decimals for formatting
+  let decimals = 0
+  try {
+    const assetRes = await indexer.lookupAssetByID(args.assetId).do()
+    decimals = Number(assetRes.asset.params.decimals ?? 0)
+  } catch {
+    /* fall back to raw amounts */
+  }
+
+  const allBalances = (response.balances ?? [])
+    .map((b) => ({
+      address: String(b.address),
+      amount: formatAssetAmount(String(b.amount), decimals),
+      rawAmount: BigInt(b.amount),
+      isFrozen: b.isFrozen,
+    }))
+    .sort((a, b) => (b.rawAmount > a.rawAmount ? 1 : b.rawAmount < a.rawAmount ? -1 : 0))
+    .map(({ rawAmount: _, ...rest }) => rest)
+
+  // Truncate to requested limit after sorting
+  const balances = allBalances.slice(0, limit)
+
   return {
     balances,
-    nextToken: stripFinalToken(balances.length, limit, response.nextToken),
+    nextToken: stripFinalToken(allBalances.length, 100, response.nextToken),
   }
 }
 

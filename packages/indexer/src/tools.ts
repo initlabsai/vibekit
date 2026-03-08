@@ -167,13 +167,22 @@ export const indexerTools: IndexerToolDefinition[] = [
   },
   {
     name: 'search_asset_balances',
-    description: 'Search for holders of a specific asset',
+    description:
+      'Search for holders of a specific asset. IMPORTANT: Results are paginated by address, NOT sorted by balance. To find top/largest holders, you MUST set currencyGreaterThan to a high raw-unit value (e.g. for USDC with 6 decimals: 1000000000000 = $1M minimum). Without this filter, results will be arbitrary small holders.',
     parameters: z.object({
       assetId: z.number().describe('The asset ID'),
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
-      currencyGreaterThan: z.number().optional().describe('Min balance of the asset'),
-      currencyLessThan: z.number().optional().describe('Max balance of the asset'),
+      currencyGreaterThan: z
+        .number()
+        .optional()
+        .describe(
+          'Min balance in raw base units (before decimal adjustment). E.g. for USDC (6 decimals), 1000000 = 1 USDC, 1000000000000 = 1M USDC'
+        ),
+      currencyLessThan: z
+        .number()
+        .optional()
+        .describe('Max balance in raw base units (before decimal adjustment)'),
     }),
     handler: async (indexer, args) => searchAssetBalances(indexer, args),
   },
