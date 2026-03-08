@@ -202,7 +202,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
                 key={i}
                 className={`rounded-lg px-4 py-2 ${
                   hasToolInvocations
-                    ? 'text-xs text-algo-muted'
+                    ? 'text-sm text-algo-muted'
                     : 'text-sm text-algo-text/90'
                 }`}
               >
