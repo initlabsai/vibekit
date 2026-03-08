@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { formatAlgos, formatAssetAmount, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { ArrowRightLeft } from 'lucide-react'
 import { TableFilter } from './table-filter'
@@ -18,7 +18,7 @@ interface TxRow {
   sender: string
   receiver?: string
   paymentAmount?: number
-  assetAmount?: number
+  assetAmount?: number | string
   assetUnitName?: string
   assetDecimals?: number
   roundTime?: number
@@ -42,7 +42,10 @@ export function TransactionList({ data }: TransactionListProps) {
 
   const sorted = useMemo(
     () => sortData(filtered, {
-      amount: (a, b) => (a.paymentAmount ?? a.assetAmount ?? 0) - (b.paymentAmount ?? b.assetAmount ?? 0),
+      amount: (a, b) => {
+        const parse = (v: number | string | undefined) => typeof v === 'string' ? parseFloat(v.replace(/,/g, '')) : (v ?? 0)
+        return parse(a.paymentAmount ?? a.assetAmount) - parse(b.paymentAmount ?? b.assetAmount)
+      },
       time: (a, b) => (a.roundTime ?? 0) - (b.roundTime ?? 0),
     }),
     [filtered, sortData],
@@ -51,10 +54,7 @@ export function TransactionList({ data }: TransactionListProps) {
   function getTxAmount(tx: TxRow): { amount: string; unit?: string } | null {
     if (tx.paymentAmount != null) return { amount: formatAlgos(tx.paymentAmount), unit: 'ALGO' }
     if (tx.assetAmount != null) {
-      const amount = tx.assetDecimals != null
-        ? formatAssetAmount(String(tx.assetAmount), tx.assetDecimals)
-        : String(tx.assetAmount)
-      return { amount, unit: tx.assetUnitName }
+      return { amount: String(tx.assetAmount), unit: tx.assetUnitName }
     }
     return null
   }

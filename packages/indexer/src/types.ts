@@ -12,7 +12,7 @@ export interface FormattedTransaction {
   assetName?: string
   assetUnitName?: string
   assetDecimals?: number
-  assetAmount?: number
+  assetAmount?: number | string
   applicationId?: number
   note?: string
   group?: string

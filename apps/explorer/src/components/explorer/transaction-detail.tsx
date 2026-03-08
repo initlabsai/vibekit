@@ -1,4 +1,4 @@
-import { formatAlgos, formatAssetAmount, formatTimestamp, txTypeLabel } from '@/lib/formatters'
+import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { CopyableValue } from './copyable-value'
 import { FileText } from 'lucide-react'
@@ -39,11 +39,7 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
         {data.assetAmount != null && (
           <Row
             label="Asset Amount"
-            value={
-              data.assetDecimals != null
-                ? `${formatAssetAmount(String(data.assetAmount), data.assetDecimals as number)}${data.assetUnitName ? ` ${data.assetUnitName}` : ''}`
-                : `${String(data.assetAmount)}${data.assetUnitName ? ` ${data.assetUnitName}` : ''}`
-            }
+            value={`${String(data.assetAmount)}${data.assetUnitName ? ` ${data.assetUnitName}` : ''}`}
           />
         )}
         <Row label="Fee" value={`${formatAlgos(data.fee as number)} ALGO`} />
