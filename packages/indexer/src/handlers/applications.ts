@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
-import { formatApplication } from '../formatters.js'
-import type { FormattedApplication } from '../types.js'
-import { DEFAULT_LIMIT } from '../types.js'
+import { formatApplication } from '../formatters'
+import type { FormattedApplication } from '../types'
+import { DEFAULT_LIMIT } from '../types'
 
 export interface LookupApplicationArgs {
   applicationId: number

@@ -1,6 +1,6 @@
 import { z, type ZodSchema } from 'zod'
 import type { NfdApiClient } from '@txnlab/nfd-sdk'
-import { resolveNfd, reverseResolveNfd } from './handlers.js'
+import { resolveNfd, reverseResolveNfd } from './handlers'
 
 export interface NfdToolDefinition {
   name: string

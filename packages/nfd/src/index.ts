@@ -1,2 +1,2 @@
-export { createNfdApiClient } from './client.js'
-export { nfdTools, type NfdToolDefinition } from './tools.js'
+export { createNfdApiClient } from './client'
+export { nfdTools, type NfdToolDefinition } from './tools'

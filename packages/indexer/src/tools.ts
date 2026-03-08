@@ -19,7 +19,7 @@ import {
   lookupApplication,
   searchApplications,
   lookupApplicationLogs,
-} from './handlers/index.js'
+} from './handlers/index'
 
 /** Framework-agnostic tool definition that both MCP server and AI SDK can consume. */
 export interface IndexerToolDefinition {
@@ -98,7 +98,8 @@ export const indexerTools: IndexerToolDefinition[] = [
   },
   {
     name: 'get_account_app_local_states',
-    description: 'Get application local state for an account (the key-value data stored by apps the account has opted into)',
+    description:
+      'Get application local state for an account (the key-value data stored by apps the account has opted into)',
     parameters: z.object({
       address: z.string().describe('The Algorand address'),
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),

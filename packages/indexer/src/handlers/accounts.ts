@@ -1,7 +1,12 @@
 import type algosdk from 'algosdk'
-import { formatAccount, formatTransaction } from '../formatters.js'
-import type { FormattedAccount, FormattedTransaction, AccountAsset, AccountAppLocalState } from '../types.js'
-import { DEFAULT_LIMIT } from '../types.js'
+import { formatAccount, formatTransaction } from '../formatters'
+import type {
+  FormattedAccount,
+  FormattedTransaction,
+  AccountAsset,
+  AccountAppLocalState,
+} from '../types'
+import { DEFAULT_LIMIT } from '../types'
 
 export interface LookupAccountArgs {
   address: string

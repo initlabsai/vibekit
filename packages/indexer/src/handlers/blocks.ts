@@ -1,7 +1,7 @@
 import type algosdk from 'algosdk'
-import { formatBlock } from '../formatters.js'
-import type { FormattedBlock } from '../types.js'
-import { DEFAULT_LIMIT } from '../types.js'
+import { formatBlock } from '../formatters'
+import type { FormattedBlock } from '../types'
+import { DEFAULT_LIMIT } from '../types'
 
 export interface LookupBlockArgs {
   round: number
