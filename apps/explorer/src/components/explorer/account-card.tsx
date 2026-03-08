@@ -13,6 +13,7 @@ export function AccountCard({ data }: AccountCardProps) {
   const totalAssetsOptedIn = data.totalAssetsOptedIn as number | undefined
   const totalAppsOptedIn = data.totalAppsOptedIn as number | undefined
   const totalCreatedAssets = data.totalCreatedAssets as number | undefined
+  const createdAtRound = data.createdAtRound as number | undefined
 
   return (
     <div className="px-4 py-3">
@@ -42,6 +43,9 @@ export function AccountCard({ data }: AccountCardProps) {
           )}
           {totalCreatedAssets != null && totalCreatedAssets > 0 && (
             <span>{formatNumber(totalCreatedAssets)} created</span>
+          )}
+          {createdAtRound != null && (
+            <span>Created round {formatNumber(createdAtRound)}</span>
           )}
         </span>
       </div>
