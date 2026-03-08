@@ -35,7 +35,7 @@ function extractProperties(properties?: {
 }
 
 export async function resolveNfd(api: NfdApiClient, args: { name: string }) {
-  const nfd = await api.resolve(args.name, { view: 'full' })
+  const nfd = await api.resolve(args.name.toLowerCase(), { view: 'full' })
   return {
     name: nfd.name,
     address: nfd.depositAccount ?? nfd.owner,
