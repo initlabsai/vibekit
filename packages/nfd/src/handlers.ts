@@ -1,5 +1,10 @@
 import type { NfdApiClient } from '@txnlab/nfd-sdk'
 
+/** Convert an ipfs:// URL to an HTTPS gateway URL. Returns the input unchanged if not IPFS. */
+function ipfsToHttps(url: string): string {
+  return url.startsWith('ipfs://') ? url.replace('ipfs://', 'https://images.nf.domains/ipfs/') : url
+}
+
 /** Pick well-known social/profile fields from NFD properties. */
 function extractProperties(properties?: {
   internal?: Record<string, string>
@@ -24,9 +29,7 @@ function extractProperties(properties?: {
   }
 
   // Convert IPFS avatar URL to HTTPS so the frontend can use it directly
-  if (picked.avatar?.startsWith('ipfs://')) {
-    picked.avatar = picked.avatar.replace('ipfs://', 'https://images.nf.domains/ipfs/')
-  }
+  if (picked.avatar) picked.avatar = ipfsToHttps(picked.avatar)
 
   return Object.keys(picked).length > 0 ? picked : undefined
 }
@@ -52,5 +55,20 @@ export async function reverseResolveNfd(api: NfdApiClient, args: { address: stri
     name: nfd.name,
     appId: nfd.appID,
     properties: extractProperties(nfd.properties),
+  }
+}
+
+export async function batchReverseResolveNfd(
+  api: NfdApiClient,
+  args: { addresses: string[] }
+) {
+  const result = await api.reverseLookup(args.addresses, { view: 'thumbnail' })
+  return {
+    results: args.addresses.map((address) => {
+      const nfd = result[address]
+      if (!nfd) return { address, name: null }
+      const avatar = nfd.properties?.userDefined?.avatar
+      return { address, name: nfd.name, avatar: avatar ? ipfsToHttps(avatar) : undefined }
+    }),
   }
 }

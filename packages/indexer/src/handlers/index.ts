@@ -1,6 +1,7 @@
 export { getNetworkStatus } from './status'
 export {
   lookupAccount,
+  batchLookupAccounts,
   searchAccountTransactions,
   searchAccounts,
   getAccountAssets,

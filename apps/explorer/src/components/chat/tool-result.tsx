@@ -9,6 +9,7 @@ import { BlockInfo } from '../explorer/block-info'
 import { ApplicationInfo } from '../explorer/application-info'
 import { AssetList } from '../explorer/asset-list'
 import { NfdCard } from '../explorer/nfd-card'
+import { NfdList } from '../explorer/nfd-list'
 import { AccountList } from '../explorer/account-list'
 import { ApplicationList } from '../explorer/application-list'
 import { BlockList } from '../explorer/block-list'
@@ -72,7 +73,11 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
     case 'reverse_resolve_nfd':
       return <NfdCard data={result as Record<string, unknown>} />
 
+    case 'batch_reverse_resolve_nfd':
+      return <NfdList data={result as Record<string, unknown>} />
+
     case 'search_accounts':
+    case 'batch_lookup_accounts':
       return <AccountList data={result as Record<string, unknown>} />
 
     case 'search_applications':

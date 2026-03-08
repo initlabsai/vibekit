@@ -1,6 +1,6 @@
 import { z, type ZodSchema } from 'zod'
 import type { NfdApiClient } from '@txnlab/nfd-sdk'
-import { resolveNfd, reverseResolveNfd } from './handlers'
+import { resolveNfd, reverseResolveNfd, batchReverseResolveNfd } from './handlers'
 
 export interface NfdToolDefinition {
   name: string
@@ -27,5 +27,14 @@ export const nfdTools: NfdToolDefinition[] = [
       address: z.string().describe('The Algorand address to look up'),
     }),
     handler: async (api, args) => reverseResolveNfd(api, args),
+  },
+  {
+    name: 'batch_reverse_resolve_nfd',
+    description:
+      'Look up NFD names for multiple Algorand addresses at once. Prefer this over repeated single reverse_resolve_nfd calls when resolving 2 or more addresses.',
+    parameters: z.object({
+      addresses: z.array(z.string()).describe('The Algorand addresses to look up'),
+    }),
+    handler: async (api, args) => batchReverseResolveNfd(api, args),
   },
 ]
