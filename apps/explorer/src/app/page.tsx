@@ -99,14 +99,14 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 text-xs text-yellow-500/80">
             <TriangleAlert className="size-3.5 shrink-0" />
             <p>
-              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span> and has some issues.{' '}
+              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span>.{' '}
               <a
                 href="https://github.com/gabrielkuettel/vibekit/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-algo-teal transition-colors"
               >
-                Report them
+                Report issues
               </a>
             </p>
           </div>
@@ -163,14 +163,14 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 text-xs text-yellow-500/80">
             <TriangleAlert className="size-3.5 shrink-0" />
             <p>
-              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span> and has some issues.{' '}
+              She&apos;s a 10, but she&apos;s in <span className="font-bold">alpha</span>.{' '}
               <a
                 href="https://github.com/gabrielkuettel/vibekit/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline hover:text-algo-teal transition-colors"
               >
-                Report them
+                Report issues
               </a>
             </p>
           </div>
