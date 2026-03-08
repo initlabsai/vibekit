@@ -8,6 +8,7 @@ export {
   formatAsset,
   formatBlock,
   formatApplication,
+  formatAssetAmount,
 } from './formatters'
 export * from './handlers/index'
 export * from './types'

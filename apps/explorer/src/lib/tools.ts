@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts, type FormattedTransaction } from '@vibekit/indexer'
+import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts, formatAssetAmount, type FormattedTransaction } from '@vibekit/indexer'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
 import { env } from '@/lib/env'
 
@@ -81,6 +81,9 @@ function attachAssetInfo(txns: FormattedTransaction[]): void {
         tx.assetName = info.name
         tx.assetUnitName = info.unitName
         tx.assetDecimals = info.decimals
+        if (info && tx.assetAmount != null) {
+          tx.assetAmount = formatAssetAmount(String(tx.assetAmount), info.decimals)
+        }
       }
     }
     if (tx.innerTxns) attachAssetInfo(tx.innerTxns)
