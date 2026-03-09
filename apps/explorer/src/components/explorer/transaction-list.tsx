@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
+import { CopyableValue } from './copyable-value'
 import { ArrowRightLeft, ArrowUp, ArrowDown } from 'lucide-react'
 import { TableFilter } from './table-filter'
 import { SortableHeader } from './sortable-header'
@@ -22,6 +23,7 @@ interface TxRow {
   assetUnitName?: string
   assetDecimals?: number
   roundTime?: number
+  group?: string
 }
 
 function DirectionBadge({ tx, address }: { tx: TxRow; address?: string }) {
@@ -47,7 +49,8 @@ export function TransactionList({ data }: TransactionListProps) {
       tx.id.toLowerCase().includes(q) ||
       txTypeLabel(tx.type).toLowerCase().includes(q) ||
       tx.sender.toLowerCase().includes(q) ||
-      tx.receiver?.toLowerCase().includes(q)
+      tx.receiver?.toLowerCase().includes(q) ||
+      tx.group?.toLowerCase().includes(q)
     )
   }, [transactions, filter])
 
@@ -86,6 +89,7 @@ export function TransactionList({ data }: TransactionListProps) {
           <thead>
             <tr className="text-algo-muted border-b border-algo-border">
               <th className="text-left px-4 py-2 font-medium">TX ID</th>
+              <th className="text-left px-4 py-2 font-medium">Group</th>
               <th className="text-left px-4 py-2 font-medium">Type</th>
               {address && <th className="text-left px-4 py-2 font-medium">Direction</th>}
               <th className="text-left px-4 py-2 font-medium">From</th>
@@ -102,6 +106,11 @@ export function TransactionList({ data }: TransactionListProps) {
               >
                 <td className="px-4 py-2 text-algo-teal">
                   <CopyableAddress address={tx.id} chars={8} />
+                </td>
+                <td className="px-4 py-2 font-mono text-algo-muted">
+                  {tx.group ? (
+                    <CopyableValue value={tx.group}>{tx.group.slice(0, 8)}…</CopyableValue>
+                  ) : '—'}
                 </td>
                 <td className="px-4 py-2">
                   <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted">
