@@ -18,18 +18,24 @@ function extractProperties(properties?: {
 
   const picked: Record<string, string> = {}
 
+  // Avatar priority: verified.avatar > verified.avatarasaid > userDefined.avatar
+  if (v.avatar) {
+    picked.avatar = ipfsToHttps(v.avatar)
+  } else if (v.avatarasaid) {
+    picked.avatar = `assetid:${v.avatarasaid}`
+  } else if (u.avatar) {
+    picked.avatar = ipfsToHttps(u.avatar)
+  }
+
   // Verified socials / contact
   for (const key of ['twitter', 'discord', 'telegram', 'github', 'email', 'domain', 'blueskydid', 'nostrpubkey'] as const) {
     if (v[key]) picked[key] = v[key]
   }
 
-  // User-defined profile fields (avatar, bio, website, name)
-  for (const key of ['avatar', 'bio', 'website', 'name'] as const) {
+  // User-defined profile fields (bio, website, name) — avatar handled above
+  for (const key of ['bio', 'website', 'name'] as const) {
     if (u[key] && !picked[key]) picked[key] = u[key]
   }
-
-  // Convert IPFS avatar URL to HTTPS so the frontend can use it directly
-  if (picked.avatar) picked.avatar = ipfsToHttps(picked.avatar)
 
   return Object.keys(picked).length > 0 ? picked : undefined
 }
@@ -67,8 +73,13 @@ export async function batchReverseResolveNfd(
     results: args.addresses.map((address) => {
       const nfd = result[address]
       if (!nfd) return { address, name: null }
-      const avatar = nfd.properties?.userDefined?.avatar
-      return { address, name: nfd.name, avatar: avatar ? ipfsToHttps(avatar) : undefined }
+      const v = nfd.properties?.verified ?? {}
+      const u = nfd.properties?.userDefined ?? {}
+      let avatar: string | undefined
+      if (v.avatar) avatar = ipfsToHttps(v.avatar)
+      else if (v.avatarasaid) avatar = `assetid:${v.avatarasaid}`
+      else if (u.avatar) avatar = ipfsToHttps(u.avatar)
+      return { address, name: nfd.name, avatar }
     }),
   }
 }

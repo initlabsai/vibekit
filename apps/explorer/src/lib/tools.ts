@@ -90,6 +90,44 @@ async function enrichTransactions(indexer: IndexerClient, txns: FormattedTransac
   attachAssetInfo(txns)
 }
 
+/** Resolve `assetid:<id>` avatar markers to image URLs via Pera API. */
+async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
+  if (!obj || typeof obj !== 'object') return
+  const record = obj as Record<string, unknown>
+
+  // Collect all assetid: markers from avatar fields
+  const targets: { holder: Record<string, unknown>; id: number }[] = []
+
+  function scan(val: unknown) {
+    if (!val || typeof val !== 'object') return
+    if (Array.isArray(val)) { val.forEach(scan); return }
+    const r = val as Record<string, unknown>
+    if (typeof r.avatar === 'string' && r.avatar.startsWith('assetid:')) {
+      const id = parseInt(r.avatar.slice(8), 10)
+      if (!isNaN(id)) targets.push({ holder: r, id })
+    }
+    if (typeof r.properties === 'object' && r.properties) {
+      const props = r.properties as Record<string, unknown>
+      if (typeof props.avatar === 'string' && props.avatar.startsWith('assetid:')) {
+        const id = parseInt(props.avatar.slice(8), 10)
+        if (!isNaN(id)) targets.push({ holder: props, id })
+      }
+    }
+    if (r.results && Array.isArray(r.results)) r.results.forEach(scan)
+  }
+
+  scan(record)
+  if (targets.length === 0) return
+
+  const uniqueIds = [...new Set(targets.map((t) => t.id))]
+  const peraMap = await getPeraAssetInfoBatch(uniqueIds)
+
+  for (const t of targets) {
+    const pera = peraMap.get(t.id)
+    t.holder.avatar = pera?.logo ?? undefined
+  }
+}
+
 /** Fetch the latest round from the Algod `/v2/status` endpoint. */
 async function getLatestRoundFromAlgod(algodUrl: string): Promise<number> {
   const res = await fetch(`${algodUrl}/v2/status`, {
@@ -221,6 +259,7 @@ export function createExplorerTools(): ToolSet {
         const start = Date.now()
         try {
           const result = sanitizeBigInts(await t.handler(nfdApi, args))
+          await resolveAssetIdAvatars(result)
           console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
           return result
         } catch (err) {
