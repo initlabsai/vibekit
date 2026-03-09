@@ -50,7 +50,7 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
           <Row label="Time" value={formatTimestamp(data.roundTime as number)} />
         )}
         {data.note ? <Row label="Note" value={data.note as string} /> : null}
-        {data.group ? <Row label="Group" value={data.group as string} mono /> : null}
+        {data.group ? <Row label="Group" value={<CopyableValue value={data.group as string}><span className="font-mono">{(data.group as string).slice(0, 12)}…</span></CopyableValue>} /> : null}
         {data.applicationId != null && (
           <Row label="App ID" value={<CopyableValue value={String(data.applicationId)}>{String(data.applicationId)}</CopyableValue>} />
         )}

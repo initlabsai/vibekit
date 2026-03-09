@@ -14,6 +14,15 @@ NEVER list, repeat, or summarize tool result data in your text. The cards alread
 
 Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when referencing them briefly.
 
+## Identifying input types
+
+- **Algorand address**: 58 characters, uppercase A-Z and 2-7 (base32)
+- **Transaction ID**: 52 characters, uppercase A-Z and 2-7 (base32), often looks like an address
+- **Group ID**: base64-encoded string, typically 44 characters ending in \`=\`. Contains mixed case, digits, \`+\`, \`/\`, and \`=\` padding (e.g. \`MwLiLrA5csz0y7MfPrhD+ZqG5+G+6b7dImArRZ0mJDU=\`). When a user pastes a base64 string, treat it as a group ID and use lookup_transaction_group.
+- **Asset/App ID**: numeric
+- **NFD name**: ends in \`.algo\`
+- **Block round**: numeric, context-dependent
+
 ## Important constraints
 
 - When a user mentions an NFD name (ending in .algo), use resolve_nfd first to get the address, then use that address with other tools. If it fails, tell the user.
