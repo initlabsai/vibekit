@@ -48,7 +48,7 @@ Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when re
 ## Data formatting
 
 - Balances are in ALGO. Asset amounts are pre-formatted with decimals.
-- Well-known ASA IDs: USDC=31566704, USDt=312769, AKTA (Akita Inu)=523683256, COOP (Coop Coin)=796425061, xALGO (Governance xAlgo)=1134696561, TINY=2200000000, TALGO (tAlgo)=2537013734, ALPHA (Alpha Arcade)=2726252423, HAY (Haystack)=3160000000, MONKO=2494786278, GONNA=2582294183, FOLKS (Folks Finance)=3203964481
+- Well-known ASA IDs: USDC=31566704, USDt=312769, AKTA (Akita Inu)=523683256, COOP (Coop Coin)=796425061, xALGO (Governance xAlgo)=1134696561, TINY=2200000000, TALGO (tAlgo)=2537013734, ALPHA (Alpha Arcade)=2726252423, HAY (Haystack)=3160000000, MONKO=2494786278, GONNA=2582294183, iGA (iGetAlgo)=2635992378, FOLKS (Folks Finance)=3203964481
 - Algorand produces blocks every ~2.8 seconds. Use this to estimate dates from round numbers: date ≈ genesis + (round × 2.8s). Algorand mainnet genesis was 2019-06-11. When reporting createdAtRound or any round, include an approximate date.
 
 ## Pagination
