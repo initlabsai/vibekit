@@ -5,7 +5,7 @@ import { useChat } from '@ai-sdk/react'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
 import { TokenUsageBar, formatTokenCount } from '@/components/chat/token-usage-bar'
-import { Search, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import { useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -89,17 +89,15 @@ export default function Home() {
             </h1>
             <p className="text-algo-muted/80 max-w-md mx-auto">The Agentic Explorer for Algorand</p>
           </div>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-algo-muted" />
-            <ChatInput
-              input={input}
-              setInput={setInput}
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              onStop={stop}
-              placeholder="Search Algorand..."
-            />
-          </div>
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            onStop={stop}
+            placeholder="Search Algorand..."
+            showSearchIcon
+          />
           <div className="flex flex-wrap gap-2 justify-center">
             {SUGGESTIONS.map((suggestion) => (
               <Button
