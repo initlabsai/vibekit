@@ -204,16 +204,98 @@ export function createExplorerTools(): ToolSet {
     })
   }
 
-  // get_network_status — use Algod instead of Indexer health check
+  // get_network_status — rich network dashboard with TPS, supply, block time
   tools.get_network_status = tool({
-    description: 'Get the current network status including the latest round number. Use this to find the most recent block.',
+    description: 'Get network health dashboard: current round, TPS, block time, supply, participation. Use when users ask about network status, health, metrics, or stats.',
     inputSchema: z.object({}),
     execute: async () => {
       const start = Date.now()
       try {
-        const latestRound = await getLatestRoundFromAlgod(algodUrl)
+        // Fetch status and supply in parallel
+        const [statusRes, supplyRes] = await Promise.all([
+          fetch(`${algodUrl}/v2/status`, { headers: { 'X-Algo-API-Token': '' } }),
+          fetch(`${algodUrl}/v2/ledger/supply`, { headers: { 'X-Algo-API-Token': '' } }),
+        ])
+        if (!statusRes.ok) throw new Error(`Algod status failed: ${statusRes.status}`)
+        if (!supplyRes.ok) throw new Error(`Algod supply failed: ${supplyRes.status}`)
+
+        const [status, supply] = await Promise.all([statusRes.json(), supplyRes.json()])
+        const latestRound = Number(status['last-round'])
+        const timeSinceLastRound = Number(status['time-since-last-round']) / 1_000_000_000 // nanoseconds to seconds
+        const genesisId = status['genesis-id'] as string ?? ''
+        const genesisHash = status['genesis-hash'] as string ?? ''
+        const lastVersion = status['last-version'] as string ?? ''
+        const catchupTime = Number(status['catchup-time'] ?? 0)
+        const totalSupply = Number(supply['total-money']) / 1_000_000
+        const onlineStake = Number(supply['online-money']) / 1_000_000
+        const participation = onlineStake / totalSupply
+
+        // Sample recent blocks for TPS and block time stats (batched to avoid rate limits)
+        const sampleSize = 10
+        const batchSize = 5
+        const blocks: Awaited<ReturnType<ReturnType<typeof indexer.lookupBlock>['do']>>[] = []
+        for (let batch = 0; batch < sampleSize; batch += batchSize) {
+          const promises = []
+          for (let i = batch; i < Math.min(batch + batchSize, sampleSize); i++) {
+            promises.push(indexer.lookupBlock(latestRound - i).do())
+          }
+          blocks.push(...await Promise.all(promises))
+        }
+
+        // Compute block times and TPS from samples
+        const blockData = blocks.map((b) => ({
+          round: Number(b.round),
+          timestamp: Number(b.timestamp),
+          txnCount: b.transactions?.length ?? 0,
+        })).sort((a, b) => a.round - b.round)
+
+        const blockTimes: number[] = []
+        const tpsPerBlock: number[] = []
+        for (let i = 1; i < blockData.length; i++) {
+          const dt = blockData[i].timestamp - blockData[i - 1].timestamp
+          if (dt > 0) {
+            blockTimes.push(dt)
+            tpsPerBlock.push(blockData[i].txnCount / dt)
+          }
+        }
+
+        const avgBlockTime = blockTimes.length > 0 ? blockTimes.reduce((a, b) => a + b, 0) / blockTimes.length : 0
+        const avgTps = tpsPerBlock.length > 0 ? tpsPerBlock.reduce((a, b) => a + b, 0) / tpsPerBlock.length : 0
+        const peakTps = tpsPerBlock.length > 0 ? Math.max(...tpsPerBlock) : 0
+        const totalTxns = blockData.reduce((sum, b) => sum + b.txnCount, 0)
+        const avgTxnPerBlock = blockData.length > 0 ? totalTxns / blockData.length : 0
+
+        // TPS trend — per-block TPS for the sparkline (oldest to newest)
+        const tpsTrend = tpsPerBlock
+
         console.log(`[tool:get_network_status] ${Date.now() - start}ms`)
-        return { latestRound }
+        return sanitizeBigInts({
+          latestRound,
+          timeSinceLastRound: Math.round(timeSinceLastRound * 100) / 100,
+          totalSupply,
+          onlineStake,
+          participation: Math.round(participation * 1000) / 10, // percentage with 1 decimal
+          avgBlockTime: Math.round(avgBlockTime * 100) / 100,
+          avgTps: Math.round(avgTps * 10) / 10,
+          peakTps: Math.round(peakTps),
+          avgTxnPerBlock: Math.round(avgTxnPerBlock),
+          sampleBlocks: sampleSize,
+          tpsTrend,
+          blockDetails: blockData.slice(1).map((b, i) => ({
+            round: b.round,
+            txnCount: b.txnCount,
+            blockTime: blockTimes[i] ?? 0,
+            tps: Math.round((tpsPerBlock[i] ?? 0) * 10) / 10,
+          })),
+          totalTxns,
+          minBlockTime: blockTimes.length > 0 ? Math.round(Math.min(...blockTimes) * 100) / 100 : 0,
+          maxBlockTime: blockTimes.length > 0 ? Math.round(Math.max(...blockTimes) * 100) / 100 : 0,
+          genesisId,
+          genesisHash,
+          consensusVersion: lastVersion,
+          catchupTime,
+          blockTimeTrend: blockTimes,
+        })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         console.error(`[tool:get_network_status] ${Date.now() - start}ms error:`, message)
