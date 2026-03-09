@@ -98,11 +98,7 @@ function StateValueCell({ entry }: { entry: GlobalStateEntry }) {
     case 'uint':
       return <span>{decoded.display}</span>
     case 'address':
-      return (
-        <span className="text-algo-muted" title={decoded.full}>
-          {decoded.display}
-        </span>
-      )
+      return <CopyableAddress address={decoded.full} />
     default:
       return <span className="text-algo-muted">{decoded.display}</span>
   }
