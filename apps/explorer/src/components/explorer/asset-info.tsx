@@ -1,6 +1,8 @@
-import { formatNumber, formatAssetAmount } from '@/lib/formatters'
+import { formatNumber, formatAssetAmount, formatUsd } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
 import { CopyableValue } from './copyable-value'
+import { AssetLogo } from './asset-logo'
+import { VerificationBadge } from './verification-badge'
 import { Gem } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -17,11 +19,18 @@ export function AssetInfo({ data }: AssetInfoProps) {
   return (
     <div className="rounded-lg border border-algo-border bg-algo-card p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Gem className="w-4 h-4 text-algo-teal" />
+        {data.logo ? (
+          <AssetLogo src={data.logo as string | null} name={data.name as string} />
+        ) : (
+          <Gem className="w-4 h-4 text-algo-teal" />
+        )}
         <h3 className="text-sm font-semibold text-algo-teal">
           {(data.name as string) ?? 'Asset'}
           {data.unitName ? ` (${data.unitName})` : ''}
         </h3>
+        {data.verificationTier != null && (
+          <VerificationBadge tier={data.verificationTier as 'verified' | 'trusted' | 'suspicious' | 'unverified'} />
+        )}
         <CopyableValue value={String(data.assetId)}>
           <span className="text-xs text-algo-muted ml-auto">ID: {data.assetId as number}</span>
         </CopyableValue>
@@ -29,6 +38,9 @@ export function AssetInfo({ data }: AssetInfoProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
         <Field label="Total Supply" value={displaySupply} />
         <Field label="Decimals" value={String(data.decimals)} />
+        {data.usdValue != null && (
+          <Field label="USD Price" value={formatUsd(data.usdValue as number)} />
+        )}
         <Field
           label="Creator"
           value={<CopyableAddress address={data.creator as string} />}

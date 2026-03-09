@@ -26,7 +26,8 @@ Use markdown **bold** for emphasis and \`code\` for inline addresses/IDs when re
 ## Workflow tips
 
 - Transactions in a block: use search_transactions with minRound and maxRound set to the same round
-- Account: start with lookup_account, then search_account_transactions. Use get_account_assets or get_account_app_local_states for deeper dives.
+- Account or NFD lookup (e.g. "look up gabe.algo" or "show me account X"): call resolve_nfd (if .algo name), lookup_account, and get_account_portfolio in parallel to show the full picture — NFD info, account summary, and portfolio with USD values.
+- Use get_account_portfolio when asked about an account's portfolio, holdings, or total value. This enriches holdings with USD values from Pera.
 - Asset: lookup_asset for details, search_asset_balances for holders, search_asset_transactions for history.
 - Application: lookup_application for details, lookup_application_logs for logs, search_applications to find by creator.
 - Transaction group: lookup_transaction_group with the group ID.
