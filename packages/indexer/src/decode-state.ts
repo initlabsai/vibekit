@@ -2,11 +2,13 @@
  * Decode Algorand application state values from base64.
  *
  * Follows the same heuristics as algokit-lora:
- * - 32-byte values → Algorand public key (hex)
+ * - 32-byte values → Algorand address (base32 with checksum)
  * - Printable text (no control chars) → UTF-8 string
  * - ≤8 bytes with control chars → big-endian uint64
  * - Everything else → original base64
  */
+
+import algosdk from 'algosdk'
 
 export type DecodedValue =
   | { type: 'string'; display: string }
@@ -18,10 +20,10 @@ export function decodeStateValue(base64: string): DecodedValue {
   try {
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
 
-    // 32 bytes → likely an Algorand public key / address
+    // 32 bytes → likely an Algorand address
     if (bytes.length === 32) {
-      const hex = toHex(bytes)
-      return { type: 'address', display: hex.slice(0, 8) + '...' + hex.slice(-8), full: hex }
+      const addr = algosdk.encodeAddress(bytes)
+      return { type: 'address', display: addr.slice(0, 6) + '...' + addr.slice(-4), full: addr }
     }
 
     // Try as printable text (no control characters including null)
@@ -43,9 +45,3 @@ export function decodeStateValue(base64: string): DecodedValue {
   }
 }
 
-function toHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase()
-}

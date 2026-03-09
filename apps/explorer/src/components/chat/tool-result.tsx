@@ -14,6 +14,7 @@ import { NfdList } from '../explorer/nfd-list'
 import { AccountList } from '../explorer/account-list'
 import { ApplicationList } from '../explorer/application-list'
 import { BlockList } from '../explorer/block-list'
+import { ApplicationLocalState } from '../explorer/application-local-state'
 
 interface ToolResultProps {
   toolName: string
@@ -83,6 +84,9 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
     case 'search_accounts':
     case 'batch_lookup_accounts':
       return <AccountList data={result as Record<string, unknown>} />
+
+    case 'get_account_app_local_states':
+      return <ApplicationLocalState data={result as Record<string, unknown>} />
 
     case 'search_applications':
       return <ApplicationList data={result as Record<string, unknown>} />
