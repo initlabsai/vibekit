@@ -97,7 +97,7 @@ export default function Home() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               onStop={stop}
-              placeholder="Search the Algorand blockchain..."
+              placeholder="Search Algorand..."
             />
           </div>
           <div className="flex flex-wrap gap-2 justify-center">

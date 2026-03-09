@@ -35,7 +35,7 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeh
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? 'Ask about the Algorand blockchain...'}
+        placeholder={placeholder ?? 'Ask anything...'}
         rows={1}
         disabled={isLoading}
         enterKeyHint="send"
