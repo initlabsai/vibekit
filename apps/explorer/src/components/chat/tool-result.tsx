@@ -16,6 +16,7 @@ import { ApplicationList } from '../explorer/application-list'
 import { BlockList } from '../explorer/block-list'
 import { ApplicationLocalState } from '../explorer/application-local-state'
 import { TransactionGroup } from '../explorer/transaction-group'
+import { NetworkStatus } from '../explorer/network-status'
 
 interface ToolResultProps {
   toolName: string
@@ -94,6 +95,9 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
 
     case 'lookup_transaction_group':
       return <TransactionGroup data={result as Record<string, unknown>} />
+
+    case 'get_network_status':
+      return <NetworkStatus data={result as Record<string, unknown>} />
 
     case 'search_block_headers':
       return <BlockList data={result as Record<string, unknown>} />
