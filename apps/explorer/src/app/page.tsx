@@ -12,9 +12,11 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { TypingDots } from '@/components/chat/typing-dots'
 
 const SUGGESTIONS = [
+  'Show network status',
   'Show me the latest block',
-  'Look up USDC asset info',
+  'Look up $USDC asset info',
   'Show portfolio for vibekit.algo',
+  'Who are the top holders of $AKITA?',
 ]
 
 export default function Home() {

@@ -21,20 +21,8 @@ function formatCompact(n: number): string {
   return n.toFixed(1)
 }
 
-function getHealthGrade(avgTps: number, avgBlockTime: number, participation: number) {
-  let score = 0
-  if (avgBlockTime > 0 && avgBlockTime < 4) score++
-  if (avgBlockTime > 0 && avgBlockTime < 3.5) score++
-  if (avgTps > 5) score++
-  if (avgTps > 15) score++
-  if (participation > 25) score++
-  if (participation > 35) score++
-
-  if (score >= 5) return { label: 'Excellent', color: 'text-green-400', dot: 'bg-green-400' }
-  if (score >= 4) return { label: 'Good', color: 'text-green-400', dot: 'bg-green-400' }
-  if (score >= 3) return { label: 'Normal', color: 'text-algo-teal', dot: 'bg-algo-teal' }
-  if (score >= 2) return { label: 'Degraded', color: 'text-yellow-400', dot: 'bg-yellow-400' }
-  return { label: 'Poor', color: 'text-red-400', dot: 'bg-red-400' }
+function getHealthStatus() {
+  return { label: 'Healthy', color: 'text-green-400', dot: 'bg-green-400' }
 }
 
 function TpsChart({ blocks, color }: { blocks: BlockDetail[]; color: string }) {
@@ -99,9 +87,9 @@ function TpsChart({ blocks, color }: { blocks: BlockDetail[]; color: string }) {
             <line key={i} x1={x} y1={chartH} x2={x} y2={chartH + 4} stroke="currentColor" className="text-algo-muted" strokeWidth="1" opacity="0.4" />
           ))}
 
-          {/* Hover crosshair */}
+          {/* Hover bar from axis up to data point */}
           {hoverIdx !== null && (
-            <line x1={xs[hoverIdx]} y1={0} x2={xs[hoverIdx]} y2={chartH} stroke={color} strokeWidth="1" opacity="0.4" />
+            <line x1={xs[hoverIdx]} y1={chartH} x2={xs[hoverIdx]} y2={ys[hoverIdx]} stroke={color} strokeWidth="1" opacity="0.4" />
           )}
 
           {/* Invisible hit areas per data point */}
@@ -153,7 +141,7 @@ export function NetworkStatus({ data }: NetworkStatusProps) {
   const consensusVersion = (data.consensusVersion ?? '') as string
   const blockDetails = (data.blockDetails ?? []) as BlockDetail[]
 
-  const health = getHealthGrade(avgTps, avgBlockTime, participation)
+  const health = getHealthStatus()
   const versionShort = consensusVersion.split('/').filter(Boolean).pop() ?? ''
   const networkName = genesisId ? genesisId.replace(/-v\d.*$/, '') : ''
 
