@@ -31,6 +31,10 @@ export function txTypeLabel(type: string): string {
   return labels[type] ?? type
 }
 
+export function formatUsd(n: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+}
+
 export function formatAssetAmount(rawAmount: string, decimals: number): string {
   const num = BigInt(rawAmount)
   if (decimals === 0) return formatNumber(Number(num))

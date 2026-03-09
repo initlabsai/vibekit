@@ -8,6 +8,7 @@ import { AssetHolders } from '../explorer/asset-holders'
 import { BlockInfo } from '../explorer/block-info'
 import { ApplicationInfo } from '../explorer/application-info'
 import { AssetList } from '../explorer/asset-list'
+import { AccountPortfolio } from '../explorer/account-portfolio'
 import { NfdCard } from '../explorer/nfd-card'
 import { NfdList } from '../explorer/nfd-list'
 import { AccountList } from '../explorer/account-list'
@@ -55,6 +56,9 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
 
     case 'lookup_asset':
       return <AssetInfo data={result as Record<string, unknown>} />
+
+    case 'get_account_portfolio':
+      return <AccountPortfolio data={result as Record<string, unknown>} />
 
     case 'search_asset_balances':
       return <AssetHolders data={result as Record<string, unknown>} />

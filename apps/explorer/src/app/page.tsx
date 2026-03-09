@@ -14,7 +14,7 @@ import { TypingDots } from '@/components/chat/typing-dots'
 const SUGGESTIONS = [
   'Show me the latest block',
   'Look up USDC asset info',
-  'Look up the account vibekit.algo',
+  'Show portfolio for vibekit.algo',
 ]
 
 export default function Home() {

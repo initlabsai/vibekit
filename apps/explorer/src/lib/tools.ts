@@ -1,41 +1,14 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts, formatAssetAmount, type FormattedTransaction } from '@vibekit/indexer'
+import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts, formatAssetAmount, type FormattedTransaction, type AccountAsset } from '@vibekit/indexer'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
 import { env } from '@/lib/env'
 
 type IndexerClient = ReturnType<typeof createIndexerClient>
 
-// ---------------------------------------------------------------------------
-// LRU cache (Map insertion-order semantics, no deps)
-// ---------------------------------------------------------------------------
-class LRUCache<K, V> {
-  private map = new Map<K, V>()
-  constructor(private capacity: number) {}
-
-  get(key: K): V | undefined {
-    const val = this.map.get(key)
-    if (val !== undefined) {
-      // refresh position
-      this.map.delete(key)
-      this.map.set(key, val)
-    }
-    return val
-  }
-
-  set(key: K, value: V): void {
-    if (this.map.has(key)) this.map.delete(key)
-    this.map.set(key, value)
-    if (this.map.size > this.capacity) {
-      // evict oldest
-      this.map.delete(this.map.keys().next().value!)
-    }
-  }
-
-  has(key: K): boolean {
-    return this.map.has(key)
-  }
-}
+import { LRUCache } from './lru-cache'
+import { getPeraAssetInfo, getPeraAssetInfoBatch } from './pera-api'
+import { getAccountAssets } from '@vibekit/indexer'
 
 // ---------------------------------------------------------------------------
 // Asset enrichment
@@ -161,6 +134,22 @@ export function createExplorerTools(): ToolSet {
           }
 
           const result = sanitizeBigInts(raw)
+
+          // Enrich asset lookup with Pera data (logo, verification, USD price)
+          if (t.name === 'lookup_asset') {
+            const assetId = (result as Record<string, unknown>).assetId as number
+            if (assetId != null) {
+              const pera = await getPeraAssetInfo(assetId)
+              if (pera) {
+                Object.assign(result as object, {
+                  logo: pera.logo,
+                  verificationTier: pera.verificationTier,
+                  usdValue: pera.usdValue,
+                })
+              }
+            }
+          }
+
           console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
           return result
         } catch (err) {
@@ -237,6 +226,79 @@ export function createExplorerTools(): ToolSet {
       },
     })
   }
+
+  // get_account_portfolio — enriched holdings with USD values
+  tools.get_account_portfolio = tool({
+    description: 'Get an account portfolio with USD values for all holdings. Excludes NFTs by default.',
+    inputSchema: z.object({
+      address: z.string().describe('Algorand address'),
+      includeNfts: z.boolean().optional().default(false).describe('Include NFTs (assets with amount of 1 and no USD value)'),
+    }),
+    execute: async ({ address, includeNfts }) => {
+      const start = Date.now()
+      try {
+        // 1. Get account info (for ALGO balance)
+        const accountRaw = await indexer.lookupAccountByID(address).do()
+        const account = sanitizeBigInts(accountRaw)
+        const algoBalance =
+          Number((account as Record<string, Record<string, unknown>>).account?.amount ?? 0) / 1_000_000
+
+        // Get ALGO USD price from Pera (asset 0)
+        const algoPera = await getPeraAssetInfo(0)
+        const algoUsdValue = algoPera?.usdValue ? algoBalance * algoPera.usdValue : null
+
+        // 2. Get all assets (paginate up to 200)
+        const allAssets: AccountAsset[] = []
+        let nextToken: string | undefined
+        do {
+          const page = await getAccountAssets(indexer, {
+            address,
+            limit: 100,
+            nextToken,
+          })
+          allAssets.push(...page.assets)
+          nextToken = page.nextToken
+        } while (nextToken && allAssets.length < 200)
+
+        // 3. Batch enrich with Pera
+        const assetIds = allAssets.map((a) => a.assetId as number)
+        const peraMap = await getPeraAssetInfoBatch(assetIds)
+
+        // 4. Compute USD values
+        let totalValueUsd = algoUsdValue ?? 0
+        const enriched = allAssets.map((a) => {
+          const pera = peraMap.get(a.assetId as number)
+          const amount = parseFloat(String(a.amount ?? '0').replace(/,/g, ''))
+          const usdValue = pera?.usdValue ? amount * pera.usdValue : null
+          if (usdValue) totalValueUsd += usdValue
+          return {
+            ...a,
+            logo: pera?.logo ?? null,
+            verificationTier: pera?.verificationTier ?? 'unverified',
+            usdValue,
+          }
+        })
+
+        // Filter out zero-balance opt-ins and NFTs unless requested
+        const filtered = enriched.filter((a) => {
+          const raw = parseFloat(String(a.amount ?? '0').replace(/,/g, ''))
+          if (raw === 0) return false
+          if (!includeNfts && raw === 1 && a.usdValue == null) return false
+          return true
+        })
+
+        // Sort by USD value desc
+        filtered.sort((a, b) => (b.usdValue ?? -1) - (a.usdValue ?? -1))
+
+        console.log(`[tool:get_account_portfolio] ${Date.now() - start}ms`)
+        return { address, algoBalance, algoUsdValue, totalValueUsd, assets: filtered }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error(`[tool:get_account_portfolio] ${Date.now() - start}ms error:`, message)
+        return { error: message }
+      }
+    },
+  })
 
   return tools
 }
