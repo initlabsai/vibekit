@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { formatAlgos, formatTimestamp, txTypeLabel } from '@/lib/formatters'
 import { CopyableAddress } from './copyable-address'
-import { ArrowRightLeft } from 'lucide-react'
+import { ArrowRightLeft, ArrowUp, ArrowDown } from 'lucide-react'
 import { TableFilter } from './table-filter'
 import { SortableHeader } from './sortable-header'
 import { useTableSort } from './use-table-sort'
@@ -24,8 +24,19 @@ interface TxRow {
   roundTime?: number
 }
 
+function DirectionBadge({ tx, address }: { tx: TxRow; address?: string }) {
+  if (!address) return null
+  const isSender = tx.sender === address
+  const isReceiver = tx.receiver === address
+  if (isSender && isReceiver) return <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted text-[10px]">Self</span>
+  if (isSender) return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px]"><ArrowUp className="w-3 h-3" />Sent</span>
+  if (isReceiver) return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]"><ArrowDown className="w-3 h-3" />Received</span>
+  return null
+}
+
 export function TransactionList({ data }: TransactionListProps) {
   const transactions = (data.transactions ?? []) as TxRow[]
+  const address = data.address as string | undefined
   const [filter, setFilter] = useState('')
   const { sort, onSort, sortData } = useTableSort<TxRow>()
 
@@ -76,6 +87,7 @@ export function TransactionList({ data }: TransactionListProps) {
             <tr className="text-algo-muted border-b border-algo-border">
               <th className="text-left px-4 py-2 font-medium">TX ID</th>
               <th className="text-left px-4 py-2 font-medium">Type</th>
+              {address && <th className="text-left px-4 py-2 font-medium">Direction</th>}
               <th className="text-left px-4 py-2 font-medium">From</th>
               <th className="text-left px-4 py-2 font-medium">To</th>
               <SortableHeader label="Amount" sortKey="amount" currentSort={sort} onSort={onSort} align="right" />
@@ -96,6 +108,11 @@ export function TransactionList({ data }: TransactionListProps) {
                     {txTypeLabel(tx.type)}
                   </span>
                 </td>
+                {address && (
+                  <td className="px-4 py-2">
+                    <DirectionBadge tx={tx} address={address} />
+                  </td>
+                )}
                 <td className="px-4 py-2">
                   <CopyableAddress address={tx.sender} />
                 </td>

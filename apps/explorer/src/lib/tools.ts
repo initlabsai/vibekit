@@ -135,6 +135,11 @@ export function createExplorerTools(): ToolSet {
 
           const result = sanitizeBigInts(raw)
 
+          // Inject queried address so the UI can determine tx direction
+          if (t.name === 'search_account_transactions') {
+            (result as Record<string, unknown>).address = args.address
+          }
+
           // Enrich asset lookup with Pera data (logo, verification, USD price)
           if (t.name === 'lookup_asset') {
             const assetId = (result as Record<string, unknown>).assetId as number
