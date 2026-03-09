@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useCallback } from 'react'
-import { Send, Square } from 'lucide-react'
+import { Search, Send, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ChatInputProps {
@@ -11,9 +11,10 @@ interface ChatInputProps {
   isLoading: boolean
   onStop?: () => void
   placeholder?: string
+  showSearchIcon?: boolean
 }
 
-export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeholder }: ChatInputProps) {
+export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeholder, showSearchIcon }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleKeyDown = useCallback(
@@ -30,17 +31,22 @@ export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeh
 
   return (
     <form onSubmit={onSubmit} className="flex items-center gap-2">
-      <textarea
-        ref={textareaRef}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? 'Ask anything...'}
-        rows={1}
-        disabled={isLoading}
-        enterKeyHint="send"
-        className="flex-1 resize-none bg-algo-card border border-algo-border rounded-lg pl-12 pr-4 py-2.5 text-[16px] sm:text-sm sm:py-3 text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal disabled:opacity-50 disabled:cursor-not-allowed"
-      />
+      <div className="relative flex-1">
+        {showSearchIcon && (
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-algo-muted" />
+        )}
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder ?? 'Ask anything...'}
+          rows={1}
+          disabled={isLoading}
+          enterKeyHint="send"
+          className={`w-full resize-none bg-algo-card border border-algo-border rounded-lg ${showSearchIcon ? 'pl-12' : 'pl-4'} pr-4 py-2.5 text-[16px] sm:text-sm sm:py-3 text-algo-text placeholder:text-algo-muted focus:outline-none focus:border-algo-teal disabled:opacity-50 disabled:cursor-not-allowed`}
+        />
+      </div>
       {isLoading ? (
         <Button
           type="button"
