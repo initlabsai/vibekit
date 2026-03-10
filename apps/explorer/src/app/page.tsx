@@ -10,6 +10,7 @@ import { useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TypingDots } from '@/components/chat/typing-dots'
+import { classifyInput, buildHint } from '@/lib/input-classifier'
 
 const SUGGESTIONS = [
   'Show network status',
@@ -52,9 +53,17 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
-    shouldAutoScroll.current = true
-    sendMessage({ text: input })
+
+    const classified = classifyInput(input.trim())
+    const hint = buildHint(classified)
+    const text = input
     setInput('')
+    shouldAutoScroll.current = true
+    if (hint) {
+      sendMessage({ text }, { body: { hint } })
+    } else {
+      sendMessage({ text })
+    }
   }
 
   const handleLoadMore = (toolName: string, nextToken: string) => {
