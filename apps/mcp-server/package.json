@@ -15,6 +15,12 @@
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.2.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@vibekit/core": "workspace:*",
+    "@vibekit/network": "workspace:*",
+    "@vibekit/accounts": "workspace:*",
+    "@vibekit/assets": "workspace:*",
+    "@vibekit/contracts": "workspace:*",
+    "@vibekit/transactions": "workspace:*",
     "@vibekit/db": "workspace:*",
     "@vibekit/indexer": "workspace:*",
     "@vibekit/nfd": "workspace:*",

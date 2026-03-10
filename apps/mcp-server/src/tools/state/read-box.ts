@@ -1,14 +1,12 @@
 /**
  * read_box tool
  *
- * Reads a box value from a deployed application.
- * Supports both simple box names and BoxMap compound keys.
+ * Delegates to @vibekit/contracts for the domain logic.
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import { parseArgs, type ToolContext } from '../types.js'
-import { ABIUintType, decodeAddress } from 'algosdk'
-import { encodeBase64 } from '../../lib/encoding.js'
+import { readBoxState } from '@vibekit/contracts'
 
 export const readBoxTool: Tool = {
   name: 'read_box',
@@ -68,67 +66,6 @@ interface ReadBoxArgs {
   appSpec?: string
 }
 
-/**
- * Encode a BoxMap key based on its type
- */
-function encodeBoxMapKey(
-  key: string | number,
-  keyType: 'uint64' | 'address' | 'string'
-): Uint8Array {
-  switch (keyType) {
-    case 'uint64': {
-      const value = typeof key === 'number' ? BigInt(key) : BigInt(key)
-      return new ABIUintType(64).encode(value)
-    }
-    case 'address': {
-      if (typeof key !== 'string') {
-        throw new Error('Address key must be a string')
-      }
-      return decodeAddress(key).publicKey
-    }
-    case 'string': {
-      const strKey = typeof key === 'string' ? key : String(key)
-      return new TextEncoder().encode(strKey)
-    }
-  }
-}
-
-/**
- * Build the box name bytes from either a simple name or BoxMap parameters
- */
-function buildBoxNameBytes(args: ReadBoxArgs): {
-  boxNameBytes: Uint8Array
-  boxNameDisplay: string
-} {
-  const { boxName, keyPrefix, key, keyType } = args
-
-  // BoxMap mode: keyPrefix + key
-  if (keyPrefix !== undefined && key !== undefined) {
-    const prefixBytes = new TextEncoder().encode(keyPrefix)
-    const keyBytes = encodeBoxMapKey(key, keyType ?? 'uint64')
-
-    // Combine prefix + key
-    const boxNameBytes = new Uint8Array(prefixBytes.length + keyBytes.length)
-    boxNameBytes.set(prefixBytes)
-    boxNameBytes.set(keyBytes, prefixBytes.length)
-
-    return {
-      boxNameBytes,
-      boxNameDisplay: `${keyPrefix}[${key}]`,
-    }
-  }
-
-  // Simple box mode
-  if (boxName !== undefined) {
-    return {
-      boxNameBytes: new TextEncoder().encode(boxName),
-      boxNameDisplay: boxName,
-    }
-  }
-
-  throw new Error('Either boxName or keyPrefix+key must be provided to identify the box')
-}
-
 export async function handleReadBox(
   args: Record<string, unknown>,
   ctx: ToolContext
@@ -140,40 +77,6 @@ export async function handleReadBox(
   valueBase64?: string
   size?: number
 }> {
-  const { algorand } = ctx
   const typedArgs = parseArgs<ReadBoxArgs>(args)
-  const { appId } = typedArgs
-
-  // Build box name bytes (handles both simple and BoxMap modes)
-  const { boxNameBytes, boxNameDisplay } = buildBoxNameBytes(typedArgs)
-
-  try {
-    const boxResponse = await algorand.client.algod
-      .getApplicationBoxByName(appId, boxNameBytes)
-      .do()
-
-    // Convert Uint8Array to string and base64
-    const valueArray = new Uint8Array(boxResponse.value)
-    const valueString = new TextDecoder().decode(valueArray)
-    const valueBase64 = encodeBase64(valueArray)
-
-    return {
-      appId,
-      boxName: boxNameDisplay,
-      exists: true,
-      value: valueString,
-      valueBase64,
-      size: valueArray.length,
-    }
-  } catch (error) {
-    // Box doesn't exist or other error
-    if (error instanceof Error && error.message.includes('box not found')) {
-      return {
-        appId,
-        boxName: boxNameDisplay,
-        exists: false,
-      }
-    }
-    throw error
-  }
+  return readBoxState(ctx.algorand, typedArgs)
 }

@@ -1,14 +1,18 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
-import { createIndexerClient, INDEXER_PRESETS, indexerTools, sanitizeBigInts, formatAssetAmount, type FormattedTransaction, type AccountAsset } from '@vibekit/indexer'
+import { AlgorandClient } from '@algorandfoundation/algokit-utils'
+import { sanitizeBigInts, formatAssetAmount, indexerSemaphore as indexerSem, type ToolDefinition } from '@vibekit/core'
+import { networkTools } from '@vibekit/network'
+import { accountTools, getAccountAssets, type AccountAsset } from '@vibekit/accounts'
+import { assetTools } from '@vibekit/assets'
+import { contractTools } from '@vibekit/contracts'
+import { transactionTools, type FormattedTransaction } from '@vibekit/transactions'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
+import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/indexer'
 import { env } from '@/lib/env'
-
-type IndexerClient = ReturnType<typeof createIndexerClient>
 
 import { LRUCache } from './lru-cache'
 import { getPeraAssetInfo, getPeraAssetInfoBatch } from './pera-api'
-import { getAccountAssets } from '@vibekit/indexer'
 
 // ---------------------------------------------------------------------------
 // Asset enrichment
@@ -63,14 +67,14 @@ function attachAssetInfo(txns: FormattedTransaction[]): void {
   }
 }
 
-async function enrichTransactions(indexer: IndexerClient, txns: FormattedTransaction[]): Promise<void> {
+async function enrichTransactions(algorand: AlgorandClient, txns: FormattedTransaction[]): Promise<void> {
   const ids = collectAssetIds(txns)
   const uncached = [...ids].filter((id) => !assetCache.has(id))
 
   if (uncached.length > 0) {
     const results = await Promise.allSettled(
       uncached.map(async (id) => {
-        const res = await indexer.lookupAssetByID(id).do()
+        const res = await indexerSem.run(() => algorand.client.indexer.lookupAssetByID(id).do())
         const params = res.asset.params
         return {
           id,
@@ -95,7 +99,6 @@ async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
   if (!obj || typeof obj !== 'object') return
   const record = obj as Record<string, unknown>
 
-  // Collect all assetid: markers from avatar fields
   const targets: { holder: Record<string, unknown>; id: number }[] = []
 
   function scan(val: unknown) {
@@ -128,47 +131,46 @@ async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
   }
 }
 
-/** Fetch the latest round from the Algod `/v2/status` endpoint. */
-async function getLatestRoundFromAlgod(algodUrl: string): Promise<number> {
-  const res = await fetch(`${algodUrl}/v2/status`, {
-    headers: { 'X-Algo-API-Token': '' },
-  })
-  if (!res.ok) throw new Error(`Algod status request failed: ${res.status}`)
-  const data = await res.json()
-  return Number(data['last-round'])
-}
+/** All domain package tools combined. */
+const allDomainTools: ToolDefinition[] = [
+  ...networkTools,
+  ...accountTools.filter((t) => t.name !== 'get_account_portfolio'),
+  ...assetTools,
+  ...contractTools,
+  ...transactionTools,
+]
 
-/** Tools overridden in the explorer to avoid the Indexer health check. */
-const OVERRIDDEN_TOOLS = new Set(['get_network_status', 'lookup_block'])
-
-/** Wrap @vibekit/indexer and @vibekit/nfd tools as AI SDK tool definitions. */
+/** Wrap domain package tools and @vibekit/nfd tools as AI SDK tool definitions. */
 export function createExplorerTools(): ToolSet {
   const network = env.ALGORAND_NETWORK
   const preset = INDEXER_PRESETS[network] ?? INDEXER_PRESETS.mainnet
-  const url = process.env.ALGORAND_INDEXER_URL ?? preset.url
-  const token = process.env.ALGORAND_INDEXER_TOKEN ?? preset.token
-  const algodUrl = env.ALGORAND_ALGOD_URL
+  const indexerUrl = process.env.ALGORAND_INDEXER_URL ?? preset.url
+  const indexerToken = process.env.ALGORAND_INDEXER_TOKEN ?? preset.token
+  const algodPreset = ALGOD_PRESETS[network] ?? ALGOD_PRESETS.mainnet
+  const algodUrl = process.env.ALGORAND_ALGOD_URL ?? algodPreset.url
 
-  const indexer = createIndexerClient(url, token)
+  const algorand = AlgorandClient.fromConfig({
+    algodConfig: { server: algodUrl, port: '', token: '' },
+    indexerConfig: { server: indexerUrl, port: '', token: indexerToken },
+  })
+
   const nfdApi = createNfdApiClient(network)
 
   const tools: ToolSet = {}
 
-  for (const t of indexerTools) {
-    if (OVERRIDDEN_TOOLS.has(t.name)) continue
-
+  for (const t of allDomainTools) {
     tools[t.name] = tool({
       description: t.description,
       inputSchema: t.parameters,
       execute: async (args: Record<string, unknown>) => {
         const start = Date.now()
         try {
-          const raw = await t.handler(indexer, args)
+          const raw = await t.handler(algorand, args)
 
           // Enrich transaction results with asset metadata
           if (TRANSACTION_TOOLS.has(t.name)) {
             const txns = extractTransactions(raw)
-            if (txns.length > 0) await enrichTransactions(indexer, txns)
+            if (txns.length > 0) await enrichTransactions(algorand, txns)
           }
 
           const result = sanitizeBigInts(raw)
@@ -204,135 +206,6 @@ export function createExplorerTools(): ToolSet {
     })
   }
 
-  // get_network_status — rich network dashboard with TPS, supply, block time
-  tools.get_network_status = tool({
-    description: 'Get network health dashboard: current round, TPS, block time, supply, participation. Use when users ask about network status, health, metrics, or stats.',
-    inputSchema: z.object({}),
-    execute: async () => {
-      const start = Date.now()
-      try {
-        // Fetch status and supply in parallel
-        const [statusRes, supplyRes] = await Promise.all([
-          fetch(`${algodUrl}/v2/status`, { headers: { 'X-Algo-API-Token': '' } }),
-          fetch(`${algodUrl}/v2/ledger/supply`, { headers: { 'X-Algo-API-Token': '' } }),
-        ])
-        if (!statusRes.ok) throw new Error(`Algod status failed: ${statusRes.status}`)
-        if (!supplyRes.ok) throw new Error(`Algod supply failed: ${supplyRes.status}`)
-
-        const [status, supply] = await Promise.all([statusRes.json(), supplyRes.json()])
-        const latestRound = Number(status['last-round'])
-        const timeSinceLastRound = Number(status['time-since-last-round']) / 1_000_000_000 // nanoseconds to seconds
-        const genesisId = status['genesis-id'] as string ?? ''
-        const genesisHash = status['genesis-hash'] as string ?? ''
-        const lastVersion = status['last-version'] as string ?? ''
-        const catchupTime = Number(status['catchup-time'] ?? 0)
-        const totalSupply = Number(supply['total-money']) / 1_000_000
-        const onlineStake = Number(supply['online-money']) / 1_000_000
-        const participation = onlineStake / totalSupply
-
-        // Sample recent blocks for TPS and block time stats (batched to avoid rate limits)
-        const sampleSize = 10
-        const batchSize = 5
-        const blocks: Awaited<ReturnType<ReturnType<typeof indexer.lookupBlock>['do']>>[] = []
-        for (let batch = 0; batch < sampleSize; batch += batchSize) {
-          const promises = []
-          for (let i = batch; i < Math.min(batch + batchSize, sampleSize); i++) {
-            promises.push(indexer.lookupBlock(latestRound - i).do())
-          }
-          blocks.push(...await Promise.all(promises))
-        }
-
-        // Compute block times and TPS from samples
-        const blockData = blocks.map((b) => ({
-          round: Number(b.round),
-          timestamp: Number(b.timestamp),
-          txnCount: b.transactions?.length ?? 0,
-        })).sort((a, b) => a.round - b.round)
-
-        const blockTimes: number[] = []
-        const tpsPerBlock: number[] = []
-        for (let i = 1; i < blockData.length; i++) {
-          const dt = blockData[i].timestamp - blockData[i - 1].timestamp
-          if (dt > 0) {
-            blockTimes.push(dt)
-            tpsPerBlock.push(blockData[i].txnCount / dt)
-          }
-        }
-
-        const avgBlockTime = blockTimes.length > 0 ? blockTimes.reduce((a, b) => a + b, 0) / blockTimes.length : 0
-        const avgTps = tpsPerBlock.length > 0 ? tpsPerBlock.reduce((a, b) => a + b, 0) / tpsPerBlock.length : 0
-        const peakTps = tpsPerBlock.length > 0 ? Math.max(...tpsPerBlock) : 0
-        const totalTxns = blockData.reduce((sum, b) => sum + b.txnCount, 0)
-        const avgTxnPerBlock = blockData.length > 0 ? totalTxns / blockData.length : 0
-
-        // TPS trend — per-block TPS for the sparkline (oldest to newest)
-        const tpsTrend = tpsPerBlock
-
-        console.log(`[tool:get_network_status] ${Date.now() - start}ms`)
-        return sanitizeBigInts({
-          latestRound,
-          timeSinceLastRound: Math.round(timeSinceLastRound * 100) / 100,
-          totalSupply,
-          onlineStake,
-          participation: Math.round(participation * 1000) / 10, // percentage with 1 decimal
-          avgBlockTime: Math.round(avgBlockTime * 100) / 100,
-          avgTps: Math.round(avgTps * 10) / 10,
-          peakTps: Math.round(peakTps),
-          avgTxnPerBlock: Math.round(avgTxnPerBlock),
-          sampleBlocks: sampleSize,
-          tpsTrend,
-          blockDetails: blockData.slice(1).map((b, i) => ({
-            round: b.round,
-            txnCount: b.txnCount,
-            blockTime: blockTimes[i] ?? 0,
-            tps: Math.round((tpsPerBlock[i] ?? 0) * 10) / 10,
-          })),
-          totalTxns,
-          minBlockTime: blockTimes.length > 0 ? Math.round(Math.min(...blockTimes) * 100) / 100 : 0,
-          maxBlockTime: blockTimes.length > 0 ? Math.round(Math.max(...blockTimes) * 100) / 100 : 0,
-          genesisId,
-          genesisHash,
-          consensusVersion: lastVersion,
-          catchupTime,
-          blockTimeTrend: blockTimes,
-        })
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        console.error(`[tool:get_network_status] ${Date.now() - start}ms error:`, message)
-        return { error: message }
-      }
-    },
-  })
-
-  // lookup_block — use Algod for latest round, then full block lookup for transaction count
-  tools.lookup_block = tool({
-    description: 'Look up a block by its round number. If no round is provided, returns the latest block.',
-    inputSchema: z.object({
-      round: z.number().nullish().describe('The round number of the block (omit for latest)'),
-    }),
-    execute: async (args) => {
-      const start = Date.now()
-      try {
-        const round = args.round ?? (await getLatestRoundFromAlgod(algodUrl))
-        const block = await indexer.lookupBlock(round).do()
-        const result = sanitizeBigInts({
-          round: Number(block.round),
-          timestamp: Number(block.timestamp),
-          transactionCount: block.transactions?.length ?? 0,
-          proposer: block.proposer ? String(block.proposer) : undefined,
-          feesCollected: block.feesCollected != null ? Number(block.feesCollected) / 1_000_000 : undefined,
-          proposerPayout: block.proposerPayout != null ? Number(block.proposerPayout) / 1_000_000 : undefined,
-        })
-        console.log(`[tool:lookup_block] ${Date.now() - start}ms`)
-        return result
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        console.error(`[tool:lookup_block] ${Date.now() - start}ms error:`, message)
-        return { error: message }
-      }
-    },
-  })
-
   for (const t of nfdTools) {
     tools[t.name] = tool({
       description: t.description,
@@ -364,7 +237,7 @@ export function createExplorerTools(): ToolSet {
       const start = Date.now()
       try {
         // 1. Get account info (for ALGO balance)
-        const accountRaw = await indexer.lookupAccountByID(address).do()
+        const accountRaw = await algorand.client.indexer.lookupAccountByID(address).do()
         const account = sanitizeBigInts(accountRaw)
         const algoBalance =
           Number((account as Record<string, Record<string, unknown>>).account?.amount ?? 0) / 1_000_000
@@ -377,7 +250,7 @@ export function createExplorerTools(): ToolSet {
         const allAssets: AccountAsset[] = []
         let nextToken: string | undefined
         do {
-          const page = await getAccountAssets(indexer, {
+          const page = await getAccountAssets(algorand, {
             address,
             limit: 100,
             nextToken,
