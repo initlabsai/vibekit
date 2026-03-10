@@ -7,6 +7,7 @@ import type {
   AccountAppLocalState,
 } from '../types'
 import { DEFAULT_LIMIT, stripFinalToken } from '../types'
+import { indexerSemaphore as indexerSem } from '@vibekit/core'
 
 export interface LookupAccountArgs {
   address: string
@@ -26,10 +27,12 @@ export async function batchLookupAccounts(
 ): Promise<{ accounts: FormattedAccount[] }> {
   const results = await Promise.allSettled(
     args.addresses.map((address) =>
-      indexer
-        .lookupAccountByID(address)
-        .do()
-        .then((r) => formatAccount(r.account))
+      indexerSem.run(() =>
+        indexer
+          .lookupAccountByID(address)
+          .do()
+          .then((r) => formatAccount(r.account))
+      )
     )
   )
   return {
@@ -131,7 +134,7 @@ export async function getAccountAssets(
 
   // Enrich holdings with asset metadata (name, unit, decimals)
   const metadataResults = await Promise.allSettled(
-    holdings.map((h) => indexer.lookupAssetByID(h.assetId).do())
+    holdings.map((h) => indexerSem.run(() => indexer.lookupAssetByID(h.assetId).do()))
   )
 
   const assets: AccountAsset[] = holdings.map((h, i) => {

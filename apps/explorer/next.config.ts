@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@vibekit/indexer', '@vibekit/nfd'],
+  transpilePackages: ['@vibekit/core', '@vibekit/network', '@vibekit/accounts', '@vibekit/assets', '@vibekit/contracts', '@vibekit/transactions', '@vibekit/indexer', '@vibekit/nfd'],
 }
 
 export default nextConfig

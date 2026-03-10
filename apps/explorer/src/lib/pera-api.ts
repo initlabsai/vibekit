@@ -1,4 +1,7 @@
+import { Semaphore } from '@vibekit/core'
 import { LRUCache } from './lru-cache'
+
+const peraSem = new Semaphore(8)
 
 const PERA_API = 'https://mainnet.api.perawallet.app/v1/public'
 const cache = new LRUCache<number, PeraAssetInfo>(500)
@@ -37,10 +40,9 @@ export async function getPeraAssetInfoBatch(assetIds: number[]): Promise<Map<num
     else uncached.push(id)
   }
   if (uncached.length === 0) return result
-  // Fetch individually in parallel (Pera has no working batch filter endpoint)
   const settled = await Promise.allSettled(
     uncached.map(async (id) => {
-      const info = await getPeraAssetInfo(id)
+      const info = await peraSem.run(() => getPeraAssetInfo(id))
       return { id, info }
     }),
   )

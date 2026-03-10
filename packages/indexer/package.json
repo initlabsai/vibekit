@@ -17,6 +17,12 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@vibekit/core": "workspace:*",
+    "@vibekit/network": "workspace:*",
+    "@vibekit/accounts": "workspace:*",
+    "@vibekit/assets": "workspace:*",
+    "@vibekit/contracts": "workspace:*",
+    "@vibekit/transactions": "workspace:*",
     "algosdk": "^3.5.2",
     "zod": "^3.22.0"
   },
