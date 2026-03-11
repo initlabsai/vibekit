@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import { DEFAULT_LIMIT, stripFinalToken, formatAssetAmount, indexerSemaphore as indexerSem } from '@vibekit/core'
 import type { AccountAsset, AccountAppLocalState } from '../types'

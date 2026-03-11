@@ -19,6 +19,7 @@
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.2.0",
     "@vibekit/core": "workspace:*",
+    "@vibekit/transactions": "workspace:*",
     "algosdk": "^3.5.2",
     "zod": "^3.22.0"
   },

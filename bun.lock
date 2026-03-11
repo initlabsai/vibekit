@@ -43,7 +43,6 @@
         "@vibekit/assets": "workspace:*",
         "@vibekit/contracts": "workspace:*",
         "@vibekit/core": "workspace:*",
-        "@vibekit/indexer": "workspace:*",
         "@vibekit/network": "workspace:*",
         "@vibekit/nfd": "workspace:*",
         "@vibekit/transactions": "workspace:*",
@@ -84,7 +83,6 @@
         "@vibekit/dispenser-interface": "workspace:*",
         "@vibekit/dispenser-kmd": "workspace:*",
         "@vibekit/dispenser-testnet": "workspace:*",
-        "@vibekit/indexer": "workspace:*",
         "@vibekit/keyring": "workspace:*",
         "@vibekit/network": "workspace:*",
         "@vibekit/nfd": "workspace:*",
@@ -126,6 +124,7 @@
       "dependencies": {
         "@algorandfoundation/algokit-utils": "^9.2.0",
         "@vibekit/core": "workspace:*",
+        "@vibekit/transactions": "workspace:*",
         "algosdk": "^3.5.2",
         "zod": "^3.22.0",
       },
@@ -140,6 +139,7 @@
       "dependencies": {
         "@algorandfoundation/algokit-utils": "^9.2.0",
         "@vibekit/core": "workspace:*",
+        "@vibekit/transactions": "workspace:*",
         "algosdk": "^3.5.2",
         "zod": "^3.22.0",
       },
@@ -162,6 +162,7 @@
       "dependencies": {
         "@algorandfoundation/algokit-utils": "^9.2.0",
         "@vibekit/core": "workspace:*",
+        "@vibekit/transactions": "workspace:*",
         "algosdk": "^3.5.2",
         "zod": "^3.22.0",
       },
@@ -219,24 +220,6 @@
       "version": "0.1.0",
       "dependencies": {
         "@vibekit/dispenser-interface": "workspace:*",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
-    "packages/indexer": {
-      "name": "@vibekit/indexer",
-      "version": "0.1.0",
-      "dependencies": {
-        "@vibekit/accounts": "workspace:*",
-        "@vibekit/assets": "workspace:*",
-        "@vibekit/contracts": "workspace:*",
-        "@vibekit/core": "workspace:*",
-        "@vibekit/network": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
-        "algosdk": "^3.5.2",
-        "zod": "^3.22.0",
       },
       "devDependencies": {
         "@types/node": "^20.0.0",
@@ -873,8 +856,6 @@
     "@vibekit/dispenser-testnet": ["@vibekit/dispenser-testnet@workspace:packages/dispenser-testnet"],
 
     "@vibekit/explorer": ["@vibekit/explorer@workspace:apps/explorer"],
-
-    "@vibekit/indexer": ["@vibekit/indexer@workspace:packages/indexer"],
 
     "@vibekit/keyring": ["@vibekit/keyring@workspace:packages/keyring"],
 

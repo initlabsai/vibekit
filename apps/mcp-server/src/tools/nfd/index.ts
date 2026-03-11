@@ -11,7 +11,7 @@ import type { ToolRegistration } from '../types.js'
 
 export const nfdTools: ToolRegistration[] = sharedTools.map((tool) => ({
   definition: {
-    name: `nfd_${tool.name}`,
+    name: tool.name,
     description: tool.description,
     inputSchema: zodToJsonSchema(tool.parameters, { target: 'openApi3' }) as Tool['inputSchema'],
   },

@@ -10,7 +10,7 @@ export const assetTools: ToolDefinition[] = [
     parameters: z.object({
       assetId: z.number().describe('The asset ID to look up'),
     }),
-    handler: async (algorand, args) => lookupAsset(algorand, args),
+    handler: async ({ algorand, args }) => lookupAsset(algorand, args),
   },
   {
     name: 'search_asset_balances',
@@ -23,7 +23,7 @@ export const assetTools: ToolDefinition[] = [
       currencyGreaterThan: z.number().optional().describe('Min balance in raw base units (before decimal adjustment)'),
       currencyLessThan: z.number().optional().describe('Max balance in raw base units (before decimal adjustment)'),
     }),
-    handler: async (algorand, args) => searchAssetBalances(algorand, args),
+    handler: async ({ algorand, args }) => searchAssetBalances(algorand, args),
   },
   {
     name: 'search_asset_transactions',
@@ -35,7 +35,7 @@ export const assetTools: ToolDefinition[] = [
       beforeTime: z.string().optional().describe('Include results before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include results after this RFC 3339 time'),
     }),
-    handler: async (algorand, args) => searchAssetTransactions(algorand, args),
+    handler: async ({ algorand, args }) => searchAssetTransactions(algorand, args),
   },
   {
     name: 'search_assets',
@@ -47,6 +47,6 @@ export const assetTools: ToolDefinition[] = [
       unit: z.string().optional().describe('Filter by asset unit name (exact match)'),
       creator: z.string().optional().describe('Filter by creator address'),
     }),
-    handler: async (algorand, args) => searchAssets(algorand, args),
+    handler: async ({ algorand, args }) => searchAssets(algorand, args),
   },
 ]

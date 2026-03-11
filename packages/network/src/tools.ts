@@ -8,7 +8,7 @@ export const networkTools: ToolDefinition[] = [
     description:
       'Get network health dashboard: current round, TPS, block time, supply, participation. Use when users ask about network status, health, metrics, or stats.',
     parameters: z.object({}),
-    handler: async (algorand) => getNetworkStatus(algorand),
+    handler: async ({ algorand }) => getNetworkStatus(algorand),
   },
   {
     name: 'lookup_block',
@@ -17,7 +17,7 @@ export const networkTools: ToolDefinition[] = [
     parameters: z.object({
       round: z.number().optional().describe('The round number of the block (omit for latest)'),
     }),
-    handler: async (algorand, args) => lookupBlock(algorand, args),
+    handler: async ({ algorand, args }) => lookupBlock(algorand, args),
   },
   {
     name: 'search_block_headers',
@@ -31,6 +31,6 @@ export const networkTools: ToolDefinition[] = [
       beforeTime: z.string().optional().describe('Include blocks before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include blocks after this RFC 3339 time'),
     }),
-    handler: async (algorand, args) => searchBlockHeaders(algorand, args),
+    handler: async ({ algorand, args }) => searchBlockHeaders(algorand, args),
   },
 ]

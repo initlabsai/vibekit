@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import { DEFAULT_LIMIT, stripFinalToken, formatAssetAmount } from '@vibekit/core'
 import type { FormattedAsset, AssetBalance } from '../types'

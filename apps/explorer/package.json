@@ -20,7 +20,6 @@
     "@vibekit/assets": "workspace:*",
     "@vibekit/contracts": "workspace:*",
     "@vibekit/transactions": "workspace:*",
-    "@vibekit/indexer": "workspace:*",
     "@vibekit/nfd": "workspace:*",
     "ai": "^6.0.116",
     "class-variance-authority": "^0.7.1",

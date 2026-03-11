@@ -16,7 +16,7 @@ export const contractTools: ToolDefinition[] = [
     parameters: z.object({
       applicationId: z.number().describe('The application ID to look up'),
     }),
-    handler: async (algorand, args) => lookupApplication(algorand, args),
+    handler: async ({ algorand, args }) => lookupApplication(algorand, args),
   },
   {
     name: 'search_applications',
@@ -26,7 +26,7 @@ export const contractTools: ToolDefinition[] = [
       nextToken: z.string().optional().describe('Pagination token'),
       creator: z.string().optional().describe('Filter by creator address'),
     }),
-    handler: async (algorand, args) => searchApplications(algorand, args),
+    handler: async ({ algorand, args }) => searchApplications(algorand, args),
   },
   {
     name: 'lookup_application_logs',
@@ -39,7 +39,7 @@ export const contractTools: ToolDefinition[] = [
       minRound: z.number().optional().describe('Include logs at or after this round'),
       maxRound: z.number().optional().describe('Include logs at or before this round'),
     }),
-    handler: async (algorand, args) => lookupApplicationLogs(algorand, args),
+    handler: async ({ algorand, args }) => lookupApplicationLogs(algorand, args),
   },
   {
     name: 'read_global_state',
@@ -48,7 +48,7 @@ export const contractTools: ToolDefinition[] = [
       appId: z.number().describe('The application ID'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    handler: async (algorand, args) => readGlobalState(algorand, args),
+    handler: async ({ algorand, args }) => readGlobalState(algorand, args),
   },
   {
     name: 'read_local_state',
@@ -58,7 +58,7 @@ export const contractTools: ToolDefinition[] = [
       address: z.string().describe('The account address to read local state for'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    handler: async (algorand, args) => readLocalState(algorand, args),
+    handler: async ({ algorand, args }) => readLocalState(algorand, args),
   },
   {
     name: 'read_box_state',
@@ -83,6 +83,6 @@ Examples:
         .describe('BoxMap key type. Defaults to uint64.'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better value decoding'),
     }),
-    handler: async (algorand, args) => readBoxState(algorand, args),
+    handler: async ({ algorand, args }) => readBoxState(algorand, args),
   },
 ]

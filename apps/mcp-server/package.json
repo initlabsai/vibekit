@@ -22,7 +22,6 @@
     "@vibekit/contracts": "workspace:*",
     "@vibekit/transactions": "workspace:*",
     "@vibekit/db": "workspace:*",
-    "@vibekit/indexer": "workspace:*",
     "@vibekit/nfd": "workspace:*",
     "@vibekit/dispenser-interface": "workspace:*",
     "@vibekit/dispenser-kmd": "workspace:*",

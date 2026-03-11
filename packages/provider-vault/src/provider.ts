@@ -17,6 +17,7 @@
  * AlgorandClient.
  */
 
+import { Buffer } from 'buffer'
 import { encodeAddress } from 'algosdk'
 import type { TransactionSigner, Transaction } from 'algosdk'
 import type {
