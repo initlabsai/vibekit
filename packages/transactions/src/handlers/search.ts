@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import { DEFAULT_LIMIT, stripFinalToken } from '@vibekit/core'
 import type { FormattedTransaction } from '../types'

@@ -1,14 +1,14 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
-import { sanitizeBigInts, formatAssetAmount, indexerSemaphore as indexerSem, type ToolDefinition } from '@vibekit/core'
+import { sanitizeBigInts, formatAssetAmount, indexerSemaphore as indexerSem, type ToolDefinition, type ResolveSenderFn, type ResolveAppSpecFn } from '@vibekit/core'
 import { networkTools } from '@vibekit/network'
 import { accountTools, getAccountAssets, type AccountAsset } from '@vibekit/accounts'
 import { assetTools } from '@vibekit/assets'
 import { contractTools } from '@vibekit/contracts'
 import { transactionTools, type FormattedTransaction } from '@vibekit/transactions'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
-import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/indexer'
+import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/core'
 import { env } from '@/lib/env'
 
 import { LRUCache } from './lru-cache'
@@ -131,6 +131,9 @@ async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
   }
 }
 
+const noResolveSender: ResolveSenderFn = () => { throw new Error('Write tools not available in explorer') }
+const noResolveAppSpec: ResolveAppSpecFn = async () => { throw new Error('Write tools not available in explorer') }
+
 /** All domain package tools combined. */
 const allDomainTools: ToolDefinition[] = [
   ...networkTools,
@@ -165,7 +168,7 @@ export function createExplorerTools(): ToolSet {
       execute: async (args: Record<string, unknown>) => {
         const start = Date.now()
         try {
-          const raw = await t.handler(algorand, args)
+          const raw = await t.handler({ algorand, args, resolveSender: noResolveSender, resolveAppSpec: noResolveAppSpec })
 
           // Enrich transaction results with asset metadata
           if (TRANSACTION_TOOLS.has(t.name)) {

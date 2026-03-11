@@ -1,6 +1,6 @@
 /** Validated environment variables. Validates lazily on first access to avoid build-time errors. */
 
-import { ALGOD_PRESETS } from '@vibekit/indexer'
+import { ALGOD_PRESETS } from '@vibekit/core'
 
 function requireEnv(name: string): string {
   const value = process.env[name]

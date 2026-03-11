@@ -2,6 +2,8 @@
  * MCP Tool Definitions and Handler
  *
  * Aggregates all tools from feature modules and routes calls to their handlers.
+ * Domain tools (read + write) come from the indexer adapter.
+ * MCP-specific tools (accounts, network, provider, walletconnect, github, utilities) stay local.
  */
 
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
@@ -10,33 +12,23 @@ import type { McpConfig } from '../config.js'
 import type { ToolContext, ToolHandler, ToolRegistration } from './types.js'
 import { isResultWithImage } from './types.js'
 
-import { contractTools } from './contracts/index.js'
-import { stateTools } from './state/index.js'
 import { accountTools } from './accounts/index.js'
-import { assetTools } from './assets/index.js'
 import { githubTools } from './github/index.js'
 import { networkTools } from './network/index.js'
 import { providerTools } from './provider/index.js'
 import { indexerTools } from './indexer/index.js'
 import { nfdTools } from './nfd/index.js'
-import { transactionTools } from './transactions/index.js'
-import { utilityTools } from './utilities/index.js'
 import { walletconnectTools } from './walletconnect/index.js'
 
 // Combine all tool registrations
 const allToolRegistrations: ToolRegistration[] = [
-  ...contractTools,
-  ...stateTools,
   ...accountTools,
-  ...assetTools,
   ...networkTools,
   ...providerTools,
   ...githubTools,
   ...indexerTools,
   ...nfdTools,
-  ...transactionTools,
-  ...utilityTools,
-  ...walletconnectTools,
+...walletconnectTools,
 ]
 
 // Export tool definitions for MCP server registration

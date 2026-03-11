@@ -4,6 +4,7 @@
  * Handles Algorand key generation, mnemonic encoding, and transaction signing.
  */
 
+import { Buffer } from 'buffer'
 import algosdk from 'algosdk'
 import type { Transaction, TransactionSigner } from 'algosdk'
 

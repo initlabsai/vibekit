@@ -1,1 +1,1 @@
-export { decodeStateValue, type DecodedValue } from '@vibekit/indexer'
+export { decodeStateValue, type DecodedValue } from '@vibekit/core'

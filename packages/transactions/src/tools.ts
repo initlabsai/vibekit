@@ -14,7 +14,7 @@ export const transactionTools: ToolDefinition[] = [
     parameters: z.object({
       txid: z.string().describe('The transaction ID to look up'),
     }),
-    handler: async (algorand, args) => lookupTransaction(algorand, args),
+    handler: async ({ algorand, args }) => lookupTransaction(algorand, args),
   },
   {
     name: 'search_transactions',
@@ -32,7 +32,7 @@ export const transactionTools: ToolDefinition[] = [
       minAmount: z.number().optional().describe('Filter by minimum amount (microAlgos)'),
       applicationId: z.number().optional().describe('Filter by application ID'),
     }),
-    handler: async (algorand, args) => searchTransactions(algorand, args),
+    handler: async ({ algorand, args }) => searchTransactions(algorand, args),
   },
   {
     name: 'lookup_transaction_group',
@@ -40,6 +40,6 @@ export const transactionTools: ToolDefinition[] = [
     parameters: z.object({
       groupId: z.string().describe('The base64-encoded group ID'),
     }),
-    handler: async (algorand, args) => lookupTransactionGroup(algorand, args),
+    handler: async ({ algorand, args }) => lookupTransactionGroup(algorand, args),
   },
 ]

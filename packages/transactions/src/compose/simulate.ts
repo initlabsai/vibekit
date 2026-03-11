@@ -2,6 +2,7 @@
  * Transaction simulation logic
  */
 
+import { Buffer } from 'buffer'
 import algosdk from 'algosdk'
 import type { AlgorandClient } from '@algorandfoundation/algokit-utils'
 import { buildTransactionGroup } from './build'

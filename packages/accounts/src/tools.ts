@@ -23,7 +23,7 @@ export const accountTools: ToolDefinition[] = [
     parameters: z.object({
       address: z.string().describe('The Algorand address to look up'),
     }),
-    handler: async (algorand, args) => lookupAccount(algorand, args),
+    handler: async ({ algorand, args }) => lookupAccount(algorand, args),
   },
   {
     name: 'batch_lookup_accounts',
@@ -32,7 +32,7 @@ export const accountTools: ToolDefinition[] = [
     parameters: z.object({
       addresses: z.array(z.string()).describe('The Algorand addresses to look up'),
     }),
-    handler: async (algorand, args) => batchLookupAccounts(algorand, args),
+    handler: async ({ algorand, args }) => batchLookupAccounts(algorand, args),
   },
   {
     name: 'search_accounts',
@@ -46,7 +46,7 @@ export const accountTools: ToolDefinition[] = [
       currencyGreaterThan: z.number().optional().describe('Min balance in microAlgos'),
       currencyLessThan: z.number().optional().describe('Max balance in microAlgos'),
     }),
-    handler: async (algorand, args) => searchAccounts(algorand, args),
+    handler: async ({ algorand, args }) => searchAccounts(algorand, args),
   },
   {
     name: 'search_account_transactions',
@@ -63,7 +63,7 @@ export const accountTools: ToolDefinition[] = [
       afterTime: z.string().optional().describe('Include results after this RFC 3339 time'),
       minAmount: z.number().optional().describe('Filter by minimum amount (microAlgos)'),
     }),
-    handler: async (algorand, args) => searchAccountTransactions(algorand, args),
+    handler: async ({ algorand, args }) => searchAccountTransactions(algorand, args),
   },
   {
     name: 'get_account_assets',
@@ -73,7 +73,7 @@ export const accountTools: ToolDefinition[] = [
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
     }),
-    handler: async (algorand, args) => getAccountAssets(algorand, args),
+    handler: async ({ algorand, args }) => getAccountAssets(algorand, args),
   },
   {
     name: 'get_account_app_local_states',
@@ -85,7 +85,7 @@ export const accountTools: ToolDefinition[] = [
       nextToken: z.string().optional().describe('Pagination token'),
       applicationId: z.number().optional().describe('Filter by specific application ID'),
     }),
-    handler: async (algorand, args) => getAccountAppLocalStates(algorand, args),
+    handler: async ({ algorand, args }) => getAccountAppLocalStates(algorand, args),
   },
   {
     name: 'get_account_portfolio',
@@ -93,6 +93,6 @@ export const accountTools: ToolDefinition[] = [
     parameters: z.object({
       address: z.string().describe('Algorand address'),
     }),
-    handler: async (algorand, args) => getAccountPortfolio(algorand, args),
+    handler: async ({ algorand, args }) => getAccountPortfolio(algorand, args),
   },
 ]

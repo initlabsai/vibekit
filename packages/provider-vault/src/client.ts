@@ -7,6 +7,7 @@
  * Keys never leave Vault - all signing operations happen inside Vault.
  */
 
+import { Buffer } from 'buffer'
 import type { VaultProviderConfig } from './types.js'
 
 /**
