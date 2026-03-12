@@ -173,6 +173,17 @@ export const projects: EcosystemProject[] = [
     github: 'https://github.com/phara23/alpha-sdk',
     twitter: 'https://x.com/alphaarcade',
   },
+  {
+    id: 'diversafi',
+    name: 'div3rsafi',
+    category: 'defi',
+    description:
+      'Decentralized binary prediction market on Algorand. Trade outcomes on crypto, equities, and index markets with USDCa collateral and full self-custody.',
+    features: ['Prediction markets', 'On-chain order book', 'Automated market creation'],
+    website: 'https://www.div3rsafi.com/',
+    docs: 'https://www.div3rsafi.com/whitepaper',
+    twitter: 'https://x.com/div3rsafi',
+  },
 
   // ── Bridges ──
   {
@@ -305,7 +316,12 @@ export const projects: EcosystemProject[] = [
     category: 'devtools',
     description:
       'The agentic stack for Algorand builders. AI-powered framework with 11 agent skills and 44 blockchain operations for compiling, testing, deploying, and troubleshooting smart contracts using natural language. Also includes an AI-powered blockchain explorer.',
-    features: ['Agentic AI framework', 'Smart contract lifecycle', 'Secure key management', 'AI blockchain explorer'],
+    features: [
+      'Agentic AI framework',
+      'Smart contract lifecycle',
+      'Secure key management',
+      'AI blockchain explorer',
+    ],
     website: 'https://getvibekit.ai/',
     github: 'https://github.com/gabrielkuettel/vibekit',
   },
