@@ -10,6 +10,7 @@ import { accountTools, accountWriteTools } from '@vibekit/accounts'
 import { assetTools, assetWriteTools } from '@vibekit/assets'
 import { contractTools, contractWriteTools } from '@vibekit/contracts'
 import { transactionTools, transactionWriteTools } from '@vibekit/transactions'
+import { ecosystemTools } from '@vibekit/ecosystem'
 import type { ToolDefinition } from '@vibekit/core'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
@@ -34,6 +35,7 @@ const allDomainTools: ToolDefinition[] = [
   ...accountWriteTools,
   ...transactionWriteTools,
   ...utilityTools,
+  ...ecosystemTools,
 ]
 
 export const indexerTools: ToolRegistration[] = allDomainTools.map((tool) => ({

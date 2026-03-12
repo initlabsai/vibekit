@@ -17,6 +17,8 @@ import { BlockList } from '../explorer/block-list'
 import { ApplicationLocalState } from '../explorer/application-local-state'
 import { TransactionGroup } from '../explorer/transaction-group'
 import { NetworkStatus } from '../explorer/network-status'
+import { EcosystemList } from '../explorer/ecosystem-list'
+import { EcosystemCard } from '../explorer/ecosystem-card'
 
 interface ToolResultProps {
   toolName: string
@@ -101,6 +103,13 @@ export function ToolResult({ toolName, result }: ToolResultProps) {
 
     case 'search_block_headers':
       return <BlockList data={result as Record<string, unknown>} />
+
+    case 'search_ecosystem': {
+      const r = result as Record<string, unknown>
+      const projects = (r.projects ?? []) as unknown[]
+      if (projects.length === 1) return <EcosystemCard data={r} />
+      return <EcosystemList data={r} />
+    }
 
     default:
       return <GenericResult data={result} />

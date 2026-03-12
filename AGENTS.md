@@ -16,8 +16,14 @@ vibekit/
 │   ├── explorer/               # Agentic explorer (Next.js, deployed to Vercel)
 │   └── website/                # Docs site (Astro/Starlight, deployed to Vercel)
 ├── packages/
-│   ├── indexer/                # Algorand indexer client + tool definitions
+│   ├── core/                   # Shared types (ToolDefinition, ToolHandlerContext), validators, utilities
+│   ├── network/                # Network info & utility tools (health, genesis, supply)
+│   ├── accounts/               # Account lookup & write tools
+│   ├── assets/                 # Asset search, lookup & write tools (create, transfer, opt-in)
+│   ├── contracts/              # ABI / app lookup & method-call tools
+│   ├── transactions/           # Transaction search & lookup tools
 │   ├── nfd/                    # NFD (Algorand name service) client + tools
+│   ├── ecosystem/              # Algorand ecosystem directory tool
 │   ├── provider-*/             # Account providers (vault, keyring, walletconnect)
 │   ├── dispenser-*/            # Dispenser providers (kmd, testnet)
 │   ├── keyring/                # OS keyring abstraction
@@ -27,15 +33,23 @@ vibekit/
 
 ### Package conventions
 
-- `indexer` and `nfd` export TypeScript source (`main: src/index.ts`) — they're consumed by the explorer via `transpilePackages` and use extensionless imports.
-- All other packages export compiled output (`main: dist/index.js`) and use `.js` extensions in imports — they're only consumed by the MCP server via `tsx`/bun.
+- Domain packages (`core`, `network`, `accounts`, `assets`, `contracts`, `transactions`, `nfd`, `ecosystem`) export TypeScript source (`main: src/index.ts`) — they're consumed by the explorer via `transpilePackages` and by the MCP server, and use extensionless imports.
+- All other packages export compiled output (`main: dist/index.js`) and use `.js` extensions in imports — they're only consumed by the CLI/MCP server via `tsx`/bun.
+
+### Tool architecture
+
+Domain packages define tools as `ToolDefinition` objects (from `@vibekit/core`). Each definition has a `name`, `description`, Zod `parameters` schema, and a `handler` that receives a `ToolHandlerContext` (containing `algorand`, `args`, `resolveSender`, `resolveAppSpec`). This keeps tools framework-agnostic.
+
+Consumers adapt these definitions to their framework:
+- **MCP server** — `apps/mcp-server/src/tools/indexer/index.ts` wraps all domain tools as MCP tool registrations, injecting `resolveSender` and `resolveAppSpec` implementations.
+- **Explorer** — `apps/explorer/src/lib/tools.ts` wraps domain tools as AI SDK tools (`ai` package), adding asset enrichment and formatting.
 
 ### Explorer
 
 - Next.js app with a chat interface that uses AI SDK (`ai` / `@ai-sdk/*`).
 - LLM provider config in `apps/explorer/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
 - Uses `@ai-sdk/openai` with `.chat()` (Chat Completions API) for OpenAI-compatible providers. Do not use `provider()` directly — it defaults to the Responses API which Ollama doesn't support.
-- Tools from `@vibekit/indexer` and `@vibekit/nfd` are wrapped as AI SDK tools in `apps/explorer/src/lib/tools.ts`.
+- Tools from domain packages (`@vibekit/network`, `@vibekit/accounts`, `@vibekit/assets`, `@vibekit/contracts`, `@vibekit/transactions`, `@vibekit/ecosystem`) and `@vibekit/nfd` are wrapped as AI SDK tools in `apps/explorer/src/lib/tools.ts`.
 - Env vars: see `apps/explorer/.env.example`.
 
 ## Dev Commands
@@ -65,7 +79,7 @@ GitHub Actions builds binaries for all supported platforms and creates the relea
 
 **CLI command:** Create in `apps/cli/src/commands/`, export from `commands/index.ts`, add to router in `index.ts`
 
-**MCP tool:** Create in `apps/mcp-server/src/tools/<category>/`, export from category's `index.ts`
+**MCP tool:** Define a `ToolDefinition` in the appropriate domain package (`packages/<domain>/src/tools.ts`), export it from the package's `index.ts`. The MCP adapter (`apps/mcp-server/src/tools/indexer/index.ts`) picks up all exported domain tools automatically.
 
 **Package:** Create `packages/<name>/` with standard setup, name it `@vibekit/<name>`, add as `workspace:*` dependency
 
