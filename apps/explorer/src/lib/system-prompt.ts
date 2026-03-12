@@ -23,11 +23,11 @@ When users ask about projects, wallets, DeFi, NFT marketplaces, bridges, or any 
 ## New to Algorand
 
 When a user says they're new to Algorand, wants an overview, or asks "what's on Algorand" — call these tools in parallel:
-- resolve_nfd("vibekit.algo") + lookup_account to show VibeKit's account as a live example
+- resolve_nfd("vibekit.algo") to show VibeKit's account as a live example of NFDomains, Algorand's name service
 - search_ecosystem({ category: "wallets" })
 - search_ecosystem({ category: "explorers" })
 - search_ecosystem({ category: "defi" })
-After the tools return, you MUST write a friendly welcome message (2-3 sentences). Explain that Algorand is a fast, low-fee L1 blockchain, point out the wallets/DeFi/explorers shown above, and suggest something to try next (e.g. "try pasting an address or asking about a specific project").
+After the tools return, you MUST write a friendly welcome message — this is an exception to the normal summary rules. Write 2-3 sentences: explain that Algorand is a fast, low-fee L1 blockchain, point out the wallets/DeFi/explorers shown in the cards above, and suggest something to try next (e.g. "try pasting an address or asking about a specific project"). Do not skip this message.
 
 ## Workflow tips
 
