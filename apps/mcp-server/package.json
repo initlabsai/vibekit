@@ -21,6 +21,7 @@
     "@vibekit/assets": "workspace:*",
     "@vibekit/contracts": "workspace:*",
     "@vibekit/transactions": "workspace:*",
+    "@vibekit/ecosystem": "workspace:*",
     "@vibekit/db": "workspace:*",
     "@vibekit/nfd": "workspace:*",
     "@vibekit/dispenser-interface": "workspace:*",

@@ -43,6 +43,7 @@
         "@vibekit/assets": "workspace:*",
         "@vibekit/contracts": "workspace:*",
         "@vibekit/core": "workspace:*",
+        "@vibekit/ecosystem": "workspace:*",
         "@vibekit/network": "workspace:*",
         "@vibekit/nfd": "workspace:*",
         "@vibekit/transactions": "workspace:*",
@@ -83,6 +84,7 @@
         "@vibekit/dispenser-interface": "workspace:*",
         "@vibekit/dispenser-kmd": "workspace:*",
         "@vibekit/dispenser-testnet": "workspace:*",
+        "@vibekit/ecosystem": "workspace:*",
         "@vibekit/keyring": "workspace:*",
         "@vibekit/network": "workspace:*",
         "@vibekit/nfd": "workspace:*",
@@ -220,6 +222,18 @@
       "version": "0.1.0",
       "dependencies": {
         "@vibekit/dispenser-interface": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
+      },
+    },
+    "packages/ecosystem": {
+      "name": "@vibekit/ecosystem",
+      "version": "0.1.0",
+      "dependencies": {
+        "@vibekit/core": "workspace:*",
+        "zod": "^3.22.0",
       },
       "devDependencies": {
         "@types/node": "^20.0.0",
@@ -854,6 +868,8 @@
     "@vibekit/dispenser-kmd": ["@vibekit/dispenser-kmd@workspace:packages/dispenser-kmd"],
 
     "@vibekit/dispenser-testnet": ["@vibekit/dispenser-testnet@workspace:packages/dispenser-testnet"],
+
+    "@vibekit/ecosystem": ["@vibekit/ecosystem@workspace:packages/ecosystem"],
 
     "@vibekit/explorer": ["@vibekit/explorer@workspace:apps/explorer"],
 

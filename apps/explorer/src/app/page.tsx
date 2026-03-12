@@ -14,7 +14,7 @@ import { classifyInput, buildHint } from '@/lib/input-classifier'
 
 const SUGGESTIONS = [
   'Show network status',
-  'Show me the latest block',
+  'What wallets are available?',
   'Look up $USDC asset info',
   'Show portfolio for vibekit.algo',
   'Who are the top holders of $AKITA?',

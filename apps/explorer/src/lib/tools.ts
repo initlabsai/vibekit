@@ -8,6 +8,7 @@ import { assetTools } from '@vibekit/assets'
 import { contractTools } from '@vibekit/contracts'
 import { transactionTools, type FormattedTransaction } from '@vibekit/transactions'
 import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
+import { ecosystemTools } from '@vibekit/ecosystem'
 import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/core'
 import { env } from '@/lib/env'
 
@@ -141,6 +142,7 @@ const allDomainTools: ToolDefinition[] = [
   ...assetTools,
   ...contractTools,
   ...transactionTools,
+  ...ecosystemTools,
 ]
 
 /** Wrap domain package tools and @vibekit/nfd tools as AI SDK tool definitions. */
