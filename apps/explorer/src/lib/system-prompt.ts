@@ -27,7 +27,7 @@ When a user says they're new to Algorand, wants an overview, or asks "what's on 
 - search_ecosystem({ category: "wallets" })
 - search_ecosystem({ category: "explorers" })
 - search_ecosystem({ category: "defi" })
-Then give a brief, friendly welcome summarizing what they're seeing.
+After the tools return, you MUST write a friendly welcome message (2-3 sentences). Explain that Algorand is a fast, low-fee L1 blockchain, point out the wallets/DeFi/explorers shown above, and suggest something to try next (e.g. "try pasting an address or asking about a specific project").
 
 ## Workflow tips
 
