@@ -14,7 +14,15 @@ interface ChatInputProps {
   showSearchIcon?: boolean
 }
 
-export function ChatInput({ input, setInput, onSubmit, isLoading, onStop, placeholder, showSearchIcon }: ChatInputProps) {
+export function ChatInput({
+  input,
+  setInput,
+  onSubmit,
+  isLoading,
+  onStop,
+  placeholder,
+  showSearchIcon,
+}: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleKeyDown = useCallback(

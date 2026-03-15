@@ -121,9 +121,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
         <div className="max-w-[85%]">
           <div className="rounded-lg bg-algo-teal px-4 py-2 text-sm text-algo-dark">
             {message.parts?.map((part, i) =>
-              part.type === 'text' && part.text ? (
-                <span key={i}>{part.text}</span>
-              ) : null,
+              part.type === 'text' && part.text ? <span key={i}>{part.text}</span> : null
             )}
           </div>
         </div>
@@ -167,9 +165,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
               )
             }
 
-            const outputs = readyParts.map(
-              (p) => p.output as Record<string, unknown>,
-            )
+            const outputs = readyParts.map((p) => p.output as Record<string, unknown>)
             const merged = mergeToolOutputs(outputs)
             const nextToken = merged.nextToken as string | undefined
 
@@ -201,9 +197,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
               <div
                 key={i}
                 className={`rounded-lg px-4 py-2 ${
-                  hasToolInvocations
-                    ? 'text-sm text-algo-muted'
-                    : 'text-sm text-algo-text/90'
+                  hasToolInvocations ? 'text-sm text-algo-muted' : 'text-sm text-algo-text/90'
                 }`}
               >
                 <Markdown>{part.text}</Markdown>
@@ -213,9 +207,7 @@ export function ChatMessage({ message, onLoadMore, isLoading }: ChatMessageProps
           return null
         })}
         {/* Typing indicator while waiting for assistant content */}
-        {!message.parts?.some(
-          (p) => (p.type === 'text' && p.text) || isToolUIPart(p),
-        ) && (
+        {!message.parts?.some((p) => (p.type === 'text' && p.text) || isToolUIPart(p)) && (
           <div className="rounded-lg px-4 py-3">
             <TypingDots />
           </div>

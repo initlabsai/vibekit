@@ -1,5 +1,5 @@
 import { Globe, ExternalLink, Github } from 'lucide-react'
-import { ECOSYSTEM_CATEGORIES, type EcosystemCategory } from '@vibekit/ecosystem'
+import { ECOSYSTEM_CATEGORIES, type EcosystemCategory } from '@vibekit/tools'
 import type { ReactNode } from 'react'
 
 interface EcosystemProject {
@@ -38,7 +38,10 @@ export function EcosystemCard({ data }: EcosystemCardProps) {
       {project.features.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {project.features.map((feature) => (
-            <span key={feature} className="px-2 py-0.5 rounded-full bg-algo-dark text-[11px] text-algo-muted">
+            <span
+              key={feature}
+              className="px-2 py-0.5 rounded-full bg-algo-dark text-[11px] text-algo-muted"
+            >
               {feature}
             </span>
           ))}
@@ -50,7 +53,12 @@ export function EcosystemCard({ data }: EcosystemCardProps) {
           <Field
             label="Website"
             value={
-              <a href={project.website} target="_blank" rel="noopener noreferrer" className="text-algo-teal hover:underline flex items-center gap-1">
+              <a
+                href={project.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-algo-teal hover:underline flex items-center gap-1"
+              >
                 {new URL(project.website).hostname} <ExternalLink className="w-3 h-3" />
               </a>
             }
@@ -60,7 +68,12 @@ export function EcosystemCard({ data }: EcosystemCardProps) {
           <Field
             label="Docs"
             value={
-              <a href={project.docs} target="_blank" rel="noopener noreferrer" className="text-algo-teal hover:underline flex items-center gap-1">
+              <a
+                href={project.docs}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-algo-teal hover:underline flex items-center gap-1"
+              >
                 Documentation <ExternalLink className="w-3 h-3" />
               </a>
             }
@@ -70,7 +83,12 @@ export function EcosystemCard({ data }: EcosystemCardProps) {
           <Field
             label="GitHub"
             value={
-              <a href={project.github} target="_blank" rel="noopener noreferrer" className="text-algo-teal hover:underline flex items-center gap-1">
+              <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-algo-teal hover:underline flex items-center gap-1"
+              >
                 <Github className="w-3 h-3" /> Source
               </a>
             }
@@ -80,8 +98,14 @@ export function EcosystemCard({ data }: EcosystemCardProps) {
           <Field
             label="Twitter/X"
             value={
-              <a href={project.twitter} target="_blank" rel="noopener noreferrer" className="text-algo-teal hover:underline flex items-center gap-1">
-                {project.twitter.replace('https://x.com/', '@')} <ExternalLink className="w-3 h-3" />
+              <a
+                href={project.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-algo-teal hover:underline flex items-center gap-1"
+              >
+                {project.twitter.replace('https://x.com/', '@')}{' '}
+                <ExternalLink className="w-3 h-3" />
               </a>
             }
           />

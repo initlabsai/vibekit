@@ -11,10 +11,7 @@ interface AssetInfoProps {
 }
 
 export function AssetInfo({ data }: AssetInfoProps) {
-  const displaySupply = formatAssetAmount(
-    data.totalSupply as string,
-    data.decimals as number
-  )
+  const displaySupply = formatAssetAmount(data.totalSupply as string, data.decimals as number)
 
   return (
     <div className="rounded-lg border border-algo-border bg-algo-card p-3 sm:p-4">
@@ -29,7 +26,9 @@ export function AssetInfo({ data }: AssetInfoProps) {
           {data.unitName ? ` (${data.unitName})` : ''}
         </h3>
         {data.verificationTier != null && (
-          <VerificationBadge tier={data.verificationTier as 'verified' | 'trusted' | 'suspicious' | 'unverified'} />
+          <VerificationBadge
+            tier={data.verificationTier as 'verified' | 'trusted' | 'suspicious' | 'unverified'}
+          />
         )}
         <CopyableValue value={String(data.assetId)}>
           <span className="text-xs text-algo-muted ml-auto">ID: {data.assetId as number}</span>
@@ -41,10 +40,7 @@ export function AssetInfo({ data }: AssetInfoProps) {
         {data.usdValue != null && (
           <Field label="USD Price" value={formatUsd(data.usdValue as number)} />
         )}
-        <Field
-          label="Creator"
-          value={<CopyableAddress address={data.creator as string} />}
-        />
+        <Field label="Creator" value={<CopyableAddress address={data.creator as string} />} />
         {data.manager ? (
           <Field label="Manager" value={<CopyableAddress address={data.manager as string} />} />
         ) : null}

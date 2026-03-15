@@ -19,10 +19,18 @@ function requireUrl(name: string): string {
 }
 
 export const env = {
-  get LLM_BASE_URL() { return requireUrl('LLM_BASE_URL') },
-  get LLM_API_KEY() { return requireEnv('LLM_API_KEY') },
-  get LLM_MODEL() { return process.env.LLM_MODEL ?? 'gpt-4o' },
-  get ALGORAND_NETWORK() { return process.env.ALGORAND_NETWORK ?? 'mainnet' },
+  get LLM_BASE_URL() {
+    return requireUrl('LLM_BASE_URL')
+  },
+  get LLM_API_KEY() {
+    return requireEnv('LLM_API_KEY')
+  },
+  get LLM_MODEL() {
+    return process.env.LLM_MODEL ?? 'gpt-4o'
+  },
+  get ALGORAND_NETWORK() {
+    return process.env.ALGORAND_NETWORK ?? 'mainnet'
+  },
   get ALGORAND_ALGOD_URL() {
     if (process.env.ALGORAND_ALGOD_URL) return process.env.ALGORAND_ALGOD_URL
     const preset = ALGOD_PRESETS[this.ALGORAND_NETWORK] ?? ALGOD_PRESETS.mainnet

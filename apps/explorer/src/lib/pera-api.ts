@@ -32,7 +32,9 @@ export async function getPeraAssetInfo(assetId: number): Promise<PeraAssetInfo |
   }
 }
 
-export async function getPeraAssetInfoBatch(assetIds: number[]): Promise<Map<number, PeraAssetInfo>> {
+export async function getPeraAssetInfoBatch(
+  assetIds: number[]
+): Promise<Map<number, PeraAssetInfo>> {
   const result = new Map<number, PeraAssetInfo>()
   const uncached: number[] = []
   for (const id of assetIds) {
@@ -44,7 +46,7 @@ export async function getPeraAssetInfoBatch(assetIds: number[]): Promise<Map<num
     uncached.map(async (id) => {
       const info = await peraSem.run(() => getPeraAssetInfo(id))
       return { id, info }
-    }),
+    })
   )
   for (const r of settled) {
     if (r.status === 'fulfilled' && r.value.info) {

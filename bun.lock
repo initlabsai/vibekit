@@ -39,14 +39,8 @@
         "@ai-sdk/togetherai": "^2.0.39",
         "@algorandfoundation/algokit-utils": "^9.2.0",
         "@base-ui/react": "^1.2.0",
-        "@vibekit/accounts": "workspace:*",
-        "@vibekit/assets": "workspace:*",
-        "@vibekit/contracts": "workspace:*",
         "@vibekit/core": "workspace:*",
-        "@vibekit/ecosystem": "workspace:*",
-        "@vibekit/network": "workspace:*",
-        "@vibekit/nfd": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
+        "@vibekit/tools": "workspace:*",
         "ai": "^6.0.116",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -76,23 +70,17 @@
       "dependencies": {
         "@algorandfoundation/algokit-utils": "^9.2.0",
         "@modelcontextprotocol/sdk": "^1.0.0",
-        "@vibekit/accounts": "workspace:*",
-        "@vibekit/assets": "workspace:*",
-        "@vibekit/contracts": "workspace:*",
         "@vibekit/core": "workspace:*",
         "@vibekit/db": "workspace:*",
         "@vibekit/dispenser-interface": "workspace:*",
         "@vibekit/dispenser-kmd": "workspace:*",
         "@vibekit/dispenser-testnet": "workspace:*",
-        "@vibekit/ecosystem": "workspace:*",
         "@vibekit/keyring": "workspace:*",
-        "@vibekit/network": "workspace:*",
-        "@vibekit/nfd": "workspace:*",
         "@vibekit/provider-interface": "workspace:*",
         "@vibekit/provider-keyring": "workspace:*",
         "@vibekit/provider-vault": "workspace:*",
         "@vibekit/provider-walletconnect": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
+        "@vibekit/tools": "workspace:*",
         "algosdk": "^3.5.2",
         "zod": "^3.22.0",
         "zod-to-json-schema": "^3.22.0",
@@ -120,54 +108,9 @@
         "satori": "^0.25.0",
       },
     },
-    "packages/accounts": {
-      "name": "@vibekit/accounts",
-      "version": "0.1.0",
-      "dependencies": {
-        "@algorandfoundation/algokit-utils": "^9.2.0",
-        "@vibekit/core": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
-        "algosdk": "^3.5.2",
-        "zod": "^3.22.0",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
-    "packages/assets": {
-      "name": "@vibekit/assets",
-      "version": "0.1.0",
-      "dependencies": {
-        "@algorandfoundation/algokit-utils": "^9.2.0",
-        "@vibekit/core": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
-        "algosdk": "^3.5.2",
-        "zod": "^3.22.0",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
     "packages/config": {
       "name": "@vibekit/config",
       "version": "0.1.0",
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
-    "packages/contracts": {
-      "name": "@vibekit/contracts",
-      "version": "0.1.0",
-      "dependencies": {
-        "@algorandfoundation/algokit-utils": "^9.2.0",
-        "@vibekit/core": "workspace:*",
-        "@vibekit/transactions": "workspace:*",
-        "algosdk": "^3.5.2",
-        "zod": "^3.22.0",
-      },
       "devDependencies": {
         "@types/node": "^20.0.0",
         "typescript": "^5.0.0",
@@ -228,49 +171,11 @@
         "typescript": "^5.0.0",
       },
     },
-    "packages/ecosystem": {
-      "name": "@vibekit/ecosystem",
-      "version": "0.1.0",
-      "dependencies": {
-        "@vibekit/core": "workspace:*",
-        "zod": "^3.22.0",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
     "packages/keyring": {
       "name": "@vibekit/keyring",
       "version": "0.1.0",
       "dependencies": {
         "@napi-rs/keyring": "^1.2.0",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
-    "packages/network": {
-      "name": "@vibekit/network",
-      "version": "0.1.0",
-      "dependencies": {
-        "@algorandfoundation/algokit-utils": "^9.2.0",
-        "@vibekit/core": "workspace:*",
-        "algosdk": "^3.5.2",
-        "zod": "^3.22.0",
-      },
-      "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-      },
-    },
-    "packages/nfd": {
-      "name": "@vibekit/nfd",
-      "version": "0.1.0",
-      "dependencies": {
-        "@txnlab/nfd-sdk": "^1.0.0",
-        "zod": "^3.22.0",
       },
       "devDependencies": {
         "@types/node": "^20.0.0",
@@ -335,11 +240,12 @@
         "typescript": "^5.0.0",
       },
     },
-    "packages/transactions": {
-      "name": "@vibekit/transactions",
+    "packages/tools": {
+      "name": "@vibekit/tools",
       "version": "0.1.0",
       "dependencies": {
         "@algorandfoundation/algokit-utils": "^9.2.0",
+        "@txnlab/nfd-sdk": "^1.0.0",
         "@vibekit/core": "workspace:*",
         "algosdk": "^3.5.2",
         "zod": "^3.22.0",
@@ -849,15 +755,9 @@
 
     "@vercel/oidc": ["@vercel/oidc@3.1.0", "", {}, "sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w=="],
 
-    "@vibekit/accounts": ["@vibekit/accounts@workspace:packages/accounts"],
-
-    "@vibekit/assets": ["@vibekit/assets@workspace:packages/assets"],
-
     "@vibekit/cli": ["@vibekit/cli@workspace:apps/cli"],
 
     "@vibekit/config": ["@vibekit/config@workspace:packages/config"],
-
-    "@vibekit/contracts": ["@vibekit/contracts@workspace:packages/contracts"],
 
     "@vibekit/core": ["@vibekit/core@workspace:packages/core"],
 
@@ -869,17 +769,11 @@
 
     "@vibekit/dispenser-testnet": ["@vibekit/dispenser-testnet@workspace:packages/dispenser-testnet"],
 
-    "@vibekit/ecosystem": ["@vibekit/ecosystem@workspace:packages/ecosystem"],
-
     "@vibekit/explorer": ["@vibekit/explorer@workspace:apps/explorer"],
 
     "@vibekit/keyring": ["@vibekit/keyring@workspace:packages/keyring"],
 
     "@vibekit/mcp-server": ["@vibekit/mcp-server@workspace:apps/mcp-server"],
-
-    "@vibekit/network": ["@vibekit/network@workspace:packages/network"],
-
-    "@vibekit/nfd": ["@vibekit/nfd@workspace:packages/nfd"],
 
     "@vibekit/provider-interface": ["@vibekit/provider-interface@workspace:packages/provider-interface"],
 
@@ -889,7 +783,7 @@
 
     "@vibekit/provider-walletconnect": ["@vibekit/provider-walletconnect@workspace:packages/provider-walletconnect"],
 
-    "@vibekit/transactions": ["@vibekit/transactions@workspace:packages/transactions"],
+    "@vibekit/tools": ["@vibekit/tools@workspace:packages/tools"],
 
     "@vibekit/website": ["@vibekit/website@workspace:apps/website"],
 

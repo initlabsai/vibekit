@@ -5,7 +5,7 @@ import { Globe } from 'lucide-react'
 import { TableFilter } from './table-filter'
 import { SortableHeader } from './sortable-header'
 import { useTableSort } from './use-table-sort'
-import { ECOSYSTEM_CATEGORIES, type EcosystemCategory } from '@vibekit/ecosystem'
+import { ECOSYSTEM_CATEGORIES, type EcosystemCategory } from '@vibekit/tools'
 
 interface EcosystemProject {
   id: string
@@ -51,7 +51,7 @@ export function EcosystemList({ data }: EcosystemListProps) {
   )
 
   const title = category
-    ? ECOSYSTEM_CATEGORIES[category as EcosystemCategory] ?? 'Ecosystem'
+    ? (ECOSYSTEM_CATEGORIES[category as EcosystemCategory] ?? 'Ecosystem')
     : query
       ? `Ecosystem: "${query}"`
       : 'Ecosystem'
@@ -72,7 +72,12 @@ export function EcosystemList({ data }: EcosystemListProps) {
           <thead>
             <tr className="text-algo-muted border-b border-algo-border">
               <SortableHeader label="Name" sortKey="name" currentSort={sort} onSort={onSort} />
-              <SortableHeader label="Category" sortKey="category" currentSort={sort} onSort={onSort} />
+              <SortableHeader
+                label="Category"
+                sortKey="category"
+                currentSort={sort}
+                onSort={onSort}
+              />
               <th className="text-left px-4 py-2 font-medium">Description</th>
               <th className="text-left px-4 py-2 font-medium">Links</th>
             </tr>
@@ -80,22 +85,36 @@ export function EcosystemList({ data }: EcosystemListProps) {
           <tbody>
             {sorted.map((project) => (
               <tr key={project.id} className="border-b border-algo-border/50 hover:bg-algo-dark/50">
-                <td className="px-4 py-2 font-medium text-algo-teal whitespace-nowrap">{project.name}</td>
+                <td className="px-4 py-2 font-medium text-algo-teal whitespace-nowrap">
+                  {project.name}
+                </td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <span className="px-1.5 py-0.5 rounded-full bg-algo-dark text-algo-muted text-[11px]">
                     {ECOSYSTEM_CATEGORIES[project.category] ?? project.category}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-algo-muted max-w-xs truncate">{project.description}</td>
+                <td className="px-4 py-2 text-algo-muted max-w-xs truncate">
+                  {project.description}
+                </td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     {project.website && (
-                      <a href={project.website} target="_blank" rel="noopener noreferrer" className="text-algo-teal hover:underline">
+                      <a
+                        href={project.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-algo-teal hover:underline"
+                      >
                         Website
                       </a>
                     )}
                     {project.github && (
-                      <a href={project.github} target="_blank" rel="noopener noreferrer" className="text-algo-muted hover:text-algo-teal">
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-algo-muted hover:text-algo-teal"
+                      >
                         GitHub
                       </a>
                     )}

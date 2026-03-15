@@ -14,7 +14,9 @@ import { getDb } from './database.js'
  */
 export function getSetting(key: string): string | null {
   const db = getDb()
-  const row = db.query<{ value: string }, [string]>('SELECT value FROM settings WHERE key = ?').get(key)
+  const row = db
+    .query<{ value: string }, [string]>('SELECT value FROM settings WHERE key = ?')
+    .get(key)
   return row?.value ?? null
 }
 

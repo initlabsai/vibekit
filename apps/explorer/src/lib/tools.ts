@@ -1,14 +1,27 @@
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
-import { sanitizeBigInts, formatAssetAmount, indexerSemaphore as indexerSem, type ToolDefinition, type ResolveSenderFn, type ResolveAppSpecFn } from '@vibekit/core'
-import { networkTools } from '@vibekit/network'
-import { accountTools, getAccountAssets, type AccountAsset } from '@vibekit/accounts'
-import { assetTools } from '@vibekit/assets'
-import { contractTools } from '@vibekit/contracts'
-import { transactionTools, type FormattedTransaction } from '@vibekit/transactions'
-import { createNfdApiClient, nfdTools } from '@vibekit/nfd'
-import { ecosystemTools } from '@vibekit/ecosystem'
+import {
+  sanitizeBigInts,
+  formatAssetAmount,
+  indexerSemaphore as indexerSem,
+  type ToolDefinition,
+  type ResolveSenderFn,
+  type ResolveAppSpecFn,
+} from '@vibekit/core'
+import {
+  networkTools,
+  accountTools,
+  getAccountAssets,
+  type AccountAsset,
+  assetTools,
+  contractTools,
+  transactionTools,
+  type FormattedTransaction,
+  createNfdApiClient,
+  nfdTools,
+  ecosystemTools,
+} from '@vibekit/tools'
 import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/core'
 import { env } from '@/lib/env'
 
@@ -46,8 +59,7 @@ function extractTransactions(raw: unknown): FormattedTransaction[] {
   if (Array.isArray(raw)) return raw
   if (raw && typeof raw === 'object' && 'transactions' in raw)
     return (raw as { transactions: FormattedTransaction[] }).transactions
-  if (raw && typeof raw === 'object' && 'id' in raw)
-    return [raw as FormattedTransaction]
+  if (raw && typeof raw === 'object' && 'id' in raw) return [raw as FormattedTransaction]
   return []
 }
 
@@ -68,7 +80,10 @@ function attachAssetInfo(txns: FormattedTransaction[]): void {
   }
 }
 
-async function enrichTransactions(algorand: AlgorandClient, txns: FormattedTransaction[]): Promise<void> {
+async function enrichTransactions(
+  algorand: AlgorandClient,
+  txns: FormattedTransaction[]
+): Promise<void> {
   const ids = collectAssetIds(txns)
   const uncached = [...ids].filter((id) => !assetCache.has(id))
 
@@ -83,11 +98,15 @@ async function enrichTransactions(algorand: AlgorandClient, txns: FormattedTrans
           unitName: params.unitName as string | undefined,
           decimals: Number(params.decimals ?? 0),
         }
-      }),
+      })
     )
     for (const r of results) {
       if (r.status === 'fulfilled') {
-        assetCache.set(r.value.id, { name: r.value.name, unitName: r.value.unitName, decimals: r.value.decimals })
+        assetCache.set(r.value.id, {
+          name: r.value.name,
+          unitName: r.value.unitName,
+          decimals: r.value.decimals,
+        })
       }
     }
   }
@@ -104,7 +123,10 @@ async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
 
   function scan(val: unknown) {
     if (!val || typeof val !== 'object') return
-    if (Array.isArray(val)) { val.forEach(scan); return }
+    if (Array.isArray(val)) {
+      val.forEach(scan)
+      return
+    }
     const r = val as Record<string, unknown>
     if (typeof r.avatar === 'string' && r.avatar.startsWith('assetid:')) {
       const id = parseInt(r.avatar.slice(8), 10)
@@ -132,8 +154,12 @@ async function resolveAssetIdAvatars(obj: unknown): Promise<void> {
   }
 }
 
-const noResolveSender: ResolveSenderFn = () => { throw new Error('Write tools not available in explorer') }
-const noResolveAppSpec: ResolveAppSpecFn = async () => { throw new Error('Write tools not available in explorer') }
+const noResolveSender: ResolveSenderFn = () => {
+  throw new Error('Write tools not available in explorer')
+}
+const noResolveAppSpec: ResolveAppSpecFn = async () => {
+  throw new Error('Write tools not available in explorer')
+}
 
 /** All domain package tools combined. */
 const allDomainTools: ToolDefinition[] = [
@@ -170,7 +196,12 @@ export function createExplorerTools(): ToolSet {
       execute: async (args: Record<string, unknown>) => {
         const start = Date.now()
         try {
-          const raw = await t.handler({ algorand, args, resolveSender: noResolveSender, resolveAppSpec: noResolveAppSpec })
+          const raw = await t.handler({
+            algorand,
+            args,
+            resolveSender: noResolveSender,
+            resolveAppSpec: noResolveAppSpec,
+          })
 
           // Enrich transaction results with asset metadata
           if (TRANSACTION_TOOLS.has(t.name)) {
@@ -182,7 +213,7 @@ export function createExplorerTools(): ToolSet {
 
           // Inject queried address so the UI can determine tx direction
           if (t.name === 'search_account_transactions') {
-            (result as Record<string, unknown>).address = args.address
+            ;(result as Record<string, unknown>).address = args.address
           }
 
           // Enrich asset lookup with Pera data (logo, verification, USD price)
@@ -233,10 +264,15 @@ export function createExplorerTools(): ToolSet {
 
   // get_account_portfolio — enriched holdings with USD values
   tools.get_account_portfolio = tool({
-    description: 'Get an account portfolio with USD values for all holdings. Excludes NFTs by default.',
+    description:
+      'Get an account portfolio with USD values for all holdings. Excludes NFTs by default.',
     inputSchema: z.object({
       address: z.string().describe('Algorand address'),
-      includeNfts: z.boolean().optional().default(false).describe('Include NFTs (assets with amount of 1 and no USD value)'),
+      includeNfts: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe('Include NFTs (assets with amount of 1 and no USD value)'),
     }),
     execute: async ({ address, includeNfts }) => {
       const start = Date.now()
@@ -245,7 +281,8 @@ export function createExplorerTools(): ToolSet {
         const accountRaw = await algorand.client.indexer.lookupAccountByID(address).do()
         const account = sanitizeBigInts(accountRaw)
         const algoBalance =
-          Number((account as Record<string, Record<string, unknown>>).account?.amount ?? 0) / 1_000_000
+          Number((account as Record<string, Record<string, unknown>>).account?.amount ?? 0) /
+          1_000_000
 
         // Get ALGO USD price from Pera (asset 0)
         const algoPera = await getPeraAssetInfo(0)

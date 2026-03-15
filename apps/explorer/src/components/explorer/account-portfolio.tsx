@@ -38,7 +38,7 @@ export function AccountPortfolio({ data }: AccountPortfolioProps) {
       (a) =>
         String(a.assetId).includes(q) ||
         a.name?.toLowerCase().includes(q) ||
-        a.unitName?.toLowerCase().includes(q),
+        a.unitName?.toLowerCase().includes(q)
     )
   }, [assets, filter])
 
@@ -80,9 +80,7 @@ export function AccountPortfolio({ data }: AccountPortfolioProps) {
                   <span className="font-medium">ALGO</span>
                 </div>
               </td>
-              <td className="px-4 py-2 text-right font-mono">
-                {formatAlgos(algoBalance)}
-              </td>
+              <td className="px-4 py-2 text-right font-mono">{formatAlgos(algoBalance)}</td>
               <td className="px-4 py-2 text-right font-mono">
                 {algoUsdValue != null ? formatUsd(algoUsdValue) : '—'}
               </td>
@@ -95,14 +93,8 @@ export function AccountPortfolio({ data }: AccountPortfolioProps) {
               >
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
-                    <AssetLogo
-                      src={asset.logo}
-                      name={asset.name ?? asset.unitName}
-                      size={20}
-                    />
-                    <span className="font-medium">
-                      {asset.name ?? asset.unitName ?? 'Unknown'}
-                    </span>
+                    <AssetLogo src={asset.logo} name={asset.name ?? asset.unitName} size={20} />
+                    <span className="font-medium">{asset.name ?? asset.unitName ?? 'Unknown'}</span>
                     {asset.unitName && asset.name && (
                       <span className="text-algo-muted">{asset.unitName}</span>
                     )}

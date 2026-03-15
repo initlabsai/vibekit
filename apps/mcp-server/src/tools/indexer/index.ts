@@ -5,12 +5,19 @@
  * All tools get resolveSender and resolveAppSpec injected; read tools simply ignore them.
  */
 
-import { networkTools, utilityTools } from '@vibekit/network'
-import { accountTools, accountWriteTools } from '@vibekit/accounts'
-import { assetTools, assetWriteTools } from '@vibekit/assets'
-import { contractTools, contractWriteTools } from '@vibekit/contracts'
-import { transactionTools, transactionWriteTools } from '@vibekit/transactions'
-import { ecosystemTools } from '@vibekit/ecosystem'
+import {
+  networkTools,
+  utilityTools,
+  accountTools,
+  accountWriteTools,
+  assetTools,
+  assetWriteTools,
+  contractTools,
+  contractWriteTools,
+  transactionTools,
+  transactionWriteTools,
+  ecosystemTools,
+} from '@vibekit/tools'
 import type { ToolDefinition } from '@vibekit/core'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
@@ -47,7 +54,12 @@ export const indexerTools: ToolRegistration[] = allDomainTools.map((tool) => ({
   handler: async (args, ctx) => {
     const mcpResolveSender = (alg: typeof ctx.algorand, sender?: string) =>
       resolveSender(alg, ctx.config, sender)
-    const result = await tool.handler({ algorand: ctx.algorand, args, resolveSender: mcpResolveSender, resolveAppSpec: resolveAppSpecFromFs })
+    const result = await tool.handler({
+      algorand: ctx.algorand,
+      args,
+      resolveSender: mcpResolveSender,
+      resolveAppSpec: resolveAppSpecFromFs,
+    })
     if (result && typeof result === 'object' && !Array.isArray(result)) {
       return { ...result, network: ctx.config.network }
     }

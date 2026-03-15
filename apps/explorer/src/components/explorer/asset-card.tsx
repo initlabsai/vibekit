@@ -31,9 +31,7 @@ export function AssetCard({ data }: AssetCardProps) {
           </span>
         )}
       </div>
-      {amount != null && (
-        <div className="text-xs text-algo-muted">{formatNumber(amount)}</div>
-      )}
+      {amount != null && <div className="text-xs text-algo-muted">{formatNumber(amount)}</div>}
     </div>
   )
 }

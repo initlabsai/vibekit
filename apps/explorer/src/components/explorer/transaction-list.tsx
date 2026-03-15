@@ -30,9 +30,24 @@ function DirectionBadge({ tx, address }: { tx: TxRow; address?: string }) {
   if (!address) return null
   const isSender = tx.sender === address
   const isReceiver = tx.receiver === address
-  if (isSender && isReceiver) return <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted text-[10px]">Self</span>
-  if (isSender) return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px]"><ArrowUp className="w-3 h-3" />Sent</span>
-  if (isReceiver) return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]"><ArrowDown className="w-3 h-3" />Received</span>
+  if (isSender && isReceiver)
+    return (
+      <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted text-[10px]">Self</span>
+    )
+  if (isSender)
+    return (
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px]">
+        <ArrowUp className="w-3 h-3" />
+        Sent
+      </span>
+    )
+  if (isReceiver)
+    return (
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px]">
+        <ArrowDown className="w-3 h-3" />
+        Received
+      </span>
+    )
   return null
 }
 
@@ -45,24 +60,27 @@ export function TransactionList({ data }: TransactionListProps) {
   const filtered = useMemo(() => {
     if (!filter) return transactions
     const q = filter.toLowerCase()
-    return transactions.filter((tx) =>
-      tx.id.toLowerCase().includes(q) ||
-      txTypeLabel(tx.type).toLowerCase().includes(q) ||
-      tx.sender.toLowerCase().includes(q) ||
-      tx.receiver?.toLowerCase().includes(q) ||
-      tx.group?.toLowerCase().includes(q)
+    return transactions.filter(
+      (tx) =>
+        tx.id.toLowerCase().includes(q) ||
+        txTypeLabel(tx.type).toLowerCase().includes(q) ||
+        tx.sender.toLowerCase().includes(q) ||
+        tx.receiver?.toLowerCase().includes(q) ||
+        tx.group?.toLowerCase().includes(q)
     )
   }, [transactions, filter])
 
   const sorted = useMemo(
-    () => sortData(filtered, {
-      amount: (a, b) => {
-        const parse = (v: number | string | undefined) => typeof v === 'string' ? parseFloat(v.replace(/,/g, '')) : (v ?? 0)
-        return parse(a.paymentAmount ?? a.assetAmount) - parse(b.paymentAmount ?? b.assetAmount)
-      },
-      time: (a, b) => (a.roundTime ?? 0) - (b.roundTime ?? 0),
-    }),
-    [filtered, sortData],
+    () =>
+      sortData(filtered, {
+        amount: (a, b) => {
+          const parse = (v: number | string | undefined) =>
+            typeof v === 'string' ? parseFloat(v.replace(/,/g, '')) : (v ?? 0)
+          return parse(a.paymentAmount ?? a.assetAmount) - parse(b.paymentAmount ?? b.assetAmount)
+        },
+        time: (a, b) => (a.roundTime ?? 0) - (b.roundTime ?? 0),
+      }),
+    [filtered, sortData]
   )
 
   function getTxAmount(tx: TxRow): { amount: string; unit?: string } | null {
@@ -78,9 +96,7 @@ export function TransactionList({ data }: TransactionListProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-algo-border">
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="w-4 h-4 text-algo-teal" />
-          <h3 className="text-sm font-semibold text-algo-teal">
-            Transactions ({filtered.length})
-          </h3>
+          <h3 className="text-sm font-semibold text-algo-teal">Transactions ({filtered.length})</h3>
         </div>
         <TableFilter value={filter} onChange={setFilter} placeholder="Filter transactions..." />
       </div>
@@ -94,23 +110,34 @@ export function TransactionList({ data }: TransactionListProps) {
               {address && <th className="text-left px-4 py-2 font-medium">Direction</th>}
               <th className="text-left px-4 py-2 font-medium">From</th>
               <th className="text-left px-4 py-2 font-medium">To</th>
-              <SortableHeader label="Amount" sortKey="amount" currentSort={sort} onSort={onSort} align="right" />
-              <SortableHeader label="Time" sortKey="time" currentSort={sort} onSort={onSort} align="right" />
+              <SortableHeader
+                label="Amount"
+                sortKey="amount"
+                currentSort={sort}
+                onSort={onSort}
+                align="right"
+              />
+              <SortableHeader
+                label="Time"
+                sortKey="time"
+                currentSort={sort}
+                onSort={onSort}
+                align="right"
+              />
             </tr>
           </thead>
           <tbody>
             {sorted.map((tx) => (
-              <tr
-                key={tx.id}
-                className="border-b border-algo-border/50 hover:bg-algo-dark/50"
-              >
+              <tr key={tx.id} className="border-b border-algo-border/50 hover:bg-algo-dark/50">
                 <td className="px-4 py-2 text-algo-teal">
                   <CopyableAddress address={tx.id} chars={8} />
                 </td>
                 <td className="px-4 py-2 font-mono text-algo-muted">
                   {tx.group ? (
                     <CopyableValue value={tx.group}>{tx.group.slice(0, 8)}…</CopyableValue>
-                  ) : '—'}
+                  ) : (
+                    '—'
+                  )}
                 </td>
                 <td className="px-4 py-2">
                   <span className="px-1.5 py-0.5 rounded bg-algo-dark text-algo-muted">

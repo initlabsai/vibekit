@@ -28,7 +28,7 @@ const allToolRegistrations: ToolRegistration[] = [
   ...githubTools,
   ...indexerTools,
   ...nfdTools,
-...walletconnectTools,
+  ...walletconnectTools,
 ]
 
 // Export tool definitions for MCP server registration

@@ -61,17 +61,16 @@ export function NfdCard({ data }: NfdCardProps) {
         {owner && owner !== address ? (
           <Field label="Owner" value={<CopyableAddress address={owner} />} />
         ) : null}
-        {appId != null ? <Field label="App ID" value={<CopyableValue value={String(appId)}>{String(appId)}</CopyableValue>} /> : null}
+        {appId != null ? (
+          <Field
+            label="App ID"
+            value={<CopyableValue value={String(appId)}>{String(appId)}</CopyableValue>}
+          />
+        ) : null}
         {properties
           ? Object.entries(properties).map(([key, value]) => {
               if (key === 'avatar' || key === 'name') return null
-              return (
-                <Field
-                  key={key}
-                  label={PROPERTY_LABELS[key] ?? key}
-                  value={value}
-                />
-              )
+              return <Field key={key} label={PROPERTY_LABELS[key] ?? key} value={value} />
             })
           : null}
       </div>

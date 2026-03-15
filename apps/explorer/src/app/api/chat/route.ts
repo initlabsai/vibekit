@@ -1,4 +1,11 @@
-import { streamText, stepCountIs, convertToModelMessages, generateId, createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+import {
+  streamText,
+  stepCountIs,
+  convertToModelMessages,
+  generateId,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from 'ai'
 import { getLLM, getContextWindowSize } from '@/lib/llm'
 import { createExplorerTools } from '@/lib/tools'
 import { SYSTEM_PROMPT } from '@/lib/system-prompt'
@@ -54,22 +61,32 @@ export async function POST(req: Request) {
           if (hint.tryAll) {
             // Run all calls in parallel, only emit results for ones that succeed
             const results = await Promise.allSettled(
-              calls.filter((c) => tools[c.tool]).map(async (call) => {
-                const output = await tools[call.tool].execute!(call.args, {
-                  toolCallId: generateId(),
-                  messages: [],
-                  abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+              calls
+                .filter((c) => tools[c.tool])
+                .map(async (call) => {
+                  const output = await tools[call.tool].execute!(call.args, {
+                    toolCallId: generateId(),
+                    messages: [],
+                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+                  })
+                  const isError =
+                    output &&
+                    typeof output === 'object' &&
+                    'error' in (output as Record<string, unknown>)
+                  return { call, output, isError }
                 })
-                const isError = output && typeof output === 'object' && 'error' in (output as Record<string, unknown>)
-                return { call, output, isError }
-              })
             )
 
             for (const r of results) {
               if (r.status !== 'fulfilled' || r.value.isError) continue
               const { call, output } = r.value
               const toolCallId = generateId()
-              writer.write({ type: 'tool-input-available', toolCallId, toolName: call.tool, input: call.args })
+              writer.write({
+                type: 'tool-input-available',
+                toolCallId,
+                toolName: call.tool,
+                input: call.args,
+              })
               writer.write({ type: 'tool-output-available', toolCallId, output })
             }
           } else {
@@ -79,7 +96,12 @@ export async function POST(req: Request) {
               const toolFn = tools[call.tool]
               if (!toolFn) continue
 
-              writer.write({ type: 'tool-input-available', toolCallId, toolName: call.tool, input: call.args })
+              writer.write({
+                type: 'tool-input-available',
+                toolCallId,
+                toolName: call.tool,
+                input: call.args,
+              })
 
               const output = await toolFn.execute!(call.args, {
                 toolCallId,
@@ -90,13 +112,15 @@ export async function POST(req: Request) {
               writer.write({ type: 'tool-output-available', toolCallId, output })
 
               // NFD special case: chain to address lookups after resolution
-              if (call.tool === 'resolve_nfd' && output && typeof output === 'object' && 'address' in (output as Record<string, unknown>)) {
+              if (
+                call.tool === 'resolve_nfd' &&
+                output &&
+                typeof output === 'object' &&
+                'address' in (output as Record<string, unknown>)
+              ) {
                 const address = (output as Record<string, unknown>).address as string
                 if (address) {
-                  calls = [
-                    ...calls,
-                    { tool: 'lookup_account', args: { address } },
-                  ]
+                  calls = [...calls, { tool: 'lookup_account', args: { address } }]
                 }
               }
             }
@@ -120,7 +144,7 @@ export async function POST(req: Request) {
       messages: await convertToModelMessages(body.messages),
       tools,
       stopWhen: stepCountIs(5),
-      abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+      abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
 
     const contextWindowSize = getContextWindowSize()
@@ -147,7 +171,7 @@ export async function POST(req: Request) {
         console.error('[chat:stream]', message)
         return message
       },
-    });
+    })
   } catch (err) {
     console.error('[chat]', err instanceof Error ? err.message : String(err))
     return new Response(JSON.stringify({ error: 'Internal server error' }), {

@@ -27,19 +27,23 @@ export function AssetList({ data }: AssetListProps) {
   const filtered = useMemo(() => {
     if (!filter) return assets
     const q = filter.toLowerCase()
-    return assets.filter((a) =>
-      String(a.assetId).includes(q) ||
-      a.name?.toLowerCase().includes(q) ||
-      a.unitName?.toLowerCase().includes(q)
+    return assets.filter(
+      (a) =>
+        String(a.assetId).includes(q) ||
+        a.name?.toLowerCase().includes(q) ||
+        a.unitName?.toLowerCase().includes(q)
     )
   }, [assets, filter])
 
   const sorted = useMemo(
-    () => sortData(filtered, {
-      assetId: (a, b) => a.assetId - b.assetId,
-      amount: (a, b) => parseFloat(a.amount?.replace(/,/g, '') ?? '0') - parseFloat(b.amount?.replace(/,/g, '') ?? '0'),
-    }),
-    [filtered, sortData],
+    () =>
+      sortData(filtered, {
+        assetId: (a, b) => a.assetId - b.assetId,
+        amount: (a, b) =>
+          parseFloat(a.amount?.replace(/,/g, '') ?? '0') -
+          parseFloat(b.amount?.replace(/,/g, '') ?? '0'),
+      }),
+    [filtered, sortData]
   )
 
   return (
@@ -55,9 +59,20 @@ export function AssetList({ data }: AssetListProps) {
         <table className="w-full text-xs">
           <thead>
             <tr className="text-algo-muted border-b border-algo-border">
-              <SortableHeader label="Asset ID" sortKey="assetId" currentSort={sort} onSort={onSort} />
+              <SortableHeader
+                label="Asset ID"
+                sortKey="assetId"
+                currentSort={sort}
+                onSort={onSort}
+              />
               <th className="text-left px-4 py-2 font-medium">Name</th>
-              <SortableHeader label="Amount" sortKey="amount" currentSort={sort} onSort={onSort} align="right" />
+              <SortableHeader
+                label="Amount"
+                sortKey="amount"
+                currentSort={sort}
+                onSort={onSort}
+                align="right"
+              />
               {sorted.some((a) => a.isFrozen !== undefined) && (
                 <th className="text-right px-4 py-2 font-medium">Frozen</th>
               )}
@@ -72,12 +87,8 @@ export function AssetList({ data }: AssetListProps) {
                 <td className="px-4 py-2 font-mono text-algo-teal">
                   <CopyableValue value={String(asset.assetId)}>{asset.assetId}</CopyableValue>
                 </td>
-                <td className="px-4 py-2">
-                  {asset.name ?? asset.unitName ?? '\u2014'}
-                </td>
-                <td className="px-4 py-2 text-right font-mono">
-                  {asset.amount ?? '\u2014'}
-                </td>
+                <td className="px-4 py-2">{asset.name ?? asset.unitName ?? '\u2014'}</td>
+                <td className="px-4 py-2 text-right font-mono">{asset.amount ?? '\u2014'}</td>
                 {sorted.some((a) => a.isFrozen !== undefined) && (
                   <td className="px-4 py-2 text-right">
                     {asset.isFrozen !== undefined ? (asset.isFrozen ? 'Yes' : 'No') : '\u2014'}

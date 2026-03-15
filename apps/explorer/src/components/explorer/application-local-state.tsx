@@ -62,9 +62,7 @@ function AppStateCard({ state }: { state: AppLocalState }) {
         ) : (
           <ChevronRight className="w-3 h-3 text-algo-muted" />
         )}
-        <span className="font-medium text-algo-teal">
-          App #{formatNumber(state.applicationId)}
-        </span>
+        <span className="font-medium text-algo-teal">App #{formatNumber(state.applicationId)}</span>
         <span className="text-algo-muted">
           ({state.keyValue.length} {state.keyValue.length === 1 ? 'key' : 'keys'})
         </span>

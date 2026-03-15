@@ -28,128 +28,126 @@ export default async function Image() {
   const { interBold, jetbrainsMono } = await loadFonts()
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#121212',
+        padding: '32px',
+      }}
+    >
       <div
         style={{
+          display: 'flex',
+          flexDirection: 'column',
           width: '100%',
           height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#121212',
-          padding: '32px',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          border: '1px solid #2a2a2a',
         }}
       >
+        {/* Title bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '14px 20px',
+            backgroundColor: '#1a1a1a',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#ff5f57' }} />
+            <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#febc2e' }} />
+            <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#28c840' }} />
+          </div>
+          <div
+            style={{
+              marginLeft: '12px',
+              fontSize: '14px',
+              color: '#888',
+              fontFamily: 'Inter',
+            }}
+          >
+            vibekit
+          </div>
+        </div>
+
+        {/* Terminal body */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            width: '100%',
-            height: '100%',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            border: '1px solid #2a2a2a',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 1,
+            backgroundColor: '#171717',
+            padding: '40px',
+            gap: '32px',
           }}
         >
-          {/* Title bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: '14px 20px',
-              backgroundColor: '#1a1a1a',
-              gap: '8px',
-            }}
-          >
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#ff5f57' }} />
-              <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#febc2e' }} />
-              <div style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#28c840' }} />
-            </div>
-            <div
-              style={{
-                marginLeft: '12px',
-                fontSize: '14px',
-                color: '#888',
-                fontFamily: 'Inter',
-              }}
-            >
-              vibekit
-            </div>
-          </div>
-
-          {/* Terminal body */}
+          {/* ASCII logo */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              flex: 1,
-              backgroundColor: '#171717',
-              padding: '40px',
-              gap: '32px',
+              gap: '2px',
             }}
           >
-            {/* ASCII logo */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2px',
-              }}
-            >
-              {ASCII_LINES.map((line, i) => (
-                <div
-                  key={i}
-                  style={{
-                    fontSize: '24px',
-                    lineHeight: '1.1',
-                    color: '#5de4c7',
-                    fontFamily: 'JetBrains Mono',
-                    letterSpacing: '-1px',
-                    whiteSpace: 'pre',
-                  }}
-                >
-                  {line}
-                </div>
-              ))}
-            </div>
+            {ASCII_LINES.map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  fontSize: '24px',
+                  lineHeight: '1.1',
+                  color: '#5de4c7',
+                  fontFamily: 'JetBrains Mono',
+                  letterSpacing: '-1px',
+                  whiteSpace: 'pre',
+                }}
+              >
+                {line}
+              </div>
+            ))}
+          </div>
 
-            {/* Text */}
+          {/* Text */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
             <div
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '8px',
+                fontSize: '32px',
+                fontWeight: 700,
+                color: '#ffffff',
+                fontFamily: 'Inter',
               }}
             >
-              <div
-                style={{
-                  fontSize: '32px',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  fontFamily: 'Inter',
-                }}
-              >
-                VibeKit Explorer
-              </div>
-              <div
-                style={{
-                  fontSize: '20px',
-                  color: '#888888',
-                  fontFamily: 'Inter',
-                }}
-              >
-                AI-powered Algorand blockchain explorer
-              </div>
+              VibeKit Explorer
+            </div>
+            <div
+              style={{
+                fontSize: '20px',
+                color: '#888888',
+                fontFamily: 'Inter',
+              }}
+            >
+              AI-powered Algorand blockchain explorer
             </div>
           </div>
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
       fonts: [

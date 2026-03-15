@@ -44,9 +44,7 @@ export function buildHint(input: ClassifiedInput): InputHint | null {
   switch (input.kind) {
     case 'address':
       return {
-        calls: [
-          { tool: 'lookup_account', args: { address: input.value } },
-        ],
+        calls: [{ tool: 'lookup_account', args: { address: input.value } }],
       }
     case 'transaction':
       return {
@@ -73,4 +71,3 @@ export function buildHint(input: ClassifiedInput): InputHint | null {
       return null
   }
 }
-
