@@ -79,17 +79,49 @@ function TpsChart({ blocks, color }: { blocks: BlockDetail[]; color: string }) {
             </linearGradient>
           </defs>
           <polygon points={fillPath} fill="url(#tpsFill)" />
-          <polyline points={xs.map((x, i) => `${x},${ys[i]}`).join(' ')} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
+          <polyline
+            points={xs.map((x, i) => `${x},${ys[i]}`).join(' ')}
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+          />
 
           {/* Axis line + ticks */}
-          <line x1="0" y1={chartH} x2={w} y2={chartH} stroke="currentColor" className="text-algo-border" strokeWidth="0.5" />
+          <line
+            x1="0"
+            y1={chartH}
+            x2={w}
+            y2={chartH}
+            stroke="currentColor"
+            className="text-algo-border"
+            strokeWidth="0.5"
+          />
           {xs.map((x, i) => (
-            <line key={i} x1={x} y1={chartH} x2={x} y2={chartH + 4} stroke="currentColor" className="text-algo-muted" strokeWidth="1" opacity="0.4" />
+            <line
+              key={i}
+              x1={x}
+              y1={chartH}
+              x2={x}
+              y2={chartH + 4}
+              stroke="currentColor"
+              className="text-algo-muted"
+              strokeWidth="1"
+              opacity="0.4"
+            />
           ))}
 
           {/* Hover bar from axis up to data point */}
           {hoverIdx !== null && (
-            <line x1={xs[hoverIdx]} y1={chartH} x2={xs[hoverIdx]} y2={ys[hoverIdx]} stroke={color} strokeWidth="1" opacity="0.4" />
+            <line
+              x1={xs[hoverIdx]}
+              y1={chartH}
+              x2={xs[hoverIdx]}
+              y2={ys[hoverIdx]}
+              stroke={color}
+              strokeWidth="1"
+              opacity="0.4"
+            />
           )}
 
           {/* Invisible hit areas per data point */}
@@ -169,10 +201,26 @@ export function NetworkStatus({ data }: NetworkStatusProps) {
 
       {/* Key metrics strip */}
       <div className="grid grid-cols-4 gap-px bg-algo-border/50 border-t border-algo-border">
-        <MetricCell icon={<Timer className="w-3.5 h-3.5" />} label="Last Block" value={`${timeSinceLastRound}s ago`} />
-        <MetricCell icon={<Box className="w-3.5 h-3.5" />} label="Txn/Block" value={String(avgTxnPerBlock)} />
-        <MetricCell icon={<Users className="w-3.5 h-3.5" />} label="Participation" value={`${participation}%`} />
-        <MetricCell label="Round" value={latestRound.toLocaleString()} copyValue={String(latestRound)} />
+        <MetricCell
+          icon={<Timer className="w-3.5 h-3.5" />}
+          label="Last Block"
+          value={`${timeSinceLastRound}s ago`}
+        />
+        <MetricCell
+          icon={<Box className="w-3.5 h-3.5" />}
+          label="Txn/Block"
+          value={String(avgTxnPerBlock)}
+        />
+        <MetricCell
+          icon={<Users className="w-3.5 h-3.5" />}
+          label="Participation"
+          value={`${participation}%`}
+        />
+        <MetricCell
+          label="Round"
+          value={latestRound.toLocaleString()}
+          copyValue={String(latestRound)}
+        />
       </div>
 
       {/* Supply footer */}
@@ -194,7 +242,17 @@ export function NetworkStatus({ data }: NetworkStatusProps) {
   )
 }
 
-function MetricCell({ icon, label, value, copyValue }: { icon?: React.ReactNode; label: string; value: string; copyValue?: string }) {
+function MetricCell({
+  icon,
+  label,
+  value,
+  copyValue,
+}: {
+  icon?: React.ReactNode
+  label: string
+  value: string
+  copyValue?: string
+}) {
   return (
     <div className="bg-algo-card px-3 py-2.5 text-center">
       <div className="flex items-center justify-center gap-1 text-algo-muted text-[10px] uppercase tracking-wider mb-1">
@@ -227,9 +285,30 @@ function CopyableValue({ value, copyValue }: { value: string; copyValue: string 
     >
       {value}
       {copied ? (
-        <svg className="w-3 h-3 text-green-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+        <svg
+          className="w-3 h-3 text-green-400 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
       ) : (
-        <svg className="w-3 h-3 opacity-40 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+        <svg
+          className="w-3 h-3 opacity-40 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect width="14" height="14" x="8" y="8" rx="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
       )}
     </button>
   )

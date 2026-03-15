@@ -10,12 +10,7 @@ export function formatTokenCount(n: number): string {
 
 export function TokenUsageBar({ usedTokens, maxTokens }: TokenUsageBarProps) {
   const ratio = usedTokens > 0 ? Math.min(usedTokens / maxTokens, 1) : 0
-  const color =
-    ratio < 0.5
-      ? 'bg-green-500'
-      : ratio < 0.75
-        ? 'bg-yellow-500'
-        : 'bg-red-500'
+  const color = ratio < 0.5 ? 'bg-green-500' : ratio < 0.75 ? 'bg-yellow-500' : 'bg-red-500'
 
   return (
     <div className="h-[2px] bg-algo-border">

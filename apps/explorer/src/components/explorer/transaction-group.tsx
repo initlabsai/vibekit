@@ -11,7 +11,9 @@ function TxnCard({ txn, depth = 0 }: { txn: Record<string, unknown>; depth?: num
   const innerTxns = Array.isArray(txn.innerTxns) ? (txn.innerTxns as Record<string, unknown>[]) : []
 
   return (
-    <div className={`rounded-md border border-algo-border p-3 text-xs space-y-1.5 ${depth === 0 ? 'bg-algo-dark' : 'bg-algo-card/50'}`}>
+    <div
+      className={`rounded-md border border-algo-border p-3 text-xs space-y-1.5 ${depth === 0 ? 'bg-algo-dark' : 'bg-algo-card/50'}`}
+    >
       <div className="flex items-center gap-2 flex-wrap">
         <span className="px-1.5 py-0.5 rounded bg-algo-card text-algo-muted text-[10px] font-medium">
           {txTypeLabel(txn.type as string)}
@@ -30,23 +32,21 @@ function TxnCard({ txn, depth = 0 }: { txn: Record<string, unknown>; depth?: num
       </div>
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-algo-muted">
-        {txn.paymentAmount != null && (
-          <span>{formatAlgos(txn.paymentAmount as number)} ALGO</span>
-        )}
+        {txn.paymentAmount != null && <span>{formatAlgos(txn.paymentAmount as number)} ALGO</span>}
         {txn.assetAmount != null && (
           <span>
             {String(txn.assetAmount)}
             {txn.assetUnitName ? ` ${txn.assetUnitName}` : ''}
           </span>
         )}
-        {txn.applicationId != null && (
-          <span>App: {String(txn.applicationId)}</span>
-        )}
+        {txn.applicationId != null && <span>App: {String(txn.applicationId)}</span>}
       </div>
 
       {innerTxns.length > 0 && (
         <div className="mt-2 ml-2 pl-3 border-l border-algo-border/50 space-y-2">
-          <div className="text-[10px] text-algo-muted">{innerTxns.length} inner transaction{innerTxns.length > 1 ? 's' : ''}</div>
+          <div className="text-[10px] text-algo-muted">
+            {innerTxns.length} inner transaction{innerTxns.length > 1 ? 's' : ''}
+          </div>
           {innerTxns.map((inner, j) => (
             <TxnCard key={j} txn={inner} depth={depth + 1} />
           ))}
@@ -56,7 +56,17 @@ function TxnCard({ txn, depth = 0 }: { txn: Record<string, unknown>; depth?: num
   )
 }
 
-function TxnStep({ txn, label, isLast, depth = 0 }: { txn: Record<string, unknown>; label: string; isLast: boolean; depth?: number }) {
+function TxnStep({
+  txn,
+  label,
+  isLast,
+  depth = 0,
+}: {
+  txn: Record<string, unknown>
+  label: string
+  isLast: boolean
+  depth?: number
+}) {
   const isInner = depth > 0
   return (
     <div className="flex gap-3">
@@ -102,9 +112,7 @@ export function TransactionGroup({ data }: TransactionGroupProps) {
           </span>
         )}
         <span>Total fees: {formatAlgos(totalFees)} ALGO</span>
-        {firstTxn?.confirmedRound != null && (
-          <span>Round: {String(firstTxn.confirmedRound)}</span>
-        )}
+        {firstTxn?.confirmedRound != null && <span>Round: {String(firstTxn.confirmedRound)}</span>}
         {firstTxn?.roundTime != null && (
           <span>{formatTimestamp(firstTxn.roundTime as number)}</span>
         )}

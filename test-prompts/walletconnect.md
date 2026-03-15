@@ -78,8 +78,8 @@ Test the WalletConnect connection and signing flow on testnet. Report PASS/FAIL 
 ### Get Account Info
 
 9. Use get_account_info for the connected wallet account
-    - Verify: shows balance (should have some TestNet ALGO)
-    - Note the current balance
+   - Verify: shows balance (should have some TestNet ALGO)
+   - Note the current balance
 
 ### Send Payment (Requires Mobile Approval)
 
@@ -87,7 +87,6 @@ Test the WalletConnect connection and signing flow on testnet. Report PASS/FAIL 
     Use send_payment to send 0.1 ALGO to this address:
     `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ`
     (This is the zero address - funds are effectively burned on testnet)
-
     - Verify: Pera Wallet shows signing request on mobile
     - **Approve the transaction in Pera Wallet**
     - Verify: returns transaction ID
@@ -152,12 +151,12 @@ Test the WalletConnect connection and signing flow on testnet. Report PASS/FAIL 
 
 ## Summary
 
-| Tool                    | Test Steps | Requires User Action |
-| ----------------------- | ---------- | -------------------- |
-| connect_walletconnect   | 4, 13, 17  | Yes (QR scan)        |
-| walletconnect_status    | 3, 6, 12, 15, 19 | No            |
-| disconnect_walletconnect| 14         | No                   |
-| send_payment (via WC)   | 10         | Yes (mobile approve) |
+| Tool                     | Test Steps       | Requires User Action |
+| ------------------------ | ---------------- | -------------------- |
+| connect_walletconnect    | 4, 13, 17        | Yes (QR scan)        |
+| walletconnect_status     | 3, 6, 12, 15, 19 | No                   |
+| disconnect_walletconnect | 14               | No                   |
+| send_payment (via WC)    | 10               | Yes (mobile approve) |
 
 **Total: 20 test steps, 3 require mobile wallet interaction**
 

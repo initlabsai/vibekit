@@ -77,7 +77,10 @@ export function serializeToml(obj: Record<string, unknown>): string {
 }
 
 /** Write a config object to a TOML file */
-export async function writeTomlFile(filePath: string, data: Record<string, unknown>): Promise<void> {
+export async function writeTomlFile(
+  filePath: string,
+  data: Record<string, unknown>
+): Promise<void> {
   await ensureDir(dirname(filePath))
   await writeFile(filePath, serializeToml(data), 'utf-8')
 }

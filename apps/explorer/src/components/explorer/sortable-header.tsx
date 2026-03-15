@@ -11,7 +11,13 @@ interface SortableHeaderProps {
   align?: 'left' | 'right'
 }
 
-export function SortableHeader({ label, sortKey, currentSort, onSort, align = 'left' }: SortableHeaderProps) {
+export function SortableHeader({
+  label,
+  sortKey,
+  currentSort,
+  onSort,
+  align = 'left',
+}: SortableHeaderProps) {
   const active = currentSort?.key === sortKey
   const dir = active ? currentSort.dir : null
 

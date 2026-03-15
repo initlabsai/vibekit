@@ -29,17 +29,19 @@ export function AssetHolders({ data }: AssetHoldersProps) {
   const filtered = useMemo(() => {
     if (!filter) return balances
     const q = filter.toLowerCase()
-    return balances.filter((h) =>
-      h.address.toLowerCase().includes(q) ||
-      h.amount.toLowerCase().includes(q)
+    return balances.filter(
+      (h) => h.address.toLowerCase().includes(q) || h.amount.toLowerCase().includes(q)
     )
   }, [balances, filter])
 
   const sorted = useMemo(
-    () => sortData(filtered, {
-      amount: (a, b) => parseFloat(a.amount.replace(/,/g, '') || '0') - parseFloat(b.amount.replace(/,/g, '') || '0'),
-    }),
-    [filtered, sortData],
+    () =>
+      sortData(filtered, {
+        amount: (a, b) =>
+          parseFloat(a.amount.replace(/,/g, '') || '0') -
+          parseFloat(b.amount.replace(/,/g, '') || '0'),
+      }),
+    [filtered, sortData]
   )
 
   return (
@@ -59,7 +61,13 @@ export function AssetHolders({ data }: AssetHoldersProps) {
             <tr className="text-algo-muted border-b border-algo-border">
               <th className="text-left px-4 py-2 font-medium">#</th>
               <th className="text-left px-4 py-2 font-medium">Address</th>
-              <SortableHeader label="Amount" sortKey="amount" currentSort={sort} onSort={onSort} align="right" />
+              <SortableHeader
+                label="Amount"
+                sortKey="amount"
+                currentSort={sort}
+                onSort={onSort}
+                align="right"
+              />
               <th className="text-right px-4 py-2 font-medium">% of shown</th>
               <th className="text-right px-4 py-2 font-medium">Frozen</th>
             </tr>
@@ -71,25 +79,29 @@ export function AssetHolders({ data }: AssetHoldersProps) {
                 className="border-b border-algo-border/50 hover:bg-algo-dark/50"
               >
                 <td className="px-4 py-2 text-algo-muted">{i + 1}</td>
-                <td className="px-4 py-2"><CopyableAddress address={holder.address} /></td>
+                <td className="px-4 py-2">
+                  <CopyableAddress address={holder.address} />
+                </td>
                 <td className="px-4 py-2 text-right font-mono">{holder.amount}</td>
                 <td className="px-4 py-2 text-right">
                   {(() => {
                     if (totalShown === 0) return '—'
-                    const pct = (parseFloat(holder.amount.replace(/,/g, '') || '0') / totalShown) * 100
+                    const pct =
+                      (parseFloat(holder.amount.replace(/,/g, '') || '0') / totalShown) * 100
                     return (
                       <div className="flex items-center justify-end gap-1.5">
                         <div className="w-12 h-1.5 rounded-full bg-algo-dark overflow-hidden">
-                          <div className="h-full rounded-full bg-algo-teal" style={{ width: `${Math.min(pct, 100)}%` }} />
+                          <div
+                            className="h-full rounded-full bg-algo-teal"
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
                         </div>
                         <span className="font-mono">{pct < 0.01 ? '<0.01' : pct.toFixed(2)}%</span>
                       </div>
                     )
                   })()}
                 </td>
-                <td className="px-4 py-2 text-right">
-                  {holder.isFrozen ? 'Yes' : 'No'}
-                </td>
+                <td className="px-4 py-2 text-right">{holder.isFrozen ? 'Yes' : 'No'}</td>
               </tr>
             ))}
           </tbody>

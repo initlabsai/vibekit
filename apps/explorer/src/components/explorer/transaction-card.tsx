@@ -42,9 +42,7 @@ export function TransactionCard({ data }: TransactionCardProps) {
         {assetAmount != null && paymentAmount == null && (
           <span className="font-medium">{String(assetAmount)}</span>
         )}
-        {roundTime && (
-          <span className="text-algo-muted ml-auto">{formatTimestamp(roundTime)}</span>
-        )}
+        {roundTime && <span className="text-algo-muted ml-auto">{formatTimestamp(roundTime)}</span>}
       </div>
     </div>
   )

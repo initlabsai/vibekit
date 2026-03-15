@@ -3,7 +3,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["LLM_BASE_URL", "LLM_API_KEY", "LLM_MODEL", "ALGORAND_NETWORK", "RATE_LIMIT_WINDOW_MS", "RATE_LIMIT_MAX_REQUESTS"],
+      "env": [
+        "LLM_BASE_URL",
+        "LLM_API_KEY",
+        "LLM_MODEL",
+        "ALGORAND_NETWORK",
+        "RATE_LIMIT_WINDOW_MS",
+        "RATE_LIMIT_MAX_REQUESTS"
+      ],
       "outputs": ["dist/**", "bin/**", ".next/**"]
     },
     "build:website": {

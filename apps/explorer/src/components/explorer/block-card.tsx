@@ -18,9 +18,7 @@ export function BlockCard({ data }: BlockCardProps) {
       <div className="flex items-center gap-2 mb-1">
         <Box className="w-3.5 h-3.5 text-algo-teal shrink-0" />
         <CopyableValue value={String(round)}>
-          <span className="text-xs font-medium text-algo-teal">
-            Block #{formatNumber(round)}
-          </span>
+          <span className="text-xs font-medium text-algo-teal">Block #{formatNumber(round)}</span>
         </CopyableValue>
         <span className="text-[11px] text-algo-muted ml-auto">
           {formatNumber(transactionCount)} txns
@@ -28,9 +26,7 @@ export function BlockCard({ data }: BlockCardProps) {
       </div>
       <div className="flex items-center gap-3 text-xs text-algo-muted">
         <span>{formatTimestamp(timestamp)}</span>
-        {proposer && (
-          <CopyableAddress address={proposer} />
-        )}
+        {proposer && <CopyableAddress address={proposer} />}
       </div>
     </div>
   )

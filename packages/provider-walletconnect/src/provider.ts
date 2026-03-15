@@ -13,7 +13,12 @@ import type {
   ProviderStatus,
   WalletId,
 } from '@vibekit/provider-interface'
-import type { WalletConfig, PairingRequest, WalletImplementation, PairingOptions } from './types/index.js'
+import type {
+  WalletConfig,
+  PairingRequest,
+  WalletImplementation,
+  PairingOptions,
+} from './types/index.js'
 import {
   createWalletImplementation,
   getSupportedWallets,

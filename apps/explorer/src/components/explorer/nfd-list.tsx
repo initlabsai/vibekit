@@ -25,17 +25,17 @@ export function NfdList({ data }: NfdListProps) {
   const filtered = useMemo(() => {
     if (!filter) return results
     const q = filter.toLowerCase()
-    return results.filter((r) =>
-      r.address.toLowerCase().includes(q) ||
-      r.name?.toLowerCase().includes(q)
+    return results.filter(
+      (r) => r.address.toLowerCase().includes(q) || r.name?.toLowerCase().includes(q)
     )
   }, [results, filter])
 
   const sorted = useMemo(
-    () => sortData(filtered, {
-      name: (a, b) => (a.name ?? '').localeCompare(b.name ?? ''),
-    }),
-    [filtered, sortData],
+    () =>
+      sortData(filtered, {
+        name: (a, b) => (a.name ?? '').localeCompare(b.name ?? ''),
+      }),
+    [filtered, sortData]
   )
 
   return (

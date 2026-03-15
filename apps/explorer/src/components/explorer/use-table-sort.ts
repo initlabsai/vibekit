@@ -25,7 +25,7 @@ export function useTableSort<T>() {
       const sorted = [...items].sort(cmp)
       return sort.dir === 'desc' ? sorted.reverse() : sorted
     },
-    [sort],
+    [sort]
   )
 
   return { sort, onSort, sortData }

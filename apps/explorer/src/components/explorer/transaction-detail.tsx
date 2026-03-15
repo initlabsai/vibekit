@@ -20,8 +20,16 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
       </div>
       <div className="space-y-2 text-xs">
         <Row label="TX ID" value={<CopyableAddress address={data.id as string} chars={12} />} />
-        <Row label="Sender" value={<CopyableAddress address={data.sender as string} chars={58} />} />
-        {data.receiver ? <Row label="Receiver" value={<CopyableAddress address={data.receiver as string} chars={58} />} /> : null}
+        <Row
+          label="Sender"
+          value={<CopyableAddress address={data.sender as string} chars={58} />}
+        />
+        {data.receiver ? (
+          <Row
+            label="Receiver"
+            value={<CopyableAddress address={data.receiver as string} chars={58} />}
+          />
+        ) : null}
         {data.paymentAmount != null && (
           <Row label="Amount" value={`${formatAlgos(data.paymentAmount as number)} ALGO`} />
         )}
@@ -31,7 +39,9 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
             value={
               <>
                 <CopyableValue value={String(data.assetId)}>{String(data.assetId)}</CopyableValue>
-                {data.assetName ? <span className="ml-1.5 text-algo-muted">({data.assetName as string})</span> : null}
+                {data.assetName ? (
+                  <span className="ml-1.5 text-algo-muted">({data.assetName as string})</span>
+                ) : null}
               </>
             }
           />
@@ -44,21 +54,41 @@ export function TransactionDetail({ data }: TransactionDetailProps) {
         )}
         <Row label="Fee" value={`${formatAlgos(data.fee as number)} ALGO`} />
         {data.confirmedRound != null && (
-          <Row label="Round" value={<CopyableValue value={String(data.confirmedRound)}>{String(data.confirmedRound)}</CopyableValue>} />
+          <Row
+            label="Round"
+            value={
+              <CopyableValue value={String(data.confirmedRound)}>
+                {String(data.confirmedRound)}
+              </CopyableValue>
+            }
+          />
         )}
         {data.roundTime != null && (
           <Row label="Time" value={formatTimestamp(data.roundTime as number)} />
         )}
         {data.note ? <Row label="Note" value={data.note as string} /> : null}
-        {data.group ? <Row label="Group" value={<CopyableValue value={data.group as string}><span className="font-mono">{(data.group as string).slice(0, 12)}…</span></CopyableValue>} /> : null}
+        {data.group ? (
+          <Row
+            label="Group"
+            value={
+              <CopyableValue value={data.group as string}>
+                <span className="font-mono">{(data.group as string).slice(0, 12)}…</span>
+              </CopyableValue>
+            }
+          />
+        ) : null}
         {data.applicationId != null && (
-          <Row label="App ID" value={<CopyableValue value={String(data.applicationId)}>{String(data.applicationId)}</CopyableValue>} />
+          <Row
+            label="App ID"
+            value={
+              <CopyableValue value={String(data.applicationId)}>
+                {String(data.applicationId)}
+              </CopyableValue>
+            }
+          />
         )}
         {Array.isArray(data.innerTxns) && data.innerTxns.length > 0 ? (
-          <Row
-            label="Inner Txns"
-            value={`${data.innerTxns.length} inner transaction(s)`}
-          />
+          <Row label="Inner Txns" value={`${data.innerTxns.length} inner transaction(s)`} />
         ) : null}
         {Array.isArray(data.logs) && data.logs.length > 0 ? (
           <div>

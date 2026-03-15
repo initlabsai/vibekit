@@ -35,7 +35,9 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
       <div className="space-y-3 text-xs">
         <div className="flex gap-2">
           <span className="text-algo-muted w-20 shrink-0">Creator</span>
-          <span className="break-all"><CopyableAddress address={data.creator as string} chars={58} /></span>
+          <span className="break-all">
+            <CopyableAddress address={data.creator as string} chars={58} />
+          </span>
         </div>
         {globalStateSchema && (
           <div className="flex gap-2">
@@ -55,9 +57,7 @@ export function ApplicationInfo({ data }: ApplicationInfoProps) {
         )}
         {globalState && globalState.length > 0 && (
           <div>
-            <span className="text-algo-muted">
-              Global State ({globalState.length} keys):
-            </span>
+            <span className="text-algo-muted">Global State ({globalState.length} keys):</span>
             <div className="mt-1 bg-algo-dark rounded p-2 max-h-48 overflow-auto">
               <table className="w-full text-[11px]">
                 <thead>

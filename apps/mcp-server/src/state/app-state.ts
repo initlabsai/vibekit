@@ -122,11 +122,19 @@ export class AppState {
 
     this.networkConfig = {
       network,
-      algodServer: useEnvEndpoints ? (process.env.ALGORAND_ALGOD || preset.algodServer) : preset.algodServer,
-      algodToken: useEnvEndpoints ? (process.env.ALGORAND_TOKEN ?? preset.algodToken) : preset.algodToken,
-      kmdServer: useEnvEndpoints ? (process.env.ALGORAND_KMD || preset.kmdServer) : preset.kmdServer,
-      kmdToken: useEnvEndpoints ? (process.env.ALGORAND_KMD_TOKEN || preset.kmdToken) : preset.kmdToken,
-      indexerServer: useEnvEndpoints ? (process.env.ALGORAND_INDEXER || preset.indexerServer) : preset.indexerServer,
+      algodServer: useEnvEndpoints
+        ? process.env.ALGORAND_ALGOD || preset.algodServer
+        : preset.algodServer,
+      algodToken: useEnvEndpoints
+        ? (process.env.ALGORAND_TOKEN ?? preset.algodToken)
+        : preset.algodToken,
+      kmdServer: useEnvEndpoints ? process.env.ALGORAND_KMD || preset.kmdServer : preset.kmdServer,
+      kmdToken: useEnvEndpoints
+        ? process.env.ALGORAND_KMD_TOKEN || preset.kmdToken
+        : preset.kmdToken,
+      indexerServer: useEnvEndpoints
+        ? process.env.ALGORAND_INDEXER || preset.indexerServer
+        : preset.indexerServer,
     }
 
     this.algorandClient = createAlgorandClient(this.networkConfig)

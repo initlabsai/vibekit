@@ -36,10 +36,14 @@ export function ApplicationCard({ data }: ApplicationCardProps) {
       {(globalStateSchema || localStateSchema) && (
         <div className="text-xs text-algo-muted flex gap-3">
           {globalStateSchema && (
-            <span>Global: {globalStateSchema.numUint} uint, {globalStateSchema.numByteSlice} bytes</span>
+            <span>
+              Global: {globalStateSchema.numUint} uint, {globalStateSchema.numByteSlice} bytes
+            </span>
           )}
           {localStateSchema && (
-            <span>Local: {localStateSchema.numUint} uint, {localStateSchema.numByteSlice} bytes</span>
+            <span>
+              Local: {localStateSchema.numUint} uint, {localStateSchema.numByteSlice} bytes
+            </span>
           )}
         </div>
       )}

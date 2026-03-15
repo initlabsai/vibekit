@@ -7,13 +7,7 @@ interface AssetLogoProps {
 export function AssetLogo({ src, name, size = 24 }: AssetLogoProps) {
   if (src) {
     return (
-      <img
-        src={src}
-        alt={name ?? 'Asset'}
-        width={size}
-        height={size}
-        className="rounded-full"
-      />
+      <img src={src} alt={name ?? 'Asset'} width={size} height={size} className="rounded-full" />
     )
   }
   const letter = (name ?? '?')[0].toUpperCase()

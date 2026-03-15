@@ -9,7 +9,12 @@ import WalletConnectModule from '@walletconnect/client'
 import type { IConnector, IWalletConnectOptions } from '@walletconnect/types'
 import type { TransactionSigner } from 'algosdk'
 import type { AccountInfo, WalletId } from '@vibekit/provider-interface'
-import type { WalletImplementation, WalletConfig, PairingRequest, PairingOptions } from '../types/index.js'
+import type {
+  WalletImplementation,
+  WalletConfig,
+  PairingRequest,
+  PairingOptions,
+} from '../types/index.js'
 import { ALGORAND_CHAIN_IDS, DEFAULT_METADATA } from '../constants.js'
 import { createWalletConnectSigner } from '../signing/index.js'
 import { InitializationError, NoSessionError } from '../errors.js'

@@ -4,7 +4,7 @@
  * Wraps @vibekit/nfd tool definitions as MCP tool registrations.
  */
 
-import { nfdTools as sharedTools, createNfdApiClient } from '@vibekit/nfd'
+import { nfdTools as sharedTools, createNfdApiClient } from '@vibekit/tools'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import type { ToolRegistration } from '../types.js'

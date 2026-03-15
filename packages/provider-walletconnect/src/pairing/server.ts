@@ -6,7 +6,7 @@
 
 import { readFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
-import pageHtmlPath from './page.html' with { type: "file" }
+import pageHtmlPath from './page.html' with { type: 'file' }
 import type { Server, ServerWebSocket } from 'bun'
 import type { PairingResult } from '../types/index.js'
 import type { AccountInfo } from '@vibekit/provider-interface'
