@@ -9,7 +9,8 @@
         "LLM_MODEL",
         "ALGORAND_NETWORK",
         "RATE_LIMIT_WINDOW_MS",
-        "RATE_LIMIT_MAX_REQUESTS"
+        "RATE_LIMIT_MAX_REQUESTS",
+        "API_KEYS"
       ],
       "outputs": ["dist/**", "bin/**", ".next/**"]
     },

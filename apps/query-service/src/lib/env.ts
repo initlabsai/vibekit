@@ -28,6 +28,12 @@ export const env = {
   get LLM_MODEL() {
     return process.env.LLM_MODEL ?? 'gpt-4o'
   },
+  get API_KEYS() {
+    return process.env.API_KEYS ?? ''
+  },
+  get PORT() {
+    return Number(process.env.PORT) || 3001
+  },
   get ALGORAND_NETWORK() {
     return process.env.ALGORAND_NETWORK ?? 'mainnet'
   },

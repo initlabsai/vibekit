@@ -1,7 +1,7 @@
 import type { LanguageModel } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createTogetherAI } from '@ai-sdk/togetherai'
-import { env } from '@/lib/env'
+import { env } from './env'
 
 const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
   'Qwen/Qwen3-235B-A22B-Instruct-2507-tput': 262_144,

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
 import { ChatMessage } from '@/components/chat/chat-message'
 import { ChatInput } from '@/components/chat/chat-input'
 import { TokenUsageBar, formatTokenCount } from '@/components/chat/token-usage-bar'
@@ -11,6 +12,13 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TypingDots } from '@/components/chat/typing-dots'
 import { classifyInput, buildHint } from '@/lib/input-classifier'
+
+const chatTransport = new DefaultChatTransport({
+  api: `${process.env.NEXT_PUBLIC_QUERY_SERVICE_URL ?? 'http://localhost:3001'}/chat`,
+  headers: process.env.NEXT_PUBLIC_QUERY_SERVICE_KEY
+    ? { Authorization: `Bearer ${process.env.NEXT_PUBLIC_QUERY_SERVICE_KEY}` }
+    : {},
+})
 
 const SUGGESTIONS = [
   'Show network status',
@@ -22,7 +30,9 @@ const SUGGESTIONS = [
 
 export default function Home() {
   const [input, setInput] = useState('')
-  const { messages, sendMessage, status, error, stop } = useChat()
+  const { messages, sendMessage, status, error, stop } = useChat({
+    transport: chatTransport,
+  })
   const bottomRef = useRef<HTMLDivElement>(null)
   const shouldAutoScroll = useRef(true)
   const isLoading = status === 'submitted' || status === 'streaming'
