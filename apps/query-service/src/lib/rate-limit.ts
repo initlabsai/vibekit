@@ -23,16 +23,16 @@ function prune() {
   }
 }
 
-/** Check and consume one request for the given IP. */
-export function rateLimit(ip: string): RateLimitResult {
+/** Check and consume one request for the given key. */
+export function rateLimit(key: string): RateLimitResult {
   // Prune occasionally to avoid unbounded growth
   if (store.size > 1000) prune()
 
   const now = Date.now()
-  const entry = store.get(ip)
+  const entry = store.get(key)
 
   if (!entry || now >= entry.resetAt) {
-    store.set(ip, { count: 1, resetAt: now + windowMs })
+    store.set(key, { count: 1, resetAt: now + windowMs })
     return { success: true, remaining: maxRequests - 1 }
   }
 
@@ -44,9 +44,9 @@ export function rateLimit(ip: string): RateLimitResult {
   return { success: true, remaining: maxRequests - entry.count }
 }
 
-/** Seconds until the current window resets for the given IP. */
-export function retryAfter(ip: string): number {
-  const entry = store.get(ip)
+/** Seconds until the current window resets for the given key. */
+export function retryAfter(key: string): number {
+  const entry = store.get(key)
   if (!entry) return 0
   return Math.ceil((entry.resetAt - Date.now()) / 1000)
 }

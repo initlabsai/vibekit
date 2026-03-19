@@ -2,6 +2,10 @@
 
 Guidance for AI agents working on this repo. User docs live at [getvibekit.ai](https://getvibekit.ai).
 
+## Code Style
+
+Write code that is easy to read and maintain. Optimize for how easy the code is to understand and follow by skimmming. Avoid cleverness. Use early returns.
+
 ## What This Is
 
 VibeKit is a CLI + explorer for Algorand. The CLI bootstraps AI coding environments (agent skills, MCP servers). The explorer is an agentic blockchain explorer powered by LLM tool calling.
@@ -13,7 +17,8 @@ vibekit/
 ├── apps/
 │   ├── cli/                    # CLI binary (Bun, compiles to standalone)
 │   ├── mcp-server/             # MCP server, started via `vibekit mcp`
-│   ├── explorer/               # Agentic explorer (Next.js, deployed to Vercel)
+│   ├── explorer/               # Chat UI for the explorer (Next.js, deployed to Vercel)
+│   ├── query-service/          # Query API — LLM orchestration + tools (Hono/Bun, Docker)
 │   └── website/                # Docs site (Astro/Starlight, deployed to Vercel)
 ├── packages/
 │   ├── core/                   # Shared types (ToolDefinition, ToolHandlerContext), validators, utilities
@@ -37,15 +42,24 @@ Domain packages define tools as `ToolDefinition` objects (from `@vibekit/core`).
 Consumers adapt these definitions to their framework:
 
 - **MCP server** — `apps/mcp-server/src/tools/indexer/index.ts` wraps all domain tools as MCP tool registrations, injecting `resolveSender` and `resolveAppSpec` implementations.
-- **Explorer** — `apps/explorer/src/lib/tools.ts` wraps domain tools as AI SDK tools (`ai` package), adding asset enrichment and formatting.
+- **Query service** — `apps/query-service/src/lib/tools.ts` wraps domain tools as AI SDK tools (`ai` package), adding asset enrichment and formatting. Serves them via Hono HTTP endpoints.
+
+### Query service
+
+- Standalone Hono/Bun API that owns all LLM orchestration, tool calling, and data enrichment.
+- Two endpoints: `POST /chat` (AI SDK UI message stream protocol) and `POST /query` (NDJSON/JSON for non-JS consumers).
+- LLM provider config in `apps/query-service/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
+- Uses `@ai-sdk/openai` with `.chat()` (Chat Completions API) for OpenAI-compatible providers. Do not use `provider()` directly — it defaults to the Responses API which Ollama doesn't support.
+- Supports per-request customization: `systemPrompt` (append-only) and `tools` (filter by name).
+- Auth via Bearer token (`API_KEYS` env var). Rate limiting per API key label.
+- Env vars: see `apps/query-service/.env.example`.
 
 ### Explorer
 
-- Next.js app with a chat interface that uses AI SDK (`ai` / `@ai-sdk/*`).
-- LLM provider config in `apps/explorer/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
-- Uses `@ai-sdk/openai` with `.chat()` (Chat Completions API) for OpenAI-compatible providers. Do not use `provider()` directly — it defaults to the Responses API which Ollama doesn't support.
-- Tools from `@vibekit/tools` are wrapped as AI SDK tools in `apps/explorer/src/lib/tools.ts`.
-- Env vars: see `apps/explorer/.env.example`.
+- Next.js chat UI that consumes the query service via `POST /chat`.
+- Uses `@ai-sdk/react` `useChat()` with `DefaultChatTransport` pointed at the query service URL.
+- No direct LLM or tool dependencies — all orchestration is in the query service.
+- Env vars: `NEXT_PUBLIC_QUERY_SERVICE_URL`, `NEXT_PUBLIC_QUERY_SERVICE_KEY`. See `apps/explorer/.env.example`.
 
 ## Dev Commands
 
@@ -55,7 +69,8 @@ bun run build            # Build everything (uses Turborepo)
 bun run typecheck        # Type check (run before commits)
 bun run dev:cli          # Run CLI from source
 bun run dev:mcp          # Run MCP server from source
-bun run dev:explorer     # Run explorer locally (needs .env.local)
+bun run dev:explorer     # Run explorer + query service locally
+bun run dev:query-service # Run query service only
 bun run dev:website      # Run docs site locally
 ```
 
