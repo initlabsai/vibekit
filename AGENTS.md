@@ -18,7 +18,7 @@ vibekit/
 │   ├── cli/                    # CLI binary (Bun, compiles to standalone)
 │   ├── mcp-server/             # MCP server, started via `vibekit mcp`
 │   ├── explorer/               # Chat UI for the explorer (Next.js, deployed to Vercel)
-│   ├── query-service/          # Query API — LLM orchestration + tools (Hono/Bun, Docker)
+│   ├── api/                    # Query API — LLM orchestration + tools (Hono/Bun, Docker)
 │   └── website/                # Docs site (Astro/Starlight, deployed to Vercel)
 ├── packages/
 │   ├── core/                   # Shared types (ToolDefinition, ToolHandlerContext), validators, utilities
@@ -42,17 +42,17 @@ Domain packages define tools as `ToolDefinition` objects (from `@vibekit/core`).
 Consumers adapt these definitions to their framework:
 
 - **MCP server** — `apps/mcp-server/src/tools/indexer/index.ts` wraps all domain tools as MCP tool registrations, injecting `resolveSender` and `resolveAppSpec` implementations.
-- **Query service** — `apps/query-service/src/lib/tools.ts` wraps domain tools as AI SDK tools (`ai` package), adding asset enrichment and formatting. Serves them via Hono HTTP endpoints.
+- **Query service** — `apps/api/src/lib/tools.ts` wraps domain tools as AI SDK tools (`ai` package), adding asset enrichment and formatting. Serves them via Hono HTTP endpoints.
 
 ### Query service
 
 - Standalone Hono/Bun API that owns all LLM orchestration, tool calling, and data enrichment.
 - Two endpoints: `POST /chat` (AI SDK UI message stream protocol) and `POST /query` (NDJSON/JSON for non-JS consumers).
-- LLM provider config in `apps/query-service/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
+- LLM provider config in `apps/api/src/lib/llm.ts` — Together AI in prod, OpenAI-compatible (Ollama) for local dev.
 - Uses `@ai-sdk/openai` with `.chat()` (Chat Completions API) for OpenAI-compatible providers. Do not use `provider()` directly — it defaults to the Responses API which Ollama doesn't support.
 - Supports per-request customization: `systemPrompt` (append-only) and `tools` (filter by name).
 - Auth via Bearer token (`API_KEYS` env var). Rate limiting per API key label.
-- Env vars: see `apps/query-service/.env.example`.
+- Env vars: see `apps/api/.env.example`.
 
 ### Explorer
 
@@ -70,7 +70,7 @@ bun run typecheck        # Type check (run before commits)
 bun run dev:cli          # Run CLI from source
 bun run dev:mcp          # Run MCP server from source
 bun run dev:explorer     # Run explorer + query service locally
-bun run dev:query-service # Run query service only
+bun run dev:api          # Run query service only
 bun run dev:website      # Run docs site locally
 ```
 
