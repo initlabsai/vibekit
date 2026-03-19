@@ -1,4 +1,4 @@
-# @vibekit/query-service
+# @vibekit/api
 
 Natural language Algorand queries via HTTP. Handles LLM orchestration, tool calling, input classification, and data enrichment. Consumers make one HTTP call.
 
@@ -101,8 +101,8 @@ See [.env.example](.env.example). Key variables:
 ## Docker
 
 ```bash
-docker build -t query-service -f apps/query-service/Dockerfile .
-docker run -p 3001:3001 --env-file apps/query-service/.env.local query-service
+docker build -t vibekit-api -f apps/api/Dockerfile .
+docker run -p 3001:3001 --env-file apps/api/.env.local vibekit-api
 ```
 
 ## See also
