@@ -15,6 +15,7 @@
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.2.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@vibekit/alpha-arcade": "workspace:*",
     "@vibekit/core": "workspace:*",
     "@vibekit/tools": "workspace:*",
     "@vibekit/db": "workspace:*",
