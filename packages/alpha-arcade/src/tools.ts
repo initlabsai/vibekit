@@ -29,8 +29,8 @@ function formatMarket(m: Market) {
       id: o.id,
       title: o.title,
       marketAppId: o.marketAppId,
-      yesPrice: probToDollars(o.yesProb),
-      noPrice: probToDollars(o.noProb),
+      yesPrice: o.yesProb != null ? probToDollars(o.yesProb) : undefined,
+      noPrice: o.noProb != null ? probToDollars(o.noProb) : undefined,
     })),
     source: m.source,
   }
