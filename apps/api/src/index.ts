@@ -27,6 +27,7 @@ console.log(`Query service listening on port ${port}`)
 export default {
   port,
   fetch: app.fetch,
+  idleTimeout: 120,
 }
 
 async function authMiddleware(c: Context<Env>, next: Next) {
