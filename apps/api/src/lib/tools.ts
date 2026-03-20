@@ -273,7 +273,7 @@ export function createTools(): ToolSet {
   }
 
   // Alpha Arcade prediction market tools
-  const alphaClient = createAlphaClient()
+  const alphaClient = createAlphaClient(process.env.ALPHA_ARCADE_API_KEY)
   for (const t of alphaArcadeTools) {
     tools[t.name] = tool({
       description: t.description,
