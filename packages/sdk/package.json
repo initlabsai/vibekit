@@ -1,0 +1,38 @@
+{
+  "name": "@getvibekit/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the VibeKit API",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "bun run build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "ai": ">=6.0.0"
+  },
+  "devDependencies": {
+    "ai": "^6.0.116",
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrielkuettel/vibekit",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://getvibekit.ai"
+}
