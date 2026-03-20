@@ -1,3 +1,8 @@
+# fly.toml app configuration file generated for vibekit-api on 2026-03-19T17:15:52-06:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
 app = 'vibekit-api'
 primary_region = 'iad'
 
@@ -14,3 +19,5 @@ primary_region = 'iad'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '256mb'
+  cpus = 1
+  memory_mb = 256

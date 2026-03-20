@@ -19,6 +19,7 @@ import { providerTools } from './provider/index.js'
 import { indexerTools } from './indexer/index.js'
 import { nfdTools } from './nfd/index.js'
 import { walletconnectTools } from './walletconnect/index.js'
+import { alphaArcadeMcpTools } from './alpha-arcade/index.js'
 
 // Combine all tool registrations
 const allToolRegistrations: ToolRegistration[] = [
@@ -29,6 +30,7 @@ const allToolRegistrations: ToolRegistration[] = [
   ...indexerTools,
   ...nfdTools,
   ...walletconnectTools,
+  ...alphaArcadeMcpTools,
 ]
 
 // Export tool definitions for MCP server registration

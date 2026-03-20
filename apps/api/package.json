@@ -13,6 +13,7 @@
     "@ai-sdk/openai": "^3.0.41",
     "@ai-sdk/togetherai": "^2.0.39",
     "@algorandfoundation/algokit-utils": "^9.2.0",
+    "@vibekit/alpha-arcade": "workspace:*",
     "@vibekit/core": "workspace:*",
     "@vibekit/tools": "workspace:*",
     "ai": "^6.0.116",

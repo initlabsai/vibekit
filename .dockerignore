@@ -1,0 +1,45 @@
+# flyctl launch added from .gitignore
+# Environment files
+**/.env
+**/.env.local
+
+# Generated config files (may contain secrets)
+**/.turbo
+**/opencode.json
+**/.mcp.json
+**/.vibekit.json
+**/.astro
+**/tsconfig.tsbuildinfo
+
+# Tool-specific directories
+**/.opencode
+**/.claude
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Editor files
+**/*.swp
+**/*.swo
+**/*~
+**/.idea
+**/.vscode
+
+# Node/Bun
+**/node_modules
+**/bun.lockb
+
+# Build artifacts
+**/dist
+**/.next
+**/apps/cli/bin
+**/apps/cli/src/lib/skills/bundled.ts
+**/apps/website/public/og-image.png
+
+# Test output
+**/*.log
+
+# flyctl launch added from node_modules/.bun/tailwindcss@3.4.19/node_modules/tailwindcss/stubs/.gitignore
+!node_modules/.bun/tailwindcss@3.4.19/node_modules/tailwindcss/stubs/**/*
+fly.toml

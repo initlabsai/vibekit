@@ -22,6 +22,7 @@ import {
   ecosystemTools,
 } from '@vibekit/tools'
 import { INDEXER_PRESETS, ALGOD_PRESETS } from '@vibekit/core'
+import { alphaArcadeTools, createAlphaClient } from '@vibekit/alpha-arcade'
 import { env } from './env'
 
 import { LRUCache } from './lru-cache'
@@ -260,6 +261,27 @@ export function createTools(): ToolSet {
         try {
           const result = sanitizeBigInts(await t.handler(nfdApi, args))
           await resolveAssetIdAvatars(result)
+          console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
+          return result
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(`[tool:${t.name}] ${Date.now() - start}ms error:`, message)
+          return { error: message }
+        }
+      },
+    })
+  }
+
+  // Alpha Arcade prediction market tools
+  const alphaClient = createAlphaClient()
+  for (const t of alphaArcadeTools) {
+    tools[t.name] = tool({
+      description: t.description,
+      inputSchema: t.parameters,
+      execute: async (args: Record<string, unknown>) => {
+        const start = Date.now()
+        try {
+          const result = sanitizeBigInts(await t.handler(alphaClient, args))
           console.log(`[tool:${t.name}] ${Date.now() - start}ms`)
           return result
         } catch (err) {
