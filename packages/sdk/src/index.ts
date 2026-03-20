@@ -21,9 +21,8 @@ export type {
   Usage,
   StreamEvent,
   Market,
-  Outcome,
   Orderbook,
-  OrderbookEntry,
   WalletPosition,
   OpenOrder,
+  ToolOutputMap,
 } from './types'

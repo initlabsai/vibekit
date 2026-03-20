@@ -58,51 +58,32 @@ export interface VibeKitConfig {
 }
 
 // ---------------------------------------------------------------------------
-// Alpha Arcade domain types
+// Alpha Arcade domain types (derived from @vibekit/alpha-arcade)
 // ---------------------------------------------------------------------------
 
-export interface Market {
-  id: string
-  title: string
-  description?: string
-  category?: string
-  status?: string
-  outcomes?: Outcome[]
-  [key: string]: unknown
-}
+export type {
+  FormattedMarket as Market,
+  FormattedOrderbook as Orderbook,
+  FormattedPosition as WalletPosition,
+  FormattedOpenOrder as OpenOrder,
+} from './generated/alpha-arcade'
 
-export interface Outcome {
-  id: string
-  title: string
-  price?: number
-  [key: string]: unknown
-}
+import type {
+  FormattedMarket,
+  FormattedOrderbook,
+  FormattedPosition,
+  FormattedOpenOrder,
+} from './generated/alpha-arcade'
 
-export interface Orderbook {
-  marketId: string
-  bids?: OrderbookEntry[]
-  asks?: OrderbookEntry[]
-  [key: string]: unknown
-}
+// ---------------------------------------------------------------------------
+// Tool output map — maps tool names to their result shapes
+// ---------------------------------------------------------------------------
 
-export interface OrderbookEntry {
-  price: number
-  quantity: number
-  [key: string]: unknown
-}
-
-export interface WalletPosition {
-  marketId: string
-  outcomeId: string
-  shares: number
-  [key: string]: unknown
-}
-
-export interface OpenOrder {
-  orderId: string
-  marketId: string
-  side: string
-  price: number
-  quantity: number
+export interface ToolOutputMap {
+  get_live_markets: { markets: FormattedMarket[] }
+  get_market: FormattedMarket
+  get_orderbook: FormattedOrderbook
+  get_positions: { positions: FormattedPosition[] }
+  get_open_orders: { orders: FormattedOpenOrder[] }
   [key: string]: unknown
 }
