@@ -270,6 +270,17 @@
         "typescript": "^5.0.0",
       },
     },
+    "packages/sdk": {
+      "name": "@getvibekit/sdk",
+      "version": "0.1.0",
+      "devDependencies": {
+        "ai": "^6.0.116",
+        "typescript": "^5.0.0",
+      },
+      "peerDependencies": {
+        "ai": ">=6.0.0",
+      },
+    },
     "packages/tools": {
       "name": "@vibekit/tools",
       "version": "0.1.0",
@@ -472,6 +483,8 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.8", "", { "dependencies": { "@floating-ui/dom": "^1.7.6" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
+
+    "@getvibekit/sdk": ["@getvibekit/sdk@workspace:packages/sdk"],
 
     "@hey-api/client-fetch": ["@hey-api/client-fetch@0.8.4", "", {}, "sha512-SWtUjVEFIUdiJGR2NiuF0njsSrSdTe7WHWkp3BLH3DEl2bRhiflOnBo29NSDdrY90hjtTQiTQkBxUgGOF29Xzg=="],
 
