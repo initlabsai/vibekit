@@ -100,7 +100,11 @@ export const alphaArcadeTools: AlphaArcadeToolDefinition[] = [
       marketId: z.string().describe('Market ID — app ID as string or UUID'),
     }),
     handler: async (client, args) => {
-      const market = await client.getMarket(args.marketId)
+      let market = await client.getMarket(args.marketId)
+      // API path only accepts UUIDs — fall back to on-chain for app IDs
+      if (!market && /^\d+$/.test(args.marketId)) {
+        market = await client.getMarketOnChain(Number(args.marketId))
+      }
       if (!market) return { error: `Market not found: ${args.marketId}` }
       return formatMarket(market)
     },
