@@ -2,6 +2,12 @@ import { z, type ZodSchema } from 'zod'
 import type { AlphaClient, Market, Orderbook, WalletPosition, OpenOrder } from '@alpha-arcade/sdk'
 import { microToDollars, microToShares, probToDollars } from './format'
 
+/** Format a price that could be a probability (0-1) or microunits (>1) */
+function formatPrice(value: number): string {
+  if (value > 1) return microToDollars(value)
+  return probToDollars(value)
+}
+
 export interface AlphaArcadeToolDefinition {
   name: string
   description: string
@@ -18,8 +24,8 @@ function formatMarket(m: Market) {
     marketAppId: m.marketAppId,
     yesAssetId: m.yesAssetId,
     noAssetId: m.noAssetId,
-    yesPrice: m.yesProb != null ? probToDollars(m.yesProb) : undefined,
-    noPrice: m.noProb != null ? probToDollars(m.noProb) : undefined,
+    yesPrice: m.yesProb != null ? formatPrice(m.yesProb) : undefined,
+    noPrice: m.noProb != null ? formatPrice(m.noProb) : undefined,
     volume: m.volume,
     endTs: m.endTs,
     isResolved: m.isResolved,
@@ -29,8 +35,8 @@ function formatMarket(m: Market) {
       id: o.id,
       title: o.title,
       marketAppId: o.marketAppId,
-      yesPrice: o.yesProb != null ? probToDollars(o.yesProb) : undefined,
-      noPrice: o.noProb != null ? probToDollars(o.noProb) : undefined,
+      yesPrice: o.yesProb != null ? formatPrice(o.yesProb) : undefined,
+      noPrice: o.noProb != null ? formatPrice(o.noProb) : undefined,
     })),
     source: m.source,
   }
