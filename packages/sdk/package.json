@@ -1,6 +1,6 @@
 {
   "name": "@getvibekit/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript SDK for the VibeKit API",
   "type": "module",
   "main": "dist/index.js",
@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
     }
   },
   "files": [
@@ -16,15 +20,24 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "sync-types": "bun scripts/sync-types.ts",
+    "build": "bun run sync-types && tsc",
     "prepublishOnly": "bun run build",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "ai": ">=6.0.0"
+    "ai": ">=6.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@vibekit/alpha-arcade": "workspace:*",
     "ai": "^6.0.116",
     "typescript": "^5.0.0"
   },

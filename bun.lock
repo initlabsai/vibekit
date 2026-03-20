@@ -272,14 +272,20 @@
     },
     "packages/sdk": {
       "name": "@getvibekit/sdk",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "devDependencies": {
+        "@types/react": "^19.0.0",
+        "@vibekit/alpha-arcade": "workspace:*",
         "ai": "^6.0.116",
         "typescript": "^5.0.0",
       },
       "peerDependencies": {
         "ai": ">=6.0.0",
+        "react": ">=18.0.0",
       },
+      "optionalPeers": [
+        "react",
+      ],
     },
     "packages/tools": {
       "name": "@vibekit/tools",

@@ -15,7 +15,7 @@ export interface AlphaArcadeToolDefinition {
   handler: (client: AlphaClient, args: any) => Promise<unknown>
 }
 
-function formatMarket(m: Market) {
+export function formatMarket(m: Market) {
   return {
     id: m.id,
     title: m.title,
@@ -42,7 +42,7 @@ function formatMarket(m: Market) {
   }
 }
 
-function formatOrderbook(ob: Orderbook) {
+export function formatOrderbook(ob: Orderbook) {
   const formatEntry = (e: { price: number; quantity: number; escrowAppId: number; owner: string }) => ({
     price: microToDollars(e.price),
     quantity: microToShares(e.quantity),
@@ -62,7 +62,7 @@ function formatOrderbook(ob: Orderbook) {
   }
 }
 
-function formatPosition(p: WalletPosition) {
+export function formatPosition(p: WalletPosition) {
   return {
     marketAppId: p.marketAppId,
     title: p.title,
@@ -73,7 +73,7 @@ function formatPosition(p: WalletPosition) {
   }
 }
 
-function formatOpenOrder(o: OpenOrder) {
+export function formatOpenOrder(o: OpenOrder) {
   return {
     escrowAppId: o.escrowAppId,
     marketAppId: o.marketAppId,
@@ -86,6 +86,12 @@ function formatOpenOrder(o: OpenOrder) {
     owner: o.owner,
   }
 }
+
+// Derived output types — these are the shapes tools actually return
+export type FormattedMarket = ReturnType<typeof formatMarket>
+export type FormattedOrderbook = ReturnType<typeof formatOrderbook>
+export type FormattedPosition = ReturnType<typeof formatPosition>
+export type FormattedOpenOrder = ReturnType<typeof formatOpenOrder>
 
 export const alphaArcadeTools: AlphaArcadeToolDefinition[] = [
   {
