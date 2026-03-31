@@ -28,9 +28,18 @@ export function formatMarket(m: Market) {
     noPrice: m.noProb != null ? formatPrice(m.noProb) : undefined,
     volume: m.volume,
     endTs: m.endTs,
+    resolution: m.resolution,
     isResolved: m.isResolved,
+    isLive: m.isLive,
     categories: m.categories,
     featured: m.featured,
+    feeBase: m.feeBase,
+    totalRewards: m.totalRewards,
+    rewardsPaidOut: m.rewardsPaidOut,
+    rewardsSpreadDistance: m.rewardsSpreadDistance,
+    rewardsMinContracts: m.rewardsMinContracts,
+    lastRewardAmount: m.lastRewardAmount,
+    lastRewardTs: m.lastRewardTs,
     options: m.options?.map((o) => ({
       id: o.id,
       title: o.title,
@@ -43,7 +52,12 @@ export function formatMarket(m: Market) {
 }
 
 export function formatOrderbook(ob: Orderbook) {
-  const formatEntry = (e: { price: number; quantity: number; escrowAppId: number; owner: string }) => ({
+  const formatEntry = (e: {
+    price: number
+    quantity: number
+    escrowAppId: number
+    owner: string
+  }) => ({
     price: microToDollars(e.price),
     quantity: microToShares(e.quantity),
     escrowAppId: e.escrowAppId,
@@ -100,7 +114,11 @@ export const alphaArcadeTools: AlphaArcadeToolDefinition[] = [
       'Get all live prediction markets on Alpha Arcade. Returns market titles, current YES/NO prices, volume, and categories.',
     parameters: z.object({}),
     handler: async (client) => {
-      const markets = await client.getLiveMarkets()
+      // Prefer API for richer data (images, categories, volume); fall back to on-chain
+      let markets = await client.getLiveMarketsFromApi().catch(() => null)
+      if (!markets) {
+        markets = await client.getLiveMarkets()
+      }
       return { markets: markets.map(formatMarket) }
     },
   },
@@ -112,8 +130,8 @@ export const alphaArcadeTools: AlphaArcadeToolDefinition[] = [
       marketId: z.string().describe('Market ID — app ID as string or UUID'),
     }),
     handler: async (client, args) => {
-      let market = await client.getMarket(args.marketId)
-      // API path only accepts UUIDs — fall back to on-chain for app IDs
+      // Prefer API for richer data; fall back to on-chain for app IDs
+      let market = await client.getMarketFromApi(args.marketId).catch(() => null)
       if (!market && /^\d+$/.test(args.marketId)) {
         market = await client.getMarketOnChain(Number(args.marketId))
       }
@@ -147,8 +165,7 @@ export const alphaArcadeTools: AlphaArcadeToolDefinition[] = [
   },
   {
     name: 'get_open_orders',
-    description:
-      'Get open orders for a wallet on a specific prediction market.',
+    description: 'Get open orders for a wallet on a specific prediction market.',
     parameters: z.object({
       marketAppId: z.number().describe('The market app ID'),
       walletAddress: z.string().describe('Algorand wallet address'),
