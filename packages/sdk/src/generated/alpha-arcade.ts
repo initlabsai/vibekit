@@ -13,9 +13,18 @@ export type FormattedMarket = {
     noPrice: string | undefined;
     volume: number | undefined;
     endTs: number;
+    resolution: number | undefined;
     isResolved: boolean | undefined;
+    isLive: boolean | undefined;
     categories: string[] | undefined;
     featured: boolean | undefined;
+    feeBase: number | undefined;
+    totalRewards: number | undefined;
+    rewardsPaidOut: number | undefined;
+    rewardsSpreadDistance: number | undefined;
+    rewardsMinContracts: number | undefined;
+    lastRewardAmount: number | undefined;
+    lastRewardTs: number | undefined;
     options: {
         id: string;
         title: string;
