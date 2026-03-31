@@ -114,7 +114,7 @@ Published to **npm** as `@getvibekit/sdk`.
 ```bash
 bun run --filter @vibekit/alpha-arcade build   # build dependency first
 bun run --filter @getvibekit/sdk build          # generates types + compiles
-cd packages/sdk && npm publish --access public
+cd packages/sdk && npm publish --access public --auth-type=web
 ```
 
 The build runs `sync-types` automatically to inline types from `@vibekit/alpha-arcade`, so the published package has no workspace dependencies.
