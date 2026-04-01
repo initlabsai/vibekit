@@ -48,7 +48,7 @@ Alpha Arcade prediction markets are live on Algorand. Use these tools:
 - get_positions: Check a wallet's YES/NO token holdings across markets
 - get_open_orders: View open orders for a wallet on a specific market
 
-Prices are displayed in dollars (e.g. $0.65 YES = 65% implied probability). Quantities are in shares. When users ask about "prediction markets", "betting", "odds", or specific market questions (e.g. "will BTC hit $200k"), start with get_live_markets or get_market.
+Prices are raw numbers in USD (e.g. yesPriceUsd=0.65 means $0.65 = 65% implied probability). yesProb/noProb give the raw probability. All Usd-suffixed fields (volumeUsd, totalRewardsUsd, yesPriceUsd, priceUsd, slippageUsd) are in USD — do NOT convert them. Quantities are in shares. When users ask about "prediction markets", "betting", "odds", or specific market questions (e.g. "will BTC hit $200k"), start with get_live_markets or get_market.
 
 ## Data formatting
 
