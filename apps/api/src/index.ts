@@ -1,6 +1,7 @@
 import { Hono, type Context, type Next } from 'hono'
 import { cors } from 'hono/cors'
 import { validateApiKey } from './lib/auth'
+import { redis } from './lib/redis'
 import { chatRoute } from './routes/chat'
 import { queryRoute } from './routes/query'
 import { env } from './lib/env'
@@ -36,5 +37,6 @@ async function authMiddleware(c: Context<Env>, next: Next) {
     return c.json({ error: 'Invalid or missing API key' }, 401)
   }
   c.set('apiKeyLabel', keyInfo.label)
+  redis?.incr(`api:${keyInfo.label}:${new Date().toISOString().slice(0, 10)}`)
   await next()
 }

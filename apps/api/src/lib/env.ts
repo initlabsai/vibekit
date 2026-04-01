@@ -37,6 +37,12 @@ export const env = {
   get ALGORAND_NETWORK() {
     return process.env.ALGORAND_NETWORK ?? 'mainnet'
   },
+  get UPSTASH_REDIS_REST_URL() {
+    return process.env.UPSTASH_REDIS_REST_URL
+  },
+  get UPSTASH_REDIS_REST_TOKEN() {
+    return process.env.UPSTASH_REDIS_REST_TOKEN
+  },
   get ALGORAND_ALGOD_URL() {
     if (process.env.ALGORAND_ALGOD_URL) return process.env.ALGORAND_ALGOD_URL
     const preset = ALGOD_PRESETS[this.ALGORAND_NETWORK] ?? ALGOD_PRESETS.mainnet
