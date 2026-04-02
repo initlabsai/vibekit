@@ -1,6 +1,12 @@
 import { z, type ZodSchema } from 'zod'
 import type { AlphaClient, Market, Orderbook, WalletPosition, OpenOrder } from '@alpha-arcade/sdk'
-import { microToUsd, microToShares } from './format'
+import { microToDollars, microToShares, probToDollars } from './format'
+
+/** Format a price that could be a probability (0-1) or microunits (>1) */
+function formatPrice(value: number): string {
+  if (value > 1) return microToDollars(value)
+  return probToDollars(value)
+}
 
 export interface AlphaArcadeToolDefinition {
   name: string
@@ -18,11 +24,9 @@ export function formatMarket(m: Market) {
     marketAppId: m.marketAppId,
     yesAssetId: m.yesAssetId,
     noAssetId: m.noAssetId,
-    yesPriceUsd: m.yesProb != null ? m.yesProb : undefined,
-    yesProb: m.yesProb != null ? m.yesProb : undefined,
-    noPriceUsd: m.noProb != null ? m.noProb : undefined,
-    noProb: m.noProb != null ? m.noProb : undefined,
-    volumeUsd: m.volume,
+    yesPrice: m.yesProb != null ? formatPrice(m.yesProb) : undefined,
+    noPrice: m.noProb != null ? formatPrice(m.noProb) : undefined,
+    volume: m.volume,
     endTs: m.endTs,
     resolution: m.resolution,
     isResolved: m.isResolved,
@@ -30,20 +34,18 @@ export function formatMarket(m: Market) {
     categories: m.categories,
     featured: m.featured,
     feeBase: m.feeBase,
-    totalRewardsUsd: m.totalRewards,
-    rewardsPaidOutUsd: m.rewardsPaidOut,
+    totalRewards: m.totalRewards,
+    rewardsPaidOut: m.rewardsPaidOut,
     rewardsSpreadDistance: m.rewardsSpreadDistance,
     rewardsMinContracts: m.rewardsMinContracts,
-    lastRewardAmountUsd: m.lastRewardAmount,
+    lastRewardAmount: m.lastRewardAmount,
     lastRewardTs: m.lastRewardTs,
     options: m.options?.map((o) => ({
       id: o.id,
       title: o.title,
       marketAppId: o.marketAppId,
-      yesPriceUsd: o.yesProb != null ? o.yesProb : undefined,
-      yesProb: o.yesProb != null ? o.yesProb : undefined,
-      noPriceUsd: o.noProb != null ? o.noProb : undefined,
-      noProb: o.noProb != null ? o.noProb : undefined,
+      yesPrice: o.yesProb != null ? formatPrice(o.yesProb) : undefined,
+      noPrice: o.noProb != null ? formatPrice(o.noProb) : undefined,
     })),
     source: m.source,
   }
@@ -56,7 +58,7 @@ export function formatOrderbook(ob: Orderbook) {
     escrowAppId: number
     owner: string
   }) => ({
-    priceUsd: microToUsd(e.price),
+    price: microToDollars(e.price),
     quantity: microToShares(e.quantity),
     escrowAppId: e.escrowAppId,
     owner: e.owner,
@@ -91,10 +93,10 @@ export function formatOpenOrder(o: OpenOrder) {
     marketAppId: o.marketAppId,
     position: o.position === 1 ? 'YES' : 'NO',
     side: o.side === 1 ? 'BUY' : 'SELL',
-    priceUsd: microToUsd(o.price),
+    price: microToDollars(o.price),
     quantity: microToShares(o.quantity),
     quantityFilled: microToShares(o.quantityFilled),
-    slippageUsd: microToUsd(o.slippage),
+    slippage: o.slippage,
     owner: o.owner,
   }
 }

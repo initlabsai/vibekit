@@ -9,11 +9,9 @@ export type FormattedMarket = {
     marketAppId: number;
     yesAssetId: number;
     noAssetId: number;
-    yesPriceUsd: number | undefined;
-    yesProb: number | undefined;
-    noPriceUsd: number | undefined;
-    noProb: number | undefined;
-    volumeUsd: number | undefined;
+    yesPrice: string | undefined;
+    noPrice: string | undefined;
+    volume: number | undefined;
     endTs: number;
     resolution: number | undefined;
     isResolved: boolean | undefined;
@@ -21,20 +19,18 @@ export type FormattedMarket = {
     categories: string[] | undefined;
     featured: boolean | undefined;
     feeBase: number | undefined;
-    totalRewardsUsd: number | undefined;
-    rewardsPaidOutUsd: number | undefined;
+    totalRewards: number | undefined;
+    rewardsPaidOut: number | undefined;
     rewardsSpreadDistance: number | undefined;
     rewardsMinContracts: number | undefined;
-    lastRewardAmountUsd: number | undefined;
+    lastRewardAmount: number | undefined;
     lastRewardTs: number | undefined;
     options: {
         id: string;
         title: string;
         marketAppId: number;
-        yesPriceUsd: number | undefined;
-        yesProb: number | undefined;
-        noPriceUsd: number | undefined;
-        noProb: number | undefined;
+        yesPrice: string | undefined;
+        noPrice: string | undefined;
     }[] | undefined;
     source: "onchain" | "api" | undefined;
 }
@@ -42,13 +38,13 @@ export type FormattedMarket = {
 export type FormattedOrderbook = {
     yes: {
         bids: {
-            priceUsd: number;
+            price: string;
             quantity: number;
             escrowAppId: number;
             owner: string;
         }[];
         asks: {
-            priceUsd: number;
+            price: string;
             quantity: number;
             escrowAppId: number;
             owner: string;
@@ -56,13 +52,13 @@ export type FormattedOrderbook = {
     };
     no: {
         bids: {
-            priceUsd: number;
+            price: string;
             quantity: number;
             escrowAppId: number;
             owner: string;
         }[];
         asks: {
-            priceUsd: number;
+            price: string;
             quantity: number;
             escrowAppId: number;
             owner: string;
@@ -84,9 +80,9 @@ export type FormattedOpenOrder = {
     marketAppId: number;
     position: string;
     side: string;
-    priceUsd: number;
+    price: string;
     quantity: number;
     quantityFilled: number;
-    slippageUsd: number;
+    slippage: number;
     owner: string;
 }
