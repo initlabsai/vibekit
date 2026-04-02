@@ -7,4 +7,4 @@ export {
   type FormattedPosition,
   type FormattedOpenOrder,
 } from './tools'
-export { microToUsd, microToShares } from './format'
+export { microToDollars, microToShares, probToDollars } from './format'
