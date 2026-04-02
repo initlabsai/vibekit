@@ -34,6 +34,12 @@ export const env = {
   get PORT() {
     return Number(process.env.PORT) || 3001
   },
+  get UPSTASH_REDIS_REST_URL() {
+    return process.env.UPSTASH_REDIS_REST_URL
+  },
+  get UPSTASH_REDIS_REST_TOKEN() {
+    return process.env.UPSTASH_REDIS_REST_TOKEN
+  },
   get ALGORAND_NETWORK() {
     return process.env.ALGORAND_NETWORK ?? 'mainnet'
   },
