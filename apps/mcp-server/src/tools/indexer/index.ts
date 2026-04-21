@@ -19,12 +19,11 @@ import {
   ecosystemTools,
 } from '@vibekit/tools'
 import type { ToolDefinition } from '@vibekit/core'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import type { ToolRegistration } from '../types.js'
 import { resolveSender } from '../../lib/account-service.js'
 import { readFile } from 'node:fs/promises'
 import type { ResolveAppSpecFn } from '@vibekit/core'
+import { createToolInputSchema } from '../schema.js'
 
 const resolveAppSpecFromFs: ResolveAppSpecFn = async (appSpec, appSpecPath) => {
   if (appSpecPath) return readFile(appSpecPath, 'utf-8')
@@ -49,7 +48,7 @@ export const indexerTools: ToolRegistration[] = allDomainTools.map((tool) => ({
   definition: {
     name: tool.name,
     description: tool.description,
-    inputSchema: zodToJsonSchema(tool.parameters, { target: 'openApi3' }) as Tool['inputSchema'],
+    inputSchema: createToolInputSchema(tool.parameters),
   },
   handler: async (args, ctx) => {
     const mcpResolveSender = (alg: typeof ctx.algorand, sender?: string) =>

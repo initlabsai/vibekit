@@ -5,15 +5,14 @@
  */
 
 import { nfdTools as sharedTools, createNfdApiClient } from '@vibekit/tools'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import type { ToolRegistration } from '../types.js'
+import { createToolInputSchema } from '../schema.js'
 
 export const nfdTools: ToolRegistration[] = sharedTools.map((tool) => ({
   definition: {
     name: tool.name,
     description: tool.description,
-    inputSchema: zodToJsonSchema(tool.parameters, { target: 'openApi3' }) as Tool['inputSchema'],
+    inputSchema: createToolInputSchema(tool.parameters),
   },
   handler: async (args, ctx) => {
     const network = ctx.config.network

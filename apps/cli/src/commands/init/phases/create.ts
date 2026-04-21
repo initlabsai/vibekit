@@ -27,6 +27,16 @@ import { agentsMdContent } from '../../../config/agents-md'
 
 function getVibekitPath(): string {
   const { basename, extname } = require('path')
+  const invokedPath = process.argv[1]
+
+  if (invokedPath) {
+    const invokedName = basename(invokedPath, extname(invokedPath))
+
+    if (invokedName === 'vibekit') {
+      return invokedPath
+    }
+  }
+
   const name = basename(process.execPath, extname(process.execPath))
 
   if (name !== 'vibekit') {
