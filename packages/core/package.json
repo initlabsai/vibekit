@@ -13,7 +13,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -29,5 +31,14 @@
     "@types/bun": "^1.2.0",
     "algosdk": "3.7.0-beta.1",
     "zod": "^4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initlabsai/vibekit.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/initlabsai/vibekit#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }

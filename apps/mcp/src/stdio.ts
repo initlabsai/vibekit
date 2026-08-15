@@ -1,5 +1,7 @@
 /** The reference stdio deployment — this file IS the self-hosting documentation. */
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
+import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
+import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
 import { createKeystoreSigner } from '@initlabs/vibekit-signer-keystore'
 import type { NetworkId } from '@initlabs/vibekit-core'
 import { tools } from './tools.js'
@@ -16,6 +18,7 @@ const handle = serveVibekitStdio({
   networks: (process.env.NETWORKS?.split(',') as NetworkId[]) ?? [],
   mode,
   tools,
+  plugins: [nfdPlugin(), alphaArcadePlugin()],
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })
 

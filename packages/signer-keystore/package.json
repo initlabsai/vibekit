@@ -35,5 +35,14 @@
     "@algorandfoundation/keystore-core": "1.0.0-canary.1",
     "@algorandfoundation/keystore-node": "1.0.0-canary.1",
     "@tanstack/store": "^0.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initlabsai/vibekit.git",
+    "directory": "packages/signer-keystore"
+  },
+  "homepage": "https://github.com/initlabsai/vibekit#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }
