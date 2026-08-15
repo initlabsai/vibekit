@@ -43,6 +43,8 @@ const transactionSummary: z.ZodType = z.lazy(() =>
   }),
 )
 
+export { assetWriteTools } from './tools-write.js'
+
 export const assetTools: AnyTool[] = [
   defineTool({
     name: 'lookup_asset',

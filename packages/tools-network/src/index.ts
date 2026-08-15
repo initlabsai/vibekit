@@ -15,6 +15,29 @@ const blockSummary = z.object({
 
 export const networkTools: AnyTool[] = [
   defineTool({
+    name: 'get_network',
+    description:
+      'Get this deployment\'s network configuration: which networks are served, the default network, endpoints, and signing mode. Use to orient before network-specific calls.',
+    parameters: z.object({}),
+    output: z.object({
+      network: z.string(),
+      defaultNetwork: z.string(),
+      servedNetworks: z.array(z.string()),
+      algodUrl: z.string(),
+      indexerUrl: z.string(),
+      mode: z.enum(['execute', 'compose']),
+    }),
+    display: 'json',
+    handler: async (ctx) => ({
+      network: ctx.network.id,
+      defaultNetwork: ctx.defaultNetwork,
+      servedNetworks: ctx.servedNetworks,
+      algodUrl: ctx.network.algod.url,
+      indexerUrl: ctx.network.indexer.url,
+      mode: ctx.mode,
+    }),
+  }),
+  defineTool({
     name: 'get_network_status',
     description:
       'Get network health dashboard: current round, TPS, block time, supply, participation. Use when users ask about network status, health, metrics, or stats.',

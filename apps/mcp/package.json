@@ -18,7 +18,8 @@
     "@initlabs/tools-network": "workspace:*",
     "@initlabs/tools-transactions": "workspace:*",
     "algosdk": "3.7.0-beta.1",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@initlabs/signer-keystore": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.2.0"

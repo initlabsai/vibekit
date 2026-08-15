@@ -12,6 +12,10 @@ export type DisplayHint = 'table' | 'txn' | 'account' | 'asset' | 'markdown' | '
 
 export interface ToolContext {
   network: NetworkConfig
+  /** Network ids this deployment serves (≥1, includes network.id). Hosts fill this; tools read it to orient. */
+  servedNetworks: string[]
+  /** Network id used when a request doesn't specify one. */
+  defaultNetwork: string
   algod: algosdk.Algodv2
   indexer: algosdk.Indexer
   /** 'execute' = sign & send via resolveSigner; 'compose' = write tools return an UnsignedGroupResult. */

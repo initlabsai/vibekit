@@ -15,7 +15,14 @@ export {
   indexerSemaphore,
   Semaphore,
   stripFinalToken,
+  validateMetadataHash,
 } from './util.js'
+export * from './compose/index.js'
+export {
+  executeGroupResultSchema,
+  unsignedGroupResultSchema,
+  writeResultSchema,
+} from './schemas.js'
 export {
   createNetworkClients,
   defaultPort,

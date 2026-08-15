@@ -37,6 +37,8 @@ const txTypeEnum = z
   .optional()
   .describe('Filter by transaction type')
 
+export { transactionWriteTools, txnSpecSchema } from './tools-write.js'
+
 export const transactionTools: AnyTool[] = [
   defineTool({
     name: 'lookup_transaction',

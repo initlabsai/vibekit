@@ -6,8 +6,9 @@ import { getNetworkStatus } from '../src/handlers/status.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {
-  test('exports 3 read-only tools with output schemas and display hints', () => {
+  test('exports 4 read-only tools with output schemas and display hints', () => {
     expect(networkTools.map((t) => t.name)).toEqual([
+      'get_network',
       'get_network_status',
       'lookup_block',
       'search_block_headers',

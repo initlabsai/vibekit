@@ -26,6 +26,8 @@ export function fakeContext(overrides: {
 }): ToolContext {
   return {
     network: resolveNetwork('localnet'),
+    servedNetworks: ['localnet'],
+    defaultNetwork: 'localnet',
     algod: (overrides.algod ?? {}) as unknown as ToolContext['algod'],
     indexer: (overrides.indexer ?? {}) as unknown as ToolContext['indexer'],
     mode: overrides.mode ?? 'compose',

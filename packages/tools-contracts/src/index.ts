@@ -40,6 +40,9 @@ const stateValue = z.object({
   type: z.enum(['uint', 'bytes']),
 })
 
+export { contractWriteTools } from './tools-write.js'
+export { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
+
 export const contractTools: AnyTool[] = [
   defineTool({
     name: 'lookup_application',
