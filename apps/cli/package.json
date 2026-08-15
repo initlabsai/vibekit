@@ -1,0 +1,40 @@
+{
+  "name": "@initlabs/vibekit-cli",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The vibekit CLI: init, new, localnet, mcp.",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "bundle-skills": "bun run scripts/bundle-skills.ts",
+    "build": "bun build src/index.ts --compile --outfile bin/vibekit",
+    "build:linux-x64": "bun build src/index.ts --compile --target=bun-linux-x64 --outfile bin/vibekit-linux-x64",
+    "build:darwin-arm64": "bun build src/index.ts --compile --target=bun-darwin-arm64 --outfile bin/vibekit-darwin-arm64",
+    "build:darwin-x64": "bun build src/index.ts --compile --target=bun-darwin-x64 --outfile bin/vibekit-darwin-x64",
+    "build:win32-x64": "bun build src/index.ts --compile --target=bun-windows-x64 --outfile bin/vibekit-win32-x64.exe",
+    "build:all": "bun run bundle-skills && bun run build:linux-x64 && bun run build:darwin-arm64 && bun run build:darwin-x64 && bun run build:win32-x64",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf bin"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.8.2",
+    "@initlabs/vibekit-core": "workspace:*",
+    "@initlabs/vibekit-mcp": "workspace:*",
+    "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
+    "@initlabs/vibekit-plugin-nfd": "workspace:*",
+    "@initlabs/vibekit-signer-keystore": "workspace:*",
+    "@initlabs/vibekit-tools-accounts": "workspace:*",
+    "@initlabs/vibekit-tools-assets": "workspace:*",
+    "@initlabs/vibekit-tools-contracts": "workspace:*",
+    "@initlabs/vibekit-tools-network": "workspace:*",
+    "@initlabs/vibekit-tools-transactions": "workspace:*",
+    "algosdk": "3.7.0-beta.1",
+    "picocolors": "^1.1.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.7.0"
+  }
+}

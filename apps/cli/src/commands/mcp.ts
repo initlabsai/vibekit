@@ -1,0 +1,71 @@
+/**
+ * `vibekit mcp` — the local MCP server over stdio, importing
+ * @initlabs/vibekit-mcp as a library (no app→app dependency).
+ *
+ * Config via env (set by `vibekit init` in agent MCP configs):
+ *   NETWORK   default network id (default: localnet)
+ *   NETWORKS  comma-separated served networks (default: localnet,testnet,mainnet)
+ *   SIGNING   'execute' (keystore daemon) or 'compose' (unsigned groups out)
+ */
+
+import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
+import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import type { AnyTool, NetworkId } from '@initlabs/vibekit-core'
+import { accountTools } from '@initlabs/vibekit-tools-accounts'
+import { assetTools, assetWriteTools } from '@initlabs/vibekit-tools-assets'
+import { contractTools, contractWriteTools } from '@initlabs/vibekit-tools-contracts'
+import { networkTools } from '@initlabs/vibekit-tools-network'
+import { transactionTools, transactionWriteTools } from '@initlabs/vibekit-tools-transactions'
+
+const tools: AnyTool[] = [
+  ...networkTools,
+  ...accountTools,
+  ...assetTools,
+  ...transactionTools,
+  ...contractTools,
+  ...transactionWriteTools,
+  ...assetWriteTools,
+  ...contractWriteTools,
+]
+
+export async function commandMcp(): Promise<void> {
+  const requestedMode = process.env.SIGNING === 'compose' ? 'compose' : 'execute'
+
+  // Execute mode needs the keystore daemon; fall back to compose (with a
+  // loud stderr warning) so the agent still gets an MCP when it's down.
+  let signer: KeystoreSigner | undefined
+  let mode: 'execute' | 'compose' = requestedMode
+  if (requestedMode === 'execute') {
+    try {
+      signer = await createKeystoreSigner()
+    } catch {
+      mode = 'compose'
+      console.error(
+        'vibekit mcp: keystore daemon not reachable — starting in compose mode ' +
+          '(write tools return unsigned transactions). Run `keystore serve` and restart for signing.',
+      )
+    }
+  }
+
+  const handle = serveVibekitStdio({
+    name: 'vibekit',
+    network: (process.env.NETWORK as NetworkId) ?? 'localnet',
+    networks: (process.env.NETWORKS?.split(',') as NetworkId[]) ?? [
+      'localnet',
+      'testnet',
+      'mainnet',
+    ],
+    mode,
+    tools,
+    plugins: [nfdPlugin(), alphaArcadePlugin()],
+    resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
+  })
+
+  console.error(`vibekit mcp (stdio) up — mode=${mode}`)
+  process.on('SIGINT', () => {
+    void handle.close()
+    void signer?.close()
+  })
+}

@@ -11,6 +11,30 @@
         "typescript": "^5.7.0",
       },
     },
+    "apps/cli": {
+      "name": "@initlabs/vibekit-cli",
+      "version": "0.1.0",
+      "dependencies": {
+        "@clack/prompts": "^0.8.2",
+        "@initlabs/vibekit-core": "workspace:*",
+        "@initlabs/vibekit-mcp": "workspace:*",
+        "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
+        "@initlabs/vibekit-plugin-nfd": "workspace:*",
+        "@initlabs/vibekit-signer-keystore": "workspace:*",
+        "@initlabs/vibekit-tools-accounts": "workspace:*",
+        "@initlabs/vibekit-tools-assets": "workspace:*",
+        "@initlabs/vibekit-tools-contracts": "workspace:*",
+        "@initlabs/vibekit-tools-network": "workspace:*",
+        "@initlabs/vibekit-tools-transactions": "workspace:*",
+        "algosdk": "3.7.0-beta.1",
+        "picocolors": "^1.1.1",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.2.0",
+        "typescript": "^5.7.0",
+      },
+    },
     "apps/mcp": {
       "name": "@initlabs/vibekit-mcp-reference",
       "version": "0.0.0",
@@ -244,7 +268,13 @@
 
     "@changesets/write": ["@changesets/write@0.4.0", "", { "dependencies": { "@changesets/types": "^6.1.0", "fs-extra": "^7.0.1", "human-id": "^4.1.1", "prettier": "^2.7.1" } }, "sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q=="],
 
+    "@clack/core": ["@clack/core@0.3.5", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-5cfhQNH+1VQ2xLQlmzXMqUoiaH0lRBq9/CLW9lTyMbuKLC3+xEK01tHVvyut++mLOn5urSHmkm6I0Lg9MaJSTQ=="],
+
+    "@clack/prompts": ["@clack/prompts@0.8.2", "", { "dependencies": { "@clack/core": "0.3.5", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-6b9Ab2UiZwJYA9iMyboYyW9yJvAO9V753ZhS+DHKEjZRKAxPPOb7MXXu84lsPFG+vZt6FRFniZ8rXi+zCIw4yQ=="],
+
     "@hey-api/client-fetch": ["@hey-api/client-fetch@0.8.4", "", {}, "sha512-SWtUjVEFIUdiJGR2NiuF0njsSrSdTe7WHWkp3BLH3DEl2bRhiflOnBo29NSDdrY90hjtTQiTQkBxUgGOF29Xzg=="],
+
+    "@initlabs/vibekit-cli": ["@initlabs/vibekit-cli@workspace:apps/cli"],
 
     "@initlabs/vibekit-core": ["@initlabs/vibekit-core@workspace:packages/core"],
 
@@ -517,6 +547,8 @@
     "shebang-regex": ["shebang-regex@3.0.0", "", {}, "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A=="],
 
     "signal-exit": ["signal-exit@4.1.0", "", {}, "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="],
+
+    "sisteransi": ["sisteransi@1.0.5", "", {}, "sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg=="],
 
     "slash": ["slash@3.0.0", "", {}, "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q=="],
 
