@@ -7,7 +7,7 @@
  * read tools, required on `requiresSigner` tools so nothing ever spends on a
  * silently-defaulted chain. Single-network deployments get no parameter.
  */
-import { jsonSafe, ToolError, type AnyTool } from '@initlabs/core'
+import { jsonSafe, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import type { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import type { ResolvedDeployment } from './options.js'

@@ -1,4 +1,4 @@
-import { ToolError, indexerSemaphore as indexerSem, type ToolContext } from '@initlabs/core'
+import { ToolError, indexerSemaphore as indexerSem, type ToolContext } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { formatAccount, type FormattedAccount } from './format.js'
 

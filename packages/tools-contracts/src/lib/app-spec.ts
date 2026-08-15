@@ -2,7 +2,7 @@
  * ARC-56 / ARC-32 app spec parsing for deploy and method listing.
  * Normalizes both formats to one shape; TEAL sources are base64 in both.
  */
-import { base64ToBytes, ToolError } from '@initlabs/core'
+import { base64ToBytes, ToolError } from '@initlabs/vibekit-core'
 
 export interface ParsedMethod {
   name: string

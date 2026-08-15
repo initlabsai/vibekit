@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
-import { base64ToBytes } from '@initlabs/core'
+import { base64ToBytes } from '@initlabs/vibekit-core'
 import { assetWriteTools } from '../src/tools-write.js'
 import { chainable, fakeContext } from './fake-context.js'
 

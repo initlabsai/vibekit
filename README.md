@@ -12,8 +12,8 @@ published, reusable tool packages, plus the `vibekit` CLI.
 apps/
   mcp/          Reference MCP deployment (stdio + streamable HTTP) — copy this to self-host
 packages/
-  core/         @initlabs/core — the tool contract (ToolDefinition, ToolContext), network clients, codecs
-  mcp/          @initlabs/mcp — createVibekitMcp(): the MCP server as a library
+  core/         @initlabs/vibekit-core — the tool contract (ToolDefinition, ToolContext), network clients, codecs
+  mcp/          @initlabs/vibekit-mcp — createVibekitMcp(): the MCP server as a library
 ```
 
 Tool packages (`tools-*`), signers, plugins, and the CLI land per the migration plan.

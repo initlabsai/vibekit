@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/signer-keystore",
+  "name": "@initlabs/vibekit-signer-keystore",
   "version": "0.1.0",
   "description": "algosdk TransactionSigner backed by the keystore-node RPC daemon: keys stay in the OS keychain, this process never holds material.",
   "license": "Apache-2.0",

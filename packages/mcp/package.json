@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/mcp",
+  "name": "@initlabs/vibekit-mcp",
   "version": "0.1.0",
   "description": "createVibekitMcp(): the VibeKit MCP server as a library — stateless (2026-07-28 spec), composed from @initlabs tool packages and plugins.",
   "license": "Apache-2.0",
@@ -33,12 +33,12 @@
     "@modelcontextprotocol/server": "^2.0.0"
   },
   "peerDependencies": {
-    "@initlabs/core": "^0.1.0",
+    "@initlabs/vibekit-core": "^0.1.0",
     "algosdk": ">=3.7.0-beta.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@initlabs/core": "workspace:*",
+    "@initlabs/vibekit-core": "workspace:*",
     "@modelcontextprotocol/client": "^2.0.0",
     "@types/bun": "^1.2.0",
     "algosdk": "3.7.0-beta.1",

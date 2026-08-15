@@ -1,4 +1,4 @@
-import { Semaphore, type ToolContext } from '@initlabs/core'
+import { Semaphore, type ToolContext } from '@initlabs/vibekit-core'
 
 /**
  * Rich network status with TPS, block times, supply, and participation metrics.

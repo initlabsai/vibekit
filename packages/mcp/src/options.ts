@@ -6,7 +6,7 @@ import {
   type NetworkId,
   type ToolContext,
   type ToolPlugin,
-} from '@initlabs/core'
+} from '@initlabs/vibekit-core'
 
 export interface VibekitMcpOptions {
   /** Server identity advertised to clients. */

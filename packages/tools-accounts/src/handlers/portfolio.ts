@@ -1,4 +1,4 @@
-import { ToolError, type ToolContext } from '@initlabs/core'
+import { ToolError, type ToolContext } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { getAccountAssets } from './assets.js'
 import type { AccountAsset } from './format.js'

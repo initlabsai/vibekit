@@ -1,7 +1,7 @@
 /** The reference stdio deployment — this file IS the self-hosting documentation. */
-import { serveVibekitStdio } from '@initlabs/mcp/stdio'
-import { createKeystoreSigner } from '@initlabs/signer-keystore'
-import type { NetworkId } from '@initlabs/core'
+import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
+import { createKeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+import type { NetworkId } from '@initlabs/vibekit-core'
 import { tools } from './tools.js'
 
 // SIGNING=execute signs via the local keystore daemon (`keystore serve`).

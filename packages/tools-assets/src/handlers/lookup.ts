@@ -1,4 +1,4 @@
-import type { ToolContext } from '@initlabs/core'
+import type { ToolContext } from '@initlabs/vibekit-core'
 import { formatAsset, type FormattedAsset } from './format.js'
 
 export async function lookupAsset(

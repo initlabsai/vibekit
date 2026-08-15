@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { ToolError } from '@initlabs/core'
+import { ToolError } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { getAccountAppLocalStates, getAccountAssets } from '../src/handlers/assets.js'
 import { batchLookupAccounts, lookupAccount } from '../src/handlers/lookup.js'

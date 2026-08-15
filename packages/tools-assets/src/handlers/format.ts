@@ -1,4 +1,4 @@
-import { bytesToBase64 } from '@initlabs/core'
+import { bytesToBase64 } from '@initlabs/vibekit-core'
 
 type IndexerAsset = InstanceType<typeof import('algosdk').indexerModels.Asset>
 type IndexerTransaction = InstanceType<typeof import('algosdk').indexerModels.Transaction>

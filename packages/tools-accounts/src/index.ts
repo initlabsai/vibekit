@@ -1,4 +1,4 @@
-import { defineTool, type AnyTool } from '@initlabs/core'
+import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 import { getAccountAppLocalStates, getAccountAssets } from './handlers/assets.js'
 import { batchLookupAccounts, lookupAccount } from './handlers/lookup.js'

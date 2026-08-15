@@ -1,4 +1,4 @@
-import { defineTool, type AnyTool } from '@initlabs/core'
+import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 import { searchBlockHeaders } from './handlers/block-headers.js'
 import { lookupBlock } from './handlers/block.js'

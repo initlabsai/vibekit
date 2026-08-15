@@ -6,7 +6,7 @@ import {
   writeResultSchema,
   type AnyTool,
   type TxnSpec,
-} from '@initlabs/core'
+} from '@initlabs/vibekit-core'
 import { z } from 'zod'
 
 /**

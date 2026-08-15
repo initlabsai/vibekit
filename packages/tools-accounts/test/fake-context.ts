@@ -2,7 +2,7 @@
  * Test fake for ToolContext: stub only the algod/indexer calls the handler
  * under test touches. Chainable query builders resolve via .do().
  */
-import { resolveNetwork, type ToolContext } from '@initlabs/core'
+import { resolveNetwork, type ToolContext } from '@initlabs/vibekit-core'
 
 /** A chainable query stub: every method returns the same proxy; .do() resolves `result`. */
 export function chainable<T>(result: T): unknown {

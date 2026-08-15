@@ -1,4 +1,4 @@
-import { bytesToBase64 } from '@initlabs/core'
+import { bytesToBase64 } from '@initlabs/vibekit-core'
 
 const MICROALGOS_PER_ALGO = 1_000_000
 

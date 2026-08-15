@@ -4,7 +4,7 @@
   "commit": false,
   "access": "public",
   "baseBranch": "main",
-  "fixed": [["@initlabs/core", "@initlabs/mcp"]],
+  "fixed": [["@initlabs/vibekit-core", "@initlabs/vibekit-mcp"]],
   "updateInternalDependencies": "patch",
-  "ignore": ["@initlabs/mcp-reference"]
+  "ignore": ["@initlabs/vibekit-mcp-reference"]
 }

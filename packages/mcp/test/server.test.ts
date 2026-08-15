@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { defineTool, ToolError, type AnyTool } from '@initlabs/core'
+import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import { Client } from '@modelcontextprotocol/client'
 import { InMemoryTransport } from '@modelcontextprotocol/server'
 import { z } from 'zod'

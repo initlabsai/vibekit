@@ -9,7 +9,7 @@ import {
   type AnyTool,
   type ToolContext,
   type TxnSpec,
-} from '@initlabs/core'
+} from '@initlabs/vibekit-core'
 import algosdk, { AtomicTransactionComposer } from 'algosdk'
 import { z } from 'zod'
 import { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'

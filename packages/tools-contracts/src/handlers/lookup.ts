@@ -1,4 +1,4 @@
-import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/core'
+import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import { formatApplication, type FormattedApplication } from '../lib/format.js'
 
 export async function lookupApplication(

@@ -3,7 +3,7 @@
  *
  * Domain logic for reading global state, local state, and box storage.
  */
-import { bytesToBase64, ToolError, type ToolContext } from '@initlabs/core'
+import { bytesToBase64, ToolError, type ToolContext } from '@initlabs/vibekit-core'
 import { ABIUintType, decodeAddress } from 'algosdk'
 
 // ============================================================================

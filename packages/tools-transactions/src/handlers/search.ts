@@ -1,4 +1,4 @@
-import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/core'
+import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import { formatTransaction, type FormattedTransaction } from './format.js'
 
 export interface SearchTransactionsArgs {

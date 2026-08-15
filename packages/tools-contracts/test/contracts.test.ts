@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { ToolError } from '@initlabs/core'
+import { ToolError } from '@initlabs/vibekit-core'
 import { contractTools } from '../src/index.js'
 import { lookupApplication, lookupApplicationLogs } from '../src/handlers/lookup.js'
 import { searchApplications } from '../src/handlers/search.js'

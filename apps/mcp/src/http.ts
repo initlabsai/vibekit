@@ -1,6 +1,6 @@
 /** The reference HTTP deployment: stateless, compose-mode, one fresh server per request. */
-import { createVibekitHttpHandler } from '@initlabs/mcp/http'
-import type { NetworkId } from '@initlabs/core'
+import { createVibekitHttpHandler } from '@initlabs/vibekit-mcp/http'
+import type { NetworkId } from '@initlabs/vibekit-core'
 import { tools } from './tools.js'
 
 const handler = createVibekitHttpHandler({

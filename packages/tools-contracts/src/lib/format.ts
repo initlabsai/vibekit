@@ -1,6 +1,6 @@
 /** Shared application formatting (ported from v1 contracts handlers). */
 import type algosdk from 'algosdk'
-import { bytesToBase64 } from '@initlabs/core'
+import { bytesToBase64 } from '@initlabs/vibekit-core'
 
 type IndexerApplication = InstanceType<typeof import('algosdk').indexerModels.Application>
 

@@ -1,4 +1,4 @@
-import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/core'
+import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 
 export interface SearchBlockHeadersArgs {
   limit?: number

@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/tools-transactions",
+  "name": "@initlabs/vibekit-tools-transactions",
   "version": "0.1.0",
   "description": "VibeKit transactions tools for Algorand (read side).",
   "license": "Apache-2.0",
@@ -22,12 +22,12 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "@initlabs/core": "^0.1.0",
+    "@initlabs/vibekit-core": "^0.1.0",
     "algosdk": ">=3.7.0-beta.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@initlabs/core": "workspace:*",
+    "@initlabs/vibekit-core": "workspace:*",
     "@types/bun": "^1.2.0",
     "algosdk": "3.7.0-beta.1",
     "zod": "^4.4.3"

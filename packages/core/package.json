@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/core",
+  "name": "@initlabs/vibekit-core",
   "version": "0.1.0",
   "description": "VibeKit tool contract: ToolDefinition, ToolContext, network clients, and codecs for Algorand tools.",
   "license": "Apache-2.0",

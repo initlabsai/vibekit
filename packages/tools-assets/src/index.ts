@@ -1,4 +1,4 @@
-import { defineTool, type AnyTool } from '@initlabs/core'
+import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 import { lookupAsset } from './handlers/lookup.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from './handlers/search.js'

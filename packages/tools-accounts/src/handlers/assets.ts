@@ -6,7 +6,7 @@ import {
   indexerSemaphore as indexerSem,
   stripFinalToken,
   type ToolContext,
-} from '@initlabs/core'
+} from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import type { AccountAppLocalState, AccountAsset } from './format.js'
 

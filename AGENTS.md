@@ -11,7 +11,7 @@ repo (`initlabs/vibekit-agent`) and consume these packages from npm.
 
 ## Hard rules
 
-- **One tool contract.** Every tool is a `ToolDefinition` from `@initlabs/core`, created via
+- **One tool contract.** Every tool is a `ToolDefinition` from `@initlabs/vibekit-core`, created via
   `defineTool()`. No bespoke handler signatures, ever (v1 died of this).
 - **Stateless.** No module-level mutable state in server or tool code. Everything a handler
   needs arrives via `ToolContext`, constructed per request.
@@ -20,6 +20,6 @@ repo (`initlabs/vibekit-agent`) and consume these packages from npm.
 - **Tests land with code.** Every tool domain ships with handler tests (`bun test`).
 - One tsconfig convention: every package extends `tsconfig.base.json` (NodeNext, `.js`
   extensions in relative imports). Published packages build to `dist/` with exports maps.
-- `algosdk`, `zod`, and `@initlabs/core` are peer dependencies of tool/plugin packages.
+- `algosdk`, `zod`, and `@initlabs/vibekit-core` are peer dependencies of tool/plugin packages.
 - Run `bun run typecheck` and `bun run test` before commits. Conventional commits. No co-author lines.
 - Ask before adding dependencies. Pin `algosdk@beta` / keystore canary exactly.

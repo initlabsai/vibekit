@@ -10,7 +10,7 @@ export type { VibekitMcpOptions } from './options.js'
  * happens once (throws at startup on duplicates / missing signer).
  *
  * Transports live in subpath exports so the core stays runtime-neutral:
- * `@initlabs/mcp/stdio` and `@initlabs/mcp/http`.
+ * `@initlabs/vibekit-mcp/stdio` and `@initlabs/vibekit-mcp/http`.
  */
 export function createVibekitMcp(options: VibekitMcpOptions): McpServer {
   const deployment = resolveDeployment(options)

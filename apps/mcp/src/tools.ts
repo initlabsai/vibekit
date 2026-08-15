@@ -1,10 +1,10 @@
 /** The full read-tool surface: five published domain packages (Phase 2). */
-import type { AnyTool } from '@initlabs/core'
-import { accountTools } from '@initlabs/tools-accounts'
-import { assetTools, assetWriteTools } from '@initlabs/tools-assets'
-import { contractTools, contractWriteTools } from '@initlabs/tools-contracts'
-import { networkTools } from '@initlabs/tools-network'
-import { transactionTools, transactionWriteTools } from '@initlabs/tools-transactions'
+import type { AnyTool } from '@initlabs/vibekit-core'
+import { accountTools } from '@initlabs/vibekit-tools-accounts'
+import { assetTools, assetWriteTools } from '@initlabs/vibekit-tools-assets'
+import { contractTools, contractWriteTools } from '@initlabs/vibekit-tools-contracts'
+import { networkTools } from '@initlabs/vibekit-tools-network'
+import { transactionTools, transactionWriteTools } from '@initlabs/vibekit-tools-transactions'
 
 export const tools: AnyTool[] = [
   ...networkTools,

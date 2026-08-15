@@ -12,17 +12,17 @@
       },
     },
     "apps/mcp": {
-      "name": "@initlabs/mcp-reference",
+      "name": "@initlabs/vibekit-mcp-reference",
       "version": "0.0.0",
       "dependencies": {
-        "@initlabs/core": "workspace:*",
-        "@initlabs/mcp": "workspace:*",
-        "@initlabs/signer-keystore": "workspace:*",
-        "@initlabs/tools-accounts": "workspace:*",
-        "@initlabs/tools-assets": "workspace:*",
-        "@initlabs/tools-contracts": "workspace:*",
-        "@initlabs/tools-network": "workspace:*",
-        "@initlabs/tools-transactions": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
+        "@initlabs/vibekit-mcp": "workspace:*",
+        "@initlabs/vibekit-signer-keystore": "workspace:*",
+        "@initlabs/vibekit-tools-accounts": "workspace:*",
+        "@initlabs/vibekit-tools-assets": "workspace:*",
+        "@initlabs/vibekit-tools-contracts": "workspace:*",
+        "@initlabs/vibekit-tools-network": "workspace:*",
+        "@initlabs/vibekit-tools-transactions": "workspace:*",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
@@ -31,7 +31,7 @@
       },
     },
     "packages/core": {
-      "name": "@initlabs/core",
+      "name": "@initlabs/vibekit-core",
       "version": "0.1.0",
       "devDependencies": {
         "@types/bun": "^1.2.0",
@@ -44,26 +44,26 @@
       },
     },
     "packages/mcp": {
-      "name": "@initlabs/mcp",
+      "name": "@initlabs/vibekit-mcp",
       "version": "0.1.0",
       "dependencies": {
         "@modelcontextprotocol/server": "^2.0.0",
       },
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@modelcontextprotocol/client": "^2.0.0",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
     },
     "packages/signer-keystore": {
-      "name": "@initlabs/signer-keystore",
+      "name": "@initlabs/vibekit-signer-keystore",
       "version": "0.1.0",
       "dependencies": {
         "@algorandfoundation/keystore-core": "1.0.0-canary.1",
@@ -80,76 +80,76 @@
       },
     },
     "packages/tools-accounts": {
-      "name": "@initlabs/tools-accounts",
+      "name": "@initlabs/vibekit-tools-accounts",
       "version": "0.1.0",
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
     },
     "packages/tools-assets": {
-      "name": "@initlabs/tools-assets",
+      "name": "@initlabs/vibekit-tools-assets",
       "version": "0.1.0",
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
     },
     "packages/tools-contracts": {
-      "name": "@initlabs/tools-contracts",
+      "name": "@initlabs/vibekit-tools-contracts",
       "version": "0.1.0",
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
     },
     "packages/tools-network": {
-      "name": "@initlabs/tools-network",
+      "name": "@initlabs/vibekit-tools-network",
       "version": "0.1.0",
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
     },
     "packages/tools-transactions": {
-      "name": "@initlabs/tools-transactions",
+      "name": "@initlabs/vibekit-tools-transactions",
       "version": "0.1.0",
       "devDependencies": {
-        "@initlabs/core": "workspace:*",
+        "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.2.0",
         "algosdk": "3.7.0-beta.1",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/core": "^0.1.0",
+        "@initlabs/vibekit-core": "^0.1.0",
         "algosdk": ">=3.7.0-beta.1",
         "zod": "^4.0.0",
       },
@@ -202,23 +202,23 @@
 
     "@changesets/write": ["@changesets/write@0.4.0", "", { "dependencies": { "@changesets/types": "^6.1.0", "fs-extra": "^7.0.1", "human-id": "^4.1.1", "prettier": "^2.7.1" } }, "sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q=="],
 
-    "@initlabs/core": ["@initlabs/core@workspace:packages/core"],
+    "@initlabs/vibekit-core": ["@initlabs/vibekit-core@workspace:packages/core"],
 
-    "@initlabs/mcp": ["@initlabs/mcp@workspace:packages/mcp"],
+    "@initlabs/vibekit-mcp": ["@initlabs/vibekit-mcp@workspace:packages/mcp"],
 
-    "@initlabs/mcp-reference": ["@initlabs/mcp-reference@workspace:apps/mcp"],
+    "@initlabs/vibekit-mcp-reference": ["@initlabs/vibekit-mcp-reference@workspace:apps/mcp"],
 
-    "@initlabs/signer-keystore": ["@initlabs/signer-keystore@workspace:packages/signer-keystore"],
+    "@initlabs/vibekit-signer-keystore": ["@initlabs/vibekit-signer-keystore@workspace:packages/signer-keystore"],
 
-    "@initlabs/tools-accounts": ["@initlabs/tools-accounts@workspace:packages/tools-accounts"],
+    "@initlabs/vibekit-tools-accounts": ["@initlabs/vibekit-tools-accounts@workspace:packages/tools-accounts"],
 
-    "@initlabs/tools-assets": ["@initlabs/tools-assets@workspace:packages/tools-assets"],
+    "@initlabs/vibekit-tools-assets": ["@initlabs/vibekit-tools-assets@workspace:packages/tools-assets"],
 
-    "@initlabs/tools-contracts": ["@initlabs/tools-contracts@workspace:packages/tools-contracts"],
+    "@initlabs/vibekit-tools-contracts": ["@initlabs/vibekit-tools-contracts@workspace:packages/tools-contracts"],
 
-    "@initlabs/tools-network": ["@initlabs/tools-network@workspace:packages/tools-network"],
+    "@initlabs/vibekit-tools-network": ["@initlabs/vibekit-tools-network@workspace:packages/tools-network"],
 
-    "@initlabs/tools-transactions": ["@initlabs/tools-transactions@workspace:packages/tools-transactions"],
+    "@initlabs/vibekit-tools-transactions": ["@initlabs/vibekit-tools-transactions@workspace:packages/tools-transactions"],
 
     "@inquirer/external-editor": ["@inquirer/external-editor@1.0.3", "", { "dependencies": { "chardet": "^2.1.1", "iconv-lite": "^0.7.0" }, "peerDependencies": { "@types/node": ">=18" }, "optionalPeers": ["@types/node"] }, "sha512-RWbSrDiYmO4LbejWY7ttpxczuwQyZLBUyygsA9Nsv95hpzUWwnNTVQmAq3xuh7vNwCp07UTmE5i11XAEExx4RA=="],
 
