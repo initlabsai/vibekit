@@ -2,7 +2,7 @@
 
 Status: **exploration / draft** · Owner: Gabriel Kuettel · Last updated: 2026-08-11
 
-VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server for Algorand built on published, reusable tool packages, with a plugin system so developers can extend it or deploy their own. The explorer spins out into its own repo as the flagship demo of the hosted API.
+VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server for Algorand built on published, reusable tool packages, with a plugin system so developers can extend it or deploy their own. Two stacks, one brain (§9): the local dev stack (CLI + MCP + `vibekit explore` TUI) and the hosted product stack (API + SDK + the web "VibeKit Agent"), all running the same tools through the same orchestrator.
 
 ---
 
@@ -16,7 +16,9 @@ VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server fo
 | Chain SDK | **`algosdk@beta` (3.7.x)** directly — no algokit-utils. PQ (Falcon-1024) account support lands here first |
 | Key custody | **`@algorandfoundation/keystore-node`** (OS keychain + AES-sealed metadata, RPC daemon over local socket) behind our own `Signer` interface |
 | HashiCorp Vault | **Dropped** (~1,180 LOC deleted; `Signer` interface leaves the door open) |
-| Explorer | Lives in **`initlabs/vibekit-agent`** with the API, redesigned with [Beautiful UI](https://www.beautifului.dev) primitives; consumes published packages + the API |
+| Explorer → **VibeKit Agent** | Rebranded; lives in **`initlabs/vibekit-agent`** with the API, redesigned with [Beautiful UI](https://www.beautifului.dev) primitives; consumes published packages + the API. Wallet connections are client-side there (WalletConnect dropped from the dev stack) |
+| Models | **BYOM everywhere**: harness brings its own (init path); TUI + API take API keys / local models via `@initlabs/agent` provider config; funded default on the API (Together today, x402 experiment later). Provider OAuth is opportunistic, never a pillar |
+| TUI | **`vibekit explore`** — agent-native Lora, core dev stack (promoted from post-MVP 2026-08-15); orchestrator in-process, tools imported directly |
 | CLI scope | init + agent/skill/MCP setup, **plus** localnet lifecycle and template bootstrapping — positioning vibekit CLI to deprecate AlgoKit CLI |
 | Tests | Required — each ported domain lands with handler tests; no untested migration |
 
@@ -55,6 +57,8 @@ initlabs/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── plugin-nfd/                # @initlabs/plugin-nfd          ┐ optional plugins — prove the
 │   ├── plugin-alpha-arcade/       # @initlabs/plugin-alpha-arcade ┘ plugin system from day one
 │   ├── signer-keystore/           # @initlabs/signer-keystore — keystore-node adapter (the only signer pkg)
+│   ├── agent/                     # @initlabs/agent — the orchestrator: LLM + tool loop + streaming over
+│   │                              #   ToolDefinition[]; BYOM provider config. Used by the TUI and the API
 │   └── sdk/                       # @initlabs/sdk — client for the hosted API (replaces @getvibekit/sdk)
 
 initlabs/vibekit-agent                 # ~/Code/@initlabs/vibekit-agent
@@ -189,34 +193,43 @@ Simplified relative to v1, but with a bigger mission: absorb the AlgoKit CLI job
 | `vibekit mcp` | Start local MCP (stdio) — imports `@initlabs/mcp` as a *library*, killing v1's app→app dependency |
 | `vibekit localnet …` | start/stop/reset/status — **re-implemented in TS** referencing AlgoKit CLI's open-source Docker orchestration: [`src/algokit/cli/localnet.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/cli/localnet.py) (command layer) and [`src/algokit/core/sandbox.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/sandbox.py) (compose-file generation + container lifecycle). Localnet funding (v1's dispenser-kmd) folds in here. **MVP subset only**: start/stop/reset/status + kmd funding; explicitly deferred: `goal` passthrough, codespaces, compose-config version migration (sandbox.py is 1,000+ lines — don't port it all) |
 | `vibekit new` (or similar) | Template bootstrapping via **GitHub template repos** (Gabriel supplies templates) — no template engine in the CLI |
-| `vibekit chat` *(post-MVP)* | TUI agent — a "talk to the chain" REPL powered by the vibekit-agent API via `@initlabs/sdk`, with **local keystore signing in execute mode** (the one head where the full reason→compose→sign→send loop runs with no browser/wallet ceremony). See §9 (Product surfaces) |
+| `vibekit explore` | The agent-native Lora (`algokit explore` is the thing it replaces): English-language network questions in a TUI, powered by `@initlabs/agent` running in-process with the tool packages imported directly — no MCP hop, no hosted dependency. BYO model via CLI config. See §9 |
 
 Explicitly gone: vault provisioning (~500 LOC), the provider/dispenser command trees, account CRUD (→ keystore CLI).
 
-## 8. Hosted API, SDK, and the explorer split
+## 8. Hosted API, SDK, and the web agent
 
 Both live in **`initlabs/vibekit-agent`** — the hosted product monorepo, consuming `@initlabs/*` packages from npm.
 
-- **`apps/api`** ports mostly as-is (it's already well-shaped: Hono, per-request tools, streaming) but its 376-line triple adapter collapses to one loop over the unified contract, and its tool registry becomes *the* registry that the SDK derives from — killing v1's four-place tool-name duplication.
+- **`apps/api`** becomes a thin Hono wrapper over **`@initlabs/agent`** (the orchestrator package, §9) — v1's 376-line triple adapter and its LLM config collapse into the orchestrator, and the tool registry becomes *the* registry the SDK derives from — killing v1's four-place tool-name duplication. Adds BYOM config (provider/key/baseUrl/model per request or per API key) and per-request tool selection.
 - **`@initlabs/sdk`** replaces `@getvibekit/sdk`. The fragile regex-over-`.d.ts` type sync is replaced by generating types from the tool registry (the Zod schemas are the source of truth — derive both MCP inputSchemas and SDK types from them).
-- **Explorer**: Next.js + Beautiful UI primitives (streaming text, thinking traces, tool chips, approval cards map 1:1 to what an agentic explorer renders). It consumes the hosted API via `@initlabs/sdk` and published tool packages for display metadata — no more `transpilePackages` reach-ins. Positioning: the flagship demo of "hook intelligent network interactions into your app" (e.g. an AlphaArcade-style betting app powering a chatbot), plus the **xArc** feature: upload an ARC-56 spec, get intelligent contract interaction via `toolsFromArc56`.
+- **Web agent** (formerly "explorer" — rebranded **VibeKit Agent**): Next.js + Beautiful UI primitives (streaming text, thinking traces, tool chips, approval cards map 1:1 to what an agentic explorer renders). It consumes the hosted API via `@initlabs/sdk` and published tool packages for display metadata — no more `transpilePackages` reach-ins. Positioning: the flagship demo of "hook intelligent network interactions into your app" (e.g. an AlphaArcade-style betting app powering a chatbot), plus the **xArc** feature: upload an ARC-56 spec, get intelligent contract interaction via `toolsFromArc56`.
 
-## 9. Product surfaces (heads)
+## 9. Products (the arc — revised 2026-08-15)
 
-The API + SDK are the product; every frontend is a thin head over them. The infra requirement that makes heads cheap: **the protocol carries everything** — streaming, tool results, presentation hints (`display` in §4), approval/compose flows all live in the API stream and `@initlabs/sdk`, never only in one head's components. Any affordance that exists solely in explorer React code is lost to every other head.
+Two stacks, one brain. The keystone is a new package, **`@initlabs/agent` — the orchestrator**: the agent loop itself (LLM provider + tool calling + streaming + system prompt) over the same `ToolDefinition[]` everything else uses. "Capability parity between harness and API" is then a *property of the architecture* — one tool registry, one loop — not a promise to maintain.
 
-| Head | Status | Role | Signing |
+**Dev stack (local, free, keystore custody):**
+`vibekit init` → agent harness gets MCP + skills → build on Algorand. `vibekit explore` → an **agent-native Lora**: English-language questions about the network, in a TUI. Same questions work inside the harness via the MCP because both are the same tools.
+
+**Product stack (hosted):**
+The **API** — everything the dev stack can do, as a configurable service (per-request tool selection, BYOM) — and the web **agent** (the explorer, rebranded "VibeKit Agent"): React + wallet connection + [Beautiful UI](https://www.beautifului.dev), where people converse to explore *and act* (send, create ASAs, xArc).
+
+| Head | What it is | Model | Signing |
 |---|---|---|---|
-| **Hosted explorer** (web) | Anchor — Phase 7 | Marketing surface, zero-friction demo, xArc playground, API-key funnel, shareable links | **Compose mode** — txns built server-side, signed client-side by the user's wallet |
-| **TUI — `vibekit chat`** | Post-MVP (after Phase 6) | "Talk to the chain" REPL free with the CLI developers already installed. Localnet/testnet workflows | **Execute mode** — local keystore daemon; the only head with the full reason→sign→send loop, zero wallet ceremony |
-| **Electron app** | Not building | Its one advantage (web UI + local keys) is replicable by a `vibekit agent` command that bridges the keystore daemon and serves the explorer UI at localhost — without auto-update infra, codesigning, or 150 MB binaries | — |
-| **Desktop (Tauri)** | Back pocket | If real desktop demand appears (dock presence, chain-event notifications), Tauri wraps the same explorer frontend | Same as TUI |
+| **Agent harness** (Claude Code, …) | The MCP, via `vibekit init` | The harness's own model | Execute mode — local keystore daemon |
+| **`vibekit explore`** (TUI) | Agent-native Lora: `@initlabs/agent` running **in-process**, importing tool packages directly — no MCP hop, no hosted dependency, works offline against localnet | BYO API key / local model (Ollama, OpenAI-compatible) via CLI config file | Read-oriented (explore = look); keystore available locally |
+| **Hosted API** (+ `@initlabs/sdk`) | `@initlabs/agent` behind Hono; per-request tool filtering; BYOM config | BYOM (keys, local/self-hosted endpoints) + a funded default (Together today; x402 later, see below) | Compose mode only — never holds keys |
+| **Web agent** ("VibeKit Agent") | React client of the API; explore *and act* (agent = do) | Via the API | Client-side: connected wallet signs compose-mode groups |
+| Electron / Tauri | Not building / back pocket | — | — |
 
-Notes:
+Scope guards:
 
-- The TUI is also the **SDK dogfood**: CLI lives in `initlabs/vibekit`, API in `vibekit-agent`, so `vibekit chat` consumes `@initlabs/sdk` from npm across the repo boundary — exactly the third-party posture the split enforces. If the SDK can't power a chat client cleanly, our own product finds out first.
-- Scope guard: `vibekit chat` is a purpose-built network REPL powered by *our* API. It does **not** compete with Claude Code + the MCP (which make *your* agent Algorand-capable). Different jobs; keep it that way.
-- Signing capability is per-head config, not per-product — the execute/compose mode split in §4 is what makes this table possible with no new machinery.
+- **Lora: question-parity, not feature-parity.** A TUI loses a visualization contest; it wins "answer this in one sentence." Every *question* Lora answers, plus rich terminal rendering — the §4 `display` hints become the TUI's table/txn/account renderers (that decision is now load-bearing).
+- **Provider auth honesty:** BYO-key + local models are the launch story. "Login with Claude/ChatGPT/Grok" mostly doesn't exist for third-party API use; provider OAuth is opportunistic per-provider work, never a design pillar.
+- **x402 is an experiment, not a dependency.** The paid default is just a BYOM entry we happen to fund; an (Algorand-native?) x402 pay-per-request flow slots in later without touching architecture. It never gates a launch.
+- The naming encodes the split: **explore** (TUI, read) vs **agent** (web, act). Bare "agent" is ungoogleable — full name "VibeKit Agent," short form in-product.
+- The infra invariant stands: **the protocol carries everything** (streaming, results, display hints, compose flows live in the orchestrator/SDK stream, never in one head's components).
 
 ## 10. State model
 
@@ -283,9 +296,9 @@ Implementation facts learned:
 - **Phase 3 — Write path.** Opens with per-request network selection (§10 state model). Then: port `transactions/compose` onto algosdk's native composer; write tools for assets/contracts/transactions; `signer-keystore` (walletconnect dropped); resolve the `app_deploy` question. **App-call policy (decided 2026-08-15):** the tools layer speaks raw algosdk (`ABIMethod` + `AtomicTransactionComposer`) — [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) is build-time codegen for known contracts and can't serve runtime specs (xArc, `resolveAppSpec`), and its generated clients depend on algokit-utils, which we dropped. We implement the needed ARC-56 semantics ourselves (struct↔tuple mapping, probably default-argument resolution) using the generator + algokit-utils `AppClient` as reference implementations. The generator belongs in `vibekit new` project templates, where a developer builds against one known contract.
 - **Phase 4 — Plugins.** `plugin-nfd` and `plugin-alpha-arcade` (applying REFACTOR.md §1's format fixes in the port); these prove the plugin contract. Publish everything under `@initlabs`.
 - **Phase 5 — CLI.** Port init/agents/skills, add localnet (from AlgoKit CLI reference) and template bootstrapping.
-- **Phase 6 — API + SDK.** Stand up `initlabs/vibekit-agent`; port api onto the unified registry; new sdk with registry-derived types; deprecation notice on `@getvibekit/sdk`.
-- **Phase 7 — Explorer.** Explorer in `vibekit-agent`, Beautiful UI redesign, xArc. Old vibekit repo archived after cutover.
-- **Phase 8 — TUI (post-MVP).** `vibekit chat` in the CLI, built on `@initlabs/sdk` + local keystore execute mode. Gated on the SDK/protocol carrying presentation hints (§9) — which Phases 2–6 bake in, so this phase is purely a rendering exercise.
+- **Phase 6 — Orchestrator + TUI.** `@initlabs/agent` (LLM provider abstraction via the AI SDK, tool loop, streaming, BYOM config) + `vibekit explore` running it in-process with the tool packages — completes the dev stack with no hosting dependency, and dogfoods the orchestrator before anything hosted exists. Display hints become terminal renderers.
+- **Phase 7 — API + SDK.** Stand up `initlabs/vibekit-agent`; api as a thin Hono wrapper over the proven orchestrator (BYOM + per-request tool selection); new sdk with registry-derived types; deprecation notice on `@getvibekit/sdk`.
+- **Phase 8 — Web agent.** "VibeKit Agent" in `vibekit-agent`: Beautiful UI, client-side wallet signing of compose groups, xArc. Old vibekit repo archived after cutover.
 
 ## 13. Reference: what dies from v1
 
