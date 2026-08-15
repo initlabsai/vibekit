@@ -54,8 +54,7 @@ initlabs/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── tools-contracts/           # @initlabs/tools-contracts    ┘
 │   ├── plugin-nfd/                # @initlabs/plugin-nfd          ┐ optional plugins — prove the
 │   ├── plugin-alpha-arcade/       # @initlabs/plugin-alpha-arcade ┘ plugin system from day one
-│   ├── signer-keystore/           # @initlabs/signer-keystore — keystore-node adapter
-│   ├── signer-walletconnect/      # @initlabs/signer-walletconnect — port of provider-walletconnect
+│   ├── signer-keystore/           # @initlabs/signer-keystore — keystore-node adapter (the only signer pkg)
 │   └── sdk/                       # @initlabs/sdk — client for the hosted API (replaces @getvibekit/sdk)
 
 initlabs/vibekit-agent                 # ~/Code/@initlabs/vibekit-agent
@@ -167,13 +166,13 @@ State that v1 kept in the server process and where it goes:
 |---|---|
 | Active account (`switch_account`) | Request parameter / deployment config; keystore daemon knows the keys |
 | Active network (`switch_network`) | Deployment config (stdio) or request header (HTTP) |
-| Provider sessions (WalletConnect) | `signer-walletconnect` package, state in the keystore/db layer it owns |
+| Provider sessions (WalletConnect) | **Dropped from v2** (2026-08-15) — wallet connections move client-side into the explorer, later |
 | App specs (`resolveAppSpec`) | Request-supplied (xArc path) or filesystem convention in stdio mode |
 
 ## 6. Signing & accounts
 
 - **`@initlabs/signer-keystore`** wraps `@algorandfoundation/keystore-node`: keys in the OS keychain, metadata AES-sealed, and — critically — the **RPC daemon mode** (`keystore serve` over a Unix socket / named pipe) means the MCP process never holds key material. PQ-ready: keystore-node already chunks Falcon-1024 keys; algosdk 3.7 brings protocol-level PQ accounts (Q3 2026).
-- **`@initlabs/signer-walletconnect`** is a port of v1's `provider-walletconnect` (the one v1 provider with real irreplaceable logic) onto `algosdk.TransactionSigner`. **Local/stdio-only**: pairing is interactive (QR + wait) and session-ful by nature — it cannot back a stateless HTTP deployment, and we don't pretend otherwise. Browser flows sign client-side via compose mode instead.
+- ~~signer-walletconnect~~ **Dropped (2026-08-15).** Too much complexity for an underused feature: devs building contracts keep keys in the OS keystore; wallet connections belong to the *explorer*, client-side in the browser (vibekit-agent repo, later), signing compose-mode groups. This also deletes the last genuinely stateful component v2 would have owned (pairing persistence) and 1,625 LOC of v1 port work. `signer-keystore` is the only signer package.
 - **Keystore daemon lifecycle** is deliberately *not* ours: the `keystore` CLI owns `keystore serve`; `signer-keystore` is only ever an RPC client that fails with a clear "start the keystore daemon" error. This also sidesteps a real risk: the v1 CLI ships as a `bun build --compile` binary, and linking `@napi-rs/keyring`'s native addon into a compiled binary is exactly the kind of thing that breaks — talking to the daemon over a socket means the native code never enters our binary. (Spike verifies this.)
 - **Account management CLI**: defer to keystore-node's own `keystore` CLI rather than rebuilding create/list/rename. `vibekit` may add thin aliases later if the UX warrants it.
 - Deleted outright: `provider-interface`, `provider-keyring`, `provider-vault`, `keyring`, `dispenser-*`, most of `db`, mcp-server's `account-service.ts` (653 LOC) and `app-state.ts` (466 LOC).
@@ -219,7 +218,26 @@ Notes:
 - Scope guard: `vibekit chat` is a purpose-built network REPL powered by *our* API. It does **not** compete with Claude Code + the MCP (which make *your* agent Algorand-capable). Different jobs; keep it that way.
 - Signing capability is per-head config, not per-product — the execute/compose mode split in §4 is what makes this table possible with no new machinery.
 
-## 10. Open questions
+## 10. State model
+
+State is where v1 died (SQLite session store, per-network keyring drift, `switch_account` bugs), and these tools get embedded in four hosts — so this section is normative.
+
+**The invariant: every request carries its full context explicitly (network, sender, …). Anything that "remembers" is a client that is stateful by nature — a conversation, a process, a browser tab, a config file. There is no shared mutable store that tools or servers read. Ambient lookup of "current X" is banned.**
+
+| "Stateful" thing | Owner | Mechanism |
+|---|---|---|
+| Current network (MCP/agent) | The conversation | Agent passes `network` per call; its context window is the session store |
+| Current network (CLI/TUI) | The CLI process | In-memory + human-readable config file — no db |
+| Current network (explorer) | The browser | URL param / localStorage; API stateless per request |
+| Active wallet / sender | Same per host | Tools take explicit `sender`; "active account" is host-side sugar filling the param |
+| Key material & metadata | keystore-node daemon | OS keychain + sealed file — not our state |
+| Agent/skill/MCP config | CLI config files | Plain files, versionable |
+
+**Per-request network selection** (Phase 3 opener): a deployment declares `networks: [...]` (one default); clients pooled per network at startup; the adapter injects a `network` parameter into tool schemas **only when >1 network is served**, as a closed enum of exactly the operator-configured networks — the agent chooses within the operator's bounds, never invents endpoints. **Optional with default on read tools** (wrong-network reads are harmless and self-evident); **required on `requiresSigner` tools** (never spend on a silently-defaulted chain). A `get_network` read tool lists served networks + default so agents orient instead of guessing. Result: "current network" ceases to exist as a stored fact anywhere — it lives only in requests and in the conversation's memory of user intent, which cannot silently diverge.
+
+**No database.** v2 has none and any future "we need to store this" is a design smell until proven otherwise. The only persistent state v2 owns is CLI config files. (WalletConnect pairing — the one stateful component previously in scope — was dropped 2026-08-15.)
+
+## 11. Open questions
 
 1. ~~Where does `apps/api` live long-term?~~ **Resolved (2026-08-11): API + explorer form their own monorepo, `initlabs/vibekit-agent`.** The vibekit repo is the developer-tooling side (MCP, CLI, packages); vibekit-agent is the hosted product side.
 2. **Package naming**: `@initlabs/core` vs `@initlabs/vibekit-core` — bare names are cleaner but generic in a company-wide scope that may later hold non-vibekit packages.
@@ -234,7 +252,7 @@ Notes:
 11. **License & copyright.** New org, published packages: pick the license early (Apache-2.0 matches the Algorand ecosystem; v1 is MIT © Gabriel Kuettel, so relicensing the ported code is the copyright holder's call — clean) and settle copyright headers/`author` fields before the first npm publish, not after.
 12. **Keystore UX gap.** Deferring account CRUD to the `keystore` CLI assumes it's installed and its UX is acceptable for vibekit users. If canary UX is rough, `vibekit account …` thin aliases move from "maybe later" to launch scope. *Spike data point: CLI UX was solid (generate/list/export/sign/serve all clean) — leaning "defer to keystore CLI".*
 
-## 11. Migration plan
+## 12. Migration plan
 
 Sequenced so each phase produces something runnable, and risk is front-loaded:
 
@@ -262,20 +280,20 @@ Implementation facts learned:
 
 - **Phase 1 — Skeleton.** Fresh repo, tsconfig/turbo/changesets/CI, `core` with the tool contract + `Signer` + `NetworkClients`, `mcp` server library, `apps/mcp` reference deployment. ✅ **Done 2026-08-15** — initial commit in `~/Code/@initlabs/vibekit`: `@initlabs/core` (contract + codec + network clients, 11 tests) and `@initlabs/mcp` (one generic adapter, registry validation at startup, `./stdio` + `./http` entries, 7 in-memory round-trip tests); reference deployment smoke-tested live against testnet. Contract refinement from implementation: `ToolPlugin` carries a pre-built `service` value (author-side factory captures config) instead of a host-invoked `createService(config)` — the host never holds plugin config.
 - **Phase 2 — Port read tools.** network → accounts → assets → transactions(read) → contracts(read), each domain landing with handler tests. Mostly mechanical: swap `AlgorandClient` context for raw clients (26 of ~38 call sites already reach through to raw algod/indexer). ✅ **Done 2026-08-15** — five packages, 23 tools, 51 tests, all with output schemas + display hints; reference deployment serves the full read surface, smoke-tested live on testnet. Notable findings: (1) algosdk defaults omitted client ports to **:8080** — `createNetworkClients` now always passes scheme-derived ports (the v1 AGENTS.md papercut, now fixed structurally); (2) named networks use nodely 4160 endpoints; free-tier 429s forced paced block sampling (3 concurrent, partial-failure tolerant) in `get_network_status`; (3) deliberate behavior change vs v1: address-taking read tools now validate and throw `ToolError('INVALID_ADDRESS')` up front (v1 surfaced raw indexer errors; in `batch_lookup_accounts` one invalid address now fails the call instead of being silently dropped); (4) v1's per-domain duplicated `formatAccount`/`formatTransaction`/`formatApplication` helpers were deduplicated into per-package `format.ts` modules with identical shaping.
-- **Phase 3 — Write path.** Port `transactions/compose` onto algosdk's native composer; write tools for assets/contracts/transactions; `signer-keystore` + `signer-walletconnect`; resolve the `app_deploy` question. **App-call policy (decided 2026-08-15):** the tools layer speaks raw algosdk (`ABIMethod` + `AtomicTransactionComposer`) — [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) is build-time codegen for known contracts and can't serve runtime specs (xArc, `resolveAppSpec`), and its generated clients depend on algokit-utils, which we dropped. We implement the needed ARC-56 semantics ourselves (struct↔tuple mapping, probably default-argument resolution) using the generator + algokit-utils `AppClient` as reference implementations. The generator belongs in `vibekit new` project templates, where a developer builds against one known contract.
+- **Phase 3 — Write path.** Opens with per-request network selection (§10 state model). Then: port `transactions/compose` onto algosdk's native composer; write tools for assets/contracts/transactions; `signer-keystore` (walletconnect dropped); resolve the `app_deploy` question. **App-call policy (decided 2026-08-15):** the tools layer speaks raw algosdk (`ABIMethod` + `AtomicTransactionComposer`) — [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) is build-time codegen for known contracts and can't serve runtime specs (xArc, `resolveAppSpec`), and its generated clients depend on algokit-utils, which we dropped. We implement the needed ARC-56 semantics ourselves (struct↔tuple mapping, probably default-argument resolution) using the generator + algokit-utils `AppClient` as reference implementations. The generator belongs in `vibekit new` project templates, where a developer builds against one known contract.
 - **Phase 4 — Plugins.** `plugin-nfd` and `plugin-alpha-arcade` (applying REFACTOR.md §1's format fixes in the port); these prove the plugin contract. Publish everything under `@initlabs`.
 - **Phase 5 — CLI.** Port init/agents/skills, add localnet (from AlgoKit CLI reference) and template bootstrapping.
 - **Phase 6 — API + SDK.** Stand up `initlabs/vibekit-agent`; port api onto the unified registry; new sdk with registry-derived types; deprecation notice on `@getvibekit/sdk`.
 - **Phase 7 — Explorer.** Explorer in `vibekit-agent`, Beautiful UI redesign, xArc. Old vibekit repo archived after cutover.
 - **Phase 8 — TUI (post-MVP).** `vibekit chat` in the CLI, built on `@initlabs/sdk` + local keystore execute mode. Gated on the SDK/protocol carrying presentation hints (§9) — which Phases 2–6 bake in, so this phase is purely a rendering exercise.
 
-## 12. Reference: what dies from v1
+## 13. Reference: what dies from v1
 
 | v1 | Fate |
 |---|---|
 | 3 tool-definition shapes, 6 adapter loops | 1 contract, 1 adapter per host |
 | 4-place tool-name registry | 1 registry, everything derives |
-| `provider-*`, `keyring`, `dispenser-*`, `config` (9 pkgs, ~1,900 LOC) | → `signer-keystore` + `signer-walletconnect` + localnet module |
+| `provider-*`, `keyring`, `dispenser-*`, `config` (9 pkgs, ~1,900 LOC) | → `signer-keystore` + localnet module (WalletConnect dropped — client-side in the explorer, later) |
 | mcp-server `account-service.ts` + `app-state.ts` (1,119 LOC) | → per-request `ToolContext` + keystore daemon |
 | algokit-utils | → raw `algosdk@beta` |
 | CLI vault module (~500 LOC) | deleted |
@@ -283,7 +301,7 @@ Implementation facts learned:
 | 3 tsconfig conventions, 9 copy-pasted tsconfigs | 1 base config |
 | 0 tests | tests required per ported domain |
 
-## 13. References
+## 14. References
 
 **MCP (stateless spec)**
 - [2026-07-28 spec release announcement](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
