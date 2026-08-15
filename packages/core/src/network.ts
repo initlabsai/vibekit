@@ -21,13 +21,13 @@ const LOCALNET_TOKEN = 'a'.repeat(64)
 const NAMED_NETWORKS: Record<NetworkId, NetworkConfig> = {
   mainnet: {
     id: 'mainnet',
-    algod: { url: 'https://mainnet-api.algonode.cloud' },
-    indexer: { url: 'https://mainnet-idx.algonode.cloud' },
+    algod: { url: 'https://mainnet-api.4160.nodely.dev' },
+    indexer: { url: 'https://mainnet-idx.4160.nodely.dev' },
   },
   testnet: {
     id: 'testnet',
-    algod: { url: 'https://testnet-api.algonode.cloud' },
-    indexer: { url: 'https://testnet-idx.algonode.cloud' },
+    algod: { url: 'https://testnet-api.4160.nodely.dev' },
+    indexer: { url: 'https://testnet-idx.4160.nodely.dev' },
   },
   localnet: {
     id: 'localnet',
@@ -47,16 +47,26 @@ export interface NetworkClients {
   indexer: algosdk.Indexer
 }
 
+/**
+ * Port to use when the endpoint config doesn't specify one. algosdk defaults
+ * omitted ports to :8080 (not the URL scheme's port), which silently breaks
+ * hosted endpoints — so we always pass a port explicitly.
+ */
+export function defaultPort(endpoint: EndpointConfig): number {
+  if (endpoint.port !== undefined) return endpoint.port
+  return endpoint.url.startsWith('https:') ? 443 : 80
+}
+
 /** Build algod/indexer clients for a network. Hosts should build once and reuse. */
 export function createNetworkClients(network: NetworkId | NetworkConfig): NetworkClients {
   const config = resolveNetwork(network)
   return {
     network: config,
-    algod: new algosdk.Algodv2(config.algod.token ?? '', config.algod.url, config.algod.port),
+    algod: new algosdk.Algodv2(config.algod.token ?? '', config.algod.url, defaultPort(config.algod)),
     indexer: new algosdk.Indexer(
       config.indexer.token ?? '',
       config.indexer.url,
-      config.indexer.port,
+      defaultPort(config.indexer),
     ),
   }
 }

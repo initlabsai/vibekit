@@ -1,16 +1,15 @@
-/** Placeholder tool until @initlabs/tools-* land in Phase 2. */
-import { defineTool, type AnyTool } from '@initlabs/core'
-import { z } from 'zod'
+/** The full read-tool surface: five published domain packages (Phase 2). */
+import type { AnyTool } from '@initlabs/core'
+import { accountTools } from '@initlabs/tools-accounts'
+import { assetTools } from '@initlabs/tools-assets'
+import { contractTools } from '@initlabs/tools-contracts'
+import { networkTools } from '@initlabs/tools-network'
+import { transactionTools } from '@initlabs/tools-transactions'
 
-export const ping = defineTool({
-  name: 'ping',
-  description: 'Liveness check: returns pong, the network, and the current round.',
-  parameters: z.object({}),
-  display: 'json',
-  handler: async (ctx) => {
-    const status = await ctx.algod.status().do()
-    return { pong: true, network: ctx.network.id, lastRound: status.lastRound }
-  },
-}) as AnyTool
-
-export const tools: AnyTool[] = [ping]
+export const tools: AnyTool[] = [
+  ...networkTools,
+  ...accountTools,
+  ...assetTools,
+  ...transactionTools,
+  ...contractTools,
+]

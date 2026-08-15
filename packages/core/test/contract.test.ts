@@ -27,6 +27,13 @@ describe('ToolError', () => {
 })
 
 describe('network', () => {
+  test('derives scheme ports when unspecified (algosdk would default to :8080)', async () => {
+    const { defaultPort } = await import('../src/network.js')
+    expect(defaultPort({ url: 'https://testnet-idx.algonode.cloud' })).toBe(443)
+    expect(defaultPort({ url: 'http://localhost' })).toBe(80)
+    expect(defaultPort({ url: 'http://localhost', port: 4001 })).toBe(4001)
+  })
+
   test('named networks resolve', () => {
     expect(resolveNetwork('testnet').algod.url).toContain('testnet')
     expect(resolveNetwork('localnet').algod.token).toHaveLength(64)
