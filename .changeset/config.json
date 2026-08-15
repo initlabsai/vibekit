@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "access": "public",
+  "baseBranch": "main",
+  "fixed": [["@initlabs/core", "@initlabs/mcp"]],
+  "updateInternalDependencies": "patch",
+  "ignore": ["@initlabs/mcp-reference"]
+}
