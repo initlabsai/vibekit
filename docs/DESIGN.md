@@ -192,7 +192,7 @@ Simplified relative to v1, but with a bigger mission: absorb the AlgoKit CLI job
 | `vibekit init` | Bootstrap AI coding environment: agents, skills, MCP config (v1's core, ported and slimmed) |
 | `vibekit mcp` | Start local MCP (stdio) — imports `@initlabs/vibekit-mcp` as a *library*, killing v1's app→app dependency |
 | `vibekit localnet …` | start/stop/reset/status — **re-implemented in TS** referencing AlgoKit CLI's open-source Docker orchestration: [`src/algokit/cli/localnet.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/cli/localnet.py) (command layer) and [`src/algokit/core/sandbox.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/sandbox.py) (compose-file generation + container lifecycle). Localnet funding (v1's dispenser-kmd) folds in here. **MVP subset only**: start/stop/reset/status + kmd funding; explicitly deferred: `goal` passthrough, codespaces, compose-config version migration (sandbox.py is 1,000+ lines — don't port it all) |
-| `vibekit new` (or similar) | Template bootstrapping via **GitHub template repos** (Gabriel supplies templates) — no template engine in the CLI |
+| `vibekit new` (or similar) | Template bootstrapping via **GitHub template repos** — no template engine in the CLI. **Live (2026-08-15)**: `initlabsai/algorand-starter-{contracts,fullstack,kitchensink}` — three additive tiers, public template repos synced from a private dev monorepo (`initlabsai/algorand-starter-templates`, single source of truth against tier drift). `vibekit new` fetches the tarball (verified: 23 files for contracts) — no git, no npm needed. Templates no longer invoke AlgoKit CLI in the build path (puya-ts + algokit-client-generator are lockfile-pinned devDependencies); `algokit localnet start` is the **single remaining AlgoKit CLI touchpoint**, so `vibekit localnet` completes the AlgoKit-free path. An `npm create` wrapper stays optional future work over the same tarballs |
 | `vibekit explore` | The agent-native Lora (`algokit explore` is the thing it replaces): English-language network questions in a TUI, powered by `@initlabs/vibekit-agent` running in-process with the tool packages imported directly — no MCP hop, no hosted dependency. BYO model via CLI config. See §9 |
 
 Explicitly gone: vault provisioning (~500 LOC), the provider/dispenser command trees, account CRUD (→ keystore CLI).
@@ -331,6 +331,10 @@ Implementation facts learned:
 
 **App calls / ARC-56 (reference for Phase 3)**
 - [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) — reference implementation of ARC-56 semantics (structs, default args); used in templates only, never a tools-layer dependency
+
+**Starter templates**
+- [algorand-starter-contracts](https://github.com/initlabsai/algorand-starter-contracts) · [-fullstack](https://github.com/initlabsai/algorand-starter-fullstack) · [-kitchensink](https://github.com/initlabsai/algorand-starter-kitchensink) — public template repos, additive tiers
+- [algorand-starter-templates](https://github.com/initlabsai/algorand-starter-templates) — private dev monorepo (single source of truth; sync subdirs → template repos on change)
 
 **AlgoKit CLI (reference for re-implementation)**
 - [algokit-cli repo](https://github.com/algorandfoundation/algokit-cli)
