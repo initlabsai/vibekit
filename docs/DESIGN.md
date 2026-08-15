@@ -1,6 +1,8 @@
 # VibeKit v2 — Design Doc
 
-Status: **exploration / draft** · Owner: Gabriel Kuettel · Last updated: 2026-08-11
+Status: **executing — Phases 0–4 complete, next: Phase 5 (CLI)** · Owner: Gabriel Kuettel · Last updated: 2026-08-15
+
+> **Handover snapshot (2026-08-15).** Code: `~/Code/@initlabs/vibekit` = `github.com/initlabsai/vibekit` (private) — 12 packages + reference app, ~130 tests, all green (`bun install && bunx turbo run build typecheck test`). Live-verified: stateless MCP (2026-07-28 spec + legacy clients), 44 tools + 8 plugin tools, multi-network per-request selection, keystore-daemon signing, compose mode, app deploy — all E2E on localnet/testnet. Templates live: `initlabsai/algorand-starter-{contracts,fullstack,kitchensink}` (public, tarball-fetchable). **npm publish is staged but HELD for a 1.0 release** (gate between Phases 6 and 7). **Next: Phase 5 — the CLI** (`init` ported from v1 `apps/cli`, `new` via template tarballs, `localnet` re-implemented from AlgoKit's sandbox.py — the single remaining AlgoKit CLI touchpoint — and `mcp` stdio entry). Read §9 (products), §10 (state model — normative), §12 (migration plan) before structural changes. Hard rules in the repo's AGENTS.md.
 
 VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server for Algorand built on published, reusable tool packages, with a plugin system so developers can extend it or deploy their own. Two stacks, one brain (§9): the local dev stack (CLI + MCP + `vibekit explore` TUI) and the hosted product stack (API + SDK + the web "VibeKit Agent"), all running the same tools through the same orchestrator.
 
