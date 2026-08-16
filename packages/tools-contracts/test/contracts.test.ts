@@ -246,6 +246,25 @@ describe('readLocalState', () => {
     expect(result.optedIn).toBe(false)
     expect(result.state).toEqual([])
   })
+
+  test('never-opted-in account (algod 404) is optedIn:false, not an error', async () => {
+    // Live finding: algod 404s accountApplicationInformation for an account
+    // that never opted in; only closed-out accounts return info without state.
+    const ctx = fakeContext({
+      algod: {
+        accountApplicationInformation: () =>
+          chainable(
+            Promise.reject(
+              new Error(
+                'Network request error. Received status 404 (Not Found): account application info not found',
+              ),
+            ),
+          ),
+      },
+    })
+    const result = await readLocalState(ctx, { appId: 9, address: 'SOMEADDRESS' })
+    expect(result).toEqual({ appId: 9, address: 'SOMEADDRESS', optedIn: false, state: [] })
+  })
 })
 
 describe('readBoxState', () => {

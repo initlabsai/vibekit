@@ -143,7 +143,17 @@ export async function readLocalState(
   state: StateValue[]
 }> {
   const { appId, address, appSpec } = args
-  const accountInfo = await ctx.algod.accountApplicationInformation(address, appId).do()
+  let accountInfo
+  try {
+    accountInfo = await ctx.algod.accountApplicationInformation(address, appId).do()
+  } catch (error) {
+    // algod 404s for an account that NEVER opted in (a closed-out account
+    // still returns info without appLocalState) — both mean "not opted in".
+    if (error instanceof Error && error.message.includes('404')) {
+      return { appId, address, optedIn: false, state: [] }
+    }
+    throw error
+  }
   const stateKeyMap = appSpec ? buildStateKeyMap(appSpec, 'local') : undefined
   const state = accountInfo.appLocalState?.keyValue
     ? decodeStateItems(accountInfo.appLocalState.keyValue, stateKeyMap)
