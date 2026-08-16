@@ -34,9 +34,9 @@ ${pc.bold('Templates:')}
   vibekit new --template contracts|fullstack|kitchensink
 
 ${pc.bold('Headless setup (no prompts — agents/CI):')}
-  vibekit init [dir] --yes                        Defaults: claude, all skills, kappa+vibekit MCPs
-  vibekit new <dir> -t contracts --yes            Scaffold + agent setup, all defaults
-  Flags: --agents <csv>  --skills all|none|<csv>  --mcps none|<csv>  --overwrite  --no-init (new only)
+  vibekit init [dir] --yes --agents claude              Explicit agents; defaults: all skills, kappa+vibekit MCPs
+  vibekit new <dir> -t contracts --yes --agents claude  Scaffold + agent setup
+  Flags: --agents <csv> (required with --yes)  --skills all|none|<csv>  --mcps none|<csv>  --overwrite  --no-init (new only)
   Any flag pre-answers its wizard step; --yes fills the rest with defaults and skips confirms.
   Existing AGENTS.md/template files are kept in headless runs unless --overwrite.
 

@@ -39,12 +39,16 @@ describe('parseInitArgs', () => {
     expect(() => parseInitArgs(['--agents'])).toThrow(/requires/)
     expect(() => parseInitArgs(['--frobnicate'])).toThrow(/Unknown argument/)
   })
+
+  test('--yes without --agents is rejected (no default agent guess)', () => {
+    expect(() => parseInitArgs(['--yes'])).toThrow(/--yes requires --agents/)
+  })
 })
 
 describe('headless runInitAt', () => {
   test('--yes writes configs, skills, and AGENTS.md without prompting', async () => {
     const dir = makeDir()
-    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'all']))
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'all']))
 
     const mcpConfig = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8'))
     expect(Object.keys(mcpConfig.mcpServers)).toEqual(expect.arrayContaining(['vibekit', 'kappa']))
@@ -59,10 +63,13 @@ describe('headless runInitAt', () => {
     const { writeFileSync } = await import('fs')
     writeFileSync(join(dir, 'AGENTS.md'), 'CUSTOMIZED')
 
-    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'none']))
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none']))
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toBe('CUSTOMIZED')
 
-    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'none', '--overwrite']))
+    await runInitAt(
+      dir,
+      parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none', '--overwrite']),
+    )
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).not.toBe('CUSTOMIZED')
   })
 })

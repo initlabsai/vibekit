@@ -47,9 +47,10 @@ export interface SetupContext {
 
 /**
  * Flags that pre-answer wizard steps. Any provided flag skips its prompt;
- * `--yes` skips every remaining prompt and confirm by taking the defaults
- * (agents: claude · skills: all · mcps: kappa,vibekit · existing files kept
- * unless --overwrite). This is the headless path agents and CI use.
+ * `--yes` skips every remaining prompt and confirm, taking vibekit's own
+ * defaults for skills (all) and MCPs (kappa,vibekit) — but `--agents` must be
+ * explicit: which coding tools you use is your fact, not our guess. Existing
+ * files are kept unless --overwrite. This is the headless path agents/CI use.
  */
 export interface InitFlags {
   dir?: string
@@ -60,10 +61,7 @@ export interface InitFlags {
   overwrite: boolean
 }
 
-const HEADLESS_DEFAULTS = {
-  agents: ['claude'] as AgentSelection,
-  mcps: ['kappa', 'vibekit'] as MCPSelection,
-}
+const HEADLESS_DEFAULT_MCPS: MCPSelection = ['kappa', 'vibekit']
 
 function parseCsv(value: string | undefined, flag: string): string[] {
   if (!value || value.startsWith('-')) {
@@ -114,6 +112,9 @@ export function parseInitArgs(args: string[]): InitFlags {
     } else {
       throw new Error(`Unknown argument: ${arg}`)
     }
+  }
+  if (flags.yes && !flags.agents) {
+    throw new Error(`--yes requires --agents <csv> (available: ${AGENT_IDS.join(', ')})`)
   }
   return flags
 }
@@ -429,10 +430,10 @@ function showSummary(context: SetupContext): void {
  * confirms (headless — usable by agents/CI without a TTY).
  */
 export async function runInitAt(installPath: string, flags?: InitFlags): Promise<void> {
-  const agents =
-    flags?.agents ?? (flags?.yes ? HEADLESS_DEFAULTS.agents : await selectAgentsStep())
+  // Headless (--yes) guarantees agents is set — parseInitArgs enforces it.
+  const agents = flags?.agents ?? (await selectAgentsStep())
   const selectedSkills = flags?.skills ?? (flags?.yes ? getSkillNames() : await selectSkillsStep())
-  const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULTS.mcps : await selectMCPsStep())
+  const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULT_MCPS : await selectMCPsStep())
 
   const context: SetupContext = { agents, mcps, installPath, selectedSkills }
 
