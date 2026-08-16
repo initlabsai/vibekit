@@ -5,7 +5,8 @@ Owner: Gabriel Kuettel · Init Labs LLC · Last updated: 2026-08-16
 
 This document is the operational handover: what exists, how to verify it, what
 environment it assumes, and what happens next. The *design* rationale lives in
-[DESIGN.md](./DESIGN.md) (canonical; §6 and §10 are normative). The adversarial
+[DESIGN.md](./DESIGN.md) (canonical; §6 and §10 are normative); the operating
+theory behind all of it is [DOCTRINE.md](./DOCTRINE.md) — read it to see the forest. The adversarial
 review runs from [REVIEW-BRIEF.md](./REVIEW-BRIEF.md). A visual map is
 [architecture.html](./architecture.html).
 

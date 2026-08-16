@@ -6,7 +6,8 @@ Guidance for AI agents working on this repo.
 
 VibeKit v2: a stateless MCP server for Algorand built on published tool packages
 (`@initlabs/*`), plus the `vibekit` CLI. [docs/DESIGN.md](./docs/DESIGN.md) is the canonical
-design doc — read it before structural changes. Operational state: [docs/HANDOVER.md](./docs/HANDOVER.md);
+design doc — read it before structural changes. Operating theory (read to keep the big picture): [docs/DOCTRINE.md](./docs/DOCTRINE.md).
+Operational state: [docs/HANDOVER.md](./docs/HANDOVER.md);
 adversarial review: [docs/REVIEW-BRIEF.md](./docs/REVIEW-BRIEF.md); map: docs/architecture.html. The hosted API + explorer live in a separate
 repo (`initlabs/vibekit-agent`) and consume these packages from npm.
 

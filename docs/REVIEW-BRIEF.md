@@ -79,6 +79,20 @@ Take DESIGN.md's handover snapshot and phase entries as a list of assertions.
 Verify each against code and tests. Report every claim that is exaggerated,
 stale, or unverifiable — this measures how far the narrative outran the artifact.
 
+### 6. Review the proposition itself
+
+`docs/DOCTRINE.md` states three falsifiable bets (delegated implementation,
+cheap surfaces as product strategy, delegated verification) with explicit
+falsifiers. Attack them:
+
+- Do your findings from areas 1–5 constitute a falsification of any bet, per its
+  own stated falsifier? Say so plainly if yes.
+- Is the "buy precision" carve-out (keystore-node) sound given what you observed
+  about our *usage* of it — and is anything else in the codebase quietly
+  precision-critical without having been either bought or verified?
+- Is any door's marginal cost or safety posture inconsistent with Bet 2's
+  obligations?
+
 ## Owner's additions
 
 <!-- Gabriel: add your own suspicions here before dispatching the review.
