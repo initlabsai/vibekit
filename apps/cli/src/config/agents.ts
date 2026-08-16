@@ -94,7 +94,7 @@ export const AGENTS = {
     baseConfigTemplate: { mcpServers: {} },
     mcpServersKey: 'mcpServers',
     skillsDir: '.pi/skills',
-    authInstructions: 'In pi: /mcp → kappa',
+    authInstructions: 'In pi: /mcp-auth kappa (first time; lazy servers show "not cached" until first use)',
     setupNote: 'Pi needs the MCP adapter once: pi install npm:pi-mcp-adapter',
     cliCommand: 'pi',
   },
