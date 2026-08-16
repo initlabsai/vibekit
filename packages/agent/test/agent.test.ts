@@ -1,0 +1,198 @@
+import { describe, expect, test } from 'bun:test'
+import { MockLanguageModelV4, simulateReadableStream } from 'ai/test'
+import { z } from 'zod'
+
+import { defineTool, ToolError } from '@initlabs/vibekit-core'
+import { createAgent, type AgentEvent } from '../src/index.js'
+
+const USAGE = {
+  inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
+  outputTokens: { total: 5, text: undefined, reasoning: undefined },
+} as never
+
+function textStream(text: string) {
+  return {
+    stream: simulateReadableStream({
+      chunks: [
+        { type: 'stream-start' as const, warnings: [] },
+        { type: 'text-start' as const, id: 't1' },
+        { type: 'text-delta' as const, id: 't1', delta: text },
+        { type: 'text-end' as const, id: 't1' },
+        { type: 'finish' as const, finishReason: 'stop' as const, usage: USAGE },
+      ],
+    }),
+  }
+}
+
+function toolCallStream(toolName: string, input: Record<string, unknown>) {
+  return {
+    stream: simulateReadableStream({
+      chunks: [
+        { type: 'stream-start' as const, warnings: [] },
+        {
+          type: 'tool-call' as const,
+          toolCallId: 'call-1',
+          toolName,
+          input: JSON.stringify(input),
+        },
+        { type: 'finish' as const, finishReason: 'tool-calls' as const, usage: USAGE },
+      ],
+    }),
+  }
+}
+
+async function collect(events: AsyncIterable<AgentEvent>): Promise<AgentEvent[]> {
+  const collected: AgentEvent[] = []
+  for await (const event of events) collected.push(event)
+  return collected
+}
+
+const echoTool = defineTool({
+  name: 'echo',
+  description: 'Echo the message back.',
+  parameters: z.object({ message: z.string() }),
+  display: 'json',
+  handler: async (_ctx, args) => ({ echoed: args.message, big: 42n }),
+})
+
+describe('createAgent', () => {
+  test('streams text and keeps conversation history', async () => {
+    const agent = createAgent({
+      model: new MockLanguageModelV4({ doStream: [textStream('Hello from the mock!')] }),
+      network: 'localnet',
+      mode: 'compose',
+      tools: [echoTool],
+    })
+
+    const events = await collect(agent.stream('hi'))
+    const text = events
+      .filter((e) => e.type === 'text-delta')
+      .map((e) => e.text)
+      .join('')
+    expect(text).toBe('Hello from the mock!')
+
+    const finish = events.at(-1)!
+    expect(finish.type).toBe('finish')
+    if (finish.type === 'finish') {
+      expect(finish.usage?.inputTokens).toBe(10)
+    }
+
+    expect(agent.messages).toHaveLength(2) // user + assistant
+    agent.reset()
+    expect(agent.messages).toHaveLength(0)
+  })
+
+  test('runs the tool loop: call, JSON-safe result with display hint, final text', async () => {
+    const agent = createAgent({
+      model: new MockLanguageModelV4({
+        doStream: [toolCallStream('echo', { message: 'ping' }), textStream('It said ping.')],
+      }),
+      network: 'localnet',
+      mode: 'compose',
+      tools: [echoTool],
+    })
+
+    const events = await collect(agent.stream('use the echo tool'))
+
+    const call = events.find((e) => e.type === 'tool-call')!
+    expect(call.type).toBe('tool-call')
+    if (call.type === 'tool-call') {
+      expect(call.toolName).toBe('echo')
+      expect(call.input).toEqual({ message: 'ping' })
+    }
+
+    const result = events.find((e) => e.type === 'tool-result')!
+    expect(result.type).toBe('tool-result')
+    if (result.type === 'tool-result') {
+      expect(result.isError).toBe(false)
+      expect(result.display).toBe('json')
+      // bigint made JSON-safe by the shared executeToolCall
+      expect(result.output).toEqual({ echoed: 'ping', big: 42 })
+    }
+
+    const text = events
+      .filter((e) => e.type === 'text-delta')
+      .map((e) => e.text)
+      .join('')
+    expect(text).toBe('It said ping.')
+
+    // history: user, assistant(tool call), tool result, assistant text
+    expect(agent.messages.length).toBeGreaterThanOrEqual(3)
+  })
+
+  test('routes the injected network param to the right pooled context', async () => {
+    const seen: string[] = []
+    const whereTool = defineTool({
+      name: 'where',
+      description: 'Report the network this call ran against.',
+      parameters: z.object({}),
+      handler: async (ctx) => {
+        seen.push(ctx.network.id)
+        return { network: ctx.network.id }
+      },
+    })
+
+    const agent = createAgent({
+      model: new MockLanguageModelV4({
+        doStream: [toolCallStream('where', { network: 'localnet' }), textStream('done')],
+      }),
+      network: 'testnet',
+      networks: ['testnet', 'localnet'],
+      mode: 'compose',
+      tools: [whereTool],
+    })
+
+    const events = await collect(agent.stream('which network?'))
+    const result = events.find((e) => e.type === 'tool-result')!
+    if (result.type === 'tool-result') {
+      expect(result.output).toEqual({ network: 'localnet' })
+    }
+    expect(seen).toEqual(['localnet'])
+  })
+
+  test('surfaces handler ToolErrors as error results and continues the loop', async () => {
+    const failTool = defineTool({
+      name: 'fail',
+      description: 'Always fails.',
+      parameters: z.object({}),
+      handler: async () => {
+        throw new ToolError('INVALID_ADDRESS', 'not an address')
+      },
+    })
+
+    const agent = createAgent({
+      model: new MockLanguageModelV4({
+        doStream: [toolCallStream('fail', {}), textStream('That failed.')],
+      }),
+      network: 'localnet',
+      mode: 'compose',
+      tools: [failTool],
+    })
+
+    const events = await collect(agent.stream('try it'))
+    const result = events.find((e) => e.type === 'tool-result')!
+    if (result.type === 'tool-result') {
+      expect(result.isError).toBe(true)
+      expect(result.output).toEqual({
+        error: { code: 'INVALID_ADDRESS', message: 'not an address' },
+      })
+    }
+
+    const text = events
+      .filter((e) => e.type === 'text-delta')
+      .map((e) => e.text)
+      .join('')
+    expect(text).toBe('That failed.')
+  })
+
+  test('registry validation happens at startup', () => {
+    expect(() =>
+      createAgent({
+        model: new MockLanguageModelV4({}),
+        network: 'localnet',
+        mode: 'compose',
+        tools: [echoTool, echoTool],
+      }),
+    ).toThrow('Duplicate tool name: echo')
+  })
+})

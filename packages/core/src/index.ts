@@ -24,6 +24,14 @@ export {
   writeResultSchema,
 } from './schemas.js'
 export {
+  executeToolCall,
+  injectNetworkParam,
+  NETWORK_PARAM,
+  resolveDeployment,
+  type DeploymentOptions,
+  type ResolvedDeployment,
+} from './deployment.js'
+export {
   createNetworkClients,
   defaultPort,
   resolveNetwork,
