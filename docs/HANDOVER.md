@@ -83,7 +83,7 @@ what users have installed; `vibekit doctor --fix` migrates their machines.
 
 1. **Adversarial review** — [REVIEW-BRIEF.md](./REVIEW-BRIEF.md). Run it in a fresh
    context with no access to this narrative.
-2. **1.0 publish gate** — scope registration, license (Q11), algosdk pin decision
+2. **1.0 publish gate** — license (Q11), algosdk pin decision
    (Q9), npm publish, install channel, docs site (Q10).
 3. **Phase 7–8** — `initlabsai/vibekit-agent` (hosted API + web agent), consuming
    published packages only.

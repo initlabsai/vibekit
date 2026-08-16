@@ -13,7 +13,7 @@ VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server fo
 | Decision | Choice |
 |---|---|
 | Repo strategy | **Two fresh monorepos**: `initlabsai/vibekit` (MCP + CLI + packages) and `initlabsai/vibekit-agent` (hosted API + explorer). Port tool handlers domain-by-domain; old repo stays runnable until cutover |
-| Ownership / npm scope | **Init Labs LLC** · `@initlabs/*` (scope registration pending) |
+| Ownership / npm scope | **Init Labs LLC** · `@initlabs/*` (org registered on npm, owner verified 2026-08-16) |
 | MCP spec | **2026-07-28 stateless spec** — no sessions, no init handshake, header-based routing |
 | Chain SDK | **`algosdk@beta` (3.7.x)** directly — no algokit-utils. PQ (Falcon-1024) account support lands here first |
 | Key custody | **`@algorandfoundation/keystore-node`** (OS keychain + AES-sealed metadata, RPC daemon over local socket) behind our own `Signer` interface |
