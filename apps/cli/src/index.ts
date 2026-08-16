@@ -12,7 +12,7 @@ function showHelp(): void {
 ${pc.bold('VibeKit')} — Deploy contracts. Manage assets. Query the chain. All through your favorite AI agent.
 
 ${pc.bold('Usage:')}
-  vibekit init                Set up AI coding agents (skills, MCP config)
+  vibekit init [dir]          Set up AI coding agents (skills, MCP config)
   vibekit new [dir]           Scaffold a project from a starter template
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
   vibekit agent               Open the VibeKit Agent (web) — explore Algorand by conversation
@@ -33,6 +33,13 @@ ${pc.bold('LocalNet Commands:')}
 ${pc.bold('Templates:')}
   vibekit new --template contracts|fullstack|kitchensink
 
+${pc.bold('Headless setup (no prompts — agents/CI):')}
+  vibekit init [dir] --yes                        Defaults: claude, all skills, kappa+vibekit MCPs
+  vibekit new <dir> -t contracts --yes            Scaffold + agent setup, all defaults
+  Flags: --agents <csv>  --skills all|none|<csv>  --mcps none|<csv>  --overwrite  --no-init (new only)
+  Any flag pre-answers its wizard step; --yes fills the rest with defaults and skips confirms.
+  Existing AGENTS.md/template files are kept in headless runs unless --overwrite.
+
 ${pc.bold('Accounts:')}
   Keys live in the OS keystore behind the keystore daemon (managed install, no global needed):
     vibekit keystore serve      Start the signing daemon (required for execute mode)
@@ -51,7 +58,7 @@ async function main(): Promise<boolean> {
   switch (subcommand) {
     case 'init': {
       const { commandInit } = await import('./commands/init.js')
-      await commandInit()
+      await commandInit(args)
       return true
     }
     case 'new': {

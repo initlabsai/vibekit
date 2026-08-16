@@ -3,11 +3,69 @@ import { mkdtempSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-import { generateConfigs, resolveVibekitPath } from '../src/commands/init.js'
+import { generateConfigs, parseInitArgs, resolveVibekitPath, runInitAt } from '../src/commands/init.js'
+import { getSkillNames } from '../src/skills/index.js'
 
 function makeDir(): string {
   return mkdtempSync(join(tmpdir(), 'vibekit-init-test-'))
 }
+
+describe('parseInitArgs', () => {
+  test('defaults: interactive, nothing pre-answered', () => {
+    expect(parseInitArgs([])).toEqual({ yes: false, overwrite: false })
+  })
+
+  test('parses dir, --yes, --overwrite, and csv selections', () => {
+    expect(
+      parseInitArgs(['proj', '-y', '--overwrite', '--agents', 'claude,codex', '--mcps', 'vibekit']),
+    ).toEqual({
+      dir: 'proj',
+      yes: true,
+      overwrite: true,
+      agents: ['claude', 'codex'],
+      mcps: ['vibekit'],
+    })
+  })
+
+  test('--skills all expands to the full bundle; none empties', () => {
+    expect(parseInitArgs(['--skills', 'all']).skills).toEqual(getSkillNames())
+    expect(parseInitArgs(['--skills', 'none']).skills).toEqual([])
+    expect(parseInitArgs(['--mcps', 'none']).mcps).toEqual([])
+  })
+
+  test('rejects unknown values and unknown flags', () => {
+    expect(() => parseInitArgs(['--agents', 'clippy'])).toThrow(/unknown value/)
+    expect(() => parseInitArgs(['--mcps', 'bogus'])).toThrow(/unknown value/)
+    expect(() => parseInitArgs(['--agents'])).toThrow(/requires/)
+    expect(() => parseInitArgs(['--frobnicate'])).toThrow(/Unknown argument/)
+  })
+})
+
+describe('headless runInitAt', () => {
+  test('--yes writes configs, skills, and AGENTS.md without prompting', async () => {
+    const dir = makeDir()
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'all']))
+
+    const mcpConfig = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8'))
+    expect(Object.keys(mcpConfig.mcpServers)).toEqual(expect.arrayContaining(['vibekit', 'kappa']))
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('VibeKit')
+    // Default agent set is claude → skills land in .claude/skills.
+    const firstSkill = getSkillNames()[0]!
+    expect(readFileSync(join(dir, '.claude', 'skills', firstSkill, 'SKILL.md'), 'utf-8')).toBeTruthy()
+  })
+
+  test('headless keeps existing AGENTS.md unless --overwrite', async () => {
+    const dir = makeDir()
+    const { writeFileSync } = await import('fs')
+    writeFileSync(join(dir, 'AGENTS.md'), 'CUSTOMIZED')
+
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'none']))
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toBe('CUSTOMIZED')
+
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--skills', 'none', '--overwrite']))
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).not.toBe('CUSTOMIZED')
+  })
+})
 
 describe('generateConfigs', () => {
   test('writes .mcp.json for claude with vibekit + kappa servers', async () => {

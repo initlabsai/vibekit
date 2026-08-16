@@ -16,6 +16,15 @@ vibekit localnet start          # Docker localnet (algod :4001, indexer :8980)
 vibekit keystore serve &        # keystore daemon (signing)
 ```
 
+For a fully agent-driven run starting from nothing, `init`/`new` are headless
+with `--yes` (no TTY needed):
+
+```bash
+vibekit init . --yes                              # agent setup in an existing dir
+vibekit new my-app -t contracts --yes             # scaffold + agent setup, all defaults
+# selection flags: --agents <csv> --skills all|none|<csv> --mcps none|<csv> --overwrite
+```
+
 Connect the MCP server with the standard init env (multi-network, execute
 mode): `NETWORK=localnet`, `NETWORKS=localnet,testnet,mainnet`,
 `SIGNING=execute` — e.g. the `.mcp.json` written by `vibekit init`, or

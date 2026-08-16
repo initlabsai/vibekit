@@ -13,7 +13,7 @@ import { basename, resolve } from 'path'
 
 import { expandPath } from '../utils/paths.js'
 import { confirm, select, text } from '../utils/prompts.js'
-import { runInitAt } from './init.js'
+import { parseInitArgs, runInitAt, type InitFlags } from './init.js'
 
 export interface TemplateDefinition {
   id: string
@@ -88,23 +88,34 @@ async function countFiles(dir: string): Promise<number> {
 interface NewArgs {
   dir?: string
   template?: string
+  noInit: boolean
+  /** Remaining flags (incl. dir and --yes) shared with `vibekit init`. */
+  init: InitFlags
 }
 
 export function parseNewArgs(args: string[]): NewArgs {
-  const result: NewArgs = {}
+  let template: string | undefined
+  let noInit = false
+  const rest: string[] = []
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!
-    if (arg === '--template' || arg === '-t') {
-      result.template = args[++i]
-    } else if (!arg.startsWith('-') && result.dir === undefined) {
-      result.dir = arg
-    }
+    if (arg === '--template' || arg === '-t') template = args[++i]
+    else if (arg === '--no-init') noInit = true
+    else rest.push(arg)
   }
-  return result
+  const init = parseInitArgs(rest)
+  return { dir: init.dir, template, noInit, init }
 }
 
 export async function commandNew(args: string[]): Promise<void> {
-  const parsed = parseNewArgs(args)
+  let parsed: NewArgs
+  try {
+    parsed = parseNewArgs(args)
+  } catch (error) {
+    p.log.error(error instanceof Error ? error.message : String(error))
+    process.exit(1)
+  }
+  const headless = parsed.init.yes
 
   p.intro(pc.cyan('vibekit new'))
 
@@ -112,6 +123,11 @@ export async function commandNew(args: string[]): Promise<void> {
     p.log.error(
       `Unknown template '${parsed.template}'. Available: ${TEMPLATES.map((t) => t.id).join(', ')}`,
     )
+    process.exit(1)
+  }
+  if (headless && (!parsed.template || !parsed.dir)) {
+    // Headless runs can't prompt for the missing pieces.
+    p.log.error('--yes requires a project directory and --template <id>.')
     process.exit(1)
   }
 
@@ -151,8 +167,10 @@ export async function commandNew(args: string[]): Promise<void> {
 
   // Greenfield = scaffold + init composed: skills and MCP configs come from
   // the CLI (one source of truth), never baked into the template repos.
-  if (await confirm('Set up AI coding agents in this project?', true)) {
-    await runInitAt(targetDir)
+  if (parsed.noInit) {
+    p.log.info('Skipped agent setup (--no-init) — run `vibekit init` inside the project any time.')
+  } else if (headless || (await confirm('Set up AI coding agents in this project?', true))) {
+    await runInitAt(targetDir, parsed.init)
   } else {
     p.log.info('Skipped — run `vibekit init` inside the project any time.')
   }

@@ -23,6 +23,7 @@ import {
   getMCPsByCategory,
   getSelectedMCPs,
   MCP_ENV,
+  MCP_IDS,
   type MCPId,
   type MCPSelection,
 } from '../config/mcps.js'
@@ -40,6 +41,81 @@ export interface SetupContext {
   mcps: MCPSelection
   installPath: string
   selectedSkills: SkillSelection
+}
+
+// --- Headless flags ---
+
+/**
+ * Flags that pre-answer wizard steps. Any provided flag skips its prompt;
+ * `--yes` skips every remaining prompt and confirm by taking the defaults
+ * (agents: claude · skills: all · mcps: kappa,vibekit · existing files kept
+ * unless --overwrite). This is the headless path agents and CI use.
+ */
+export interface InitFlags {
+  dir?: string
+  agents?: AgentSelection
+  skills?: SkillSelection
+  mcps?: MCPSelection
+  yes: boolean
+  overwrite: boolean
+}
+
+const HEADLESS_DEFAULTS = {
+  agents: ['claude'] as AgentSelection,
+  mcps: ['kappa', 'vibekit'] as MCPSelection,
+}
+
+function parseCsv(value: string | undefined, flag: string): string[] {
+  if (!value || value.startsWith('-')) {
+    throw new Error(`${flag} requires a comma-separated value`)
+  }
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
+function assertKnown(values: string[], known: readonly string[], flag: string): void {
+  const unknown = values.filter((value) => !known.includes(value))
+  if (unknown.length > 0) {
+    throw new Error(`${flag}: unknown value(s) ${unknown.join(', ')}. Available: ${known.join(', ')}`)
+  }
+}
+
+export function parseInitArgs(args: string[]): InitFlags {
+  const flags: InitFlags = { yes: false, overwrite: false }
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!
+    if (arg === '--yes' || arg === '-y') flags.yes = true
+    else if (arg === '--overwrite') flags.overwrite = true
+    else if (arg === '--agents') {
+      const values = parseCsv(args[++i], '--agents')
+      assertKnown(values, AGENT_IDS, '--agents')
+      flags.agents = values as AgentSelection
+    } else if (arg === '--skills') {
+      const value = args[++i]
+      if (value === 'all') flags.skills = getSkillNames()
+      else if (value === 'none') flags.skills = []
+      else {
+        const values = parseCsv(value, '--skills')
+        assertKnown(values, getSkillNames(), '--skills')
+        flags.skills = values
+      }
+    } else if (arg === '--mcps') {
+      const value = args[++i]
+      if (value === 'none') flags.mcps = []
+      else {
+        const values = parseCsv(value, '--mcps')
+        assertKnown(values, MCP_IDS, '--mcps')
+        flags.mcps = values as MCPSelection
+      }
+    } else if (!arg.startsWith('-') && flags.dir === undefined) {
+      flags.dir = arg
+    } else {
+      throw new Error(`Unknown argument: ${arg}`)
+    }
+  }
+  return flags
 }
 
 // --- Prompt steps ---
@@ -239,7 +315,7 @@ interface TemplateFile {
   content: string
 }
 
-async function installAgentFiles(context: SetupContext): Promise<void> {
+async function installAgentFiles(context: SetupContext, flags?: InitFlags): Promise<void> {
   const templates: TemplateFile[] = [{ path: 'AGENTS.md', content: agentsMdContent }]
   for (const agent of getEnabledAgents(context.agents)) {
     if (agent.templateFile && agent.templateContent) {
@@ -254,13 +330,18 @@ async function installAgentFiles(context: SetupContext): Promise<void> {
   let action: 'skip' | 'overwrite' = 'overwrite'
   if (existingFiles.length > 0) {
     p.log.warn(`Found existing files: ${existingFiles.map((f) => pc.cyan(f)).join(', ')}`)
-    action = (await select({
-      message: 'How would you like to handle existing files?',
-      options: [
-        { value: 'skip', label: 'Skip existing files', hint: 'keep your customizations' },
-        { value: 'overwrite', label: 'Overwrite all', hint: 'replace with latest templates' },
-      ],
-    })) as 'skip' | 'overwrite'
+    if (flags?.yes) {
+      // Headless: never destroy customizations unless --overwrite says so.
+      action = flags.overwrite ? 'overwrite' : 'skip'
+    } else {
+      action = (await select({
+        message: 'How would you like to handle existing files?',
+        options: [
+          { value: 'skip', label: 'Skip existing files', hint: 'keep your customizations' },
+          { value: 'overwrite', label: 'Overwrite all', hint: 'replace with latest templates' },
+        ],
+      })) as 'skip' | 'overwrite'
+    }
   }
 
   for (const template of templates) {
@@ -343,16 +424,20 @@ function showSummary(context: SetupContext): void {
  * brownfield) and `vibekit new` (composed after scaffolding, greenfield).
  * Templates stay agent-agnostic; the CLI is the single source of truth for
  * skills and MCP configs.
+ *
+ * Flags pre-answer steps; `--yes` fills the rest with defaults and skips
+ * confirms (headless — usable by agents/CI without a TTY).
  */
-export async function runInitAt(installPath: string): Promise<void> {
-  const agents = await selectAgentsStep()
-  const selectedSkills = await selectSkillsStep()
-  const mcps = await selectMCPsStep()
+export async function runInitAt(installPath: string, flags?: InitFlags): Promise<void> {
+  const agents =
+    flags?.agents ?? (flags?.yes ? HEADLESS_DEFAULTS.agents : await selectAgentsStep())
+  const selectedSkills = flags?.skills ?? (flags?.yes ? getSkillNames() : await selectSkillsStep())
+  const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULTS.mcps : await selectMCPsStep())
 
   const context: SetupContext = { agents, mcps, installPath, selectedSkills }
 
   p.note(buildFilePreview(context).join('\n'), 'Files to create')
-  if (!(await confirm('Create project?', true))) {
+  if (!flags?.yes && !(await confirm('Create project?', true))) {
     p.cancel('Setup cancelled.')
     process.exit(0)
   }
@@ -364,7 +449,7 @@ export async function runInitAt(installPath: string): Promise<void> {
     const skillsCount = await installSkills(context)
     s.stop(`Created ${skillsCount} skills`)
     // may prompt about existing files, so runs outside the spinner
-    await installAgentFiles(context)
+    await installAgentFiles(context, flags)
   } catch (error) {
     s.stop('Failed to create project')
     throw error
@@ -381,16 +466,21 @@ export async function runInitAt(installPath: string): Promise<void> {
   showSummary(context)
 }
 
-export async function runSetupWizard(): Promise<void> {
-  welcome()
-  const installPath = await selectInstallPathStep()
-  await runInitAt(installPath)
+export async function runSetupWizard(flags: InitFlags): Promise<void> {
+  const headless = flags.yes
+  if (!headless) welcome()
+  const installPath = flags.dir
+    ? expandPath(flags.dir)
+    : headless
+      ? process.cwd()
+      : await selectInstallPathStep()
+  await runInitAt(installPath, flags)
   p.outro(pc.green('The vibes are immaculate 😎'))
 }
 
-export async function commandInit(): Promise<void> {
+export async function commandInit(args: string[] = []): Promise<void> {
   try {
-    await runSetupWizard()
+    await runSetupWizard(parseInitArgs(args))
   } catch (error) {
     p.log.error(error instanceof Error ? `Setup failed: ${error.message}` : 'Setup failed with an unexpected error')
     process.exit(1)
