@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'fs'
 import { unlink, copyFile } from 'fs/promises'
 
 import { MCP_ENV } from '../config/mcps.js'
+import { isProvisioned, provisionKeystoreCli, KEYSTORE_NODE_VERSION } from './keystore.js'
 import { writeJsonFile } from '../utils/files.js'
 
 /** The previous release's (0.x, gabrielkuettel/vibekit) MCP server key. */
@@ -181,14 +182,27 @@ export async function commandDoctor(args: string[]): Promise<void> {
     warn('Docker not found (needed for `vibekit localnet`)')
   }
 
-  // 4. Keystore (for signing)
+  // 4. Keystore (for signing) — managed install, self-healing via --fix
+  if (!isProvisioned()) {
+    if (fix) {
+      try {
+        await provisionKeystoreCli()
+        ok(`keystore CLI provisioned (managed, keystore-node@${KEYSTORE_NODE_VERSION})`)
+      } catch (err) {
+        problems++
+        bad(`keystore CLI could not be provisioned: ${err instanceof Error ? err.message : err}`)
+      }
+    } else {
+      warn(`keystore CLI not provisioned — any \`vibekit keystore\` command (or doctor --fix) installs the pinned version`)
+    }
+  } else {
+    ok(`keystore CLI managed at the pinned version (${KEYSTORE_NODE_VERSION})`)
+  }
   const keystoreSocket = join(homedir(), '.algorand-keystore', 'keystore.sock')
   if (existsSync(keystoreSocket)) {
     ok('keystore daemon socket present (signing available)')
-  } else if (Bun.which('keystore')) {
-    warn('keystore CLI installed but daemon not running — `keystore serve` enables signing')
   } else {
-    warn('keystore CLI not found — `npm i -g @algorandfoundation/keystore-node@1.0.0-canary.3` enables signing')
+    warn('keystore daemon not running — `vibekit keystore serve` enables signing')
   }
 
   console.log()

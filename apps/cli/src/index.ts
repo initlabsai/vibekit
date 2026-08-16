@@ -19,6 +19,7 @@ ${pc.bold('Usage:')}
   vibekit doctor              Diagnose setup problems (--fix repairs them)
   vibekit tool <name> [json]  Call any VibeKit tool from the shell (tool list to browse)
   vibekit dispenser <cmd>     TestNet dispenser session: login | status | logout
+  vibekit keystore <args>     Managed keystore CLI (auto-provisioned, pinned — no global install)
   vibekit mcp                 Run the MCP server over stdio (for agent integration)
 
 ${pc.bold('LocalNet Commands:')}
@@ -33,10 +34,11 @@ ${pc.bold('Templates:')}
   vibekit new --template contracts|fullstack|kitchensink
 
 ${pc.bold('Accounts:')}
-  Keys live in the OS keystore via the ${pc.cyan('keystore')} CLI (@algorandfoundation/keystore-node):
-    keystore generate ed25519 --name <label>   Create an account (or ask your agent: create_signing_account)
-    keystore list               List accounts
-    keystore serve              Start the signing daemon (required for execute mode)
+  Keys live in the OS keystore behind the keystore daemon (managed install, no global needed):
+    vibekit keystore serve      Start the signing daemon (required for execute mode)
+    vibekit keystore list       List keys (or ask your agent: list_signing_addresses)
+    Ask your agent to create accounts (create_signing_account); mnemonic/seed flows:
+    vibekit keystore generate seed
 
 ${pc.bold('Links:')}
   Documentation:  ${pc.cyan('https://github.com/initlabsai/vibekit')}
@@ -60,6 +62,11 @@ async function main(): Promise<boolean> {
     case 'localnet': {
       const { commandLocalnet } = await import('./commands/localnet/index.js')
       await commandLocalnet(args)
+      return true
+    }
+    case 'keystore': {
+      const { commandKeystore } = await import('./commands/keystore.js')
+      await commandKeystore(args)
       return true
     }
     case 'dispenser': {

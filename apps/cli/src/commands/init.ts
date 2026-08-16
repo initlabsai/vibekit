@@ -318,7 +318,7 @@ function showSummary(context: SetupContext): void {
       '',
       `${pc.bold('For on-chain development:')}`,
       `  ${pc.cyan('vibekit localnet start')}   requires Docker`,
-      `  ${pc.cyan('keystore serve')}           enables signing (npm i -g @algorandfoundation/keystore-node)`,
+      `  ${pc.cyan('vibekit keystore serve')}   enables signing (daemon auto-provisioned, no global install)`,
     )
   }
 

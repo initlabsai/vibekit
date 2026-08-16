@@ -30,7 +30,7 @@ async function openDaemonSecrets(): Promise<KeystoreSigner> {
   } catch {
     console.error(
       pc.red('The keystore daemon is not running — the dispenser token lives there.') +
-        pc.dim('\nStart it with `keystore serve`, then retry.'),
+        pc.dim('\nStart it with `vibekit keystore serve`, then retry.'),
     )
     process.exit(1)
   }

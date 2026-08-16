@@ -59,12 +59,12 @@ stop it first (they are interchangeable; same ports and genesis layout).
 ## Accounts & signing setup
 
 ```bash
-npm i -g @algorandfoundation/keystore-node@1.0.0-canary.3   # the keystore CLI
-keystore serve                               # signing daemon — enables execute mode
-keystore generate ed25519 --name <label>     # create an account (OS keychain);
-                                             # agents should use the
-                                             # create_signing_account tool instead
-keystore list                                # list keys
+vibekit keystore serve                       # signing daemon — enables execute mode
+                                             # (vibekit provisions the pinned daemon
+                                             # itself; nothing installed globally)
+vibekit keystore list                        # list keys
+vibekit keystore generate ed25519 --name <label>   # create an account (agents should
+                                                   # use create_signing_account instead)
 ```
 
 ## When something is broken

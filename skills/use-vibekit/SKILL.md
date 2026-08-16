@@ -31,8 +31,9 @@ access paths — pick whichever your harness supports.
 
 ## Accounts: no "current account" exists
 
-- Keys live in the OS keychain behind the **keystore daemon** (`keystore serve`).
-  The server never holds key material.
+- Keys live in the OS keychain behind the **keystore daemon**
+  (`vibekit keystore serve` — vibekit provisions and pins the daemon itself;
+  nothing is installed globally). The server never holds key material.
 - **"my accounts" → call `list_signing_addresses`** (present when signing is
   available). Returns addresses with their labels; pass
   `{"includeBalances": true}` to add ALGO balances. Shell equivalent:
@@ -44,11 +45,11 @@ access paths — pick whichever your harness supports.
 - Every write tool takes an explicit `sender`. There is no switch-account
   concept; remember the user's chosen address in conversation and pass it
   explicitly each time.
-- **Human-only**: mnemonic/seed-phrase flows (`keystore generate seed`, HD
-  derivation, imports/exports of secrets) — those print or accept key
+- **Human-only**: mnemonic/seed-phrase flows (`vibekit keystore generate seed`,
+  HD derivation, imports/exports of secrets) — those print or accept key
   material, which must never pass through you.
-- Caveat: keys created with the raw CLI (`keystore generate ed25519`) while
-  `keystore serve` is running are not visible to tools until the daemon
+- Caveat: keys created with the raw CLI (`vibekit keystore generate ed25519`)
+  while the daemon is running are not visible to tools until the daemon
   restarts. Prefer `create_signing_account`, which goes through the daemon.
 
 ## Networks: explicit, never invented
@@ -115,7 +116,7 @@ summarize what it means instead.
 ## Troubleshooting
 
 - MCP tools missing → `vibekit doctor` (add `--fix` to repair configs).
-- Signing fails / write tools absent → `keystore serve`, then restart the server.
+- Signing fails / write tools absent → `vibekit keystore serve`, then restart the server.
 - Localnet errors → `vibekit localnet status`, `vibekit localnet reset`.
 - This project may also contain AlgoKit-era docs; for localnet, scaffolding,
   accounts, and funding, vibekit commands supersede algokit ones. Compilation

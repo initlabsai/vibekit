@@ -125,7 +125,7 @@ prefer the vibekit equivalents:
 |---|---|
 | \`algokit localnet start/stop/reset/status\` | \`vibekit localnet start/stop/reset/status\` |
 | \`algokit init\` | \`vibekit new\` |
-| account listing/creation via algokit or goal | \`list_signing_addresses\` / \`create_signing_account\` (MCP), or \`keystore list\` / \`keystore generate ed25519 --name <label>\` |
+| account listing/creation via algokit or goal | \`list_signing_addresses\` / \`create_signing_account\` (MCP), or \`vibekit keystore list\` / \`vibekit keystore generate ed25519 --name <label>\` |
 | funding via dispenser | \`vibekit localnet fund <address>\` |
 
 \`algokit project run build\`, \`algokit compile\`, and typed-client generation
@@ -158,7 +158,7 @@ npm test                    # Run project tests
 | Localnet errors | \`vibekit localnet reset\` |
 | Transaction failures | Use \`lookup_application_logs\` |
 | Puya compiler errors | Search the documentation MCP (kappa/context7) |
-| Signing fails | Start the keystore daemon: \`keystore serve\` |
+| Signing fails | Start the keystore daemon: \`vibekit keystore serve\` |
 
 </troubleshooting>
 `
