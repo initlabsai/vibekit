@@ -73,6 +73,19 @@ ALGO — report them as-is, never re-divide by 1e6. Tool *inputs* named
 `amountMicroAlgos` are microALGO (1 ALGO = 1,000,000 microALGO). ASA amounts
 are in base units unless a decimals field says otherwise.
 
+## Funding accounts
+
+- **Localnet**: agent-complete — shell: `vibekit localnet fund <address>` (kmd dispenser, no auth).
+- **Testnet**: bootstrap requires ONE human act (the Foundation faucet is
+  auth+captcha gated by design). Use the **treasury pattern**: the user funds a
+  single account once at https://lora.algokit.io/testnet/fund — after that, use
+  `send_payment` from the funded account to bootstrap any other account. Check
+  existing balances first (`list_signing_addresses` with `includeBalances` and
+  `"network":"testnet"` on lookups): if ANY local account already holds testnet
+  ALGO, you do not need a faucet — redistribute. Never hunt for unauthenticated
+  public faucets; they no longer exist.
+- **Mainnet**: real funds — acquiring them is entirely the user's business.
+
 ## Common flows
 
 | Task | Tools |
