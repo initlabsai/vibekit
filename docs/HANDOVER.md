@@ -1,6 +1,6 @@
 # Handover — VibeKit v2 Dev Stack
 
-Status: **Phases 0–6 complete · adversarial review done · 1.0 publish gate and contribution gate are separate**
+Status: **Phases 0–6 complete · adversarial review IMPLEMENTED · holding at the 1.0 publish gate**
 Owner: Gabriel Kuettel · Init Labs LLC · Last updated: 2026-08-16
 
 This document is the operational handover: what exists, how to verify it, what
@@ -28,7 +28,7 @@ review runs from [REVIEW-BRIEF.md](./REVIEW-BRIEF.md). A visual map is
 
 ```bash
 bun install
-bunx turbo run build typecheck test      # ~190 tests, all workspaces
+bunx turbo run build typecheck test      # ~181 tests, all workspaces green
 cd apps/cli && bun run build             # compiles bin/vibekit (~95 MB)
 ./bin/vibekit doctor                     # environment diagnosis
 ```
@@ -51,18 +51,66 @@ Live loop (requires Docker):
 - Pinned pre-1.0 deps: `algosdk@3.7.0-beta.1`, `keystore-node@1.0.0-canary.3` (pin-exact policy; the npm `latest` tag of keystore-node points at a stale beta — never install unpinned).
 - macOS and Windows are **entirely unverified** (paths, sockets, keychain, `npm --prefix` provisioning).
 
-## State + custody model (one paragraph)
+## Architecture in one screen (read before touching code)
 
-No databases. Keys and credentials live behind the keystore daemon (vibekit-managed
-install); agents wield capabilities and see metadata, never material (§6). Network and
-sender are explicit per request; the conversation is the only session memory (§10).
-Localnet is regenerable Docker config. Skills are repo content bundled at build.
+**One `ToolDefinition` (`defineTool`), three hosts** (MCP adapter, `createAgent`,
+`vibekit tool`), all funneling through the shared path:
+`resolveDeployment` → `injectNetworkParam` → host parses args → `executeToolCall`
+→ `jsonSafe(handler)`. Writes go `composeOrExecute` → `buildGroup` → `finishGroup`.
+
+`executeToolCall` (`packages/core/src/deployment.ts`) is **the** enforcement point —
+network-on-writes, context selection, jsonSafe. A host that skips schema parsing
+(future Hono API) is still guarded there.
+
+Write-gating flags on a tool (`packages/core/src/contract.ts`):
+- `requiresSigner` — chain write from user funds; forces explicit `network`, gated.
+- `mutatesState` — world-changing but not a fund-spend (create key, faucet); gated, no forced network.
+- Either → MCP `readOnlyHint:false` + `destructiveHint:true`; agent `approveToolCall` fires.
+
+Keys never enter the CLI process on the default path (`extractable:false`); the signer
+only calls `keystore.sign(id, txn.bytesToSign())`. No databases. Custody + credentials
+behind the keystore daemon (§6). Network/sender explicit per request; conversation is
+the only session memory (§10). Localnet is regenerable Docker config; skills are repo
+content bundled at build.
+
+Init MCP env: `NETWORK=localnet`, `NETWORKS=localnet,testnet,mainnet`, `SIGNING=execute`.
+CLI MCP falls back to compose (loud stderr) if the daemon is down. Reference `apps/mcp`
+HTTP is compose-only.
+
+## Adversarial review — IMPLEMENTED (commits 5d30d0d, 06f6ab6)
+
+Security-relevant fixes and where they live:
+
+- **Network enforced in the core**, not just the schema — `executeToolCall` throws
+  `NETWORK_REQUIRED` on `requiresSigner` tools missing explicit network (`deployment.ts` ~159).
+- **Close-account confirmation** — `closeRemainderTo`/`closeAssetTo` throw
+  `CLOSE_NOT_CONFIRMED` unless `confirmCloseAccount:true` (`compose/build.ts` `requireCloseConfirmation`).
+- **Permanent role-clearing guarded** — `asset_config` AND acfg-embedded-in-ABI-args keep
+  `strictEmptyAddressChecking` unless `confirmClearRoles:true` (`build.ts` top-level + `buildTransactionArg`).
+- **All address fields validated** incl. ABI transaction-typed args (`requireAddress`/`optionalAddress`).
+- **Private-key hygiene** — address book prefers state public keys; drops any exported
+  `privateKey` immediately (`signer-keystore/src/index.ts` ~77).
+- **`socketPath` was silently ignored** — client option is `path`, fixed (`index.ts` ~168).
+- **Dispenser** uses `mutatesState`, enforces testnet (`WRONG_NETWORK`), single-flights refresh (`dispenser.ts`).
+- **Untrusted on-chain content** — NFD avatar URLs must be https; note decode uses printable
+  heuristic (old catch was dead code); system-prompt data-not-instructions line.
+- **Skills**: shell `vibekit tool` is READ-ONLY for agents; writes via MCP where the gate applies.
+
+**Trust boundary (normative):** local stack = trusted machine, competent developer;
+same-UID daemon access is the ssh-agent posture (accepted, documented). The **model** is
+not trusted (prompt injection via chain data) — hence write gates, close/clear
+confirmations, on-chain-strings-as-data. **Phase 7 (hosted, untrusted browsers) gets NONE
+of these relaxations.**
 
 ## Known gaps (deliberate, tracked)
 
 - **Rekeyed accounts**: signer resolves address→key 1:1; a rekeyed account would sign
   with the wrong key (chain rejects — safe but broken). Pre-1.0 correctness item.
 - **Multisig**: unsupported. Post-1.0.
+- **`output` schemas unenforced** (owner decision pending): `ToolDefinition.output` is
+  declared but `executeToolCall` never `.parse`s it, and some schemas disagree with
+  post-`jsonSafe` shapes (`z.bigint()`). **Enforce (parse after jsonSafe + fix schemas)
+  or drop from the public contract before publish** — don't ship an unenforced promise.
 - **Distribution**: no install channel for the binary; blocked on the 1.0 gate.
 - **CI**: unit suites run, but nothing exercises the compiled binary (where the
   `$bunfs` bug class lives) or non-Linux platforms.
@@ -81,13 +129,12 @@ what users have installed; `vibekit doctor --fix` migrates their machines.
 
 ## Next
 
-1. **Adversarial review (local 1.0 posture)** — done 2026-08-16; implement
-   [REVIEW-FINDINGS.md](./REVIEW-FINDINGS.md) (brief was
-   [REVIEW-BRIEF.md](./REVIEW-BRIEF.md)). Do not re-run the brief unless the
-   tree has moved.
-2. **1.0 publish gate** — license (Q11), algosdk pin decision (Q9), npm
-   publish, install channel, docs site (Q10). Does **not** open stranger
-   contributions.
+1. **Adversarial review** — done + Do-now items implemented 2026-08-16
+   ([REVIEW-FINDINGS.md](./REVIEW-FINDINGS.md), brief was [REVIEW-BRIEF.md](./REVIEW-BRIEF.md)).
+   Phase-7 items remain open there. Don't re-run the brief unless the tree moved.
+2. **1.0 publish gate** — owner decisions: `output` enforce-or-drop, license (Q11),
+   algosdk pin-vs-peer (Q9). Then npm publish (`@initlabs` scope registered), install
+   channel, compiled-binary CI smoke, docs site (Q10). Does **not** open contributions.
 3. **Contribution gate** — required before outside agents may land nodes.
    Distinct from (2); after packages are published (strangers need something
    to build against). Constitution: [CONSTITUTION.md](./CONSTITUTION.md).
