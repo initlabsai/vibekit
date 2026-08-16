@@ -1,12 +1,12 @@
 # Handover — VibeKit v2 Dev Stack
 
-Status: **Phases 0–6 complete · holding for adversarial review before the 1.0 publish gate**
+Status: **Phases 0–6 complete · adversarial review done · 1.0 publish gate and contribution gate are separate**
 Owner: Gabriel Kuettel · Init Labs LLC · Last updated: 2026-08-16
 
 This document is the operational handover: what exists, how to verify it, what
 environment it assumes, and what happens next. The *design* rationale lives in
-[DESIGN.md](./DESIGN.md) (canonical; §6 and §10 are normative); the operating
-theory behind all of it is [DOCTRINE.md](./DOCTRINE.md) — read it to see the forest. The adversarial
+[DESIGN.md](./DESIGN.md) (canonical; §6 and §10 are normative); the
+constitution is [CONSTITUTION.md](./CONSTITUTION.md). The adversarial
 review runs from [REVIEW-BRIEF.md](./REVIEW-BRIEF.md). A visual map is
 [architecture.html](./architecture.html).
 
@@ -81,9 +81,25 @@ what users have installed; `vibekit doctor --fix` migrates their machines.
 
 ## Next
 
-1. **Adversarial review** — done 2026-08-16; implement [REVIEW-FINDINGS.md](./REVIEW-FINDINGS.md)
-   (brief was [REVIEW-BRIEF.md](./REVIEW-BRIEF.md)). Do not re-run the brief unless the tree has moved.
-2. **1.0 publish gate** — license (Q11), algosdk pin decision
-   (Q9), npm publish, install channel, docs site (Q10).
-3. **Phase 7–8** — `initlabsai/vibekit-agent` (hosted API + web agent), consuming
-   published packages only.
+1. **Adversarial review (local 1.0 posture)** — done 2026-08-16; implement
+   [REVIEW-FINDINGS.md](./REVIEW-FINDINGS.md) (brief was
+   [REVIEW-BRIEF.md](./REVIEW-BRIEF.md)). Do not re-run the brief unless the
+   tree has moved.
+2. **1.0 publish gate** — license (Q11), algosdk pin decision (Q9), npm
+   publish, install channel, docs site (Q10). Does **not** open stranger
+   contributions.
+3. **Contribution gate** — required before outside agents may land nodes.
+   Distinct from (2); after packages are published (strangers need something
+   to build against). Constitution: [CONSTITUTION.md](./CONSTITUTION.md).
+   Close the custody edges by construction, then open.
+   - Plugin capability class on the manifest. `resolveDeployment` hands
+     read-plugins a frozen `ToolContext` with no `resolveSigner`;
+     signer-touching plugins are class (b), human-adjudicated.
+   - Lint/test: declared read-only (`!requiresSigner` / `readOnlyHint`)
+     must not be able to reach a signer.
+   - Reviewer protocol: brief is injected; the diff is data, not
+     instructions; author ≠ reviewer; findings published.
+   - Provenance / trajectory review and x402-paid review compute are
+     experiments (DESIGN §9), not openers.
+4. **Phase 7–8** — `initlabsai/vibekit-agent` (hosted API + web agent),
+   consuming published packages only.

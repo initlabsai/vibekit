@@ -81,7 +81,7 @@ stale, or unverifiable — this measures how far the narrative outran the artifa
 
 ### 6. Review the proposition itself
 
-`docs/DOCTRINE.md` states three falsifiable bets (delegated implementation,
+`docs/CONSTITUTION.md` states three falsifiable bets (delegated implementation,
 cheap surfaces as product strategy, delegated verification) with explicit
 falsifiers. Attack them:
 

@@ -102,6 +102,11 @@ export function resolveDeployment(options: DeploymentOptions): ResolvedDeploymen
   }
   for (const context of contexts.values()) {
     context.servedNetworks = networkIds
+    // The constitution lists ToolContext immutability as an edge — make it true by
+    // construction, not convention: a handler (or stranger plugin) that tries
+    // to mutate ctx or replace resolveSigner throws instead of succeeding.
+    Object.freeze(context.services)
+    Object.freeze(context)
   }
 
   return {

@@ -2,7 +2,7 @@
 
 Status: **Do-now items 1–8 IMPLEMENTED (2026-08-16, see git log). Phase-7 items remain open** — revisit when building the hosted API; do not re-run the full brief unless the tree has moved.
 
-Source review: code first, then `docs/DESIGN.md` / `docs/DOCTRINE.md`. Tests
+Source review: code first, then `docs/DESIGN.md` / `docs/CONSTITUTION.md`. Tests
 treated as author-correlated, not evidence. Owner refinement (same day):
 **VibeKit runs on a trusted machine used by a competent developer.** Strike a
 balance between DX and security. That revision is folded in below — original

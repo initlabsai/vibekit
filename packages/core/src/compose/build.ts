@@ -92,14 +92,17 @@ function buildTransactionArg(
       })
     case 'acfg':
       if (arg.assetId) {
+        // Same guard as the top-level asset_config: omitted roles clear
+        // PERMANENTLY, so keep strict checking unless confirmClearRoles is set.
+        // (An acfg embedded in an ABI arg must not be a silent-clear bypass.)
         return algosdk.makeAssetConfigTxnWithSuggestedParamsFromObject({
           sender,
           assetIndex: BigInt(arg.assetId),
-          manager: arg.manager,
-          reserve: arg.reserve,
-          freeze: arg.freeze,
-          clawback: arg.clawback,
-          strictEmptyAddressChecking: false,
+          manager: optionalAddress(arg.manager, 'manager', index),
+          reserve: optionalAddress(arg.reserve, 'reserve', index),
+          freeze: optionalAddress(arg.freeze, 'freeze', index),
+          clawback: optionalAddress(arg.clawback, 'clawback', index),
+          strictEmptyAddressChecking: arg.confirmClearRoles !== true,
           note,
           suggestedParams,
         })
@@ -112,10 +115,10 @@ function buildTransactionArg(
         unitName: arg.unitName,
         assetURL: arg.url,
         defaultFrozen: arg.defaultFrozen ?? false,
-        manager: arg.manager,
-        reserve: arg.reserve,
-        freeze: arg.freeze,
-        clawback: arg.clawback,
+        manager: optionalAddress(arg.manager, 'manager', index),
+        reserve: optionalAddress(arg.reserve, 'reserve', index),
+        freeze: optionalAddress(arg.freeze, 'freeze', index),
+        clawback: optionalAddress(arg.clawback, 'clawback', index),
         note,
         suggestedParams,
       })

@@ -99,6 +99,8 @@ export interface TxnArg {
   reserve?: string
   freeze?: string
   clawback?: string
+  /** (acfg reconfigure) Must be true to clear omitted role addresses — permanent. */
+  confirmClearRoles?: boolean
   freezeTarget?: string
   frozen?: boolean
 }

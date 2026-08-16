@@ -235,3 +235,30 @@ describe('close/clear confirmations (adversarial review item 5)', () => {
     expect(built.atc.buildGroup()).toHaveLength(1)
   })
 })
+
+describe('ABI-embedded acfg is not a silent role-clear bypass (review item 5 follow-up)', () => {
+  test('acfg inside an app_call ABI arg keeps strict checking unless confirmed', async () => {
+    const { buildGroup } = await import('../src/compose/build.js')
+    const ctx = fakeCtx()
+    // an acfg smuggled as a transaction-typed ABI arg, omitting roles → must throw
+    const specWithInnerClear: TxnSpec = {
+      type: 'app_call',
+      sender: ADDR_A,
+      appId: 123,
+      methodSignature: 'configure(acfg)void',
+      args: [{ type: 'acfg', sender: ADDR_A, assetId: 1, manager: ADDR_A }],
+    }
+    expect(buildGroup(ctx, [specWithInnerClear])).rejects.toThrow()
+
+    // with explicit confirmation the inner clear is allowed
+    const confirmed: TxnSpec = {
+      type: 'app_call',
+      sender: ADDR_A,
+      appId: 123,
+      methodSignature: 'configure(acfg)void',
+      args: [{ type: 'acfg', sender: ADDR_A, assetId: 1, manager: ADDR_A, confirmClearRoles: true }],
+    }
+    const built = await buildGroup(ctx, [confirmed])
+    expect(built.atc.buildGroup().length).toBeGreaterThanOrEqual(1)
+  })
+})
