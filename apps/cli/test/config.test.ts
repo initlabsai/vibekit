@@ -67,3 +67,19 @@ describe('canonical skills', () => {
     expect(names).not.toContain('algorand-project-setup') // replaced upstream skill
   })
 })
+
+describe('skill frontmatter', () => {
+  test('every bundled SKILL.md has strict-YAML frontmatter (pi hard-fails otherwise)', async () => {
+    const { BUNDLED_SKILLS } = await import('../src/skills/bundled.js')
+    for (const skill of BUNDLED_SKILLS) {
+      const skillMd = skill.files.find((f) => f.path === 'SKILL.md')
+      expect(skillMd, `${skill.name} has SKILL.md`).toBeDefined()
+      const lines = skillMd!.content.split('\n')
+      const end = lines.indexOf('---', 1)
+      expect(lines[0]).toBe('---')
+      const parsed = Bun.YAML.parse(lines.slice(1, end).join('\n')) as { name?: string; description?: string }
+      expect(parsed.name).toBe(skill.name)
+      expect(typeof parsed.description).toBe('string')
+    }
+  })
+})

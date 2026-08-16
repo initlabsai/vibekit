@@ -1,6 +1,6 @@
 ---
 name: algorand-typescript
-description: Develops Algorand smart contracts in TypeScript using Algorand TypeScript (PuyaTs). Covers contract syntax, AVM types, storage patterns, transactions, ABI methods, testing, deployment, and AlgoKit Utils. Use when: (1) writing or modifying .algo.ts smart contracts, (2) using uint64, bytes, GlobalState, BoxMap, LocalState, itxn, gtxn in contracts, (3) testing contracts with algorandFixture/Vitest, (4) deploying or calling contracts with typed clients, (5) migrating from TEALScript or Algorand TypeScript beta, (6) troubleshooting Puya compiler errors or AVM transaction errors, (7) using AlgorandClient, AppFactory, or generated app clients in TypeScript.
+description: "Develops Algorand smart contracts in TypeScript using Algorand TypeScript (PuyaTs). Covers contract syntax, AVM types, storage patterns, transactions, ABI methods, testing, deployment, and AlgoKit Utils. Use when: (1) writing or modifying .algo.ts smart contracts, (2) using uint64, bytes, GlobalState, BoxMap, LocalState, itxn, gtxn in contracts, (3) testing contracts with algorandFixture/Vitest, (4) deploying or calling contracts with typed clients, (5) migrating from TEALScript or Algorand TypeScript beta, (6) troubleshooting Puya compiler errors or AVM transaction errors, (7) using AlgorandClient, AppFactory, or generated app clients in TypeScript."
 ---
 
 # Algorand TypeScript

@@ -42,9 +42,24 @@ async function main() {
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (!entry.isDirectory()) continue
     const files = await readSkill(join(SKILLS_DIR, entry.name))
-    if (files.length > 0) {
-      skills.push({ name: entry.name, files })
+    if (files.length === 0) continue
+
+    // Strict-YAML gate: pi (and other harnesses) hard-fail on frontmatter
+    // Claude Code tolerates. Refuse to bundle anything a strict parser rejects.
+    const skillMd = files.find((f) => f.path === 'SKILL.md')
+    if (skillMd) {
+      const lines = skillMd.content.split('\n')
+      const end = lines.indexOf('---', 1)
+      if (lines[0] !== '---' || end === -1) {
+        throw new Error(`${entry.name}/SKILL.md: missing frontmatter`)
+      }
+      try {
+        Bun.YAML.parse(lines.slice(1, end).join('\n'))
+      } catch (err) {
+        throw new Error(`${entry.name}/SKILL.md: frontmatter is not strict YAML — ${err}`)
+      }
     }
+    skills.push({ name: entry.name, files })
   }
 
   const output = `// AUTO-GENERATED - DO NOT EDIT
