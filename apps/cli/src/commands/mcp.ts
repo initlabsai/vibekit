@@ -11,6 +11,7 @@
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
 import {
   createKeystoreSigner,
+  createSigningAccountTool,
   createSigningAddressesTool,
   type KeystoreSigner,
 } from '@initlabs/vibekit-signer-keystore'
@@ -63,7 +64,9 @@ export async function commandMcp(): Promise<void> {
     ],
     mode,
     // signer present → agents can also discover the local accounts
-    tools: signer ? [...tools, createSigningAddressesTool(signer)] : tools,
+    tools: signer
+      ? [...tools, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
+      : tools,
     plugins: [nfdPlugin(), alphaArcadePlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })

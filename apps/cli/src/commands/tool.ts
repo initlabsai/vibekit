@@ -25,6 +25,7 @@ import {
 } from '@initlabs/vibekit-core'
 import {
   createKeystoreSigner,
+  createSigningAccountTool,
   createSigningAddressesTool,
   type KeystoreSigner,
 } from '@initlabs/vibekit-signer-keystore'
@@ -68,7 +69,9 @@ async function buildDeployment(): Promise<{
       'mainnet',
     ],
     mode: signer ? 'execute' : 'compose',
-    tools: signer ? [...baseTools, createSigningAddressesTool(signer)] : baseTools,
+    tools: signer
+      ? [...baseTools, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
+      : baseTools,
     plugins: [nfdPlugin(), alphaArcadePlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })

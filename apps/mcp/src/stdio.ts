@@ -2,7 +2,7 @@
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { createKeystoreSigner, createSigningAddressesTool } from '@initlabs/vibekit-signer-keystore'
+import { createKeystoreSigner, createSigningAccountTool, createSigningAddressesTool } from '@initlabs/vibekit-signer-keystore'
 import type { NetworkId } from '@initlabs/vibekit-core'
 import { tools } from './tools.js'
 
@@ -18,7 +18,9 @@ const handle = serveVibekitStdio({
   networks: (process.env.NETWORKS?.split(',') as NetworkId[]) ?? [],
   mode,
   // signer present → agents can also discover the local keystore accounts
-  tools: signer ? [...tools, createSigningAddressesTool(signer)] : tools,
+  tools: signer
+    ? [...tools, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
+    : tools,
   plugins: [nfdPlugin(), alphaArcadePlugin()],
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })

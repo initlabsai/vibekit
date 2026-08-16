@@ -19,6 +19,14 @@ import algosdk from 'algosdk'
 export interface KeystoreLike {
   export(id: string): Promise<{ publicKey?: Uint8Array }>
   sign(id: string, data: Uint8Array): Promise<Uint8Array>
+  /** Create a key inside the keystore (daemon-side; no material leaves it). */
+  generate?(options: {
+    type: string
+    algorithm: string
+    extractable: boolean
+    keyUsages: string[]
+    params?: Record<string, unknown>
+  }): Promise<string>
   close?(): Promise<void>
 }
 
@@ -27,6 +35,14 @@ export interface KeystoreSigner {
   resolveSigner(address: string): Promise<algosdk.TransactionSigner>
   /** All Algorand addresses (ed25519 keys) held by the daemon. */
   listAddresses(): Promise<string[]>
+  /**
+   * Create a new ed25519 account inside the daemon (key stays in the OS
+   * keychain, unextractable; only the public address comes back). Mirrors
+   * `keystore generate ed25519 --name <label>`, but because it goes through
+   * the daemon's RPC the new key is immediately visible to listAddresses —
+   * CLI-side generates are not, until the daemon restarts.
+   */
+  createAccount(name?: string): Promise<{ address: string; keyId: string }>
   /** Drop the socket. Required in short-lived processes. */
   close(): Promise<void>
 }
@@ -83,6 +99,25 @@ export function createSignerFromKeystore(
       await refreshAddressBook()
       return [...addressBook.keys()]
     },
+    async createAccount(name?: string) {
+      if (!keystore.generate) {
+        throw new Error('This keystore connection does not support key generation')
+      }
+      const keyId = await keystore.generate({
+        type: 'ed25519',
+        algorithm: 'EdDSA',
+        extractable: false,
+        keyUsages: ['sign', 'verify'],
+        ...(name ? { params: { name } } : {}),
+      })
+      const data = await keystore.export(keyId)
+      if (!data.publicKey || data.publicKey.length !== 32) {
+        throw new Error(`Key ${keyId} was created but its public key could not be read`)
+      }
+      const address = algosdk.encodeAddress(data.publicKey)
+      addressBook.set(address, keyId)
+      return { address, keyId }
+    },
     async close() {
       await keystore.close?.()
     },
@@ -108,3 +143,4 @@ export async function createKeystoreSigner(
   return createSignerFromKeystore(keystore, listKeys)
 }
 export { createSigningAddressesTool } from './tools.js'
+export { createSigningAccountTool } from './tools.js'

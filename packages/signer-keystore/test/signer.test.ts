@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import nacl from 'tweetnacl'
-import { createSignerFromKeystore, createSigningAddressesTool } from '../src/index.js'
+import { createSignerFromKeystore, createSigningAddressesTool, createSigningAccountTool } from '../src/index.js'
 
 // A real ed25519 keypair so signatures verify end-to-end. The keystore daemon
 // signs the raw bytes it is given (bytesToSign() already carries the TX prefix).
@@ -87,5 +87,61 @@ describe('createSigningAddressesTool', () => {
       accounts: [{ address: account.addr.toString() }],
       count: 1, // key-2 has a non-ed25519 public key and is not addressable
     })
+  })
+})
+
+describe('createAccount / create_signing_account', () => {
+  function generatingKeystore() {
+    const created: Array<{ id: string; publicKey: Uint8Array; params?: Record<string, unknown> }> = []
+    const fresh = algosdk.generateAccount()
+    const keystore = {
+      export: async (id: string) => {
+        const hit = created.find((k) => k.id === id)
+        return hit ? { publicKey: hit.publicKey } : { publicKey }
+      },
+      sign: async (_id: string, data: Uint8Array) => nacl.sign.detached(data, secretKey),
+      generate: async (options: { params?: Record<string, unknown> }) => {
+        const id = `gen-${created.length + 1}`
+        created.push({
+          id,
+          publicKey: algosdk.decodeAddress(fresh.addr.toString()).publicKey,
+          params: options.params,
+        })
+        return id
+      },
+    }
+    return { keystore, created, freshAddr: fresh.addr.toString() }
+  }
+
+  test('creates via daemon RPC, returns encoded address, address book updates', async () => {
+    const { keystore, created, freshAddr } = generatingKeystore()
+    const signer = createSignerFromKeystore(keystore, () =>
+      [{ id: 'key-1' }, ...created.map((k) => ({ id: k.id }))],
+    )
+
+    const result = await signer.createAccount('my-label')
+    expect(result.keyId).toBe('gen-1')
+    expect(result.address).toBe(freshAddr)
+    expect(algosdk.isValidAddress(result.address)).toBe(true)
+    expect(created[0]!.params).toEqual({ name: 'my-label' })
+
+    // immediately listable — the daemon's store is the source
+    expect(await signer.listAddresses()).toContain(freshAddr)
+  })
+
+  test('tool wraps it with a schema and never returns key material', async () => {
+    const { keystore, freshAddr } = generatingKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [])
+    const tool = createSigningAccountTool(signer)
+
+    const result = (await tool.handler({} as never, { name: 'x' } as never)) as Record<string, unknown>
+    expect(result.address).toBe(freshAddr)
+    expect(Object.keys(result).sort()).toEqual(['address', 'keyId', 'name'])
+  })
+
+  test('clear error when the connection cannot generate', async () => {
+    const { keystore } = fakeKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [])
+    expect(signer.createAccount()).rejects.toThrow('does not support key generation')
   })
 })

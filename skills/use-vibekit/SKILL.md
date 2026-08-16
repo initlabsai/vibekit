@@ -36,10 +36,19 @@ access paths — pick whichever your harness supports.
 - **"my accounts" → call `list_signing_addresses`** (present when signing is
   available). Shell equivalents: `vibekit tool list_signing_addresses '{}'` or
   `keystore list`.
+- **"create an account" → call `create_signing_account`** (optional `name`).
+  The key is generated inside the daemon, stays unextractable in the OS
+  keychain, and only the address comes back — this is safe for you to run.
+  Shell equivalent: `vibekit tool create_signing_account '{"name":"..."}'`.
 - Every write tool takes an explicit `sender`. There is no switch-account
   concept; remember the user's chosen address in conversation and pass it
   explicitly each time.
-- New account: `keystore generate` (human runs it; keys never pass through you).
+- **Human-only**: mnemonic/seed-phrase flows (`keystore generate seed`, HD
+  derivation, imports/exports of secrets) — those print or accept key
+  material, which must never pass through you.
+- Caveat: keys created with the raw CLI (`keystore generate ed25519`) while
+  `keystore serve` is running are not visible to tools until the daemon
+  restarts. Prefer `create_signing_account`, which goes through the daemon.
 
 ## Networks: explicit, never invented
 

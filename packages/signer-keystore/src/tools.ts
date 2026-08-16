@@ -27,3 +27,24 @@ export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAdd
     },
   })
 }
+
+export function createSigningAccountTool(signer: Pick<KeystoreSigner, 'createAccount'>) {
+  return defineTool({
+    name: 'create_signing_account',
+    description:
+      'Create a new local Algorand account in the keystore daemon (OS keychain; the private key is unextractable and never returned). Returns the address. The account starts unfunded. For mnemonic/seed-phrase flows the user must run the keystore CLI themselves.',
+    parameters: z.object({
+      name: z.string().max(64).optional().describe('Human-readable label for the key'),
+    }),
+    output: z.object({
+      address: z.string(),
+      keyId: z.string(),
+      name: z.string().optional(),
+    }),
+    display: 'account',
+    handler: async (_ctx, args) => {
+      const { address, keyId } = await signer.createAccount(args.name)
+      return { address, keyId, ...(args.name ? { name: args.name } : {}) }
+    },
+  })
+}

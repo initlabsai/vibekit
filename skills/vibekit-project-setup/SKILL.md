@@ -60,8 +60,11 @@ stop it first (they are interchangeable; same ports and genesis layout).
 
 ```bash
 npm i -g @algorandfoundation/keystore-node   # the keystore CLI
-keystore generate                            # create an account (OS keychain)
 keystore serve                               # signing daemon — enables execute mode
+keystore generate ed25519 --name <label>     # create an account (OS keychain);
+                                             # agents should use the
+                                             # create_signing_account tool instead
+keystore list                                # list keys
 ```
 
 ## When something is broken

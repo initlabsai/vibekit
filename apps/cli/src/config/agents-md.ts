@@ -99,9 +99,10 @@ Your project may have different MCPs configured. Check which tools are available
 Write tools take an explicit \`sender\` and (on multi-network deployments) an explicit
 \`network\` — there is no "current account" or "current network" server state.
 Account keys live in the local keystore daemon (\`keystore\` CLI). When the user
-says "my account(s)", call \`list_signing_addresses\` to discover the local
-accounts the deployment can sign for (present only when signing is available).
-Fund localnet accounts with \`vibekit localnet fund <address>\`.
+says "my account(s)", call \`list_signing_addresses\`; to create one, call
+\`create_signing_account\` (both present only when signing is available — the
+key never leaves the daemon). Mnemonic/seed flows stay human-only via the
+keystore CLI. Fund localnet accounts with \`vibekit localnet fund <address>\`.
 
 </mcp_tools>
 
@@ -124,7 +125,7 @@ prefer the vibekit equivalents:
 |---|---|
 | \`algokit localnet start/stop/reset/status\` | \`vibekit localnet start/stop/reset/status\` |
 | \`algokit init\` | \`vibekit new\` |
-| account listing/creation via algokit or goal | \`list_signing_addresses\` (MCP) or \`keystore list\` / \`keystore generate\` |
+| account listing/creation via algokit or goal | \`list_signing_addresses\` / \`create_signing_account\` (MCP), or \`keystore list\` / \`keystore generate ed25519 --name <label>\` |
 | funding via dispenser | \`vibekit localnet fund <address>\` |
 
 \`algokit project run build\`, \`algokit compile\`, and typed-client generation
@@ -156,7 +157,7 @@ npm test                    # Run project tests
 | MCP tools unavailable | Check \`.mcp.json\` exists, restart agent |
 | Localnet errors | \`vibekit localnet reset\` |
 | Transaction failures | Use \`lookup_application_logs\` |
-| Puya compiler errors | Load \`algorand-typescript\` skill |
+| Puya compiler errors | Search the documentation MCP (kappa/context7) |
 | Signing fails | Start the keystore daemon: \`keystore serve\` |
 
 </troubleshooting>

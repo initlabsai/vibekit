@@ -33,7 +33,7 @@ ${pc.bold('Templates:')}
 
 ${pc.bold('Accounts:')}
   Keys live in the OS keystore via the ${pc.cyan('keystore')} CLI (@algorandfoundation/keystore-node):
-    keystore generate           Create an account
+    keystore generate ed25519 --name <label>   Create an account (or ask your agent: create_signing_account)
     keystore list               List accounts
     keystore serve              Start the signing daemon (required for execute mode)
 
