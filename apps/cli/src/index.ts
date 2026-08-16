@@ -71,6 +71,11 @@ async function main(): Promise<boolean> {
       return true
     }
     case 'mcp': {
+      if (args.includes('--help') || args.includes('-h')) {
+        console.log(`vibekit mcp — VibeKit MCP server over stdio (spawned by agent harnesses).
+Config via env: NETWORK (default localnet), NETWORKS (comma-separated), SIGNING=execute|compose`)
+        return true
+      }
       const { commandMcp } = await import('./commands/mcp.js')
       await commandMcp()
       return false // MCP server stays alive
