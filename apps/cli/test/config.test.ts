@@ -31,8 +31,11 @@ describe('agent registry', () => {
     }
   })
 
-  test('codex is the only toml agent', () => {
-    expect(AGENT_IDS.filter((id) => AGENTS[id].configFormat === 'toml')).toEqual(['codex'])
+  test('codex and grok are the toml agents', () => {
+    expect(AGENT_IDS.filter((id) => AGENTS[id].configFormat === 'toml').sort()).toEqual([
+      'codex',
+      'grok',
+    ])
   })
 })
 

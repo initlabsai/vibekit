@@ -46,6 +46,7 @@ const vibekit: MCPDefinition = {
       case 'cursor':
       case 'codex':
       case 'pi':
+      case 'grok':
         return {
           serverKey: 'vibekit',
           config: { command: '$VIBEKIT_PATH', args: ['mcp'], env: '$MCP_ENV' },
@@ -85,6 +86,7 @@ const kappa: MCPDefinition = {
       case 'pi':
         return { serverKey: 'kappa', config: { type: 'http', url: KAPPA_URL } }
       case 'codex':
+      case 'grok':
         return { serverKey: 'kappa', config: { url: KAPPA_URL } }
       case 'opencode':
         return { serverKey: 'kappa', config: { type: 'remote', url: KAPPA_URL, enabled: true } }
@@ -109,6 +111,7 @@ const context7: MCPDefinition = {
       case 'pi':
         return { serverKey: 'context7', config: { type: 'http', url: CONTEXT7_URL } }
       case 'codex':
+      case 'grok':
         return { serverKey: 'context7', config: { url: CONTEXT7_URL } }
       case 'opencode':
         return {

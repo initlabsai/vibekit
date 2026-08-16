@@ -85,6 +85,21 @@ export const AGENTS = {
     authInstructions: 'In Cursor Settings → MCP → kappa → Authenticate',
     cliCommand: 'cursor',
   },
+  grok: {
+    id: 'grok',
+    displayName: 'Grok Build',
+    // Native project TOML (highest precedence, committable). Grok can also
+    // read .mcp.json, but that stops loading once the user imports or
+    // dismisses its Claude-import prompt — too fragile to rely on.
+    configFile: '.grok/config.toml',
+    configFormat: 'toml',
+    baseConfigTemplate: { mcp_servers: {} },
+    mcpServersKey: 'mcp_servers',
+    skillsDir: '.grok/skills',
+    // Grok reads AGENTS.md natively — no pointer file.
+    authInstructions: 'In Grok Build: /mcps → kappa (Grok handles the OAuth flow directly)',
+    cliCommand: 'grok',
+  },
   pi: {
     id: 'pi',
     displayName: 'Pi',
