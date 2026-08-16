@@ -63,15 +63,16 @@ Skills are markdown docs with detailed workflows and syntax rules. **Always load
 
 | Task | Skill | When to Load |
 |------|-------|--------------|
-| Write contract code | \`build-smart-contracts\` | Creating new contracts, adding methods/features |
-| TypeScript syntax | \`algorand-typescript\` | Puya compiler errors, AVM types, clone(), storage patterns |
-| Create new project | \`create-project\` | Scaffolding new dApps (\`vibekit new\`) |
-| Write tests | \`test-smart-contracts\` | Integration tests, multi-user scenarios |
-| Deploy/call contracts | \`call-smart-contracts\` | Deployment scripts, calling methods, reading state |
-| React frontend | \`deploy-react-frontend\` | Wallet integration, typed clients in React |
-| Find examples | \`search-algorand-examples\` | Searching GitHub for patterns |
-| ARC standards | \`implement-arc-standards\` | ARC-4, ARC-32, ARC-56, ABI encoding |
-| Debug errors | \`troubleshoot-errors\` | Logic eval errors, transaction failures |
+| Any on-chain action via VibeKit | \`use-vibekit\` | Accounts, tool access paths, networks, signing — load first |
+| Project/env setup, localnet | \`vibekit-project-setup\` | \`vibekit new\`, init, localnet lifecycle, doctor |
+| Algorand fundamentals | \`algorand-core\` | Accounts, transactions, ASAs, apps, AVM concepts |
+| TypeScript contracts | \`algorand-typescript\` | Puya compiler errors, AVM types, storage patterns |
+| Python contracts | \`algorand-python\` | PuyaPy syntax and patterns |
+| Client code (TS) | \`algokit-utils-ts\` | AlgorandClient, typed clients, sending transactions |
+| Client code (Python) | \`algokit-utils-py\` | Python client code |
+| React frontend | \`algorand-frontend\` | Wallet integration, typed clients in React |
+| Payments middleware | \`algorand-x402-typescript\` / \`-python\` | x402 pay-per-request flows |
+| Ecosystem lookup | \`algorand-ecosystem\` | Wallets, explorers, DeFi, infra references |
 
 </skills>
 

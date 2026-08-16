@@ -17,6 +17,7 @@ ${pc.bold('Usage:')}
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
   vibekit agent               Open the VibeKit Agent (web) — explore Algorand by conversation
   vibekit doctor              Diagnose setup problems (--fix repairs them)
+  vibekit tool <name> [json]  Call any VibeKit tool from the shell (tool list to browse)
   vibekit mcp                 Run the MCP server over stdio (for agent integration)
 
 ${pc.bold('LocalNet Commands:')}
@@ -58,6 +59,11 @@ async function main(): Promise<boolean> {
     case 'localnet': {
       const { commandLocalnet } = await import('./commands/localnet/index.js')
       await commandLocalnet(args)
+      return true
+    }
+    case 'tool': {
+      const { commandTool } = await import('./commands/tool.js')
+      await commandTool(args)
       return true
     }
     case 'doctor': {

@@ -1,0 +1,88 @@
+---
+name: use-vibekit
+description: How to interact with Algorand through VibeKit as an AI agent — tool access paths (MCP, meta-tool harnesses, shell fallback), the account/keystore model, network selection, signing modes, and common on-chain flows. Load this before any on-chain action in a vibekit-configured project.
+---
+
+# Use VibeKit
+
+VibeKit gives you ~50 tools for Algorand: accounts, assets, transactions,
+applications, blocks, NFD names, and prediction markets. One engine, several
+access paths — pick whichever your harness supports.
+
+## Tool access paths (in order of preference)
+
+1. **Native MCP tools** (Claude Code, Cursor, Copilot, Codex, OpenCode): the
+   vibekit server from `.mcp.json` registers every tool directly. Just call
+   them: `lookup_account`, `send_payment`, `app_deploy`, …
+2. **Meta-tool harnesses** (pi with pi-mcp-adapter): MCP tools are reached
+   through a single `mcp` tool — search for the tool name, then invoke it.
+   Do not guess other tool names.
+3. **Shell fallback** (any harness with shell access, no MCP needed):
+
+   ```bash
+   vibekit tool list                                        # browse all tools
+   vibekit tool lookup_account --help                       # parameter schema
+   vibekit tool lookup_account '{"address":"...","network":"mainnet"}'
+   ```
+
+   Arguments are one JSON object string; results are JSON on stdout. This is
+   the correct fallback when MCP is unavailable — never invent other CLI
+   commands for on-chain actions.
+
+## Accounts: no "current account" exists
+
+- Keys live in the OS keychain behind the **keystore daemon** (`keystore serve`).
+  The server never holds key material.
+- **"my accounts" → call `list_signing_addresses`** (present when signing is
+  available). Shell equivalents: `vibekit tool list_signing_addresses '{}'` or
+  `keystore list`.
+- Every write tool takes an explicit `sender`. There is no switch-account
+  concept; remember the user's chosen address in conversation and pass it
+  explicitly each time.
+- New account: `keystore generate` (human runs it; keys never pass through you).
+
+## Networks: explicit, never invented
+
+Deployments serve a fixed set (usually localnet, testnet, mainnet) with a
+default. Tools accept a `network` parameter — optional on reads (defaults),
+**required on writes** so nothing spends on a silently-defaulted chain. Use
+`get_network` to see what is served; never invent endpoints.
+
+## Signing modes
+
+- **execute** (keystore daemon running): write tools sign and submit, returning
+  txIds and confirmation. Your harness's own approval gate is the safety layer.
+- **compose** (no daemon): write tools return `{ unsignedGroup: [...base64...] }`
+  for external signing. If the user expects execution, tell them to run
+  `keystore serve` and restart the MCP server.
+
+## Denominations
+
+ALGO amounts in tool *results* (fees, payment amounts, balances) are already in
+ALGO — report them as-is, never re-divide by 1e6. Tool *inputs* named
+`amountMicroAlgos` are microALGO (1 ALGO = 1,000,000 microALGO). ASA amounts
+are in base units unless a decimals field says otherwise.
+
+## Common flows
+
+| Task | Tools |
+|---|---|
+| Who am I / my accounts | `list_signing_addresses` |
+| Balance & holdings | `lookup_account`, `get_account_portfolio`, `get_account_assets` |
+| Send ALGO | `send_payment` (sender, receiver, amountMicroAlgos, network) |
+| Fund a localnet account | shell: `vibekit localnet fund <address>` |
+| Create / transfer ASAs | `create_asset`, `asset_transfer`, `asset_opt_in` |
+| Deploy / call contracts | `app_deploy`, `app_call`, `app_get_info`, `app_list_methods` |
+| Read contract state | `read_global_state`, `read_local_state`, `read_box_state` |
+| Debug a transaction | `lookup_transaction`, `lookup_application_logs`, `simulate_transactions` |
+| Resolve names | `resolve_nfd`, `reverse_resolve_nfd` |
+| Network health | `get_network_status` (current round, TPS), `get_network` |
+
+## Troubleshooting
+
+- MCP tools missing → `vibekit doctor` (add `--fix` to repair configs).
+- Signing fails / write tools absent → `keystore serve`, then restart the server.
+- Localnet errors → `vibekit localnet status`, `vibekit localnet reset`.
+- This project may also contain AlgoKit-era docs; for localnet, scaffolding,
+  accounts, and funding, vibekit commands supersede algokit ones. Compilation
+  and typed-client generation remain AlgoKit's (`algokit project run build`).

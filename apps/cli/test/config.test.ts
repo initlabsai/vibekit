@@ -55,3 +55,12 @@ describe('bundled skills', () => {
     }
   })
 })
+
+describe('canonical skills', () => {
+  test('the vibekit-authored skills are bundled', () => {
+    const names = getSkillNames()
+    expect(names).toContain('use-vibekit')
+    expect(names).toContain('vibekit-project-setup')
+    expect(names).not.toContain('algorand-project-setup') // replaced upstream skill
+  })
+})
