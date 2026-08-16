@@ -65,14 +65,10 @@ Skills are markdown docs with detailed workflows and syntax rules. **Always load
 |------|-------|--------------|
 | Any on-chain action via VibeKit | \`use-vibekit\` | Accounts, tool access paths, networks, signing — load first |
 | Project/env setup, localnet | \`vibekit-project-setup\` | \`vibekit new\`, init, localnet lifecycle, doctor |
-| Algorand fundamentals | \`algorand-core\` | Accounts, transactions, ASAs, apps, AVM concepts |
-| TypeScript contracts | \`algorand-typescript\` | Puya compiler errors, AVM types, storage patterns |
-| Python contracts | \`algorand-python\` | PuyaPy syntax and patterns |
-| Client code (TS) | \`algokit-utils-ts\` | AlgorandClient, typed clients, sending transactions |
-| Client code (Python) | \`algokit-utils-py\` | Python client code |
-| React frontend | \`algorand-frontend\` | Wallet integration, typed clients in React |
-| Payments middleware | \`algorand-x402-typescript\` / \`-python\` | x402 pay-per-request flows |
-| Ecosystem lookup | \`algorand-ecosystem\` | Wallets, explorers, DeFi, infra references |
+
+For contract syntax and client-code questions, use the documentation MCP
+(kappa/context7) and the canonical repositories listed above — do not follow
+AlgoKit CLI workflows from other sources for environment or account tasks.
 
 </skills>
 
