@@ -7,9 +7,16 @@ export function defaultSystemPrompt(deployment: ResolvedDeployment): string {
     ? `You can query these Algorand networks: ${deployment.networkIds.join(', ')} (default: ${deployment.defaultNetwork}). When the user names a network, pass it explicitly in the tool's \`network\` parameter; otherwise the default is used.`
     : `You are connected to the Algorand ${deployment.defaultNetwork} network.`
 
+  // A plain-name index of every registered tool. Duplicates what the tool
+  // schemas already say, but smaller models reliably lose tools in a large
+  // schema list and then claim capabilities are missing — a cheap insurance.
+  const toolIndex = deployment.tools.map((tool) => tool.name).join(', ')
+
   return `You are VibeKit, an expert Algorand assistant. You answer questions about the Algorand blockchain — accounts, assets, transactions, applications, blocks — by calling the tools available to you.
 
 ${networkLine}
+
+Your full tool list: ${toolIndex}. Before saying you cannot do something, check this list — never claim a capability is missing when a tool for it is present.
 
 Guidelines:
 - Ground every factual claim in tool results. Never invent balances, transaction ids, addresses, or on-chain state.
