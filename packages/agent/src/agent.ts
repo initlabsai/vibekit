@@ -35,8 +35,16 @@ export interface VibekitAgentOptions extends DeploymentOptions {
   model: LanguageModel | ProviderConfig
   /** Replaces the built-in system prompt entirely when set. */
   systemPrompt?: string
+  /** Host-specific lines appended to the (default or custom) system prompt. */
+  extraInstructions?: string
   /** Max model↔tool round trips per user turn. */
   maxSteps?: number
+  /**
+   * Human-in-the-loop gate for `requiresSigner` tools: called before the
+   * handler runs; return false to deny (the model sees a DENIED error result
+   * and the loop continues). Read tools are never gated.
+   */
+  approveToolCall?: (call: { toolName: string; input: unknown }) => Promise<boolean>
 }
 
 export interface AgentSession {
@@ -66,7 +74,10 @@ function toToolErrorOutput(err: unknown): ToolErrorOutput {
 export function createAgent(options: VibekitAgentOptions): AgentSession {
   const deployment = resolveDeployment(options)
   const model = isProviderConfig(options.model) ? createModel(options.model) : options.model
-  const system = options.systemPrompt ?? defaultSystemPrompt(deployment)
+  const basePrompt = options.systemPrompt ?? defaultSystemPrompt(deployment)
+  const system = options.extraInstructions
+    ? `${basePrompt}\n\n${options.extraInstructions}`
+    : basePrompt
   const maxSteps = options.maxSteps ?? DEFAULT_MAX_STEPS
 
   const displayByTool = new Map<string, DisplayHint | undefined>(
@@ -82,6 +93,14 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
       inputSchema: injectNetworkParam(tool, deployment),
       execute: async (args: unknown) => {
         try {
+          if (tool.requiresSigner && options.approveToolCall) {
+            const approved = await options.approveToolCall({ toolName: tool.name, input: args })
+            if (!approved) {
+              return {
+                error: { code: 'DENIED', message: 'The user denied this request.' },
+              } satisfies ToolErrorOutput
+            }
+          }
           return await executeToolCall(deployment, tool, args)
         } catch (err) {
           return toToolErrorOutput(err)

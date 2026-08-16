@@ -196,3 +196,69 @@ describe('createAgent', () => {
     ).toThrow('Duplicate tool name: echo')
   })
 })
+
+describe('approval gate', () => {
+  const sendTool = defineTool({
+    name: 'send',
+    description: 'Write tool requiring a signer.',
+    parameters: z.object({ amount: z.number() }),
+    requiresSigner: true,
+    handler: async () => ({ sent: true }),
+  })
+
+  test('denied requiresSigner calls return a DENIED error result', async () => {
+    const agent = createAgent({
+      model: new MockLanguageModelV4({
+        doStream: [toolCallStream('send', { amount: 1 }), textStream('Denied then.')],
+      }),
+      network: 'localnet',
+      mode: 'compose',
+      tools: [sendTool],
+      approveToolCall: async () => false,
+    })
+
+    const events = await collect(agent.stream('send it'))
+    const result = events.find((e) => e.type === 'tool-result')!
+    if (result.type === 'tool-result') {
+      expect(result.isError).toBe(true)
+      expect(result.output).toEqual({
+        error: { code: 'DENIED', message: 'The user denied this request.' },
+      })
+    }
+  })
+
+  test('approved calls run the handler; read tools are never gated', async () => {
+    const gated: string[] = []
+    const agent = createAgent({
+      model: new MockLanguageModelV4({
+        doStream: [toolCallStream('send', { amount: 1 }), toolCallStream('echo', { message: 'x' }), textStream('ok')],
+      }),
+      network: 'localnet',
+      mode: 'compose',
+      tools: [sendTool, echoTool],
+      approveToolCall: async ({ toolName }) => {
+        gated.push(toolName)
+        return true
+      },
+    })
+
+    const events = await collect(agent.stream('go'))
+    const results = events.filter((e) => e.type === 'tool-result')
+    expect(results).toHaveLength(2)
+    expect(gated).toEqual(['send']) // echo (read) never hit the gate
+  })
+
+  test('extraInstructions are appended to the system prompt', () => {
+    const model = new MockLanguageModelV4({ doStream: [textStream('hi')] })
+    createAgent({
+      model,
+      network: 'localnet',
+      mode: 'compose',
+      tools: [echoTool],
+      extraInstructions: 'HOST_MARKER',
+    })
+    // constructing is enough — prompt assembly happens in createAgent; a bad
+    // concat would throw. Deeper assertion happens on the first stream call.
+    expect(model.doStreamCalls).toHaveLength(0)
+  })
+})

@@ -1,6 +1,7 @@
 /**
- * Display-hint renderers — §4's `display` hints become terminal output here.
- * Pure functions (no color): the REPL applies styling.
+ * Display-hint render models — §4's `display` hints become terminal output.
+ * Pure functions (no color, no JSX): the Ink components colorize the models,
+ * and the string renderers stay for tests and non-Ink fallbacks.
  */
 
 import type { DisplayHint } from '@initlabs/vibekit-core'
@@ -9,7 +10,7 @@ const MAX_ROWS = 15
 const MAX_CELL = 28
 const MAX_JSON_LINES = 24
 
-function cell(value: unknown): string {
+export function cell(value: unknown): string {
   let text: string
   if (value === null || value === undefined) {
     text = ''
@@ -21,54 +22,45 @@ function cell(value: unknown): string {
   return text.length > MAX_CELL ? text.slice(0, MAX_CELL - 1) + '…' : text
 }
 
-/** Rows of objects → aligned columns. */
-export function renderTable(rows: Array<Record<string, unknown>>): string {
-  if (rows.length === 0) return '(no rows)'
+export interface TableModel {
+  columns: string[]
+  /** Cell text per shown row, aligned with `columns`. */
+  rows: string[][]
+  /** Column widths (max of header and cells). */
+  widths: number[]
+  /** Rows hidden by truncation. */
+  more: number
+}
 
+/** Rows of objects → an aligned-column model. */
+export function tableModel(data: Array<Record<string, unknown>>): TableModel {
   const columns: string[] = []
-  for (const row of rows) {
+  for (const row of data) {
     for (const key of Object.keys(row)) {
       if (!columns.includes(key)) columns.push(key)
     }
   }
 
-  const shown = rows.slice(0, MAX_ROWS)
-  const grid = [columns, ...shown.map((row) => columns.map((column) => cell(row[column])))]
-  const widths = columns.map((_, i) => Math.max(...grid.map((line) => line[i]!.length)))
+  const shown = data.slice(0, MAX_ROWS)
+  const rows = shown.map((row) => columns.map((column) => cell(row[column])))
+  const widths = columns.map((column, i) =>
+    Math.max(column.length, ...rows.map((row) => row[i]!.length)),
+  )
 
-  const lines = grid.map((line) => line.map((text, i) => text.padEnd(widths[i]!)).join('  ').trimEnd())
-  lines.splice(1, 0, widths.map((w) => '─'.repeat(w)).join('  '))
-  if (rows.length > MAX_ROWS) {
-    lines.push(`… ${rows.length - MAX_ROWS} more rows`)
-  }
-  return lines.join('\n')
+  return { columns, rows, widths, more: Math.max(0, data.length - MAX_ROWS) }
 }
 
-/** Object → key/value listing (nested values inlined as JSON). */
-export function renderKeyValue(data: Record<string, unknown>): string {
-  const keys = Object.keys(data)
-  if (keys.length === 0) return '(empty)'
-  const width = Math.min(Math.max(...keys.map((k) => k.length)), 32)
-  return keys
-    .map((key) => {
-      const value = data[key]
-      const text =
-        typeof value === 'object' && value !== null ? cell(value) : String(value ?? '')
-      return `${key.padEnd(width)}  ${text}`
-    })
-    .join('\n')
-}
-
-function renderJson(data: unknown): string {
-  const lines = JSON.stringify(data, null, 2)?.split('\n') ?? ['undefined']
-  if (lines.length > MAX_JSON_LINES) {
-    return [...lines.slice(0, MAX_JSON_LINES), `… ${lines.length - MAX_JSON_LINES} more lines`].join('\n')
-  }
-  return lines.join('\n')
+/** Object → [key, value-text] entries (nested values inlined as JSON). */
+export function kvEntries(data: Record<string, unknown>): Array<[string, string]> {
+  return Object.keys(data).map((key) => {
+    const value = data[key]
+    const text = typeof value === 'object' && value !== null ? cell(value) : String(value ?? '')
+    return [key, text]
+  })
 }
 
 /** Find the array to tabulate: the value itself, or its single array property. */
-function tableRows(data: unknown): Array<Record<string, unknown>> | null {
+export function tableRows(data: unknown): Array<Record<string, unknown>> | null {
   if (Array.isArray(data)) return data as Array<Record<string, unknown>>
   if (typeof data === 'object' && data !== null) {
     const arrays = Object.values(data).filter(Array.isArray)
@@ -79,7 +71,39 @@ function tableRows(data: unknown): Array<Record<string, unknown>> | null {
   return null
 }
 
-/** Render a tool result for the terminal according to its display hint. */
+export function renderJson(data: unknown): string {
+  const lines = JSON.stringify(data, null, 2)?.split('\n') ?? ['undefined']
+  if (lines.length > MAX_JSON_LINES) {
+    return [...lines.slice(0, MAX_JSON_LINES), `… ${lines.length - MAX_JSON_LINES} more lines`].join('\n')
+  }
+  return lines.join('\n')
+}
+
+// --- String renderers (tests + non-Ink fallbacks) ---
+
+export function renderTable(data: Array<Record<string, unknown>>): string {
+  if (data.length === 0) return '(no rows)'
+  const model = tableModel(data)
+
+  const grid = [model.columns, ...model.rows]
+  const lines = grid.map((line) =>
+    line.map((text, i) => text.padEnd(model.widths[i]!)).join('  ').trimEnd(),
+  )
+  lines.splice(1, 0, model.widths.map((w) => '─'.repeat(w)).join('  '))
+  if (model.more > 0) {
+    lines.push(`… ${model.more} more rows`)
+  }
+  return lines.join('\n')
+}
+
+export function renderKeyValue(data: Record<string, unknown>): string {
+  const entries = kvEntries(data)
+  if (entries.length === 0) return '(empty)'
+  const width = Math.min(Math.max(...entries.map(([key]) => key.length)), 32)
+  return entries.map(([key, text]) => `${key.padEnd(width)}  ${text}`).join('\n')
+}
+
+/** Render a tool result as plain text according to its display hint. */
 export function renderToolResult(output: unknown, display?: DisplayHint): string {
   switch (display) {
     case 'table': {
