@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import nacl from 'tweetnacl'
-import { createSignerFromKeystore } from '../src/index.js'
+import { createSignerFromKeystore, createSigningAddressesTool } from '../src/index.js'
 
 // A real ed25519 keypair so signatures verify end-to-end. The keystore daemon
 // signs the raw bytes it is given (bytesToSign() already carries the TX prefix).
@@ -70,5 +70,22 @@ describe('createSignerFromKeystore', () => {
     const signer = createSignerFromKeystore(keystore, () => [])
     await signer.close()
     expect(isClosed()).toBe(true)
+  })
+})
+
+describe('createSigningAddressesTool', () => {
+  test('lists the daemon address book as table rows', async () => {
+    const { keystore } = fakeKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }, { id: 'key-2' }])
+    const tool = createSigningAddressesTool(signer)
+
+    expect(tool.name).toBe('list_signing_addresses')
+    expect(tool.requiresSigner).toBeUndefined() // a read tool — never gated
+
+    const result = await tool.handler({} as never, {} as never)
+    expect(result).toEqual({
+      accounts: [{ address: account.addr.toString() }],
+      count: 1, // key-2 has a non-ed25519 public key and is not addressable
+    })
   })
 })

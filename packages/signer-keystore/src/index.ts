@@ -107,3 +107,4 @@ export async function createKeystoreSigner(
   const listKeys = () => ((store.state as { keys?: Array<{ id: string }> }).keys ?? [])
   return createSignerFromKeystore(keystore, listKeys)
 }
+export { createSigningAddressesTool } from './tools.js'

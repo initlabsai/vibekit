@@ -101,8 +101,10 @@ Your project may have different MCPs configured. Check which tools are available
 
 Write tools take an explicit \`sender\` and (on multi-network deployments) an explicit
 \`network\` — there is no "current account" or "current network" server state.
-Account keys live in the local keystore daemon (\`keystore\` CLI); fund localnet
-accounts with \`vibekit localnet fund <address>\`.
+Account keys live in the local keystore daemon (\`keystore\` CLI). When the user
+says "my account(s)", call \`list_signing_addresses\` to discover the local
+accounts the deployment can sign for (present only when signing is available).
+Fund localnet accounts with \`vibekit localnet fund <address>\`.
 
 </mcp_tools>
 
