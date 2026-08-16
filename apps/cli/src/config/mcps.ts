@@ -45,6 +45,7 @@ const vibekit: MCPDefinition = {
       case 'claude':
       case 'cursor':
       case 'codex':
+      case 'pi':
         return {
           serverKey: 'vibekit',
           config: { command: '$VIBEKIT_PATH', args: ['mcp'], env: '$MCP_ENV' },
@@ -81,6 +82,7 @@ const kappa: MCPDefinition = {
       case 'claude':
       case 'cursor':
       case 'copilot':
+      case 'pi':
         return { serverKey: 'kappa', config: { type: 'http', url: KAPPA_URL } }
       case 'codex':
         return { serverKey: 'kappa', config: { url: KAPPA_URL } }
@@ -104,6 +106,7 @@ const context7: MCPDefinition = {
       case 'claude':
       case 'cursor':
       case 'copilot':
+      case 'pi':
         return { serverKey: 'context7', config: { type: 'http', url: CONTEXT7_URL } }
       case 'codex':
         return { serverKey: 'context7', config: { url: CONTEXT7_URL } }

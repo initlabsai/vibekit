@@ -16,9 +16,19 @@ describe('agent registry', () => {
     }
   })
 
-  test('agents declare distinct config files', () => {
+  test('config files are distinct, except pi deliberately shares .mcp.json with claude', () => {
     const files = AGENT_IDS.map((id) => AGENTS[id].configFile)
-    expect(new Set(files).size).toBe(files.length)
+    const sharers = AGENT_IDS.filter((id) => AGENTS[id].configFile === '.mcp.json')
+    expect(sharers.sort()).toEqual(['claude', 'pi']) // pi-mcp-adapter reads the standard .mcp.json
+    expect(new Set(files).size).toBe(files.length - 1)
+  })
+
+  test('pi and claude produce identical .mcp.json server entries (shared file must agree)', () => {
+    for (const mcpId of MCP_IDS) {
+      const forClaude = MCPS[mcpId].getAgentConfig('claude')
+      const forPi = MCPS[mcpId].getAgentConfig('pi')
+      expect(forPi).toEqual(forClaude)
+    }
   })
 
   test('codex is the only toml agent', () => {

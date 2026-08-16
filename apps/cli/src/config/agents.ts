@@ -22,6 +22,8 @@ export interface AgentDefinition {
   templateContent?: string
   /** Instructions for authenticating the Kappa MCP in this agent. */
   authInstructions?: string
+  /** One-time setup the user must do for this agent (shown in the summary). */
+  setupNote?: string
   /** CLI command to launch the agent after setup. */
   cliCommand?: string
 }
@@ -82,6 +84,19 @@ export const AGENTS = {
     templateContent: `# .cursorrules\n\n${pointerContent()}`,
     authInstructions: 'In Cursor Settings → MCP → kappa → Authenticate',
     cliCommand: 'cursor',
+  },
+  pi: {
+    id: 'pi',
+    displayName: 'Pi',
+    // pi-mcp-adapter reads the standard project .mcp.json (same file and
+    // format Claude Code uses); pi reads AGENTS.md natively — no pointer file.
+    configFile: '.mcp.json',
+    baseConfigTemplate: { mcpServers: {} },
+    mcpServersKey: 'mcpServers',
+    skillsDir: '.pi/skills',
+    authInstructions: 'In pi: /mcp → kappa',
+    setupNote: 'Pi needs the MCP adapter once: pi install npm:pi-mcp-adapter',
+    cliCommand: 'pi',
   },
   opencode: {
     id: 'opencode',

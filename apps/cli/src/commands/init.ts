@@ -322,6 +322,12 @@ function showSummary(context: SetupContext): void {
     )
   }
 
+  const setupNotes = enabledAgents.filter((a) => a.setupNote).map((a) => a.setupNote!)
+  if (setupNotes.length > 0) {
+    lines.push('', `${pc.bold('One-time agent setup:')}`)
+    for (const note of setupNotes) lines.push(`  ${note}`)
+  }
+
   const hasCopilot = enabledAgents.some((a) => a.id === 'copilot')
   if (hasCopilot) {
     lines.push('', `${pc.bold('VS Code Setup:')}`, `  Enable "Agent Skills" in Settings (search "agentskills")`)
