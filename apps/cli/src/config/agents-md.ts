@@ -108,6 +108,33 @@ Fund localnet accounts with \`vibekit localnet fund <address>\`.
 
 </mcp_tools>
 
+<tool_access_note>
+
+If your harness exposes MCP servers through a single meta-tool (e.g. pi's \`mcp\`
+tool), use it to search for and invoke the vibekit tools by name — do not guess
+other tool names and do not fall back to shell commands for on-chain actions.
+
+</tool_access_note>
+
+<command_precedence>
+
+## Command Precedence — vibekit supersedes algokit here
+
+Some installed skills reference AlgoKit CLI commands. In vibekit projects,
+prefer the vibekit equivalents:
+
+| Skill says | Use instead |
+|---|---|
+| \`algokit localnet start/stop/reset/status\` | \`vibekit localnet start/stop/reset/status\` |
+| \`algokit init\` | \`vibekit new\` |
+| account listing/creation via algokit or goal | \`list_signing_addresses\` (MCP) or \`keystore list\` / \`keystore generate\` |
+| funding via dispenser | \`vibekit localnet fund <address>\` |
+
+\`algokit project run build\`, \`algokit compile\`, and typed-client generation
+remain AlgoKit's job — use them as the skills describe.
+
+</command_precedence>
+
 <commands>
 
 ## Development Commands
