@@ -14,7 +14,7 @@ import { unlink, copyFile } from 'fs/promises'
 import { MCP_ENV } from '../config/mcps.js'
 import { writeJsonFile } from '../utils/files.js'
 
-/** v1's MCP server key — replaced by 'vibekit' in v2 configs. */
+/** The previous release's (0.x, gabrielkuettel/vibekit) MCP server key. */
 export const LEGACY_SERVER_KEY = 'vibekit-mcp'
 /** v1-era env vars that mean nothing to the v2 server. */
 const LEGACY_ENV_VARS = ['ALGORAND_NETWORK', 'ALGORAND_ALGOD', 'ALGORAND_TOKEN', 'ALGORAND_KMD', 'ALGORAND_KMD_TOKEN', 'ALGORAND_INDEXER']
@@ -42,7 +42,7 @@ export function diagnoseMcpConfig(
   if (LEGACY_SERVER_KEY in servers) {
     issues.push({
       code: 'legacy-key',
-      message: `v1 server entry '${LEGACY_SERVER_KEY}' present (v2 uses 'vibekit')`,
+      message: `legacy server entry '${LEGACY_SERVER_KEY}' present (this release uses 'vibekit')`,
     })
   }
 
@@ -66,7 +66,7 @@ export function diagnoseMcpConfig(
   const envKeys = Object.keys(entry.env ?? {})
   const legacy = envKeys.filter((key) => LEGACY_ENV_VARS.includes(key))
   if (legacy.length > 0) {
-    issues.push({ code: 'legacy-env', message: `v1 env vars set: ${legacy.join(', ')}` })
+    issues.push({ code: 'legacy-env', message: `legacy (0.x) env vars set: ${legacy.join(', ')}` })
   }
 
   return issues
@@ -105,7 +105,7 @@ async function runHelp(binary: string): Promise<string> {
   }
 }
 
-/** v1 fingerprint: its help advertises vault/dispenser command trees. */
+/** Legacy-release fingerprint: 0.x help advertises vault/dispenser command trees. */
 export function looksLikeV1(helpText: string): boolean {
   return helpText.includes('vault') && helpText.includes('dispenser')
 }
@@ -127,7 +127,7 @@ export async function commandDoctor(args: string[]): Promise<void> {
     warn(`vibekit is not on PATH (running from ${self}) — agent configs use absolute paths, so this is fine`)
   } else if (looksLikeV1(await runHelp(onPath))) {
     problems++
-    bad(`v1 vibekit found on PATH: ${onPath}`)
+    bad(`legacy vibekit found on PATH (the previous 0.x release, github.com/gabrielkuettel/vibekit): ${onPath}`)
     if (fix && existsSync(self) && basename(self) === 'vibekit' && self !== onPath) {
       await unlink(onPath) // survives "text file busy" when a v1 process is live
       await copyFile(self, onPath)
