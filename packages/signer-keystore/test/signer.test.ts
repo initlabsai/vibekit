@@ -76,7 +76,10 @@ describe('createSignerFromKeystore', () => {
 describe('createSigningAddressesTool', () => {
   test('lists the daemon address book as table rows', async () => {
     const { keystore } = fakeKeystore()
-    const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }, { id: 'key-2' }])
+    const signer = createSignerFromKeystore(keystore, () => [
+      { id: 'key-1', metadata: { name: 'dev-account' } },
+      { id: 'key-2' },
+    ])
     const tool = createSigningAddressesTool(signer)
 
     expect(tool.name).toBe('list_signing_addresses')
@@ -84,9 +87,25 @@ describe('createSigningAddressesTool', () => {
 
     const result = await tool.handler({} as never, {} as never)
     expect(result).toEqual({
-      accounts: [{ address: account.addr.toString() }],
+      accounts: [{ address: account.addr.toString(), name: 'dev-account' }],
       count: 1, // key-2 has a non-ed25519 public key and is not addressable
     })
+  })
+
+  test('includeBalances enriches from the context algod', async () => {
+    const { keystore } = fakeKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }])
+    const tool = createSigningAddressesTool(signer)
+
+    const ctx = {
+      algod: {
+        accountInformation: () => ({ do: async () => ({ amount: 5_000_000n }) }),
+      },
+    }
+    const result = (await tool.handler(ctx as never, { includeBalances: true } as never)) as {
+      accounts: Array<{ balanceAlgo?: number }>
+    }
+    expect(result.accounts[0]!.balanceAlgo).toBe(5)
   })
 })
 

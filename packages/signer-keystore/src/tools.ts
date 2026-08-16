@@ -10,20 +10,39 @@ import { defineTool } from '@initlabs/vibekit-core'
 
 import type { KeystoreSigner } from './index.js'
 
-export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAddresses'>) {
+export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAccounts'>) {
   return defineTool({
     name: 'list_signing_addresses',
     description:
-      "List the Algorand addresses this deployment can sign for — the user's local keystore accounts. Use when the user says 'my account(s)' or a sender address is needed and none was given.",
-    parameters: z.object({}),
+      "List the Algorand accounts this deployment can sign for — the user's local keystore accounts, with their labels. Use when the user says 'my account(s)' or a sender address is needed and none was given. Set includeBalances for ALGO balances (uses the network parameter on multi-network deployments).",
+    parameters: z.object({
+      includeBalances: z
+        .boolean()
+        .optional()
+        .describe('Also fetch each account ALGO balance from algod'),
+    }),
     output: z.object({
-      accounts: z.array(z.object({ address: z.string() })),
+      accounts: z.array(
+        z.object({
+          address: z.string(),
+          name: z.string().optional(),
+          balanceAlgo: z.number().optional(),
+        }),
+      ),
       count: z.number(),
     }),
     display: 'table',
-    handler: async () => {
-      const addresses = await signer.listAddresses()
-      return { accounts: addresses.map((address) => ({ address })), count: addresses.length }
+    handler: async (ctx, args) => {
+      const accounts = await signer.listAccounts()
+      const rows = await Promise.all(
+        accounts.map(async ({ address, name }) => {
+          const base = { address, ...(name ? { name } : {}) }
+          if (!args.includeBalances) return base
+          const info = await ctx.algod.accountInformation(address).do()
+          return { ...base, balanceAlgo: Number(info.amount) / 1_000_000 }
+        }),
+      )
+      return { accounts: rows, count: rows.length }
     },
   })
 }

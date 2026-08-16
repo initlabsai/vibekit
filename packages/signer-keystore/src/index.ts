@@ -35,6 +35,8 @@ export interface KeystoreSigner {
   resolveSigner(address: string): Promise<algosdk.TransactionSigner>
   /** All Algorand addresses (ed25519 keys) held by the daemon. */
   listAddresses(): Promise<string[]>
+  /** Addresses with their keystore labels (key.metadata.name). */
+  listAccounts(): Promise<Array<{ address: string; keyId: string; name?: string }>>
   /**
    * Create a new ed25519 account inside the daemon (key stays in the OS
    * keychain, unextractable; only the public address comes back). Mirrors
@@ -48,7 +50,7 @@ export interface KeystoreSigner {
 }
 
 interface KeyLister {
-  (): Array<{ id: string }>
+  (): Array<{ id: string; metadata?: Record<string, unknown> }>
 }
 
 /** Pure factory over any keystore-like backend — the testable core. */
@@ -56,15 +58,23 @@ export function createSignerFromKeystore(
   keystore: KeystoreLike,
   listKeys: KeyLister,
 ): KeystoreSigner {
-  let addressBook = new Map<string, string>() // address → keyId
+  interface BookEntry {
+    keyId: string
+    name?: string
+  }
+  let addressBook = new Map<string, BookEntry>()
 
   async function refreshAddressBook(): Promise<void> {
-    const next = new Map<string, string>()
+    const next = new Map<string, BookEntry>()
     for (const key of listKeys()) {
       try {
         const data = await keystore.export(key.id)
         if (data.publicKey && data.publicKey.length === 32) {
-          next.set(algosdk.encodeAddress(data.publicKey), key.id)
+          const name = key.metadata?.name
+          next.set(algosdk.encodeAddress(data.publicKey), {
+            keyId: key.id,
+            ...(typeof name === 'string' ? { name } : {}),
+          })
         }
       } catch {
         // non-exportable or non-ed25519 keys are simply not addressable
@@ -75,11 +85,11 @@ export function createSignerFromKeystore(
 
   async function keyIdFor(address: string): Promise<string> {
     if (!addressBook.has(address)) await refreshAddressBook()
-    const keyId = addressBook.get(address)
-    if (!keyId) {
+    const entry = addressBook.get(address)
+    if (!entry) {
       throw new Error(`No key in the keystore daemon for address ${address} (is it generated? run: keystore list)`)
     }
-    return keyId
+    return entry.keyId
   }
 
   return {
@@ -99,6 +109,10 @@ export function createSignerFromKeystore(
       await refreshAddressBook()
       return [...addressBook.keys()]
     },
+    async listAccounts() {
+      await refreshAddressBook()
+      return [...addressBook.entries()].map(([address, entry]) => ({ address, ...entry }))
+    },
     async createAccount(name?: string) {
       if (!keystore.generate) {
         throw new Error('This keystore connection does not support key generation')
@@ -115,7 +129,7 @@ export function createSignerFromKeystore(
         throw new Error(`Key ${keyId} was created but its public key could not be read`)
       }
       const address = algosdk.encodeAddress(data.publicKey)
-      addressBook.set(address, keyId)
+      addressBook.set(address, { keyId, ...(name ? { name } : {}) })
       return { address, keyId }
     },
     async close() {
