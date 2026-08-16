@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-import { generateConfigs } from '../src/commands/init.js'
+import { generateConfigs, resolveVibekitPath } from '../src/commands/init.js'
 
 function makeDir(): string {
   return mkdtempSync(join(tmpdir(), 'vibekit-init-test-'))
@@ -78,5 +78,25 @@ describe('generateConfigs', () => {
     const dir = makeDir()
     await generateConfigs({ agents: ['claude'], mcps: [], installPath: dir, selectedSkills: [] })
     expect(() => readFileSync(join(dir, '.mcp.json'))).toThrow()
+  })
+})
+
+describe('resolveVibekitPath', () => {
+  test('bun-compiled binary: embedded $bunfs argv is never written; execPath wins', () => {
+    expect(resolveVibekitPath('/$bunfs/root/vibekit', '/home/dev/.local/bin/vibekit', '/dev/bin')).toBe(
+      '/home/dev/.local/bin/vibekit',
+    )
+  })
+
+  test('invoked as an on-disk vibekit script: argv path wins', () => {
+    expect(resolveVibekitPath('/usr/local/bin/vibekit', '/usr/local/bin/bun', '/dev/bin')).toBe(
+      '/usr/local/bin/vibekit',
+    )
+  })
+
+  test('dev mode (bun run src/index.ts): falls back to the compiled binary path', () => {
+    expect(resolveVibekitPath('/repo/apps/cli/src/index.ts', '/usr/local/bin/bun', '/repo/apps/cli/bin/vibekit')).toBe(
+      '/repo/apps/cli/bin/vibekit',
+    )
   })
 })

@@ -9,6 +9,7 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { basename, dirname, extname, join } from 'path'
+import { readFileSync } from 'fs'
 
 import {
   AGENTS,
@@ -26,6 +27,7 @@ import {
   type MCPSelection,
 } from '../config/mcps.js'
 import { agentsMdContent } from '../config/agents-md.js'
+import { LEGACY_SERVER_KEY } from './doctor.js'
 import { getSkillNames, getSkillsByNames, type SkillSelection } from '../skills/index.js'
 import { ensureDir, fileExists, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
@@ -136,19 +138,30 @@ async function selectMCPsStep(): Promise<MCPSelection> {
 /**
  * Resolve the path agents should use to spawn `vibekit mcp`: the invoked
  * binary when running compiled, or this app's bin/vibekit in dev mode.
+ * Exported for tests via the injectable variant below.
  */
+export function resolveVibekitPath(
+  argv1: string | undefined,
+  execPath: string,
+  devFallback: string,
+): string {
+  // bun-compiled binaries report the *embedded* entry as argv[1]
+  // (/$bunfs/root/...) — never write that; the real on-disk binary is execPath.
+  if (argv1?.startsWith('/$bunfs')) {
+    return execPath
+  }
+  if (argv1 && basename(argv1, extname(argv1)) === 'vibekit') {
+    return argv1
+  }
+  return devFallback
+}
+
 function getVibekitPath(): string {
-  const invokedPath = process.argv[1]
-  if (invokedPath && basename(invokedPath, extname(invokedPath)) === 'vibekit') {
-    return invokedPath
-  }
-
-  if (basename(process.execPath, extname(process.execPath)) !== 'vibekit') {
-    // Dev mode (`bun run src/index.ts`): point to the compiled binary
-    return join(import.meta.dir, '..', '..', 'bin', 'vibekit')
-  }
-
-  return process.execPath
+  return resolveVibekitPath(
+    process.argv[1],
+    process.execPath,
+    join(import.meta.dir, '..', '..', 'bin', 'vibekit'),
+  )
 }
 
 const TEMPLATE_VARS: Record<string, () => unknown> = {
@@ -172,8 +185,21 @@ function resolveTemplate(value: unknown): unknown {
 
 export async function generateConfigs(context: SetupContext): Promise<void> {
   for (const agent of getEnabledAgents(context.agents)) {
-    const config = structuredClone(agent.baseConfigTemplate) as Record<string, unknown>
+    const outputPath = join(context.installPath, agent.configFile)
+
+    // Merge into an existing JSON config: foreign MCP servers survive, and
+    // v1's 'vibekit-mcp' entry is migrated out. (TOML configs are rewritten
+    // wholesale — we don't parse TOML.)
+    let config = structuredClone(agent.baseConfigTemplate) as Record<string, unknown>
+    if (agent.configFormat !== 'toml' && fileExists(outputPath)) {
+      try {
+        config = JSON.parse(readFileSync(outputPath, 'utf-8')) as Record<string, unknown>
+      } catch {
+        // unparseable existing config: fall back to the fresh template
+      }
+    }
     const serversSection = (config[agent.mcpServersKey] as Record<string, unknown>) ?? {}
+    delete serversSection[LEGACY_SERVER_KEY]
 
     for (const mcp of getSelectedMCPs(context.mcps)) {
       const agentConfig = mcp.getAgentConfig(agent.id as AgentId)
@@ -186,7 +212,6 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
     config[agent.mcpServersKey] = serversSection
 
     const resolved = resolveTemplate(config) as Record<string, unknown>
-    const outputPath = join(context.installPath, agent.configFile)
     if (agent.configFormat === 'toml') {
       await writeTomlFile(outputPath, resolved)
     } else {
