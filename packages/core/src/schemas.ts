@@ -9,7 +9,9 @@ export const unsignedGroupResultSchema = z.object({
 export const executeGroupResultSchema = z.object({
   txids: z.array(z.string()),
   confirmedRound: z.number(),
-  returns: z.array(z.object({ index: z.number(), value: z.unknown() })),
+  // nullish: zod 4 treats a bare z.unknown() field as a required key, and
+  // jsonSafe drops undefined entries — absent-or-null must both validate.
+  returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
 })
 
 /** What every write tool returns: unsigned group (compose mode) or execution result. */

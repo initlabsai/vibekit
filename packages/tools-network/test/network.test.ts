@@ -107,4 +107,26 @@ describe('getNetworkStatus', () => {
     expect(status.avgTps).toBe(10)
     expect(status.blockDetails).toHaveLength(9)
   })
+
+  test('zero total supply (fresh localnet) yields participation 0, not NaN', async () => {
+    const ctx = fakeContext({
+      algod: {
+        status: () =>
+          chainable({
+            lastRound: BigInt(1),
+            timeSinceLastRound: BigInt(0),
+            lastVersion: 'v40',
+            catchupTime: BigInt(0),
+          }),
+        supply: () => chainable({ totalMoney: BigInt(0), onlineMoney: BigInt(0) }),
+      },
+      indexer: {
+        lookupBlock: (round: number) =>
+          chainable({ round: BigInt(round), timestamp: BigInt(1_700_000_000), transactions: [] }),
+      },
+    })
+    const status = await getNetworkStatus(ctx)
+    // zod rejects NaN — an unguarded 0/0 here would throw OUTPUT_MISMATCH.
+    expect(status.participation).toBe(0)
+  })
 })

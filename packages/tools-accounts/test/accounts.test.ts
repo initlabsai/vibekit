@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { ToolError } from '@initlabs/vibekit-core'
+import { ToolError, jsonSafe } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { getAccountAppLocalStates, getAccountAssets } from '../src/handlers/assets.js'
 import { batchLookupAccounts, lookupAccount } from '../src/handlers/lookup.js'
@@ -196,6 +196,37 @@ describe('searchAccountTransactions', () => {
     const ctx = fakeContext({})
     expect(searchAccountTransactions(ctx, { address: 'bogus' })).rejects.toThrow(ToolError)
   })
+
+  test('output schema accepts inner txns without id (the indexer assigns them none)', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        searchForTransactions: () =>
+          chainable({
+            transactions: [
+              {
+                id: 'APPTX',
+                txType: 'appl',
+                sender: ADDR,
+                fee: BigInt(2_000),
+                applicationTransaction: { applicationId: BigInt(1) },
+                innerTxns: [
+                  {
+                    // No id — the real indexer omits it on inner transactions.
+                    txType: 'pay',
+                    sender: ADDR2,
+                    fee: BigInt(0),
+                    paymentTransaction: { amount: BigInt(1), receiver: ADDR },
+                  },
+                ],
+              },
+            ],
+          }),
+      },
+    })
+    const tool = accountTools.find((t) => t.name === 'search_account_transactions')!
+    const wire = jsonSafe(await tool.handler(ctx, { address: ADDR }))
+    expect(tool.output!.safeParse(wire).success).toBe(true)
+  })
 })
 
 describe('getAccountAssets', () => {
@@ -267,10 +298,40 @@ describe('getAccountAppLocalStates', () => {
       {
         applicationId: 123,
         schema: { numByteSlice: 1, numUint: 2 },
-        keyValue: [{ key: 'AQI=', value: { type: 2, bytes: '', uint: 7 } }],
+        // uint entries omit their empty bytes; the uint stays a bigint so
+        // jsonSafe can emit number-or-decimal-string above 2^53.
+        keyValue: [{ key: 'AQI=', value: { type: 2, uint: BigInt(7) } }],
       },
     ])
     expect(result.nextToken).toBeUndefined() // 1 < default limit → final page
+  })
+
+  test('output schema accepts uint64 app state above 2^53 as a decimal string', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupAccountAppLocalStates: () =>
+          chainable({
+            appsLocalStates: [
+              {
+                id: BigInt(1),
+                schema: { numByteSlice: BigInt(0), numUint: BigInt(1) },
+                keyValue: [
+                  {
+                    key: new Uint8Array([1]),
+                    value: { type: 2, bytes: new Uint8Array(0), uint: BigInt('18446744073709551615') },
+                  },
+                ],
+              },
+            ],
+          }),
+      },
+    })
+    const tool = accountTools.find((t) => t.name === 'get_account_app_local_states')!
+    const wire = jsonSafe(await tool.handler(ctx, { address: ADDR })) as {
+      appLocalStates: Array<{ keyValue: Array<{ value: { uint: unknown } }> }>
+    }
+    expect(wire.appLocalStates[0]!.keyValue[0]!.value.uint).toBe('18446744073709551615')
+    expect(tool.output!.safeParse(wire).success).toBe(true)
   })
 
   test('throws ToolError on invalid address', async () => {

@@ -11,8 +11,14 @@ import { ABIUintType, decodeAddress } from 'algosdk'
 // ============================================================================
 
 export interface StateValue {
+  /** App-spec name when resolvable, else UTF-8 decode of the raw key. */
   key: string
-  value: unknown
+  /** base64 of the exact key bytes. */
+  keyBase64: string
+  /** bytes state as UTF-8 text; uint64 state as bigint (jsonSafe emits number | decimal string). */
+  value: string | number | bigint
+  /** base64 of the exact value bytes (bytes-typed state only). */
+  valueBase64?: string
   type: 'uint' | 'bytes'
 }
 
@@ -75,12 +81,15 @@ function decodeStateItems(
     if (Number(item.value.type) === 1) {
       state.push({
         key: displayKey,
+        keyBase64,
         value: bytesToString(item.value.bytes),
+        valueBase64: toBase64(item.value.bytes),
         type: 'bytes',
       })
     } else {
       state.push({
         key: displayKey,
+        keyBase64,
         value: item.value.uint,
         type: 'uint',
       })
@@ -130,6 +139,7 @@ export async function readLocalState(
 ): Promise<{
   appId: number
   address: string
+  optedIn: boolean
   state: StateValue[]
 }> {
   const { appId, address, appSpec } = args
@@ -138,7 +148,8 @@ export async function readLocalState(
   const state = accountInfo.appLocalState?.keyValue
     ? decodeStateItems(accountInfo.appLocalState.keyValue, stateKeyMap)
     : []
-  return { appId, address, state }
+  // Distinguish "not opted in" from "opted in with empty state".
+  return { appId, address, optedIn: accountInfo.appLocalState != null, state }
 }
 
 // ============================================================================

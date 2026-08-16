@@ -11,7 +11,9 @@ export async function getNetworkStatus(ctx: ToolContext) {
   const timeSinceLastRound = Number(status.timeSinceLastRound) / 1_000_000_000
   const totalSupply = Number(supply.totalMoney) / 1_000_000
   const onlineStake = Number(supply.onlineMoney) / 1_000_000
-  const participation = onlineStake / totalSupply
+  // Guard 0/0 on a fresh localnet — zod rejects NaN, and executeToolCall now
+  // enforces the output schema.
+  const participation = totalSupply > 0 ? onlineStake / totalSupply : 0
 
   // Sample recent blocks for TPS stats. Public free-tier indexers rate-limit
   // bursts, so pace at 3 concurrent and tolerate partial failures — a network

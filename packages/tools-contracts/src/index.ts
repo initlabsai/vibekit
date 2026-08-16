@@ -23,8 +23,11 @@ const formattedApplication = z.object({
         key: z.string(),
         value: z.object({
           type: z.number(),
-          bytes: z.string().optional(),
-          uint: z.number().optional(),
+          bytes: z.string().optional().describe('base64-encoded bytes value'),
+          uint: z
+            .union([z.number(), z.string()])
+            .optional()
+            .describe('uint64 state value; decimal string when above 2^53'),
         }),
       }),
     )
@@ -33,10 +36,14 @@ const formattedApplication = z.object({
   globalStateSchema: stateSchema.optional(),
 })
 
-/** Decoded key-value pair from application state. uint values may exceed 2^53 (bigint). */
+/** Decoded key-value pair from application state. */
 const stateValue = z.object({
-  key: z.string(),
-  value: z.union([z.string(), z.number(), z.bigint()]),
+  key: z.string().describe('State key: app-spec name when resolvable, else UTF-8 decode of the raw key'),
+  keyBase64: z.string().describe('base64 of the exact key bytes'),
+  value: z
+    .union([z.string(), z.number()])
+    .describe('bytes state as UTF-8 text; uint64 state as number, or decimal string above 2^53'),
+  valueBase64: z.string().optional().describe('base64 of the exact value bytes (bytes-typed state only)'),
   type: z.enum(['uint', 'bytes']),
 })
 
@@ -82,7 +89,12 @@ export const contractTools: AnyTool[] = [
     }),
     output: z.object({
       applicationId: z.number(),
-      logData: z.array(z.unknown()),
+      logData: z.array(
+        z.object({
+          txid: z.string(),
+          logs: z.array(z.string()).describe('base64-encoded log bytes'),
+        }),
+      ),
       nextToken: z.string().optional(),
     }),
     display: 'table',
@@ -113,6 +125,7 @@ export const contractTools: AnyTool[] = [
     output: z.object({
       appId: z.number(),
       address: z.string(),
+      optedIn: z.boolean().describe('false = account is not opted in (state is then empty, not merely unset)'),
       state: z.array(stateValue),
     }),
     display: 'json',

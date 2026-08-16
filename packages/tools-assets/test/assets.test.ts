@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { jsonSafe } from '@initlabs/vibekit-core'
 import { assetTools } from '../src/index.js'
 import { lookupAsset } from '../src/handlers/lookup.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from '../src/handlers/search.js'
@@ -146,6 +147,45 @@ describe('searchAssetTransactions', () => {
     expect(pay!.receiver).toBe('PAYEE')
     // 2 < default limit 20 → final page
     expect(result.nextToken).toBeUndefined()
+  })
+
+  test('output schema accepts real indexer shapes: inner txns without id, uint64 amounts above 2^53', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        searchForTransactions: () =>
+          chainable({
+            transactions: [
+              {
+                id: 'APPTX',
+                txType: 'appl',
+                sender: 'CALLER',
+                fee: BigInt(2000),
+                applicationTransaction: { applicationId: BigInt(1) },
+                innerTxns: [
+                  {
+                    // No id: the indexer assigns none to inner transactions.
+                    txType: 'axfer',
+                    sender: 'APPADDR',
+                    fee: BigInt(0),
+                    assetTransferTransaction: {
+                      assetId: BigInt(777),
+                      amount: BigInt('18446744073709551615'), // max uint64
+                      receiver: 'DEST',
+                    },
+                  },
+                ],
+              },
+            ],
+          }),
+      },
+    })
+    const tool = assetTools.find((t) => t.name === 'search_asset_transactions')!
+    const wire = jsonSafe(await tool.handler(ctx, { assetId: 777 })) as {
+      transactions: Array<{ innerTxns: Array<Record<string, unknown>> }>
+    }
+    // Above 2^53 the amount must arrive as a decimal string, not a rounded number.
+    expect(wire.transactions[0]!.innerTxns[0]!.assetAmount).toBe('18446744073709551615')
+    expect(tool.output!.safeParse(wire).success).toBe(true)
   })
 
   test('caps limit at 100 and keeps token on a full page', async () => {

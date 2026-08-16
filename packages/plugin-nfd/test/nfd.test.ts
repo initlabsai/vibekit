@@ -69,4 +69,28 @@ describe('nfd plugin', () => {
     expect(result.properties?.avatar).toBe('https://images.nf.domains/ipfs/Qm123')
     expect(result.properties?.bio).toBe('builder')
   })
+
+  test('reverse lookups return name:null for unnamed addresses (API sends an empty object, not a missing key)', async () => {
+    const fakeClient = {
+      // What the live API does for an address with no NFD: an entry that is {}.
+      reverseLookup: async () => ({ NAMED: { name: 'gabe.algo', appID: 5 }, UNNAMED: {} }),
+    }
+    const service = { clientFor: () => fakeClient as never }
+    const ctx = ctxWith({ nfd: service })
+
+    const single = nfdTools.find((t) => t.name === 'reverse_resolve_nfd')!
+    const singleResult = await single.handler(ctx, { address: 'UNNAMED' } as never)
+    expect(single.output!.safeParse(singleResult).success).toBe(true)
+    expect((singleResult as { name: string | null }).name).toBeNull()
+
+    const batch = nfdTools.find((t) => t.name === 'batch_reverse_resolve_nfd')!
+    const batchResult = (await batch.handler(ctx, {
+      addresses: ['NAMED', 'UNNAMED'],
+    } as never)) as { results: Array<{ address: string; name: string | null }> }
+    expect(batch.output!.safeParse(batchResult).success).toBe(true)
+    expect(batchResult.results).toEqual([
+      { address: 'NAMED', name: 'gabe.algo' },
+      { address: 'UNNAMED', name: null },
+    ])
+  })
 })

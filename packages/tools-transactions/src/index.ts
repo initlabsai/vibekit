@@ -8,19 +8,22 @@ export type { SearchTransactionsArgs } from './handlers/search.js'
 export type { FormattedTransaction } from './handlers/format.js'
 
 const formattedTransaction = z.object({
-  id: z.string(),
-  type: z.string(),
+  // The indexer assigns no id to inner transactions, and txType is optional
+  // in the indexer model — both keys are absent when unset (jsonSafe drops
+  // undefined entries).
+  id: z.string().optional(),
+  type: z.string().optional(),
   sender: z.string(),
-  fee: z.number(),
+  fee: z.number().describe('Fee in ALGO (not microALGO)'),
   confirmedRound: z.number().optional(),
   roundTime: z.number().optional(),
-  paymentAmount: z.number().optional(),
+  paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
   receiver: z.string().optional(),
   assetId: z.number().optional(),
-  assetName: z.string().optional(),
-  assetUnitName: z.string().optional(),
-  assetDecimals: z.number().optional(),
-  assetAmount: z.union([z.number(), z.string()]).optional(),
+  assetAmount: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe('Asset amount in base units; decimal string when above 2^53'),
   applicationId: z.number().optional(),
   note: z.string().optional(),
   group: z.string().optional(),
@@ -33,7 +36,7 @@ const formattedTransaction = z.object({
 })
 
 const txTypeEnum = z
-  .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf'])
+  .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])
   .optional()
   .describe('Filter by transaction type')
 

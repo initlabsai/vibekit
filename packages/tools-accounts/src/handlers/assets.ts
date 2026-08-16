@@ -88,8 +88,11 @@ export async function getAccountAppLocalStates(
       key: bytesToBase64(kv.key),
       value: {
         type: kv.value.type,
-        bytes: kv.value.bytes ? bytesToBase64(kv.value.bytes) : undefined,
-        uint: kv.value.uint !== undefined ? Number(kv.value.uint) : undefined,
+        // Empty Uint8Array is truthy — uint entries carry empty bytes; omit them.
+        bytes: kv.value.bytes?.length ? bytesToBase64(kv.value.bytes) : undefined,
+        // Raw bigint: uint64 app state routinely exceeds 2^53 — jsonSafe emits
+        // number, or a decimal string above 2^53 (Number() would silently round).
+        uint: kv.value.uint,
       },
     })),
   }))

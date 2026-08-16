@@ -13,18 +13,19 @@ const MICROALGOS_PER_ALGO = 1_000_000
 type IndexerTransaction = InstanceType<typeof import('algosdk').indexerModels.Transaction>
 
 export interface FormattedTransaction {
-  id: string
-  type: string
+  /** Absent on inner transactions — the indexer assigns them no id. */
+  id?: string
+  type?: string
   sender: string
+  /** In ALGO, not microALGO. */
   fee: number
   confirmedRound?: number
   roundTime?: number
+  /** In ALGO, not microALGO. */
   paymentAmount?: number
   receiver?: string
   assetId?: number
-  assetName?: string
-  assetUnitName?: string
-  assetDecimals?: number
+  /** Base units; decimal string when the uint64 exceeds 2^53. */
   assetAmount?: number | string
   applicationId?: number
   note?: string
@@ -35,10 +36,17 @@ export interface FormattedTransaction {
   logs?: string[]
 }
 
+/** uint64 → number, or decimal string above 2^53 (Number() would silently round). */
+function uint64(value: bigint): number | string {
+  return value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
+}
+
 function formatTransaction(tx: IndexerTransaction): FormattedTransaction {
   const formatted: FormattedTransaction = {
-    id: tx.id!,
-    type: tx.txType as string,
+    // Inner transactions carry no indexer-assigned id, and txType is optional
+    // in the model — leave the keys absent rather than asserting.
+    id: tx.id,
+    type: tx.txType,
     sender: String(tx.sender),
     fee: Number(tx.fee) / MICROALGOS_PER_ALGO,
     confirmedRound: tx.confirmedRound != null ? Number(tx.confirmedRound) : undefined,
@@ -50,18 +58,17 @@ function formatTransaction(tx: IndexerTransaction): FormattedTransaction {
   }
   if (tx.assetTransferTransaction) {
     formatted.assetId = Number(tx.assetTransferTransaction.assetId)
-    formatted.assetAmount = Number(tx.assetTransferTransaction.amount)
+    formatted.assetAmount = uint64(tx.assetTransferTransaction.amount)
     formatted.receiver = String(tx.assetTransferTransaction.receiver)
   }
   if (tx.applicationTransaction) {
     formatted.applicationId = Number(tx.applicationTransaction.applicationId)
   }
   if (tx.note && tx.note.length > 0) {
-    try {
-      formatted.note = new TextDecoder().decode(tx.note)
-    } catch {
-      formatted.note = bytesToBase64(tx.note)
-    }
+    // TextDecoder never throws (review finding: the old catch was dead code).
+    // Only surface notes that decode to printable text; otherwise base64.
+    const decoded = new TextDecoder().decode(tx.note)
+    formatted.note = /^[^\p{C}]*$/u.test(decoded) ? decoded : bytesToBase64(tx.note)
   }
   if (tx.group) formatted.group = bytesToBase64(tx.group)
   if (tx.innerTxns && tx.innerTxns.length > 0)

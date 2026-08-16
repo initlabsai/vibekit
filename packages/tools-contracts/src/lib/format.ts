@@ -9,11 +9,14 @@ export interface FormattedApplication {
   applicationId: number
   creator?: string
   globalState?: Array<{
+    /** base64-encoded state key. */
     key: string
     value: {
       type: number
+      /** base64-encoded bytes value (bytes-typed entries only). */
       bytes?: string
-      uint?: number
+      /** uint64 state; jsonSafe emits number, or decimal string above 2^53. */
+      uint?: bigint
     }
   }>
   localStateSchema?: { numByteSlice: number; numUint: number }
@@ -29,8 +32,10 @@ export function formatApplication(app: IndexerApplication): FormattedApplication
       key: bytesToBase64(kv.key),
       value: {
         type: Number(kv.value.type),
-        bytes: kv.value.bytes ? bytesToBase64(kv.value.bytes) : undefined,
-        uint: kv.value.uint != null ? Number(kv.value.uint) : undefined,
+        // Empty Uint8Array is truthy — uint entries carry empty bytes; omit them.
+        bytes: kv.value.bytes?.length ? bytesToBase64(kv.value.bytes) : undefined,
+        // Raw bigint: uint64 state can exceed 2^53 (Number() would silently round).
+        uint: kv.value.uint,
       },
     })),
     localStateSchema: params.localStateSchema

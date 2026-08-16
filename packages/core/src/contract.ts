@@ -39,9 +39,11 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   description: string
   parameters: P
   /**
-   * Result schema. Feeds MCP structured content and generated SDK result types
-   * — input schemas alone can't (the gap v1's regex type-sync papered over).
-   * Required for core tool packages; optional for plugins.
+   * Result schema, written against the post-jsonSafe (wire) shape — bigint
+   * fields are number|string, byte fields are base64 strings. Enforced by
+   * `executeToolCall` on every call: a result that violates it throws
+   * OUTPUT_MISMATCH. Feeds MCP structured content and generated SDK result
+   * types. Required for core tool packages; optional for plugins.
    */
   output?: z.ZodType
   /** Write tools set this; hosts gate on it and map it to MCP annotations. */

@@ -183,7 +183,8 @@ export const transactionWriteTools: AnyTool[] = [
           budgetConsumed: z.number().optional(),
         }),
       ),
-      returns: z.array(z.object({ index: z.number(), value: z.unknown() })),
+      // nullish: zod 4 treats bare z.unknown() as a required key (see core schemas.ts).
+      returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
       appBudgetAdded: z.number().optional(),
       appBudgetConsumed: z.number().optional(),
     }),

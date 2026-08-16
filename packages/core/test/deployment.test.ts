@@ -60,3 +60,51 @@ describe('executeToolCall', () => {
     expect(result).toMatchObject({ network: 'localnet', amount: 2 })
   })
 })
+
+describe('output schema enforcement', () => {
+  const single = (tool: ReturnType<typeof defineTool>) =>
+    resolveDeployment({ network: 'localnet', mode: 'compose', tools: [tool] })
+
+  test('validates against the post-jsonSafe shape, not the raw handler result', async () => {
+    const tool = defineTool({
+      name: 'big_read',
+      description: 'Returns bigint + bytes.',
+      parameters: z.object({}),
+      output: z.object({ big: z.number(), bytes: z.string() }),
+      handler: async () => ({ big: 7n, bytes: new Uint8Array([1, 2, 3]) }),
+    })
+    const result = await executeToolCall(single(tool), tool, {})
+    expect(result).toEqual({ big: 7, bytes: 'AQID' })
+  })
+
+  test('a result violating the output schema throws OUTPUT_MISMATCH with the field path', async () => {
+    const tool = defineTool({
+      name: 'liar',
+      description: 'Schema says number, handler returns string.',
+      parameters: z.object({}),
+      output: z.object({ value: z.number() }),
+      handler: async () => ({ value: 'not-a-number' }),
+    })
+    expect(executeToolCall(single(tool), tool, {})).rejects.toMatchObject({
+      code: 'OUTPUT_MISMATCH',
+      message: expect.stringContaining('value'),
+    })
+  })
+
+  test('validation only — extra keys the schema does not declare are kept, not stripped', async () => {
+    const tool = defineTool({
+      name: 'extra',
+      description: 'Returns more than it declares.',
+      parameters: z.object({}),
+      output: z.object({ declared: z.number() }),
+      handler: async () => ({ declared: 1, undeclared: 'kept' }),
+    })
+    const result = await executeToolCall(single(tool), tool, {})
+    expect(result).toEqual({ declared: 1, undeclared: 'kept' })
+  })
+
+  test('tools without an output schema are unaffected', async () => {
+    const result = await executeToolCall(multi(), readTool, {})
+    expect(result).toEqual({ network: 'localnet' })
+  })
+})

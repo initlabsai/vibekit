@@ -62,7 +62,9 @@ describe('lookupApplication', () => {
     expect(app.globalState).toHaveLength(2)
     expect(app.globalState![0]).toEqual({
       key: btoa('counter'),
-      value: { type: 2, bytes: '', uint: 42 },
+      // uint entries carry no bytes (empty Uint8Array is omitted), and the
+      // uint stays a bigint so jsonSafe can emit number-or-decimal-string.
+      value: { type: 2, uint: BigInt(42) },
     })
     expect(app.globalState![1]!.value.bytes).toBe(btoa('hello'))
     expect(app.localStateSchema).toEqual({ numByteSlice: 1, numUint: 2 })
@@ -167,8 +169,14 @@ describe('readGlobalState', () => {
     const result = await readGlobalState(ctx, { appId: 5 })
     expect(result.appId).toBe(5)
     expect(result.state).toEqual([
-      { key: 'name', value: 'vibekit', type: 'bytes' },
-      { key: 'total', value: BigInt(9000), type: 'uint' },
+      {
+        key: 'name',
+        keyBase64: btoa('name'),
+        value: 'vibekit',
+        valueBase64: btoa('vibekit'),
+        type: 'bytes',
+      },
+      { key: 'total', keyBase64: btoa('total'), value: BigInt(9000), type: 'uint' },
     ])
   })
 
@@ -224,7 +232,10 @@ describe('readLocalState', () => {
     const result = await readLocalState(ctx, { appId: 9, address: 'SOMEADDRESS' })
     expect(result.appId).toBe(9)
     expect(result.address).toBe('SOMEADDRESS')
-    expect(result.state).toEqual([{ key: 'score', value: BigInt(3), type: 'uint' }])
+    expect(result.optedIn).toBe(true)
+    expect(result.state).toEqual([
+      { key: 'score', keyBase64: btoa('score'), value: BigInt(3), type: 'uint' },
+    ])
   })
 
   test('returns empty state when account is not opted in state', async () => {
@@ -232,6 +243,7 @@ describe('readLocalState', () => {
       algod: { accountApplicationInformation: () => chainable({}) },
     })
     const result = await readLocalState(ctx, { appId: 9, address: 'SOMEADDRESS' })
+    expect(result.optedIn).toBe(false)
     expect(result.state).toEqual([])
   })
 })

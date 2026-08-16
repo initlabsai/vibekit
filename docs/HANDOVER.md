@@ -107,10 +107,15 @@ of these relaxations.**
 - **Rekeyed accounts**: signer resolves address→key 1:1; a rekeyed account would sign
   with the wrong key (chain rejects — safe but broken). Pre-1.0 correctness item.
 - **Multisig**: unsupported. Post-1.0.
-- **`output` schemas unenforced** (owner decision pending): `ToolDefinition.output` is
-  declared but `executeToolCall` never `.parse`s it, and some schemas disagree with
-  post-`jsonSafe` shapes (`z.bigint()`). **Enforce (parse after jsonSafe + fix schemas)
-  or drop from the public contract before publish** — don't ship an unenforced promise.
+- ~~**`output` schemas unenforced**~~ — RESOLVED 2026-08-16 (owner chose **enforce**):
+  `executeToolCall` now validates every result against `tool.output` post-`jsonSafe`
+  (`OUTPUT_MISMATCH` on violation; validation-only, no stripping). All 39 schemas were
+  audited against wire reality and fixed — notably: inner txns carry no indexer `id`
+  (was a hard failure on every DeFi lookup), uint64 fields no longer pre-`Number()`ed
+  (silent precision loss above 2^53), zod-4 `z.unknown()` fields made `.nullish()`,
+  NFD empty-object results, dispenser response drift. Regression tests round-trip
+  realistic indexer payloads through `jsonSafe` + schema per package. Follow-up
+  opportunity: publish MCP `outputSchema`/`structuredContent` from the now-true schemas.
 - **Distribution**: no install channel for the binary; blocked on the 1.0 gate.
 - **CI**: unit suites run, but nothing exercises the compiled binary (where the
   `$bunfs` bug class lives) or non-Linux platforms.
@@ -132,8 +137,9 @@ what users have installed; `vibekit doctor --fix` migrates their machines.
 1. **Adversarial review** — done + Do-now items implemented 2026-08-16
    ([REVIEW-FINDINGS.md](./REVIEW-FINDINGS.md), brief was [REVIEW-BRIEF.md](./REVIEW-BRIEF.md)).
    Phase-7 items remain open there. Don't re-run the brief unless the tree moved.
-2. **1.0 publish gate** — owner decisions: `output` enforce-or-drop, license (Q11),
-   algosdk pin-vs-peer (Q9). Then npm publish (`@initlabs` scope registered), install
+2. **1.0 publish gate** — remaining owner decisions: license (Q11),
+   algosdk pin-vs-peer (Q9) (`output` enforce-or-drop resolved: enforced, see Known
+   gaps). Then npm publish (`@initlabs` scope registered), install
    channel, compiled-binary CI smoke, docs site (Q10). Does **not** open contributions.
 3. **Contribution gate** — required before outside agents may land nodes.
    Distinct from (2); after packages are published (strangers need something

@@ -173,5 +173,19 @@ export async function executeToolCall(
   if (!context) {
     throw new ToolError('UNKNOWN_NETWORK', `Network not served: ${networkId}`)
   }
-  return jsonSafe(await tool.handler(context, handlerArgs as never))
+  const result = jsonSafe(await tool.handler(context, handlerArgs as never))
+  if (tool.output) {
+    // Validate the declared result contract (post-jsonSafe, the shape hosts
+    // actually emit). Validation only — the original result is returned, so a
+    // schema that under-declares fields fails loudly here instead of silently
+    // stripping data.
+    const parsed = tool.output.safeParse(result)
+    if (!parsed.success) {
+      const issues = parsed.error.issues
+        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('; ')
+      throw new ToolError('OUTPUT_MISMATCH', `Tool ${tool.name} returned a result that violates its output schema — ${issues}`)
+    }
+  }
+  return result
 }

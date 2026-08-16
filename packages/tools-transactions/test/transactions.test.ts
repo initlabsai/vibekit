@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { jsonSafe } from '@initlabs/vibekit-core'
 import { transactionTools } from '../src/index.js'
 import { lookupTransaction, lookupTransactionGroup } from '../src/handlers/lookup.js'
 import { searchTransactions } from '../src/handlers/search.js'
@@ -92,6 +93,47 @@ describe('lookupTransaction', () => {
     expect(tx.innerTxns?.[0]?.assetAmount).toBe(9_000)
     expect(tx.innerTxns?.[0]?.receiver).toBe('DEST')
     expect(tx.innerTxns?.[0]?.confirmedRound).toBeUndefined()
+  })
+
+  test('output schema accepts real indexer shapes: inner txns without id, uint64 amounts above 2^53', async () => {
+    const hugeAmount = BigInt('18446744073709551615') // max uint64
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'APPTX',
+              txType: 'appl',
+              sender: 'CALLER',
+              fee: BigInt(2_000),
+              applicationTransaction: { applicationId: BigInt(123) },
+              innerTxns: [
+                {
+                  // The indexer assigns NO id (and this model field is
+                  // optional) on inner transactions — the schema must accept
+                  // the absent key or every DeFi lookup throws OUTPUT_MISMATCH.
+                  txType: 'axfer',
+                  sender: 'APPADDR',
+                  fee: BigInt(0),
+                  assetTransferTransaction: {
+                    assetId: BigInt(777),
+                    amount: hugeAmount,
+                    receiver: 'DEST',
+                  },
+                },
+              ],
+            },
+          }),
+      },
+    })
+    const tool = transactionTools.find((t) => t.name === 'lookup_transaction')!
+    const wire = jsonSafe(await tool.handler(ctx, { txid: 'APPTX' })) as {
+      innerTxns: Array<Record<string, unknown>>
+    }
+    // Above 2^53 the amount must arrive as a decimal string, not a rounded number.
+    expect(wire.innerTxns[0]!.assetAmount).toBe('18446744073709551615')
+    const parsed = tool.output!.safeParse(wire)
+    expect(parsed.success).toBe(true)
   })
 })
 

@@ -13,7 +13,8 @@ export interface FormattedAccount {
   totalCreatedAssets?: number
   totalCreatedApps?: number
   status?: string
-  rewardBase?: number
+  /** Raw uint64; decimal string when above 2^53. */
+  rewardBase?: number | string
   createdAtRound?: number
 }
 
@@ -35,7 +36,8 @@ export interface AccountAppLocalState {
     value: {
       type: number
       bytes?: string
-      uint?: number
+      /** uint64 app state; decimal string when above 2^53 (post-jsonSafe). */
+      uint?: bigint
     }
   }>
 }
@@ -49,7 +51,12 @@ export function formatAccount(account: IndexerAccount): FormattedAccount {
     totalCreatedAssets: account.totalCreatedAssets,
     totalCreatedApps: account.totalCreatedApps,
     status: account.status,
-    rewardBase: account.rewardBase != null ? Number(account.rewardBase) : undefined,
+    rewardBase:
+      account.rewardBase != null
+        ? account.rewardBase <= BigInt(Number.MAX_SAFE_INTEGER)
+          ? Number(account.rewardBase)
+          : account.rewardBase.toString()
+        : undefined,
     createdAtRound: account.createdAtRound != null ? Number(account.createdAtRound) : undefined,
   }
 }

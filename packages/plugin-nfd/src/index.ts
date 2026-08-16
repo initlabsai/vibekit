@@ -93,7 +93,9 @@ export const nfdTools: AnyTool[] = [
     handler: async (ctx, args) => {
       const nfd = await getNfdClient(ctx).resolve(args.name.toLowerCase(), { view: 'full' })
       return {
-        name: nfd.name,
+        // The SDK types name as required but does no runtime validation of the
+        // API body — fall back to the requested name rather than dropping the key.
+        name: nfd.name ?? args.name.toLowerCase(),
         address: nfd.depositAccount ?? nfd.owner,
         owner: nfd.owner,
         appId: nfd.appID,
@@ -119,7 +121,10 @@ export const nfdTools: AnyTool[] = [
     handler: async (ctx, args) => {
       const result = await getNfdClient(ctx).reverseLookup([args.address], { view: 'full' })
       const nfd = result[args.address]
-      if (!nfd) return { address: args.address, name: null }
+      // The API returns an empty object (not a missing key) for unnamed
+      // addresses — an absent `name` would be dropped by jsonSafe and violate
+      // the schema's `name: null` contract.
+      if (!nfd?.name) return { address: args.address, name: null }
       return {
         address: args.address,
         name: nfd.name,
@@ -150,7 +155,8 @@ export const nfdTools: AnyTool[] = [
       return {
         results: args.addresses.map((address) => {
           const nfd = result[address]
-          if (!nfd) return { address, name: null }
+          // Empty object = no NFD for this address (see reverse_resolve_nfd).
+          if (!nfd?.name) return { address, name: null }
           const v = nfd.properties?.verified ?? {}
           const u = nfd.properties?.userDefined ?? {}
           let avatar: string | undefined

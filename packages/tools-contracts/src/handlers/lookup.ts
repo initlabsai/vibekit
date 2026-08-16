@@ -1,4 +1,4 @@
-import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
+import { DEFAULT_LIMIT, ToolError, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import { formatApplication, type FormattedApplication } from '../lib/format.js'
 
 export async function lookupApplication(
@@ -6,7 +6,10 @@ export async function lookupApplication(
   args: { applicationId: number },
 ): Promise<FormattedApplication> {
   const response = await ctx.indexer.lookupApplications(args.applicationId).do()
-  return formatApplication(response.application!)
+  if (!response.application) {
+    throw new ToolError('APP_NOT_FOUND', `Application not found: ${args.applicationId}`)
+  }
+  return formatApplication(response.application)
 }
 
 export interface LookupApplicationLogsArgs {

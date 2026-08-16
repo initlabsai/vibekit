@@ -280,8 +280,21 @@ export function createFundTestnetTool(secrets: SecretsLike, fetchFn: FetchLike =
         throw new ToolError('DISPENSER_ERROR', body.message ?? `Dispenser request failed (${response.status})`)
       }
 
-      const result = (await response.json()) as { txID: string; amount: number }
-      return { txId: result.txID, receiver: args.receiver, amountMicroAlgos: result.amount }
+      // The success body is unvalidated external JSON — the funds are already
+      // sent by now, so a drifted response shape must surface as a dispenser
+      // error (or fall back to the requested amount), not OUTPUT_MISMATCH.
+      const result = (await response.json().catch(() => ({}))) as { txID?: unknown; amount?: unknown }
+      if (typeof result.txID !== 'string') {
+        throw new ToolError(
+          'DISPENSER_ERROR',
+          'Dispenser reported success but returned no transaction id — funds may have been sent; check the account balance.',
+        )
+      }
+      return {
+        txId: result.txID,
+        receiver: args.receiver,
+        amountMicroAlgos: typeof result.amount === 'number' ? result.amount : amount,
+      }
     },
   })
 }
