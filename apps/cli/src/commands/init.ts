@@ -307,12 +307,15 @@ function showSummary(context: SetupContext): void {
 
 // --- Entry point ---
 
-export async function runSetupWizard(): Promise<void> {
-  welcome()
-
+/**
+ * The agent-setup flow at a known path — shared by `vibekit init` (standalone,
+ * brownfield) and `vibekit new` (composed after scaffolding, greenfield).
+ * Templates stay agent-agnostic; the CLI is the single source of truth for
+ * skills and MCP configs.
+ */
+export async function runInitAt(installPath: string): Promise<void> {
   const agents = await selectAgentsStep()
   const selectedSkills = await selectSkillsStep()
-  const installPath = await selectInstallPathStep()
   const mcps = await selectMCPsStep()
 
   const context: SetupContext = { agents, mcps, installPath, selectedSkills }
@@ -345,6 +348,12 @@ export async function runSetupWizard(): Promise<void> {
   }
 
   showSummary(context)
+}
+
+export async function runSetupWizard(): Promise<void> {
+  welcome()
+  const installPath = await selectInstallPathStep()
+  await runInitAt(installPath)
   p.outro(pc.green('The vibes are immaculate 😎'))
 }
 

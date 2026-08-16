@@ -12,7 +12,8 @@ import { mkdir, readdir } from 'fs/promises'
 import { basename, resolve } from 'path'
 
 import { expandPath } from '../utils/paths.js'
-import { select, text } from '../utils/prompts.js'
+import { confirm, select, text } from '../utils/prompts.js'
+import { runInitAt } from './init.js'
 
 export interface TemplateDefinition {
   id: string
@@ -148,14 +149,20 @@ export async function commandNew(args: string[]): Promise<void> {
     process.exit(1)
   }
 
+  // Greenfield = scaffold + init composed: skills and MCP configs come from
+  // the CLI (one source of truth), never baked into the template repos.
+  if (await confirm('Set up AI coding agents in this project?', true)) {
+    await runInitAt(targetDir)
+  } else {
+    p.log.info('Skipped — run `vibekit init` inside the project any time.')
+  }
+
   p.note(
     [
       `${pc.cyan('cd')} ${dirInput}`,
       `${pc.cyan('npm install')}`,
       `${pc.cyan('vibekit localnet start')}`,
       `${pc.cyan('npm run build')}`,
-      '',
-      pc.dim('Run `vibekit init` inside the project to set up your AI agent.'),
     ].join('\n'),
     'Next steps',
   )
