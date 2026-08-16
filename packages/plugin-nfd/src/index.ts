@@ -40,8 +40,11 @@ export function getNfdClient(ctx: ToolContext): NfdApiClient {
 }
 
 /** ipfs:// → HTTPS gateway URL; non-IPFS input passes through. */
-function ipfsToHttps(url: string): string {
-  return url.startsWith('ipfs://') ? url.replace('ipfs://', 'https://images.nf.domains/ipfs/') : url
+function ipfsToHttps(url: string): string | undefined {
+  if (url.startsWith('ipfs://')) return url.replace('ipfs://', 'https://images.nf.domains/ipfs/')
+  // User-controlled field: only https survives (review finding - javascript:/data:
+  // schemes previously passed through verbatim).
+  return url.startsWith('https://') ? url : undefined
 }
 
 /** Pick well-known social/profile fields from NFD properties. */
@@ -55,9 +58,9 @@ function extractProperties(properties?: {
   const u = properties.userDefined ?? {}
   const picked: Record<string, string> = {}
 
-  if (v.avatar) picked.avatar = ipfsToHttps(v.avatar)
+  const avatar = (v.avatar && ipfsToHttps(v.avatar)) || (u.avatar && ipfsToHttps(u.avatar))
+  if (avatar) picked.avatar = avatar
   else if (v.avatarasaid) picked.avatar = `assetid:${v.avatarasaid}`
-  else if (u.avatar) picked.avatar = ipfsToHttps(u.avatar)
 
   for (const key of ['twitter', 'discord', 'telegram', 'github', 'email', 'domain', 'blueskydid', 'nostrpubkey'] as const) {
     if (v[key]) picked[key] = v[key]

@@ -172,6 +172,11 @@ export async function hasDispenserToken(secrets: SecretsLike): Promise<boolean> 
   }
 }
 
+// One refresh in flight per secrets store: concurrent tool calls must not
+// race remove-then-put (review finding; the crash window between remove and
+// put remains and degrades to a clear re-login error).
+const refreshInFlight = new WeakMap<SecretsLike, Promise<string>>()
+
 /** Valid access token, transparently refreshed (and re-sealed) when stale. */
 export async function getValidAccessToken(secrets: SecretsLike, fetchFn: FetchLike = fetch): Promise<string> {
   const token = await loadDispenserToken(secrets)
@@ -188,9 +193,19 @@ export async function getValidAccessToken(secrets: SecretsLike, fetchFn: FetchLi
       'The TestNet dispenser session expired — run `vibekit dispenser login`.',
     )
   }
-  const fresh = await refreshToken(token.refreshToken, fetchFn)
-  await saveDispenserToken(secrets, fresh)
-  return fresh.accessToken
+  const inFlight = refreshInFlight.get(secrets)
+  if (inFlight) return inFlight
+  const refresh = (async () => {
+    try {
+      const fresh = await refreshToken(token.refreshToken!, fetchFn)
+      await saveDispenserToken(secrets, fresh)
+      return fresh.accessToken
+    } finally {
+      refreshInFlight.delete(secrets)
+    }
+  })()
+  refreshInFlight.set(secrets, refresh)
+  return refresh
 }
 
 // --- The agent-facing capability ---
@@ -215,8 +230,17 @@ export function createFundTestnetTool(secrets: SecretsLike, fetchFn: FetchLike =
       amountMicroAlgos: z.number(),
     }),
     display: 'txn',
-    requiresSigner: true, // a world-changing action — hosts gate it like other writes
-    handler: async (_ctx, args) => {
+    // Gated like a write (approval + non-read-only hints) but no chain signer
+    // and no forced network param — the action is inherently testnet-only,
+    // enforced below (review finding: approval could previously say mainnet).
+    mutatesState: true,
+    handler: async (ctx, args) => {
+      if (ctx.network?.id && ctx.network.id !== 'testnet') {
+        throw new ToolError(
+          'WRONG_NETWORK',
+          `fund_testnet_account only funds testnet (got network: ${ctx.network.id}) — pass {"network":"testnet"} or omit it on testnet-default deployments`,
+        )
+      }
       const amount = args.amountMicroAlgos ?? DEFAULT_FUND_MICROALGOS
 
       const attempt = async (accessToken: string) =>

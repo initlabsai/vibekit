@@ -40,7 +40,7 @@ export interface VibekitAgentOptions extends DeploymentOptions {
   /** Max model↔tool round trips per user turn. */
   maxSteps?: number
   /**
-   * Human-in-the-loop gate for `requiresSigner` tools: called before the
+   * Human-in-the-loop gate for `requiresSigner`/`mutatesState` tools: called before the
    * handler runs; return false to deny (the model sees a DENIED error result
    * and the loop continues). Read tools are never gated.
    */
@@ -93,7 +93,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
       inputSchema: injectNetworkParam(tool, deployment),
       execute: async (args: unknown) => {
         try {
-          if (tool.requiresSigner && options.approveToolCall) {
+          if ((tool.requiresSigner || tool.mutatesState) && options.approveToolCall) {
             const approved = await options.approveToolCall({ toolName: tool.name, input: args })
             if (!approved) {
               return {

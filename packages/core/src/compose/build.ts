@@ -26,6 +26,22 @@ function requireAddress(value: string | undefined, what: string, index: number):
   return value
 }
 
+/** Validate an address field only when present. */
+function optionalAddress(value: string | undefined, what: string, index: number): string | undefined {
+  if (value === undefined) return undefined
+  return requireAddress(value, what, index)
+}
+
+/** Account/position-closing fields empty the source — demand explicit intent. */
+function requireCloseConfirmation(closeTo: string | undefined, confirmed: boolean | undefined, what: string, index: number): void {
+  if (closeTo !== undefined && confirmed !== true) {
+    throw new ToolError(
+      'CLOSE_NOT_CONFIRMED',
+      `Transaction ${index}: ${what} closes the position and sends the ENTIRE remaining balance — set confirmCloseAccount: true to proceed`,
+    )
+  }
+}
+
 /** Per-spec suggested params honoring extraFee/maxFee via flat fees. */
 function feeParams(
   base: algosdk.SuggestedParams,
@@ -51,15 +67,16 @@ function buildTransactionArg(
   arg: TxnArg,
   defaultSender: string,
   suggestedParams: algosdk.SuggestedParams,
+  index = 0,
 ): algosdk.Transaction {
-  const sender = arg.sender ?? defaultSender
+  const sender = requireAddress(arg.sender ?? defaultSender, 'sender', index)
   const note = encodeNote(arg.note)
 
   switch (arg.type) {
     case 'pay':
       return algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender,
-        receiver: arg.receiver!,
+        receiver: requireAddress(arg.receiver, 'receiver', index),
         amount: BigInt(arg.amount ?? 0),
         note,
         suggestedParams,
@@ -67,7 +84,7 @@ function buildTransactionArg(
     case 'axfer':
       return algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
         sender,
-        receiver: arg.receiver!,
+        receiver: requireAddress(arg.receiver, 'receiver', index),
         assetIndex: BigInt(arg.assetId ?? 0),
         amount: BigInt(arg.amount ?? 0),
         note,
@@ -106,7 +123,7 @@ function buildTransactionArg(
       return algosdk.makeAssetFreezeTxnWithSuggestedParamsFromObject({
         sender,
         assetIndex: BigInt(arg.assetId ?? 0),
-        freezeTarget: arg.freezeTarget!,
+        freezeTarget: requireAddress(arg.freezeTarget, 'freezeTarget', index),
         frozen: arg.frozen ?? false,
         note,
         suggestedParams,
@@ -182,11 +199,12 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
     switch (spec.type) {
       case 'payment': {
         requireAddress(spec.receiver, 'receiver', i)
+        requireCloseConfirmation(spec.closeRemainderTo, spec.confirmCloseAccount, 'closeRemainderTo', i)
         const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
           sender,
           receiver: spec.receiver,
           amount: BigInt(spec.amount),
-          closeRemainderTo: spec.closeRemainderTo,
+          closeRemainderTo: optionalAddress(spec.closeRemainderTo, 'closeRemainderTo', i),
           note,
           suggestedParams,
         })
@@ -196,13 +214,14 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
 
       case 'asset_transfer': {
         requireAddress(spec.receiver, 'receiver', i)
+        requireCloseConfirmation(spec.closeAssetTo, spec.confirmCloseAccount, 'closeAssetTo', i)
         const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
           sender: spec.clawbackTarget ? sender : sender,
           receiver: spec.receiver,
           assetIndex: BigInt(spec.assetId),
           amount: BigInt(spec.amount),
-          assetSender: spec.clawbackTarget,
-          closeRemainderTo: spec.closeAssetTo,
+          assetSender: optionalAddress(spec.clawbackTarget, 'clawbackTarget', i),
+          closeRemainderTo: optionalAddress(spec.closeAssetTo, 'closeAssetTo', i),
           note,
           suggestedParams,
         })
@@ -258,8 +277,8 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
           assetURL: spec.url,
           assetMetadataHash: validateMetadataHash(spec.metadataHash),
           defaultFrozen: spec.defaultFrozen ?? false,
-          manager: spec.manager,
-          reserve: spec.reserve,
+          manager: optionalAddress(spec.manager, 'manager', i),
+          reserve: optionalAddress(spec.reserve, 'reserve', i),
           freeze: spec.freeze,
           clawback: spec.clawback,
           note,
@@ -273,11 +292,12 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
         const txn = algosdk.makeAssetConfigTxnWithSuggestedParamsFromObject({
           sender,
           assetIndex: BigInt(spec.assetId),
-          manager: spec.manager,
-          reserve: spec.reserve,
-          freeze: spec.freeze,
-          clawback: spec.clawback,
-          strictEmptyAddressChecking: false,
+          manager: optionalAddress(spec.manager, 'manager', i),
+          reserve: optionalAddress(spec.reserve, 'reserve', i),
+          freeze: optionalAddress(spec.freeze, 'freeze', i),
+          clawback: optionalAddress(spec.clawback, 'clawback', i),
+          // Omitted roles are cleared PERMANENTLY — demand explicit intent.
+          strictEmptyAddressChecking: spec.confirmClearRoles !== true,
           note,
           suggestedParams,
         })
@@ -329,7 +349,7 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
         if (abiMethod) {
           const methodArgs = (spec.args ?? []).map((arg) =>
             isTransactionArg(arg)
-              ? { txn: buildTransactionArg(arg, sender, suggestedParams), signer }
+              ? { txn: buildTransactionArg(arg, sender, suggestedParams, i), signer }
               : arg,
           )
           atc.addMethodCall({

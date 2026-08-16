@@ -193,3 +193,45 @@ describe('simulateGroup', () => {
     }
   })
 })
+
+describe('close/clear confirmations (adversarial review item 5)', () => {
+  test('closeRemainderTo without confirmCloseAccount is rejected', async () => {
+    const { buildGroup } = await import('../src/compose/build.js')
+    const ctx = fakeCtx()
+    expect(
+      buildGroup(ctx, [
+        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1, closeRemainderTo: ADDR_B },
+      ]),
+    ).rejects.toMatchObject({ code: 'CLOSE_NOT_CONFIRMED' })
+  })
+
+  test('closeRemainderTo with confirmCloseAccount builds', async () => {
+    const { buildGroup } = await import('../src/compose/build.js')
+    const ctx = fakeCtx()
+    const built = await buildGroup(ctx, [
+      {
+        type: 'payment',
+        sender: ADDR_A,
+        receiver: ADDR_B,
+        amount: 1,
+        closeRemainderTo: ADDR_B,
+        confirmCloseAccount: true,
+      },
+    ])
+    expect(built.atc.buildGroup()).toHaveLength(1)
+  })
+
+  test('asset_config keeps strict empty-address checking unless confirmClearRoles', async () => {
+    const { buildGroup } = await import('../src/compose/build.js')
+    const ctx = fakeCtx()
+    // omitting roles without confirmation → algosdk strict check throws
+    expect(
+      buildGroup(ctx, [{ type: 'asset_config', sender: ADDR_A, assetId: 1, manager: ADDR_A }]),
+    ).rejects.toThrow()
+    // with explicit confirmation the clear is allowed
+    const built = await buildGroup(ctx, [
+      { type: 'asset_config', sender: ADDR_A, assetId: 1, manager: ADDR_A, confirmClearRoles: true },
+    ])
+    expect(built.atc.buildGroup()).toHaveLength(1)
+  })
+})

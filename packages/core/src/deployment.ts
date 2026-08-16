@@ -156,6 +156,12 @@ export async function executeToolCall(
   if (deployment.networkIds.length > 1 && handlerArgs && typeof handlerArgs === 'object') {
     const { [NETWORK_PARAM]: requested, ...rest } = handlerArgs
     if (typeof requested === 'string') networkId = requested
+    else if (tool.requiresSigner) {
+      // The schema requires this, but executeToolCall is the enforcement
+      // point for hosts that skip schema parsing (§10: never write to a
+      // silently-defaulted chain).
+      throw new ToolError('NETWORK_REQUIRED', `Tool ${tool.name} writes to the chain — pass an explicit 'network'`)
+    }
     handlerArgs = rest
   }
   const context = deployment.contexts.get(networkId)

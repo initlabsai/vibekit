@@ -15,7 +15,7 @@ const handle = serveVibekitStdio({
   name: 'vibekit-reference',
   network: (process.env.NETWORK as NetworkId) ?? 'testnet',
   // e.g. NETWORKS=testnet,localnet — multi-network per-request selection (§10)
-  networks: (process.env.NETWORKS?.split(',') as NetworkId[]) ?? [],
+  networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [],
   mode,
   // signer present → keystore account tools; dispenser token → testnet funding
   tools: signer

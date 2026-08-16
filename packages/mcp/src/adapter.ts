@@ -24,7 +24,10 @@ export function registerTools(server: McpServer, deployment: ResolvedDeployment)
       {
         description: tool.description,
         inputSchema,
-        annotations: { readOnlyHint: !tool.requiresSigner },
+        annotations: {
+          readOnlyHint: !(tool.requiresSigner || tool.mutatesState),
+          destructiveHint: Boolean(tool.requiresSigner || tool.mutatesState),
+        },
         _meta: tool.display ? { [DISPLAY_META_KEY]: tool.display } : undefined,
       },
       async (args: unknown) => {

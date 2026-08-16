@@ -15,6 +15,12 @@ import { mkdir } from 'fs/promises'
 /** The one place the keystore-node version lives; bump with a tested release. */
 export const KEYSTORE_NODE_VERSION = '1.0.0-canary.3'
 
+/**
+ * Data-dir policy (intentional, review-noted): tool installs are DATA ->
+ * XDG_DATA_HOME / LOCALAPPDATA; localnet compose files are CONFIG ->
+ * ~/.config / APPDATA (see localnet/sandbox.ts). macOS uses the XDG-style
+ * paths deliberately - CLI tooling convention over ~/Library.
+ */
 export function keystoreDataDir(): string {
   const base =
     process.env.XDG_DATA_HOME ??

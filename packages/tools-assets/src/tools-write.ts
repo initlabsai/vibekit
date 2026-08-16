@@ -62,7 +62,14 @@ export const assetWriteTools: AnyTool[] = [
       receiver: z.string().describe('Receiver address'),
       amount: z.number().describe('Amount in base units of the asset'),
       clawbackTarget: z.string().optional().describe('Clawback: account to claw back from'),
-      closeAssetTo: z.string().optional().describe('Account receiving remaining asset balance'),
+      closeAssetTo: z
+        .string()
+        .optional()
+        .describe('Account receiving remaining asset balance — CLOSES the position; requires confirmCloseAccount: true'),
+      confirmCloseAccount: z
+        .boolean()
+        .optional()
+        .describe('Must be true when closeAssetTo is set'),
       note,
     }),
     toSpec: (a) => ({ ...a, type: 'asset_transfer' }),
@@ -101,10 +108,14 @@ export const assetWriteTools: AnyTool[] = [
   writeTool({
     name: 'asset_config',
     description:
-      'Reconfigure an ASA\'s role addresses (sender must be the manager). Omitted addresses are cleared PERMANENTLY.',
+      'Reconfigure an ASA\'s role addresses (sender must be the manager). Omitted addresses are cleared PERMANENTLY and require confirmClearRoles: true.',
     parameters: z.object({
       sender,
       assetId: z.number().describe('The asset ID'),
+      confirmClearRoles: z
+        .boolean()
+        .optional()
+        .describe('Must be true to clear any omitted role address (clearing is permanent)'),
       manager: z.string().optional().describe('New manager address'),
       reserve: z.string().optional().describe('New reserve address'),
       freeze: z.string().optional().describe('New freeze address'),

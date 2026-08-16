@@ -49,11 +49,10 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
   if (tx.applicationTransaction)
     formatted.applicationId = Number(tx.applicationTransaction.applicationId)
   if (tx.note && tx.note.length > 0) {
-    try {
-      formatted.note = new TextDecoder().decode(tx.note)
-    } catch {
-      formatted.note = bytesToBase64(tx.note)
-    }
+    // TextDecoder never throws (review finding: the old catch was dead code).
+    // Only surface notes that decode to printable text; otherwise base64.
+    const decoded = new TextDecoder().decode(tx.note)
+    formatted.note = /^[^\p{C}]*$/u.test(decoded) ? decoded : bytesToBase64(tx.note)
   }
   if (tx.group) formatted.group = bytesToBase64(tx.group)
   if (tx.innerTxns && tx.innerTxns.length > 0)

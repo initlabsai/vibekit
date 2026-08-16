@@ -115,9 +115,11 @@ describe('fund_testnet_account', () => {
           : null,
     ])
     const tool = createFundTestnetTool(secrets, fetchFn)
-    expect(tool.requiresSigner).toBe(true)
+    expect(tool.mutatesState).toBe(true) // gated, but no forced network param
+    expect(tool.requiresSigner).toBeUndefined()
 
-    const result = await tool.handler({} as never, { receiver: 'ADDR' } as never)
+    const testnetCtx = { network: { id: 'testnet' } }
+    const result = await tool.handler(testnetCtx as never, { receiver: 'ADDR' } as never)
     expect(result).toEqual({ txId: 'TX123', receiver: 'ADDR', amountMicroAlgos: 1_000_000 })
     expect(JSON.stringify(result)).not.toContain('live-token')
     expect(calls[0]!.headers.Authorization).toBe('Bearer live-token')
@@ -144,7 +146,8 @@ describe('fund_testnet_account', () => {
           : null,
     ])
     const tool = createFundTestnetTool(secrets, fetchFn)
-    const result = (await tool.handler({} as never, { receiver: 'A', amountMicroAlgos: 5 } as never)) as {
+    const testnetCtx = { network: { id: 'testnet' } }
+    const result = (await tool.handler(testnetCtx as never, { receiver: 'A', amountMicroAlgos: 5 } as never)) as {
       txId: string
     }
     expect(result.txId).toBe('TX2')
@@ -161,8 +164,20 @@ describe('fund_testnet_account', () => {
           : null,
     ])
     const tool = createFundTestnetTool(secrets, fetchFn)
-    expect(tool.handler({} as never, { receiver: 'A' } as never)).rejects.toMatchObject({
+    const testnetCtx = { network: { id: 'testnet' } }
+    expect(tool.handler(testnetCtx as never, { receiver: 'A' } as never)).rejects.toMatchObject({
       code: 'DISPENSER_LIMIT',
     })
+  })
+
+  test('refuses to run against a non-testnet context (review item 4)', async () => {
+    const secrets = fakeSecrets()
+    await saveDispenserToken(secrets, validToken)
+    const tool = createFundTestnetTool(secrets, (async () => {
+      throw new Error('must not reach the network')
+    }) as never)
+    expect(
+      tool.handler({ network: { id: 'mainnet' } } as never, { receiver: 'A' } as never),
+    ).rejects.toMatchObject({ code: 'WRONG_NETWORK' })
   })
 })

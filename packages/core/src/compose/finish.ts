@@ -17,9 +17,15 @@ export type ComposeOrExecuteResult = UnsignedGroupResult | ExecuteGroupResult
 function describeSpec(spec: TxnSpec): string {
   switch (spec.type) {
     case 'payment':
-      return `pay ${spec.amount} microALGO ${spec.sender} → ${spec.receiver}`
+      return (
+        `pay ${spec.amount} microALGO ${spec.sender} → ${spec.receiver}` +
+        (spec.closeRemainderTo ? ` + CLOSE ACCOUNT (entire remaining balance → ${spec.closeRemainderTo})` : '')
+      )
     case 'asset_transfer':
-      return `transfer ${spec.amount} of asset ${spec.assetId} ${spec.sender} → ${spec.receiver}`
+      return (
+        `transfer ${spec.amount} of asset ${spec.assetId} ${spec.sender} → ${spec.receiver}` +
+        (spec.closeAssetTo ? ` + CLOSE ASSET POSITION (remainder → ${spec.closeAssetTo})` : '')
+      )
     case 'asset_opt_in':
       return `opt ${spec.sender} into asset ${spec.assetId}`
     case 'asset_opt_out':
@@ -27,7 +33,7 @@ function describeSpec(spec: TxnSpec): string {
     case 'asset_create':
       return `create asset "${spec.assetName ?? spec.unitName ?? 'unnamed'}" (total ${spec.total})`
     case 'asset_config':
-      return `reconfigure asset ${spec.assetId}`
+      return `reconfigure asset ${spec.assetId}` + (spec.confirmClearRoles ? " (omitted roles CLEARED PERMANENTLY)" : "")
     case 'asset_freeze':
       return `${spec.frozen ? 'freeze' : 'unfreeze'} asset ${spec.assetId} for ${spec.freezeTarget}`
     case 'asset_destroy':

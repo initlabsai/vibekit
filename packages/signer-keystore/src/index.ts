@@ -56,7 +56,7 @@ export interface KeystoreSigner {
 }
 
 interface KeyLister {
-  (): Array<{ id: string; metadata?: Record<string, unknown> }>
+  (): Array<{ id: string; metadata?: Record<string, unknown>; publicKey?: Uint8Array }>
 }
 
 /** Pure factory over any keystore-like backend — the testable core. */
@@ -74,10 +74,18 @@ export function createSignerFromKeystore(
     const next = new Map<string, BookEntry>()
     for (const key of listKeys()) {
       try {
-        const data = await keystore.export(key.id)
-        if (data.publicKey && data.publicKey.length === 32) {
+        // Prefer the state-mirrored public key; export() only as fallback —
+        // for extractable keys export() also returns private material, which
+        // must never linger in this process (review finding).
+        let publicKey = key.publicKey
+        if (!publicKey) {
+          const data = await keystore.export(key.id)
+          publicKey = data.publicKey
+          delete (data as { privateKey?: Uint8Array }).privateKey
+        }
+        if (publicKey && publicKey.length === 32) {
           const name = key.metadata?.name
-          next.set(algosdk.encodeAddress(data.publicKey), {
+          next.set(algosdk.encodeAddress(publicKey), {
             keyId: key.id,
             ...(typeof name === 'string' ? { name } : {}),
           })
@@ -156,7 +164,8 @@ export async function createKeystoreSigner(
   const store = new Store({ keys: [], status: 'idle' } as unknown as KeyStoreState)
   const keystore: RpcKeyStore = createRpcKeyStore({
     store,
-    ...(options.socketPath ? { socketPath: options.socketPath } : {}),
+    // the client option is `path` (review finding: socketPath was silently ignored)
+    ...(options.socketPath ? { path: options.socketPath } : {}),
   })
   await keystore.ready
   const listKeys = () =>

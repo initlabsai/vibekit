@@ -2,7 +2,7 @@
 
 Status: **executing — Phases 0–6 complete, next: 1.0 publish gate, then Phase 7 (API + SDK, new repo)** · Owner: Gabriel Kuettel · Last updated: 2026-08-16
 
-> **Handover snapshot (2026-08-16).** Code: `~/Code/@initlabs/vibekit` = `github.com/initlabsai/vibekit` (private) — 11 packages + reference app + CLI + canonical skills, ~190 tests green (`bun install && bunx turbo run build typecheck test`). **Phases 0–6 complete and field-hardened** by live Claude Code, Pi, and Grok Build sessions; every field failure was fixed same-day (see git log). Post-phase-6 additions: `vibekit doctor --fix`, `vibekit new` composes init, Pi + Grok Build harness support, `vibekit tool` (full surface as CLI), canonical in-repo `skills/`, account lifecycle (`list_signing_addresses` with names+balances, `create_signing_account`), the **§6 secrets policy (normative)**, TestNet dispenser (`vibekit dispenser login` → daemon secrets → `fund_testnet_account`), and the **managed keystore CLI** (`vibekit keystore <args>`, pinned, no globals). **Institutional knowledge lives in this repo** (docs/ — DESIGN.md canonical, HANDOVER.md, REVIEW-BRIEF.md, architecture.html); the v1 repo (`gabrielkuettel/vibekit`, `~/Code/vibekit`) is heritage only. **Next: adversarial review (docs/REVIEW-BRIEF.md) → the 1.0 publish gate → Phase 7** (`initlabsai/vibekit-agent`: hosted API + SDK, consuming published packages only). Read §9 (products), §10 (state model — normative), §6 (custody + secrets — normative), §12 (migration plan) before structural changes. Hard rules in AGENTS.md.
+> **Handover snapshot (2026-08-16).** Code: `~/Code/@initlabs/vibekit` = `github.com/initlabsai/vibekit` (private) — 11 packages + reference app + CLI + canonical skills, ~185 tests green (`bun install && bunx turbo run build typecheck test`). **Phases 0–6 complete and field-hardened** by live Claude Code, Pi, and Grok Build sessions; every field failure was fixed same-day (see git log). Post-phase-6 additions: `vibekit doctor --fix`, `vibekit new` composes init, Pi + Grok Build harness support, `vibekit tool` (full surface as CLI), canonical in-repo `skills/`, account lifecycle (`list_signing_addresses` with names+balances, `create_signing_account`), the **§6 secrets policy (normative)**, TestNet dispenser (`vibekit dispenser login` → daemon secrets → `fund_testnet_account`), and the **managed keystore CLI** (`vibekit keystore <args>`, pinned, no globals). **Institutional knowledge lives in this repo** (docs/ — DESIGN.md canonical, HANDOVER.md, REVIEW-BRIEF.md, architecture.html); the v1 repo (`gabrielkuettel/vibekit`, `~/Code/vibekit`) is heritage only. **Next: adversarial review (docs/REVIEW-BRIEF.md) → the 1.0 publish gate → Phase 7** (`initlabsai/vibekit-agent`: hosted API + SDK, consuming published packages only). Read §9 (products), §10 (state model — normative), §6 (custody + secrets — normative), §12 (migration plan) before structural changes. Hard rules in AGENTS.md.
 
 VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server for Algorand built on published, reusable tool packages, with a plugin system so developers can extend it or deploy their own. Two stacks, one brain (§9): the local dev stack (CLI + MCP) and the hosted product stack (API + SDK + the web "VibeKit Agent"), all running the same tools through the same orchestrator.
 
@@ -96,7 +96,9 @@ interface ToolDefinition<P extends z.ZodType = z.ZodType, R extends z.ZodType = 
   parameters: P
   /** Result schema. Input schemas alone can't generate SDK result types or MCP
    *  structured-content schemas — v1's regex-over-.d.ts hack was patching exactly
-   *  this gap. Required for core tools; optional for plugins. */
+   *  this gap. Required for core tools; optional for plugins.
+   *  NOTE (review): not yet runtime-enforced — enforce-or-drop is an explicit
+   *  pre-publish decision (see docs/REVIEW-FINDINGS.md). */
   output?: R
   /** Write tools set this; hosts gate on it. Maps to MCP tool annotations
    *  (readOnlyHint / destructiveHint) in the adapter. */
@@ -126,12 +128,12 @@ interface ToolContext {
 }
 ```
 
-- **`ToolContext` is constructed per request** — this is what makes the stateless spec trivial to satisfy. Network selection moves from server state to request config (HTTP: a namespaced header, e.g. `X-Algorand-Network`, with algod/indexer clients pooled per network; stdio: process config).
+- **`ToolContext` is pooled per network at startup** (`resolveDeployment`) and selected per request — nothing request-scoped is stored on it, which is what makes the stateless spec trivial to satisfy. (Freezing the pooled contexts before handler invocation is a tracked pre-hosted item.) Network selection moves from server state to request config (today: the injected `network` tool parameter, clients pooled per network; a hosted-HTTP header like `X-Algorand-Network` is planned, not yet implemented).
 - **`Signer` is `algosdk.TransactionSigner`** (`(txnGroup, indexesToSign) => Promise<Uint8Array[]>`) — not a custom interface. Signers must see the whole group and sign a subset: WalletConnect and any co-signing/rekey flow require it, and it plugs directly into algosdk's composer. Inventing our own shape here was a v1-style mistake caught on review.
-- **Results are JSON-safe by contract.** algosdk v3 emits `bigint` everywhere; core ships one codec (bigint→string, Uint8Array→base64) applied in the adapter, not per host. v1 scattered `sanitizeBigInts` across consumers.
+- **Results are JSON-safe by contract.** algosdk v3 emits `bigint` everywhere; core ships one codec (bigint→number when safe, →string otherwise; Uint8Array→base64) applied in the adapter (always-string is under consideration pre-publish), not per host. v1 scattered `sanitizeBigInts` across consumers.
 - **Errors are thrown, not returned.** Handlers throw `ToolError` (typed code + user-safe message); each host adapter maps it once (MCP `isError`, API error JSON). No `{ error }` result shapes.
 - **`services` bag** is how nfd- and alpha-arcade-style tools get their clients without bespoke handler signatures. A plugin declares a factory; the host runs it once and injects the result under the plugin's name (registry rejects duplicate plugin names and duplicate tool names at startup). Typing is by convention — a plugin exports a typed accessor (`getNfdService(ctx)`) so its own handlers stay type-safe.
-- **Dynamic tools are first-class**: nothing in the contract assumes tools are statically compiled in. An ARC-56 spec can be turned into `ToolDefinition[]` at runtime — this is the seed of the explorer's xArc feature and lives in `tools-contracts` as `toolsFromArc56(spec)`. Note xArc runs through the **API**, not the MCP: the 2026 spec makes tool lists cacheable, so the MCP's list must stay deterministic per deployment.
+- **Dynamic tools are first-class**: nothing in the contract assumes tools are statically compiled in. An ARC-56 spec can be turned into `ToolDefinition[]` at runtime — this is the seed of the explorer's xArc feature and will live in `tools-contracts` as `toolsFromArc56(spec)` (Phase 7/8 work — not yet implemented). Note xArc runs through the **API**, not the MCP: the 2026 spec makes tool lists cacheable, so the MCP's list must stay deterministic per deployment.
 
 ```ts
 // A plugin is just a package exporting this:
@@ -155,8 +157,8 @@ import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
 const server = createVibekitMcp({
   network: 'mainnet',                    // or per-request via header in HTTP mode
   tools: [...networkTools, ...accountTools],
-  plugins: [nfdPlugin({ apiUrl: '...' })],
-  signer: keystoreSigner(),              // optional — omit for read-only deployments
+  plugins: [nfdPlugin()],
+  resolveSigner: (addr) => signer.resolveSigner(addr), // optional — omit for read-only
 })
 ```
 
@@ -186,10 +188,12 @@ State that v1 kept in the server process and where it goes:
 
 **Secrets policy (normative, 2026-08-16).** The keystore daemon's secrets store (`secrets.put/get/list/remove` over the same RPC socket; values sealed at rest by the same driver as key material) is v2's **only** home for credentials — dispenser tokens, plugin API keys (keyed by convention: `vibekit.dispenser.<network>`, `vibekit.plugin.<name>.<key>`), any future paid-service auth. The bright line, mirroring the key model exactly:
 
-- **Agents see metadata, never plaintext.** Non-secret metadata (id, name, expiry) mirrors into the reactive store and may be exposed via tools; a raw `secrets.get` must never be an agent-facing tool — a decrypted value in a tool result is in the transcript, the harness logs, and the model provider's hands.
+- **Agents see metadata, never plaintext.** Non-secret metadata (id, name, expiry) mirrors into the reactive store and may be exposed via tools; a raw `secrets.get` must never be an agent-facing tool — a decrypted value in a tool result is in the transcript, the harness logs, and the model provider's hands. Precisely: **the tool surface cannot return credentials** — the guarantee is about what crosses the tool-result boundary, not a claim that a same-UID process couldn't read the daemon (see trust boundary below).
 - **Agents wield capabilities that consume secrets in-handler.** Tools like `fund_testnet_account` read the secret inside the tool process and return only outcomes (txIds, statuses) — the `sign` pattern applied to credentials. Refresh/rotation exchanges likewise happen in-handler; agents orchestrate lifecycle (detect expiry from metadata, invoke refresh, tell the human when a human grant is required) without ever being able to read a value.
 - **Secrets enter via human channels only** (CLI prompts, OAuth device flows like `vibekit dispenser login`) — never through the model's context window, so nothing to seal has already leaked.
 - Plugin services resolve their credentials from the daemon at service-construction time — no env-var/dotfile sprawl; one vault, one `keystore serve`, one custody story for keys and credentials alike.
+
+**Trust boundary (normative, from the adversarial review).** VibeKit's local dev stack runs on a **trusted machine operated by a competent developer**: any same-UID process can reach the daemon socket (full API) — that is the ssh-agent posture, accepted and documented, not a vulnerability. What is *not* trusted is **the model**: prompt injection via on-chain data (asset names, notes, NFD fields) is in scope, which is why writes are gated (harness approval + `requiresSigner`/`mutatesState` hints + explicit network enforcement in `executeToolCall`), close/clear actions demand explicit confirmation flags, and the system prompt frames on-chain strings as data. `SIGNING=execute` means the operator accepts harness auto-approve as the residual risk. **Phase 7 (hosted, multi-tenant, untrusted browsers) gets none of these relaxations.**
 
 Both foundation dependencies are pre-1.0 (`algosdk@3.7.0-beta.1`, `keystore-node@1.0.0-canary.3`). Policy: **pin exact versions, isolate behind our interfaces** (`Signer`, `NetworkClients`) so churn lands in one file per dependency, not across published packages.
 
@@ -267,7 +271,7 @@ State is where v1 died (SQLite session store, per-network keyring drift, `switch
 
 1. ~~Where does `apps/api` live long-term?~~ **Resolved (2026-08-11): API + explorer form their own monorepo, `initlabsai/vibekit-agent`.** The vibekit repo is the developer-tooling side (MCP, CLI, packages); vibekit-agent is the hosted product side.
 2. **Package naming**: `@initlabs/vibekit-core` vs `@initlabs/vibekit-core` — bare names are cleaner but generic in a company-wide scope that may later hold non-vibekit packages.
-3. **Testnet faucet**: v1's dispenser-testnet (Foundation faucet client; AlgoKit's equivalent is [`core/dispenser.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/dispenser.py)) — resurrect as a tool, a CLI command, or drop?
+3. ~~Testnet faucet~~ **Resolved (2026-08-16)**: `vibekit dispenser login` (device flow, `offline_access`) → token sealed in daemon secrets → `fund_testnet_account` tool, conditionally registered. Original question: v1's dispenser-testnet (Foundation faucet client; AlgoKit's equivalent is [`core/dispenser.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/dispenser.py)) — resurrect as a tool, a CLI command, or drop?
 4. ~~`app_deploy` semantics~~ **Resolved (2026-08-15): plain create on raw algosdk** — ARC-56/32 parsing, `TMPL_*` deploy-time substitution, algod compile, bare or ABI create. No idempotent AppFactory semantics: deploying again makes a new app; agents that want update flows use `app_call` with the update OnComplete (future work if demanded).
 5. ~~MCP SDK choice~~ **Resolved by spike (2026-08-11): official v2 SDK** (`@modelcontextprotocol/server` 2.x) — its per-request factory model matches our per-request `ToolContext` exactly.
 6. **Ecosystem tools** (`search_ecosystem` + 454-line static dataset): port as a plugin with the data externalized, or drop from the MCP and keep it API-side only?
@@ -276,7 +280,7 @@ State is where v1 died (SQLite session store, per-network keyring drift, `switch
 9. **How to depend on `algosdk@beta`**: peer ranges against a prerelease (`>=3.7.0-beta.1`) behave badly in npm/semver. Option: ship algosdk as a *pinned regular dependency* until 3.7 stable, then flip to peer in one breaking release. Same question for `keystore-node@canary` inside `signer-keystore`.
 10. **Docs site.** v1 has `apps/website` (Astro/Starlight, getvibekit.ai) — v2's layout doesn't account for it, but published packages for external developers *require* docs (contract reference, plugin authoring guide, self-hosting guide). Port the site into the new repo, or new docs under an Init Labs domain?
 11. **License & copyright.** New org, published packages: pick the license early (Apache-2.0 matches the Algorand ecosystem; v1 is MIT © Gabriel Kuettel, so relicensing the ported code is the copyright holder's call — clean) and settle copyright headers/`author` fields before the first npm publish, not after.
-12. **Keystore UX gap.** Deferring account CRUD to the `keystore` CLI assumes it's installed and its UX is acceptable for vibekit users. If canary UX is rough, `vibekit account …` thin aliases move from "maybe later" to launch scope. *Spike data point: CLI UX was solid (generate/list/export/sign/serve all clean) — leaning "defer to keystore CLI".*
+12. ~~Keystore UX gap~~ **Resolved (2026-08-16)**: `vibekit keystore <args>` (managed pinned install) + agent-facing `create_signing_account`/`list_signing_addresses`; mnemonic flows stay with the CLI. Original question: **Keystore UX gap.** Deferring account CRUD to the `keystore` CLI assumes it's installed and its UX is acceptable for vibekit users. If canary UX is rough, `vibekit account …` thin aliases move from "maybe later" to launch scope. *Spike data point: CLI UX was solid (generate/list/export/sign/serve all clean) — leaning "defer to keystore CLI".*
 
 ## 12. Migration plan
 

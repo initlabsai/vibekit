@@ -16,6 +16,8 @@ export interface PaymentTxnSpec extends BaseTxnSpec {
   receiver: string
   amount: number
   closeRemainderTo?: string
+  /** Must be true when closeRemainderTo is set — closing empties the account. */
+  confirmCloseAccount?: boolean
 }
 
 export interface AssetTransferTxnSpec extends BaseTxnSpec {
@@ -25,6 +27,8 @@ export interface AssetTransferTxnSpec extends BaseTxnSpec {
   amount: number
   clawbackTarget?: string
   closeAssetTo?: string
+  /** Must be true when closeAssetTo is set — closes the asset position. */
+  confirmCloseAccount?: boolean
 }
 
 export interface AssetOptInTxnSpec extends BaseTxnSpec {
@@ -61,6 +65,8 @@ export interface AssetConfigTxnSpec extends BaseTxnSpec {
   reserve?: string
   freeze?: string
   clawback?: string
+  /** Must be true to clear omitted role addresses (clearing is permanent). */
+  confirmClearRoles?: boolean
 }
 
 export interface AssetFreezeTxnSpec extends BaseTxnSpec {

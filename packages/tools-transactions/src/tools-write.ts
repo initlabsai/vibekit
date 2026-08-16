@@ -39,7 +39,15 @@ export const txnSpecSchema = z.object({
   closeRemainderTo: z
     .string()
     .optional()
-    .describe('(payment) Address receiving remaining balance — closes the account'),
+    .describe('(payment) Address receiving remaining balance — CLOSES the account; requires confirmCloseAccount: true'),
+  confirmCloseAccount: z
+    .boolean()
+    .optional()
+    .describe('Must be true when closing (closeRemainderTo/closeAssetTo) — the position is emptied'),
+  confirmClearRoles: z
+    .boolean()
+    .optional()
+    .describe('(asset_config) Must be true to clear omitted role addresses (permanent)'),
   assetId: z.number().optional().describe('(asset_*) The asset ID'),
   total: z.number().optional().describe('(asset_create) Total supply'),
   decimals: z.number().optional().describe('(asset_create) Decimals (0-19)'),
@@ -115,6 +123,10 @@ export const transactionWriteTools: AnyTool[] = [
       sender: z.string().describe('Sender address'),
       receiver: z.string().describe('Receiver address'),
       amountMicroAlgos: z.number().int().positive().describe('Amount in microALGO'),
+      confirmCloseAccount: z
+        .boolean()
+        .optional()
+        .describe('Must be true when closeRemainderTo is set — closing empties the account'),
       closeRemainderTo: z
         .string()
         .optional()
@@ -132,6 +144,7 @@ export const transactionWriteTools: AnyTool[] = [
           receiver: args.receiver,
           amount: args.amountMicroAlgos,
           closeRemainderTo: args.closeRemainderTo,
+          confirmCloseAccount: args.confirmCloseAccount,
           note: args.note,
         },
       ]),

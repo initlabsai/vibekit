@@ -17,7 +17,7 @@ access paths — pick whichever your harness supports.
 2. **Meta-tool harnesses** (pi with pi-mcp-adapter): MCP tools are reached
    through a single `mcp` tool — search for the tool name, then invoke it.
    Do not guess other tool names.
-3. **Shell fallback** (any harness with shell access, no MCP needed):
+3. **Shell fallback — READS ONLY** (any harness with shell access, no MCP):
 
    ```bash
    vibekit tool list                                        # browse all tools
@@ -27,7 +27,11 @@ access paths — pick whichever your harness supports.
 
    Arguments are one JSON object string; results are JSON on stdout. This is
    the correct fallback when MCP is unavailable — never invent other CLI
-   commands for on-chain actions.
+   commands for on-chain actions. **Writes (send/create/deploy/fund) must go
+   through MCP tools**, where your harness's approval gate applies —
+   `vibekit tool` executes writes without any gate and is reserved for the
+   human at the keyboard and their scripts. If you have shell but no MCP
+   write path, compose the request and hand the exact command to the user.
 
 ## Accounts: no "current account" exists
 
@@ -40,7 +44,8 @@ access paths — pick whichever your harness supports.
   `vibekit tool list_signing_addresses '{"includeBalances":true}'`.
 - **"create an account" → call `create_signing_account`** (optional `name`).
   The key is generated inside the daemon, stays unextractable in the OS
-  keychain, and only the address comes back — this is safe for you to run.
+  keychain, and only the address comes back. It is a gated (approval-carrying)
+  action: it mints key material on the user's machine.
   Shell equivalent: `vibekit tool create_signing_account '{"name":"..."}'`.
 - Every write tool takes an explicit `sender`. There is no switch-account
   concept; remember the user's chosen address in conversation and pass it
@@ -96,7 +101,7 @@ are in base units unless a decimals field says otherwise.
 |---|---|
 | Who am I / my accounts | `list_signing_addresses` |
 | Balance & holdings | `lookup_account`, `get_account_portfolio`, `get_account_assets` |
-| Send ALGO | `send_payment` (sender, receiver, amountMicroAlgos, network) |
+| Send ALGO | `send_payment` via MCP (sender, receiver, amountMicroAlgos, network) — never via shell |
 | Fund a localnet account | shell: `vibekit localnet fund <address>` |
 | Create / transfer ASAs | `create_asset`, `asset_transfer`, `asset_opt_in` |
 | Deploy / call contracts | `app_deploy`, `app_call`, `app_get_info`, `app_list_methods` |

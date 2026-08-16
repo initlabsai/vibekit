@@ -61,6 +61,8 @@ export function createSigningAccountTool(signer: Pick<KeystoreSigner, 'createAcc
       name: z.string().optional(),
     }),
     display: 'account',
+    // Mints a key in the OS keychain — gated (approval + non-read-only hints).
+    mutatesState: true,
     handler: async (_ctx, args) => {
       const { address, keyId } = await signer.createAccount(args.name)
       return { address, keyId, ...(args.name ? { name: args.name } : {}) }

@@ -198,7 +198,10 @@ export async function commandDoctor(args: string[]): Promise<void> {
   } else {
     ok(`keystore CLI managed at the pinned version (${KEYSTORE_NODE_VERSION})`)
   }
-  const keystoreSocket = join(homedir(), '.algorand-keystore', 'keystore.sock')
+  const keystoreSocket =
+    process.platform === 'win32'
+      ? '\\\\.\\pipe\\algorand-keystore' // keystore-node named pipe
+      : join(homedir(), '.algorand-keystore', 'keystore.sock')
   if (existsSync(keystoreSocket)) {
     ok('keystore daemon socket present (signing available)')
   } else {

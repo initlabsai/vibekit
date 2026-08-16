@@ -46,6 +46,12 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   output?: z.ZodType
   /** Write tools set this; hosts gate on it and map it to MCP annotations. */
   requiresSigner?: boolean
+  /**
+   * World-changing without being a chain write from the user's funds
+   * (key creation, faucet dispense). Hosts gate it like requiresSigner
+   * (approval, non-read-only hints) but no `network` write-param is forced.
+   */
+  mutatesState?: boolean
   display?: DisplayHint
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>
 }

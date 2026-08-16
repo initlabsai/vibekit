@@ -65,7 +65,7 @@ async function buildDeployment(): Promise<{
 
   const deployment = resolveDeployment({
     network: (process.env.NETWORK as NetworkId) ?? 'localnet',
-    networks: (process.env.NETWORKS?.split(',') as NetworkId[]) ?? [
+    networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [
       'localnet',
       'testnet',
       'mainnet',
