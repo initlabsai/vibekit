@@ -5,8 +5,7 @@
     "types": [
       "bun"
     ],
-    "resolveJsonModule": true,
-    "jsx": "react-jsx"
+    "resolveJsonModule": true
   },
   "include": [
     "src",

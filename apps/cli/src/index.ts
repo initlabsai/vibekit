@@ -15,7 +15,7 @@ ${pc.bold('Usage:')}
   vibekit init                Set up AI coding agents (skills, MCP config)
   vibekit new [dir]           Scaffold a project from a starter template
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
-  vibekit explore             Ask about the network in plain English (TUI)
+  vibekit agent               Open the VibeKit Agent (web) — explore Algorand by conversation
   vibekit mcp                 Run the MCP server over stdio (for agent integration)
 
 ${pc.bold('LocalNet Commands:')}
@@ -59,9 +59,9 @@ async function main(): Promise<boolean> {
       await commandLocalnet(args)
       return true
     }
-    case 'explore': {
-      const { commandExplore } = await import('./commands/explore/index.js')
-      await commandExplore(args)
+    case 'agent': {
+      const { commandAgent } = await import('./commands/agent.js')
+      await commandAgent()
       return true
     }
     case 'mcp': {
