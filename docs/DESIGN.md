@@ -184,7 +184,7 @@ State that v1 kept in the server process and where it goes:
 - **Account management CLI**: defer to keystore-node's own `keystore` CLI rather than rebuilding create/list/rename. `vibekit` may add thin aliases later if the UX warrants it. **Agent-side discovery (added 2026-08-16):** `signer-keystore` exports `createSigningAddressesTool` — a read tool (`list_signing_addresses`) exposing the daemon's address book, registered by hosts only in execute-mode deployments. Live query of the daemon each call, no stored state (§10 holds); answers the "list my accounts" question every first session asks. **Create added 2026-08-16** (from a Grok field report): `create_signing_account` generates ed25519 inside the daemon over RPC (unextractable, address-only response) — which also sidesteps the daemon's stale-view limitation (keys created by the raw CLI while `keystore serve` runs are invisible until restart; documented in the skills, upstream fix desirable). Mnemonic/seed flows remain human-only. Q12 stance amended: create is now agent-facing; rename/remove/import stay with the keystore CLI.
 - Deleted outright: `provider-interface`, `provider-keyring`, `provider-vault`, `keyring`, `dispenser-*`, most of `db`, mcp-server's `account-service.ts` (653 LOC) and `app-state.ts` (466 LOC).
 
-Both foundation dependencies are pre-1.0 (`algosdk@3.7.0-beta.1`, `keystore-node@1.0.0-canary.1`). Policy: **pin exact versions, isolate behind our interfaces** (`Signer`, `NetworkClients`) so churn lands in one file per dependency, not across published packages.
+Both foundation dependencies are pre-1.0 (`algosdk@3.7.0-beta.1`, `keystore-node@1.0.0-canary.3`). Policy: **pin exact versions, isolate behind our interfaces** (`Signer`, `NetworkClients`) so churn lands in one file per dependency, not across published packages.
 
 ## 7. CLI (`vibekit`)
 
@@ -329,7 +329,7 @@ Implementation facts learned:
 **Signing & custody**
 - [wallet-provider repo](https://github.com/algorandfoundation/wallet-provider) · [TUTORIAL.md](https://github.com/algorandfoundation/wallet-provider/blob/main/TUTORIAL.md) (provider/extension/store architecture)
 - [wallet-provider-extensions repo](https://github.com/algorandfoundation/wallet-provider-extensions) — `keystore/node` directory is the source of `@algorandfoundation/keystore-node`
-- [`@algorandfoundation/keystore-node` on npm](https://www.npmjs.com/package/@algorandfoundation/keystore-node) — pin `1.0.0-canary.1` (`next` tag) for the spike
+- [`@algorandfoundation/keystore-node` on npm](https://www.npmjs.com/package/@algorandfoundation/keystore-node) — pin exactly (currently `1.0.0-canary.3`; the npm `latest` tag points at a stale 0.0.1 beta — always install with an explicit version)
 
 **Chain SDK & post-quantum**
 - [js-algorand-sdk repo](https://github.com/algorand/js-algorand-sdk) — beta channel is `algosdk@3.7.0-beta.1` (`npm i algosdk@beta`)

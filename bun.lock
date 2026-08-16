@@ -150,8 +150,8 @@
       "name": "@initlabs/vibekit-signer-keystore",
       "version": "0.1.0",
       "dependencies": {
-        "@algorandfoundation/keystore-core": "1.0.0-canary.1",
-        "@algorandfoundation/keystore-node": "1.0.0-canary.1",
+        "@algorandfoundation/keystore-core": "1.0.0-canary.3",
+        "@algorandfoundation/keystore-node": "1.0.0-canary.3",
         "@tanstack/store": "^0.7.0",
       },
       "devDependencies": {
@@ -260,9 +260,9 @@
 
     "@algorandfoundation/dp256": ["@algorandfoundation/dp256@1.1.0", "", { "dependencies": { "@noble/curves": "1.9.6", "@noble/hashes": "1.8.0", "@scure/bip39": "1.6.0" } }, "sha512-s+ZQG3WK6eWskfmjh0bbMImyO+SIR297s+7vQoercbM0hYvilzTBT/rEcvs4ZQxU6TxkTXLq4BRj1USjGFpsCA=="],
 
-    "@algorandfoundation/keystore-core": ["@algorandfoundation/keystore-core@1.0.0-canary.1", "", { "dependencies": { "@noble/hashes": "2.0.1", "@scure/bip39": "1.6.0" }, "peerDependencies": { "@algorandfoundation/dp256": "1.1.0", "@algorandfoundation/wallet-provider": "1.0.0-canary.5", "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@tanstack/store": "0.9.3", "before-after-hook": "4.0.0", "falcon-1024": "0.2.0" }, "optionalPeers": ["@algorandfoundation/dp256", "@algorandfoundation/xhd-wallet-api", "falcon-1024"] }, "sha512-jYxrBRcDFkU3OkacF0BwhWbwAxtJZwyltlMgyNewAgAMhyayo5sTEjjXGBBGAiBaa4EghrAzSCXwjmsNHthuuQ=="],
+    "@algorandfoundation/keystore-core": ["@algorandfoundation/keystore-core@1.0.0-canary.3", "", { "dependencies": { "@noble/hashes": "2.0.1", "@scure/bip39": "1.6.0" }, "peerDependencies": { "@algorandfoundation/dp256": "1.1.0", "@algorandfoundation/wallet-provider": "1.0.0-canary.5", "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@tanstack/store": "0.9.3", "before-after-hook": "4.0.0", "falcon-1024": "0.2.0" }, "optionalPeers": ["@algorandfoundation/dp256", "@algorandfoundation/xhd-wallet-api", "falcon-1024"] }, "sha512-BYHhQSu5ENQSux9dQBBBbeWlR2SK9rGQ7w6WupLInKtb5tcb29noxPIlEIFbvN0jsSaC4qpCQMBxz4uQzVFNKw=="],
 
-    "@algorandfoundation/keystore-node": ["@algorandfoundation/keystore-node@1.0.0-canary.1", "", { "dependencies": { "@algorandfoundation/dp256": "1.1.0", "@algorandfoundation/keystore-core": "1.0.0-canary.1", "@algorandfoundation/wallet-provider": "1.0.0-canary.5", "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@scure/base": "2.0.0", "@scure/bip39": "1.6.0", "falcon-1024": "0.2.0" }, "optionalDependencies": { "@napi-rs/keyring": "1.3.0" }, "peerDependencies": { "@algorandfoundation/log-store": "1.0.0-canary.3", "@tanstack/store": "0.9.3", "before-after-hook": "4.0.0" }, "optionalPeers": ["@algorandfoundation/log-store"], "bin": { "keystore": "dist/cli.js" } }, "sha512-f84NiLZ2VxtKCBNxlU1qbElOrF7gp+L0vgga7dDBwwoLY4sEJT/lEUHaADyOfF5cygPbr/NJJP1nt40oGNQUxg=="],
+    "@algorandfoundation/keystore-node": ["@algorandfoundation/keystore-node@1.0.0-canary.3", "", { "dependencies": { "@algorandfoundation/dp256": "1.1.0", "@algorandfoundation/keystore-core": "1.0.0-canary.3", "@algorandfoundation/wallet-provider": "1.0.0-canary.5", "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@scure/base": "2.0.0", "@scure/bip39": "1.6.0", "falcon-1024": "0.2.0" }, "optionalDependencies": { "@napi-rs/keyring": "1.3.0" }, "peerDependencies": { "@algorandfoundation/log-store": "1.0.0-canary.3", "@tanstack/store": "0.9.3", "before-after-hook": "4.0.0" }, "optionalPeers": ["@algorandfoundation/log-store"], "bin": { "keystore": "dist/cli.js" } }, "sha512-iwXhW8lamJSDOwkUfpTrBUjAu4T1ymvzo8DtpmX4qPKip35cxIKC7TJ39BfkEe5aQFLnS5GNrlYzQL6TGgwO+w=="],
 
     "@algorandfoundation/wallet-provider": ["@algorandfoundation/wallet-provider@1.0.0-canary.5", "", {}, "sha512-yXak4ze3uOdkSSyCkv4Qz4mm4FiqCKh3pDErZNBaIhkGCgWcboelgkEMQneBd0I/o9DwU2EfkHfRSZYxaJ11Rg=="],
 

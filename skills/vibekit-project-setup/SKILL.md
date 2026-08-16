@@ -59,7 +59,7 @@ stop it first (they are interchangeable; same ports and genesis layout).
 ## Accounts & signing setup
 
 ```bash
-npm i -g @algorandfoundation/keystore-node   # the keystore CLI
+npm i -g @algorandfoundation/keystore-node@1.0.0-canary.3   # the keystore CLI
 keystore serve                               # signing daemon — enables execute mode
 keystore generate ed25519 --name <label>     # create an account (OS keychain);
                                              # agents should use the

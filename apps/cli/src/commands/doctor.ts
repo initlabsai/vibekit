@@ -188,7 +188,7 @@ export async function commandDoctor(args: string[]): Promise<void> {
   } else if (Bun.which('keystore')) {
     warn('keystore CLI installed but daemon not running — `keystore serve` enables signing')
   } else {
-    warn('keystore CLI not found — `npm i -g @algorandfoundation/keystore-node` enables signing')
+    warn('keystore CLI not found — `npm i -g @algorandfoundation/keystore-node@1.0.0-canary.3` enables signing')
   }
 
   console.log()

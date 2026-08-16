@@ -36,8 +36,8 @@
     "zod": "^4.4.3"
   },
   "dependencies": {
-    "@algorandfoundation/keystore-core": "1.0.0-canary.1",
-    "@algorandfoundation/keystore-node": "1.0.0-canary.1",
+    "@algorandfoundation/keystore-core": "1.0.0-canary.3",
+    "@algorandfoundation/keystore-node": "1.0.0-canary.3",
     "@tanstack/store": "^0.7.0"
   },
   "repository": {
