@@ -18,6 +18,9 @@ MCP server connected with `NETWORK=localnet`,
 
 ## Phases (run in order — later phases reuse earlier state)
 
+0. **[bootstrap.md](bootstrap.md)** — optional entry point when starting from
+   an empty directory (headless init, localnet + daemon provisioning). Skip
+   if the environment above is already standing.
 1. **[network.md](network.md)** — no dependencies.
 2. **[keystore.md](keystore.md)** — creates ACCT_A / ACCT_B; ACCT_A gets funded. Carry both addresses forward.
 3. Fund ACCT_B as well: `vibekit localnet fund <ACCT_B>` (assets phase needs its min balance).
@@ -26,6 +29,9 @@ MCP server connected with `NETWORK=localnet`,
 6. **[contracts.md](contracts.md)** — deploy/call/state/teardown of the counter app.
 7. **[accounts.md](accounts.md)** — history-dependent lookups (needs 4–6 done).
 8. **[gates.md](gates.md)** — refusal behaviors; must not move funds.
+9. **[compose.md](compose.md)** — reconnect the MCP with `SIGNING=compose`
+   (then `NETWORKS=localnet` for its single-network section); unsigned-group
+   contract and gate parity. Must not move funds.
 
 ## Final report
 

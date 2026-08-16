@@ -122,6 +122,15 @@ of these relaxations.**
 - Small debts: AGENTS.md skills table is hand-maintained (should generate from the
   bundle); `withKeystoreTools`/deployment construction duplicated across
   `apps/cli/src/commands/{mcp,tool}.ts`.
+- **App-call tools expose no box references parameter** — an app call touching
+  boxes can't declare them, so box-using contracts fail at runtime (simulate's
+  `allowUnnamedResources` is the only escape). Tool-surface gap, pre-1.0 worth
+  deciding.
+- **Test prompts** (`test-prompts/`): cover the tool surface, gates, compose
+  mode, single-network, and bootstrap; deliberately deferred: ABI depth (method
+  args, return-value decoding, `deployTimeParams`, txn-typed args — needs a
+  richer fixture app with an ARC-4 router), stateless-HTTP transport, and the
+  `vibekit tool` CLI host (better served by deterministic CI than prompts).
 - Vendored language skills removed pending vibekit-consistent refactor (git history
   keeps them; `skills/README.md` explains).
 

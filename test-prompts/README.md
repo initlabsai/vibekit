@@ -39,6 +39,7 @@ the prompt instructs it (or pre-fund and substitute addresses).
 
 | File | Network | Needs |
 |---|---|---|
+| [bootstrap.md](bootstrap.md) | localnet | shell + binary; empty dir → READY (entry point) |
 | [network.md](network.md) | localnet | localnet |
 | [keystore.md](keystore.md) | localnet | + keystore daemon |
 | [transactions.md](transactions.md) | localnet | + 2 funded signing accounts |
@@ -46,6 +47,7 @@ the prompt instructs it (or pre-fund and substitute addresses).
 | [contracts.md](contracts.md) | localnet | + 1 funded signing account |
 | [accounts.md](accounts.md) | localnet | run after transactions/assets (needs history) |
 | [gates.md](gates.md) | localnet | + 1 funded signing account (nothing is spent) |
+| [compose.md](compose.md) | localnet | MCP reconnected with `SIGNING=compose` (no daemon; nothing is spent) |
 | [plugins.md](plugins.md) | mainnet | internet (read-only, no funds) |
 | [testnet-dispenser.md](testnet-dispenser.md) | testnet | `vibekit dispenser login` |
 
