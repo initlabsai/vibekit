@@ -10,9 +10,11 @@
 
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
 import {
+  createFundTestnetTool,
   createKeystoreSigner,
   createSigningAccountTool,
   createSigningAddressesTool,
+  hasDispenserToken,
   type KeystoreSigner,
 } from '@initlabs/vibekit-signer-keystore'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
@@ -63,10 +65,9 @@ export async function commandMcp(): Promise<void> {
       'mainnet',
     ],
     mode,
-    // signer present → agents can also discover the local accounts
-    tools: signer
-      ? [...tools, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
-      : tools,
+    // signer present → agents can also discover/create the local accounts;
+    // dispenser token present → they can fund testnet too (§6 secrets policy)
+    tools: await withKeystoreTools(tools, signer),
     plugins: [nfdPlugin(), alphaArcadePlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
@@ -76,4 +77,16 @@ export async function commandMcp(): Promise<void> {
     void handle.close()
     void signer?.close()
   })
+}
+
+async function withKeystoreTools(
+  base: AnyTool[],
+  signer: KeystoreSigner | undefined,
+): Promise<AnyTool[]> {
+  if (!signer) return base
+  const tools = [...base, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
+  if (signer.secrets && (await hasDispenserToken(signer.secrets))) {
+    tools.push(createFundTestnetTool(signer.secrets))
+  }
+  return tools
 }

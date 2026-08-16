@@ -24,9 +24,11 @@ import {
   type ResolvedDeployment,
 } from '@initlabs/vibekit-core'
 import {
+  createFundTestnetTool,
   createKeystoreSigner,
   createSigningAccountTool,
   createSigningAddressesTool,
+  hasDispenserToken,
   type KeystoreSigner,
 } from '@initlabs/vibekit-signer-keystore'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
@@ -69,9 +71,7 @@ async function buildDeployment(): Promise<{
       'mainnet',
     ],
     mode: signer ? 'execute' : 'compose',
-    tools: signer
-      ? [...baseTools, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
-      : baseTools,
+    tools: await withKeystoreTools(baseTools, signer),
     plugins: [nfdPlugin(), alphaArcadePlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
@@ -142,4 +142,16 @@ export async function commandTool(args: string[]): Promise<void> {
   } finally {
     await signer?.close()
   }
+}
+
+async function withKeystoreTools(
+  base: AnyTool[],
+  signer: KeystoreSigner | undefined,
+): Promise<AnyTool[]> {
+  if (!signer) return base
+  const tools = [...base, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
+  if (signer.secrets && (await hasDispenserToken(signer.secrets))) {
+    tools.push(createFundTestnetTool(signer.secrets))
+  }
+  return tools
 }

@@ -47,6 +47,12 @@ export interface KeystoreSigner {
   createAccount(name?: string): Promise<{ address: string; keyId: string }>
   /** Drop the socket. Required in short-lived processes. */
   close(): Promise<void>
+  /**
+   * The daemon's sealed secrets store (§6 secrets policy home), when the
+   * connection provides one. Consumed in-handler by credentialed tools —
+   * never exposed to agents directly.
+   */
+  secrets?: import('./dispenser.js').SecretsLike
 }
 
 interface KeyLister {
@@ -153,8 +159,24 @@ export async function createKeystoreSigner(
     ...(options.socketPath ? { socketPath: options.socketPath } : {}),
   })
   await keystore.ready
-  const listKeys = () => ((store.state as { keys?: Array<{ id: string }> }).keys ?? [])
-  return createSignerFromKeystore(keystore, listKeys)
+  const listKeys = () =>
+    (store.state as { keys?: Array<{ id: string; metadata?: Record<string, unknown> }> }).keys ?? []
+  const signer = createSignerFromKeystore(keystore, listKeys)
+  const secrets = (keystore as unknown as { secrets?: import('./dispenser.js').SecretsLike }).secrets
+  return secrets ? { ...signer, secrets } : signer
 }
 export { createSigningAddressesTool } from './tools.js'
 export { createSigningAccountTool } from './tools.js'
+export {
+  createFundTestnetTool,
+  DISPENSER_SECRET_ID,
+  getValidAccessToken,
+  hasDispenserToken,
+  loadDispenserToken,
+  pollForToken,
+  requestDeviceCode,
+  saveDispenserToken,
+  type DeviceCodeResponse,
+  type DispenserToken,
+  type SecretsLike,
+} from './dispenser.js'

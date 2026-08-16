@@ -76,14 +76,17 @@ are in base units unless a decimals field says otherwise.
 ## Funding accounts
 
 - **Localnet**: agent-complete — shell: `vibekit localnet fund <address>` (kmd dispenser, no auth).
-- **Testnet**: bootstrap requires ONE human act (the Foundation faucet is
-  auth+captcha gated by design). Use the **treasury pattern**: the user funds a
-  single account once at https://lora.algokit.io/testnet/fund — after that, use
-  `send_payment` from the funded account to bootstrap any other account. Check
-  existing balances first (`list_signing_addresses` with `includeBalances` and
-  `"network":"testnet"` on lookups): if ANY local account already holds testnet
-  ALGO, you do not need a faucet — redistribute. Never hunt for unauthenticated
-  public faucets; they no longer exist.
+- **Testnet, preferred**: if the `fund_testnet_account` tool is present, use it
+  (Foundation dispenser; daily limits; refreshes its own session). If it is
+  absent, the one-time human grant is missing — tell the user to run
+  `vibekit dispenser login` and restart the agent session.
+- **Testnet, fallback (no dispenser session)**: the **treasury pattern** — the
+  user funds a single account once at https://lora.algokit.io/testnet/fund,
+  then use `send_payment` from it to bootstrap any other account. Check
+  existing balances first (`list_signing_addresses` with `includeBalances`):
+  if ANY local account already holds testnet ALGO, redistribute instead of
+  seeking a faucet. Never hunt for unauthenticated public faucets; they no
+  longer exist.
 - **Mainnet**: real funds — acquiring them is entirely the user's business.
 
 ## Common flows
