@@ -78,6 +78,14 @@ are in base units unless a decimals field says otherwise.
 | Resolve names | `resolve_nfd`, `reverse_resolve_nfd` |
 | Network health | `get_network_status` (current round, TPS), `get_network` |
 
+## Reporting results
+
+Never re-type addresses, transaction ids, or asset ids — copy them exactly
+from tool output, or point at the output block. A single transcribed
+character corrupts them (addresses are checksummed and will fail validation).
+Rendered tool output the user can already see does not need restating;
+summarize what it means instead.
+
 ## Troubleshooting
 
 - MCP tools missing → `vibekit doctor` (add `--fix` to repair configs).
