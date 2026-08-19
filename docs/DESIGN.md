@@ -1,43 +1,126 @@
 # VibeKit v2 — Design Doc
 
-Status: **executing — Phases 0–6 complete, next: 1.0 publish gate, then Phase 7 (API + SDK, new repo)** · Owner: Gabriel Kuettel · Last updated: 2026-08-16
+Status: **executing.** Phases 0–6 are complete. Next: the Phase 7 protocol
+spine and first fixture-backed Phase 8 Explorer slice, alongside the 1.0
+publish gate. Owner: Gabriel Kuettel. Last updated: 2026-08-19.
 
-> **Handover snapshot (2026-08-16).** Code: `~/Code/@initlabs/vibekit` = `github.com/initlabsai/vibekit` (private) — 11 packages + reference app + CLI + canonical skills, ~185 tests green (`bun install && bunx turbo run build typecheck test`). **Phases 0–6 complete and field-hardened** by live Claude Code, Pi, and Grok Build sessions; every field failure was fixed same-day (see git log). Post-phase-6 additions: `vibekit doctor --fix`, `vibekit new` composes init, Pi + Grok Build harness support, `vibekit tool` (full surface as CLI), canonical in-repo `skills/`, account lifecycle (`list_signing_addresses` with names+balances, `create_signing_account`), the **§6 secrets policy (normative)**, TestNet dispenser (`vibekit dispenser login` → daemon secrets → `fund_testnet_account`), and the **managed keystore CLI** (`vibekit keystore <args>`, pinned, no globals). **Institutional knowledge lives in this repo** (docs/ — DESIGN.md canonical, CONSTITUTION.md, HANDOVER.md, REVIEW-BRIEF.md, architecture.html); the v1 repo (`gabrielkuettel/vibekit`, `~/Code/vibekit`) is heritage only. **Next: adversarial review (docs/REVIEW-BRIEF.md) → the 1.0 publish gate → Phase 7** (`initlabsai/vibekit-agent`: hosted API + SDK, consuming published packages only). Read §9 (products), §10 (state model — normative), §6 (custody + secrets — normative), §12 (migration plan) before structural changes. Hard rules in AGENTS.md.
+> **Current snapshot (2026-08-19).** Phases 0–6 are complete. Live field
+> sessions hardened the stack. The implementation includes core, five tool
+> domains, two plugins, the keystore signer, the agent loop, MCP adapters,
+> the CLI, skills, and the reference deployment. The codebase implements
+> the immediate findings of the 2026-08-16 adversarial review. The next
+> workstreams are the 1.0 package/binary release, the separate
+> contribution-safety gate, and Phases 7–8 in this monorepo. Internal app
+> development does not wait for npm publication; the public package boundary
+> is proven separately with packed external-consumer verification.
+> `DESIGN.md` and `CONSTITUTION.md` are the complete documentation set
+> under `docs/`. Git history retains retired handover and review
+> artifacts. The v1 repo (`gabrielkuettel/vibekit`) is heritage only.
 
-VibeKit v2 is a ground-up restart of this repo: a clean, stateless MCP server for Algorand built on published, reusable tool packages, with a plugin system so developers can extend it or deploy their own. Two stacks, one brain (§9): the local dev stack (CLI + MCP) and the hosted product stack (API + SDK + the web "VibeKit Agent"), all running the same tools through the same orchestrator.
+> **Product direction (2026-08-19).** The TUI is restored as a target. The
+> deleted chat-only Ink experiment stays deleted. The new Explorer is a
+> Lora-class, full-screen Algorand workspace. It has persistent
+> network/signer chrome, navigable domain views, workspace tabs, and
+> explicit transaction review. A docked agent composer controls a dynamic
+> main canvas. TUI and web share the experience model and selected
+> semantic React view trees. Rendering primitives stay
+> platform-specific.
+
+VibeKit v2 is a restart of this repo from a new base. It is a clean,
+stateless MCP server for Algorand. It is built from reusable package
+workspaces prepared for npm publication. A plugin system lets developers
+extend it or deploy their own.
+
+Two target stacks, one brain (§9). The local dev stack is CLI + MCP + TUI
+Explorer. The hosted product stack is API + SDK + web VibeKit Agent. Both
+run the same tools through the same orchestrator and presentation protocol.
 
 ---
 
 ## 1. Decisions (locked)
 
-| Decision | Choice |
-|---|---|
-| Repo strategy | **Two fresh monorepos**: `initlabsai/vibekit` (MCP + CLI + packages) and `initlabsai/vibekit-agent` (hosted API + explorer). Port tool handlers domain-by-domain; old repo stays runnable until cutover |
-| Ownership / npm scope | **Init Labs LLC** · `@initlabs/*` (org registered on npm, owner verified 2026-08-16) |
-| MCP spec | **2026-07-28 stateless spec** — no sessions, no init handshake, header-based routing |
-| Chain SDK | **`algosdk@beta` (3.7.x)** directly — no algokit-utils. PQ (Falcon-1024) account support lands here first |
-| Key custody | **`@algorandfoundation/keystore-node`** (OS keychain + AES-sealed metadata, RPC daemon over local socket) behind our own `Signer` interface |
-| HashiCorp Vault | **Dropped** (~1,180 LOC deleted; `Signer` interface leaves the door open) |
-| Explorer → **VibeKit Agent** | Rebranded; lives in **`initlabsai/vibekit-agent`** with the API, redesigned with [Beautiful UI](https://www.beautifului.dev) primitives; consumes published packages + the API. Wallet connections are client-side there (WalletConnect dropped from the dev stack) |
-| Models | **BYOM everywhere**: harness brings its own (init path); TUI + API take API keys / local models via `@initlabs/vibekit-agent` provider config; funded default on the API (Together today, x402 experiment later). Provider OAuth is opportunistic, never a pillar |
-| TUI | ~~`vibekit explore`~~ **Dropped 2026-08-16** (built on Ink, live-verified, then cut — owner's call): redundant with the user's own agent harness in a vibekit-configured directory (same tools over the MCP, better model, harness-native approval gates); offline/local-model exploration is covered by any local harness (e.g. pi) + Ollama + `vibekit mcp`. The Lora replacement is the **web VibeKit Agent** (Phase 8); `vibekit agent` launches it. The orchestrator package the TUI dogfooded stays — it's the brain of Phases 7–8 |
-| CLI scope | init + agent/skill/MCP setup, **plus** localnet lifecycle and template bootstrapping — positioning vibekit CLI to deprecate AlgoKit CLI |
-| Tests | Required — each ported domain lands with handler tests; no untested migration |
+| Decision               | Choice                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo strategy          | **One monorepo, several products**: `initlabsai/vibekit` contains the public engine/packages and private API, TUI, and web apps. Apps are independent build/deployment units and consume only public package exports. Packed external-consumer tests preserve the npm boundary. A separate small reference implementation may follow 1.0; the old v1 repo is heritage only. |
+| Ownership / npm scope  | **Init Labs LLC** · `@initlabs/*` (org registered on npm, owner verified 2026-08-16)                                                                                                                                                                                                                                                                                        |
+| MCP spec               | **2026-07-28 stateless spec**. No sessions. No init handshake. Header-based routing.                                                                                                                                                                                                                                                                                        |
+| Chain SDK              | **`algosdk@3.7.0`** directly. No algokit-utils. The repository pins 3.7.0 while public packages declare a `>=3.7.0 <4` peer range.                                                                                                                                                                                                                                          |
+| Key custody            | **`@algorandfoundation/keystore-node`** (OS keychain + AES-sealed metadata, RPC daemon over local socket) through an adapter that satisfies `algosdk.TransactionSigner`                                                                                                                                                                                                     |
+| HashiCorp Vault        | **Dropped** (about 1,180 LOC deleted. The signer adapter boundary leaves room for another custody provider.)                                                                                                                                                                                                                                                                |
+| Agentic Explorer       | A stable explorer workspace controlled by an agent, not a chat transcript with cards. Persistent chrome owns network, signer/wallet, navigation, tabs, and approvals. The docked composer routes identifiers and natural language into trusted views in the main canvas.                                                                                                    |
+| Explorer renderers     | **React on both heads**: `@opentui/react` for the full-screen TUI and Next.js/React for web. Share domain/view models, workspace state, hooks, and selected semantic component trees behind platform primitives. Do not target pixel-identical output.                                                                                                                      |
+| Generative UI boundary | The model can select and compose versioned, Zod-validated view specifications from a trusted registry. It never emits JSX, HTML, terminal markup, or executable UI code.                                                                                                                                                                                                    |
+| Models                 | **BYOM everywhere**. The harness brings its own (init path). TUI + API take API keys / local models via `@initlabs/vibekit-agent` provider config. Funded default on the API (Together today, x402 experiment later). Provider OAuth is opportunistic, never a pillar.                                                                                                      |
+| TUI                    | **Restored 2026-08-19 as a new product shape.** `vibekit explore` targets the structured OpenTUI workspace above. The 2026-08-16 Ink chat head remains a useful discarded experiment. A generic harness can replace chat + tools. It cannot replace persistent Algorand views, live navigation, comparison workspaces, simulation, or signer-aware approval.                |
+| CLI scope              | init + agent/skill/MCP setup, **plus** localnet lifecycle and template bootstrapping. This replaces the AlgoKit CLI for those jobs; compilation and typed-client generation remain separate.                                                                                                                                                                                |
+| Tests                  | Required. Each ported domain lands with handler tests. No untested migration.                                                                                                                                                                                                                                                                                               |
 
 ## 2. Goals
 
-1. **Clean stateless MCP** conforming to the 2026-07-28 spec, horizontally scalable, deployable by anyone.
-2. **Tools as published packages** (`@initlabs/*`) usable outside the MCP — in CLIs, servers, other people's projects.
-3. **Plugin system**: a plugin is just an npm package exporting tools that conform to the published contract.
-4. **Self-hostable**: `createVibekitMcp({ ... })` is a library; our deployment is a thin reference app anyone can copy.
-5. **Simplified CLI** that also absorbs AlgoKit CLI's remaining jobs (localnet, templates).
+1. **Clean stateless MCP** that conforms to the 2026-07-28 spec. It is
+   horizontally scalable. Anyone can deploy it.
+2. **Tools as reusable packages** (`@initlabs/*`) usable outside the MCP,
+   in CLIs, servers, and other people's projects, then published at the 1.0
+   gate.
+3. **Plugin system**: a plugin is an npm package that exports tools that
+   conform to the published contract.
+4. **Self-hostable**: `createVibekitMcp({ ... })` is a library. Our
+   deployment is a thin reference app anyone can copy.
+5. **Simplified CLI** that also absorbs the remaining AlgoKit CLI jobs
+   (localnet, templates).
+6. **One agentic Explorer experience across terminal and web**, with
+   deterministic direct lookup, trusted structured views, and explicit
+   human approval for writes.
+7. **Canonical project skills** installed by the CLI so coding agents can
+   implement smart contracts, generated clients, frontend interfaces, and
+   broader Algorand workflows using current, internally consistent patterns.
 
 ### Non-goals
 
 - Vault signing support.
-- Dispenser packages as a standalone concept (localnet funding folds into the localnet module; testnet faucet TBD).
-- Preserving the current explorer UI (full redesign in the new repo).
-- Backwards compatibility with the v1 MCP tool surface where statelessness forces changes (e.g. `switch_account` / `switch_network` as server state).
+- Dispenser packages as a standalone concept. Localnet funding lives in the
+  localnet module. Authenticated TestNet funding lives in
+  `signer-keystore` as a conditional tool plus a human CLI grant.
+- Port of Lora or the v1 Explorer component implementation wholesale.
+  Their workflows, domain coverage, enrichment, and visual language are
+  reference inputs. The new experience has a new typed presentation
+  architecture.
+- Backwards compatibility with the v1 MCP tool surface where
+  statelessness forces changes. Examples are `switch_account` /
+  `switch_network` as server state.
+
+### Current gates and known gaps
+
+The clean-checkout verification path is `bun install`, then
+`bunx turbo run build typecheck test`. The compiled CLI also needs a
+smoke test. Filesystem behavior differs inside the Bun binary.
+
+Development has confirmation on Linux with Bun, Node/npm, Docker Compose
+v2, and a Secret Service keychain. macOS, Windows, their
+keychains/sockets, and compiled-binary CI remain without confirmation.
+
+Before the 1.0 publish gate: add the root license file and settle copyright
+metadata; package manifests currently declare Apache-2.0. Decide whether the
+keystore canary is acceptable for release. Add an install channel and
+cross-platform binary smoke coverage. Pack the public packages, install them in
+an out-of-workspace consumer fixture with workspace resolution unavailable,
+and build and test that fixture. Resolve rekeyed account signing. The signer
+uses algosdk's `addressWithSignersFromRawEd25519Signer` (since 3.7.0), while
+both the old and current algosdk serialization paths set `sgnr` when the
+transaction sender differs from the signing key. What remains is resolution:
+map a rekeyed sender to the local key that is its auth address. Decide app-call
+box-reference support. Multisig is post-1.0; algosdk's signer APIs can compose
+with the daemon's raw ed25519 signer for multisig and lsig, so no custom
+cryptography is needed when they land.
+
+Resolved deployments already freeze each `ToolContext` and its services
+registry. Before you accept outside plugins, add capability-scoped contexts:
+remove signer access from read-only plugins and test that the boundary is
+real. Apply the uncorrelated review rules in `CONSTITUTION.md`.
+
+Start Explorer work with one fixture-backed vertical slice that proves the
+browser-safe agent/approval/presentation protocol in both renderers. Do not
+freeze `ViewSpec` from prose alone.
 
 ## 3. Target repo layout
 
@@ -46,15 +129,17 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 ├── apps/
 │   ├── cli/                       # `vibekit` binary (Bun compile). init, agents/skills/MCP setup,
 │   │                              #   localnet, templates
-│   └── mcp/                       # thin reference deployment of @initlabs/vibekit-mcp (stdio + streamable HTTP)
-├── skills/                        # canonical agent skills (bundled into the CLI at build time; see §7)
+│   ├── mcp/                       # thin reference deployment of @initlabs/vibekit-mcp (stdio + streamable HTTP)
+│   ├── api/                       # planned private hosted API (Hono/Bun)
+│   ├── tui/                       # planned private full-screen @opentui/react Explorer
+│   └── web/                       # planned private Next.js Explorer/agent
 ├── packages/
 │   ├── core/                      # @initlabs/vibekit-core — tool contract, ToolContext, NetworkClients,
-│   │                              #   Signer interface, shared validators/formatters/utils
+│   │                              #   compose engine, shared validators/formatters/utils
 │   ├── mcp/                       # @initlabs/vibekit-mcp — createVibekitMcp() server library (2026-07-28 spec)
 │   ├── tools-network/             # @initlabs/vibekit-tools-network      ┐
 │   ├── tools-accounts/            # @initlabs/vibekit-tools-accounts     │
-│   ├── tools-assets/              # @initlabs/vibekit-tools-assets       │  published domain tool packages
+│   ├── tools-assets/              # @initlabs/vibekit-tools-assets       │  publishable domain tool packages
 │   ├── tools-transactions/        # @initlabs/vibekit-tools-transactions │  (each: ToolDefinition[] + handlers)
 │   ├── tools-contracts/           # @initlabs/vibekit-tools-contracts    ┘
 │   ├── plugin-nfd/                # @initlabs/vibekit-plugin-nfd          ┐ optional plugins — prove the
@@ -62,85 +147,173 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── signer-keystore/           # @initlabs/vibekit-signer-keystore — keystore-node adapter (the only signer pkg)
 │   ├── agent/                     # @initlabs/vibekit-agent — the orchestrator: LLM + tool loop + streaming over
 │   │                              #   ToolDefinition[]; BYOM provider config. Used by the TUI and the API
-│   └── sdk/                       # @initlabs/vibekit-sdk — client for the hosted API (replaces @getvibekit/sdk)
-
-initlabsai/vibekit-agent                 # ~/Code/@initlabs/vibekit-agent
-├── apps/
-│   ├── api/                       # hosted query API (LLM orchestration, Hono/Bun)
-│   └── explorer/                  # Beautiful UI chat frontend, xArc feature (Next.js)
-└── packages/                      # agent-side shared code as it emerges
+│   ├── experience/                # planned browser-safe routing, protocol, reducer, fixtures, and view models
+│   ├── views-react/               # planned selected semantic React view composition
+│   └── sdk/                       # planned @initlabs/vibekit-sdk hosted API client
+├── skills/                        # canonical agent skills bundled into the CLI (see §7)
+├── test-prompts/                  # agent-run acceptance tests
+└── docs/                          # DESIGN.md and CONSTITUTION.md
 ```
 
-The boundary between the two repos is the published-package surface: `vibekit-agent` consumes `@initlabs/*` from npm like any third party — no cross-repo workspace links. (`@initlabs/vibekit-sdk` lives in `vibekit` because its types derive from the tool registry; if that coupling proves annoying in practice it migrates to `vibekit-agent` alongside the API whose contract it wraps.)
+All official product surfaces live in this monorepo. This is a source and
+coordination boundary, not a deployment boundary: `apps/api`, `apps/tui`, and
+`apps/web` are private terminal nodes that build, ship, and deploy
+independently. No package may depend on an app.
+
+Workspace apps depend on `@initlabs/*` through `workspace:*`, but may import
+only exported package entry points. Relative imports across workspaces, deep
+imports into package source, and app-to-app source imports are forbidden. This
+allows engine, protocol, and first-party consumers to change atomically without
+hiding an npm-only dependency. Before release, packed tarballs are installed
+and built in a fixture outside the workspace to prove the real consumer edge.
+
+`packages/experience` is browser-safe and owns the shared protocol and
+semantic state. `packages/views-react` contains only composition that both
+React renderers actually share. OpenTUI and HTML primitives begin inside their
+respective apps; create renderer-specific packages only when another real
+consumer earns the abstraction.
+
+`@initlabs/vibekit-sdk` lives next to the API whose wire contract it wraps and
+depends only on published schemas, never API implementation internals. A small
+separate reference implementation may be useful after 1.0 as an external
+integration example. It is not the home of a first-party product.
 
 Conventions (one tier, no exceptions):
 
-- Every package extends the root `tsconfig.base.json`. One module-resolution style, one import-extension style, decided once in the skeleton.
-- Every published package builds to `dist/` with `exports` maps and `.d.ts`. No "source export" tier — consumers are external now.
-- `algosdk` is a **peer dependency** of every tool/signer package; consumers control the version. Docs state plainly: packages stabilize when algosdk 3.7 does. (Caveat: peer ranges against a prerelease are awkward — see open question 9.)
-- `zod` and `@initlabs/vibekit-core` are **also peer dependencies** of every tool/signer/plugin package — exactly one copy of the contract and one Zod major (Zod 4, for native `z.toJSONSchema()`) may exist in a consumer's graph, or type identity breaks.
+- Every package extends the root `tsconfig.base.json`. One
+  module-resolution style. One import-extension style. Decided once in
+  the skeleton.
+- Every published package builds to `dist/` with `exports` maps and
+  `.d.ts`. No "source export" tier. Workspace consumers must remain capable of
+  consuming the packed package externally.
+- `algosdk` is a **peer dependency** of every tool/signer package.
+  Consumers control the compatible version through the `>=3.7.0 <4` range;
+  repository development and runtime installs pin 3.7.0 exactly.
+- `zod` and `@initlabs/vibekit-core` are **also peer dependencies** of
+  every tool/signer/plugin package. Exactly one copy of the contract and
+  one Zod major (Zod 4, for native `z.toJSONSchema()`) can exist in a
+  consumer's graph. If not, type identity breaks.
 - **ESM-only** unless a concrete CJS consumer appears (open question 8).
-- Versioning via **changesets**, fixed version group across `core` + `mcp` + `tools-*` (they evolve together); plugins and sdk version independently.
-- Turbo `test` task from day one; CI builds and tests **every** workspace.
+- Versioning via **changesets**. Fixed version group across `core` +
+  `mcp` + `tools-*` (they evolve together). Plugins and sdk version
+  independently.
+- Apps are private and packages are publishable by default. Apps are leaves in
+  the dependency graph and remain separate release/deployment artifacts.
+- Turbo `test` task from day one. CI builds and tests **every** workspace, plus
+  the packed external-consumer fixture at the release gate.
 
 ## 4. The tool contract (the product)
 
-One shape, no variants. This is the single highest-leverage fix from v1, which had three
-incompatible handler signatures forcing six copy-pasted adapter loops.
+One shape. No variants. This is the single highest-leverage fix from v1.
+v1 had three incompatible handler signatures. Those signatures forced six
+copy-pasted adapter loops.
 
 ```ts
-// @initlabs/vibekit-core
-interface ToolDefinition<P extends z.ZodType = z.ZodType, R extends z.ZodType = z.ZodType> {
-  name: string
-  description: string
-  parameters: P
-  /** Result schema. Input schemas alone can't generate SDK result types or MCP
-   *  structured-content schemas — v1's regex-over-.d.ts hack was patching exactly
-   *  this gap. Required for core tools; optional for plugins.
-   *  NOTE (review): not yet runtime-enforced — enforce-or-drop is an explicit
-   *  pre-publish decision (see docs/REVIEW-FINDINGS.md). */
-  output?: R
-  /** Write tools set this; hosts gate on it. Maps to MCP tool annotations
-   *  (readOnlyHint / destructiveHint) in the adapter. */
-  requiresSigner?: boolean
-  /** Presentation hint, carried on the wire by the API. Every head (web explorer,
-   *  TUI) renders results from data + this hint — never from hardcoded per-tool
-   *  knowledge (v1's 127-line switch on tool names is the anti-pattern). */
-  display?: 'table' | 'txn' | 'account' | 'asset' | 'markdown' | 'json'
-  handler: (ctx: ToolContext, args: z.infer<P>) => Promise<ToolResult<z.infer<R>>>
+// @initlabs/vibekit-core — current implemented contract
+type DisplayHint = "table" | "txn" | "account" | "asset" | "markdown" | "json";
+
+interface ToolDefinition<P extends z.ZodType = z.ZodType> {
+  name: string;
+  description: string;
+  parameters: P;
+  /** Enforced after jsonSafe; describes the actual wire shape. */
+  output?: z.ZodType;
+  /** Moves funds. Forces explicit network and host approval. */
+  requiresSigner?: boolean;
+  /** Changes state without spending user funds. Host approval still applies. */
+  mutatesState?: boolean;
+  /** Coarse compatibility fallback, not the Explorer layout contract. */
+  display?: DisplayHint;
+  handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>;
 }
 
-/** Write tools return either an executed result or an unsigned group.
- *  `mode: 'compose'` is how browser/hosted flows (explorer, xArc) work: the server
- *  has no signer there — txns are built server-side, signed client-side. */
-type ToolResult<T> = T | { unsignedGroup: string[] /* base64 txns */; summary: string }
+interface UnsignedGroupResult {
+  unsignedGroup: string[]; // base64 transactions, in group order
+  summary: string;
+}
 
 interface ToolContext {
-  network: NetworkConfig                // named net OR custom algod/indexer endpoints (localnet, private nets)
-  algod: algosdk.Algodv2
-  indexer: algosdk.Indexer
-  /** 'execute' = sign & send via resolveSigner; 'compose' = return unsignedGroup. */
-  mode: 'execute' | 'compose'
-  /** Resolves a sender address to a signer. Absent in read-only and compose-only deployments. */
-  resolveSigner?: (address: string) => Promise<algosdk.TransactionSigner>
-  /** Plugin-provided clients, keyed by plugin name (nfd API client, alpha-arcade client, …). */
-  services: Record<string, unknown>
+  network: NetworkConfig;
+  servedNetworks: string[];
+  defaultNetwork: string;
+  algod: algosdk.Algodv2;
+  indexer: algosdk.Indexer;
+  mode: "execute" | "compose";
+  resolveSigner?: (address: string) => Promise<algosdk.TransactionSigner>;
+  services: Record<string, unknown>;
 }
 ```
 
-- **`ToolContext` is pooled per network at startup** (`resolveDeployment`) and selected per request — nothing request-scoped is stored on it, which is what makes the stateless spec trivial to satisfy. (Freezing the pooled contexts before handler invocation is a tracked pre-hosted item.) Network selection moves from server state to request config (today: the injected `network` tool parameter, clients pooled per network; a hosted-HTTP header like `X-Algorand-Network` is planned, not yet implemented).
-- **`Signer` is `algosdk.TransactionSigner`** (`(txnGroup, indexesToSign) => Promise<Uint8Array[]>`) — not a custom interface. Signers must see the whole group and sign a subset: WalletConnect and any co-signing/rekey flow require it, and it plugs directly into algosdk's composer. Inventing our own shape here was a v1-style mistake caught on review.
-- **Results are JSON-safe by contract.** algosdk v3 emits `bigint` everywhere; core ships one codec (bigint→number when safe, →string otherwise; Uint8Array→base64) applied in the adapter (always-string is under consideration pre-publish), not per host. v1 scattered `sanitizeBigInts` across consumers.
-- **Errors are thrown, not returned.** Handlers throw `ToolError` (typed code + user-safe message); each host adapter maps it once (MCP `isError`, API error JSON). No `{ error }` result shapes.
-- **`services` bag** is how nfd- and alpha-arcade-style tools get their clients without bespoke handler signatures. A plugin declares a factory; the host runs it once and injects the result under the plugin's name (registry rejects duplicate plugin names and duplicate tool names at startup). Typing is by convention — a plugin exports a typed accessor (`getNfdService(ctx)`) so its own handlers stay type-safe.
-- **Dynamic tools are first-class**: nothing in the contract assumes tools are statically compiled in. An ARC-56 spec can be turned into `ToolDefinition[]` at runtime — this is the seed of the explorer's xArc feature and will live in `tools-contracts` as `toolsFromArc56(spec)` (Phase 7/8 work — not yet implemented). Note xArc runs through the **API**, not the MCP: the 2026 spec makes tool lists cacheable, so the MCP's list must stay deterministic per deployment.
+- **`ToolContext` is pooled per network at startup** (`resolveDeployment`)
+  and selected per request. Nothing request-scoped is stored on it. That
+  is what makes the stateless spec trivial to satisfy. Resolved contexts
+  and their services registries are frozen before handler invocation.
+  Network selection moves from server state to request config. Today that
+  means an injected `network` tool parameter with clients pooled per network.
+- **`Signer` is `algosdk.TransactionSigner`**
+  (`(txnGroup, indexesToSign) => Promise<Uint8Array[]>`). It is not a
+  custom interface. Signers must see the whole group and sign a subset.
+  WalletConnect and any co-signing/rekey flow require it. It plugs
+  directly into the composer of algosdk. Inventing our own shape here
+  was a v1-style mistake caught on review.
+- **Results are JSON-safe by contract.** algosdk v3 emits `bigint`
+  everywhere. Core ships one codec. bigint becomes number when safe, and
+  string otherwise. Uint8Array becomes base64. The adapter applies the
+  codec, not each host. Always-string is under consideration
+  pre-publish. v1 scattered `sanitizeBigInts` across consumers.
+- **Errors are thrown, not returned.** Handlers throw `ToolError` (typed
+  code + user-safe message). Each host adapter maps it once (MCP
+  `isError`, API error JSON). No `{ error }` result shapes.
+- **`services` bag** is how nfd- and alpha-arcade-style tools get their
+  clients without bespoke handler signatures. A plugin factory constructs
+  its service and returns it on `ToolPlugin`; the host injects that value
+  under the plugin name. The registry rejects duplicate plugin names and
+  duplicate tool names at startup. Typing is by convention. A plugin exports
+  a typed accessor (`getNfdService(ctx)`) so its own handlers stay type-safe.
+- **Dynamic tools are first-class.** Nothing in the contract assumes
+  tools are statically compiled in. An ARC-56 spec can be turned into
+  `ToolDefinition[]` at runtime. This is the seed of the explorer xArc
+  feature. It will live in `tools-contracts` as `toolsFromArc56(spec)`
+  (Phase 7/8 work, not yet implemented). Note: xArc runs through the
+  **API**, not the MCP. The 2026 spec makes tool lists cacheable, so the
+  MCP list must stay deterministic per deployment.
+
+### 4.1 Presentation contract (target. Implementation pending)
+
+`display` is deliberately too small to drive the new Explorer. It remains
+a generic fallback while Phase 7–8 introduce a separate, versioned
+presentation protocol. Tools own capabilities and structured data. They
+do not own layouts. A tool can advertise a default semantic view. The
+agent can issue workspace commands that compose one or more results.
+
+The exact `ViewSpec` / `WorkspaceCommand` schema is frozen only after the
+first fixture-backed TUI/web vertical slice. These constraints are
+already locked:
+
+- Every message is versioned and Zod-validated at the API/SDK boundary.
+- Views reference structured tool results (normally by tool-call id and
+  optional data path). The model does not copy authoritative IDs or
+  amounts into prose.
+- `view` is a trusted registry id such as `transaction.detail`,
+  `account.portfolio`, `transactions.table`, or `entity.compare`.
+- The model can open, replace, patch, focus, or pin views. It must not
+  emit JSX, HTML, terminal markup, component imports, or executable UI
+  code.
+- Unknown views and third-party tools fall back to schema-derived table,
+  key/value, markdown, or JSON renderers.
+- Approval requests and decisions are protocol events, not a blocking
+  callback hidden inside one renderer. The UI shows the actual unsigned
+  group, simulation, sender, network, fees, and effects before signing.
+- Web and TUI render the same semantic view contract. Platform
+  primitives, charts/media, wallet/keystore adapters, focus, and
+  responsive layout remain renderer-specific.
 
 ```ts
 // A plugin is just a package exporting this:
 interface ToolPlugin {
-  name: string                                    // becomes the services key
-  tools: ToolDefinition[]
-  createService?: (config: unknown) => unknown    // e.g. NfdApiClient
+  name: string;
+  tools: ToolDefinition[];
+  service?: unknown; // host injects at ctx.services[name]
 }
 ```
 
@@ -149,218 +322,685 @@ interface ToolPlugin {
 A library, not an app:
 
 ```ts
-import { createVibekitMcp } from '@initlabs/vibekit-mcp'
-import { networkTools } from '@initlabs/vibekit-tools-network'
-import { accountTools } from '@initlabs/vibekit-tools-accounts'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { createVibekitMcp } from "@initlabs/vibekit-mcp";
+import { networkTools } from "@initlabs/vibekit-tools-network";
+import { accountTools } from "@initlabs/vibekit-tools-accounts";
+import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
 
 const server = createVibekitMcp({
-  network: 'mainnet',                    // or per-request via header in HTTP mode
+  network: "mainnet",
+  mode: "execute", // use 'compose' and omit the signer for unsigned groups
   tools: [...networkTools, ...accountTools],
   plugins: [nfdPlugin()],
-  resolveSigner: (addr) => signer.resolveSigner(addr), // optional — omit for read-only
-})
+  resolveSigner: (addr) => signer.resolveSigner(addr),
+});
 ```
 
-- Implements the **2026-07-28 stateless spec**: no session state, version/capabilities via `_meta`, `Mcp-Method`/`Mcp-Name` headers on Streamable HTTP.
-- Two transports: **stdio** (local dev, spawned by `vibekit mcp` or agent config) and **Streamable HTTP** (self-hosted deployments).
-- Exactly **one** generic `ToolDefinition → MCP tool` adapter (~40 LOC), replacing v1's three.
-- `apps/mcp` is the reference deployment: a ~20-line file anyone can copy to deploy their own with their own plugin mix. That file **is** the "deploy your own MCP" documentation.
-- **Security posture for HTTP**: the hosted/reference HTTP deployment is **read-only + compose-mode** — no server-side signer over HTTP, ever, in our deployments. Signing is a stdio/local capability (keystore daemon on the same machine) or an explicit self-host opt-in that requires the deployer to bring auth. This needs to be loud in the docs, because "deploy your own MCP" plus "signer" is a foot-gun.
-- **Client compatibility is an open risk** (open question 7): agents in the wild still speak pre-2026 protocol versions. If the official TS SDK negotiates versions, we lean on that; if "stateless-only" excludes current Claude/Cursor/etc. clients, `vibekit init` would be configuring agents against a server they can't talk to. The spike must answer this empirically.
+- Implements the **2026-07-28 stateless spec**: no session state,
+  version/capabilities via `_meta`, `Mcp-Method`/`Mcp-Name` headers on
+  Streamable HTTP.
+- Two transports: **stdio** (local dev, spawned by `vibekit mcp` or agent
+  config) and **Streamable HTTP** (self-hosted deployments).
+- Exactly **one** generic `ToolDefinition → MCP tool` adapter (about 40
+  LOC), replacing v1's three.
+- `apps/mcp` is the reference deployment: a small set of files anyone can
+  copy to deploy their own tool and plugin mix. Those files are executable
+  self-hosting documentation.
+- **Security posture for HTTP**: the hosted/reference HTTP deployment is
+  **signerless and compose-only**. It exposes read and write tools, but writes
+  return unsigned groups. No server-side signer over HTTP, ever, in our
+  deployments. Signing is a stdio/local capability (keystore daemon on the
+  same machine) or an explicit self-host opt-in that requires the deployer to
+  bring auth. This needs to be loud in the docs. "Deploy your own MCP" plus
+  "signer" is a foot-gun.
+- **Client compatibility is resolved** (open question 7). The official v2 SDK
+  bridges legacy clients, and both modern and 2025-era clients were tested
+  against the stateless server over its supported transports.
 
-State that v1 kept in the server process and where it goes:
+State that v1 kept in the server process, and where it goes:
 
-| v1 state | v2 home |
-|---|---|
-| Active account (`switch_account`) | Request parameter / deployment config; keystore daemon knows the keys |
-| Active network (`switch_network`) | Deployment config (stdio) or request header (HTTP) |
-| Provider sessions (WalletConnect) | **Dropped from v2** (2026-08-15) — wallet connections move client-side into the explorer, later |
-| App specs (`resolveAppSpec`) | Request-supplied (xArc path) or filesystem convention in stdio mode |
+| v1 state                          | v2 home                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Active account (`switch_account`) | Request parameter / deployment config. The keystore daemon knows the keys.                          |
+| Active network (`switch_network`) | Deployment default plus the injected per-call `network` tool parameter in multi-network deployments |
+| Provider sessions (WalletConnect) | **Dropped from v2** (2026-08-15). Wallet connections move client-side into the explorer, later.     |
+| App specs (`resolveAppSpec`)      | Request-supplied (xArc path) or filesystem convention in stdio mode                                 |
 
 ## 6. Signing & accounts
 
-- **`@initlabs/vibekit-signer-keystore`** wraps `@algorandfoundation/keystore-node`: keys in the OS keychain, metadata AES-sealed, and — critically — the **RPC daemon mode** (`keystore serve` over a Unix socket / named pipe) means the MCP process never holds key material. PQ-ready: keystore-node already chunks Falcon-1024 keys; algosdk 3.7 brings protocol-level PQ accounts (Q3 2026).
-- ~~signer-walletconnect~~ **Dropped (2026-08-15).** Too much complexity for an underused feature: devs building contracts keep keys in the OS keystore; wallet connections belong to the *explorer*, client-side in the browser (vibekit-agent repo, later), signing compose-mode groups. This also deletes the last genuinely stateful component v2 would have owned (pairing persistence) and 1,625 LOC of v1 port work. `signer-keystore` is the only signer package.
-- **Keystore daemon lifecycle** — refined 2026-08-16: the daemon's *code, storage format, and native addon* remain upstream's (running under node, outside our binary, across the socket — unchanged), but its **presence and version are vibekit-managed**: `vibekit keystore <args>` auto-provisions the pinned keystore-node into vibekit's data dir (`~/.local/share/vibekit/keystore-cli/<version>`, via npm --prefix) and passes through — no global installs on developer machines, no version drift (the npm `latest` tag pointing at a stale beta made unmanaged installs a live hazard), doctor --fix self-heals. Same relationship `vibekit localnet` has with the algod image. Original rationale preserved: the `keystore` CLI owns `keystore serve`; `signer-keystore` is only ever an RPC client that fails with a clear "start the keystore daemon" error. This also sidesteps a real risk: the v1 CLI ships as a `bun build --compile` binary, and linking `@napi-rs/keyring`'s native addon into a compiled binary is exactly the kind of thing that breaks — talking to the daemon over a socket means the native code never enters our binary. (Spike verifies this.)
-- **Account management CLI**: defer to keystore-node's own `keystore` CLI rather than rebuilding create/list/rename. `vibekit` may add thin aliases later if the UX warrants it. **Agent-side discovery (added 2026-08-16):** `signer-keystore` exports `createSigningAddressesTool` — a read tool (`list_signing_addresses`) exposing the daemon's address book, registered by hosts only in execute-mode deployments. Live query of the daemon each call, no stored state (§10 holds); answers the "list my accounts" question every first session asks. **Create added 2026-08-16** (from a Grok field report): `create_signing_account` generates ed25519 inside the daemon over RPC (unextractable, address-only response) — which also sidesteps the daemon's stale-view limitation (keys created by the raw CLI while `keystore serve` runs are invisible until restart; documented in the skills, upstream fix desirable). Mnemonic/seed flows remain human-only. Q12 stance amended: create is now agent-facing; rename/remove/import stay with the keystore CLI.
-- Deleted outright: `provider-interface`, `provider-keyring`, `provider-vault`, `keyring`, `dispenser-*`, most of `db`, mcp-server's `account-service.ts` (653 LOC) and `app-state.ts` (466 LOC).
+- **`@initlabs/vibekit-signer-keystore`** wraps
+  `@algorandfoundation/keystore-node`. Keys sit in the OS keychain.
+  Metadata is AES-sealed. The **RPC daemon mode** (`keystore serve` over
+  a Unix socket / named pipe) means the MCP process never holds key
+  material. PQ-ready: keystore-node already chunks Falcon-1024 keys.
+  algosdk 3.7 provides protocol-level PQ account support.
+- ~~signer-walletconnect~~ **Dropped (2026-08-15).** Too much complexity
+  for an underused feature. Devs who build contracts keep keys in the OS
+  keystore. Wallet connections belong to the _explorer_, client-side in
+  `apps/web`, signing compose-mode groups.
+  This also deletes the last genuinely stateful component that v2 planned
+  to own (pairing persistence) and 1,625 LOC of v1 port work.
+  `signer-keystore` is the only signer package.
+- **Keystore daemon lifecycle** — refined 2026-08-16. The daemon _code,
+  storage format, and native addon_ remain upstream's. They run under
+  node, outside our binary, across the socket. Unchanged. Its **presence
+  and version are vibekit-managed**. `vibekit keystore <args>`
+  auto-provisions the pinned keystore-node into the vibekit data dir
+  (`~/.local/share/vibekit/keystore-cli/<version>`, via npm --prefix)
+  and passes through. No global installs on developer machines. No
+  version drift. At the time, the npm `latest` tag pointed at a stale beta and made
+  unmanaged installs a live hazard. `doctor --fix` self-heals. Same
+  relationship `vibekit localnet` has with the algod image. Original
+  rationale preserved: the `keystore` CLI owns `keystore serve`.
+  `signer-keystore` is only ever an RPC client that fails with a clear
+  "start the keystore daemon" error. This also sidesteps a real risk:
+  the v1 CLI ships as a `bun build --compile` binary, and linking
+  `@napi-rs/keyring`'s native addon into a compiled binary is exactly
+  the kind of thing that breaks. Talk to the daemon over a socket. Then
+  the native code never enters our binary. (The spike confirms this.)
+- **Account management CLI**: defer to the `keystore` CLI of
+  keystore-node rather than rebuild create/list/rename. `vibekit` can
+  add thin aliases later if the UX warrants it. **Agent-side discovery
+  (added 2026-08-16):** `signer-keystore` exports
+  `createSigningAddressesTool` — a read tool (`list_signing_addresses`)
+  that exposes the daemon address book. Hosts register it only in
+  execute-mode deployments. Live query of the daemon each call. No
+  stored state (§10 holds). This answers the "list my accounts" question
+  every first session asks. **Create added 2026-08-16** (from a Grok
+  field report): `create_signing_account` generates ed25519 inside the
+  daemon over RPC (unextractable, address-only response). This also
+  sidesteps the daemon stale-view limitation. Keys created by the raw
+  CLI while `keystore serve` runs are invisible until restart. This is
+  documented in the skills. An upstream fix is desirable. Mnemonic/seed
+  flows remain human-only. Q12 stance amended: create is now
+  agent-facing. Rename/remove/import stay with the keystore CLI.
+- Deleted outright: `provider-interface`, `provider-keyring`,
+  `provider-vault`, `keyring`, `dispenser-*`, most of `db`,
+  mcp-server's `account-service.ts` (653 LOC) and `app-state.ts` (466
+  LOC).
 
-**Secrets policy (normative, 2026-08-16).** The keystore daemon's secrets store (`secrets.put/get/list/remove` over the same RPC socket; values sealed at rest by the same driver as key material) is v2's **only** home for credentials — dispenser tokens, plugin API keys (keyed by convention: `vibekit.dispenser.<network>`, `vibekit.plugin.<name>.<key>`), any future paid-service auth. The bright line, mirroring the key model exactly:
+**Secrets policy (normative, 2026-08-16).** The keystore daemon secrets
+store (`secrets.put/get/list/remove` over the same RPC socket) is v2's
+**only** home for credentials. Values are sealed at rest by the same
+driver as key material. This covers dispenser tokens, plugin API keys
+(keyed by convention: `vibekit.dispenser.<network>`,
+`vibekit.plugin.<name>.<key>`), and any future paid-service auth. The
+bright line mirrors the key model exactly:
 
-- **Agents see metadata, never plaintext.** Non-secret metadata (id, name, expiry) mirrors into the reactive store and may be exposed via tools; a raw `secrets.get` must never be an agent-facing tool — a decrypted value in a tool result is in the transcript, the harness logs, and the model provider's hands. Precisely: **the tool surface cannot return credentials** — the guarantee is about what crosses the tool-result boundary, not a claim that a same-UID process couldn't read the daemon (see trust boundary below).
-- **Agents wield capabilities that consume secrets in-handler.** Tools like `fund_testnet_account` read the secret inside the tool process and return only outcomes (txIds, statuses) — the `sign` pattern applied to credentials. Refresh/rotation exchanges likewise happen in-handler; agents orchestrate lifecycle (detect expiry from metadata, invoke refresh, tell the human when a human grant is required) without ever being able to read a value.
-- **Secrets enter via human channels only** (CLI prompts, OAuth device flows like `vibekit dispenser login`) — never through the model's context window, so nothing to seal has already leaked.
-- Plugin services resolve their credentials from the daemon at service-construction time — no env-var/dotfile sprawl; one vault, one `keystore serve`, one custody story for keys and credentials alike.
+- **Agents see metadata, never plaintext.** Non-secret metadata (id,
+  name, expiry) mirrors into the reactive store and can be exposed via
+  tools. A raw `secrets.get` must never be an agent-facing tool. A
+  decrypted value in a tool result is in the transcript, the harness
+  logs, and the model provider's hands. Precisely: **the tool surface
+  cannot return credentials.** The guarantee is about what crosses the
+  tool-result boundary. It is not a claim that a same-UID process cannot
+  read the daemon (see trust boundary below).
+- **Agents wield capabilities that consume secrets in-handler.** Tools
+  like `fund_testnet_account` read the secret inside the tool process
+  and return only outcomes (txIds, statuses). This is the `sign` pattern
+  applied to credentials. Refresh/rotation exchanges likewise happen
+  in-handler. Agents orchestrate lifecycle. They detect expiry from
+  metadata, invoke refresh, and tell the human when a human grant is
+  required. They are never able to read a value.
+- **Secrets enter via human channels only** (CLI prompts, OAuth device
+  flows like `vibekit dispenser login`). They never enter through the
+  model context window. Then nothing to seal has already leaked.
+- Plugin services resolve their credentials from the daemon at
+  service-construction time. No env-var/dotfile sprawl. One vault. One
+  `keystore serve`. One custody story for keys and credentials alike.
 
-**Trust boundary (normative, from the adversarial review).** VibeKit's local dev stack runs on a **trusted machine operated by a competent developer**: any same-UID process can reach the daemon socket (full API) — that is the ssh-agent posture, accepted and documented, not a vulnerability. What is *not* trusted is **the model**: prompt injection via on-chain data (asset names, notes, NFD fields) is in scope, which is why writes are gated (harness approval + `requiresSigner`/`mutatesState` hints + explicit network enforcement in `executeToolCall`), close/clear actions demand explicit confirmation flags, and the system prompt frames on-chain strings as data. `SIGNING=execute` means the operator accepts harness auto-approve as the residual risk. **Phase 7 (hosted, multi-tenant, untrusted browsers) gets none of these relaxations.**
+**Trust boundary (normative, from the adversarial review).** VibeKit's
+local dev stack runs on a **trusted machine operated by a competent
+developer**. Any same-UID process can reach the daemon socket (full API).
+That is the ssh-agent posture. It is accepted and documented. It is not a
+vulnerability. What is _not_ trusted is **the model**. Prompt injection
+via on-chain data (asset names, notes, NFD fields) is in scope. That is
+why writes are gated (harness approval + `requiresSigner`/`mutatesState`
+hints + explicit network enforcement in `executeToolCall`). Close/clear
+actions demand explicit confirmation flags. The system prompt frames
+on-chain strings as data. `SIGNING=execute` means the operator accepts
+harness auto-approve as the residual risk. **Phase 7 (hosted,
+multi-tenant, untrusted browsers) gets none of these relaxations.**
 
-Both foundation dependencies are pre-1.0 (`algosdk@3.7.0-beta.1`, `keystore-node@1.0.0-canary.3`). Policy: **pin exact versions, isolate behind our interfaces** (`Signer`, `NetworkClients`) so churn lands in one file per dependency, not across published packages.
+The repository pins `algosdk@3.7.0` for development and app runtimes while
+published packages expose a `>=3.7.0 <4` peer range. The keystore remains pinned
+to `keystore-node@1.0.0-canary.3`. Isolate custody behind the
+`algosdk.TransactionSigner` adapter and network construction behind
+`NetworkClients`, so dependency churn lands at narrow seams.
 
 ## 7. CLI (`vibekit`)
 
-Simplified relative to v1, but with a bigger mission: absorb the AlgoKit CLI jobs that matter for the vibekit workflow. Be precise about the boundary — AlgoKit CLI also does smart-contract compilation (puya), typed client generation, `doctor`, `goal` passthrough, and codespaces. **v2 absorbs init/templates/localnet only**; compilation and client generation stay with AlgoKit (or become future work). Saying "deprecates AlgoKit CLI" without this caveat overpromises.
+Simplified relative to v1, but with a bigger mission: absorb the AlgoKit
+CLI jobs that matter for the vibekit workflow. Be precise about the
+boundary. AlgoKit CLI also does smart-contract compilation (puya), typed
+client generation, `doctor`, `goal` passthrough, and codespaces. **v2
+absorbs init/templates/localnet only.** Compilation and client generation
+stay with AlgoKit (or become future work). A claim that this "deprecates
+AlgoKit CLI" without this caveat overpromises.
 
-| Command area | Notes |
-|---|---|
-| `vibekit init` | Bootstrap AI coding environment: agents, skills, MCP config (v1's core, ported and slimmed) |
-| `vibekit mcp` | Start local MCP (stdio) — imports `@initlabs/vibekit-mcp` as a *library*, killing v1's app→app dependency |
-| `vibekit localnet …` | start/stop/reset/status — **re-implemented in TS** referencing AlgoKit CLI's open-source Docker orchestration: [`src/algokit/cli/localnet.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/cli/localnet.py) (command layer) and [`src/algokit/core/sandbox.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/sandbox.py) (compose-file generation + container lifecycle). Localnet funding (v1's dispenser-kmd) folds in here. **MVP subset only**: start/stop/reset/status + kmd funding; explicitly deferred: `goal` passthrough, codespaces, compose-config version migration (sandbox.py is 1,000+ lines — don't port it all) |
-| `vibekit new` (or similar) | Template bootstrapping via **GitHub template repos** — no template engine in the CLI. **Live (2026-08-15)**: `initlabsai/algorand-starter-{contracts,fullstack,kitchensink}` — three additive tiers, public template repos synced from a private dev monorepo (`initlabsai/algorand-starter-templates`, single source of truth against tier drift). `vibekit new` fetches the tarball (verified: 23 files for contracts) — no git, no npm needed. Templates no longer invoke AlgoKit CLI in the build path (puya-ts + algokit-client-generator are lockfile-pinned devDependencies); `algokit localnet start` is the **single remaining AlgoKit CLI touchpoint**, so `vibekit localnet` completes the AlgoKit-free path. An `npm create` wrapper stays optional future work over the same tarballs. **Composed with init (2026-08-16):** after extraction, `new` runs init's agent-setup flow (`runInitAt`) into the fresh directory — skills and MCP configs come from the CLI (single source of truth), never baked into template repos (which would mean 3 repos × every skills/MCP-format change). `init` stays standalone for existing projects |
-| `vibekit tool <name> [json]` | **The full tool surface as a CLI** (added 2026-08-16): one generic `ToolDefinition → CLI` adapter over the same `resolveDeployment`/`executeToolCall` core — `tool list`, per-tool `--help` (JSON Schema from zod), args as one JSON string, results as JSON. Gives agents a *correct* shell fallback when no MCP client is wired (observed failure mode: agents fell back to shell and hallucinated algokit commands) and humans a scriptable interface. Third thin host over the engine; zero per-tool code |
-| **Skills (canonical, in-repo)** | **Decided 2026-08-16**: `skills/` at the repo root is the canonical agent-skill set, bundled into the CLI at build time (no network fetch). Two vibekit-authored skills (`use-vibekit` — tool access paths incl. meta-tool harnesses and the shell fallback, account/keystore model, networks, signing, denominations; `vibekit-project-setup` — new/init/localnet/doctor) **Curated down to those two on the same day** (owner's call): the nine vendored upstream language/stack skills (algorand-devrel/algorand-agent-skills, MIT) proved too algokit-coupled — live pi sessions showed weak models pattern-matching skill content over the AGENTS.md precedence table and flailing into algokit commands. They live in git history and return individually as each is refactored to be vibekit-consistent. AGENTS.md carries an algokit→vibekit command-precedence table for residual references |
-| `vibekit doctor` | Diagnoses and repairs (`--fix`) field problems: v1 binaries shadowing v2 on PATH, broken/legacy MCP entries (`/$bunfs` compiled-binary paths, v1 `vibekit-mcp` key, v1 env vars), missing Docker/keystore. Added 2026-08-16 after live v1-conflict debugging; init also merges into existing configs (foreign MCP servers survive, v1 key migrated) |
-| `vibekit agent` | Launches the **web VibeKit Agent** (the Lora replacement, Phase 8) in the browser; until it ships, prints the today-path (your own agent via `vibekit init`). Replaces the dropped `vibekit explore` TUI (see §1) |
+| Command area                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vibekit init`                  | Bootstrap AI coding environment: agents, skills, MCP config (v1's core, ported and slimmed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `vibekit mcp`                   | Start local MCP (stdio). Imports `@initlabs/vibekit-mcp` as a _library_. This kills v1's app→app dependency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `vibekit localnet …`            | start/stop/reset/status. **Re-implemented in TS** with AlgoKit CLI open-source Docker orchestration as reference: [`src/algokit/cli/localnet.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/cli/localnet.py) (command layer) and [`src/algokit/core/sandbox.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/sandbox.py) (compose-file generation + container lifecycle). Localnet funding (v1's dispenser-kmd) folds in here. **MVP subset only**: start/stop/reset/status + kmd funding. Explicitly deferred: `goal` passthrough, codespaces, compose-config version migration (sandbox.py is 1,000+ lines. Do not port it all.)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `vibekit new` (or similar)      | Template bootstrapping via **GitHub template repos**. No template engine in the CLI. **Live (2026-08-15)**: `initlabsai/algorand-starter-{contracts,fullstack,kitchensink}` — three additive tiers, public template repos synced from a private dev monorepo (`initlabsai/algorand-starter-templates`, single source of truth against tier drift). `vibekit new` fetches the tarball (confirmed: 23 files for contracts). No git. No npm needed. Templates no longer invoke AlgoKit CLI in the build path (puya-ts + algokit-client-generator are lockfile-pinned devDependencies). `algokit localnet start` is the **single remaining AlgoKit CLI touchpoint**, so `vibekit localnet` completes the AlgoKit-free path. An `npm create` wrapper stays optional future work over the same tarballs. **Composed with init (2026-08-16):** after extraction, `new` runs init's agent-setup flow (`runInitAt`) into the fresh directory. Skills and MCP configs come from the CLI (single source of truth). They are never baked into template repos. That path means 3 repos times every skills/MCP-format change. `init` stays standalone for existing projects. |
+| `vibekit tool <name> [json]`    | **The full tool surface as a CLI** (added 2026-08-16): one generic `ToolDefinition → CLI` adapter over the same `resolveDeployment`/`executeToolCall` core. `tool list`, per-tool `--help` (JSON Schema from zod), args as one JSON string, results as JSON. Gives agents a _correct_ shell fallback when no MCP client is wired (observed failure mode: agents fell back to shell and hallucinated algokit commands) and humans a scriptable interface. Third thin host over the engine. Zero per-tool code.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Skills (canonical, in-repo)** | **Decided 2026-08-16**: `skills/` at the repo root is the canonical agent-skill set, bundled into the CLI at build time (no network fetch). It is the product channel for teaching coding agents correct contract, generated-client, frontend, and general Algorand patterns. The current safe bundle contains two vibekit-authored skills: `use-vibekit` covers tool access paths, meta-tool harnesses, the shell fallback, the account/keystore model, networks, signing, and denominations; `vibekit-project-setup` covers new/init/localnet/doctor. **Curated down to those two on the same day** (owner's call): the nine vendored upstream language/stack skills (algorand-devrel/algorand-agent-skills, MIT) proved too algokit-coupled. Live pi sessions showed weak models pattern-matching skill content over the generated AGENTS.md precedence table and flailing into algokit commands. They live in git history and return individually as each is refactored to be vibekit-consistent. The generated project AGENTS.md carries an algokit→vibekit command-precedence table for residual references.                                             |
+| `vibekit doctor`                | Diagnoses and repairs (`--fix`) field problems: v1 binaries shadowing v2 on PATH, broken/legacy MCP entries (`/$bunfs` compiled-binary paths, v1 `vibekit-mcp` key, v1 env vars), missing Docker/keystore. Added 2026-08-16 after live v1-conflict debugging. Init also merges into existing configs (foreign MCP servers survive, v1 key migrated).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `vibekit explore`               | **Planned Phase 8:** launch the local full-screen OpenTUI Explorer. The command does not exist today. Its distribution boundary is open question 13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `vibekit agent`                 | Launch the hosted web VibeKit Agent in a browser. Until Phase 8 ships, it prints the current path (`vibekit init` with the user's own harness).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
-Explicitly gone: vault provisioning (~500 LOC), the provider/dispenser command trees, account CRUD (→ keystore CLI).
+Explicitly gone from v1: vault provisioning (about 500 LOC), provider trees,
+standalone dispenser packages, and general account CRUD. Their narrow
+replacements are `vibekit dispenser` for the TestNet authorization grant,
+agent-facing create/list tools, and the managed keystore CLI for human-only
+key operations.
 
-## 8. Hosted API, SDK, and the web agent
+## 8. Hosted API, SDK, and shared Explorer
 
-Both live in **`initlabsai/vibekit-agent`** — the hosted product monorepo, consuming `@initlabs/*` packages from npm.
+The API, SDK, and Explorer are first-party workspaces in this monorepo. Apps
+consume `@initlabs/*` through public exports using `workspace:*`; the release
+fixture consumes the same packages from packed tarballs. Co-location makes
+protocol changes atomic without turning the apps into one runtime or one
+deployment:
 
-- **`apps/api`** becomes a thin Hono wrapper over **`@initlabs/vibekit-agent`** (the orchestrator package, §9) — v1's 376-line triple adapter and its LLM config collapse into the orchestrator, and the tool registry becomes *the* registry the SDK derives from — killing v1's four-place tool-name duplication. Adds BYOM config (provider/key/baseUrl/model per request or per API key) and per-request tool selection.
-- **`@initlabs/vibekit-sdk`** replaces `@getvibekit/sdk`. The fragile regex-over-`.d.ts` type sync is replaced by generating types from the tool registry (the Zod schemas are the source of truth — derive both MCP inputSchemas and SDK types from them).
-- **Web agent** (formerly "explorer" — rebranded **VibeKit Agent**): Next.js + Beautiful UI primitives (streaming text, thinking traces, tool chips, approval cards map 1:1 to what an agentic explorer renders). It consumes the hosted API via `@initlabs/vibekit-sdk` and published tool packages for display metadata — no more `transpilePackages` reach-ins. Positioning: the flagship demo of "hook intelligent network interactions into your app" (e.g. an AlphaArcade-style betting app powering a chatbot), plus the **xArc** feature: upload an ARC-56 spec, get intelligent contract interaction via `toolsFromArc56`.
+- **`apps/api`** is a thin Hono wrapper over `@initlabs/vibekit-agent`,
+  with BYOM config and per-request tool selection. Hosted writes are
+  always compose-only. The service never holds wallet keys.
+- **`@initlabs/vibekit-sdk`** replaces `@getvibekit/sdk`. Zod tool and
+  protocol schemas generate its types. There is no
+  regex-over-declarations sync step.
+- **`apps/tui`** is a full-screen `@opentui/react` Explorer using local or
+  BYOM models and the local keystore daemon. It is a structured
+  application, not a transcript-only Ink chat.
+- **`apps/web`** is the Next.js VibeKit Agent. It uses the hosted API,
+  browser wallet adapters, web-native charts/media, and selected
+  Beautiful UI parts.
+- **Shared experience packages** own input classification, workspace
+  commands, state transitions, view models, and semantic React
+  composition. TUI primitives (`<box>`, `<text>`, focus/key handling) and
+  web primitives (HTML, CSS, responsive layout, wallet UX) stay in their apps.
+  Extract renderer-specific packages only after a second consumer appears.
 
-## 9. Products (the arc — revised 2026-08-15)
+## 9. Products and Explorer interaction model (revised 2026-08-19)
 
-Two stacks, one brain. The keystone is a new package, **`@initlabs/vibekit-agent` — the orchestrator**: the agent loop itself (LLM provider + tool calling + streaming + system prompt) over the same `ToolDefinition[]` everything else uses. "Capability parity between harness and API" is then a *property of the architecture* — one tool registry, one loop — not a promise to maintain.
+The shared brain is **`@initlabs/vibekit-agent`**: model providers, tool
+loop, streaming, and approval interception over the same
+`ToolDefinition[]` as every other host. The Explorer adds a typed
+presentation/workspace protocol on top.
 
-**Dev stack (local, free, keystore custody):**
-`vibekit init` → agent harness gets MCP + skills → build on Algorand. `vibekit explore` → an **agent-native Lora**: English-language questions about the network, in a TUI. Same questions work inside the harness via the MCP because both are the same tools.
+| Head                  | Experience                                           | Model                  | Signing                                       |
+| --------------------- | ---------------------------------------------------- | ---------------------- | --------------------------------------------- |
+| **Agent harness**     | MCP + skills installed by `vibekit init`             | Harness model          | Local keystore, execute mode                  |
+| **TUI Explorer**      | Lora-class terminal workspace with agent composer    | BYOM/local             | Local keystore after explicit in-app review   |
+| **Hosted API + SDK**  | Stateless orchestration and structured event stream  | BYOM or funded default | Compose only. Never holds keys.               |
+| **Web VibeKit Agent** | Same Explorer semantics in a richer browser renderer | Via API                | Connected wallet after explicit in-app review |
 
-**Product stack (hosted):**
-The **API** — everything the dev stack can do, as a configurable service (per-request tool selection, BYOM) — and the web **agent** (the explorer, rebranded "VibeKit Agent"): React + wallet connection + [Beautiful UI](https://www.beautifului.dev), where people converse to explore *and act* (send, create ASAs, xArc).
+The default screen has stable chrome: network and signer/wallet status at
+the top, primary navigation and workspace tabs, a large structured
+canvas, and a compact composer docked at the bottom. Conversation
+history is available. It is not the product's organizing surface. Tabs
+preserve investigations and artifacts (accounts, transactions, assets,
+apps, simulations, comparisons). Tabs are not chat sessions by default.
 
-| Head | What it is | Model | Signing |
-|---|---|---|---|
-| **Agent harness** (Claude Code, …) | The MCP, via `vibekit init` | The harness's own model | Execute mode — local keystore daemon |
-| ~~`vibekit explore`~~ (TUI) | **Dropped 2026-08-16** — redundant with the harness row above (same tools, better model, harness approval gates); offline story covered by local harnesses (pi + Ollama) over the MCP. Its lessons (cards from data + display hints, don't-restate prompt, `approveToolCall`) carry to the web agent | — | — |
-| **Hosted API** (+ `@initlabs/vibekit-sdk`) | `@initlabs/vibekit-agent` behind Hono; per-request tool filtering; BYOM config | BYOM (keys, local/self-hosted endpoints) + a funded default (Together today; x402 later, see below) | Compose mode only — never holds keys |
-| **Web agent** ("VibeKit Agent") | React client of the API; explore *and act* (agent = do) | Via the API | Client-side: connected wallet signs compose-mode groups |
-| Electron / Tauri | Not building / back pocket | — | — |
+Input follows two lanes:
+
+1. A deterministic classifier recognizes transaction IDs, addresses, app
+   IDs, asset IDs, and known commands before any model call. Ambiguous
+   numeric IDs can query block, asset, and app candidates concurrently
+   and present typed matches.
+2. Natural language enters the agent loop. Tools return authoritative
+   structured data. The agent emits validated workspace commands
+   selecting trusted view ids. Narration explains results without
+   copying tables, IDs, or amounts already rendered from the result
+   object.
+
+Writes always follow **draft → simulate → inspect → explicit approval →
+sign → confirm**. The approval view is protocol-driven. It shows the
+actual transaction group, sender, network, fees, and effects. TUI and
+web differ only in the custody adapter (keystore versus wallet) and
+renderer. Static navigation and direct lookup remain useful when the
+model is absent or misbehaving.
 
 Scope guards:
 
-- **Lora parity is the web agent's job** (revised 2026-08-16, TUI dropped): every *question and action* Lora supports, rendered from tool-result data + §4 `display` hints — components consume structured tool output, the model narrates and never restates rendered data (both patterns proven in the TUI before it was cut).
-- **Provider auth honesty:** BYO-key + local models are the launch story. "Login with Claude/ChatGPT/Grok" mostly doesn't exist for third-party API use; provider OAuth is opportunistic per-provider work, never a design pillar.
-- **x402 is an experiment, not a dependency.** The paid default is just a BYOM entry we happen to fund; an (Algorand-native?) x402 pay-per-request flow slots in later without touching architecture. It never gates a launch.
-- The naming encodes the split: **explore** (TUI, read) vs **agent** (web, act). Bare "agent" is ungoogleable — full name "VibeKit Agent," short form in-product.
-- The infra invariant stands: **the protocol carries everything** (streaming, results, display hints, compose flows live in the orchestrator/SDK stream, never in one head's components).
+- Lora workflows and coverage are the shared experience target. Its
+  component implementation is reference material, not a code-port
+  requirement.
+- The model selects trusted, versioned view recipes. It never generates
+  UI code.
+- Component sharing is selective. Share semantics, hooks, state, and view
+  trees where they stay natural. Prefer two small renderers to a
+  lowest-common-denominator abstraction.
+- BYO key/local models are the launch auth story. Provider OAuth is
+  opportunistic.
+- x402 is an experiment, not a launch dependency.
+- The protocol carries agent, result, workspace, presentation, and
+  approval events. No critical flow can exist only inside one head's
+  components.
 
 ## 10. State model
 
-State is where v1 died (SQLite session store, per-network keyring drift, `switch_account` bugs), and these tools get embedded in four hosts — so this section is normative.
+State is where v1 died (SQLite session store, per-network keyring drift,
+`switch_account` bugs). These tools get embedded in four hosts. So this
+section is normative.
 
-**The invariant: every request carries its full context explicitly (network, sender, …). Anything that "remembers" is a client that is stateful by nature — a conversation, a process, a browser tab, a config file. There is no shared mutable store that tools or servers read. Ambient lookup of "current X" is banned.**
+**The invariant: every request carries its full context explicitly
+(network, sender, and more).** Anything that "remembers" is a client that
+is stateful by nature: a conversation, a process, a browser tab, a config
+file. There is no shared mutable store that tools or servers read.
+Ambient lookup of "current X" is banned.
 
-| "Stateful" thing | Owner | Mechanism |
-|---|---|---|
-| Current network (MCP/agent) | The conversation | Agent passes `network` per call; its context window is the session store |
-| Current network (CLI/TUI) | The CLI process | In-memory + human-readable config file — no db |
-| Current network (explorer) | The browser | URL param / localStorage; API stateless per request |
-| Active wallet / sender | Same per host | Tools take explicit `sender`; "active account" is host-side sugar filling the param |
-| Key material & metadata | keystore-node daemon | OS keychain + sealed file — not our state |
-| Agent/skill/MCP config | CLI config files | Plain files, versionable |
+| "Stateful" thing                | Owner                          | Mechanism                                                                             |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
+| Current network (MCP/agent)     | The conversation               | Agent passes `network` per call. Its context window is the session store.             |
+| Current network (CLI/TUI)       | The local client process       | In-memory + human-readable config file. No db.                                        |
+| Current network (web)           | The browser                    | URL param / localStorage. API stateless per request.                                  |
+| Active wallet / sender          | Same per host                  | Tools take explicit `sender`. "Active account" is host-side sugar filling the param.  |
+| Explorer tabs, focus, artifacts | The TUI process or browser tab | Shared workspace reducer. Optional client-local persistence. Never API ambient state. |
+| Key material & metadata         | keystore-node daemon           | OS keychain + sealed file. Not our state.                                             |
+| Agent/skill/MCP config          | CLI config files               | Plain files, versionable                                                              |
 
-**Per-request network selection** (Phase 3 opener): a deployment declares `networks: [...]` (one default); clients pooled per network at startup; the adapter injects a `network` parameter into tool schemas **only when >1 network is served**, as a closed enum of exactly the operator-configured networks — the agent chooses within the operator's bounds, never invents endpoints. **Optional with default on read tools** (wrong-network reads are harmless and self-evident); **required on `requiresSigner` tools** (never spend on a silently-defaulted chain). A `get_network` read tool lists served networks + default so agents orient instead of guessing. Result: "current network" ceases to exist as a stored fact anywhere — it lives only in requests and in the conversation's memory of user intent, which cannot silently diverge.
+**Per-request network selection** (Phase 3 opener): a deployment declares
+`networks: [...]` (one default). Clients are pooled per network at
+startup. The adapter injects a `network` parameter into tool schemas
+**only when more than 1 network is served**, as a closed enum of exactly
+the operator-configured networks. The agent chooses within the
+operator's bounds. The agent never invents endpoints. **Optional with
+default on read tools** (wrong-network reads are harmless and
+self-evident). **Required on `requiresSigner` tools** (never spend on a
+silently-defaulted chain). A `get_network` read tool lists served
+networks + default so agents orient instead of guessing. Result: "current
+network" ceases to exist as a stored fact anywhere. It lives only in
+requests and in the conversation memory of user intent, which cannot
+silently diverge.
 
-**No database.** v2 has none and any future "we need to store this" is a design smell until proven otherwise. The only persistent state v2 owns is CLI config files. (WalletConnect pairing — the one stateful component previously in scope — was dropped 2026-08-15.)
+**No shared application database.** The engine has none. Any future "we
+need to store this" is a design smell until proven otherwise.
+Client-local workspace persistence and hosted account/billing records
+are allowed at their natural edges. Neither becomes ambient tool
+context. Wallet pairing stays client-side.
 
 ## 11. Open questions
 
-1. ~~Where does `apps/api` live long-term?~~ **Resolved (2026-08-11): API + explorer form their own monorepo, `initlabsai/vibekit-agent`.** The vibekit repo is the developer-tooling side (MCP, CLI, packages); vibekit-agent is the hosted product side.
-2. **Package naming**: `@initlabs/vibekit-core` vs `@initlabs/vibekit-core` — bare names are cleaner but generic in a company-wide scope that may later hold non-vibekit packages.
-3. ~~Testnet faucet~~ **Resolved (2026-08-16)**: `vibekit dispenser login` (device flow, `offline_access`) → token sealed in daemon secrets → `fund_testnet_account` tool, conditionally registered. Original question: v1's dispenser-testnet (Foundation faucet client; AlgoKit's equivalent is [`core/dispenser.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/dispenser.py)) — resurrect as a tool, a CLI command, or drop?
-4. ~~`app_deploy` semantics~~ **Resolved (2026-08-15): plain create on raw algosdk** — ARC-56/32 parsing, `TMPL_*` deploy-time substitution, algod compile, bare or ABI create. No idempotent AppFactory semantics: deploying again makes a new app; agents that want update flows use `app_call` with the update OnComplete (future work if demanded).
-5. ~~MCP SDK choice~~ **Resolved by spike (2026-08-11): official v2 SDK** (`@modelcontextprotocol/server` 2.x) — its per-request factory model matches our per-request `ToolContext` exactly.
-6. **Ecosystem tools** (`search_ecosystem` + 454-line static dataset): port as a plugin with the data externalized, or drop from the MCP and keep it API-side only?
-7. ~~Minimum client protocol version~~ **Resolved by spike (2026-08-11)**: the v2 SDK bridges 2025-era clients by default (verified empirically with a v1-SDK client against our stateless server, both transports' default postures). No extra compat work; today's agents are served.
-8. **Module format**: ESM-only (draft assumption) or dual CJS/ESM? Dual doubles build/test surface for consumers we may not have.
-9. **How to depend on `algosdk@beta`**: peer ranges against a prerelease (`>=3.7.0-beta.1`) behave badly in npm/semver. Option: ship algosdk as a *pinned regular dependency* until 3.7 stable, then flip to peer in one breaking release. Same question for `keystore-node@canary` inside `signer-keystore`.
-10. **Docs site.** v1 has `apps/website` (Astro/Starlight, getvibekit.ai) — v2's layout doesn't account for it, but published packages for external developers *require* docs (contract reference, plugin authoring guide, self-hosting guide). Port the site into the new repo, or new docs under an Init Labs domain?
-11. **License & copyright.** New org, published packages: pick the license early (Apache-2.0 matches the Algorand ecosystem; v1 is MIT © Gabriel Kuettel, so relicensing the ported code is the copyright holder's call — clean) and settle copyright headers/`author` fields before the first npm publish, not after.
-12. ~~Keystore UX gap~~ **Resolved (2026-08-16)**: `vibekit keystore <args>` (managed pinned install) + agent-facing `create_signing_account`/`list_signing_addresses`; mnemonic flows stay with the CLI. Original question: **Keystore UX gap.** Deferring account CRUD to the `keystore` CLI assumes it's installed and its UX is acceptable for vibekit users. If canary UX is rough, `vibekit account …` thin aliases move from "maybe later" to launch scope. *Spike data point: CLI UX was solid (generate/list/export/sign/serve all clean) — leaning "defer to keystore CLI".*
+1. ~~Where do the API and Explorer heads live?~~ **Resolved (updated
+   2026-08-19): API, TUI, web, SDK, and their shared experience packages live
+   in `initlabsai/vibekit` beside the engine.** Apps are private terminal
+   workspaces and independent deployment artifacts. They consume only public
+   package exports. An out-of-workspace packed-package fixture, not a second
+   first-party repo, proves the external boundary.
+2. ~~Package naming~~ **Resolved (2026-08-15):** packages use the
+   `@initlabs/vibekit-*` pattern.
+3. ~~Testnet faucet~~ **Resolved (2026-08-16)**:
+   `vibekit dispenser login` (device flow, `offline_access`) → token
+   sealed in daemon secrets → `fund_testnet_account` tool,
+   conditionally registered. Original question: v1's dispenser-testnet
+   (Foundation faucet client. AlgoKit's equivalent is
+   [`core/dispenser.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/dispenser.py)).
+   Resurrect as a tool, a CLI command, or drop?
+4. ~~`app_deploy` semantics~~ **Resolved (2026-08-15): plain create on
+   raw algosdk.** ARC-56/32 parsing, `TMPL_*` deploy-time substitution,
+   algod compile, bare or ABI create. No idempotent AppFactory
+   semantics: deploying again makes a new app. Agents that want update
+   flows use `app_call` with the update OnComplete (future work if
+   demanded).
+5. ~~MCP SDK choice~~ **Resolved by spike (2026-08-11): official v2
+   SDK** (`@modelcontextprotocol/server` 2.x). Its per-request factory
+   model matches our per-request `ToolContext` exactly.
+6. **Ecosystem tools** (`search_ecosystem` + 454-line static dataset):
+   port as a plugin with the data externalized, or drop from the MCP and
+   keep it API-side only?
+7. ~~Minimum client protocol version~~ **Resolved by spike
+   (2026-08-11)**: the v2 SDK bridges 2025-era clients by default
+   (confirmed empirically with a v1-SDK client against our stateless
+   server, both transports' default postures). No extra compat work.
+   Today's agents are served.
+8. ~~Module format~~ **Resolved:** packages are ESM-only. Reopen this only for
+   a concrete CJS consumer rather than doubling the build and test surface
+   speculatively.
+9. **Keystore prerelease policy.** The algosdk half is resolved: 3.7.0 is
+   stable, apps and development pin it exactly, and packages declare the
+   `>=3.7.0 <4` peer range. Decide whether `keystore-node@1.0.0-canary.3` is
+   acceptable at the 1.0 gate or whether release waits for its stable build.
+10. **Docs site.** v1 has `apps/website` (Astro/Starlight,
+    getvibekit.ai). Published packages for external developers _require_ docs
+    (contract reference, plugin authoring guide, self-hosting guide). If the
+    site returns, keep its source as a private app in this monorepo. Decide its
+    framework, domain, and hosting before adding it to the target layout.
+11. **License & copyright.** Package manifests currently declare
+    Apache-2.0, but the repository has no root license file. Add it and settle
+    copyright headers/`author` fields before the first npm publish. v1 is MIT
+    © Gabriel Kuettel, so relicensing the ported code remains the copyright
+    holder's call.
+12. ~~Keystore UX gap~~ **Resolved (2026-08-16)**:
+    `vibekit keystore <args>` (managed pinned install) + agent-facing
+    `create_signing_account`/`list_signing_addresses`. Mnemonic flows
+    stay with the CLI. Original question: **Keystore UX gap.** Deferring
+    account CRUD to the `keystore` CLI assumes it is installed and its
+    UX is acceptable for vibekit users. If canary UX is rough,
+    `vibekit account …` thin aliases move from "maybe later" to launch
+    scope. _Spike data point: CLI UX was solid
+    (generate/list/export/sign/serve all clean). Leaning "defer to
+    keystore CLI"._
+13. **TUI distribution:** source location is resolved as `apps/tui`. Decide
+    whether `vibekit explore` embeds OpenTUI in the main compiled CLI or
+    installs and launches a separately built TUI artifact from this repo.
+    Prefer the separate artifact unless cross-platform compiled-binary smoke
+    proves embedding reliable. The user-facing command remains
+    `vibekit explore` either way.
+14. **Presentation protocol:** freeze `AgentEvent`, approval events,
+    `ViewSpec`, and `WorkspaceCommand` only after the same recorded
+    fixtures render and update correctly in OpenTUI and web. The §4.1
+    constraints are locked. The exact schema is not.
 
 ## 12. Migration plan
 
-Sequenced so each phase produces something runnable, and risk is front-loaded:
+Sequenced so each phase produces something runnable, and risk is
+front-loaded:
 
-- **Phase 0 — Spike (de-risk the betas).** Minimal stateless MCP on the 2026-07-28 spec serving `network` + read-only `accounts` tools on raw `algosdk@beta`, plus one write tool (`send_payment`) signing through keystore-node's daemon. Throwaway code, keep the learnings. *Exit criterion: an agent completes a testnet payment end-to-end through the new stack.* Must also answer, explicitly: (a) does a **current** agent client (Claude Code today) successfully talk to the stateless server — i.e. open question 7; (b) does the keystore RPC socket work from a `bun build --compile` binary with no native addon linked in; (c) does the bigint→JSON codec round-trip cleanly on real algod/indexer responses; (d) does compose mode (unsigned group out, signature in) work end-to-end.
+- **Phase 0 — Spike (de-risk the then-beta dependencies).** Minimal stateless MCP on the
+  2026-07-28 spec serving `network` + read-only `accounts` tools on raw
+  algosdk 3.7 beta, plus one write tool (`send_payment`) signing through
+  keystore-node's daemon. Throwaway code. Keep the learnings. _Exit
+  criterion: an agent completes a testnet payment end-to-end through the
+  new stack._ The spike must also answer these four questions.
+  (a) Does a **current** agent client (Claude Code today) talk to the
+  stateless server (open question 7)?
+  (b) Does the keystore RPC socket work from a `bun build --compile`
+  binary with no native addon linked in?
+  (c) Does the bigint→JSON codec round-trip cleanly on real
+  algod/indexer responses?
+  (d) Does compose mode (unsigned group out, signature in) work
+  end-to-end?
+
 ### Phase 0 results (2026-08-11) — ✅ all four verdicts passed
 
-Spike code: `~/Code/@initlabs/vibekit/spike` (throwaway; keep for reference until Phase 2).
+The throwaway implementation was removed after Phase 2. Its durable results
+remain below and the code remains available in Git history.
 
-| Verdict | Result |
-|---|---|
-| (a) Client compat | ✅ **Both** a modern 2026-07-28 client and a legacy 2025-era client (v1 SDK, initialize handshake) talked to the same stateless HTTP server. The official v2 SDK bridges legacy clients by default (`legacy: 'stateless'` on HTTP, `'serve'` on stdio; bridged versions: 2025-11-25 … 2024-10-07). **Open questions 5 & 7 resolved**: use the official SDK; no extra compat work needed. |
-| (b) Compiled binary | ✅ `bun build --compile` binary (95 MB) signed via the keystore daemon socket; the RPC-client import path pulls in no native addon. |
-| (c) BigInt codec | ✅ One `jsonSafe` codec (bigint→number-if-safe-else-string, bytes→base64) round-tripped real algod responses (testnet + localnet reads, account info, tx confirmation). |
-| (d) Compose mode | ✅ HTTP server (compose, no signer) returned a base64 `unsignedGroup`; the "wallet side" decoded, signed via keystore, submitted, confirmed. The hosted/browser write flow is viable. |
+| Verdict             | Result                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (a) Client compat   | ✅ **Both** a modern 2026-07-28 client and a legacy 2025-era client (v1 SDK, initialize handshake) talked to the same stateless HTTP server. The official v2 SDK bridges legacy clients by default (`legacy: 'stateless'` on HTTP, `'serve'` on stdio. Bridged versions: 2025-11-25 … 2024-10-07). **Open questions 5 & 7 resolved**: use the official SDK. No extra compat work needed. |
+| (b) Compiled binary | ✅ `bun build --compile` binary (95 MB) signed via the keystore daemon socket. The RPC-client import path pulls in no native addon.                                                                                                                                                                                                                                                      |
+| (c) BigInt codec    | ✅ One `jsonSafe` codec (bigint→number-if-safe-else-string, bytes→base64) round-tripped real algod responses (testnet + localnet reads, account info, tx confirmation).                                                                                                                                                                                                                  |
+| (d) Compose mode    | ✅ HTTP server (compose, no signer) returned a base64 `unsignedGroup`. The "wallet side" decoded, signed via keystore, submitted, confirmed. The hosted/browser write flow is viable.                                                                                                                                                                                                    |
 
-**Exit criterion**: payment end-to-end through the new stack — ✅ on **localnet** (keystore-daemon-signed via stateless MCP, confirmed round 108; before/after balances verified). The literal *testnet* run is blocked only on funds: the AlgoKit testnet dispenser token is expired (`vibekit dispenser login` to refresh); testnet reads verified against real nodes.
+**Exit criterion**: payment end-to-end through the new stack — ✅ on
+**localnet** (keystore-daemon-signed via stateless MCP, confirmed round 108. Before/after balances confirmed). The literal _testnet_ run is
+blocked only on funds: the AlgoKit testnet dispenser token is expired
+(`vibekit dispenser login` to refresh). Testnet reads confirmed against
+real nodes.
 
 Implementation facts learned:
 
-- **v2 SDK package names**: `@modelcontextprotocol/server` / `@modelcontextprotocol/client` (2.0.0) — the v1 monolith `@modelcontextprotocol/sdk` is frozen at protocol 2025-11-25. `createMcpHandler(factory)` builds a fresh server per HTTP request (exactly our per-request `ToolContext` model); `serveStdio(factory)` ditto per connection. `registerTool` takes full Zod schemas (Zod 4 works), annotations, and `_meta` — the `display` hint travels as `_meta['ai.vibekit/display']`.
-- **Contract**: a `defineTool()` identity helper is required for `z.infer` to flow into handler args (annotating `const x: ToolDefinition` erases inference), plus an `AnyTool` erased type for registries. Bake both into `@initlabs/vibekit-core`.
-- **keystore-node canary held up**: generate/export/sign/list/serve all worked first try on Linux (Secret Service). Two adapter needs for `signer-keystore`: the daemon has no "list addresses" — the adapter must build an address book by `export()`ing each key's public key (cache it); and the RPC client holds the socket open — the adapter needs an explicit `close()` or CLI processes hang on exit. **Open question 12 leaning**: keystore CLI UX is solid; thin aliases can wait.
-- **algosdk@beta**: `Transaction.bytesToSign()` + `attachSignature(addr, sig)` compose cleanly with `KeyStoreAPI.sign()`; `makePaymentTxnWithSuggestedParamsFromObject` / `waitForConfirmation` unchanged from v3 stable. No algokit-utils missed.
-- **v1 bug found en route**: v1 MCP `switch_account` succeeds but `send_payment` then fails with "Account not found in keyring" (per-network keyring lookup mismatch) — more evidence for the rewrite; no fix planned in v1.
+- **v2 SDK package names**: `@modelcontextprotocol/server` /
+  `@modelcontextprotocol/client` (2.0.0). The v1 monolith
+  `@modelcontextprotocol/sdk` is frozen at protocol 2025-11-25.
+  `createMcpHandler(factory)` builds a fresh server per HTTP request
+  (exactly our per-request `ToolContext` model). `serveStdio(factory)`
+  ditto per connection. `registerTool` takes full Zod schemas (Zod 4
+  works), annotations, and `_meta`. The `display` hint travels as
+  `_meta['ai.vibekit/display']`.
+- **Contract**: a `defineTool()` identity helper is required for
+  `z.infer` to flow into handler args (annotating
+  `const x: ToolDefinition` erases inference), plus an `AnyTool` erased
+  type for registries. Bake both into `@initlabs/vibekit-core`.
+- **keystore-node canary held up**: generate/export/sign/list/serve all
+  worked first try on Linux (Secret Service). Two adapter needs for
+  `signer-keystore`: the daemon has no "list addresses". The adapter
+  must build an address book by `export()`ing each key's public key
+  (cache it). The RPC client holds the socket open. The adapter needs an
+  explicit `close()` or CLI processes hang on exit. **Open question 12
+  leaning**: keystore CLI UX was solid. Thin aliases can wait.
+- **algosdk 3.7 beta (at spike time)**: `Transaction.bytesToSign()` +
+  `attachSignature(addr, sig)` compose cleanly with `KeyStoreAPI.sign()`.
+  `makePaymentTxnWithSuggestedParamsFromObject` / `waitForConfirmation`
+  unchanged from v3 stable. No algokit-utils missed.
+- **v1 bug found en route**: v1 MCP `switch_account` succeeds but
+  `send_payment` then fails with "Account not found in keyring"
+  (per-network keyring lookup mismatch). More evidence for the rewrite.
+  No fix planned in v1.
 
-- **Phase 1 — Skeleton.** Fresh repo, tsconfig/turbo/changesets/CI, `core` with the tool contract + `Signer` + `NetworkClients`, `mcp` server library, `apps/mcp` reference deployment. ✅ **Done 2026-08-15** — initial commit in `~/Code/@initlabs/vibekit`: `@initlabs/vibekit-core` (contract + codec + network clients, 11 tests) and `@initlabs/vibekit-mcp` (one generic adapter, registry validation at startup, `./stdio` + `./http` entries, 7 in-memory round-trip tests); reference deployment smoke-tested live against testnet. Contract refinement from implementation: `ToolPlugin` carries a pre-built `service` value (author-side factory captures config) instead of a host-invoked `createService(config)` — the host never holds plugin config.
-- **Phase 2 — Port read tools.** network → accounts → assets → transactions(read) → contracts(read), each domain landing with handler tests. Mostly mechanical: swap `AlgorandClient` context for raw clients (26 of ~38 call sites already reach through to raw algod/indexer). ✅ **Done 2026-08-15** — five packages, 23 tools, 51 tests, all with output schemas + display hints; reference deployment serves the full read surface, smoke-tested live on testnet. Notable findings: (1) algosdk defaults omitted client ports to **:8080** — `createNetworkClients` now always passes scheme-derived ports (the v1 AGENTS.md papercut, now fixed structurally); (2) named networks use nodely 4160 endpoints; free-tier 429s forced paced block sampling (3 concurrent, partial-failure tolerant) in `get_network_status`; (3) deliberate behavior change vs v1: address-taking read tools now validate and throw `ToolError('INVALID_ADDRESS')` up front (v1 surfaced raw indexer errors; in `batch_lookup_accounts` one invalid address now fails the call instead of being silently dropped); (4) v1's per-domain duplicated `formatAccount`/`formatTransaction`/`formatApplication` helpers were deduplicated into per-package `format.ts` modules with identical shaping.
-- **Phase 3 — Write path.** Opens with per-request network selection (§10 state model). Then: port `transactions/compose` onto algosdk's native composer; write tools for assets/contracts/transactions; `signer-keystore` (walletconnect dropped); resolve the `app_deploy` question. ✅ **Done 2026-08-15** — multi-network shipped exactly per §10 (pooled contexts, adapter-injected enum, optional-on-reads/required-on-writes, `get_network`); compose engine in core on `AtomicTransactionComposer` (one path for plain txns + ABI method calls with transaction-typed args, execute/compose/simulate); 13 write tools + 3 recovered reads across three packages; `@initlabs/vibekit-signer-keystore` with address-book cache + `close()`. Live E2E on localnet through the reference deployment: keystore-signed payment, asset creation, group simulation, app deploy. 100+ tests green. Repo now at 8 packages + reference app. **App-call policy (decided 2026-08-15):** the tools layer speaks raw algosdk (`ABIMethod` + `AtomicTransactionComposer`) — [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) is build-time codegen for known contracts and can't serve runtime specs (xArc, `resolveAppSpec`), and its generated clients depend on algokit-utils, which we dropped. We implement the needed ARC-56 semantics ourselves (struct↔tuple mapping, probably default-argument resolution) using the generator + algokit-utils `AppClient` as reference implementations. The generator belongs in `vibekit new` project templates, where a developer builds against one known contract.
-- **Phase 4 — Plugins.** `plugin-nfd` and `plugin-alpha-arcade` (applying REFACTOR.md §1's format fixes in the port); these prove the plugin contract. Publish everything under `@initlabs`. ✅ **Built 2026-08-15, publish deferred**: packages renamed `@initlabs/vibekit-*` (Q2 resolved), both plugins live-verified (1,146 markets; nf.algo), repo pushed to `github.com/initlabsai/vibekit`, publish metadata stamped and staged — **npm publish held for a 1.0 release** (owner's call: first public release should be 1.0-quality, roughly aligned with algosdk 3.7 stable). Nothing blocks on this until Phase 7: the CLI (5) and orchestrator+TUI (6) live in this repo; only `vibekit-agent`'s npm-boundary consumption needs published packages, so **the 1.0 release gate sits between Phases 6 and 7**.
-- **Phase 5 — CLI.** Port init/agents/skills, add localnet (from AlgoKit CLI reference) and template bootstrapping. ✅ **Done 2026-08-15** — `apps/cli` (`@initlabs/vibekit-cli`, private, bun-compiled binary like v1). Four command areas, all live-verified: (1) **`init`** ported from v1 and slimmed — agent registry (claude/codex/copilot/cursor/opencode), MCP registry (vibekit local + kappa/context7 docs; GoPlausible dropped), skills bundled at build time from `algorand-devrel/algorand-agent-skills` (10 skills), AGENTS.md rewritten for the v2 tool surface; deleted relative to v1: Vault/keyring/WalletConnect provider phases, GitHub PAT, dispenser auth, AlgoKit install (~2,000 LOC of v1 wizard). Agent MCP config now carries env `NETWORK=localnet, NETWORKS=localnet,testnet,mainnet, SIGNING=execute`. (2) **`new`** — tarball fetch from `codeload.github.com` + `tar --strip-components=1`, no git/npm; interactive tier picker or `--template`; verified live (contracts: 20 files). (3) **`localnet`** — sandbox.py's compose/conduit/algod-config/network-template generation ported verbatim (project `vibekit_localnet`, config in `~/.config/vibekit/localnet`, same host ports as AlgoKit so templates work unchanged), start/stop/reset(--update)/status/logs + `fund <addr>` via kmd (richest key in `unencrypted-default-wallet`); deferred per MVP scope: podman, named instances, image-version cache, goal passthrough, codespaces. Verified E2E: start → health checks → status → fund 5 ALGO (confirmed on-chain) → stop. (4) **`mcp`** — stdio server importing `@initlabs/vibekit-mcp` as a library (v1's app→app dependency killed): full 50-tool surface + both plugins, execute mode via keystore daemon with a loud **fallback to compose** when the daemon is down (agents still get an MCP). 24 CLI tests (compose generation/staleness, config generation for all agent formats, toml, template args); repo-wide turbo green.
-- **Phase 6 — Orchestrator + TUI.** `@initlabs/vibekit-agent` (LLM provider abstraction via the AI SDK, tool loop, streaming, BYOM config) + `vibekit explore` running it in-process with the tool packages — completes the dev stack with no hosting dependency, and dogfoods the orchestrator before anything hosted exists. Display hints become terminal renderers. ✅ **Done 2026-08-15** — (1) **Refactor first**: deployment semantics (`resolveDeployment`, `injectNetworkParam`, `executeToolCall` — registry validation, pooled per-network contexts, §10 network-param injection, jsonSafe results) moved from `packages/mcp` into **core**, so the MCP adapter and the orchestrator are two thin hosts over one implementation. (2) **`@initlabs/vibekit-agent`**: AI SDK **v7** (`streamText` + `stepCountIs` loop); BYOM `ProviderConfig` (anthropic / openai / openai-compatible / ollama) or any raw `LanguageModel` (mocks, middleware); `createAgent()` returns a session — in-memory message history (the conversation is the client's state, §10) and `stream(input)` yielding the **`AgentEvent` protocol**: text/reasoning deltas, tool-call, tool-result carrying the §4 `display` hint, error, finish+usage. Tool failures return `{ error: { code, message } }` to the model (loop continues) rather than throwing; 5 mock-model tests cover loop, network routing, ToolError surfacing, history. (3) **`vibekit explore`**: read tools + nfd/alpha-arcade plugins in-process, all three named networks (default mainnet, `--network` flag), first-run BYOM wizard persisting `~/.config/vibekit/config.json` (0600), REPL with `/new`, and display-hint renderers (table/account/asset/txn/markdown/json) in the CLI. Live-verified with Ollama (qwen3-8b-class local model): mainnet transaction queries with per-call `network` param, table rendering, NFD plugin resolution (nf.algo), and the same flows from the compiled binary (AI SDK bundles clean). Observation: small local models under-use specific tools (searched transactions instead of `get_network_status`) — a model-quality issue, mitigated with a tool-selection line in the default system prompt; hosted-quality models are the target for the API heads. **TUI upgraded to components (2026-08-16, owner's call):** the readline REPL became an **Ink** (React-for-terminal) app in the v1 brand (mint `#5de4c7`): `<Static>` chat scrollback, streaming markdown, tool chips with nested **result cards** (table/account/asset/txn views built from tool output + display hints — the answer surface, with an `extraInstructions` line telling the model not to restate rendered data), in-TUI model wizard + keystore account picker, and **approval-card signing**: `approveToolCall` (new orchestrator option) gates every `requiresSigner` call on an in-TUI y/n card; connecting = picking a keystore-daemon account (no pairing state — the design's WalletConnect-less answer to "connect wallet"). Explore is thus look *and* act locally; the §9 read-only scope guard is amended. Implementation notes: Ink needs `react-devtools-core` as a devDependency to compile into the bun binary (dormant at runtime); **never mix clack prompts with Ink in one process** — clack's teardown leaves stdin unrecoverable for Ink, so explore is all-Ink (`setup.tsx`: SelectList/wizard/picker). E2E: keystore-signed 1 ALGO localnet payment requested in English, approved on the card, confirmed round 3. **TUI dropped (2026-08-16, owner's call, same day it shipped):** live use made the redundancy concrete — a `vibekit init` user already has these exact tools in a better harness with a better model and harness-native write approval, and offline/local-model exploration is served by any local harness (e.g. pi) + Ollama over `vibekit mcp`; BYOM-local models also proved weak at 50-tool recall (mitigated with a tool-name index in the default system prompt, but the ceiling is the model, not the UI). The TUI code is deleted (git history keeps it); `vibekit agent` reserves the entry point and launches the web VibeKit Agent when Phase 8 ships. **What survives — and why Phase 6 still paid for itself:** the orchestrator (untouched, the Phase 7–8 engine), `approveToolCall` (the web approval card), `extraInstructions`, the don't-restate-rendered-results pattern, the microALGO prompt fix, and the tool-index fix — four real bugs caught before anything hosted exists.
-- **Phase 7 — API + SDK.** Stand up `initlabsai/vibekit-agent`; api as a thin Hono wrapper over the proven orchestrator (BYOM + per-request tool selection); new sdk with registry-derived types; deprecation notice on `@getvibekit/sdk`.
-- **Phase 8 — Web agent.** "VibeKit Agent" in `vibekit-agent`: Beautiful UI, client-side wallet signing of compose groups, xArc. Old vibekit repo archived after cutover.
+- **Phase 1 — Skeleton.** Fresh repo, tsconfig/turbo/changesets/CI,
+  `core` with the tool contract + signer hook + `NetworkClients`, `mcp`
+  server library, `apps/mcp` reference deployment. ✅ **Done 2026-08-15**
+  — initial commit in `~/Code/@initlabs/vibekit`:
+  `@initlabs/vibekit-core` (contract + codec + network clients, 11 tests)
+  and `@initlabs/vibekit-mcp` (one generic adapter, registry validation
+  at startup, `./stdio` + `./http` entries, 7 in-memory round-trip
+  tests). Reference deployment smoke-tested live against testnet.
+  Contract refinement from implementation: `ToolPlugin` carries a
+  pre-built `service` value (author-side factory captures config)
+  instead of a host-invoked `createService(config)`. The host never
+  holds plugin config.
+- **Phase 2 — Port read tools.** network → accounts → assets →
+  transactions(read) → contracts(read). Each domain lands with handler
+  tests. Mostly mechanical: swap `AlgorandClient` context for raw
+  clients (26 of about 38 call sites already reach through to raw
+  algod/indexer). ✅ **Done 2026-08-15** — five packages, 23 tools, 51
+  tests, all with output schemas + display hints. Reference deployment
+  serves the full read surface, smoke-tested live on testnet. Notable
+  findings: (1) algosdk defaults omitted client ports to **:8080**.
+  `createNetworkClients` now always passes scheme-derived ports (the v1
+  AGENTS.md papercut, now fixed structurally). (2) Named networks use
+  nodely 4160 endpoints. Free-tier 429s forced paced block sampling (3
+  concurrent, partial-failure tolerant) in `get_network_status`. (3)
+  Deliberate behavior change vs v1: address-taking read tools now
+  validate and throw `ToolError('INVALID_ADDRESS')` up front (v1
+  surfaced raw indexer errors. In `batch_lookup_accounts` one invalid
+  address now fails the call instead of being silently dropped). (4)
+  v1's per-domain duplicated
+  `formatAccount`/`formatTransaction`/`formatApplication` helpers were
+  deduplicated into per-package `format.ts` modules with identical
+  shaping.
+- **Phase 3 — Write path.** Opens with per-request network selection (§10
+  state model). Then: port `transactions/compose` onto algosdk's native
+  composer. Write tools for assets/contracts/transactions.
+  `signer-keystore` (walletconnect dropped). Resolve the `app_deploy`
+  question. ✅ **Done 2026-08-15** — multi-network shipped exactly per
+  §10 (pooled contexts, adapter-injected enum,
+  optional-on-reads/required-on-writes, `get_network`). Compose engine
+  in core on `AtomicTransactionComposer` (one path for plain txns + ABI
+  method calls with transaction-typed args, execute/compose/simulate).
+  13 write tools + 3 recovered reads across three packages.
+  `@initlabs/vibekit-signer-keystore` with address-book cache +
+  `close()`. Live E2E on localnet through the reference deployment:
+  keystore-signed payment, asset creation, group simulation, app
+  deploy. 100+ tests green. Repo now at 8 packages + reference app.
+  **App-call policy (decided 2026-08-15):** the tools layer speaks raw
+  algosdk (`ABIMethod` + `AtomicTransactionComposer`).
+  [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts)
+  is build-time codegen for known contracts and cannot serve runtime
+  specs (xArc, `resolveAppSpec`). Its generated clients depend on
+  algokit-utils, which we dropped. We implement the needed ARC-56
+  semantics ourselves (struct↔tuple mapping, probably default-argument
+  resolution) using the generator + algokit-utils `AppClient` as
+  reference implementations. The generator belongs in `vibekit new`
+  project templates, where a developer builds against one known
+  contract.
+- **Phase 4 — Plugins.** `plugin-nfd` and `plugin-alpha-arcade` (applying
+  REFACTOR.md §1's format fixes in the port). These prove the plugin
+  contract. Publish everything under `@initlabs`. ✅ **Built 2026-08-15,
+  publish deferred**: packages renamed `@initlabs/vibekit-*` (Q2
+  resolved). Both plugins live-verified (1,146 markets, nf.algo). Repo
+  pushed to `github.com/initlabsai/vibekit`. Publish metadata stamped
+  and staged. **npm publish held for a 1.0 release** (owner's call:
+  first public release must be 1.0-quality, roughly aligned with
+  algosdk 3.7 stable). The earlier two-repo plan placed the release gate
+  between Phases 6 and 7. **Superseded 2026-08-19:** first-party app work now
+  proceeds in this monorepo through public exports and does not wait for npm
+  publication. The 1.0 gate remains binding for external consumers and adds a
+  packed out-of-workspace consumer fixture so workspace resolution cannot hide
+  package defects.
+- **Phase 5 — CLI.** Port init/agents/skills. Add localnet (from AlgoKit
+  CLI reference) and template bootstrapping. ✅ **Done 2026-08-15** —
+  `apps/cli` (`@initlabs/vibekit-cli`, private, bun-compiled binary like
+  v1). Four command areas, all live-verified:
+  (1) **`init`** ported from v1 and slimmed. Agent registry
+  (claude/codex/copilot/cursor/opencode). MCP registry (vibekit local +
+  kappa/context7 docs. GoPlausible dropped). Skills bundled at build
+  time from `algorand-devrel/algorand-agent-skills` (10 skills).
+  AGENTS.md rewritten for the v2 tool surface. Deleted relative to v1:
+  Vault/keyring/WalletConnect provider phases, GitHub PAT, dispenser
+  auth, AlgoKit install (about 2,000 LOC of v1 wizard). Agent MCP config
+  now carries env
+  `NETWORK=localnet, NETWORKS=localnet,testnet,mainnet, SIGNING=execute`.
+  (2) **`new`** — tarball fetch from `codeload.github.com` +
+  `tar --strip-components=1`. No git/npm. Interactive tier picker or
+  `--template`. Verified live (contracts: 20 files).
+  (3) **`localnet`** — sandbox.py's
+  compose/conduit/algod-config/network-template generation ported
+  verbatim (project `vibekit_localnet`, config in
+  `~/.config/vibekit/localnet`, same host ports as AlgoKit so templates
+  work unchanged). start/stop/reset(--update)/status/logs +
+  `fund <addr>` via kmd (richest key in `unencrypted-default-wallet`).
+  Deferred per MVP scope: podman, named instances, image-version cache,
+  goal passthrough, codespaces. Verified E2E: start → health checks →
+  status → fund 5 ALGO (confirmed on-chain) → stop.
+  (4) **`mcp`** — stdio server importing `@initlabs/vibekit-mcp` as a
+  library (v1's app→app dependency killed). Full 50-tool surface + both
+  plugins. Execute mode via keystore daemon with a loud **fallback to
+  compose** when the daemon is down (agents still get an MCP). 24 CLI
+  tests (compose generation/staleness, config generation for all agent
+  formats, toml, template args). Repo-wide turbo green.
+- **Phase 6 — Orchestrator + TUI.** `@initlabs/vibekit-agent` (LLM
+  provider abstraction via the AI SDK, tool loop, streaming, BYOM
+  config) + `vibekit explore` running it in-process with the tool
+  packages. This completes the dev stack with no hosting dependency. It
+  also dogfoods the orchestrator before anything hosted exists. Display
+  hints become terminal renderers. ✅ **Done 2026-08-15.**
+  (1) **Refactor first**: deployment semantics (`resolveDeployment`,
+  `injectNetworkParam`, `executeToolCall` — registry validation, pooled
+  per-network contexts, §10 network-param injection, jsonSafe results)
+  moved from `packages/mcp` into **core**. Then the MCP adapter and the
+  orchestrator are two thin hosts over one implementation.
+  (2) **`@initlabs/vibekit-agent`**: AI SDK **v7** (`streamText` +
+  `stepCountIs` loop). BYOM `ProviderConfig` (anthropic / openai /
+  openai-compatible / ollama) or any raw `LanguageModel` (mocks,
+  middleware). `createAgent()` returns a session. In-memory message
+  history (the conversation is the client's state, §10). `stream(input)`
+  yields the **`AgentEvent` protocol**: text/reasoning deltas,
+  tool-call, tool-result carrying the §4 `display` hint, error,
+  finish+usage. Tool failures return `{ error: { code, message } }` to
+  the model (loop continues) rather than throwing. 5 mock-model tests
+  cover loop, network routing, ToolError surfacing, history.
+  (3) **`vibekit explore`**: read tools + nfd/alpha-arcade plugins
+  in-process, all three named networks (default mainnet, `--network`
+  flag), first-run BYOM wizard persisting
+  `~/.config/vibekit/config.json` (0600), REPL with `/new`, and
+  display-hint renderers (table/account/asset/txn/markdown/json) in the
+  CLI. Live-verified with Ollama (qwen3-8b-class local model): mainnet
+  transaction queries with per-call `network` param, table rendering,
+  NFD plugin resolution (nf.algo), and the same flows from the compiled
+  binary (AI SDK bundles clean). Observation: small local models
+  under-use specific tools (searched transactions instead of
+  `get_network_status`). This is a model-quality issue, mitigated with a
+  tool-selection line in the default system prompt. Hosted-quality
+  models are the target for the API heads.
+  **TUI upgraded to components (2026-08-16, owner's call):** the readline
+  REPL became an **Ink** (React-for-terminal) app in the v1 brand (mint
+  `#5de4c7`): `<Static>` chat scrollback, streaming markdown, tool chips
+  with nested **result cards** (table/account/asset/txn views built from
+  tool output + display hints — the answer surface, with an
+  `extraInstructions` line telling the model not to restate rendered
+  data), in-TUI model wizard + keystore account picker, and
+  **approval-card signing**: `approveToolCall` (new orchestrator option)
+  gates every `requiresSigner` call on an in-TUI y/n card. Connecting =
+  picking a keystore-daemon account (no pairing state — the design's
+  WalletConnect-less answer to "connect wallet"). Explore is thus look
+  _and_ act locally. The §9 read-only scope guard is amended.
+  Implementation notes: Ink needs `react-devtools-core` as a
+  devDependency to compile into the bun binary (dormant at runtime).
+  **Never mix clack prompts with Ink in one process.** Clack teardown
+  leaves stdin unrecoverable for Ink, so explore is all-Ink (`setup.tsx`:
+  SelectList/wizard/picker). E2E: keystore-signed 1 ALGO localnet
+  payment requested in English, approved on the card, confirmed round 3.
+  **TUI dropped (2026-08-16, owner's call, same day it shipped):** live
+  use made the redundancy concrete. A `vibekit init` user already has
+  these exact tools in a better harness with a better model and
+  harness-native write approval. Offline/local-model exploration is
+  served by any local harness (for example pi) + Ollama over
+  `vibekit mcp`. BYOM-local models also proved weak at 50-tool recall
+  (mitigated with a tool-name index in the default system prompt, but
+  the ceiling is the model, not the UI). The TUI code is deleted (git
+  history keeps it). `vibekit agent` reserves the entry point and
+  launches the web VibeKit Agent when Phase 8 ships. **What survives,
+  and why Phase 6 still paid for itself:** the orchestrator (untouched,
+  the Phase 7–8 engine), `approveToolCall` (the web approval card),
+  `extraInstructions`, the don't-restate-rendered-results pattern, the
+  microALGO prompt fix, and the tool-index fix. Four real bugs caught
+  before anything hosted exists.
+- **Phase 7 — API + SDK + protocol spine.** Add `apps/api` and
+  `packages/sdk` in this monorepo. The API is a thin Hono wrapper over the
+  proven orchestrator (BYOM + per-request tool selection). Build the new SDK with
+  registry-derived types. Establish the minimal browser-safe agent, result,
+  workspace, presentation, and approval event spine in
+  `packages/experience`, driven by the first fixture-backed slice. Keep
+  workspace and presentation details provisional until both renderers prove
+  them. Deprecate `@getvibekit/sdk`.
+- **Phase 8 — Shared TUI/web Explorer.** Build one fixture-backed
+  vertical slice first: direct transaction lookup → trusted detail view
+  → related navigation → payment draft/simulation/approval. Render it in
+  `@opentui/react` and Next.js from the same experience state and
+  semantic view model, then freeze the protocol proven by that slice. Expand
+  toward Lora coverage, wallet/keystore signing, xArc, and terminal packaging
+  afterward. The Phase 6 transcript-oriented Ink TUI remains deleted. This is
+  a different product shape. Archive the old vibekit repo after cutover.
 
 ## 13. Reference: what dies from v1
 
-| v1 | Fate |
-|---|---|
-| 3 tool-definition shapes, 6 adapter loops | 1 contract, 1 adapter per host |
-| 4-place tool-name registry | 1 registry, everything derives |
-| `provider-*`, `keyring`, `dispenser-*`, `config` (9 pkgs, ~1,900 LOC) | → `signer-keystore` + localnet module (WalletConnect dropped — client-side in the explorer, later) |
-| mcp-server `account-service.ts` + `app-state.ts` (1,119 LOC) | → per-request `ToolContext` + keystore daemon |
-| algokit-utils | → raw `algosdk@beta` |
-| CLI vault module (~500 LOC) | deleted |
-| regex `.d.ts` type-sync in sdk | → types derived from Zod registry |
-| 3 tsconfig conventions, 9 copy-pasted tsconfigs | 1 base config |
-| 0 tests | tests required per ported domain |
+| v1                                                                         | Fate                                                                                               |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 3 tool-definition shapes, 6 adapter loops                                  | 1 contract, 1 adapter per host                                                                     |
+| 4-place tool-name registry                                                 | 1 registry, everything derives                                                                     |
+| `provider-*`, `keyring`, `dispenser-*`, `config` (9 pkgs, about 1,900 LOC) | → `signer-keystore` + localnet module (WalletConnect dropped — client-side in the explorer, later) |
+| mcp-server `account-service.ts` + `app-state.ts` (1,119 LOC)               | → per-request `ToolContext` + keystore daemon                                                      |
+| algokit-utils                                                              | → raw `algosdk@3.7.0`                                                                              |
+| CLI vault module (about 500 LOC)                                           | deleted                                                                                            |
+| regex `.d.ts` type-sync in sdk                                             | → types derived from Zod registry                                                                  |
+| 3 tsconfig conventions, 9 copy-pasted tsconfigs                            | 1 base config                                                                                      |
+| 0 tests                                                                    | tests required per ported domain                                                                   |
 
 ## 14. References
 
 **MCP (stateless spec)**
+
 - [2026-07-28 spec release announcement](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
 - [2026-07-28 changelog — key changes](https://modelcontextprotocol.io/specification/2026-07-28/changelog)
 
 **Signing & custody**
+
 - [wallet-provider repo](https://github.com/algorandfoundation/wallet-provider) · [TUTORIAL.md](https://github.com/algorandfoundation/wallet-provider/blob/main/TUTORIAL.md) (provider/extension/store architecture)
 - [wallet-provider-extensions repo](https://github.com/algorandfoundation/wallet-provider-extensions) — `keystore/node` directory is the source of `@algorandfoundation/keystore-node`
-- [`@algorandfoundation/keystore-node` on npm](https://www.npmjs.com/package/@algorandfoundation/keystore-node) — pin exactly (currently `1.0.0-canary.3`; the npm `latest` tag points at a stale 0.0.1 beta — always install with an explicit version)
+- [`@algorandfoundation/keystore-node` on npm](https://www.npmjs.com/package/@algorandfoundation/keystore-node) — the repository pins `1.0.0-canary.3` exactly
 
 **Chain SDK & post-quantum**
-- [js-algorand-sdk repo](https://github.com/algorand/js-algorand-sdk) — beta channel is `algosdk@3.7.0-beta.1` (`npm i algosdk@beta`)
-- [Algorand post-quantum roadmap](https://algorand.co/blog/algorand-post-quantum-cryptography-roadmap) — native Falcon-1024 accounts Q3 2026, Falcon-512 by year-end
+
+- [js-algorand-sdk repo](https://github.com/algorand/js-algorand-sdk) — this repository pins stable `algosdk@3.7.0`
+- [Algorand post-quantum roadmap](https://algorand.co/blog/algorand-post-quantum-cryptography-roadmap) — background for Falcon account support
 
 **App calls / ARC-56 (reference for Phase 3)**
-- [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) — reference implementation of ARC-56 semantics (structs, default args); used in templates only, never a tools-layer dependency
+
+- [algokit-client-generator-ts](https://github.com/algorandfoundation/algokit-client-generator-ts) — reference implementation of ARC-56 semantics (structs, default args). Used in templates only, never a tools-layer dependency.
 
 **Starter templates**
+
 - [algorand-starter-contracts](https://github.com/initlabsai/algorand-starter-contracts) · [-fullstack](https://github.com/initlabsai/algorand-starter-fullstack) · [-kitchensink](https://github.com/initlabsai/algorand-starter-kitchensink) — public template repos, additive tiers
-- [algorand-starter-templates](https://github.com/initlabsai/algorand-starter-templates) — private dev monorepo (single source of truth; sync subdirs → template repos on change)
+- [algorand-starter-templates](https://github.com/initlabsai/algorand-starter-templates) — private dev monorepo (single source of truth. Sync subdirs → template repos on change.)
 
 **AlgoKit CLI (reference for re-implementation)**
+
 - [algokit-cli repo](https://github.com/algorandfoundation/algokit-cli)
 - Localnet: [`src/algokit/cli/localnet.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/cli/localnet.py) (commands) · [`src/algokit/core/sandbox.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/sandbox.py) (Docker Compose orchestration)
 - Testnet dispenser: [`src/algokit/core/dispenser.py`](https://github.com/algorandfoundation/algokit-cli/blob/main/src/algokit/core/dispenser.py)
 
 **Explorer**
-- [Beautiful UI](https://www.beautifului.dev) — copy-paste AI-native primitives (streaming text, thinking traces, tool chips, approval cards, chat composer) by Turbo; design language for the new explorer repo
+
+- [Lora](https://github.com/algorandfoundation/algokit-lora) — workflow, domain-coverage, and interaction reference
+- [OpenTUI](https://github.com/anomalyco/opentui) — terminal renderer. Use its React reconciler for the TUI head.
+- [Beautiful UI](https://www.beautifului.dev) — copy-paste AI-native primitives (streaming text, thinking traces, tool chips, approval cards, chat composer) by Turbo. Design language for the new Explorer.
 - [ARC-56 spec](https://github.com/algorandfoundation/ARCs/blob/main/ARCs/arc-0056.md) — the app-spec format behind `toolsFromArc56` and the xArc feature
 
 **v1 carryover**
-- `REFACTOR.md` in the v1 repo — §1 (raw numbers from alpha-arcade format functions) applies during the plugin-alpha-arcade port; §2 already re-landed in v1 (`67d49c0`); §3 is moot after the rewrite
+
+- `REFACTOR.md` in the v1 repo — §1 (raw numbers from alpha-arcade format functions) applies during the plugin-alpha-arcade port. §2 already re-landed in v1 (`67d49c0`). §3 is moot after the rewrite.
