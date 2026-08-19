@@ -17,7 +17,7 @@
     "@initlabs/vibekit-tools-contracts": "workspace:*",
     "@initlabs/vibekit-tools-network": "workspace:*",
     "@initlabs/vibekit-tools-transactions": "workspace:*",
-    "algosdk": "3.7.0-beta.1",
+    "algosdk": "3.7.0",
     "zod": "^4.4.3",
     "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@initlabs/vibekit-plugin-nfd": "workspace:*",
