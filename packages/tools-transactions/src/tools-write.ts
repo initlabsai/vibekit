@@ -11,7 +11,7 @@ import { z } from 'zod'
 
 /**
  * One TxnSpec as zod — the JSON shape agents produce for grouped transactions.
- * Sender is required on every txn: there is no ambient active account (§10).
+ * Sender is required on every txn: there is no ambient active account.
  */
 export const txnSpecSchema = z.object({
   type: z

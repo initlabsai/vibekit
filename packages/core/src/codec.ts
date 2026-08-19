@@ -1,10 +1,9 @@
 /**
- * The one place chain data becomes JSON-safe. algosdk v3 emits `bigint` and
- * `Uint8Array` throughout; hosts apply this codec in their adapter so handlers
- * can return raw algosdk values freely. Browser-safe (no Buffer requirement).
+ * Where chain data becomes JSON-safe. algosdk v3 emits bigint and Uint8Array
+ * throughout; handlers return raw algosdk values and this converts them.
+ * Browser-safe (no Buffer requirement).
  */
 
-/** Uint8Array → base64, in any runtime. */
 export function bytesToBase64(bytes: Uint8Array): string {
   if (typeof Buffer !== 'undefined') {
     return Buffer.from(bytes).toString('base64')
@@ -14,7 +13,6 @@ export function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-/** base64 → Uint8Array, in any runtime. */
 export function base64ToBytes(base64: string): Uint8Array {
   if (typeof Buffer !== 'undefined') {
     return new Uint8Array(Buffer.from(base64, 'base64'))
@@ -26,9 +24,8 @@ export function base64ToBytes(base64: string): Uint8Array {
 }
 
 /**
- * Deep-convert a handler result to JSON-safe data:
- * bigint → number when within Number.MAX_SAFE_INTEGER, else decimal string;
- * Uint8Array → base64; `undefined` object entries dropped.
+ * Deep-converts a handler result: bigint to number (decimal string above
+ * 2^53), Uint8Array to base64. Drops undefined object entries.
  */
 export function jsonSafe(value: unknown): unknown {
   if (typeof value === 'bigint') {

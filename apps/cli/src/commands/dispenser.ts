@@ -1,8 +1,7 @@
 /**
- * `vibekit dispenser` — the one-time human grant for TestNet funding (§6
- * secrets policy: credentials enter via human channels). Device-flow OAuth
- * against the Foundation dispenser; the token is sealed in the keystore
- * daemon's secrets store, where the fund_testnet_account tool consumes it.
+ * `vibekit dispenser` — the one-time human grant for TestNet funding.
+ * Device-flow OAuth against the Foundation dispenser; the token is sealed in
+ * the keystore daemon's secrets store, where fund_testnet_account consumes it.
  */
 
 import * as p from '@clack/prompts'

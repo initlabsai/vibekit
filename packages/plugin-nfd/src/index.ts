@@ -42,8 +42,7 @@ export function getNfdClient(ctx: ToolContext): NfdApiClient {
 /** ipfs:// → HTTPS gateway URL; non-IPFS input passes through. */
 function ipfsToHttps(url: string): string | undefined {
   if (url.startsWith('ipfs://')) return url.replace('ipfs://', 'https://images.nf.domains/ipfs/')
-  // User-controlled field: only https survives (review finding - javascript:/data:
-  // schemes previously passed through verbatim).
+  // User-controlled field: only https survives (blocks javascript:/data: schemes).
   return url.startsWith('https://') ? url : undefined
 }
 

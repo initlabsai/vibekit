@@ -1,36 +1,31 @@
 /**
- * The VibeKit tool contract (docs/DESIGN.md §4). One shape, no variants:
- * every tool in every package is a ToolDefinition; every host (MCP server,
- * query API, tests) adapts it with one generic adapter.
+ * The tool contract. Every tool in every package is a ToolDefinition;
+ * every host adapts this one shape.
  */
 import type algosdk from 'algosdk'
 import type { z } from 'zod'
 import type { NetworkConfig } from './network.js'
 
-/** Presentation hint carried on the wire so every head renders from data. */
 export type DisplayHint = 'table' | 'txn' | 'account' | 'asset' | 'markdown' | 'json'
 
 export interface ToolContext {
   network: NetworkConfig
-  /** Network ids this deployment serves (≥1, includes network.id). Hosts fill this; tools read it to orient. */
   servedNetworks: string[]
-  /** Network id used when a request doesn't specify one. */
   defaultNetwork: string
   algod: algosdk.Algodv2
   indexer: algosdk.Indexer
-  /** 'execute' = sign & send via resolveSigner; 'compose' = write tools return an UnsignedGroupResult. */
+  /** 'execute' signs and sends; 'compose' returns unsigned transactions. */
   mode: 'execute' | 'compose'
-  /** Resolves a sender address to a signer. Absent in read-only and compose-only deployments. */
+  /** Missing in read-only and compose deployments. */
   resolveSigner?: (address: string) => Promise<algosdk.TransactionSigner>
-  /** Plugin-provided clients, keyed by plugin name. Read via the plugin's typed accessor. */
+  /** Plugin clients, keyed by plugin name. */
   services: Record<string, unknown>
 }
 
-/** Write tools in compose mode return this instead of executing. */
+/** What write tools return in compose mode. */
 export interface UnsignedGroupResult {
   /** base64-encoded unsigned transactions, in group order. */
   unsignedGroup: string[]
-  /** Human-readable description of what signing this group does. */
   summary: string
 }
 
@@ -39,44 +34,28 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   description: string
   parameters: P
   /**
-   * Result schema, written against the post-jsonSafe (wire) shape — bigint
-   * fields are number|string, byte fields are base64 strings. Enforced by
-   * `executeToolCall` on every call: a result that violates it throws
-   * OUTPUT_MISMATCH. Feeds MCP structured content and generated SDK result
-   * types. Required for core tool packages; optional for plugins.
+   * Checked by executeToolCall after jsonSafe, so describe the wire shape:
+   * bigints arrive as number or string, bytes as base64.
    */
   output?: z.ZodType
-  /** Write tools set this; hosts gate on it and map it to MCP annotations. */
+  /** Spends from a user account. Hosts require approval and an explicit network. */
   requiresSigner?: boolean
-  /**
-   * World-changing without being a chain write from the user's funds
-   * (key creation, faucet dispense). Hosts gate it like requiresSigner
-   * (approval, non-read-only hints) but no `network` write-param is forced.
-   */
+  /** Changes state without spending user funds (key creation, faucet). Approval-gated. */
   mutatesState?: boolean
   display?: DisplayHint
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>
 }
 
-/**
- * Identity helper so `parameters` inference flows into the handler's `args`
- * (annotating `const x: ToolDefinition` erases inference — spike finding).
- */
+/** Identity function; lets TypeScript infer the handler's args from `parameters`. */
 export function defineTool<P extends z.ZodType>(def: ToolDefinition<P>): ToolDefinition<P> {
   return def
 }
 
-/** Erased form for heterogeneous tool lists (registries, adapters). */
 export type AnyTool = ToolDefinition<z.ZodType>
 
-/**
- * A plugin is a package exporting a factory that returns this. The author's
- * factory captures config; the host injects `service` at `ctx.services[name]`.
- */
+/** Returned by a plugin factory. The host puts `service` at ctx.services[name]. */
 export interface ToolPlugin {
-  /** Unique plugin name; becomes the services key. */
   name: string
   tools: AnyTool[]
-  /** Pre-built client/service instance for this plugin's handlers. */
   service?: unknown
 }

@@ -14,7 +14,7 @@ const signer = mode === 'execute' ? await createKeystoreSigner() : undefined
 const handle = serveVibekitStdio({
   name: 'vibekit-reference',
   network: (process.env.NETWORK as NetworkId) ?? 'testnet',
-  // e.g. NETWORKS=testnet,localnet — multi-network per-request selection (§10)
+  // e.g. NETWORKS=testnet,localnet for per-request network selection
   networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [],
   mode,
   // signer present → keystore account tools; dispenser token → testnet funding

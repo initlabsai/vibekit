@@ -1,9 +1,6 @@
 /**
- * Deployment resolution — shared by every host that embeds the tools
- * (MCP server, agent orchestrator). Validates the tool registry and builds
- * pooled per-network ToolContexts at startup, and implements the §10
- * multi-network semantics: a `network` parameter injected into tool schemas
- * (optional on reads, required on writes) only when >1 network is served.
+ * Turns a config into a running deployment and runs every tool call through
+ * one choke point. Shared by all hosts.
  */
 
 import { z } from 'zod'
@@ -14,16 +11,13 @@ import type { AnyTool, ToolContext, ToolPlugin } from './contract.js'
 import { createNetworkClients, resolveNetwork, type NetworkConfig, type NetworkId } from './network.js'
 
 export interface DeploymentOptions {
-  /** Default network — used when a request doesn't specify one. */
+  /** Default when a request doesn't specify one. */
   network: NetworkId | NetworkConfig
   /**
-   * All networks this deployment serves (§10 state model). When more than one
-   * (after including the default), hosts inject a `network` parameter into
-   * every tool: optional on reads, required on write tools. Omit for
-   * single-network deployments — no parameter appears anywhere.
+   * Serving more than one network injects a `network` param into every tool:
+   * optional on reads, required on writes. Omit for single-network.
    */
   networks?: (NetworkId | NetworkConfig)[]
-  /** 'execute' requires resolveSigner; 'compose' returns unsigned groups. */
   mode: 'execute' | 'compose'
   tools?: AnyTool[]
   plugins?: ToolPlugin[]
@@ -31,19 +25,17 @@ export interface DeploymentOptions {
 }
 
 export interface ResolvedDeployment {
-  /** All tools, registry-validated (unique names). */
   tools: AnyTool[]
-  /** Per-network contexts, pooled at startup. Keyed by network id. */
+  /** Built once at startup, keyed by network id. */
   contexts: Map<string, ToolContext>
   defaultNetwork: string
-  /** Network ids served, default first. */
+  /** Default first. */
   networkIds: string[]
 }
 
 /**
- * Validate the tool registry and build pooled per-network contexts.
- * Throws at startup — never at request time — on duplicate tool/plugin names,
- * duplicate network ids, or execute mode without a signer.
+ * Validates the registry and builds per-network contexts. Config errors
+ * (duplicate names, execute mode without a signer) throw here, at startup.
  */
 export function resolveDeployment(options: DeploymentOptions): ResolvedDeployment {
   const plugins = options.plugins ?? []
@@ -102,9 +94,7 @@ export function resolveDeployment(options: DeploymentOptions): ResolvedDeploymen
   }
   for (const context of contexts.values()) {
     context.servedNetworks = networkIds
-    // The constitution lists ToolContext immutability as an edge — make it true by
-    // construction, not convention: a handler (or stranger plugin) that tries
-    // to mutate ctx or replace resolveSigner throws instead of succeeding.
+    // Frozen so a handler or plugin cannot swap resolveSigner.
     Object.freeze(context.services)
     Object.freeze(context)
   }
@@ -121,10 +111,8 @@ export function resolveDeployment(options: DeploymentOptions): ResolvedDeploymen
 export const NETWORK_PARAM = 'network'
 
 /**
- * The tool's wire-facing parameter schema: on multi-network deployments a
- * `network` enum of exactly the served ids is injected — optional (falls back
- * to the default) on read tools, required on `requiresSigner` tools so nothing
- * ever spends on a silently-defaulted chain.
+ * The tool's wire-facing parameter schema. Multi-network deployments get a
+ * `network` enum: optional on reads, required on writes.
  */
 export function injectNetworkParam(tool: AnyTool, deployment: ResolvedDeployment): z.ZodType {
   if (deployment.networkIds.length < 2) return tool.parameters
@@ -147,9 +135,8 @@ export function injectNetworkParam(tool: AnyTool, deployment: ResolvedDeployment
 }
 
 /**
- * Run one tool call: extract the injected network param (multi-network only),
- * pick the pooled context, invoke the handler, and make the result JSON-safe.
- * Throws ToolError — each host maps errors to its own wire shape exactly once.
+ * Runs one tool call. Throws ToolError; each host maps errors to its own
+ * wire shape.
  */
 export async function executeToolCall(
   deployment: ResolvedDeployment,
@@ -162,9 +149,7 @@ export async function executeToolCall(
     const { [NETWORK_PARAM]: requested, ...rest } = handlerArgs
     if (typeof requested === 'string') networkId = requested
     else if (tool.requiresSigner) {
-      // The schema requires this, but executeToolCall is the enforcement
-      // point for hosts that skip schema parsing (§10: never write to a
-      // silently-defaulted chain).
+      // Also enforced here for hosts that skip schema parsing.
       throw new ToolError('NETWORK_REQUIRED', `Tool ${tool.name} writes to the chain — pass an explicit 'network'`)
     }
     handlerArgs = rest
@@ -175,10 +160,7 @@ export async function executeToolCall(
   }
   const result = jsonSafe(await tool.handler(context, handlerArgs as never))
   if (tool.output) {
-    // Validate the declared result contract (post-jsonSafe, the shape hosts
-    // actually emit). Validation only — the original result is returned, so a
-    // schema that under-declares fields fails loudly here instead of silently
-    // stripping data.
+    // Validation only: the original result is returned, never a stripped parse.
     const parsed = tool.output.safeParse(result)
     if (!parsed.success) {
       const issues = parsed.error.issues

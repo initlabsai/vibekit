@@ -1,7 +1,6 @@
 /**
  * The orchestrator: an LLM tool loop over ToolDefinition[] with a streaming
- * event protocol. One brain for every head (docs/DESIGN.md §9) — the TUI runs
- * it in-process, the hosted API wraps it behind Hono.
+ * event protocol. The TUI runs it in-process; the hosted API wraps it.
  *
  * Deployment semantics (registry validation, pooled per-network contexts,
  * network-param injection) come from @initlabs/vibekit-core and are identical
@@ -52,7 +51,7 @@ export interface AgentSession {
    * Send one user message; yields AgentEvents as the model streams.
    * The session appends the exchange to its in-memory history — the
    * conversation is the only stateful thing here, owned by the caller's
-   * process (§10: no shared mutable store).
+   * process. No shared mutable store.
    */
   stream(input: string): AsyncIterable<AgentEvent>
   /** Conversation history (read-only view; reset() clears it). */

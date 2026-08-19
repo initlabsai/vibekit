@@ -4,7 +4,7 @@
  * this process only ever talks JSON-RPC over a local socket — no key material,
  * no native addons in the bundle (safe inside `bun build --compile` binaries).
  *
- * Spike learnings baked in (docs/DESIGN.md Phase 0):
+ * Two daemon quirks shape this code:
  * - the daemon has no "list addresses" call, so the address book is built by
  *   export()ing each key's public key, and cached (refreshed on miss);
  * - the RPC client holds its socket open — call close() or short-lived
@@ -48,9 +48,8 @@ export interface KeystoreSigner {
   /** Drop the socket. Required in short-lived processes. */
   close(): Promise<void>
   /**
-   * The daemon's sealed secrets store (§6 secrets policy home), when the
-   * connection provides one. Consumed in-handler by credentialed tools —
-   * never exposed to agents directly.
+   * The daemon's sealed secrets store, when the connection provides one.
+   * Consumed in-handler by credentialed tools, never exposed to agents.
    */
   secrets?: import('./dispenser.js').SecretsLike
 }
@@ -76,7 +75,7 @@ export function createSignerFromKeystore(
       try {
         // Prefer the state-mirrored public key; export() only as fallback —
         // for extractable keys export() also returns private material, which
-        // must never linger in this process (review finding).
+        // must never linger in this process.
         let publicKey = key.publicKey
         if (!publicKey) {
           const data = await keystore.export(key.id)
@@ -164,7 +163,7 @@ export async function createKeystoreSigner(
   const store = new Store({ keys: [], status: 'idle' } as unknown as KeyStoreState)
   const keystore: RpcKeyStore = createRpcKeyStore({
     store,
-    // the client option is `path` (review finding: socketPath was silently ignored)
+    // the client option is `path`, not `socketPath`
     ...(options.socketPath ? { path: options.socketPath } : {}),
   })
   await keystore.ready

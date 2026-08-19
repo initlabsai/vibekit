@@ -1,6 +1,5 @@
 /**
- * The one generic ToolDefinition → MCP adapter (docs/DESIGN.md §5).
- * v1 had three of these copy-pasted; this is the only one.
+ * The one generic ToolDefinition-to-MCP adapter.
  *
  * Network selection, context pooling, and result encoding live in core
  * (injectNetworkParam / executeToolCall) and are shared with the agent

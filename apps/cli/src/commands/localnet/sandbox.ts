@@ -1,6 +1,6 @@
 /**
- * LocalNet container lifecycle — Docker Compose orchestration re-implemented
- * from AlgoKit CLI's sandbox.py. Docker only (podman deferred; see DESIGN.md §7).
+ * LocalNet container lifecycle: Docker Compose orchestration re-implemented
+ * from AlgoKit CLI's sandbox.py. Docker only.
  */
 
 import { homedir } from 'os'

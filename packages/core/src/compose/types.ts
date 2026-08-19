@@ -6,7 +6,7 @@
 
 export interface BaseTxnSpec {
   type: string
-  /** Sender address. Required in v2 — there is no ambient "active account" (§10). */
+  /** Required: there is no ambient active account. */
   sender: string
   note?: string
 }

@@ -1,6 +1,6 @@
 /**
- * Alpha Arcade formatting — v1's deferred REFACTOR.md §1 applied:
- * raw numbers, no "$" strings, Usd-suffixed field names, slippage converted.
+ * Alpha Arcade formatting: raw numbers, no "$" strings, Usd-suffixed field
+ * names, slippage converted.
  */
 import type { Market, OpenOrder, Orderbook, WalletPosition } from '@alpha-arcade/sdk'
 
@@ -90,7 +90,7 @@ export function formatOpenOrder(o: OpenOrder) {
     priceUsd: microToUsd(o.price),
     quantity: microToShares(o.quantity),
     quantityFilled: microToShares(o.quantityFilled),
-    // v1 bug (REFACTOR.md §1): slippage was raw microunits; convert like other prices.
+    // Slippage arrives in raw microunits; convert like the other prices.
     slippageUsd: microToUsd(o.slippage),
     owner: o.owner,
   }

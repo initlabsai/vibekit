@@ -65,8 +65,8 @@ export async function commandMcp(): Promise<void> {
       'mainnet',
     ],
     mode,
-    // signer present → agents can also discover/create the local accounts;
-    // dispenser token present → they can fund testnet too (§6 secrets policy)
+    // With a signer, agents can also discover/create local accounts;
+    // with a dispenser token, they can fund testnet too.
     tools: await withKeystoreTools(tools, signer),
     plugins: [nfdPlugin(), alphaArcadePlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,

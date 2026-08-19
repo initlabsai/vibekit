@@ -2,9 +2,8 @@ import type { DisplayHint } from '@initlabs/vibekit-core'
 
 /**
  * The orchestrator's stream protocol. Every head (TUI, hosted API, web agent)
- * renders from these events — streaming text, tool activity, results with
- * their display hints — never from per-tool knowledge of its own (§9: the
- * protocol carries everything).
+ * renders from these events (streaming text, tool activity, results with
+ * their display hints), never from per-tool knowledge of its own.
  */
 export type AgentEvent =
   | { type: 'text-delta'; text: string }

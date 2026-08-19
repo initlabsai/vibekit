@@ -2,7 +2,7 @@
  * The one tool this package offers: expose the keystore daemon's address book
  * to agents. Registered by hosts only in execute-mode deployments (a signer
  * exists), so read-only/compose deployments never advertise it. No stored
- * state — every call queries the daemon live (§10).
+ * state; every call queries the daemon live.
  */
 
 import { z } from 'zod'

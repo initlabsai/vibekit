@@ -1,9 +1,8 @@
 /**
- * TestNet dispenser over the Foundation's authenticated faucet API, built to
- * the §6 secrets policy: the OAuth token lives in the keystore daemon's
- * secrets store (sealed like key material), agents wield `fund_testnet_account`
- * (token consumed in-handler, never returned), and the token *enters* via the
- * human-run `vibekit dispenser login` device flow.
+ * TestNet dispenser over the Foundation's authenticated faucet API. The OAuth
+ * token lives in the keystore daemon's secrets store, is consumed in-handler
+ * (never returned to agents), and enters via the human-run
+ * `vibekit dispenser login` device flow.
  *
  * Unlike v1 (which requested no offline_access and died on expiry), the device
  * flow asks for a refresh token and the handler refreshes transparently;
@@ -173,8 +172,8 @@ export async function hasDispenserToken(secrets: SecretsLike): Promise<boolean> 
 }
 
 // One refresh in flight per secrets store: concurrent tool calls must not
-// race remove-then-put (review finding; the crash window between remove and
-// put remains and degrades to a clear re-login error).
+// race remove-then-put. A crash between remove and put degrades to a clear
+// re-login error.
 const refreshInFlight = new WeakMap<SecretsLike, Promise<string>>()
 
 /** Valid access token, transparently refreshed (and re-sealed) when stale. */
@@ -231,8 +230,8 @@ export function createFundTestnetTool(secrets: SecretsLike, fetchFn: FetchLike =
     }),
     display: 'txn',
     // Gated like a write (approval + non-read-only hints) but no chain signer
-    // and no forced network param — the action is inherently testnet-only,
-    // enforced below (review finding: approval could previously say mainnet).
+    // and no forced network param: the action is inherently testnet-only,
+    // enforced below.
     mutatesState: true,
     handler: async (ctx, args) => {
       if (ctx.network?.id && ctx.network.id !== 'testnet') {
