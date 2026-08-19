@@ -108,15 +108,13 @@ export function createSignerFromKeystore(
   return {
     async resolveSigner(address) {
       const keyId = await keyIdFor(address)
-      return async (txnGroup, indexesToSign) => {
-        const signed: Uint8Array[] = []
-        for (const index of indexesToSign) {
-          const txn = txnGroup[index]!
-          const signature = await keystore.sign(keyId, txn.bytesToSign())
-          signed.push(txn.attachSignature(address, signature))
-        }
-        return signed
-      }
+      // algosdk applies domain prefixes before calling the raw signer, and the
+      // daemon signs exactly the bytes it is given.
+      const { txnSigner } = algosdk.addressWithSignersFromRawEd25519Signer({
+        ed25519PublicKey: algosdk.decodeAddress(address).publicKey,
+        ed25519Signer: (bytes) => keystore.sign(keyId, bytes),
+      })
+      return txnSigner
     },
     async listAddresses() {
       await refreshAddressBook()

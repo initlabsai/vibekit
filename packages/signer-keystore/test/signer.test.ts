@@ -55,6 +55,26 @@ describe('createSignerFromKeystore', () => {
     const decoded = algosdk.decodeSignedTransaction(signed!)
     expect(decoded.sig).toBeDefined()
     expect(decoded.txn.txID()).toBe(txn.txID())
+    expect(nacl.sign.detached.verify(txn.bytesToSign(), decoded.sig!, publicKey)).toBe(true)
+  })
+
+  test('sets the auth address when the sender differs from the signing key', async () => {
+    const { keystore } = fakeKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }])
+    const txnSigner = await signer.resolveSigner(account.addr.toString())
+    const sender = algosdk.generateAccount()
+
+    const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      sender: sender.addr.toString(),
+      receiver: account.addr.toString(),
+      amount: 0,
+      suggestedParams,
+    })
+    const [signed] = await txnSigner([txn], [0])
+    const decoded = algosdk.decodeSignedTransaction(signed!)
+
+    expect(decoded.sgnr?.toString()).toBe(account.addr.toString())
+    expect(nacl.sign.detached.verify(txn.bytesToSign(), decoded.sig!, publicKey)).toBe(true)
   })
 
   test('unknown address throws a helpful error after refresh', async () => {
