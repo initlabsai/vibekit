@@ -112,6 +112,7 @@ export async function readGlobalState(
   args: ReadGlobalStateArgs,
 ): Promise<{
   appId: number
+  scope: 'global'
   state: StateValue[]
 }> {
   const { appId, appSpec } = args
@@ -120,7 +121,7 @@ export async function readGlobalState(
   const state = appInfo.params?.globalState
     ? decodeStateItems(appInfo.params.globalState, stateKeyMap)
     : []
-  return { appId, state }
+  return { appId, scope: 'global', state }
 }
 
 // ============================================================================
@@ -138,6 +139,7 @@ export async function readLocalState(
   args: ReadLocalStateArgs,
 ): Promise<{
   appId: number
+  scope: 'local'
   address: string
   optedIn: boolean
   state: StateValue[]
@@ -150,7 +152,7 @@ export async function readLocalState(
     // algod 404s for an account that NEVER opted in (a closed-out account
     // still returns info without appLocalState) — both mean "not opted in".
     if (error instanceof Error && error.message.includes('404')) {
-      return { appId, address, optedIn: false, state: [] }
+      return { appId, scope: 'local' as const, address, optedIn: false, state: [] }
     }
     throw error
   }
@@ -159,7 +161,7 @@ export async function readLocalState(
     ? decodeStateItems(accountInfo.appLocalState.keyValue, stateKeyMap)
     : []
   // Distinguish "not opted in" from "opted in with empty state".
-  return { appId, address, optedIn: accountInfo.appLocalState != null, state }
+  return { appId, scope: 'local', address, optedIn: accountInfo.appLocalState != null, state }
 }
 
 // ============================================================================

@@ -77,7 +77,7 @@ export const networkTools: AnyTool[] = [
       'Get this deployment\'s network configuration: which networks are served, the default network, endpoints, and signing mode. Use to orient before network-specific calls.',
     parameters: z.object({}),
     output: networkConfigSchema,
-    view: 'network.status',
+    view: 'table',
     handler: async (ctx) => ({
       network: ctx.network.id,
       defaultNetwork: ctx.defaultNetwork,

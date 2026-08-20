@@ -10,14 +10,10 @@ export const networkStatusViewModelSchema = z
   .object({
     view: z.literal('network.status'),
     network: z.string().min(1),
-    mode: z.enum(['execute', 'compose']).optional(),
-    servedNetworks: z.array(z.string().min(1)).optional(),
-    latestRound: z.number().int().nonnegative().optional(),
-    avgTps: z.number().finite().nonnegative().optional(),
-    avgBlockTime: z.number().finite().nonnegative().optional(),
-    participation: z.number().finite().nonnegative().optional(),
-    algodUrl: z.string().optional(),
-    indexerUrl: z.string().optional(),
+    latestRound: z.number().int().nonnegative(),
+    avgTps: z.number().finite().nonnegative(),
+    avgBlockTime: z.number().finite().nonnegative(),
+    participation: z.number().finite().nonnegative(),
   })
   .strict()
 

@@ -25,8 +25,8 @@ import {
 import { buildAccountPortfolioRecord } from '../live-account.js'
 import {
   buildAccountListRecord,
-  buildApplicationStateRecord,
-  buildAssetListRecord,
+  buildApplicationLocalsRecord,
+  buildAssetHoldingsRecord,
   buildTransactionGroupRecord,
   buildTransactionListRecord,
 } from '../live-catalog.js'
@@ -384,7 +384,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     },
     async lookupAccountAssets(address) {
       const wire = await executeToolCall(deployment, accountAssetsTool, { address })
-      return buildAssetListRecord(
+      return buildAssetHoldingsRecord(
         {
           resultId: newId('result-live-account-assets'),
           toolCallId: newId('tool-call-live-account-assets'),
@@ -396,7 +396,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     },
     async lookupAccountAppStates(address) {
       const wire = await executeToolCall(deployment, accountAppStatesTool, { address })
-      return buildApplicationStateRecord(
+      return buildApplicationLocalsRecord(
         {
           resultId: newId('result-live-account-apps'),
           toolCallId: newId('tool-call-live-account-apps'),

@@ -245,6 +245,8 @@ describe('view cue', () => {
           network: 'localnet',
           latestRound: 22,
           avgTps: 1.5,
+          avgBlockTime: 2.8,
+          participation: 0.9,
           extraIgnored: true,
         },
         isError: false,
@@ -255,6 +257,12 @@ describe('view cue', () => {
     const store = addResult(createResultStore(), bridged.record)
     const derived = createNetworkStatusViewModel(store, viewFor(bridged.record, 'network.status'))
     if (!derived.ok) throw new Error(derived.error.message)
-    expect(derived.model).toMatchObject({ network: 'localnet', latestRound: 22, avgTps: 1.5 })
+    expect(derived.model).toMatchObject({
+      network: 'localnet',
+      latestRound: 22,
+      avgTps: 1.5,
+      avgBlockTime: 2.8,
+      participation: 0.9,
+    })
   })
 })

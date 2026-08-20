@@ -14,9 +14,11 @@ import {
   buildAccountSummaryRecord,
   buildApplicationBoxRecord,
   buildApplicationListRecord,
+  buildApplicationLocalsRecord,
   buildApplicationLogsRecord,
   buildApplicationStateRecord,
   buildAssetHoldersRecord,
+  buildAssetHoldingsRecord,
   buildAssetListRecord,
   buildBlockListRecord,
   buildTransactionGroupRecord,
@@ -72,6 +74,8 @@ function recordForView(
       return buildAssetDetailRecord(identity, output, toolName)
     case 'asset.list':
       return buildAssetListRecord(identity, output, toolName)
+    case 'asset.holdings':
+      return buildAssetHoldingsRecord(identity, output, toolName)
     case 'asset.holders':
       return buildAssetHoldersRecord(identity, output, toolName)
     case 'application.detail':
@@ -80,6 +84,8 @@ function recordForView(
       return buildApplicationListRecord(identity, output, toolName)
     case 'application.state':
       return buildApplicationStateRecord(identity, output, toolName)
+    case 'application.locals':
+      return buildApplicationLocalsRecord(identity, output, toolName)
     case 'application.logs':
       return buildApplicationLogsRecord(identity, output, toolName)
     case 'application.box':

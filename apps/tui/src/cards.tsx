@@ -433,32 +433,17 @@ export function NetworkCard({
   const stats = [
     {
       label: 'round',
-      value: model.latestRound === undefined ? '—' : String(model.latestRound),
-      copy: model.latestRound === undefined ? undefined : String(model.latestRound),
+      value: String(model.latestRound),
+      copy: String(model.latestRound),
     },
-    { label: 'block', value: model.avgBlockTime === undefined ? '—' : `${model.avgBlockTime}s` },
-    {
-      label: 'online',
-      value: model.participation === undefined ? '—' : String(model.participation),
-    },
-    ...(model.mode ? [{ label: 'mode', value: model.mode }] : []),
+    { label: 'block', value: `${model.avgBlockTime}s` },
+    { label: 'online', value: String(model.participation) },
   ]
   return (
     <Frame width={width}>
       <Header kicker="NETWORK" pill={model.network.toUpperCase()} tone="idle" />
-      {model.avgTps === undefined ? (
-        <Hero
-          value={model.latestRound === undefined ? '—' : String(model.latestRound)}
-          unit="round"
-          copy={model.latestRound === undefined ? undefined : String(model.latestRound)}
-        />
-      ) : (
-        <Hero value={String(model.avgTps)} unit="TPS" />
-      )}
+      <Hero value={String(model.avgTps)} unit="TPS" />
       <StatGrid items={stats} width={body} />
-      {model.servedNetworks && model.servedNetworks.length > 0 ? (
-        <Fact label="served" value={model.servedNetworks.join(', ')} width={body} />
-      ) : null}
     </Frame>
   )
 }
@@ -672,10 +657,8 @@ export function AssetListCard({
     assetId: number | string
     name?: string
     unitName?: string
-    amount?: string
-    isFrozen?: boolean
-    totalSupply?: string
-    decimals?: number
+    totalSupply: string
+    decimals: number
     creator?: string
   }>
   nextToken?: string
@@ -705,18 +688,62 @@ export function AssetListCard({
             {asset.unitName && asset.name ? (
               <Fact label="unit" value={asset.unitName} width={body} />
             ) : null}
-            {asset.amount === undefined ? null : (
-              <Fact label="amount" value={asset.amount} width={body} />
-            )}
-            {asset.totalSupply === undefined ? null : (
-              <Fact label="supply" value={asset.totalSupply} width={body} />
-            )}
-            {asset.decimals === undefined ? null : (
-              <Fact label="decimals" value={String(asset.decimals)} width={body} />
-            )}
+            <Fact label="supply" value={asset.totalSupply} width={body} />
+            <Fact label="decimals" value={String(asset.decimals)} width={body} />
             {asset.creator ? (
               <Fact label="creator" value={asset.creator} copy={asset.creator} width={body} />
             ) : null}
+            {index < rows.length - 1 ? <Rule width={body} /> : null}
+          </box>
+        ))}
+        {pageNotes(assets.length, rows.length, nextToken).map((note) => (
+          <FooterNote key={note} text={note} width={body} />
+        ))}
+      </box>
+    </Frame>
+  )
+}
+
+export function AssetHoldingsCard({
+  assets,
+  nextToken,
+  width,
+}: {
+  assets: ReadonlyArray<{
+    assetId: number | string
+    amount: string
+    isFrozen: boolean
+    name?: string
+    unitName?: string
+  }>
+  nextToken?: string
+  width: number
+}) {
+  const body = innerWidth(width)
+  const rows = assets.slice(0, 10)
+  return (
+    <Frame width={width}>
+      <Header kicker="ASSET HOLDINGS" pill={String(assets.length)} tone="idle" />
+      <box flexDirection="column">
+        {rows.map((asset, index) => (
+          <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
+            <Fact
+              label="id"
+              value={String(asset.assetId)}
+              copy={String(asset.assetId)}
+              width={body}
+            />
+            {asset.name || asset.unitName ? (
+              <Fact
+                label="name"
+                value={asset.name ?? asset.unitName ?? ''}
+                width={body}
+              />
+            ) : null}
+            {asset.unitName && asset.name ? (
+              <Fact label="unit" value={asset.unitName} width={body} />
+            ) : null}
+            <Fact label="amount" value={asset.amount} width={body} />
             {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
@@ -812,17 +839,67 @@ export function ApplicationListCard({
 }
 
 export function ApplicationStateCard({
+  applicationId,
   scope,
+  address,
+  optedIn,
+  entries,
+  width,
+}: {
+  applicationId: number | string
+  scope: 'global' | 'local'
+  address?: string
+  optedIn?: boolean
+  entries: ReadonlyArray<{ key: string; value: string; type?: string }>
+  width: number
+}) {
+  const body = innerWidth(width)
+  return (
+    <Frame width={width}>
+      <Header kicker="APP STATE" pill={scope.toUpperCase()} tone="idle" />
+      <Fact
+        label="app"
+        value={String(applicationId)}
+        copy={String(applicationId)}
+        width={body}
+      />
+      {address ? (
+        <Fact label="address" value={address} copy={address} width={body} />
+      ) : null}
+      {optedIn === undefined ? null : (
+        <Fact label="opted" value={optedIn ? 'yes' : 'no'} width={body} />
+      )}
+      <box marginTop={1} flexDirection="column">
+        <Fact
+          label="keys"
+          value={`${entries.length} key${entries.length === 1 ? '' : 's'}`}
+          width={body}
+        />
+        {entries.slice(0, 6).map((entry) => (
+          <Fact
+            key={entry.key}
+            label={shorten(entry.key, 9)}
+            value={entry.type ? `${entry.type} · ${entry.value}` : entry.value}
+            width={body}
+          />
+        ))}
+        {entries.length > 6 ? (
+          <FooterNote text={`${entries.length - 6} more keys`} width={body} />
+        ) : null}
+      </box>
+    </Frame>
+  )
+}
+
+export function ApplicationLocalsCard({
   address,
   apps,
   nextToken,
   width,
 }: {
-  scope: string
   address?: string
   apps: ReadonlyArray<{
     applicationId: number | string
-    optedIn?: boolean
     entries: ReadonlyArray<{ key: string; value: string; type?: string }>
   }>
   nextToken?: string
@@ -832,7 +909,7 @@ export function ApplicationStateCard({
   const shown = apps.slice(0, 6)
   return (
     <Frame width={width}>
-      <Header kicker="APP STATE" pill={scope.toUpperCase()} tone="idle" />
+      <Header kicker="APP LOCALS" pill={String(apps.length)} tone="idle" />
       {address ? (
         <Fact label="address" value={address} copy={address} width={body} />
       ) : null}
@@ -850,7 +927,6 @@ export function ApplicationStateCard({
               value={`${app.entries.length} key${app.entries.length === 1 ? '' : 's'}`}
               width={body}
             />
-            {app.optedIn === false ? <Fact label="opted" value="no" width={body} /> : null}
             {app.entries.slice(0, 6).map((entry) => (
               <Fact
                 key={entry.key}

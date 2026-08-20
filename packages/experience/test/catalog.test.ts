@@ -7,8 +7,10 @@ import {
   bridgeToolResult,
   createAccountListViewModel,
   createAccountSummaryViewModel,
+  createApplicationLocalsViewModel,
   createApplicationStateViewModel,
   createAssetHoldersViewModel,
+  createAssetHoldingsViewModel,
   createAssetListViewModel,
   createBlockDetailViewModel,
   createBlockListViewModel,
@@ -31,8 +33,10 @@ function viewFor(
     | 'transaction.list'
     | 'transaction.group'
     | 'asset.list'
+    | 'asset.holdings'
     | 'asset.holders'
     | 'application.state'
+    | 'application.locals'
     | 'block.list',
 ) {
   return viewSpecSchema.parse({
@@ -201,12 +205,40 @@ describe('first-party catalog views', () => {
     expect(holderModel.model.balances[0]?.amount).toBe('12')
   })
 
-  test('account local state and read_global_state share application.state', () => {
-    const local = bridgeToolResult(
+  test('get_account_assets renders asset.holdings', () => {
+    const holdings = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'get_account_assets',
+        view: 'asset.holdings',
+        output: {
+          assets: [{ assetId: 1042, amount: '12', isFrozen: false, name: 'Sample', unitName: 'SMPL' }],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(holdings.view).toBe('asset.holdings')
+    const model = createAssetHoldingsViewModel(
+      addResult(createResultStore(), holdings.record),
+      viewFor(holdings.record, 'asset.holdings'),
+    )
+    if (!model.ok) throw new Error(model.error.message)
+    expect(model.model.assets[0]).toEqual({
+      assetId: 1042,
+      amount: '12',
+      isFrozen: false,
+      name: 'Sample',
+      unitName: 'SMPL',
+    })
+  })
+
+  test('get_account_app_local_states renders application.locals', () => {
+    const locals = bridgeToolResult(
       {
         id: '1',
         toolName: 'get_account_app_local_states',
-        view: 'application.state',
+        view: 'application.locals',
         output: {
           appLocalStates: [
             {
@@ -220,6 +252,57 @@ describe('first-party catalog views', () => {
       },
       identity,
     )
+    expect(locals.view).toBe('application.locals')
+    const localsModel = createApplicationLocalsViewModel(
+      addResult(createResultStore(), locals.record),
+      viewFor(locals.record, 'application.locals'),
+    )
+    if (!localsModel.ok) throw new Error(localsModel.error.message)
+    expect(localsModel.model.apps[0]?.entries[0]).toEqual({ key: 'counter', value: '7', type: 'uint' })
+  })
+
+  test('read_global_state and read_local_state share the application.state scope shape', () => {
+    const global = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'read_global_state',
+        view: 'application.state',
+        output: {
+          appId: 1071,
+          scope: 'global',
+          state: [{ key: 'admin', value: FIXTURE_SENDER, type: 'bytes' }],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(global.view).toBe('application.state')
+    const globalModel = createApplicationStateViewModel(
+      addResult(createResultStore(), global.record),
+      viewFor(global.record, 'application.state'),
+    )
+    if (!globalModel.ok) throw new Error(globalModel.error.message)
+    expect(globalModel.model.scope).toBe('global')
+    expect(globalModel.model.applicationId).toBe(1071)
+    expect(globalModel.model.address).toBeUndefined()
+    expect(globalModel.model.optedIn).toBeUndefined()
+
+    const local = bridgeToolResult(
+      {
+        id: '2',
+        toolName: 'read_local_state',
+        view: 'application.state',
+        output: {
+          appId: 1071,
+          scope: 'local',
+          address: FIXTURE_SENDER,
+          optedIn: true,
+          state: [{ key: 'counter', value: 7, type: 'uint' }],
+        },
+        isError: false,
+      },
+      { ...identity, resultId: 'result-local', toolCallId: 'tool-call-local' },
+    )
     expect(local.view).toBe('application.state')
     const localModel = createApplicationStateViewModel(
       addResult(createResultStore(), local.record),
@@ -227,24 +310,9 @@ describe('first-party catalog views', () => {
     )
     if (!localModel.ok) throw new Error(localModel.error.message)
     expect(localModel.model.scope).toBe('local')
-    expect(localModel.model.apps[0]?.entries[0]).toEqual({ key: 'counter', value: '7', type: 'uint' })
-
-    const global = bridgeToolResult(
-      {
-        id: '2',
-        toolName: 'read_global_state',
-        view: 'application.state',
-        output: { appId: 1071, state: [{ key: 'admin', value: FIXTURE_SENDER, type: 'bytes' }] },
-        isError: false,
-      },
-      { ...identity, resultId: 'result-global', toolCallId: 'tool-call-global' },
-    )
-    const globalModel = createApplicationStateViewModel(
-      addResult(createResultStore(), global.record),
-      viewFor(global.record, 'application.state'),
-    )
-    if (!globalModel.ok) throw new Error(globalModel.error.message)
-    expect(globalModel.model.scope).toBe('global')
+    expect(localModel.model.address).toBe(FIXTURE_SENDER)
+    expect(localModel.model.optedIn).toBeTrue()
+    expect(localModel.model.entries[0]).toEqual({ key: 'counter', value: '7', type: 'uint' })
   })
 
   test('lookup_block carries type totals, not transaction rows', () => {

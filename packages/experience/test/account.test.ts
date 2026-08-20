@@ -85,7 +85,7 @@ describe('account portfolio slice', () => {
     const apps = await host.lookupAccountAppStates(FIXTURE_SENDER)
     expect(apps).toMatchObject({
       toolName: 'get_account_app_local_states',
-      data: { scope: 'local', address: FIXTURE_SENDER, apps: [] },
+      data: { address: FIXTURE_SENDER, apps: [] },
     })
     const txns = await host.lookupAccountTransactions(FIXTURE_SENDER)
     const derived = createTransactionCollectionViewModel(

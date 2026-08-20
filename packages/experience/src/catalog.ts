@@ -57,24 +57,41 @@ export const accountListDataSchema = z
   })
   .strict()
 
-/** One asset row in a catalog or holdings list. */
+/** One asset row in the search catalog. */
 export const assetRowSchema = z
   .object({
     assetId: uint64JsonSchema,
     name: z.string().min(1).optional(),
     unitName: z.string().min(1).optional(),
-    amount: z.string().min(1).optional(),
-    isFrozen: z.boolean().optional(),
-    totalSupply: z.string().regex(/^\d+$/).optional(),
-    decimals: z.number().int().nonnegative().optional(),
+    totalSupply: z.string().regex(/^\d+$/),
+    decimals: z.number().int().nonnegative(),
     creator: optionalAddress,
   })
   .strict()
 
-/** A page of assets (search or account holdings). */
+/** A page of catalog assets (search_assets). */
 export const assetListDataSchema = z
   .object({
     assets: z.array(assetRowSchema),
+    nextToken: z.string().min(1).optional(),
+  })
+  .strict()
+
+/** One asset an account holds, with its balance. */
+export const assetHoldingRowSchema = z
+  .object({
+    assetId: uint64JsonSchema,
+    amount: z.string().min(1),
+    isFrozen: z.boolean(),
+    name: z.string().min(1).optional(),
+    unitName: z.string().min(1).optional(),
+  })
+  .strict()
+
+/** A page of one account's asset holdings (get_account_assets). */
+export const assetHoldingsDataSchema = z
+  .object({
+    assets: z.array(assetHoldingRowSchema),
     nextToken: z.string().min(1).optional(),
   })
   .strict()
@@ -122,11 +139,24 @@ export const applicationStateEntrySchema = z
   })
   .strict()
 
-/** One application's local or global state. */
-export const applicationStateAppSchema = z
+/**
+ * One application's decoded state (read_global_state / read_local_state).
+ * address and optedIn appear only for local scope.
+ */
+export const applicationStateDataSchema = z
   .object({
     applicationId: uint64JsonSchema,
+    scope: z.enum(['global', 'local']),
+    address: optionalAddress,
     optedIn: z.boolean().optional(),
+    entries: z.array(applicationStateEntrySchema),
+  })
+  .strict()
+
+/** One app's local state within an account's opted-in list. */
+export const applicationLocalStateAppSchema = z
+  .object({
+    applicationId: uint64JsonSchema,
     schema: z
       .object({
         numByteSlice: z.number().int().nonnegative(),
@@ -138,12 +168,11 @@ export const applicationStateAppSchema = z
   })
   .strict()
 
-/** Local or global application state for one or more apps. */
-export const applicationStateDataSchema = z
+/** Every application one account holds local state for (get_account_app_local_states). */
+export const applicationLocalsDataSchema = z
   .object({
-    scope: z.enum(['local', 'global']),
     address: optionalAddress,
-    apps: z.array(applicationStateAppSchema),
+    apps: z.array(applicationLocalStateAppSchema),
     nextToken: z.string().min(1).optional(),
   })
   .strict()
@@ -197,9 +226,11 @@ export type TransactionCollectionData = z.infer<typeof transactionCollectionData
 export type AccountSummaryData = z.infer<typeof accountSummaryDataSchema>
 export type AccountListData = z.infer<typeof accountListDataSchema>
 export type AssetListData = z.infer<typeof assetListDataSchema>
+export type AssetHoldingsData = z.infer<typeof assetHoldingsDataSchema>
 export type AssetHoldersData = z.infer<typeof assetHoldersDataSchema>
 export type ApplicationListData = z.infer<typeof applicationListDataSchema>
 export type ApplicationStateData = z.infer<typeof applicationStateDataSchema>
+export type ApplicationLocalsData = z.infer<typeof applicationLocalsDataSchema>
 export type ApplicationLogsData = z.infer<typeof applicationLogsDataSchema>
 export type ApplicationBoxData = z.infer<typeof applicationBoxDataSchema>
 export type BlockListData = z.infer<typeof blockListDataSchema>

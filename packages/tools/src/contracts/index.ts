@@ -69,17 +69,15 @@ export const applicationLogsSchema = z.object({
   nextToken: z.string().optional(),
 })
 
-/** Wire shape of read_global_state ('application.state' view). */
-export const globalStateSchema = z.object({
+/** Wire shape of read_global_state and read_local_state ('application.state' view). */
+export const applicationStateSchema = z.object({
   appId: z.number(),
-  state: z.array(stateValue),
-})
-
-/** Wire shape of read_local_state ('application.state' view). */
-export const localStateSchema = z.object({
-  appId: z.number(),
-  address: z.string(),
-  optedIn: z.boolean().describe('false = account is not opted in (state is then empty, not merely unset)'),
+  scope: z.enum(['global', 'local']),
+  address: z.string().optional().describe('Local scope only: the account whose state this is'),
+  optedIn: z
+    .boolean()
+    .optional()
+    .describe('Local scope only. false = not opted in (state is then empty, not merely unset)'),
   state: z.array(stateValue),
 })
 
@@ -174,7 +172,7 @@ export const contractTools: AnyTool[] = [
       appId: z.number().describe('The application ID'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    output: globalStateSchema,
+    output: applicationStateSchema,
     view: 'application.state',
     handler: async (ctx, args) => readGlobalState(ctx, args),
   }),
@@ -186,7 +184,7 @@ export const contractTools: AnyTool[] = [
       address: z.string().describe('The account address to read local state for'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    output: localStateSchema,
+    output: applicationStateSchema,
     view: 'application.state',
     handler: async (ctx, args) => readLocalState(ctx, args),
   }),

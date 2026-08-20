@@ -265,7 +265,7 @@ describe('readLocalState', () => {
       },
     })
     const result = await readLocalState(ctx, { appId: 9, address: 'SOMEADDRESS' })
-    expect(result).toEqual({ appId: 9, address: 'SOMEADDRESS', optedIn: false, state: [] })
+    expect(result).toEqual({ appId: 9, scope: 'local', address: 'SOMEADDRESS', optedIn: false, state: [] })
   })
 })
 

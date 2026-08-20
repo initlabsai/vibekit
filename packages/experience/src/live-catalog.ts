@@ -5,9 +5,11 @@ import {
   accountSummaryDataSchema,
   applicationBoxDataSchema,
   applicationListDataSchema,
+  applicationLocalsDataSchema,
   applicationLogsDataSchema,
   applicationStateDataSchema,
   assetHoldersDataSchema,
+  assetHoldingsDataSchema,
   assetListDataSchema,
   blockListDataSchema,
   transactionCollectionDataSchema,
@@ -183,14 +185,12 @@ const assetRowWireSchema = z.object({
   assetId: z.union([z.number(), z.string()]),
   name: z.string().min(1).optional(),
   unitName: z.string().min(1).optional(),
-  amount: z.union([z.string(), z.number()]).optional(),
-  isFrozen: z.boolean().optional(),
-  totalSupply: z.union([z.string(), z.number()]).optional(),
-  decimals: z.number().int().nonnegative().optional(),
+  totalSupply: z.union([z.string(), z.number()]),
+  decimals: z.number().int().nonnegative(),
   creator: z.string().min(1).optional(),
 })
 
-/** Wraps search_assets / get_account_assets. */
+/** Wraps search_assets. */
 export function buildAssetListRecord(
   identity: ResultIdentity,
   wire: unknown,
@@ -210,13 +210,45 @@ export function buildAssetListRecord(
         assetId: asset.assetId,
         ...(asset.name === undefined ? {} : { name: asset.name }),
         ...(asset.unitName === undefined ? {} : { unitName: asset.unitName }),
-        ...(asset.amount === undefined ? {} : { amount: String(asset.amount) }),
-        ...(asset.isFrozen === undefined ? {} : { isFrozen: asset.isFrozen }),
-        ...(asset.totalSupply === undefined
-          ? {}
-          : { totalSupply: String(asset.totalSupply) }),
-        ...(asset.decimals === undefined ? {} : { decimals: asset.decimals }),
+        totalSupply: String(asset.totalSupply),
+        decimals: asset.decimals,
         ...(asset.creator === undefined ? {} : { creator: asset.creator }),
+      })),
+      ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
+    }),
+  )
+}
+
+const assetHoldingWireSchema = z.object({
+  assetId: z.union([z.number(), z.string()]),
+  amount: z.union([z.string(), z.number()]),
+  isFrozen: z.boolean(),
+  name: z.string().min(1).optional(),
+  unitName: z.string().min(1).optional(),
+})
+
+/** Wraps get_account_assets. */
+export function buildAssetHoldingsRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'get_account_assets',
+): StructuredResult {
+  const page = z
+    .object({
+      assets: z.array(assetHoldingWireSchema),
+      nextToken: z.string().min(1).optional(),
+    })
+    .parse(wire)
+  return record(
+    identity,
+    toolName,
+    assetHoldingsDataSchema.parse({
+      assets: page.assets.map((asset) => ({
+        assetId: asset.assetId,
+        amount: String(asset.amount),
+        isFrozen: asset.isFrozen,
+        ...(asset.name === undefined ? {} : { name: asset.name }),
+        ...(asset.unitName === undefined ? {} : { unitName: asset.unitName }),
       })),
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
@@ -314,13 +346,41 @@ function stateEntry(entry: z.infer<typeof stateEntryWireSchema>) {
   return { key: entry.key, value: String(entry.value), type }
 }
 
-/** Wraps get_account_app_local_states, read_local_state, and read_global_state. */
+/** Wraps read_global_state and read_local_state (the unified scope shape). */
 export function buildApplicationStateRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'read_global_state',
+): StructuredResult {
+  const single = z
+    .object({
+      appId: z.union([z.number(), z.string()]),
+      scope: z.enum(['global', 'local']),
+      address: z.string().min(1).optional(),
+      optedIn: z.boolean().optional(),
+      state: z.array(stateEntryWireSchema),
+    })
+    .parse(wire)
+  return record(
+    identity,
+    toolName,
+    applicationStateDataSchema.parse({
+      applicationId: single.appId,
+      scope: single.scope,
+      ...(single.address === undefined ? {} : { address: single.address }),
+      ...(single.optedIn === undefined ? {} : { optedIn: single.optedIn }),
+      entries: single.state.map(stateEntry),
+    }),
+  )
+}
+
+/** Wraps get_account_app_local_states. */
+export function buildApplicationLocalsRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'get_account_app_local_states',
 ): StructuredResult {
-  const localPage = z
+  const page = z
     .object({
       appLocalStates: z.array(
         z.object({
@@ -337,46 +397,18 @@ export function buildApplicationStateRecord(
       nextToken: z.string().min(1).optional(),
       address: z.string().min(1).optional(),
     })
-    .safeParse(wire)
-  if (localPage.success) {
-    return record(
-      identity,
-      toolName,
-      applicationStateDataSchema.parse({
-        scope: 'local',
-        ...(localPage.data.address === undefined ? {} : { address: localPage.data.address }),
-        apps: localPage.data.appLocalStates.map((app) => ({
-          applicationId: app.applicationId,
-          ...(app.schema === undefined ? {} : { schema: app.schema }),
-          entries: (app.keyValue ?? []).map(stateEntry),
-        })),
-        ...(localPage.data.nextToken === undefined ? {} : { nextToken: localPage.data.nextToken }),
-      }),
-    )
-  }
-
-  const single = z
-    .object({
-      appId: z.union([z.number(), z.string()]),
-      address: z.string().min(1).optional(),
-      optedIn: z.boolean().optional(),
-      state: z.array(stateEntryWireSchema),
-    })
     .parse(wire)
-  const scope = toolName === 'read_global_state' ? 'global' : 'local'
   return record(
     identity,
     toolName,
-    applicationStateDataSchema.parse({
-      scope,
-      ...(single.address === undefined ? {} : { address: single.address }),
-      apps: [
-        {
-          applicationId: single.appId,
-          ...(single.optedIn === undefined ? {} : { optedIn: single.optedIn }),
-          entries: single.state.map(stateEntry),
-        },
-      ],
+    applicationLocalsDataSchema.parse({
+      ...(page.address === undefined ? {} : { address: page.address }),
+      apps: page.appLocalStates.map((app) => ({
+        applicationId: app.applicationId,
+        ...(app.schema === undefined ? {} : { schema: app.schema }),
+        entries: (app.keyValue ?? []).map(stateEntry),
+      })),
+      ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
   )
 }

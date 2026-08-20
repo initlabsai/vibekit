@@ -5,9 +5,11 @@ import {
   accountSummaryDataSchema,
   applicationBoxDataSchema,
   applicationListDataSchema,
+  applicationLocalsDataSchema,
   applicationLogsDataSchema,
   applicationStateDataSchema,
   assetHoldersDataSchema,
+  assetHoldingsDataSchema,
   assetListDataSchema,
   blockListDataSchema,
   transactionCollectionDataSchema,
@@ -68,9 +70,11 @@ export function createTransactionCollectionViewModel(
 export const createAccountSummaryViewModel = viewModelFor(accountSummaryDataSchema, 'account.summary' as const, 'Account summary')
 export const createAccountListViewModel = viewModelFor(accountListDataSchema, 'account.list' as const, 'Account list')
 export const createAssetListViewModel = viewModelFor(assetListDataSchema, 'asset.list' as const, 'Asset list')
+export const createAssetHoldingsViewModel = viewModelFor(assetHoldingsDataSchema, 'asset.holdings' as const, 'Asset holdings')
 export const createAssetHoldersViewModel = viewModelFor(assetHoldersDataSchema, 'asset.holders' as const, 'Asset holders')
 export const createApplicationListViewModel = viewModelFor(applicationListDataSchema, 'application.list' as const, 'Application list')
 export const createApplicationStateViewModel = viewModelFor(applicationStateDataSchema, 'application.state' as const, 'Application state')
+export const createApplicationLocalsViewModel = viewModelFor(applicationLocalsDataSchema, 'application.locals' as const, 'Application local states')
 export const createApplicationLogsViewModel = viewModelFor(applicationLogsDataSchema, 'application.logs' as const, 'Application logs')
 export const createApplicationBoxViewModel = viewModelFor(applicationBoxDataSchema, 'application.box' as const, 'Application box')
 export const createBlockListViewModel = viewModelFor(blockListDataSchema, 'block.list' as const, 'Block list')
@@ -84,6 +88,10 @@ export type AccountListViewModel = Extract<
   { ok: true }
 >['model']
 export type AssetListViewModel = Extract<ReturnType<typeof createAssetListViewModel>, { ok: true }>['model']
+export type AssetHoldingsViewModel = Extract<
+  ReturnType<typeof createAssetHoldingsViewModel>,
+  { ok: true }
+>['model']
 export type AssetHoldersViewModel = Extract<
   ReturnType<typeof createAssetHoldersViewModel>,
   { ok: true }
@@ -94,6 +102,10 @@ export type ApplicationListViewModel = Extract<
 >['model']
 export type ApplicationStateViewModel = Extract<
   ReturnType<typeof createApplicationStateViewModel>,
+  { ok: true }
+>['model']
+export type ApplicationLocalsViewModel = Extract<
+  ReturnType<typeof createApplicationLocalsViewModel>,
   { ok: true }
 >['model']
 export type ApplicationLogsViewModel = Extract<

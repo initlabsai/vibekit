@@ -8,12 +8,16 @@ export { lookupAsset, searchAssetBalances, searchAssetTransactions, searchAssets
 export type { FormattedAsset, AssetBalance } from './handlers/format.js'
 export type { FormattedTransaction } from '../shared/format.js'
 
-/** Wire shape of lookup_asset ('asset.detail' view). */
-export const assetSummarySchema = z.object({
+/**
+ * Wire shape of the 'asset.detail' view — one shape for both sources:
+ * lookup_asset (indexer summary) and get_asset_info (algod params).
+ * Fields a source lacks are simply absent.
+ */
+export const assetDetailSchema = z.object({
   assetId: z.number(),
   name: z.string().optional(),
   unitName: z.string().optional(),
-  totalSupply: z.string(),
+  totalSupply: z.string().regex(/^\d+$/),
   decimals: z.number(),
   creator: z.string().optional(),
   manager: z.string().optional(),
@@ -38,24 +42,8 @@ export const assetHoldersSchema = z.object({
 
 /** Wire shape of search_assets ('asset.list' view). */
 export const assetListSchema = z.object({
-  assets: z.array(assetSummarySchema),
+  assets: z.array(assetDetailSchema),
   nextToken: z.string().optional(),
-})
-
-/** Wire shape of get_asset_info ('asset.detail' view, algod-sourced). */
-export const assetInfoSchema = z.object({
-  assetId: z.number(),
-  name: z.string().optional(),
-  unitName: z.string().optional(),
-  totalSupply: z.string().regex(/^\d+$/),
-  decimals: z.number(),
-  defaultFrozen: z.boolean().optional(),
-  url: z.string().optional(),
-  creator: z.string(),
-  manager: z.string().optional(),
-  reserve: z.string().optional(),
-  freeze: z.string().optional(),
-  clawback: z.string().optional(),
 })
 
 export { assetWriteTools } from './tools-write.js'
@@ -68,7 +56,7 @@ export const assetTools: AnyTool[] = [
     parameters: z.object({
       assetId: z.number().describe('The asset ID to look up'),
     }),
-    output: assetSummarySchema,
+    output: assetDetailSchema,
     view: 'asset.detail',
     handler: async (ctx, args) => lookupAsset(ctx, args),
   }),
@@ -126,7 +114,7 @@ export const assetTools: AnyTool[] = [
     description:
       "Get an asset's current parameters directly from algod (name, supply, roles, frozen state).",
     parameters: z.object({ assetId: z.number().describe('The asset ID') }),
-    output: assetInfoSchema,
+    output: assetDetailSchema,
     view: 'asset.detail',
     handler: async (ctx, args) => {
       const asset = await ctx.algod.getAssetByID(BigInt(args.assetId)).do()

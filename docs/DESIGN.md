@@ -357,7 +357,8 @@ The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and
 references by result or tool-call id with optional data paths; trusts
 `transaction.detail`/`list`/`group`, `account.portfolio`/`summary`/`list`,
-`asset.detail`/`list`/`holders`, `application.detail`/`list`/`state`/`logs`/`box`,
+`asset.detail`/`list`/`holdings`/`holders`,
+`application.detail`/`list`/`state`/`locals`/`logs`/`box`,
 `block.detail`/`list`, and `network.status`; supports open,
 replace, patch, focus, and pin commands; represents approval request and
 decision states; and derives renderer-ready view models plus related-entity

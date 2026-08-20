@@ -29,16 +29,15 @@ describe('viewDataSchemas', () => {
   })
 
   // Pins the map to the tool declarations: each tool's output IS the mapped
-  // schema, or (for views fed by tools with genuinely different shapes) one
-  // of the union's members — by reference, so the two cannot drift.
+  // schema — by reference, so the two cannot drift and one view id stays
+  // one shape.
   test.each(dottedViewTools.map((t) => [t.name, t.view as keyof typeof viewDataSchemas] as const))(
-    '%s output is (a member of) viewDataSchemas[%s]',
+    '%s output is viewDataSchemas[%s]',
     (name, view) => {
       const mapped = viewDataSchemas[view]
       expect(mapped).toBeDefined()
       const tool = dottedViewTools.find((t) => t.name === name)!
-      const members = mapped instanceof z.ZodUnion ? mapped.options : [mapped]
-      expect(members.some((m: unknown) => m === tool.output)).toBe(true)
+      expect(mapped === tool.output).toBe(true)
     },
   )
 

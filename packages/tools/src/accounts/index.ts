@@ -67,13 +67,13 @@ const accountAppLocalState = z.object({
   ),
 })
 
-/** Wire shape of get_account_assets ('asset.list' view, holdings rows). */
+/** Wire shape of get_account_assets ('asset.holdings' view). */
 export const accountAssetListSchema = z.object({
   assets: z.array(accountAsset),
   nextToken: z.string().optional(),
 })
 
-/** Wire shape of get_account_app_local_states ('application.state' view). */
+/** Wire shape of get_account_app_local_states ('application.locals' view). */
 export const appLocalStatesSchema = z.object({
   appLocalStates: z.array(accountAppLocalState),
   nextToken: z.string().optional(),
@@ -159,7 +159,7 @@ export const accountTools: AnyTool[] = [
       nextToken: z.string().optional().describe('Pagination token'),
     }),
     output: accountAssetListSchema,
-    view: 'asset.list',
+    view: 'asset.holdings',
     handler: async (ctx, args) => getAccountAssets(ctx, args),
   }),
   defineTool({
@@ -173,7 +173,7 @@ export const accountTools: AnyTool[] = [
       applicationId: z.number().optional().describe('Filter by specific application ID'),
     }),
     output: appLocalStatesSchema,
-    view: 'application.state',
+    view: 'application.locals',
     handler: async (ctx, args) => getAccountAppLocalStates(ctx, args),
   }),
   defineTool({

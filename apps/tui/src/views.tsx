@@ -5,10 +5,12 @@ import {
   createApplicationBoxViewModel,
   createApplicationDetailViewModel,
   createApplicationListViewModel,
+  createApplicationLocalsViewModel,
   createApplicationLogsViewModel,
   createApplicationStateViewModel,
   createAssetDetailViewModel,
   createAssetHoldersViewModel,
+  createAssetHoldingsViewModel,
   createAssetListViewModel,
   createBlockDetailViewModel,
   createBlockListViewModel,
@@ -26,10 +28,12 @@ import {
   ApplicationBoxCard,
   ApplicationCard,
   ApplicationListCard,
+  ApplicationLocalsCard,
   ApplicationLogsCard,
   ApplicationStateCard,
   AssetCard,
   AssetHoldersCard,
+  AssetHoldingsCard,
   AssetListCard,
   BlockCard,
   BlockListCard,
@@ -153,6 +157,17 @@ export function ResultView({
         />
       )
     }
+    case 'asset.holdings': {
+      const derived = createAssetHoldingsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="ASSET HOLDINGS" width={width} />
+      return (
+        <AssetHoldingsCard
+          assets={derived.model.assets}
+          nextToken={derived.model.nextToken}
+          width={width}
+        />
+      )
+    }
     case 'asset.holders': {
       const derived = createAssetHoldersViewModel(store, view)
       if (!derived.ok) return <Unavailable title="HOLDERS" width={width} />
@@ -180,7 +195,20 @@ export function ResultView({
       if (!derived.ok) return <Unavailable title="APP STATE" width={width} />
       return (
         <ApplicationStateCard
+          applicationId={derived.model.applicationId}
           scope={derived.model.scope}
+          address={derived.model.address}
+          optedIn={derived.model.optedIn}
+          entries={derived.model.entries}
+          width={width}
+        />
+      )
+    }
+    case 'application.locals': {
+      const derived = createApplicationLocalsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="APP LOCALS" width={width} />
+      return (
+        <ApplicationLocalsCard
           address={derived.model.address}
           apps={derived.model.apps}
           nextToken={derived.model.nextToken}

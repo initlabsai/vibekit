@@ -1,8 +1,8 @@
 import { buildAccountPortfolioRecord, type AccountLookupHost } from '../live-account.js'
 import {
   buildAccountListRecord,
-  buildApplicationStateRecord,
-  buildAssetListRecord,
+  buildApplicationLocalsRecord,
+  buildAssetHoldingsRecord,
   buildTransactionListRecord,
 } from '../live-catalog.js'
 import type { StructuredResult } from '../results.js'
@@ -76,7 +76,7 @@ export function createFixtureAccountLookup(): AccountLookupHost {
     async lookupAccountAssets(address: string): Promise<StructuredResult> {
       recordedWire(address)
       counter += 1
-      return buildAssetListRecord(
+      return buildAssetHoldingsRecord(
         {
           resultId: `result-fixture-assets-${counter}`,
           toolCallId: `tool-call-fixture-assets-${counter}`,
@@ -89,7 +89,7 @@ export function createFixtureAccountLookup(): AccountLookupHost {
     async lookupAccountAppStates(address: string): Promise<StructuredResult> {
       recordedWire(address)
       counter += 1
-      return buildApplicationStateRecord(
+      return buildApplicationLocalsRecord(
         {
           resultId: `result-fixture-apps-${counter}`,
           toolCallId: `tool-call-fixture-apps-${counter}`,

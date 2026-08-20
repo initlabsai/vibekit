@@ -825,9 +825,9 @@ export function App() {
             : () => host().lookupAccountTransactions(address)
       const viewId =
         target === 'assets'
-          ? ('asset.list' as const)
+          ? ('asset.holdings' as const)
           : target === 'apps'
-            ? ('application.state' as const)
+            ? ('application.locals' as const)
             : ('transaction.list' as const)
       void run()
         .then((record) => {
