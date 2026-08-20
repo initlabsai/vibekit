@@ -11,6 +11,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "clean": "turbo run clean",
+    "verify:packed": "bun scripts/verify-packed.ts",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "changeset": "changeset"
   },

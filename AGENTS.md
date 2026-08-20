@@ -88,8 +88,9 @@ HTML, or terminal markup.
   Packages never depend on apps.
 - Put shared Explorer state/protocol in `packages/experience` and selected
   React composition in `packages/views-react`. Keep renderer primitives in
-  their apps. Before release, build an out-of-workspace consumer from packed
-  tarballs.
+  their apps. `bun run verify:packed` builds the out-of-workspace consumer
+  from packed tarballs; run it after any change to package exports,
+  manifests, or public types.
 - If a skill tells an agent to skip a gate, treat that as a bug. Update the
   skill, generated AGENTS.md templates, and system prompts with the gate.
 - Treat `skills/` as a product surface, not ancillary documentation. Keep
