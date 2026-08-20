@@ -1,6 +1,6 @@
 import type { PaymentFlowViewModel } from '@initlabs/vibekit-experience'
 
-import { PaymentBody } from './cards.js'
+import { PaymentBody } from './cards/index.js'
 import { COLORS } from './theme.js'
 import { Header } from './ui.js'
 

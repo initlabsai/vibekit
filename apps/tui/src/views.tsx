@@ -43,7 +43,7 @@ import {
   TransactionListCard,
   Unavailable,
   type AssetSort,
-} from './cards.js'
+} from './cards/index.js'
 
 export { RawCard }
 

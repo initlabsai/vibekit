@@ -12,7 +12,7 @@ import {
   startPaymentFlow,
 } from '@initlabs/vibekit-experience'
 
-import { paymentLines } from '../src/cards.js'
+import { paymentLines } from '../src/cards/index.js'
 import { routeComposerInput } from '../src/commands.js'
 
 let counter = 0

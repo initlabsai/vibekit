@@ -7,7 +7,7 @@ import {
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 
-import { PaymentCard, type AssetSort } from './cards.js'
+import { PaymentCard, type AssetSort } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { RawCard, ResultView } from './views.js'
 

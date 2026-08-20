@@ -1,5 +1,6 @@
 import type { ResultStore, ViewSpec } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
 import { Ident } from './ui.js'
 import { ResultView } from './views.js'
@@ -237,6 +238,51 @@ export function ShelfScreen({
         <text fg={COLORS.faint} marginTop={1} content={empty} />
       )}
       <text fg={COLORS.faint} marginTop={1} content="[esc] chat · ^w wallet · [ ] cycle account" />
+    </box>
+  )
+}
+
+/** The single input line at the bottom of the chat screen. */
+export function Composer({
+  epoch,
+  focused,
+  hint,
+  onChange,
+  onSubmit,
+}: {
+  epoch: number
+  focused: boolean
+  hint: string
+  onChange: (value: string) => void
+  onSubmit: (value: string) => void
+}) {
+  // OpenTUI's intrinsic type currently intersects its core SubmitEvent prop
+  // with the React adapter's string callback; runtime behavior is the latter.
+  const submitHandler = onSubmit as unknown as ((event: OpenTUISubmitEvent) => void) &
+    ((value: string) => void)
+
+  return (
+    <box
+      height={3}
+      flexDirection="row"
+      alignItems="center"
+      paddingX={1}
+      border
+      borderStyle="rounded"
+      borderColor={focused ? COLORS.brass : COLORS.border}
+      backgroundColor={COLORS.panelRaised}
+    >
+      <text fg={focused ? COLORS.brassBright : COLORS.faint}>› </text>
+      {/* Remount per submit: the input keeps its own buffer, so a fresh key is
+          the only reliable way to clear it. */}
+      <input
+        key={epoch}
+        flexGrow={1}
+        focused={focused}
+        placeholder={hint}
+        onInput={onChange}
+        onSubmit={submitHandler}
+      />
     </box>
   )
 }
