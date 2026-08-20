@@ -245,6 +245,10 @@ wins.
 
 - State additions are design smells until proven otherwise (§10). Challenge
   "we need to store this". Do not implement it first.
+- Package and layer additions are design smells until proven otherwise.
+  Challenge "this needs its own package" and "this needs a registry". A new
+  package, protocol, or extension point needs a named consumer that exists
+  today, and owner sign-off. Do not create it first.
 - Per-tool code in a host is a bug in the making. Hosts are generic
   adapters.
 - Treat private apps as terminal nodes and separate deployment artifacts. A

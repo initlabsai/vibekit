@@ -76,6 +76,12 @@ HTML, or terminal markup.
   - Share one factory for host wiring. Do not copy the tool and plugin mix into
     another host.
   - If a write needs a side path around `packages/core/src/compose/`, stop.
+- Package and layer additions are design smells until proven otherwise. A new
+  package, protocol, registry, or extension point needs a named consumer that
+  exists today plus owner sign-off; "a future head might need it" is not a
+  consumer. Prefer a plain function over a registry and an existing package
+  over a new one. When an architecture instinct and a measured line-count
+  disagree, the line-count wins (`docs/CONSTITUTION.md`).
 - Keep official API/TUI/web apps here as private terminal workspaces and
   independent deployment artifacts. They import `@initlabs/*` through public
   exports using `workspace:*`; no relative or private cross-package imports.
