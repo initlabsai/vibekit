@@ -184,7 +184,10 @@ accounts, and account-number badges), depth-first transaction rows with
 inner-transaction nesting and close-out "remainder" sub-rows, and three
 edge representations (vector / self-loop / point) with typed labels —
 validated against wires recorded from Lora's real-transaction snapshot
-corpus; then a TUI swimlane card for `transaction.group`. (L2) My Apps:
+corpus; then a TUI swimlane card for `transaction.group`. (L2) My Apps (done —
+normalizeAppSpec accepts all three formats via plain algosdk; the ^2
+screen shows deployed associations from the config apps section beside
+scanned local specs; name.algo input resolves through the NFD plugin):
 scan the launch directory for app specs (ARC-56, ARC-32, ARC-4 —
 normalized to ARC-56), a screen with deployed vs local-spec sections,
 NFD names accepted as direct-lane input. (L3) `toolsFromArc56(spec)` —

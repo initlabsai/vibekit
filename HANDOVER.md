@@ -23,20 +23,17 @@ Everything through L1 is committed and green:
   `~/.config/vibekit/config.json`; API keys stay in env) and the
   `zerosignal` provider in `packages/agent` (probe + model-catalog helpers).
 
-**L2 (My Apps) may be complete, partially complete, or untouched — check
-`git log` and `git status`.** L2's scope: ARC-56/ARC-32/ARC-4 spec
-normalization helpers in the tools contracts domain (plain algosdk + zod;
-do NOT add algokit-utils); a depth-limited cwd scan for spec files in an
-apps/tui slice (local specs are rescanned each launch, never persisted);
-a My Apps screen (deployed associations persist under an `apps` section in
-the vibekit config file, keyed by network — helpers beside the agent
-section in `packages/agent/src/config.ts`); `.algo` names recognized by
-`packages/experience/src/core/classifier.ts` as
-`{ kind: 'entity', entity: 'account-name' }` and resolved in the TUI
-lookup slice via `@initlabs/vibekit-plugin-nfd`. If the tree holds
-uncommitted L2 work, finish it against that spec, run the full gate, and
-commit; do not revert partial work — this repo's history shows completing
-interrupted trees works cleanly.
+**L2 (My Apps) is complete and committed** (`feat(tui,tools): My Apps —
+spec discovery, normalization, and NFD names`): ARC-56/32/4 normalization
+in the contracts domain (`normalizeAppSpec`/`tryNormalizeAppSpec`/
+`detectAppSpecFormat`), the cwd scan in `apps/tui/src/slices/apps.ts`,
+the My Apps screen (`^2` / `apps` command; deployed associations under
+the config file's `apps` section via `packages/agent/src/config.ts`
+helpers), and `.algo` name input resolved via the NFD plugin. **Start at
+L3.** Two L2 leftovers for the L5 findings list: the old opted-in-apps
+shelf (`application.locals`) is no longer reachable from `^2` (the view
+and host method still exist — an easy third section on the Apps screen),
+and NFD names resolve only in the TUI lane.
 
 ## Next phases (owner-approved; do not re-ask scope)
 
