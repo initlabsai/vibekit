@@ -208,7 +208,7 @@ describe('view cue', () => {
           type: 'axfer',
           sender: FIXTURE_SENDER,
           receiver: FIXTURE_SENDER,
-          fee: 0.001,
+          feeMicroAlgos: 1000,
           confirmedRound: 64_241_214,
           roundTime: 1_787_169_296,
           assetId: 849_191_641,

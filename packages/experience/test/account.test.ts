@@ -21,7 +21,7 @@ import {
 
 const RECORDED_WIRE = {
   address: FIXTURE_SENDER,
-  algoBalance: 8.44,
+  balanceMicroAlgos: 8440000,
   assets: [],
   totalAssets: 0,
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { uint64JsonSchema } from './algo.js'
 import { blockDetailDataSchema } from './blocks.js'
 import { algorandAddressCandidateSchema } from './classifier.js'
 import type { ResultIdentity } from './live-payment.js'
@@ -12,8 +13,8 @@ export const blockWireSchema = z.object({
   timestamp: z.number().int().nonnegative(),
   transactionCount: z.number().int().nonnegative(),
   proposer: algorandAddressCandidateSchema.optional(),
-  feesCollected: z.number().finite().nonnegative().optional(),
-  proposerPayout: z.number().finite().nonnegative().optional(),
+  feesCollectedMicroAlgos: uint64JsonSchema.optional(),
+  proposerPayoutMicroAlgos: uint64JsonSchema.optional(),
   transactionTypes: z
     .array(z.object({ type: z.string().min(1), count: z.number().int().nonnegative() }))
     .optional(),
@@ -24,7 +25,7 @@ export interface BlockLookupHost {
   lookupBlock(round: number): Promise<StructuredResult>
 }
 
-/** Wraps a lookup_block result as a block detail record. Fees on the wire are ALGO floats. */
+/** Wraps a lookup_block result as a block detail record. */
 export function buildBlockDetailRecord(
   identity: ResultIdentity,
   wire: unknown,
@@ -44,12 +45,12 @@ export function buildBlockDetailRecord(
       timestamp: block.timestamp,
       transactionCount: block.transactionCount,
       ...(block.proposer === undefined ? {} : { proposer: block.proposer }),
-      ...(block.feesCollected === undefined
+      ...(block.feesCollectedMicroAlgos === undefined
         ? {}
-        : { feesCollectedMicroAlgos: Math.round(block.feesCollected * 1_000_000) }),
-      ...(block.proposerPayout === undefined
+        : { feesCollectedMicroAlgos: block.feesCollectedMicroAlgos }),
+      ...(block.proposerPayoutMicroAlgos === undefined
         ? {}
-        : { proposerPayoutMicroAlgos: Math.round(block.proposerPayout * 1_000_000) }),
+        : { proposerPayoutMicroAlgos: block.proposerPayoutMicroAlgos }),
       ...(block.round > 0 ? { previousRound: block.round - 1 } : {}),
       nextRound: block.round + 1,
       transactionTypes: block.transactionTypes ?? [],

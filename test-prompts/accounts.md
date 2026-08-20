@@ -14,7 +14,7 @@ history to look up.
 ### Lookups
 
 1. `lookup_account` for ACCT_A.
-   - Verify: `balanceAlgos` is a plausible ALGO number (not µALGO); status and totals fields present.
+   - Verify: `balanceMicroAlgos` is a plausible integer µALGO amount (not an ALGO float); status and totals fields present.
 2. `batch_lookup_accounts` for [ACCT_A, ACCT_B].
    - Verify: both returned, order or keying is unambiguous.
 3. `search_accounts` with a filter that matches ACCT_A (e.g. `currencyGreaterThan: 0`, `limit: 10`).
@@ -24,7 +24,7 @@ history to look up.
 
 4. `search_account_transactions` for ACCT_A, `limit: 20`.
    - Verify: the payments/asset transfers/app calls from earlier files appear.
-   - Verify: fees/payment amounts are in ALGO.
+   - Verify: `feeMicroAlgos`/`paymentAmountMicroAlgos` are integer µALGO.
    - **Any `OUTPUT_MISMATCH` is an automatic FAIL** — this call is the historical regression site for app calls with inner transactions.
 5. `search_account_transactions` for ACCT_A with `txType: "axfer"`.
    - Verify: only asset transfers returned.

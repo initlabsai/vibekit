@@ -1,8 +1,6 @@
 import { bytesToBase64 } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 
-const MICROALGOS_PER_ALGO = 1_000_000
-
 type IndexerTransaction = InstanceType<typeof import('algosdk').indexerModels.Transaction>
 
 /** Formatted transaction returned by handlers. */
@@ -11,12 +9,12 @@ export interface FormattedTransaction {
   id?: string
   type?: string
   sender: string
-  /** In ALGO, not microALGO. */
-  fee: number
+  /** microALGOs; decimal string when the uint64 exceeds 2^53. */
+  feeMicroAlgos: number | string
   confirmedRound?: number
   roundTime?: number
-  /** In ALGO, not microALGO. */
-  paymentAmount?: number
+  /** microALGOs; decimal string when the uint64 exceeds 2^53. */
+  paymentAmountMicroAlgos?: number | string
   receiver?: string
   assetId?: number
   /** Base units; decimal string when the uint64 exceeds 2^53. */
@@ -30,8 +28,10 @@ export interface FormattedTransaction {
   group?: string
   rekeyTo?: string
   closeTo?: string
-  /** Pay: ALGO float. Axfer: base units. */
-  closeAmount?: number | string
+  /** Pay close-out amount in microALGOs; decimal string above 2^53. */
+  closeAmountMicroAlgos?: number | string
+  /** Axfer close-out amount in base units; decimal string above 2^53. */
+  closeAssetAmount?: number | string
   clawbackFrom?: string
   innerTxns?: FormattedTransaction[]
   globalStateDelta?: unknown
@@ -47,10 +47,17 @@ export const formattedTransactionSchema = z.object({
   id: z.string().optional(),
   type: z.string().optional(),
   sender: z.string(),
-  fee: z.number().describe('Fee in ALGO (not microALGO)'),
+  feeMicroAlgos: z
+    .union([z.number(), z.string()])
+    .describe('Fee in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53'),
   confirmedRound: z.number().optional(),
   roundTime: z.number().optional(),
-  paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
+  paymentAmountMicroAlgos: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe(
+      'Payment amount in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   receiver: z.string().optional(),
   assetId: z.number().optional(),
   assetAmount: z
@@ -64,7 +71,16 @@ export const formattedTransactionSchema = z.object({
   assetDecimals: z.number().int().nonnegative().optional(),
   rekeyTo: z.string().optional(),
   closeTo: z.string().optional(),
-  closeAmount: z.union([z.number(), z.string()]).optional(),
+  closeAmountMicroAlgos: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe(
+      'Pay close-out amount in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
+  closeAssetAmount: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe('Axfer close-out amount in base units; decimal string when above 2^53'),
   clawbackFrom: z.string().optional(),
   note: z.string().optional(),
   group: z.string().optional(),
@@ -83,7 +99,8 @@ export const transactionListSchema = z.object({
 })
 
 /** uint64 → number, or decimal string above 2^53 (Number() would silently round). */
-function uint64(value: bigint): number | string {
+export function uint64(value: bigint | number): number | string {
+  if (typeof value === 'number') return value
   return value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
 }
 
@@ -94,19 +111,19 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
     id: tx.id,
     type: tx.txType,
     sender: String(tx.sender),
-    fee: Number(tx.fee) / MICROALGOS_PER_ALGO,
+    feeMicroAlgos: uint64(tx.fee),
     confirmedRound: tx.confirmedRound != null ? Number(tx.confirmedRound) : undefined,
     roundTime: tx.roundTime != null ? Number(tx.roundTime) : undefined,
   }
   if (tx.rekeyTo) formatted.rekeyTo = String(tx.rekeyTo)
   if (tx.paymentTransaction) {
-    formatted.paymentAmount = Number(tx.paymentTransaction.amount) / MICROALGOS_PER_ALGO
+    formatted.paymentAmountMicroAlgos = uint64(tx.paymentTransaction.amount)
     formatted.receiver = String(tx.paymentTransaction.receiver)
     if (tx.paymentTransaction.closeRemainderTo) {
       formatted.closeTo = String(tx.paymentTransaction.closeRemainderTo)
     }
     if (tx.paymentTransaction.closeAmount != null) {
-      formatted.closeAmount = Number(tx.paymentTransaction.closeAmount) / MICROALGOS_PER_ALGO
+      formatted.closeAmountMicroAlgos = uint64(tx.paymentTransaction.closeAmount)
     }
   }
   if (tx.assetTransferTransaction) {
@@ -120,7 +137,7 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
       formatted.closeTo = String(tx.assetTransferTransaction.closeTo)
     }
     if (tx.assetTransferTransaction.closeAmount != null) {
-      formatted.closeAmount = uint64(tx.assetTransferTransaction.closeAmount)
+      formatted.closeAssetAmount = uint64(tx.assetTransferTransaction.closeAmount)
     }
   }
   if (tx.applicationTransaction) {

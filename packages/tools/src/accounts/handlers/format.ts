@@ -1,19 +1,21 @@
 /** Shared account formatting for the accounts tool domain. */
 
-const MICROALGOS_PER_ALGO = 1_000_000
+import { uint64 } from '../../shared/format.js'
 
 type IndexerAccount = InstanceType<typeof import('algosdk').indexerModels.Account>
 
 /** Formatted account returned by handlers. */
 export interface FormattedAccount {
   address: string
-  balanceAlgos: number
+  /** microALGOs; decimal string when the uint64 exceeds 2^53. */
+  balanceMicroAlgos: number | string
   totalAssetsOptedIn?: number
   totalAppsOptedIn?: number
   totalCreatedAssets?: number
   totalCreatedApps?: number
   status?: string
-  minBalanceAlgos?: number
+  /** microALGOs; decimal string when the uint64 exceeds 2^53. */
+  minBalanceMicroAlgos?: number | string
   rekeyedTo?: string
   /** Raw uint64; decimal string when above 2^53. */
   rewardBase?: number | string
@@ -47,21 +49,15 @@ export interface AccountAppLocalState {
 export function formatAccount(account: IndexerAccount): FormattedAccount {
   return {
     address: String(account.address),
-    balanceAlgos: Number(account.amount) / MICROALGOS_PER_ALGO,
+    balanceMicroAlgos: uint64(account.amount),
     totalAssetsOptedIn: account.totalAssetsOptedIn,
     totalAppsOptedIn: account.totalAppsOptedIn,
     totalCreatedAssets: account.totalCreatedAssets,
     totalCreatedApps: account.totalCreatedApps,
     status: account.status,
-    minBalanceAlgos:
-      account.minBalance != null ? Number(account.minBalance) / MICROALGOS_PER_ALGO : undefined,
+    minBalanceMicroAlgos: account.minBalance != null ? uint64(account.minBalance) : undefined,
     rekeyedTo: account.authAddr ? String(account.authAddr) : undefined,
-    rewardBase:
-      account.rewardBase != null
-        ? account.rewardBase <= BigInt(Number.MAX_SAFE_INTEGER)
-          ? Number(account.rewardBase)
-          : account.rewardBase.toString()
-        : undefined,
+    rewardBase: account.rewardBase != null ? uint64(account.rewardBase) : undefined,
     createdAtRound: account.createdAtRound != null ? Number(account.createdAtRound) : undefined,
   }
 }

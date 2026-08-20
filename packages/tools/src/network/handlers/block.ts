@@ -1,6 +1,5 @@
 import { bytesToBase64, type ToolContext } from '@initlabs/vibekit-core'
-
-const MICROALGOS_PER_ALGO = 1_000_000
+import { uint64 } from '../../shared/format.js'
 
 type IndexerTxn = {
   txType?: string
@@ -27,14 +26,10 @@ export async function lookupBlock(ctx: ToolContext, args: { round?: number }) {
     timestamp: Number(response.timestamp),
     transactionCount: raw.length,
     proposer: response.proposer ? String(response.proposer) : undefined,
-    feesCollected:
-      response.feesCollected != null
-        ? Number(response.feesCollected) / MICROALGOS_PER_ALGO
-        : undefined,
-    proposerPayout:
-      response.proposerPayout != null
-        ? Number(response.proposerPayout) / MICROALGOS_PER_ALGO
-        : undefined,
+    feesCollectedMicroAlgos:
+      response.feesCollected != null ? uint64(response.feesCollected) : undefined,
+    proposerPayoutMicroAlgos:
+      response.proposerPayout != null ? uint64(response.proposerPayout) : undefined,
     previousBlockHash: response.previousBlockHash
       ? bytesToBase64(response.previousBlockHash)
       : undefined,

@@ -145,7 +145,8 @@ id = one wire shape — `application.locals` splits from a unified
 `application.state` (with a `scope: 'global' | 'local'` discriminator),
 `asset.holdings` splits from `asset.list`, and `get_network` demotes to
 the coarse `table` hint. (3) One schema family: monetary wire fields
-align to integer `*MicroAlgos` (the freeze-review follow-up), tools gains
+are integer `*MicroAlgos` (done — tools emit microALGOs directly; the
+float-to-micro conversion shims in experience are gone), tools gains
 a dependency-clean `./views` subpath, and `packages/experience` parses
 wires with `viewDataSchemas` instead of maintaining shadow wire schemas.
 (4) Experience reorganizes into vertical slices (one module per view;

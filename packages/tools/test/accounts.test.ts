@@ -61,7 +61,7 @@ describe('registry', () => {
 })
 
 describe('lookupAccount', () => {
-  test('formats account with algo conversion and bigint round fields', async () => {
+  test('formats account with microALGO balances and bigint round fields', async () => {
     const ctx = fakeContext({
       indexer: {
         lookupAccountByID: () => chainable({ account: fakeIndexerAccount(ADDR, BigInt(2_500_000)) }),
@@ -69,10 +69,10 @@ describe('lookupAccount', () => {
     })
     const account = await lookupAccount(ctx, { address: ADDR })
     expect(account.address).toBe(ADDR)
-    expect(account.balanceAlgos).toBe(2.5)
+    expect(account.balanceMicroAlgos).toBe(2_500_000)
     expect(account.totalAssetsOptedIn).toBe(3)
     expect(account.status).toBe('Offline')
-    expect(account.minBalanceAlgos).toBe(0.1)
+    expect(account.minBalanceMicroAlgos).toBe(100_000)
     expect(account.rekeyedTo).toBe(ADDR2)
     expect(account.rewardBase).toBe(218288)
     expect(account.createdAtRound).toBe(1_000_000)
@@ -97,7 +97,7 @@ describe('batchLookupAccounts', () => {
     const result = await batchLookupAccounts(ctx, { addresses: [ADDR, ADDR2] })
     expect(result.accounts).toHaveLength(1)
     expect(result.accounts[0].address).toBe(ADDR)
-    expect(result.accounts[0].balanceAlgos).toBe(1)
+    expect(result.accounts[0].balanceMicroAlgos).toBe(1_000_000)
   })
 
   test('throws ToolError when any address is invalid', async () => {
@@ -131,7 +131,7 @@ describe('searchAccounts', () => {
     const result = await searchAccounts(ctx, { limit: 500 })
     expect(requestedLimit).toBe(100)
     expect(result.accounts).toHaveLength(1)
-    expect(result.accounts[0].balanceAlgos).toBe(5)
+    expect(result.accounts[0].balanceMicroAlgos).toBe(5_000_000)
     expect(result.nextToken).toBeUndefined() // 1 < 100 → final page
   })
 
@@ -184,9 +184,9 @@ describe('searchAccountTransactions', () => {
     const result = await searchAccountTransactions(ctx, { address: ADDR })
     const tx = result.transactions[0]
     expect(tx.id).toBe('TXID1')
-    expect(tx.fee).toBe(0.001)
+    expect(tx.feeMicroAlgos).toBe(1_000)
     expect(tx.confirmedRound).toBe(42)
-    expect(tx.paymentAmount).toBe(7)
+    expect(tx.paymentAmountMicroAlgos).toBe(7_000_000)
     expect(tx.receiver).toBe(ADDR2)
     expect(tx.note).toBe('hello')
     expect(tx.group).toBe('AQI=')
@@ -371,7 +371,7 @@ describe('getAccountPortfolio', () => {
     const result = await getAccountPortfolio(ctx, { address: ADDR })
     expect(assetPageCalls).toBe(2)
     expect(result.address).toBe(ADDR)
-    expect(result.algoBalance).toBe(9)
+    expect(result.balanceMicroAlgos).toBe(9_000_000)
     expect(result.assets).toHaveLength(101)
     expect(result.totalAssets).toBe(101)
     expect(result.assets[100]).toEqual({ assetId: 999, amount: '5', isFrozen: false })

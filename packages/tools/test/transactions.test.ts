@@ -45,10 +45,10 @@ describe('lookupTransaction', () => {
     expect(tx.id).toBe('TXID')
     expect(tx.type).toBe('pay')
     expect(tx.sender).toBe('SENDER')
-    expect(tx.fee).toBe(0.001)
+    expect(tx.feeMicroAlgos).toBe(1_000)
     expect(tx.confirmedRound).toBe(42)
     expect(tx.roundTime).toBe(1_700_000_000)
-    expect(tx.paymentAmount).toBe(2.5)
+    expect(tx.paymentAmountMicroAlgos).toBe(2_500_000)
     expect(tx.receiver).toBe('RECEIVER')
     expect(tx.note).toBe('hello')
     expect(tx.group).toBe('AQID')
@@ -96,7 +96,7 @@ describe('lookupTransaction', () => {
     expect(tx.assetDecimals).toBe(2)
     expect(tx.clawbackFrom).toBe('VICTIM')
     expect(tx.closeTo).toBe('CLOSE')
-    expect(tx.closeAmount).toBe(10)
+    expect(tx.closeAssetAmount).toBe(10)
     expect(tx.rekeyTo).toBe('REKEY')
   })
 
@@ -235,7 +235,7 @@ describe('searchTransactions', () => {
     const result = await searchTransactions(ctx, { limit: 500 })
     expect(requestedLimit).toBe(100)
     expect(result.transactions).toHaveLength(1)
-    expect(result.transactions[0]?.fee).toBe(0.001)
+    expect(result.transactions[0]?.feeMicroAlgos).toBe(1_000)
     expect(result.nextToken).toBeUndefined() // 1 < 100 → final page
   })
 
@@ -332,7 +332,7 @@ describe('lookupTransactionGroup', () => {
     expect(result.groupId).toBe('CQ==')
     expect(result.transactions.map((t) => t.id)).toEqual(['G1', 'G2'])
     expect(result.transactions[0]?.group).toBe('CQ==')
-    expect(result.transactions[0]?.paymentAmount).toBe(1)
+    expect(result.transactions[0]?.paymentAmountMicroAlgos).toBe(1_000_000)
     expect(result.nextToken).toBeUndefined() // 2 < 100 → final page
   })
 })

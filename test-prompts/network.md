@@ -20,7 +20,7 @@ conventions and blanket assertions in [README.md](README.md).
 
 3. Call `get_network_status` (localnet).
    - Verify: `latestRound` is a number ≥ 0; `participation` is a finite number (never NaN — a fresh localnet with zero online stake must report 0).
-   - Verify: supply, block-time, and TPS fields are present and numeric.
+   - Verify: block-time and TPS fields are present and numeric; `totalSupplyMicroAlgos`/`onlineStakeMicroAlgos` are integer µALGO (a decimal string when the value exceeds 2^53, as localnet's 10B-ALGO supply does).
 
 ### Blocks
 

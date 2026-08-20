@@ -37,7 +37,7 @@ const BLOCK_WIRE = {
   timestamp: 1787169189,
   transactionCount: 1,
   proposer: FIXTURE_SENDER,
-  feesCollected: 0.001,
+  feesCollectedMicroAlgos: 1000,
   transactionTypes: [{ type: 'pay', count: 1 }],
 }
 

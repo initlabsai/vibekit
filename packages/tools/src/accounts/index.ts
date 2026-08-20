@@ -19,13 +19,22 @@ export {
 /** Wire shape of lookup_account ('account.summary' view). */
 export const formattedAccountSchema = z.object({
   address: z.string(),
-  balanceAlgos: z.number(),
+  balanceMicroAlgos: z
+    .union([z.number(), z.string()])
+    .describe(
+      'Balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   totalAssetsOptedIn: z.number().optional(),
   totalAppsOptedIn: z.number().optional(),
   totalCreatedAssets: z.number().optional(),
   totalCreatedApps: z.number().optional(),
   status: z.string().optional(),
-  minBalanceAlgos: z.number().optional(),
+  minBalanceMicroAlgos: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe(
+      'Minimum balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   rekeyedTo: z.string().optional(),
   rewardBase: z.union([z.number(), z.string()]).optional(),
   createdAtRound: z.number().optional(),
@@ -82,7 +91,11 @@ export const appLocalStatesSchema = z.object({
 /** Wire shape of get_account_portfolio ('account.portfolio' view). */
 export const accountPortfolioSchema = z.object({
   address: z.string(),
-  algoBalance: z.number(),
+  balanceMicroAlgos: z
+    .union([z.number(), z.string()])
+    .describe(
+      'Balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   assets: z.array(accountAsset),
   totalAssets: z.number(),
 })

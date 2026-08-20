@@ -73,6 +73,6 @@ the prompt instructs it (or pre-fund and substitute addresses).
 - Every write tool call must include an explicit `"network"` argument.
   Steps deliberately omitting it (gates.md) expect refusal.
 - Amounts: `send_payment` and payment `TxnSpec`s take `amountMicroAlgos` (µALGO); lookups report
-  `fee`/`paymentAmount` in **ALGO**. Verify conversions accordingly.
+  `feeMicroAlgos`/`paymentAmountMicroAlgos` as **integer µALGO**. Verify units accordingly.
 - Never use mainnet in any write call. Localnet files must never name
   `testnet`/`mainnet` except where a step explicitly tests refusal.

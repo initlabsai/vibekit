@@ -15,13 +15,13 @@ import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from './tran
 const RECORDED_PORTFOLIOS = [
   {
     address: FIXTURE_SENDER,
-    algoBalance: 8.44,
+    balanceMicroAlgos: 8_440_000,
     assets: [],
     totalAssets: 0,
   },
   {
     address: FIXTURE_RECEIVER,
-    algoBalance: 1.551,
+    balanceMicroAlgos: 1_551_000,
     assets: [],
     totalAssets: 0,
   },
@@ -60,7 +60,7 @@ export function createFixtureAccountLookup(): AccountLookupHost {
     async lookupAccounts(addresses: readonly string[]): Promise<StructuredResult> {
       const accounts = addresses.map((address) => {
         const recorded = recordedWire(address)
-        return { address: recorded.address, balanceAlgos: recorded.algoBalance }
+        return { address: recorded.address, balanceMicroAlgos: recorded.balanceMicroAlgos }
       })
       counter += 1
       return buildAccountListRecord(
@@ -110,8 +110,8 @@ export function createFixtureAccountLookup(): AccountLookupHost {
                 type: 'pay',
                 sender: FIXTURE_SENDER,
                 receiver: FIXTURE_RECEIVER,
-                fee: 0.001,
-                paymentAmount: 0.1,
+                feeMicroAlgos: 1000,
+                paymentAmountMicroAlgos: 100000,
                 confirmedRound: 8,
               },
             ]

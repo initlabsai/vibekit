@@ -26,7 +26,7 @@ Test signing-account lifecycle via the keystore daemon on localnet. Follow
 ### Balances
 
 4. Ask the operator to run `vibekit localnet fund <SMOKE1-address>` (or run it if you can execute shell commands), then call `list_signing_addresses` with `includeBalances: true`.
-   - Verify: SMOKE1 shows a positive `balanceAlgo`; the unfunded account shows 0 or no balance — report which.
+   - Verify: SMOKE1 shows a positive `balanceMicroAlgos` (integer µALGO); the unfunded account shows 0 or no balance — report which.
 
 ### Signing proof (end-to-end custody check)
 

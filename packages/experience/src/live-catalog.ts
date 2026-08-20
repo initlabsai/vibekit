@@ -14,6 +14,7 @@ import {
   blockListDataSchema,
   transactionCollectionDataSchema,
 } from './catalog.js'
+import { uint64JsonSchema } from './algo.js'
 import { algorandAddressCandidateSchema } from './classifier.js'
 import type { ResultIdentity } from './live-payment.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
@@ -36,18 +37,13 @@ function record(
   })
 }
 
-function microFromAlgo(value: number | undefined): number | undefined {
-  if (value === undefined) return undefined
-  return Math.round(value * 1_000_000)
-}
-
 const txnWireSchema = z.object({
   id: z.string().min(1).optional(),
   type: z.string().min(1).optional(),
   sender: z.string().min(1),
   receiver: z.string().min(1).optional(),
-  fee: z.number().optional(),
-  paymentAmount: z.number().optional(),
+  feeMicroAlgos: uint64JsonSchema.optional(),
+  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
   assetId: z.union([z.number(), z.string()]).optional(),
   assetAmount: z.union([z.number(), z.string()]).optional(),
   applicationId: z.union([z.number(), z.string()]).optional(),
@@ -58,15 +54,16 @@ const txnWireSchema = z.object({
 })
 
 function txnRow(wire: z.infer<typeof txnWireSchema>) {
-  const payment = microFromAlgo(wire.paymentAmount)
   const innerCount = wire.innerTxns?.length
   return {
     sender: wire.sender,
     ...(wire.id === undefined ? {} : { id: wire.id }),
     ...(wire.type === undefined ? {} : { type: wire.type }),
     ...(wire.receiver === undefined ? {} : { receiver: wire.receiver }),
-    ...(payment === undefined ? {} : { paymentAmountMicroAlgos: payment }),
-    ...(wire.fee === undefined ? {} : { feeMicroAlgos: microFromAlgo(wire.fee) }),
+    ...(wire.paymentAmountMicroAlgos === undefined
+      ? {}
+      : { paymentAmountMicroAlgos: wire.paymentAmountMicroAlgos }),
+    ...(wire.feeMicroAlgos === undefined ? {} : { feeMicroAlgos: wire.feeMicroAlgos }),
     ...(wire.assetId === undefined ? {} : { assetId: wire.assetId }),
     ...(wire.assetAmount === undefined ? {} : { assetAmount: wire.assetAmount }),
     ...(wire.applicationId === undefined ? {} : { applicationId: wire.applicationId }),
@@ -122,9 +119,9 @@ export function buildTransactionGroupRecord(
 
 const accountWireSchema = z.object({
   address: algorandAddressCandidateSchema,
-  balanceAlgos: z.number().finite().nonnegative(),
+  balanceMicroAlgos: uint64JsonSchema,
   status: z.string().min(1).optional(),
-  minBalanceAlgos: z.number().finite().nonnegative().optional(),
+  minBalanceMicroAlgos: uint64JsonSchema.optional(),
   rekeyedTo: algorandAddressCandidateSchema.optional(),
   totalAssetsOptedIn: z.number().int().nonnegative().optional(),
   totalAppsOptedIn: z.number().int().nonnegative().optional(),
@@ -136,11 +133,11 @@ const accountWireSchema = z.object({
 function accountSummary(wire: z.infer<typeof accountWireSchema>) {
   return accountSummaryDataSchema.parse({
     address: wire.address,
-    balanceMicroAlgos: Math.round(wire.balanceAlgos * 1_000_000),
+    balanceMicroAlgos: wire.balanceMicroAlgos,
     ...(wire.status === undefined ? {} : { status: wire.status }),
-    ...(wire.minBalanceAlgos === undefined
+    ...(wire.minBalanceMicroAlgos === undefined
       ? {}
-      : { minBalanceMicroAlgos: Math.round(wire.minBalanceAlgos * 1_000_000) }),
+      : { minBalanceMicroAlgos: wire.minBalanceMicroAlgos }),
     ...(wire.rekeyedTo === undefined ? {} : { rekeyedTo: wire.rekeyedTo }),
     ...(wire.totalAssetsOptedIn === undefined ? {} : { totalAssetsOptedIn: wire.totalAssetsOptedIn }),
     ...(wire.totalAppsOptedIn === undefined ? {} : { totalAppsOptedIn: wire.totalAppsOptedIn }),

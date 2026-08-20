@@ -63,9 +63,9 @@ const TXN_WIRE = {
   id: PAYMENT_FIXTURE_TRANSACTION_ID,
   type: 'pay',
   sender: 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ',
-  fee: 0.001,
+  feeMicroAlgos: 1000,
   confirmedRound: 22,
-  paymentAmount: 0.25,
+  paymentAmountMicroAlgos: 250000,
   receiver: 'L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE',
 }
 

@@ -51,9 +51,9 @@ describe('lookupBlock', () => {
     const block = await lookupBlock(ctx, {})
     expect(block.round).toBe(100)
     expect(block.transactionCount).toBe(2)
-    expect(block.feesCollected).toBe(2)
+    expect(block.feesCollectedMicroAlgos).toBe(2_000_000)
     expect(block.previousBlockHash).toBe('AQI=')
-    expect(block.proposerPayout).toBeUndefined()
+    expect(block.proposerPayoutMicroAlgos).toBeUndefined()
     expect(block.transactionTypes).toEqual([
       { type: 'pay', count: 1 },
       { type: 'other', count: 1 },
@@ -145,8 +145,8 @@ describe('getNetworkStatus', () => {
     })
     const status = await getNetworkStatus(ctx)
     expect(status.latestRound).toBe(20)
-    expect(status.totalSupply).toBe(10_000_000)
-    expect(status.onlineStake).toBe(2_000_000)
+    expect(status.totalSupplyMicroAlgos).toBe(10_000_000_000_000)
+    expect(status.onlineStakeMicroAlgos).toBe(2_000_000_000_000)
     expect(status.participation).toBe(20)
     expect(status.avgBlockTime).toBe(3)
     expect(status.avgTps).toBe(10)

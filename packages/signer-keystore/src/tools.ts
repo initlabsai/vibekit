@@ -26,7 +26,12 @@ export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAcc
         z.object({
           address: z.string(),
           name: z.string().optional(),
-          balanceAlgo: z.number().optional(),
+          balanceMicroAlgos: z
+            .union([z.number(), z.string()])
+            .optional()
+            .describe(
+              'Balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+            ),
         }),
       ),
       count: z.number(),
@@ -39,7 +44,13 @@ export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAcc
           const base = { address, ...(name ? { name } : {}) }
           if (!args.includeBalances) return base
           const info = await ctx.algod.accountInformation(address).do()
-          return { ...base, balanceAlgo: Number(info.amount) / 1_000_000 }
+          // uint64 → number, or decimal string above 2^53 (Number() would round).
+          const amount = BigInt(info.amount)
+          return {
+            ...base,
+            balanceMicroAlgos:
+              amount <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(amount) : amount.toString(),
+          }
         }),
       )
       return { accounts: rows, count: rows.length }

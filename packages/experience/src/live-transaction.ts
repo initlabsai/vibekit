@@ -12,10 +12,10 @@ export const transactionWireSchema = z.object({
   id: algorandTransactionIdSchema,
   type: z.string().min(1).optional(),
   sender: algorandAddressCandidateSchema,
-  fee: z.number().finite().nonnegative().describe('ALGO float on the tool wire'),
+  feeMicroAlgos: uint64JsonSchema,
   confirmedRound: z.number().int().nonnegative().optional(),
   roundTime: z.number().int().nonnegative().optional(),
-  paymentAmount: z.number().finite().nonnegative().optional(),
+  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
   receiver: algorandAddressCandidateSchema.optional(),
   assetId: z.number().int().nonnegative().optional(),
   assetAmount: uint64JsonSchema.optional(),
@@ -29,15 +29,12 @@ export const transactionWireSchema = z.object({
   innerTxns: z.array(z.unknown()).optional(),
   rekeyTo: algorandAddressCandidateSchema.optional(),
   closeTo: algorandAddressCandidateSchema.optional(),
-  closeAmount: z.union([z.number(), uint64JsonSchema]).optional(),
+  closeAmountMicroAlgos: uint64JsonSchema.optional(),
+  closeAssetAmount: uint64JsonSchema.optional(),
   clawbackFrom: algorandAddressCandidateSchema.optional(),
 })
 
-/**
- * Wraps a lookup_transaction result as a transaction detail record. The tool
- * wire carries ALGO floats; converted back to microALGOs here (same
- * freeze-review follow-up as accounts: tools should expose microALGOs).
- */
+/** Wraps a lookup_transaction result as a transaction detail record. */
 export function buildTransactionDetailRecord(
   identity: ResultIdentity,
   wire: unknown,
@@ -57,11 +54,11 @@ export function buildTransactionDetailRecord(
       type: txn.type ?? 'txn',
       status: txn.confirmedRound === undefined ? 'pending' : 'confirmed',
       sender: txn.sender,
-      feeMicroAlgos: Math.round(txn.fee * 1_000_000),
+      feeMicroAlgos: txn.feeMicroAlgos,
       ...(txn.receiver === undefined ? {} : { receiver: txn.receiver }),
-      ...(txn.paymentAmount === undefined
+      ...(txn.paymentAmountMicroAlgos === undefined
         ? {}
-        : { paymentAmountMicroAlgos: Math.round(txn.paymentAmount * 1_000_000) }),
+        : { paymentAmountMicroAlgos: txn.paymentAmountMicroAlgos }),
       ...(txn.confirmedRound === undefined ? {} : { confirmedRound: txn.confirmedRound }),
       ...(txn.roundTime === undefined ? {} : { roundTime: txn.roundTime }),
       ...(txn.assetId === undefined ? {} : { assetId: txn.assetId }),
@@ -76,11 +73,10 @@ export function buildTransactionDetailRecord(
       ...(txn.innerTxns && txn.innerTxns.length > 0 ? { innerCount: txn.innerTxns.length } : {}),
       ...(txn.rekeyTo === undefined ? {} : { rekeyTo: txn.rekeyTo }),
       ...(txn.closeTo === undefined ? {} : { closeTo: txn.closeTo }),
-      ...(txn.closeAmount === undefined
+      ...(txn.closeAmountMicroAlgos === undefined
         ? {}
-        : txn.type === 'pay' && typeof txn.closeAmount === 'number'
-          ? { closeAmountMicroAlgos: Math.round(txn.closeAmount * 1_000_000) }
-          : { closeAssetAmount: txn.closeAmount }),
+        : { closeAmountMicroAlgos: txn.closeAmountMicroAlgos }),
+      ...(txn.closeAssetAmount === undefined ? {} : { closeAssetAmount: txn.closeAssetAmount }),
       ...(txn.clawbackFrom === undefined ? {} : { clawbackFrom: txn.clawbackFrom }),
     }),
   })

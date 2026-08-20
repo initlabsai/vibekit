@@ -1,4 +1,5 @@
 import { Semaphore, type ToolContext } from '@initlabs/vibekit-core'
+import { uint64 } from '../../shared/format.js'
 
 /**
  * Rich network status with TPS, block times, supply, and participation metrics.
@@ -9,11 +10,11 @@ export async function getNetworkStatus(ctx: ToolContext) {
 
   const latestRound = Number(status.lastRound)
   const timeSinceLastRound = Number(status.timeSinceLastRound) / 1_000_000_000
-  const totalSupply = Number(supply.totalMoney) / 1_000_000
-  const onlineStake = Number(supply.onlineMoney) / 1_000_000
   // Guard 0/0 on a fresh localnet — zod rejects NaN, and executeToolCall now
-  // enforces the output schema.
-  const participation = totalSupply > 0 ? onlineStake / totalSupply : 0
+  // enforces the output schema. The ratio tolerates Number() rounding above
+  // 2^53; the wire supply fields stay exact via uint64.
+  const participation =
+    supply.totalMoney > BigInt(0) ? Number(supply.onlineMoney) / Number(supply.totalMoney) : 0
 
   // Sample recent blocks for TPS stats. Public free-tier indexers rate-limit
   // bursts, so pace at 3 concurrent and tolerate partial failures — a network
@@ -57,8 +58,8 @@ export async function getNetworkStatus(ctx: ToolContext) {
     network: ctx.network.id,
     latestRound,
     timeSinceLastRound: Math.round(timeSinceLastRound * 100) / 100,
-    totalSupply,
-    onlineStake,
+    totalSupplyMicroAlgos: uint64(supply.totalMoney),
+    onlineStakeMicroAlgos: uint64(supply.onlineMoney),
     participation: Math.round(participation * 1000) / 10,
     avgBlockTime: Math.round(avgBlockTime * 100) / 100,
     avgTps: Math.round(avgTps * 10) / 10,

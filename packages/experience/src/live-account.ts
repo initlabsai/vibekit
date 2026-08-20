@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { accountPortfolioDataSchema } from './accounts.js'
+import { uint64JsonSchema } from './algo.js'
 import { algorandAddressCandidateSchema } from './classifier.js'
 import type { ExplorerArtifact } from './protocol.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
@@ -10,7 +11,7 @@ import type { ResultIdentity } from './live-payment.js'
 /** The JSON-safe wire subset of get_account_portfolio this slice consumes. */
 export const accountPortfolioWireSchema = z.object({
   address: algorandAddressCandidateSchema,
-  algoBalance: z.number().finite().nonnegative(),
+  balanceMicroAlgos: uint64JsonSchema,
   totalAssets: z.number().int().nonnegative(),
   assets: z.array(
     z.object({
@@ -36,12 +37,7 @@ export interface AccountLookupHost {
   lookupAccountTransactions(address: string): Promise<StructuredResult>
 }
 
-/**
- * Wraps a get_account_portfolio result as a portfolio record. The tool wire
- * carries the balance as an ALGO float; it is converted back to microALGOs
- * here. Freeze-review follow-up: the account tools should expose microALGOs
- * so this conversion disappears.
- */
+/** Wraps a get_account_portfolio result as a portfolio record. */
 export function buildAccountPortfolioRecord(
   identity: ResultIdentity,
   wire: unknown,
@@ -58,7 +54,7 @@ export function buildAccountPortfolioRecord(
     network: identity.network,
     data: accountPortfolioDataSchema.parse({
       address: portfolio.address,
-      balanceMicroAlgos: Math.round(portfolio.algoBalance * 1_000_000),
+      balanceMicroAlgos: portfolio.balanceMicroAlgos,
       totalAssets: portfolio.totalAssets,
       assets: portfolio.assets.map((asset) => ({
         assetId: asset.assetId,

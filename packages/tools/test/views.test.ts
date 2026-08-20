@@ -47,7 +47,7 @@ describe('viewDataSchemas', () => {
       id: 'TXID',
       type: 'axfer',
       sender: 'CLAWBACK',
-      fee: 0.001,
+      feeMicroAlgos: 1_000,
       confirmedRound: 64_241_214,
       roundTime: 1_787_169_296,
       rekeyTo: 'REKEY',
@@ -59,8 +59,8 @@ describe('viewDataSchemas', () => {
       receiver: 'RECEIVER',
       clawbackFrom: 'VICTIM',
       closeTo: 'CLOSE',
-      closeAmount: 10,
-      innerTxns: [{ sender: 'INNER', fee: 0 }],
+      closeAssetAmount: 10,
+      innerTxns: [{ sender: 'INNER', feeMicroAlgos: 0 }],
     }
     const parsed = viewDataSchemas['transaction.detail'].safeParse(detail)
     expect(parsed.success).toBe(true)

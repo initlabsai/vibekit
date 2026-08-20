@@ -74,10 +74,11 @@ default. Tools accept a `network` parameter — optional on reads (defaults),
 
 ## Denominations
 
-ALGO amounts in tool *results* (fees, payment amounts, balances) are already in
-ALGO — report them as-is, never re-divide by 1e6. Tool *inputs* named
-`amountMicroAlgos` are microALGO (1 ALGO = 1,000,000 microALGO). ASA amounts
-are in base units unless a decimals field says otherwise.
+Monetary fields in tool *results* (`feeMicroAlgos`, `paymentAmountMicroAlgos`,
+`balanceMicroAlgos`, ...) and tool *inputs* named `amountMicroAlgos` are integer
+microALGO (1 ALGO = 1,000,000 microALGO) — divide by 1,000,000 only when
+reporting ALGO to the user. ASA amounts are in base units unless a decimals
+field says otherwise.
 
 ## Funding accounts
 

@@ -141,10 +141,10 @@ describe('searchAssetTransactions', () => {
     expect(axfer!.assetAmount).toBe(100)
     expect(axfer!.receiver).toBe('RECEIVER')
     expect(axfer!.confirmedRound).toBe(50_000_000)
-    expect(axfer!.fee).toBe(0.001)
+    expect(axfer!.feeMicroAlgos).toBe(1_000)
     expect(axfer!.note).toBe('hello')
     expect(axfer!.group).toBe('AQI=')
-    expect(pay!.paymentAmount).toBe(2.5)
+    expect(pay!.paymentAmountMicroAlgos).toBe(2_500_000)
     expect(pay!.receiver).toBe('PAYEE')
     // 2 < default limit 20 → final page
     expect(result.nextToken).toBeUndefined()

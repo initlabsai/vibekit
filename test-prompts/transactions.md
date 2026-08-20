@@ -17,7 +17,7 @@ or create+fund fresh ones the same way).
    - Verify: returns `txids` (1 entry) and a numeric `confirmedRound`.
 2. `lookup_transaction` with that txid.
    - Verify: `type` is `pay`, sender/receiver match.
-   - Verify: `paymentAmount` is **0.25** (ALGO, not µALGO) and `fee` is in ALGO (~0.001).
+   - Verify: `paymentAmountMicroAlgos` is **250000** (integer µALGO) and `feeMicroAlgos` is integer µALGO (~1000).
    - Verify: `note` decodes to the string `vibekit smoke` (printable text must arrive as text, not base64).
 
 ### Grouped transactions

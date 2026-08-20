@@ -123,9 +123,9 @@ describe('createSigningAddressesTool', () => {
       },
     }
     const result = (await tool.handler(ctx as never, { includeBalances: true } as never)) as {
-      accounts: Array<{ balanceAlgo?: number }>
+      accounts: Array<{ balanceMicroAlgos?: number | string }>
     }
-    expect(result.accounts[0]!.balanceAlgo).toBe(5)
+    expect(result.accounts[0]!.balanceMicroAlgos).toBe(5_000_000)
   })
 })
 

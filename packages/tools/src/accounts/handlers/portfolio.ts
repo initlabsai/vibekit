@@ -1,5 +1,6 @@
 import { ToolError, type ToolContext } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
+import { uint64 } from '../../shared/format.js'
 import { getAccountAssets } from './assets.js'
 import type { AccountAsset } from './format.js'
 
@@ -10,12 +11,17 @@ import type { AccountAsset } from './format.js'
 export async function getAccountPortfolio(
   ctx: ToolContext,
   args: { address: string },
-): Promise<{ address: string; algoBalance: number; assets: AccountAsset[]; totalAssets: number }> {
+): Promise<{
+  address: string
+  balanceMicroAlgos: number | string
+  assets: AccountAsset[]
+  totalAssets: number
+}> {
   if (!algosdk.isValidAddress(args.address)) {
     throw new ToolError('INVALID_ADDRESS', `Invalid Algorand address: ${args.address}`)
   }
   const response = await ctx.indexer.lookupAccountByID(args.address).do()
-  const algoBalance = Number(response.account?.amount ?? 0) / 1_000_000
+  const balanceMicroAlgos = uint64(response.account?.amount ?? BigInt(0))
 
   // Paginate up to 200 assets
   const allAssets: AccountAsset[] = []
@@ -30,5 +36,5 @@ export async function getAccountPortfolio(
     nextToken = page.nextToken
   } while (nextToken && allAssets.length < 200)
 
-  return { address: args.address, algoBalance, assets: allAssets, totalAssets: allAssets.length }
+  return { address: args.address, balanceMicroAlgos, assets: allAssets, totalAssets: allAssets.length }
 }

@@ -28,8 +28,16 @@ export const networkStatusSchema = z.object({
   network: z.string(),
   latestRound: z.number(),
   timeSinceLastRound: z.number(),
-  totalSupply: z.number(),
-  onlineStake: z.number(),
+  totalSupplyMicroAlgos: z
+    .union([z.number(), z.string()])
+    .describe(
+      'Total supply in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
+  onlineStakeMicroAlgos: z
+    .union([z.number(), z.string()])
+    .describe(
+      'Online stake in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   participation: z.number(),
   avgBlockTime: z.number(),
   avgTps: z.number(),
@@ -52,8 +60,18 @@ export const networkStatusSchema = z.object({
 
 /** Wire shape of lookup_block ('block.detail' view). */
 export const blockDetailSchema = blockSummary.extend({
-  feesCollected: z.number().optional(),
-  proposerPayout: z.number().optional(),
+  feesCollectedMicroAlgos: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe(
+      'Fees collected in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
+  proposerPayoutMicroAlgos: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe(
+      'Proposer payout in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
+    ),
   previousBlockHash: z.string().optional(),
   seed: z.string().optional(),
   transactionTypes: z.array(

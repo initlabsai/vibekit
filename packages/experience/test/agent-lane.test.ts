@@ -29,10 +29,10 @@ const TXN_WIRE = {
   id: PAYMENT_FIXTURE_TRANSACTION_ID,
   type: 'pay',
   sender: recorded.request.sender,
-  fee: 0.001,
+  feeMicroAlgos: 1000,
   confirmedRound: 22,
   roundTime: 1787169189,
-  paymentAmount: 0.25,
+  paymentAmountMicroAlgos: 250000,
   receiver: recorded.request.receiver,
   note: 'Explorer fixture payment',
 }
