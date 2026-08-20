@@ -175,7 +175,7 @@ export const transactionWriteTools: AnyTool[] = [
     }),
     output: writeResultSchema,
     requiresSigner: true,
-    display: 'txn',
+    view: 'txn',
     handler: async (ctx, args) =>
       composeOrExecute(ctx, [
         {
@@ -197,7 +197,7 @@ export const transactionWriteTools: AnyTool[] = [
     }),
     output: writeResultSchema,
     requiresSigner: true,
-    display: 'txn',
+    view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, args.transactions as TxnSpec[]),
   }),
   defineTool({
@@ -228,7 +228,7 @@ export const transactionWriteTools: AnyTool[] = [
       appBudgetAdded: z.number().optional(),
       appBudgetConsumed: z.number().optional(),
     }),
-    display: 'json',
+    view: 'json',
     handler: async (ctx, args) =>
       simulateGroup(ctx, args.transactions as TxnSpec[], {
         allowMoreLogging: args.allowMoreLogging,

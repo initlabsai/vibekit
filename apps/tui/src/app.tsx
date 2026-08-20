@@ -966,7 +966,7 @@ export function App() {
               return
             }
             try {
-              // The tool's declared display hint selects the trusted view.
+              // The tool's declared view cue selects the trusted view.
               const { record, view } = bridgeToolResult(event, {
                 resultId: newId('result-agent'),
                 toolCallId: event.id,

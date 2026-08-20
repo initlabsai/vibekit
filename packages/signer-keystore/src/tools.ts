@@ -31,7 +31,7 @@ export function createSigningAddressesTool(signer: Pick<KeystoreSigner, 'listAcc
       ),
       count: z.number(),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (ctx, args) => {
       const accounts = await signer.listAccounts()
       const rows = await Promise.all(
@@ -60,7 +60,7 @@ export function createSigningAccountTool(signer: Pick<KeystoreSigner, 'createAcc
       keyId: z.string(),
       name: z.string().optional(),
     }),
-    display: 'account',
+    view: 'account',
     // Mints a key in the OS keychain — gated (approval + non-read-only hints).
     mutatesState: true,
     handler: async (_ctx, args) => {

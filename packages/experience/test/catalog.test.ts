@@ -102,6 +102,7 @@ describe('first-party catalog views', () => {
       {
         id: '1',
         toolName: 'search_transactions',
+        view: 'transaction.list',
         output: {
           transactions: [
             {
@@ -140,6 +141,7 @@ describe('first-party catalog views', () => {
       {
         id: '1',
         toolName: 'lookup_transaction_group',
+        view: 'transaction.group',
         output: {
           groupId: 'abc123',
           transactions: [
@@ -166,6 +168,7 @@ describe('first-party catalog views', () => {
       {
         id: '1',
         toolName: 'search_assets',
+        view: 'asset.list',
         output: { assets: [{ assetId: 1042, name: 'Sample', unitName: 'SMPL', totalSupply: '1000', decimals: 0 }] },
         isError: false,
       },
@@ -183,6 +186,7 @@ describe('first-party catalog views', () => {
       {
         id: '2',
         toolName: 'search_asset_balances',
+        view: 'asset.holders',
         output: { balances: [{ address: FIXTURE_SENDER, amount: '12', isFrozen: false }] },
         isError: false,
       },
@@ -202,6 +206,7 @@ describe('first-party catalog views', () => {
       {
         id: '1',
         toolName: 'get_account_app_local_states',
+        view: 'application.state',
         output: {
           appLocalStates: [
             {
@@ -228,6 +233,7 @@ describe('first-party catalog views', () => {
       {
         id: '2',
         toolName: 'read_global_state',
+        view: 'application.state',
         output: { appId: 1071, state: [{ key: 'admin', value: FIXTURE_SENDER, type: 'bytes' }] },
         isError: false,
       },
@@ -277,6 +283,7 @@ describe('first-party catalog views', () => {
       {
         id: '1',
         toolName: 'search_block_headers',
+        view: 'block.list',
         output: { blocks: [{ round: 22, timestamp: 1787169189, transactionCount: 1 }] },
         isError: false,
       },

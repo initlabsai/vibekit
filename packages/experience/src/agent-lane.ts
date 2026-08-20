@@ -1,10 +1,9 @@
 /**
  * The agent lane's result-to-view bridge. Tools return structured JSON and
- * declare a view id (tool name, then `display`, are fallbacks for tools
- * that have not declared one). The tool's cue picks the view, never the
- * model; any third-party tool that declares a trusted view and matches the
- * wire schema gets the same card. Unknown cues or unexpected shapes fall
- * back to a raw record with no view — never a dropped result.
+ * declare a view cue; the cue picks the view, never the model. Any
+ * third-party tool that declares a trusted view and matches the wire schema
+ * gets the same card. Unknown cues or unexpected shapes fall back to a raw
+ * record with no view — never a dropped result.
  */
 import { buildAccountPortfolioRecord } from './live-account.js'
 import { buildApplicationDetailRecord } from './live-application.js'
@@ -40,47 +39,13 @@ export interface BridgedToolResult {
   view?: TrustedViewId
 }
 
-const VIEW_BY_DISPLAY: Record<string, TrustedViewId> = {
-  txn: 'transaction.detail',
-}
-
-const VIEW_BY_TOOL: Record<string, TrustedViewId> = {
-  lookup_transaction: 'transaction.detail',
-  search_transactions: 'transaction.list',
-  search_account_transactions: 'transaction.list',
-  search_asset_transactions: 'transaction.list',
-  lookup_transaction_group: 'transaction.group',
-  get_account_portfolio: 'account.portfolio',
-  lookup_account: 'account.summary',
-  search_accounts: 'account.list',
-  batch_lookup_accounts: 'account.list',
-  lookup_asset: 'asset.detail',
-  get_asset_info: 'asset.detail',
-  search_assets: 'asset.list',
-  get_account_assets: 'asset.list',
-  search_asset_balances: 'asset.holders',
-  lookup_application: 'application.detail',
-  search_applications: 'application.list',
-  get_account_app_local_states: 'application.state',
-  read_local_state: 'application.state',
-  read_global_state: 'application.state',
-  lookup_application_logs: 'application.logs',
-  read_box_state: 'application.box',
-  lookup_block: 'block.detail',
-  search_block_headers: 'block.list',
-  get_network: 'network.status',
-  get_network_status: 'network.status',
-}
-
 function isTrustedViewId(value: string): value is TrustedViewId {
   return (TRUSTED_VIEW_IDS as readonly string[]).includes(value)
 }
 
-/** Resolves the trusted view cue: declared view, then tool name, then display. */
+/** Resolves the trusted view cue from the tool's declared view, if trusted. */
 export function viewCueForToolResult(event: ToolResultEventLike): TrustedViewId | undefined {
   if (event.view && isTrustedViewId(event.view)) return event.view
-  if (VIEW_BY_TOOL[event.toolName]) return VIEW_BY_TOOL[event.toolName]
-  if (event.display && VIEW_BY_DISPLAY[event.display]) return VIEW_BY_DISPLAY[event.display]
   return undefined
 }
 
@@ -130,8 +95,7 @@ function recordForView(
 
 /**
  * Wraps one agent tool result as a structured record, selecting a trusted
- * view from the tool's declared view id (display hint and first-party names
- * remain fallback cues).
+ * view from the tool's declared view cue.
  */
 export function bridgeToolResult(
   event: ToolResultEventLike,

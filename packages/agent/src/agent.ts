@@ -14,7 +14,6 @@ import {
   ToolError,
   type AnyTool,
   type DeploymentOptions,
-  type DisplayHint,
 } from '@initlabs/vibekit-core'
 import {
   stepCountIs,
@@ -79,9 +78,6 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
     : basePrompt
   const maxSteps = options.maxSteps ?? DEFAULT_MAX_STEPS
 
-  const displayByTool = new Map<string, DisplayHint | undefined>(
-    deployment.tools.map((tool: AnyTool) => [tool.name, tool.display]),
-  )
   const viewByTool = new Map<string, string | undefined>(
     deployment.tools.map((tool: AnyTool) => [tool.name, tool.view]),
   )
@@ -142,7 +138,6 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             id: part.toolCallId,
             toolName: part.toolName,
             output,
-            display: displayByTool.get(part.toolName),
             view: viewByTool.get(part.toolName),
             isError: isToolErrorOutput(output),
           }
@@ -156,7 +151,6 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             id: part.toolCallId,
             toolName: part.toolName,
             output: toToolErrorOutput(part.error),
-            display: displayByTool.get(part.toolName),
             view: viewByTool.get(part.toolName),
             isError: true,
           }

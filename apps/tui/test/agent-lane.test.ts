@@ -73,6 +73,7 @@ const stubLookup = defineTool({
   name: 'lookup_transaction',
   description: 'stub',
   parameters: z.object({ txid: z.string() }),
+  view: 'transaction.detail',
   handler: async () => TXN_WIRE,
 })
 

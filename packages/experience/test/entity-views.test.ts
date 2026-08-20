@@ -127,17 +127,19 @@ describe('fixture entity lookup', () => {
 })
 
 describe('view cue', () => {
-  test('prefers the declared view id over display and tool name', () => {
+  test('resolves a trusted declared view and ignores coarse hints', () => {
     expect(
       viewCueForToolResult({
         id: '1',
         toolName: 'my_custom_asa',
         view: 'asset.detail',
-        display: 'json',
         output: {},
         isError: false,
       }),
     ).toBe('asset.detail')
+    expect(
+      viewCueForToolResult({ id: '2', toolName: 'my_table_tool', view: 'json', output: {}, isError: false }),
+    ).toBeUndefined()
   })
 
   test('bridges a lookup_asset wire onto the asset card', () => {
@@ -238,6 +240,7 @@ describe('view cue', () => {
       {
         id: '1',
         toolName: 'get_network_status',
+        view: 'network.status',
         output: {
           network: 'localnet',
           latestRound: 22,

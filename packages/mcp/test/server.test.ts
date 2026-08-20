@@ -3,14 +3,14 @@ import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import { Client } from '@modelcontextprotocol/client'
 import { InMemoryTransport } from '@modelcontextprotocol/server'
 import { z } from 'zod'
-import { DISPLAY_META_KEY, VIEW_META_KEY, createVibekitMcp } from '../src/index.js'
+import { VIEW_META_KEY, createVibekitMcp } from '../src/index.js'
 import { resolveDeployment } from '../src/options.js'
 
 const echo = defineTool({
   name: 'echo',
   description: 'Echo a value with a bigint round',
   parameters: z.object({ value: z.string() }),
-  display: 'json',
+  view: 'json',
   handler: async (ctx, args) => ({ value: args.value, round: BigInt(107), network: ctx.network.id }),
 }) as AnyTool
 
@@ -49,7 +49,7 @@ async function connect(tools: AnyTool[]) {
 }
 
 describe('createVibekitMcp', () => {
-  test('lists tools with annotations and display meta', async () => {
+  test('lists tools with annotations and view meta', async () => {
     const client = await connect([echo, writeTool, lookup])
     const { tools } = await client.listTools()
     const names = tools.map((t) => t.name).sort()
@@ -57,15 +57,13 @@ describe('createVibekitMcp', () => {
 
     const echoTool = tools.find((t) => t.name === 'echo')!
     expect(echoTool.annotations?.readOnlyHint).toBe(true)
-    expect((echoTool._meta as Record<string, unknown>)?.[DISPLAY_META_KEY]).toBe('json')
-    expect((echoTool._meta as Record<string, unknown>)?.[VIEW_META_KEY]).toBeUndefined()
+    expect((echoTool._meta as Record<string, unknown>)?.[VIEW_META_KEY]).toBe('json')
 
     const write = tools.find((t) => t.name === 'write_thing')!
     expect(write.annotations?.readOnlyHint).toBe(false)
 
     const lookupTool = tools.find((t) => t.name === 'lookup_thing')!
     expect((lookupTool._meta as Record<string, unknown>)?.[VIEW_META_KEY]).toBe('account.summary')
-    expect((lookupTool._meta as Record<string, unknown>)?.[DISPLAY_META_KEY]).toBeUndefined()
     await client.close()
   })
 

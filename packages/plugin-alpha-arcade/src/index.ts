@@ -49,7 +49,7 @@ export const alphaArcadeTools: AnyTool[] = [
     description:
       'Get all live prediction markets on Alpha Arcade (Algorand mainnet). Prices are raw numbers: yesPriceUsd=0.65 means $0.65 = 65% implied probability. All Usd-suffixed fields are already USD — never convert them.',
     parameters: z.object({}),
-    display: 'table',
+    view: 'table',
     handler: async (ctx) => {
       const client = getAlphaClient(ctx)
       let markets = await client.getLiveMarketsFromApi().catch(() => null)
@@ -64,7 +64,7 @@ export const alphaArcadeTools: AnyTool[] = [
     parameters: z.object({
       marketId: z.string().describe('Market ID — app ID as string or UUID'),
     }),
-    display: 'json',
+    view: 'json',
     handler: async (ctx, args) => {
       const client = getAlphaClient(ctx)
       let market = await client.getMarketFromApi(args.marketId).catch(() => null)
@@ -84,7 +84,7 @@ export const alphaArcadeTools: AnyTool[] = [
     parameters: z.object({
       marketAppId: z.number().describe('The market app ID'),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (ctx, args) => formatOrderbook(await getAlphaClient(ctx).getOrderbook(args.marketAppId)),
   }),
   defineTool({
@@ -93,7 +93,7 @@ export const alphaArcadeTools: AnyTool[] = [
     parameters: z.object({
       walletAddress: z.string().describe('Algorand wallet address'),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (ctx, args) => ({
       positions: (await getAlphaClient(ctx).getPositions(args.walletAddress)).map(formatPosition),
     }),
@@ -105,7 +105,7 @@ export const alphaArcadeTools: AnyTool[] = [
       marketAppId: z.number().describe('The market app ID'),
       walletAddress: z.string().describe('Algorand wallet address'),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (ctx, args) => ({
       orders: (
         await getAlphaClient(ctx).getOpenOrders(args.marketAppId, args.walletAddress)

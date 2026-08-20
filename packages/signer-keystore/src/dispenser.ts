@@ -228,7 +228,7 @@ export function createFundTestnetTool(secrets: SecretsLike, fetchFn: FetchLike =
       receiver: z.string(),
       amountMicroAlgos: z.number(),
     }),
-    display: 'txn',
+    view: 'txn',
     // Gated like a write (approval + non-read-only hints) but no chain signer
     // and no forced network param: the action is inherently testnet-only,
     // enforced below.

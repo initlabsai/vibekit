@@ -23,7 +23,7 @@ function writeTool<P extends z.ZodType>(def: {
     parameters: def.parameters,
     output: writeResultSchema,
     requiresSigner: true,
-    display: 'txn',
+    view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, [def.toSpec(args)]),
   }) as AnyTool
 }

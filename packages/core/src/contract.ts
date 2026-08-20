@@ -6,8 +6,6 @@ import type algosdk from 'algosdk'
 import type { z } from 'zod'
 import type { NetworkConfig } from './network.js'
 
-export type DisplayHint = 'table' | 'txn' | 'account' | 'asset' | 'markdown' | 'json'
-
 export interface ToolContext {
   network: NetworkConfig
   servedNetworks: string[]
@@ -43,15 +41,11 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   /** Changes state without spending user funds (key creation, faucet). Approval-gated. */
   mutatesState?: boolean
   /**
-   * Coarse host hint (`table` / `txn` / `json` / …) for tools that have no
-   * Explorer `view`. Do not set both: `view` is the card cue, and this is
-   * only a fallback for MCP clients and plugins that have not declared one.
-   */
-  display?: DisplayHint
-  /**
-   * Semantic Explorer view id this tool's success payload binds to
-   * (for example `transaction.detail`). Hosts that do not render views
-   * ignore it. The experience registry decides which ids are trusted.
+   * The tool's one view cue. Either a semantic Explorer view id the success
+   * payload binds to (dotted, for example `transaction.detail` — the
+   * experience registry decides which ids are trusted) or a coarse rendering
+   * hint for everything else (`table`, `txn`, `json`, `markdown`, `account`).
+   * Hosts that do not render views ignore it.
    */
   view?: string
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>

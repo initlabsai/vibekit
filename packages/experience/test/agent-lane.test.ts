@@ -38,12 +38,12 @@ const TXN_WIRE = {
 }
 
 describe('agent lane result bridge', () => {
-  test('the display hint selects the trusted view — not the tool name', () => {
-    // A third-party tool: unknown name, declared display hint, compatible wire.
+  test('the declared view cue selects the trusted view — not the tool name', () => {
+    // A third-party tool: unknown name, declared trusted view, compatible wire.
     const event: ToolResultEventLike = {
       id: 'call-1',
       toolName: 'my_custom_lookup',
-      display: 'txn',
+      view: 'transaction.detail',
       output: TXN_WIRE,
       isError: false,
     }
@@ -67,14 +67,14 @@ describe('agent lane result bridge', () => {
     expect(derived.model.note).toBe('Explorer fixture payment')
   })
 
-  test('first-party tool names still cue their views without a hint', () => {
+  test('no declared view means a raw record, even for a first-party tool name', () => {
     const event: ToolResultEventLike = {
       id: 'call-1b',
       toolName: 'lookup_transaction',
       output: TXN_WIRE,
       isError: false,
     }
-    expect(bridgeToolResult(event, identity()).view).toBe('transaction.detail')
+    expect(bridgeToolResult(event, identity()).view).toBeUndefined()
   })
 
   test('unknown tools fall back to raw records with no view', () => {
@@ -89,10 +89,11 @@ describe('agent lane result bridge', () => {
     expect(bridged.view).toBeUndefined()
   })
 
-  test('a malformed known-tool wire keeps the raw record instead of dropping it', () => {
+  test('a malformed wire keeps the raw record instead of dropping it', () => {
     const event: ToolResultEventLike = {
       id: 'call-3',
       toolName: 'lookup_transaction',
+      view: 'transaction.detail',
       output: { unexpected: true },
       isError: false,
     }

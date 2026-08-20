@@ -187,7 +187,7 @@ Examples:
       approvalProgramSize: z.number(),
       clearProgramSize: z.number(),
     }),
-    display: 'json',
+    view: 'json',
     handler: async (ctx, args) => {
       const app = await ctx.algod.getApplicationByID(BigInt(args.appId)).do()
       const params = app.params
@@ -237,7 +237,7 @@ Examples:
         }),
       ),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (_ctx, args) => {
       const spec = parseAppSpec(args.appSpec)
       return { name: spec.name, methods: spec.methods }

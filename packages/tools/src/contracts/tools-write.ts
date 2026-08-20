@@ -43,7 +43,7 @@ function appTool(
     parameters: appCallParams,
     output: writeResultSchema,
     requiresSigner: true,
-    display: 'txn',
+    view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, [{ ...args, type } as TxnSpec]),
   }) as AnyTool
 }
@@ -185,7 +185,7 @@ export const contractWriteTools: AnyTool[] = [
       z.object({ unsignedGroup: z.array(z.string()), summary: z.string() }),
     ]),
     requiresSigner: true,
-    display: 'txn',
+    view: 'txn',
     handler: async (ctx, args) => deployApp(ctx, args),
   }) as AnyTool,
   appTool('app_call', 'app_call', 'Call a smart contract method (or bare NoOp).'),

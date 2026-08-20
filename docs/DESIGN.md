@@ -58,10 +58,10 @@ updated: 2026-08-19.
 > stay tagged with the network that produced them). While a thinking model
 > reasons, the stream shows at the feed's tail and disappears when the
 > turn's first card renders. Cards dispatch on the
-> tool's declared view cue (`view` on ToolDefinition; `display` only on
-> tools that have no view), so third-party tools that declare a
-> cue and match the wire schema get the same cards — or ship their own
-> views. Wallet/signer connection UI comes later; keystore signing after
+> tool's declared view cue (the single `view` field on ToolDefinition —
+> a trusted semantic id or a coarse hint), so third-party tools that
+> declare a trusted view and match the wire schema get the same cards —
+> or ship their own views. Wallet/signer connection UI comes later; keystore signing after
 > modal approval works today. `vibekit explore` launches the TUI as a
 > separate process.
 
@@ -262,9 +262,7 @@ interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   requiresSigner?: boolean;
   /** Changes state without spending user funds. Host approval still applies. */
   mutatesState?: boolean;
-  /** Coarse host hint for tools with no Explorer `view`. */
-  display?: DisplayHint;
-  /** Semantic Explorer view id. A tool declares `view` or `display`, not both. */
+  /** The one view cue: a semantic Explorer id or a coarse hint. */
   view?: string;
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>;
 }
@@ -328,10 +326,12 @@ on the domain read arrays, not on the write exports.
 
 ### 4.1 Presentation contract (provisional implementation, not frozen)
 
-`display` is deliberately too small to drive the new Explorer. It remains
-only on tools that have no trusted `view` (writes, plugins, generic JSON).
-A tool declares one or the other, not both. Tools own capabilities and
-structured data. They do not own layouts.
+A tool declares one `view` cue. Dotted ids (`transaction.detail`) are
+semantic Explorer views; the experience registry decides which are
+trusted. Plain words (`table`, `txn`, `json`, `markdown`, `account`) are
+coarse rendering hints for tools without a trusted view (writes, plugins,
+generic JSON). Tools own capabilities and structured data. They do not
+own layouts.
 
 The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and
@@ -380,8 +380,8 @@ flow. The trusted view registry now holds the first-party Explorer catalog:
 transaction detail/list/group, account portfolio/summary/list, asset
 detail/list/holders, application detail/list/state/logs/box, block
 detail/list, and network status. Plugin views (NFD, ecosystem) remain
-unwired. Tools declare that cue as `view` on
-`ToolDefinition` (`display` and first-party tool names remain fallbacks).
+unwired. Tools declare that cue as `view` on `ToolDefinition` — the
+single source; there is no tool-name or hint fallback.
 The Accounts surface is signer-scoped (the keystore address book as the
 landing, live indexer portfolios as the detail). A typed `pay` uses the
 active keystore account as sender. Bare numeric ids query asset,
@@ -871,8 +871,7 @@ Implementation facts learned:
   (exactly our per-request `ToolContext` model). `serveStdio(factory)`
   ditto per connection. `registerTool` takes full Zod schemas (Zod 4
   works), annotations, and `_meta`. A tool's `view` travels as
-  `_meta['ai.vibekit/view']`; tools without a view still send
-  `_meta['ai.vibekit/display']`.
+  `_meta['ai.vibekit/view']`.
 - **Contract**: a `defineTool()` identity helper is required for
   `z.infer` to flow into handler args (annotating
   `const x: ToolDefinition` erases inference), plus an `AnyTool` erased
@@ -1012,7 +1011,7 @@ Implementation facts learned:
   middleware). `createAgent()` returns a session. In-memory message
   history (the conversation is the client's state, §10). `stream(input)`
   yields the **`AgentEvent` protocol**: text/reasoning deltas,
-  tool-call, tool-result carrying `view` (or the §4 `display` fallback), error,
+  tool-call, tool-result carrying the tool's `view` cue, error,
   finish+usage. Tool failures return `{ error: { code, message } }` to
   the model (loop continues) rather than throwing. 5 mock-model tests
   cover loop, network routing, ToolError surfacing, history.

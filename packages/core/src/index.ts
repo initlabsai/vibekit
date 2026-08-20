@@ -1,7 +1,6 @@
 export {
   defineTool,
   type AnyTool,
-  type DisplayHint,
   type ToolContext,
   type ToolDefinition,
   type ToolPlugin,

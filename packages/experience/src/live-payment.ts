@@ -168,9 +168,7 @@ export interface ToolResultEventLike {
   toolName: string
   output: unknown
   isError: boolean
-  /** The tool's declared display hint — a fallback view cue. */
-  display?: string
-  /** The tool's declared semantic view id, when present. */
+  /** The tool's declared view cue, when present. */
   view?: string
 }
 

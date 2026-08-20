@@ -51,7 +51,6 @@ const echoTool = defineTool({
   name: 'echo',
   description: 'Echo the message back.',
   parameters: z.object({ message: z.string() }),
-  display: 'json',
   view: 'network.status',
   handler: async (_ctx, args) => ({ echoed: args.message, big: 42n }),
 })
@@ -118,7 +117,6 @@ describe('createAgent', () => {
     expect(result.type).toBe('tool-result')
     if (result.type === 'tool-result') {
       expect(result.isError).toBe(false)
-      expect(result.display).toBe('json')
       expect(result.view).toBe('network.status')
       // bigint made JSON-safe by the shared executeToolCall
       expect(result.output).toEqual({ echoed: 'ping', big: 42 })

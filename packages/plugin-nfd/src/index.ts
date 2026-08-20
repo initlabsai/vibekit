@@ -88,7 +88,7 @@ export const nfdTools: AnyTool[] = [
       state: z.string().optional(),
       properties: propertiesSchema,
     }),
-    display: 'account',
+    view: 'account',
     handler: async (ctx, args) => {
       const nfd = await getNfdClient(ctx).resolve(args.name.toLowerCase(), { view: 'full' })
       return {
@@ -116,7 +116,7 @@ export const nfdTools: AnyTool[] = [
       appId: z.number().optional(),
       properties: propertiesSchema,
     }),
-    display: 'account',
+    view: 'account',
     handler: async (ctx, args) => {
       const result = await getNfdClient(ctx).reverseLookup([args.address], { view: 'full' })
       const nfd = result[args.address]
@@ -148,7 +148,7 @@ export const nfdTools: AnyTool[] = [
         }),
       ),
     }),
-    display: 'table',
+    view: 'table',
     handler: async (ctx, args) => {
       const result = await getNfdClient(ctx).reverseLookup(args.addresses, { view: 'thumbnail' })
       return {
