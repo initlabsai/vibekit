@@ -22,6 +22,7 @@ export function useExplorerKeys({
   setActiveSender,
   cycleAccount,
   cycleSort,
+  toggleFlowView,
   closeSelectedSection,
   isNarrow,
 }: {
@@ -36,6 +37,7 @@ export function useExplorerKeys({
   setActiveSender: (address: string) => void
   cycleAccount: (delta: number) => void
   cycleSort: () => void
+  toggleFlowView: () => void
   closeSelectedSection: () => void
   isNarrow: boolean
 }) {
@@ -124,6 +126,9 @@ export function useExplorerKeys({
             case 's':
               cycleSort()
               return
+            case 'v':
+              toggleFlowView()
+              return
             case 'x':
               closeSelectedSection()
               return
@@ -163,6 +168,9 @@ export function useExplorerKeys({
             case 's':
               cycleSort()
               return
+            case 'v':
+              toggleFlowView()
+              return
             case 'x':
               closeSelectedSection()
               return
@@ -194,6 +202,7 @@ export function useExplorerKeys({
         setFocus,
         setScreen,
         switchNetwork,
+        toggleFlowView,
       ],
     ),
   )

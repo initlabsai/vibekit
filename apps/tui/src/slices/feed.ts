@@ -67,7 +67,7 @@ export function useFeed() {
     (prompt: string): number => {
       sectionSeq.current += 1
       const id = sectionSeq.current
-      commitSections([...sectionsRef.current, { id, prompt, sort: 'none', items: [] }])
+      commitSections([...sectionsRef.current, { id, prompt, sort: 'none', flow: 'graph', items: [] }])
       setSelectedId(id)
       selectedRef.current = id
       return id
@@ -136,6 +136,17 @@ export function useFeed() {
     [selectSection],
   )
 
+  /** Flips the selected section's transaction.group cards between graph and table. */
+  const toggleFlowView = useCallback(() => {
+    commitSections(
+      sectionsRef.current.map((section) =>
+        section.id === selectedRef.current
+          ? { ...section, flow: section.flow === 'graph' ? 'table' : 'graph' }
+          : section,
+      ),
+    )
+  }, [commitSections])
+
   const cycleSort = useCallback(() => {
     commitSections(
       sectionsRef.current.map((section) =>
@@ -191,6 +202,7 @@ export function useFeed() {
     appendBlock,
     moveSelection,
     cycleSort,
+    toggleFlowView,
     closeSelectedSection,
   }
 }

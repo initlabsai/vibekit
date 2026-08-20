@@ -31,6 +31,8 @@ export interface Section {
   /** The user request, shown in the nav and as the section header. */
   prompt: string
   sort: AssetSort
+  /** transaction.group cards in this section: flow graph or row table. */
+  flow: 'graph' | 'table'
   items: SectionItem[]
   /** Model reasoning for this request; folded by default. */
   thinking?: string
@@ -272,6 +274,7 @@ export function ContentPane({
                         width={cardWidth}
                         sort={section.sort}
                         maxAssets={20}
+                        flow={section.flow}
                       />
                     )
                   }

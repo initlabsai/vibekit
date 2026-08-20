@@ -24,6 +24,7 @@ import {
 import {
   AccountCard,
   AccountListCard,
+  buildGroupGraph,
   AccountSummaryCard,
   ApplicationBoxCard,
   ApplicationCard,
@@ -40,6 +41,7 @@ import {
   NetworkCard,
   RawCard,
   TransactionCard,
+  TransactionGraphCard,
   TransactionListCard,
   Unavailable,
   type AssetSort,
@@ -54,12 +56,15 @@ export function ResultView({
   width,
   sort = 'none',
   maxAssets = 20,
+  flow = 'graph',
 }: {
   store: ResultStore
   view: ViewSpec
   width: number
   sort?: AssetSort
   maxAssets?: number
+  /** transaction.group presentation: flow graph (primary) or the row table. */
+  flow?: 'graph' | 'table'
 }) {
   switch (view.view) {
     case 'transaction.detail': {
@@ -135,6 +140,20 @@ export function ResultView({
             width={width}
           />
         )
+      }
+      if (view.view === 'transaction.group' && flow === 'graph') {
+        // The card receives the derived graph model; it computes nothing.
+        const graph = buildGroupGraph(derived.model.transactions)
+        if (graph) {
+          return (
+            <TransactionGraphCard
+              graph={graph}
+              groupId={derived.model.groupId}
+              transactionCount={derived.model.transactions.length}
+              width={width}
+            />
+          )
+        }
       }
       return (
         <TransactionListCard

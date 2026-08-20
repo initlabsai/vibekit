@@ -61,7 +61,7 @@ export function App() {
   const { network, networkRef, keystoreHost, host, live, setNetwork } = net
 
   const feed = useFeed()
-  const { focus, setFocus, sections, selectedId, appendNote, createSection, cycleSort } = feed
+  const { focus, setFocus, sections, selectedId, appendNote, createSection, cycleSort, toggleFlowView } = feed
 
   const accounts = useAccounts({ keystoreHost, host, commitStore, storeRef, setFocus })
   const {
@@ -260,6 +260,7 @@ export function App() {
     setActiveSender,
     cycleAccount,
     cycleSort,
+    toggleFlowView,
     closeSelectedSection,
     isNarrow,
   })
@@ -283,9 +284,9 @@ export function App() {
       : screen === 'assets' || screen === 'apps' || screen === 'txns'
         ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns'
         : focus === 'nav'
-        ? '↑/↓ select · enter view · s sort · x close · tab content · esc chat'
+        ? '↑/↓ select · enter view · s sort · v flow · x close · tab content · esc chat'
         : focus === 'content'
-          ? '↑/↓ scroll · ←/→ sections · s sort · x close · tab/esc chat'
+          ? '↑/↓ scroll · ←/→ sections · s sort · v flow · x close · tab/esc chat'
           : sections.length > 0
             ? `enter send · tab session (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
