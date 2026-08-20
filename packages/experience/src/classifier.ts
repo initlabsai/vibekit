@@ -28,19 +28,6 @@ export const algorandGroupIdSchema = z
     'Expected a 44-character base64 Algorand group ID',
   )
 
-/** Entity kinds the deterministic input lane can target or disambiguate. */
-export const explorerEntityKindSchema = z.enum([
-  'transaction',
-  'account',
-  'asset',
-  'application',
-  'block',
-  'group',
-])
-
-/** Entity kinds the deterministic input lane can target or disambiguate. */
-export type ExplorerEntityKind = z.infer<typeof explorerEntityKindSchema>
-
 /** Result of deterministic Explorer input classification. */
 export type ClassifiedExplorerInput =
   | {
@@ -68,81 +55,31 @@ export type ClassifiedExplorerInput =
       value: string
     }
 
-/** A pure recognizer that can extend the deterministic input lane. */
-export interface InputRecognizer {
-  readonly id: string
-  recognize(input: string): ClassifiedExplorerInput | undefined
-}
-
-/** Recognizes canonical transaction IDs without an LLM or network call. */
-export const transactionIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
-  id: 'algorand-transaction-id',
-  recognize(input) {
-    if (!algorandTransactionIdSchema.safeParse(input).success) return undefined
-    return { kind: 'entity', entity: 'transaction', value: input }
-  },
-})
-
-/** Recognizes address-shaped input for the account lookup extension point. */
-export const addressCandidateRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
-  id: 'algorand-address-candidate',
-  recognize(input) {
-    if (!algorandAddressCandidateSchema.safeParse(input).success) return undefined
-    return { kind: 'entity', entity: 'account', value: input }
-  },
-})
-
-/** Recognizes a 32-byte transaction group id in standard or URL-safe base64. */
-export const groupIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
-  id: 'algorand-group-id',
-  recognize(input) {
-    if (!algorandGroupIdSchema.safeParse(input).success) return undefined
-    return { kind: 'entity', entity: 'group', value: input }
-  },
-})
-
 /**
- * Preserves bare numeric identifiers as an explicit asset/application/block
- * ambiguity instead of guessing which domain owns the number.
+ * Classifies direct Explorer input without an LLM or network call. Bare
+ * numeric identifiers stay an explicit asset/application/block ambiguity
+ * instead of guessing which domain owns the number.
  */
-export const ambiguousNumericIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
-  id: 'algorand-numeric-entity-id',
-  recognize(input) {
-    if (!NUMERIC_ID_PATTERN.test(input)) return undefined
+export function classifyExplorerInput(raw: string): ClassifiedExplorerInput {
+  const input = raw.trim()
+  if (algorandTransactionIdSchema.safeParse(input).success) {
+    return { kind: 'entity', entity: 'transaction', value: input }
+  }
+  if (algorandAddressCandidateSchema.safeParse(input).success) {
+    return { kind: 'entity', entity: 'account', value: input }
+  }
+  if (algorandGroupIdSchema.safeParse(input).success) {
+    return { kind: 'entity', entity: 'group', value: input }
+  }
+  if (NUMERIC_ID_PATTERN.test(input)) {
     return {
       kind: 'ambiguous-entity',
       value: input,
       candidates: ['asset', 'application', 'block'],
     }
-  },
-})
-
-/** Default recognizer order for direct Explorer input. */
-export const defaultInputRecognizers: readonly InputRecognizer[] = Object.freeze([
-  transactionIdRecognizer,
-  addressCandidateRecognizer,
-  groupIdRecognizer,
-  ambiguousNumericIdRecognizer,
-])
-
-/** Builds a deterministic classifier from an ordered recognizer registry. */
-export function createInputClassifier(
-  recognizers: readonly InputRecognizer[] = defaultInputRecognizers,
-): (raw: string) => ClassifiedExplorerInput {
-  const registry = Object.freeze([...recognizers])
-
-  return (raw: string): ClassifiedExplorerInput => {
-    const input = raw.trim()
-    for (const recognizer of registry) {
-      const classification = recognizer.recognize(input)
-      if (classification) return classification
-    }
-    return { kind: 'text', value: input }
   }
+  return { kind: 'text', value: input }
 }
-
-/** Classifies input with the built-in transaction, account, and numeric lanes. */
-export const classifyExplorerInput = createInputClassifier()
 
 /** A composer command that names one entity kind and a numeric id. */
 export type DirectedEntityCommand =

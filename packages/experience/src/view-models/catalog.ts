@@ -41,6 +41,15 @@ function derive<S extends z.ZodType, View extends string>(
   }
 }
 
+function viewModelFor<S extends z.ZodType, View extends string>(
+  schema: S,
+  viewId: View,
+  label: string,
+) {
+  return (store: ResultStore, view: ViewSpec) =>
+    derive(store, view, schema, viewId, `${label} did not match the trusted schema`)
+}
+
 /** Derives a transaction list or group model. */
 export function createTransactionCollectionViewModel(
   store: ResultStore,
@@ -56,104 +65,15 @@ export function createTransactionCollectionViewModel(
   )
 }
 
-/** Derives an account summary model. */
-export function createAccountSummaryViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    accountSummaryDataSchema,
-    'account.summary' as const,
-    'Account summary did not match the trusted schema',
-  )
-}
-
-/** Derives an account list model. */
-export function createAccountListViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    accountListDataSchema,
-    'account.list' as const,
-    'Account list did not match the trusted schema',
-  )
-}
-
-/** Derives an asset list model. */
-export function createAssetListViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    assetListDataSchema,
-    'asset.list' as const,
-    'Asset list did not match the trusted schema',
-  )
-}
-
-/** Derives an asset holders model. */
-export function createAssetHoldersViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    assetHoldersDataSchema,
-    'asset.holders' as const,
-    'Asset holders did not match the trusted schema',
-  )
-}
-
-/** Derives an application list model. */
-export function createApplicationListViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    applicationListDataSchema,
-    'application.list' as const,
-    'Application list did not match the trusted schema',
-  )
-}
-
-/** Derives an application state model. */
-export function createApplicationStateViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    applicationStateDataSchema,
-    'application.state' as const,
-    'Application state did not match the trusted schema',
-  )
-}
-
-/** Derives an application logs model. */
-export function createApplicationLogsViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    applicationLogsDataSchema,
-    'application.logs' as const,
-    'Application logs did not match the trusted schema',
-  )
-}
-
-/** Derives an application box model. */
-export function createApplicationBoxViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    applicationBoxDataSchema,
-    'application.box' as const,
-    'Application box did not match the trusted schema',
-  )
-}
-
-/** Derives a block list model. */
-export function createBlockListViewModel(store: ResultStore, view: ViewSpec) {
-  return derive(
-    store,
-    view,
-    blockListDataSchema,
-    'block.list' as const,
-    'Block list did not match the trusted schema',
-  )
-}
+export const createAccountSummaryViewModel = viewModelFor(accountSummaryDataSchema, 'account.summary' as const, 'Account summary')
+export const createAccountListViewModel = viewModelFor(accountListDataSchema, 'account.list' as const, 'Account list')
+export const createAssetListViewModel = viewModelFor(assetListDataSchema, 'asset.list' as const, 'Asset list')
+export const createAssetHoldersViewModel = viewModelFor(assetHoldersDataSchema, 'asset.holders' as const, 'Asset holders')
+export const createApplicationListViewModel = viewModelFor(applicationListDataSchema, 'application.list' as const, 'Application list')
+export const createApplicationStateViewModel = viewModelFor(applicationStateDataSchema, 'application.state' as const, 'Application state')
+export const createApplicationLogsViewModel = viewModelFor(applicationLogsDataSchema, 'application.logs' as const, 'Application logs')
+export const createApplicationBoxViewModel = viewModelFor(applicationBoxDataSchema, 'application.box' as const, 'Application box')
+export const createBlockListViewModel = viewModelFor(blockListDataSchema, 'block.list' as const, 'Block list')
 
 export type AccountSummaryViewModel = Extract<
   ReturnType<typeof createAccountSummaryViewModel>,

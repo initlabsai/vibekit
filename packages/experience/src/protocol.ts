@@ -27,88 +27,25 @@ export const TRUSTED_VIEW_IDS = [
 /** Trusted view identifiers proven by the current vertical slices. */
 export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]
 
-function viewSpecFor<Id extends TrustedViewId>(view: Id) {
-  return z
-    .object({
-      protocolVersion: experienceProtocolVersionSchema,
-      type: z.literal('view'),
-      view: z.literal(view),
-      source: resultReferenceSchema,
-    })
-    .strict()
-}
-
 /** A transaction detail view backed only by an authoritative result reference. */
-export const transactionDetailViewSpecSchema = viewSpecFor('transaction.detail')
-
-/** A transaction list view backed only by an authoritative result reference. */
-export const transactionListViewSpecSchema = viewSpecFor('transaction.list')
-
-/** A transaction group view backed only by an authoritative result reference. */
-export const transactionGroupViewSpecSchema = viewSpecFor('transaction.group')
-
-/** An account portfolio view backed only by an authoritative result reference. */
-export const accountPortfolioViewSpecSchema = viewSpecFor('account.portfolio')
-
-/** An account summary view backed only by an authoritative result reference. */
-export const accountSummaryViewSpecSchema = viewSpecFor('account.summary')
-
-/** An account list view backed only by an authoritative result reference. */
-export const accountListViewSpecSchema = viewSpecFor('account.list')
-
-/** An asset detail view backed only by an authoritative result reference. */
-export const assetDetailViewSpecSchema = viewSpecFor('asset.detail')
-
-/** An asset list view backed only by an authoritative result reference. */
-export const assetListViewSpecSchema = viewSpecFor('asset.list')
-
-/** An asset holders view backed only by an authoritative result reference. */
-export const assetHoldersViewSpecSchema = viewSpecFor('asset.holders')
-
-/** An application detail view backed only by an authoritative result reference. */
-export const applicationDetailViewSpecSchema = viewSpecFor('application.detail')
-
-/** An application list view backed only by an authoritative result reference. */
-export const applicationListViewSpecSchema = viewSpecFor('application.list')
-
-/** An application state view backed only by an authoritative result reference. */
-export const applicationStateViewSpecSchema = viewSpecFor('application.state')
-
-/** An application logs view backed only by an authoritative result reference. */
-export const applicationLogsViewSpecSchema = viewSpecFor('application.logs')
-
-/** An application box view backed only by an authoritative result reference. */
-export const applicationBoxViewSpecSchema = viewSpecFor('application.box')
-
-/** A block detail view backed only by an authoritative result reference. */
-export const blockDetailViewSpecSchema = viewSpecFor('block.detail')
-
-/** A block list view backed only by an authoritative result reference. */
-export const blockListViewSpecSchema = viewSpecFor('block.list')
-
-/** A network status view backed only by an authoritative result reference. */
-export const networkStatusViewSpecSchema = viewSpecFor('network.status')
+export const transactionDetailViewSpecSchema = z
+  .object({
+    protocolVersion: experienceProtocolVersionSchema,
+    type: z.literal('view'),
+    view: z.literal('transaction.detail'),
+    source: resultReferenceSchema,
+  })
+  .strict()
 
 /** A trusted presentation specification selected by the model or direct lane. */
-export const viewSpecSchema = z.discriminatedUnion('view', [
-  transactionDetailViewSpecSchema,
-  transactionListViewSpecSchema,
-  transactionGroupViewSpecSchema,
-  accountPortfolioViewSpecSchema,
-  accountSummaryViewSpecSchema,
-  accountListViewSpecSchema,
-  assetDetailViewSpecSchema,
-  assetListViewSpecSchema,
-  assetHoldersViewSpecSchema,
-  applicationDetailViewSpecSchema,
-  applicationListViewSpecSchema,
-  applicationStateViewSpecSchema,
-  applicationLogsViewSpecSchema,
-  applicationBoxViewSpecSchema,
-  blockDetailViewSpecSchema,
-  blockListViewSpecSchema,
-  networkStatusViewSpecSchema,
-])
+export const viewSpecSchema = z
+  .object({
+    protocolVersion: experienceProtocolVersionSchema,
+    type: z.literal('view'),
+    view: z.enum(TRUSTED_VIEW_IDS),
+    source: resultReferenceSchema,
+  })
+  .strict()
 
 /** A trusted presentation specification selected by the model or direct lane. */
 export type ViewSpec = z.infer<typeof viewSpecSchema>

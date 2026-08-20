@@ -4,9 +4,6 @@ import {
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   classifyExplorerInput,
-  createInputClassifier,
-  defaultInputRecognizers,
-  type InputRecognizer,
 } from '../src/index.js'
 
 describe('deterministic Explorer input classification', () => {
@@ -59,23 +56,6 @@ describe('deterministic Explorer input classification', () => {
       kind: 'ambiguous-entity',
       value: '1022',
       candidates: ['asset', 'application', 'block'],
-    })
-  })
-
-  test('accepts an ordered custom recognizer registry without mutable global registration', () => {
-    const prefixedTransaction: InputRecognizer = {
-      id: 'prefixed-transaction',
-      recognize(input) {
-        if (!input.startsWith('txn:')) return undefined
-        return { kind: 'entity', entity: 'transaction', value: input.slice(4) }
-      },
-    }
-    const classify = createInputClassifier([prefixedTransaction, ...defaultInputRecognizers])
-
-    expect(classify(`txn:${FIXTURE_TRANSACTION_ID}`)).toEqual({
-      kind: 'entity',
-      entity: 'transaction',
-      value: FIXTURE_TRANSACTION_ID,
     })
   })
 })
