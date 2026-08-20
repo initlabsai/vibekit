@@ -1,18 +1,9 @@
-import { z } from 'zod'
+import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
 
 import type { ResultIdentity } from './live-payment.js'
 import { networkStatusDataSchema } from './networks.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
-
-/** The JSON-safe wire subset of get_network_status metrics this slice consumes. */
-export const networkStatusWireSchema = z.object({
-  network: z.string().min(1),
-  latestRound: z.number().int().nonnegative(),
-  avgTps: z.number().finite().nonnegative(),
-  avgBlockTime: z.number().finite().nonnegative(),
-  participation: z.number().finite().nonnegative(),
-})
 
 /** Wraps a get_network_status result as a network status record. Extra wire fields are dropped. */
 export function buildNetworkStatusRecord(
@@ -20,7 +11,7 @@ export function buildNetworkStatusRecord(
   wire: unknown,
   toolName = 'get_network_status',
 ): StructuredResult {
-  const status = networkStatusWireSchema.parse(wire)
+  const status = viewDataSchemas['network.status'].parse(wire)
   return structuredResultSchema.parse({
     protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
     type: 'result',

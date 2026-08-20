@@ -1,3 +1,4 @@
+import { viewDataSchemas, type ViewData } from '@initlabs/vibekit-tools/views'
 import { z } from 'zod'
 
 import {
@@ -14,8 +15,6 @@ import {
   blockListDataSchema,
   transactionCollectionDataSchema,
 } from './catalog.js'
-import { uint64JsonSchema } from './algo.js'
-import { algorandAddressCandidateSchema } from './classifier.js'
 import type { ResultIdentity } from './live-payment.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
@@ -37,33 +36,24 @@ function record(
   })
 }
 
-const txnWireSchema = z.object({
-  id: z.string().min(1).optional(),
-  type: z.string().min(1).optional(),
-  sender: z.string().min(1),
-  receiver: z.string().min(1).optional(),
-  feeMicroAlgos: uint64JsonSchema.optional(),
-  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
-  assetId: z.union([z.number(), z.string()]).optional(),
-  assetAmount: z.union([z.number(), z.string()]).optional(),
-  applicationId: z.union([z.number(), z.string()]).optional(),
-  confirmedRound: z.number().int().nonnegative().optional(),
-  roundTime: z.number().int().nonnegative().optional(),
-  group: z.string().min(1).optional(),
-  innerTxns: z.array(z.unknown()).optional(),
-})
+/**
+ * Hosts scope some list wires to an account by merging an `address` key into
+ * the tool result; the tools schemas know nothing about it, so it is parsed
+ * beside them.
+ */
+const addressEnvelopeSchema = z.object({ address: z.string().min(1).optional() })
 
-function txnRow(wire: z.infer<typeof txnWireSchema>) {
+function txnRow(wire: ViewData<'transaction.list'>['transactions'][number]) {
   const innerCount = wire.innerTxns?.length
   return {
     sender: wire.sender,
+    feeMicroAlgos: wire.feeMicroAlgos,
     ...(wire.id === undefined ? {} : { id: wire.id }),
     ...(wire.type === undefined ? {} : { type: wire.type }),
     ...(wire.receiver === undefined ? {} : { receiver: wire.receiver }),
     ...(wire.paymentAmountMicroAlgos === undefined
       ? {}
       : { paymentAmountMicroAlgos: wire.paymentAmountMicroAlgos }),
-    ...(wire.feeMicroAlgos === undefined ? {} : { feeMicroAlgos: wire.feeMicroAlgos }),
     ...(wire.assetId === undefined ? {} : { assetId: wire.assetId }),
     ...(wire.assetAmount === undefined ? {} : { assetAmount: wire.assetAmount }),
     ...(wire.applicationId === undefined ? {} : { applicationId: wire.applicationId }),
@@ -73,27 +63,21 @@ function txnRow(wire: z.infer<typeof txnWireSchema>) {
   }
 }
 
-const txnCollectionWireSchema = z.object({
-  transactions: z.array(txnWireSchema),
-  nextToken: z.string().min(1).optional(),
-  address: z.string().min(1).optional(),
-  groupId: z.string().min(1).optional(),
-})
-
 /** Wraps search_transactions / search_account_transactions / search_asset_transactions. */
 export function buildTransactionListRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'search_transactions',
 ): StructuredResult {
-  const page = txnCollectionWireSchema.parse(wire)
+  const page = viewDataSchemas['transaction.list'].parse(wire)
+  const { address } = addressEnvelopeSchema.parse(wire)
   return record(
     identity,
     toolName,
     transactionCollectionDataSchema.parse({
       transactions: page.transactions.map(txnRow),
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
-      ...(page.address === undefined ? {} : { address: page.address }),
+      ...(address === undefined ? {} : { address }),
     }),
   )
 }
@@ -104,33 +88,19 @@ export function buildTransactionGroupRecord(
   wire: unknown,
   toolName = 'lookup_transaction_group',
 ): StructuredResult {
-  const page = txnCollectionWireSchema.parse(wire)
-  const groupId = page.groupId ?? page.transactions.find((txn) => txn.group)?.group
+  const page = viewDataSchemas['transaction.group'].parse(wire)
   return record(
     identity,
     toolName,
     transactionCollectionDataSchema.parse({
       transactions: page.transactions.map(txnRow),
-      ...(groupId === undefined ? {} : { groupId }),
+      groupId: page.groupId,
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
   )
 }
 
-const accountWireSchema = z.object({
-  address: algorandAddressCandidateSchema,
-  balanceMicroAlgos: uint64JsonSchema,
-  status: z.string().min(1).optional(),
-  minBalanceMicroAlgos: uint64JsonSchema.optional(),
-  rekeyedTo: algorandAddressCandidateSchema.optional(),
-  totalAssetsOptedIn: z.number().int().nonnegative().optional(),
-  totalAppsOptedIn: z.number().int().nonnegative().optional(),
-  totalCreatedAssets: z.number().int().nonnegative().optional(),
-  totalCreatedApps: z.number().int().nonnegative().optional(),
-  createdAtRound: z.number().int().nonnegative().optional(),
-})
-
-function accountSummary(wire: z.infer<typeof accountWireSchema>) {
+function accountSummary(wire: ViewData<'account.summary'>) {
   return accountSummaryDataSchema.parse({
     address: wire.address,
     balanceMicroAlgos: wire.balanceMicroAlgos,
@@ -153,7 +123,7 @@ export function buildAccountSummaryRecord(
   wire: unknown,
   toolName = 'lookup_account',
 ): StructuredResult {
-  return record(identity, toolName, accountSummary(accountWireSchema.parse(wire)))
+  return record(identity, toolName, accountSummary(viewDataSchemas['account.summary'].parse(wire)))
 }
 
 /** Wraps search_accounts / batch_lookup_accounts. */
@@ -162,12 +132,7 @@ export function buildAccountListRecord(
   wire: unknown,
   toolName = 'search_accounts',
 ): StructuredResult {
-  const page = z
-    .object({
-      accounts: z.array(accountWireSchema),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['account.list'].parse(wire)
   return record(
     identity,
     toolName,
@@ -178,37 +143,23 @@ export function buildAccountListRecord(
   )
 }
 
-const assetRowWireSchema = z.object({
-  assetId: z.union([z.number(), z.string()]),
-  name: z.string().min(1).optional(),
-  unitName: z.string().min(1).optional(),
-  totalSupply: z.union([z.string(), z.number()]),
-  decimals: z.number().int().nonnegative(),
-  creator: z.string().min(1).optional(),
-})
-
 /** Wraps search_assets. */
 export function buildAssetListRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'search_assets',
 ): StructuredResult {
-  const page = z
-    .object({
-      assets: z.array(assetRowWireSchema),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['asset.list'].parse(wire)
   return record(
     identity,
     toolName,
     assetListDataSchema.parse({
       assets: page.assets.map((asset) => ({
         assetId: asset.assetId,
+        totalSupply: asset.totalSupply,
+        decimals: asset.decimals,
         ...(asset.name === undefined ? {} : { name: asset.name }),
         ...(asset.unitName === undefined ? {} : { unitName: asset.unitName }),
-        totalSupply: String(asset.totalSupply),
-        decimals: asset.decimals,
         ...(asset.creator === undefined ? {} : { creator: asset.creator }),
       })),
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
@@ -216,37 +167,18 @@ export function buildAssetListRecord(
   )
 }
 
-const assetHoldingWireSchema = z.object({
-  assetId: z.union([z.number(), z.string()]),
-  amount: z.union([z.string(), z.number()]),
-  isFrozen: z.boolean(),
-  name: z.string().min(1).optional(),
-  unitName: z.string().min(1).optional(),
-})
-
 /** Wraps get_account_assets. */
 export function buildAssetHoldingsRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'get_account_assets',
 ): StructuredResult {
-  const page = z
-    .object({
-      assets: z.array(assetHoldingWireSchema),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['asset.holdings'].parse(wire)
   return record(
     identity,
     toolName,
     assetHoldingsDataSchema.parse({
-      assets: page.assets.map((asset) => ({
-        assetId: asset.assetId,
-        amount: String(asset.amount),
-        isFrozen: asset.isFrozen,
-        ...(asset.name === undefined ? {} : { name: asset.name }),
-        ...(asset.unitName === undefined ? {} : { unitName: asset.unitName }),
-      })),
+      assets: page.assets,
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
   )
@@ -258,27 +190,12 @@ export function buildAssetHoldersRecord(
   wire: unknown,
   toolName = 'search_asset_balances',
 ): StructuredResult {
-  const page = z
-    .object({
-      balances: z.array(
-        z.object({
-          address: z.string().min(1),
-          amount: z.union([z.string(), z.number()]),
-          isFrozen: z.boolean(),
-        }),
-      ),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['asset.holders'].parse(wire)
   return record(
     identity,
     toolName,
     assetHoldersDataSchema.parse({
-      balances: page.balances.map((holder) => ({
-        address: holder.address,
-        amount: String(holder.amount),
-        isFrozen: holder.isFrozen,
-      })),
+      balances: page.balances,
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
   )
@@ -290,18 +207,7 @@ export function buildApplicationListRecord(
   wire: unknown,
   toolName = 'search_applications',
 ): StructuredResult {
-  const page = z
-    .object({
-      applications: z.array(
-        z.object({
-          applicationId: z.union([z.number(), z.string()]),
-          creator: z.string().min(1).optional(),
-          globalState: z.array(z.unknown()).optional(),
-        }),
-      ),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['application.list'].parse(wire)
   return record(
     identity,
     toolName,
@@ -316,48 +222,13 @@ export function buildApplicationListRecord(
   )
 }
 
-const stateEntryWireSchema = z.object({
-  key: z.string().min(1),
-  value: z.union([
-    z.string(),
-    z.number(),
-    z.object({
-      type: z.number(),
-      bytes: z.string().optional(),
-      uint: z.union([z.number(), z.string()]).optional(),
-    }),
-  ]),
-  type: z.enum(['uint', 'bytes']).optional(),
-  keyBase64: z.string().optional(),
-})
-
-function stateEntry(entry: z.infer<typeof stateEntryWireSchema>) {
-  if (typeof entry.value === 'object' && entry.value !== null && 'type' in entry.value) {
-    const typed = entry.value
-    if (typed.type === 2 || typed.uint !== undefined) {
-      return { key: entry.key, value: String(typed.uint ?? 0), type: 'uint' as const }
-    }
-    return { key: entry.key, value: typed.bytes ?? '', type: 'bytes' as const }
-  }
-  const type = entry.type ?? (typeof entry.value === 'number' ? 'uint' : 'bytes')
-  return { key: entry.key, value: String(entry.value), type }
-}
-
 /** Wraps read_global_state and read_local_state (the unified scope shape). */
 export function buildApplicationStateRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'read_global_state',
 ): StructuredResult {
-  const single = z
-    .object({
-      appId: z.union([z.number(), z.string()]),
-      scope: z.enum(['global', 'local']),
-      address: z.string().min(1).optional(),
-      optedIn: z.boolean().optional(),
-      state: z.array(stateEntryWireSchema),
-    })
-    .parse(wire)
+  const single = viewDataSchemas['application.state'].parse(wire)
   return record(
     identity,
     toolName,
@@ -366,9 +237,24 @@ export function buildApplicationStateRecord(
       scope: single.scope,
       ...(single.address === undefined ? {} : { address: single.address }),
       ...(single.optedIn === undefined ? {} : { optedIn: single.optedIn }),
-      entries: single.state.map(stateEntry),
+      entries: single.state.map((entry) => ({
+        key: entry.key,
+        value: String(entry.value),
+        type: entry.type,
+      })),
     }),
   )
+}
+
+type LocalKeyValue =
+  ViewData<'application.locals'>['appLocalStates'][number]['keyValue'][number]
+
+function localStateEntry(entry: LocalKeyValue) {
+  // Algod state types: 1 = bytes, 2 = uint.
+  if (entry.value.type === 2 || entry.value.uint !== undefined) {
+    return { key: entry.key, value: String(entry.value.uint ?? 0), type: 'uint' as const }
+  }
+  return { key: entry.key, value: entry.value.bytes ?? '', type: 'bytes' as const }
 }
 
 /** Wraps get_account_app_local_states. */
@@ -377,33 +263,17 @@ export function buildApplicationLocalsRecord(
   wire: unknown,
   toolName = 'get_account_app_local_states',
 ): StructuredResult {
-  const page = z
-    .object({
-      appLocalStates: z.array(
-        z.object({
-          applicationId: z.union([z.number(), z.string()]),
-          schema: z
-            .object({
-              numByteSlice: z.number().int().nonnegative(),
-              numUint: z.number().int().nonnegative(),
-            })
-            .optional(),
-          keyValue: z.array(stateEntryWireSchema).optional(),
-        }),
-      ),
-      nextToken: z.string().min(1).optional(),
-      address: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['application.locals'].parse(wire)
+  const { address } = addressEnvelopeSchema.parse(wire)
   return record(
     identity,
     toolName,
     applicationLocalsDataSchema.parse({
-      ...(page.address === undefined ? {} : { address: page.address }),
+      ...(address === undefined ? {} : { address }),
       apps: page.appLocalStates.map((app) => ({
         applicationId: app.applicationId,
-        ...(app.schema === undefined ? {} : { schema: app.schema }),
-        entries: (app.keyValue ?? []).map(stateEntry),
+        schema: app.schema,
+        entries: app.keyValue.map(localStateEntry),
       })),
       ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
     }),
@@ -416,18 +286,7 @@ export function buildApplicationLogsRecord(
   wire: unknown,
   toolName = 'lookup_application_logs',
 ): StructuredResult {
-  const page = z
-    .object({
-      applicationId: z.union([z.number(), z.string()]),
-      logData: z.array(
-        z.object({
-          txid: z.string().min(1),
-          logs: z.array(z.string()),
-        }),
-      ),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['application.logs'].parse(wire)
   return record(
     identity,
     toolName,
@@ -445,15 +304,7 @@ export function buildApplicationBoxRecord(
   wire: unknown,
   toolName = 'read_box_state',
 ): StructuredResult {
-  const box = z
-    .object({
-      appId: z.union([z.number(), z.string()]),
-      boxName: z.string().min(1),
-      exists: z.boolean(),
-      value: z.string().optional(),
-      size: z.number().int().nonnegative().optional(),
-    })
-    .parse(wire)
+  const box = viewDataSchemas['application.box'].parse(wire)
   return record(
     identity,
     toolName,
@@ -473,19 +324,7 @@ export function buildBlockListRecord(
   wire: unknown,
   toolName = 'search_block_headers',
 ): StructuredResult {
-  const page = z
-    .object({
-      blocks: z.array(
-        z.object({
-          round: z.number().int().nonnegative(),
-          timestamp: z.number().int().nonnegative(),
-          transactionCount: z.number().int().nonnegative(),
-          proposer: z.string().min(1).optional(),
-        }),
-      ),
-      nextToken: z.string().min(1).optional(),
-    })
-    .parse(wire)
+  const page = viewDataSchemas['block.list'].parse(wire)
   return record(
     identity,
     toolName,

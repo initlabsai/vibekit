@@ -19,6 +19,7 @@ import {
   type FormattedTransaction,
   type ViewData,
 } from '@initlabs/vibekit-tools'
+import { viewDataSchemas as viewSchemasFromSubpath } from '@initlabs/vibekit-tools/views'
 import { createVibekitMcp, VIEW_META_KEY } from '@initlabs/vibekit-mcp'
 import { isProviderConfig, type AgentEvent, type ProviderConfig } from '@initlabs/vibekit-agent'
 import { createSignerFromKeystore, type KeystoreLike } from '@initlabs/vibekit-signer-keystore'
@@ -48,6 +49,10 @@ if (!isProviderConfig(providerConfig)) fail('isProviderConfig rejected a valid c
 
 if (typeof viewDataSchemas['transaction.detail']?.parse !== 'function') {
   fail('viewDataSchemas is missing transaction.detail')
+}
+// The ./views subpath must serve the same object as the root export.
+if (viewSchemasFromSubpath !== viewDataSchemas) {
+  fail('@initlabs/vibekit-tools/views does not re-serve the root viewDataSchemas object')
 }
 
 const echo = defineTool({

@@ -146,9 +146,13 @@ id = one wire shape — `application.locals` splits from a unified
 `asset.holdings` splits from `asset.list`, and `get_network` demotes to
 the coarse `table` hint. (3) One schema family: monetary wire fields
 are integer `*MicroAlgos` (done — tools emit microALGOs directly; the
-float-to-micro conversion shims in experience are gone), tools gains
-a dependency-clean `./views` subpath, and `packages/experience` parses
-wires with `viewDataSchemas` instead of maintaining shadow wire schemas.
+float-to-micro conversion shims in experience are gone), tools has
+a dependency-clean `./views` subpath (done — schema-only `schemas.ts`
+modules per domain, zod-only import graph pinned by test), and
+`packages/experience` parses wires with `viewDataSchemas` instead of
+maintaining shadow wire schemas (done — the shadow wire schemas are
+deleted; host-added envelope keys like `address` parse beside the tools
+schema).
 (4) Experience reorganizes into vertical slices (one module per view;
 flows together). (5) The TUI app reorganizes into vertical slices.
 (6) `packages/agent` adds a first-class `zerosignal` provider (ZeroSignal
@@ -353,6 +357,9 @@ own layouts. `@initlabs/vibekit-tools` exports `viewDataSchemas` and
 `ViewData<'…'>` — the wire shape per view id, pinned by test to the tool
 declarations — so a downstream consumer can build custom components
 against typed tool output without the experience package.
+`@initlabs/vibekit-tools/views` is the dependency-clean import for
+browsers: the same `viewDataSchemas` object through a subpath whose
+transitive module graph is zod-only.
 
 The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and

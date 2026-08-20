@@ -12,18 +12,18 @@ import {
   accountPortfolioSchema,
   appLocalStatesSchema,
   formattedAccountSchema,
-} from './accounts/index.js'
-import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './assets/index.js'
+} from './accounts/schemas.js'
+import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './assets/schemas.js'
 import {
   applicationBoxSchema,
   applicationListSchema,
   applicationLogsSchema,
   applicationStateSchema,
   formattedApplicationSchema,
-} from './contracts/index.js'
-import { blockDetailSchema, blockListSchema, networkStatusSchema } from './network/index.js'
-import { formattedTransactionSchema, transactionListSchema } from './shared/format.js'
-import { transactionGroupSchema } from './transactions/index.js'
+} from './contracts/schemas.js'
+import { blockDetailSchema, blockListSchema, networkStatusSchema } from './network/schemas.js'
+import { formattedTransactionSchema, transactionListSchema } from './shared/schemas.js'
+import { transactionGroupSchema } from './transactions/schemas.js'
 
 /** Data schema per dotted view id, keyed exactly as tools declare `view`. */
 export const viewDataSchemas = {

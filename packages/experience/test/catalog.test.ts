@@ -117,7 +117,7 @@ describe('first-party catalog views', () => {
               feeMicroAlgos: 1000,
               confirmedRound: 22,
               roundTime: 1787169189,
-              innerTxns: [{ sender: FIXTURE_SENDER }],
+              innerTxns: [{ sender: FIXTURE_SENDER, feeMicroAlgos: 0 }],
             },
           ],
         },
@@ -149,8 +149,8 @@ describe('first-party catalog views', () => {
         output: {
           groupId: 'abc123',
           transactions: [
-            { type: 'pay', sender: FIXTURE_SENDER, group: 'abc123' },
-            { type: 'appl', sender: FIXTURE_SENDER, group: 'abc123', applicationId: 1071 },
+            { type: 'pay', sender: FIXTURE_SENDER, group: 'abc123', feeMicroAlgos: 1000 },
+            { type: 'appl', sender: FIXTURE_SENDER, group: 'abc123', applicationId: 1071, feeMicroAlgos: 1000 },
           ],
         },
         isError: false,
@@ -270,7 +270,7 @@ describe('first-party catalog views', () => {
         output: {
           appId: 1071,
           scope: 'global',
-          state: [{ key: 'admin', value: FIXTURE_SENDER, type: 'bytes' }],
+          state: [{ key: 'admin', keyBase64: 'YWRtaW4=', value: FIXTURE_SENDER, type: 'bytes' }],
         },
         isError: false,
       },
@@ -297,7 +297,7 @@ describe('first-party catalog views', () => {
           scope: 'local',
           address: FIXTURE_SENDER,
           optedIn: true,
-          state: [{ key: 'counter', value: 7, type: 'uint' }],
+          state: [{ key: 'counter', keyBase64: 'Y291bnRlcg==', value: 7, type: 'uint' }],
         },
         isError: false,
       },

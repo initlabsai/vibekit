@@ -1,38 +1,9 @@
-import { z } from 'zod'
+import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
 
-import { uint64JsonSchema } from './algo.js'
-import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from './classifier.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
 import { transactionDetailDataSchema } from './transactions.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
 import type { ResultIdentity } from './live-payment.js'
-
-/** The JSON-safe wire subset of lookup_transaction this slice consumes. */
-export const transactionWireSchema = z.object({
-  id: algorandTransactionIdSchema,
-  type: z.string().min(1).optional(),
-  sender: algorandAddressCandidateSchema,
-  feeMicroAlgos: uint64JsonSchema,
-  confirmedRound: z.number().int().nonnegative().optional(),
-  roundTime: z.number().int().nonnegative().optional(),
-  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
-  receiver: algorandAddressCandidateSchema.optional(),
-  assetId: z.number().int().nonnegative().optional(),
-  assetAmount: uint64JsonSchema.optional(),
-  assetName: z.string().min(1).optional(),
-  assetUnitName: z.string().min(1).optional(),
-  assetDecimals: z.number().int().nonnegative().optional(),
-  applicationId: z.number().int().nonnegative().optional(),
-  onCompletion: z.string().min(1).optional(),
-  note: z.string().min(1).optional(),
-  group: z.string().min(1).optional(),
-  innerTxns: z.array(z.unknown()).optional(),
-  rekeyTo: algorandAddressCandidateSchema.optional(),
-  closeTo: algorandAddressCandidateSchema.optional(),
-  closeAmountMicroAlgos: uint64JsonSchema.optional(),
-  closeAssetAmount: uint64JsonSchema.optional(),
-  clawbackFrom: algorandAddressCandidateSchema.optional(),
-})
 
 /** Wraps a lookup_transaction result as a transaction detail record. */
 export function buildTransactionDetailRecord(
@@ -40,7 +11,7 @@ export function buildTransactionDetailRecord(
   wire: unknown,
   toolName = 'lookup_transaction',
 ): StructuredResult {
-  const txn = transactionWireSchema.parse(wire)
+  const txn = viewDataSchemas['transaction.detail'].parse(wire)
   return structuredResultSchema.parse({
     protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
     type: 'result',

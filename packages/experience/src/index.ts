@@ -62,7 +62,7 @@ export { lookupAmbiguousEntity, type EntityLookupHost } from './entity-lookup.js
 export { assetDetailDataSchema, type AssetDetailData } from './assets.js'
 export { blockDetailDataSchema, type BlockDetailData } from './blocks.js'
 export { networkStatusDataSchema, type NetworkStatusData } from './networks.js'
-export { buildNetworkStatusRecord, networkStatusWireSchema } from './live-network.js'
+export { buildNetworkStatusRecord } from './live-network.js'
 export {
   createFixtureEntityLookup,
   FIXTURE_APPLICATION_ID,

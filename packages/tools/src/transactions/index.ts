@@ -1,20 +1,15 @@
 import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
-import { formattedTransactionSchema, transactionListSchema } from '../shared/format.js'
+import { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
 import { lookupTransaction, lookupTransactionGroup } from './handlers/lookup.js'
 import { searchTransactions } from './handlers/search.js'
+import { transactionGroupSchema } from './schemas.js'
 
+export * from './schemas.js'
 export { lookupTransaction, lookupTransactionGroup, searchTransactions }
 export type { SearchTransactionsArgs } from './handlers/search.js'
-export type { FormattedTransaction } from '../shared/format.js'
-export { formattedTransactionSchema, transactionListSchema } from '../shared/format.js'
-
-/** Wire shape of lookup_transaction_group ('transaction.group' view). */
-export const transactionGroupSchema = z.object({
-  groupId: z.string(),
-  transactions: z.array(formattedTransactionSchema),
-  nextToken: z.string().optional(),
-})
+export type { FormattedTransaction } from '../shared/schemas.js'
+export { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
 
 const txTypeEnum = z
   .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod'
 import { accountTools } from '../src/accounts/index.js'
@@ -64,5 +66,37 @@ describe('viewDataSchemas', () => {
     }
     const parsed = viewDataSchemas['transaction.detail'].safeParse(detail)
     expect(parsed.success).toBe(true)
+  })
+})
+
+// The ./views subpath is the browser-safe import: its whole transitive
+// module graph must stay zod-only (schema modules and nothing else), so a
+// bundler never drags algosdk or node-only code into a page.
+describe('views import graph', () => {
+  test('src/views.ts transitively imports only zod and schema modules', () => {
+    const srcDir = resolve(import.meta.dir, '../src')
+    const entry = resolve(srcDir, 'views.ts')
+    const seen = new Set<string>()
+    const queue = [entry]
+    while (queue.length > 0) {
+      const file = queue.pop()!
+      if (seen.has(file)) continue
+      seen.add(file)
+      const source = readFileSync(file, 'utf8')
+      const specifiers = [
+        // `import ... from 'x'` and `export ... from 'x'` clauses.
+        ...[...source.matchAll(/^(?:import|export)[\s\S]*?from\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]!),
+        // Bare side-effect imports: `import 'x'`.
+        ...[...source.matchAll(/^import\s+['"]([^'"]+)['"]/gm)].map((m) => m[1]!),
+      ]
+      for (const specifier of specifiers) {
+        if (specifier === 'zod') continue
+        // Anything that is not zod must be another local schema-only module.
+        expect(specifier).toMatch(/^\.\.?\/.*schemas\.js$/)
+        queue.push(resolve(dirname(file), specifier.replace(/\.js$/, '.ts')))
+      }
+    }
+    // views.ts plus the six schema modules it reaches.
+    expect(seen.size).toBe(7)
   })
 })
