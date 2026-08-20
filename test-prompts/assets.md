@@ -3,7 +3,7 @@
 Test the full ASA lifecycle on localnet. Follow [README.md](README.md)
 conventions. Every write call: explicit `network: "localnet"`.
 
-**Tools:** `create_asset`, `get_asset_info`, `lookup_asset`, `search_assets`,
+**Tools:** `asset_create`, `get_asset_info`, `lookup_asset`, `search_assets`,
 `search_asset_balances`, `search_asset_transactions`, `asset_opt_in`,
 `asset_transfer`, `asset_freeze`, `asset_config`, `asset_opt_out`, `asset_destroy`
 
@@ -14,7 +14,7 @@ fund ACCT_B too: `vibekit localnet fund <ACCT_B>`).
 
 ### Create
 
-1. `create_asset` from ACCT_A: `total: 1000000`, `decimals: 2`, `assetName: "Smoke Token"`, `unitName: "SMK"`, `manager`, `freeze` and `clawback` set to ACCT_A.
+1. `asset_create` from ACCT_A: `total: 1000000`, `decimals: 2`, `assetName: "Smoke Token"`, `unitName: "SMK"`, `manager`, `freeze` and `clawback` set to ACCT_A.
    - Verify: executes; extract the created ASSET_ID from the result/txid (via `lookup_transaction` on the create txid if the result doesn't carry it).
 2. `get_asset_info` for ASSET_ID.
    - Verify: name/unit/decimals/total match; `manager`/`freeze`/`clawback` = ACCT_A; `creator` = ACCT_A.

@@ -15,7 +15,7 @@ describe('registry', () => {
     for (const tool of transactionTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.display).toBeDefined()
+      expect(tool.view ?? tool.display).toBeDefined()
     }
   })
 })
@@ -54,6 +54,79 @@ describe('lookupTransaction', () => {
     expect(tx.group).toBe('AQID')
     expect(tx.logs).toEqual(['BAU='])
     expect(tx.assetId).toBeUndefined()
+  })
+
+  test('enriches an asset transfer with algod params and clawback/close fields', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: (txid: string) =>
+          chainable({
+            transaction: {
+              id: txid,
+              txType: 'axfer',
+              sender: 'CLAWBACK',
+              fee: BigInt(1_000),
+              confirmedRound: BigInt(64_241_214),
+              roundTime: BigInt(1_787_169_296),
+              rekeyTo: 'REKEY',
+              assetTransferTransaction: {
+                assetId: BigInt(849_191_641),
+                amount: BigInt(52_000),
+                receiver: 'RECEIVER',
+                sender: 'VICTIM',
+                closeTo: 'CLOSE',
+                closeAmount: BigInt(10),
+              },
+            },
+          }),
+      },
+      algod: {
+        getAssetByID: () =>
+          chainable({
+            index: BigInt(849_191_641),
+            params: { name: 'Hesab Afghani', unitName: 'HAFN', decimals: 2 },
+          }),
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'AXFER' })
+    expect(tx.assetId).toBe(849_191_641)
+    expect(tx.assetAmount).toBe(52_000)
+    expect(tx.assetName).toBe('Hesab Afghani')
+    expect(tx.assetUnitName).toBe('HAFN')
+    expect(tx.assetDecimals).toBe(2)
+    expect(tx.clawbackFrom).toBe('VICTIM')
+    expect(tx.closeTo).toBe('CLOSE')
+    expect(tx.closeAmount).toBe(10)
+    expect(tx.rekeyTo).toBe('REKEY')
+  })
+
+  test('still returns an asset transfer when algod asset lookup fails', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'AXFER',
+              txType: 'axfer',
+              sender: 'SENDER',
+              fee: BigInt(1_000),
+              assetTransferTransaction: {
+                assetId: BigInt(7),
+                amount: BigInt(1),
+                receiver: 'RECEIVER',
+              },
+            },
+          }),
+      },
+      algod: {
+        getAssetByID: () => {
+          throw new Error('offline')
+        },
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'AXFER' })
+    expect(tx.assetId).toBe(7)
+    expect(tx.assetName).toBeUndefined()
   })
 
   test('formats an app call with inner asset transfer txns', async () => {
@@ -256,6 +329,7 @@ describe('lookupTransactionGroup', () => {
     const result = await lookupTransactionGroup(ctx, { groupId: 'CQ==' })
     expect(calls.groupid).toEqual(['CQ=='])
     expect(calls.limit).toEqual([100])
+    expect(result.groupId).toBe('CQ==')
     expect(result.transactions.map((t) => t.id)).toEqual(['G1', 'G2'])
     expect(result.transactions[0]?.group).toBe('CQ==')
     expect(result.transactions[0]?.paymentAmount).toBe(1)

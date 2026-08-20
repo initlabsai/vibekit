@@ -3,7 +3,7 @@ import type { DisplayHint } from '@initlabs/vibekit-core'
 /**
  * The orchestrator's stream protocol. Every head (TUI, hosted API, web agent)
  * renders from these events (streaming text, tool activity, results with
- * their display hints), never from per-tool knowledge of its own.
+ * their display hints and view ids), never from per-tool knowledge of its own.
  */
 export type AgentEvent =
   | { type: 'text-delta'; text: string }
@@ -16,6 +16,8 @@ export type AgentEvent =
       /** JSON-safe tool output; on isError, `{ error: { code, message } }`. */
       output: unknown
       display?: DisplayHint
+      /** Semantic Explorer view id declared on the tool, when present. */
+      view?: string
       isError: boolean
     }
   | { type: 'error'; message: string }

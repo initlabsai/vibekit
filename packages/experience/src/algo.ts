@@ -30,11 +30,25 @@ export function formatMicroAlgos(value: Uint64Json | SignedMicroAlgosJson): stri
   const raw = typeof value === 'number' ? value.toString() : value
   if (!/^-?\d+$/.test(raw)) throw new Error(`Not a microALGO integer: ${raw}`)
   const negative = raw.startsWith('-')
-  const digits = (negative ? raw.slice(1) : raw).padStart(7, '0')
-  const whole = digits.slice(0, -6).replace(/^0+(?=\d)/, '')
-  const fraction = digits.slice(-6).replace(/0+$/, '')
-  const magnitude = fraction ? `${whole}.${fraction}` : whole
+  const magnitude = formatBaseUnits(negative ? raw.slice(1) : raw, 6)
   return negative && magnitude !== '0' ? `-${magnitude}` : magnitude
+}
+
+/**
+ * Formats an unsigned integer in base units as a decimal string with `decimals`
+ * places, using digit math so ASA amounts survive display unchanged.
+ */
+export function formatBaseUnits(value: Uint64Json, decimals: number): string {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 19) {
+    throw new Error(`Invalid decimals: ${decimals}`)
+  }
+  const raw = typeof value === 'number' ? value.toString() : value
+  if (!/^\d+$/.test(raw)) throw new Error(`Not a uint64: ${raw}`)
+  if (decimals === 0) return raw.replace(/^0+(?=\d)/, '')
+  const digits = raw.padStart(decimals + 1, '0')
+  const whole = digits.slice(0, -decimals).replace(/^0+(?=\d)/, '')
+  const fraction = digits.slice(-decimals).replace(/0+$/, '')
+  return fraction ? `${whole}.${fraction}` : whole
 }
 
 /**

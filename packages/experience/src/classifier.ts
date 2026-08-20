@@ -3,6 +3,9 @@ import { z } from 'zod'
 const TRANSACTION_ID_PATTERN = /^[A-Z2-7]{51}[AQ]$/
 const ADDRESS_PATTERN = /^[A-Z2-7]{57}[AEIMQUY4]$/
 const NUMERIC_ID_PATTERN = /^(0|[1-9]\d*)$/
+/** 32-byte group digest as RFC 4648 base64 (44 chars, one trailing pad). */
+const GROUP_ID_PATTERN = /^[A-Za-z0-9+/]{43}=$/
+const GROUP_ID_URLSAFE_PATTERN = /^[A-Za-z0-9_-]{43}=$/
 
 /** Canonical unpadded base32 shape of a 32-byte Algorand transaction hash. */
 export const algorandTransactionIdSchema = z
@@ -17,6 +20,14 @@ export const algorandAddressCandidateSchema = z
   .string()
   .regex(ADDRESS_PATTERN, 'Expected a 58-character Algorand address candidate')
 
+/** Structural group-id shape as returned by lookup_transaction (`group` is base64). */
+export const algorandGroupIdSchema = z
+  .string()
+  .refine(
+    (value) => GROUP_ID_PATTERN.test(value) || GROUP_ID_URLSAFE_PATTERN.test(value),
+    'Expected a 44-character base64 Algorand group ID',
+  )
+
 /** Entity kinds the deterministic input lane can target or disambiguate. */
 export const explorerEntityKindSchema = z.enum([
   'transaction',
@@ -24,6 +35,7 @@ export const explorerEntityKindSchema = z.enum([
   'asset',
   'application',
   'block',
+  'group',
 ])
 
 /** Entity kinds the deterministic input lane can target or disambiguate. */
@@ -39,6 +51,11 @@ export type ClassifiedExplorerInput =
   | {
       kind: 'entity'
       entity: 'account'
+      value: string
+    }
+  | {
+      kind: 'entity'
+      entity: 'group'
       value: string
     }
   | {
@@ -75,6 +92,15 @@ export const addressCandidateRecognizer: InputRecognizer = Object.freeze<InputRe
   },
 })
 
+/** Recognizes a 32-byte transaction group id in standard or URL-safe base64. */
+export const groupIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
+  id: 'algorand-group-id',
+  recognize(input) {
+    if (!algorandGroupIdSchema.safeParse(input).success) return undefined
+    return { kind: 'entity', entity: 'group', value: input }
+  },
+})
+
 /**
  * Preserves bare numeric identifiers as an explicit asset/application/block
  * ambiguity instead of guessing which domain owns the number.
@@ -95,6 +121,7 @@ export const ambiguousNumericIdRecognizer: InputRecognizer = Object.freeze<Input
 export const defaultInputRecognizers: readonly InputRecognizer[] = Object.freeze([
   transactionIdRecognizer,
   addressCandidateRecognizer,
+  groupIdRecognizer,
   ambiguousNumericIdRecognizer,
 ])
 
@@ -116,3 +143,33 @@ export function createInputClassifier(
 
 /** Classifies input with the built-in transaction, account, and numeric lanes. */
 export const classifyExplorerInput = createInputClassifier()
+
+/** A composer command that names one entity kind and a numeric id. */
+export type DirectedEntityCommand =
+  | { entity: 'asset'; id: number }
+  | { entity: 'application'; id: number }
+  | { entity: 'block'; id: number }
+  | { entity: 'group'; id: string }
+
+/**
+ * Parses `asset 1042`, `app 1071`, `application 1071`, `asa 1042`,
+ * `block 22`, or `group <base64>`. Bare numbers stay ambiguous and go
+ * through classifyExplorerInput.
+ */
+export function parseEntityComposerCommand(raw: string): DirectedEntityCommand | undefined {
+  const trimmed = raw.trim()
+  const groupMatch = /^group\s+(\S+)$/i.exec(trimmed)
+  if (groupMatch) {
+    const id = groupMatch[1]!
+    if (!algorandGroupIdSchema.safeParse(id).success) return undefined
+    return { entity: 'group', id }
+  }
+  const match = /^(asset|asa|app|application|block)\s+(0|[1-9]\d*)$/i.exec(trimmed)
+  if (!match) return undefined
+  const id = Number(match[2])
+  if (!Number.isSafeInteger(id)) return undefined
+  const kind = match[1]!.toLowerCase()
+  if (kind === 'asset' || kind === 'asa') return { entity: 'asset', id }
+  if (kind === 'app' || kind === 'application') return { entity: 'application', id }
+  return { entity: 'block', id }
+}

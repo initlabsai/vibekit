@@ -65,12 +65,9 @@ describe('contract write tools', () => {
       'app_opt_in',
       'app_close_out',
       'app_delete',
-      'app_get_info',
-      'app_list_methods',
     ])
-    const readNames = ['app_get_info', 'app_list_methods']
     for (const tool of contractWriteTools) {
-      expect(tool.requiresSigner ?? false).toBe(!readNames.includes(tool.name))
+      expect(tool.requiresSigner).toBe(true)
     }
   })
 
@@ -114,13 +111,5 @@ describe('contract write tools', () => {
     const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(result.unsignedGroup[0]!))
     expect(txn.applicationCall?.appIndex).toBe(BigInt(7))
     expect(txn.applicationCall?.appArgs?.length).toBeGreaterThan(0) // selector + encoded arg
-  })
-
-  test('app_list_methods returns parsed methods without touching the chain', async () => {
-    const tool = contractWriteTools.find((t) => t.name === 'app_list_methods')!
-    const result = (await tool.handler(fakeContext({}), { appSpec: arc32Spec } as never)) as {
-      methods: Array<{ signature: string }>
-    }
-    expect(result.methods[0]?.signature).toBe('go()void')
   })
 })

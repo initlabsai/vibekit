@@ -6,7 +6,11 @@
  * decision before it will invoke `signDraft`.
  */
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
-import type { PaymentFlowHost, StructuredResult } from '@initlabs/vibekit-experience'
+import type {
+  EntityLookupHost,
+  PaymentFlowHost,
+  StructuredResult,
+} from '@initlabs/vibekit-experience'
 import {
   createPaymentComposeHost,
   signedGroupRecordFor,
@@ -15,14 +19,21 @@ import {
 } from '@initlabs/vibekit-experience/live'
 
 /** The TUI payment host: compose, simulate, submit, and keystore signing. */
-export interface KeystorePaymentHost extends PaymentFlowHost {
+export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
   probe(timeoutMs?: number): Promise<boolean>
   /** True when the daemon is reachable and holds a key for the address. */
   canSign(address: string): Promise<boolean>
   /** Looks an account's portfolio up as an authoritative record. */
   lookupAccount(address: string): Promise<StructuredResult>
+  /** Looks several accounts up as one account.list record. */
+  lookupAccounts(addresses: readonly string[]): Promise<StructuredResult>
   /** Looks a transaction up as an authoritative record. */
   lookupTransaction(txid: string): Promise<StructuredResult>
+  /** Looks every transaction in an atomic group up as one transaction.group record. */
+  lookupTransactionGroup(groupId: string): Promise<StructuredResult>
+  lookupAccountAssets(address: string): Promise<StructuredResult>
+  lookupAccountAppStates(address: string): Promise<StructuredResult>
+  lookupAccountTransactions(address: string): Promise<StructuredResult>
   /** The keystore daemon's address book (names never leave this process). */
   listSigningAccounts(): Promise<Array<{ address: string; name?: string }>>
   close(): Promise<void>

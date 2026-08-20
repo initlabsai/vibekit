@@ -17,27 +17,26 @@ const suggestedParams = {
 }
 
 describe('asset write tools', () => {
-  test('registry: 7 writes require signer + get_asset_info read', () => {
+  test('registry: 7 writes require signer', () => {
     const names = assetWriteTools.map((t) => t.name)
     expect(names).toEqual([
-      'create_asset',
+      'asset_create',
       'asset_transfer',
       'asset_opt_in',
       'asset_opt_out',
       'asset_freeze',
       'asset_config',
       'asset_destroy',
-      'get_asset_info',
     ])
     for (const tool of assetWriteTools) {
-      expect(tool.requiresSigner ?? false).toBe(tool.name !== 'get_asset_info')
+      expect(tool.requiresSigner).toBe(true)
       expect(tool.output).toBeDefined()
     }
   })
 
-  test('create_asset composes an acfg create with metadata hash', async () => {
+  test('asset_create composes an acfg create with metadata hash', async () => {
     const ctx = fakeContext({ algod: { getTransactionParams: () => chainable(suggestedParams) } })
-    const tool = assetWriteTools.find((t) => t.name === 'create_asset')!
+    const tool = assetWriteTools.find((t) => t.name === 'asset_create')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       total: 1_000_000,
@@ -49,27 +48,5 @@ describe('asset write tools', () => {
     const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(result.unsignedGroup[0]!))
     expect(txn.assetConfig?.total).toBe(BigInt(1_000_000))
     expect(txn.assetConfig?.decimals).toBe(2)
-  })
-
-  test('get_asset_info shapes algod response', async () => {
-    const ctx = fakeContext({
-      algod: {
-        getAssetByID: () =>
-          chainable({
-            index: BigInt(42),
-            params: {
-              name: 'Coin',
-              unitName: 'C',
-              total: BigInt(9),
-              decimals: BigInt(0),
-              creator: ADDR_A,
-            },
-          }),
-      },
-    })
-    const tool = assetWriteTools.find((t) => t.name === 'get_asset_info')!
-    const info = (await tool.handler(ctx, { assetId: 42 } as never)) as { assetId: number; creator: string }
-    expect(info.assetId).toBe(42)
-    expect(info.creator).toBe(ADDR_A)
   })
 })

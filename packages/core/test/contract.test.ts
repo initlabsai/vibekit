@@ -10,10 +10,12 @@ describe('defineTool', () => {
       name: 'echo',
       description: 'echo',
       parameters: z.object({ value: z.string() }),
+      view: 'transaction.detail',
       handler: async (_ctx, args) => args.value.toUpperCase(), // args typed, not unknown
     })
     expect(tool.name).toBe('echo')
     expect(tool.requiresSigner).toBeUndefined()
+    expect(tool.view).toBe('transaction.detail')
   })
 })
 

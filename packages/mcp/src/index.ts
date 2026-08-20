@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server'
 import { registerTools } from './adapter.js'
 import { resolveDeployment, type VibekitMcpOptions } from './options.js'
 
-export { DISPLAY_META_KEY, NETWORK_PARAM } from './adapter.js'
+export { DISPLAY_META_KEY, VIEW_META_KEY, NETWORK_PARAM } from './adapter.js'
 export type { VibekitMcpOptions } from './options.js'
 
 /**

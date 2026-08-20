@@ -1,4 +1,4 @@
-import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
+import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 import { lookupAsset } from './handlers/lookup.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from './handlers/search.js'
@@ -39,6 +39,14 @@ const transactionSummary: z.ZodType = z.lazy(() =>
       .optional()
       .describe('Asset amount in base units; decimal string when above 2^53'),
     applicationId: z.number().optional(),
+    onCompletion: z.string().optional(),
+    assetName: z.string().optional(),
+    assetUnitName: z.string().optional(),
+    assetDecimals: z.number().int().nonnegative().optional(),
+    rekeyTo: z.string().optional(),
+    closeTo: z.string().optional(),
+    closeAmount: z.union([z.number(), z.string()]).optional(),
+    clawbackFrom: z.string().optional(),
     note: z.string().optional(),
     group: z.string().optional(),
     innerTxns: z.array(transactionSummary).optional(),
@@ -59,7 +67,7 @@ export const assetTools: AnyTool[] = [
       assetId: z.number().describe('The asset ID to look up'),
     }),
     output: assetSummary,
-    display: 'asset',
+    view: 'asset.detail',
     handler: async (ctx, args) => lookupAsset(ctx, args),
   }),
   defineTool({
@@ -89,7 +97,7 @@ export const assetTools: AnyTool[] = [
       ),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'asset.holders',
     handler: async (ctx, args) => searchAssetBalances(ctx, args),
   }),
   defineTool({
@@ -106,7 +114,7 @@ export const assetTools: AnyTool[] = [
       transactions: z.array(transactionSummary),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'transaction.list',
     handler: async (ctx, args) => searchAssetTransactions(ctx, args),
   }),
   defineTool({
@@ -123,7 +131,49 @@ export const assetTools: AnyTool[] = [
       assets: z.array(assetSummary),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'asset.list',
     handler: async (ctx, args) => searchAssets(ctx, args),
+  }),
+  defineTool({
+    name: 'get_asset_info',
+    description:
+      "Get an asset's current parameters directly from algod (name, supply, roles, frozen state).",
+    parameters: z.object({ assetId: z.number().describe('The asset ID') }),
+    output: z.object({
+      assetId: z.number(),
+      name: z.string().optional(),
+      unitName: z.string().optional(),
+      total: z.union([z.number(), z.string()]),
+      decimals: z.number(),
+      defaultFrozen: z.boolean().optional(),
+      url: z.string().optional(),
+      creator: z.string(),
+      manager: z.string().optional(),
+      reserve: z.string().optional(),
+      freeze: z.string().optional(),
+      clawback: z.string().optional(),
+    }),
+    view: 'asset.detail',
+    handler: async (ctx, args) => {
+      const asset = await ctx.algod.getAssetByID(BigInt(args.assetId)).do()
+      const params = asset.params
+      if (!params) {
+        throw new ToolError('ASSET_NOT_FOUND', `Asset ${args.assetId} has no parameters`)
+      }
+      return {
+        assetId: Number(asset.index),
+        name: params.name,
+        unitName: params.unitName,
+        total: params.total,
+        decimals: Number(params.decimals),
+        defaultFrozen: params.defaultFrozen,
+        url: params.url,
+        creator: String(params.creator),
+        manager: params.manager ? String(params.manager) : undefined,
+        reserve: params.reserve ? String(params.reserve) : undefined,
+        freeze: params.freeze ? String(params.freeze) : undefined,
+        clawback: params.clawback ? String(params.clawback) : undefined,
+      }
+    },
   }),
 ] as AnyTool[]

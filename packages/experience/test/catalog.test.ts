@@ -1,0 +1,293 @@
+import { describe, expect, test } from 'bun:test'
+
+import {
+  EXPERIENCE_PROTOCOL_VERSION,
+  FIXTURE_SENDER,
+  addResult,
+  bridgeToolResult,
+  createAccountListViewModel,
+  createAccountSummaryViewModel,
+  createApplicationStateViewModel,
+  createAssetHoldersViewModel,
+  createAssetListViewModel,
+  createBlockDetailViewModel,
+  createBlockListViewModel,
+  createResultStore,
+  createTransactionCollectionViewModel,
+  viewSpecSchema,
+} from '../src/index.js'
+
+const identity = {
+  resultId: 'result-catalog',
+  toolCallId: 'tool-call-catalog',
+  network: 'localnet' as const,
+}
+
+function viewFor(
+  record: { resultId: string },
+  view:
+    | 'account.summary'
+    | 'account.list'
+    | 'transaction.list'
+    | 'transaction.group'
+    | 'asset.list'
+    | 'asset.holders'
+    | 'application.state'
+    | 'block.list',
+) {
+  return viewSpecSchema.parse({
+    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    type: 'view',
+    view,
+    source: { source: 'result', id: record.resultId },
+  })
+}
+
+describe('first-party catalog views', () => {
+  test('lookup_account becomes an account summary', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'lookup_account',
+        view: 'account.summary',
+        output: {
+          address: FIXTURE_SENDER,
+          balanceAlgos: 8.44,
+          status: 'Offline',
+          minBalanceAlgos: 0.1,
+          totalAssetsOptedIn: 2,
+          totalAppsOptedIn: 1,
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('account.summary')
+    const derived = createAccountSummaryViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewFor(bridged.record, 'account.summary'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.balanceMicroAlgos).toBe(8440000)
+    expect(derived.model.minBalanceMicroAlgos).toBe(100000)
+    expect(derived.model.totalAssetsOptedIn).toBe(2)
+  })
+
+  test('search_accounts becomes an account list', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'search_accounts',
+        view: 'account.list',
+        output: {
+          accounts: [{ address: FIXTURE_SENDER, balanceAlgos: 1 }],
+          nextToken: 'abc',
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('account.list')
+    const derived = createAccountListViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewFor(bridged.record, 'account.list'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.accounts).toHaveLength(1)
+    expect(derived.model.nextToken).toBe('abc')
+  })
+
+  test('search_transactions becomes a transaction list', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'search_transactions',
+        output: {
+          transactions: [
+            {
+              id: 'Y5OGL6BRVN32OAL54AB32C4SXSYAZOMOT3YPIG4N454RRR566YBA',
+              type: 'pay',
+              sender: FIXTURE_SENDER,
+              paymentAmount: 0.25,
+              fee: 0.001,
+              confirmedRound: 22,
+              roundTime: 1787169189,
+              innerTxns: [{ sender: FIXTURE_SENDER }],
+            },
+          ],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('transaction.list')
+    const derived = createTransactionCollectionViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewFor(bridged.record, 'transaction.list'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.transactions[0]).toMatchObject({
+      paymentAmountMicroAlgos: 250000,
+      feeMicroAlgos: 1000,
+      confirmedRound: 22,
+      roundTime: 1787169189,
+      innerCount: 1,
+    })
+  })
+
+  test('lookup_transaction_group captures the group id', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'lookup_transaction_group',
+        output: {
+          groupId: 'abc123',
+          transactions: [
+            { type: 'pay', sender: FIXTURE_SENDER, group: 'abc123' },
+            { type: 'appl', sender: FIXTURE_SENDER, group: 'abc123', applicationId: 1071 },
+          ],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('transaction.group')
+    const derived = createTransactionCollectionViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewFor(bridged.record, 'transaction.group'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.groupId).toBe('abc123')
+    expect(derived.model.transactions).toHaveLength(2)
+  })
+
+  test('search_assets and search_asset_balances become list and holders cards', () => {
+    const assets = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'search_assets',
+        output: { assets: [{ assetId: 1042, name: 'Sample', unitName: 'SMPL', totalSupply: '1000', decimals: 0 }] },
+        isError: false,
+      },
+      identity,
+    )
+    expect(assets.view).toBe('asset.list')
+    const assetModel = createAssetListViewModel(
+      addResult(createResultStore(), assets.record),
+      viewFor(assets.record, 'asset.list'),
+    )
+    if (!assetModel.ok) throw new Error(assetModel.error.message)
+    expect(assetModel.model.assets[0]?.unitName).toBe('SMPL')
+
+    const holders = bridgeToolResult(
+      {
+        id: '2',
+        toolName: 'search_asset_balances',
+        output: { balances: [{ address: FIXTURE_SENDER, amount: '12', isFrozen: false }] },
+        isError: false,
+      },
+      { ...identity, resultId: 'result-holders', toolCallId: 'tool-call-holders' },
+    )
+    expect(holders.view).toBe('asset.holders')
+    const holderModel = createAssetHoldersViewModel(
+      addResult(createResultStore(), holders.record),
+      viewFor(holders.record, 'asset.holders'),
+    )
+    if (!holderModel.ok) throw new Error(holderModel.error.message)
+    expect(holderModel.model.balances[0]?.amount).toBe('12')
+  })
+
+  test('account local state and read_global_state share application.state', () => {
+    const local = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'get_account_app_local_states',
+        output: {
+          appLocalStates: [
+            {
+              applicationId: 1071,
+              schema: { numByteSlice: 0, numUint: 1 },
+              keyValue: [{ key: 'counter', value: { type: 2, uint: 7 } }],
+            },
+          ],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(local.view).toBe('application.state')
+    const localModel = createApplicationStateViewModel(
+      addResult(createResultStore(), local.record),
+      viewFor(local.record, 'application.state'),
+    )
+    if (!localModel.ok) throw new Error(localModel.error.message)
+    expect(localModel.model.scope).toBe('local')
+    expect(localModel.model.apps[0]?.entries[0]).toEqual({ key: 'counter', value: '7', type: 'uint' })
+
+    const global = bridgeToolResult(
+      {
+        id: '2',
+        toolName: 'read_global_state',
+        output: { appId: 1071, state: [{ key: 'admin', value: FIXTURE_SENDER, type: 'bytes' }] },
+        isError: false,
+      },
+      { ...identity, resultId: 'result-global', toolCallId: 'tool-call-global' },
+    )
+    const globalModel = createApplicationStateViewModel(
+      addResult(createResultStore(), global.record),
+      viewFor(global.record, 'application.state'),
+    )
+    if (!globalModel.ok) throw new Error(globalModel.error.message)
+    expect(globalModel.model.scope).toBe('global')
+  })
+
+  test('lookup_block carries type totals, not transaction rows', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'lookup_block',
+        view: 'block.detail',
+        output: {
+          round: 22,
+          timestamp: 1787169189,
+          transactionCount: 1,
+          transactionTypes: [{ type: 'pay', count: 1 }],
+        },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('block.detail')
+    const derived = createBlockDetailViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewSpecSchema.parse({
+        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        type: 'view',
+        view: 'block.detail',
+        source: { source: 'result', id: bridged.record.resultId },
+      }),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.transactionTypes).toEqual([{ type: 'pay', count: 1 }])
+    expect(derived.model.transactionCount).toBe(1)
+  })
+
+  test('search_block_headers becomes a block list', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'search_block_headers',
+        output: { blocks: [{ round: 22, timestamp: 1787169189, transactionCount: 1 }] },
+        isError: false,
+      },
+      identity,
+    )
+    expect(bridged.view).toBe('block.list')
+    const derived = createBlockListViewModel(
+      addResult(createResultStore(), bridged.record),
+      viewFor(bridged.record, 'block.list'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.blocks[0]?.round).toBe(22)
+  })
+})

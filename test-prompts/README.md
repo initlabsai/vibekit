@@ -72,7 +72,7 @@ the prompt instructs it (or pre-fund and substitute addresses).
   message (e.g. `CLOSE_NOT_CONFIRMED`) — a generic error or a success is FAIL.
 - Every write tool call must include an explicit `"network"` argument.
   Steps deliberately omitting it (gates.md) expect refusal.
-- Amounts: `send_payment` takes `amountMicroAlgos` (µALGO); lookups report
+- Amounts: `send_payment` and payment `TxnSpec`s take `amountMicroAlgos` (µALGO); lookups report
   `fee`/`paymentAmount` in **ALGO**. Verify conversions accordingly.
 - Never use mainnet in any write call. Localnet files must never name
   `testnet`/`mainnet` except where a step explicitly tests refusal.

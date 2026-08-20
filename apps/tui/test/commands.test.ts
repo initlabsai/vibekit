@@ -1,16 +1,25 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
 } from '@initlabs/vibekit-experience'
 
-import { routeComposerInput } from '../src/commands.js'
+import { paymentParties, routeComposerInput } from '../src/commands.js'
 
 describe('transcript command routing', () => {
   test('exact commands come first', () => {
-    expect(routeComposerInput('accounts')).toEqual({ status: 'nav', screen: 'accounts' })
+    expect(routeComposerInput('accounts')).toEqual({ status: 'nav', screen: 'wallet' })
+    expect(routeComposerInput('wallet')).toEqual({ status: 'nav', screen: 'wallet' })
+    expect(routeComposerInput('my assets')).toEqual({ status: 'nav', screen: 'assets' })
+    expect(routeComposerInput('assets')).toEqual({ status: 'nav', screen: 'assets' })
+    expect(routeComposerInput('my apps')).toEqual({ status: 'nav', screen: 'apps' })
+    expect(routeComposerInput('list my txns')).toEqual({ status: 'nav', screen: 'txns' })
+    expect(routeComposerInput('list my accounts')).toEqual({ status: 'account-list' })
+    expect(routeComposerInput('show me my accounts')).toEqual({ status: 'account-list' })
+    expect(routeComposerInput('my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput(' SAMPLE ')).toEqual({ status: 'sample' })
     expect(routeComposerInput('help')).toEqual({ status: 'help' })
     expect(routeComposerInput('pay 1.5')).toEqual({ status: 'payment', amountMicroAlgos: 1500000 })
@@ -37,6 +46,29 @@ describe('transcript command routing', () => {
       address: FIXTURE_SENDER,
     })
     expect(routeComposerInput('1022')).toEqual({ status: 'ambiguous', value: '1022' })
+    expect(routeComposerInput('asset 1042')).toEqual({ status: 'asset', assetId: 1042 })
+    expect(routeComposerInput('app 1071')).toEqual({ status: 'application', applicationId: 1071 })
+    expect(routeComposerInput('block 22')).toEqual({ status: 'block', round: 22 })
+    expect(
+      routeComposerInput('group AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='),
+    ).toEqual({
+      status: 'group',
+      groupId: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+    })
+    expect(routeComposerInput('AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=')).toEqual({
+      status: 'group',
+      groupId: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+    })
+  })
+
+  test('typed pay uses the active keystore account as sender', () => {
+    expect(paymentParties([], undefined)).toEqual({
+      sender: FIXTURE_SENDER,
+      receiver: FIXTURE_RECEIVER,
+    })
+    expect(
+      paymentParties([{ address: FIXTURE_SENDER }, { address: FIXTURE_RECEIVER }], FIXTURE_RECEIVER),
+    ).toEqual({ sender: FIXTURE_RECEIVER, receiver: FIXTURE_SENDER })
   })
 
   test('everything else is conversation', () => {

@@ -16,10 +16,21 @@ describe('registry', () => {
     for (const tool of networkTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.display).toBeDefined()
+      expect(tool.view ?? tool.display).toBeDefined()
     }
   })
 })
+
+const PAY_TXN = {
+  id: 'Y5OGL6BRVN32OAL54AB32C4SXSYAZOMOT3YPIG4N454RRR566YBA',
+  txType: 'pay',
+  sender: 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ',
+  paymentTransaction: {
+    amount: BigInt(250_000),
+    receiver: 'L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE',
+  },
+  innerTxns: [{}],
+}
 
 describe('lookupBlock', () => {
   test('defaults to latest round from algod and formats fields', async () => {
@@ -30,7 +41,7 @@ describe('lookupBlock', () => {
           chainable({
             round: BigInt(round),
             timestamp: BigInt(1_700_000_000),
-            transactions: [{}, {}],
+            transactions: [PAY_TXN, {}],
             proposer: 'PROPOSER',
             feesCollected: BigInt(2_000_000),
             previousBlockHash: new Uint8Array([1, 2]),
@@ -43,7 +54,41 @@ describe('lookupBlock', () => {
     expect(block.feesCollected).toBe(2)
     expect(block.previousBlockHash).toBe('AQI=')
     expect(block.proposerPayout).toBeUndefined()
+    expect(block.transactionTypes).toEqual([
+      { type: 'pay', count: 1 },
+      { type: 'other', count: 1 },
+    ])
   })
+
+  test('summarizes mixed transaction types across the whole block', async () => {
+    const axfer = {
+      id: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      txType: 'axfer',
+      sender: PAY_TXN.sender,
+      assetTransferTransaction: {
+        assetId: 1042,
+        amount: BigInt(10),
+        receiver: PAY_TXN.paymentTransaction.receiver,
+      },
+    }
+    const ctx = fakeContext({
+      indexer: {
+        lookupBlock: (round: number) =>
+          chainable({
+            round: BigInt(round),
+            timestamp: BigInt(1_700_000_000),
+            transactions: [PAY_TXN, PAY_TXN, axfer],
+          }),
+      },
+    })
+    const block = await lookupBlock(ctx, { round: 22 })
+    expect(block.transactionCount).toBe(3)
+    expect(block.transactionTypes).toEqual([
+      { type: 'pay', count: 2 },
+      { type: 'axfer', count: 1 },
+    ])
+  })
+
 })
 
 describe('searchBlockHeaders', () => {

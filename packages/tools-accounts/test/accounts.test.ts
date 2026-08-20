@@ -29,6 +29,8 @@ function fakeIndexerAccount(address: string, amount: bigint) {
   return {
     address,
     amount,
+    minBalance: 100_000,
+    authAddr: ADDR2,
     totalAssetsOptedIn: 3,
     totalAppsOptedIn: 1,
     totalCreatedAssets: 0,
@@ -53,7 +55,7 @@ describe('registry', () => {
     for (const tool of accountTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.display).toBeDefined()
+      expect(tool.view ?? tool.display).toBeDefined()
     }
   })
 })
@@ -70,6 +72,8 @@ describe('lookupAccount', () => {
     expect(account.balanceAlgos).toBe(2.5)
     expect(account.totalAssetsOptedIn).toBe(3)
     expect(account.status).toBe('Offline')
+    expect(account.minBalanceAlgos).toBe(0.1)
+    expect(account.rekeyedTo).toBe(ADDR2)
     expect(account.rewardBase).toBe(218288)
     expect(account.createdAtRound).toBe(1_000_000)
   })

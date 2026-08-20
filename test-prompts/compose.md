@@ -30,7 +30,7 @@ here). Requires reconnecting the MCP server twice with different env
    - Verify: refused with `CLOSE_NOT_CONFIRMED` — composing an unsigned close is still a close.
 6. **Network gate still applies in compose**: `send_payment` omitting `network`.
    - Verify: refused (schema-required param or `NETWORK_REQUIRED`).
-7. `create_asset` from ACCT_A (any params), `network: "localnet"`.
+7. `asset_create` from ACCT_A (any params), `network: "localnet"`.
    - Verify: composes to a 1-txn `unsignedGroup` with a create summary.
 8. `app_deploy` from ACCT_A with the counter app spec from [contracts.md](contracts.md).
    - Verify: returns `unsignedGroup` + a summary like `create app "SmokeCounter" (bare)` — not an appId (nothing executed).

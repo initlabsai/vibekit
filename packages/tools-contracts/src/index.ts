@@ -1,11 +1,14 @@
-import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
+import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
+import algosdk from 'algosdk'
 import { z } from 'zod'
 import { lookupApplication, lookupApplicationLogs } from './handlers/lookup.js'
 import { searchApplications } from './handlers/search.js'
 import { readBoxState, readGlobalState, readLocalState } from './handlers/state.js'
+import { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
 
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { readBoxState, readGlobalState, readLocalState }
+export { parseAppSpec, substituteTemplateParams }
 export type { FormattedApplication } from './lib/format.js'
 export type { StateValue } from './handlers/state.js'
 
@@ -48,7 +51,6 @@ const stateValue = z.object({
 })
 
 export { contractWriteTools } from './tools-write.js'
-export { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
 
 export const contractTools: AnyTool[] = [
   defineTool({
@@ -58,7 +60,7 @@ export const contractTools: AnyTool[] = [
       applicationId: z.number().describe('The application ID to look up'),
     }),
     output: formattedApplication,
-    display: 'json',
+    view: 'application.detail',
     handler: async (ctx, args) => lookupApplication(ctx, args),
   }),
   defineTool({
@@ -73,7 +75,7 @@ export const contractTools: AnyTool[] = [
       applications: z.array(formattedApplication),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'application.list',
     handler: async (ctx, args) => searchApplications(ctx, args),
   }),
   defineTool({
@@ -97,7 +99,7 @@ export const contractTools: AnyTool[] = [
       ),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'application.logs',
     handler: async (ctx, args) => lookupApplicationLogs(ctx, args),
   }),
   defineTool({
@@ -111,7 +113,7 @@ export const contractTools: AnyTool[] = [
       appId: z.number(),
       state: z.array(stateValue),
     }),
-    display: 'json',
+    view: 'application.state',
     handler: async (ctx, args) => readGlobalState(ctx, args),
   }),
   defineTool({
@@ -128,7 +130,7 @@ export const contractTools: AnyTool[] = [
       optedIn: z.boolean().describe('false = account is not opted in (state is then empty, not merely unset)'),
       state: z.array(stateValue),
     }),
-    display: 'json',
+    view: 'application.state',
     handler: async (ctx, args) => readLocalState(ctx, args),
   }),
   defineTool({
@@ -165,7 +167,80 @@ Examples:
       valueBase64: z.string().optional(),
       size: z.number().optional(),
     }),
-    display: 'json',
+    view: 'application.box',
     handler: async (ctx, args) => readBoxState(ctx, args),
+  }),
+  defineTool({
+    name: 'app_get_info',
+    description:
+      "Get an application's current parameters from algod: creator, schema, program sizes, extra pages.",
+    parameters: z.object({ appId: z.number().describe('The application ID') }),
+    output: z.object({
+      appId: z.number(),
+      creator: z.string(),
+      appAddress: z.string(),
+      globalInts: z.number().optional(),
+      globalBytes: z.number().optional(),
+      localInts: z.number().optional(),
+      localBytes: z.number().optional(),
+      extraProgramPages: z.number().optional(),
+      approvalProgramSize: z.number(),
+      clearProgramSize: z.number(),
+    }),
+    display: 'json',
+    handler: async (ctx, args) => {
+      const app = await ctx.algod.getApplicationByID(BigInt(args.appId)).do()
+      const params = app.params
+      if (!params) {
+        throw new ToolError('APP_NOT_FOUND', `Application ${args.appId} has no parameters`)
+      }
+      return {
+        appId: Number(app.id),
+        creator: String(params.creator),
+        appAddress: String(algosdk.getApplicationAddress(BigInt(args.appId))),
+        globalInts: params.globalStateSchema ? Number(params.globalStateSchema.numUint) : undefined,
+        globalBytes: params.globalStateSchema
+          ? Number(params.globalStateSchema.numByteSlice)
+          : undefined,
+        localInts: params.localStateSchema ? Number(params.localStateSchema.numUint) : undefined,
+        localBytes: params.localStateSchema
+          ? Number(params.localStateSchema.numByteSlice)
+          : undefined,
+        extraProgramPages:
+          params.extraProgramPages !== undefined ? Number(params.extraProgramPages) : undefined,
+        approvalProgramSize: params.approvalProgram?.length ?? 0,
+        clearProgramSize: params.clearStateProgram?.length ?? 0,
+      }
+    },
+  }),
+  defineTool({
+    name: 'app_list_methods',
+    description: 'List the ABI methods of an app spec: signatures, args, returns, descriptions.',
+    parameters: z.object({
+      appSpec: z.string().describe('ARC-56 or ARC-32 app spec JSON as a string'),
+    }),
+    output: z.object({
+      name: z.string().optional(),
+      methods: z.array(
+        z.object({
+          name: z.string(),
+          signature: z.string(),
+          description: z.string().optional(),
+          args: z.array(
+            z.object({
+              name: z.string().optional(),
+              type: z.string(),
+              description: z.string().optional(),
+            }),
+          ),
+          returns: z.object({ type: z.string(), description: z.string().optional() }),
+        }),
+      ),
+    }),
+    display: 'table',
+    handler: async (_ctx, args) => {
+      const spec = parseAppSpec(args.appSpec)
+      return { name: spec.name, methods: spec.methods }
+    },
   }),
 ] as AnyTool[]

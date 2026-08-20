@@ -82,6 +82,9 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
   const displayByTool = new Map<string, DisplayHint | undefined>(
     deployment.tools.map((tool: AnyTool) => [tool.name, tool.display]),
   )
+  const viewByTool = new Map<string, string | undefined>(
+    deployment.tools.map((tool: AnyTool) => [tool.name, tool.view]),
+  )
 
   // ToolDefinition[] → AI SDK ToolSet. Failures are returned to the model as
   // an error payload (never thrown) so the loop continues and it can react.
@@ -140,6 +143,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             toolName: part.toolName,
             output,
             display: displayByTool.get(part.toolName),
+            view: viewByTool.get(part.toolName),
             isError: isToolErrorOutput(output),
           }
           break
@@ -153,6 +157,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             toolName: part.toolName,
             output: toToolErrorOutput(part.error),
             display: displayByTool.get(part.toolName),
+            view: viewByTool.get(part.toolName),
             isError: true,
           }
           break

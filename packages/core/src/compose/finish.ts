@@ -18,7 +18,7 @@ function describeSpec(spec: TxnSpec): string {
   switch (spec.type) {
     case 'payment':
       return (
-        `pay ${spec.amount} microALGO ${spec.sender} → ${spec.receiver}` +
+        `pay ${spec.amountMicroAlgos} microALGO ${spec.sender} → ${spec.receiver}` +
         (spec.closeRemainderTo ? ` + CLOSE ACCOUNT (entire remaining balance → ${spec.closeRemainderTo})` : '')
       )
     case 'asset_transfer':

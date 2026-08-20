@@ -64,6 +64,7 @@ describe('agent lane result bridge', () => {
     })
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.id).toBe(PAYMENT_FIXTURE_TRANSACTION_ID)
+    expect(derived.model.note).toBe('Explorer fixture payment')
   })
 
   test('first-party tool names still cue their views without a hint', () => {

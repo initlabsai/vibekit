@@ -206,7 +206,7 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
         const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
           sender,
           receiver: spec.receiver,
-          amount: BigInt(spec.amount),
+          amount: BigInt(spec.amountMicroAlgos),
           closeRemainderTo: optionalAddress(spec.closeRemainderTo, 'closeRemainderTo', i),
           note,
           suggestedParams,

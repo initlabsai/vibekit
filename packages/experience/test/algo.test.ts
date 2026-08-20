@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 
-import { formatMicroAlgos, parseAlgosToMicroAlgos, sameUint64 } from '../src/index.js'
+import {
+  formatBaseUnits,
+  formatMicroAlgos,
+  parseAlgosToMicroAlgos,
+  sameUint64,
+} from '../src/index.js'
 
 describe('exact microALGO math', () => {
   test('formats microALGOs as exact decimal ALGO strings', () => {
@@ -33,6 +38,15 @@ describe('exact microALGO math', () => {
     for (const micro of [1, 999, 1000, 250000, 1000001, 123456789]) {
       expect(parseAlgosToMicroAlgos(formatMicroAlgos(micro))).toBe(micro)
     }
+  })
+
+  test('formats ASA base units with exact decimal places', () => {
+    expect(formatBaseUnits(52000, 2)).toBe('520')
+    expect(formatBaseUnits(52000, 0)).toBe('52000')
+    expect(formatBaseUnits(1_000_000_000, 6)).toBe('1000')
+    expect(formatBaseUnits('1000000', 6)).toBe('1')
+    expect(formatBaseUnits(1, 2)).toBe('0.01')
+    expect(() => formatBaseUnits(1, -1)).toThrow()
   })
 
   test('compares wire uint64 values across number and string encodings', () => {

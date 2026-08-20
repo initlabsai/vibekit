@@ -1,7 +1,8 @@
 import type { PaymentFlowViewModel } from '@initlabs/vibekit-experience'
 
-import { paymentLines } from './cards.js'
-import { COLORS, shorten } from './theme.js'
+import { PaymentBody } from './cards.js'
+import { COLORS } from './theme.js'
+import { Header } from './ui.js'
 
 /**
  * The payment decision as a true modal: centered over the app, it owns all
@@ -18,13 +19,12 @@ export function ApprovalModal({
   screenHeight: number
 }) {
   const width = Math.min(76, Math.max(44, screenWidth - 6))
-  const lines = model ? paymentLines(model) : ['The payment record could not be derived.']
   const failed = model?.simulation?.wouldSucceed === false
-  const warning = failed ? ['', 'This payment WOULD FAIL if submitted.'] : []
   const keys = failed
     ? '[enter] approve anyway · [esc] deny'
     : '[enter] approve & send · [esc] deny'
-  const height = lines.length + warning.length + 5
+  const effectCount = model?.simulation?.effects.length ?? 0
+  const height = Math.min(screenHeight - 2, 10 + effectCount + (model?.note ? 1 : 0))
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
   return (
@@ -42,17 +42,19 @@ export function ApprovalModal({
       paddingX={2}
       paddingY={0}
     >
-      <box flexDirection="row" justifyContent="space-between">
-        <text fg={COLORS.brassBright}>APPROVE THIS PAYMENT?</text>
-        <text fg={failed ? COLORS.red : COLORS.brass}>
-          {failed ? 'WOULD FAIL' : 'SIMULATED OK'}
-        </text>
-      </box>
-      <text
-        fg={COLORS.text}
-        marginTop={1}
-        content={[...lines, ...warning].map((line) => shorten(line, width - 6)).join('\n')}
+      <Header
+        kicker="APPROVE THIS PAYMENT?"
+        pill={failed ? 'WOULD FAIL' : 'SIMULATED OK'}
+        tone={failed ? 'bad' : 'ok'}
       />
+      {model ? (
+        <PaymentBody model={model} width={Math.max(8, width - 6)} />
+      ) : (
+        <text fg={COLORS.muted} marginTop={1} content="The payment record could not be derived." />
+      )}
+      {failed ? (
+        <text fg={COLORS.red} marginTop={1} content="This payment WOULD FAIL if submitted." />
+      ) : null}
       <text fg={COLORS.brassBright} marginTop={1} content={keys} />
     </box>
   )

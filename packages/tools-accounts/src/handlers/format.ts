@@ -13,6 +13,8 @@ export interface FormattedAccount {
   totalCreatedAssets?: number
   totalCreatedApps?: number
   status?: string
+  minBalanceAlgos?: number
+  rekeyedTo?: string
   /** Raw uint64; decimal string when above 2^53. */
   rewardBase?: number | string
   createdAtRound?: number
@@ -51,6 +53,9 @@ export function formatAccount(account: IndexerAccount): FormattedAccount {
     totalCreatedAssets: account.totalCreatedAssets,
     totalCreatedApps: account.totalCreatedApps,
     status: account.status,
+    minBalanceAlgos:
+      account.minBalance != null ? Number(account.minBalance) / MICROALGOS_PER_ALGO : undefined,
+    rekeyedTo: account.authAddr ? String(account.authAddr) : undefined,
     rewardBase:
       account.rewardBase != null
         ? account.rewardBase <= BigInt(Number.MAX_SAFE_INTEGER)

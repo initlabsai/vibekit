@@ -2,8 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import { MockLanguageModelV4, simulateReadableStream } from 'ai/test'
 import { z } from 'zod'
 
-import { defineTool, ToolError } from '@initlabs/vibekit-core'
-import { createAgent, type AgentEvent } from '../src/index.js'
+import { defineTool, resolveDeployment, ToolError } from '@initlabs/vibekit-core'
+import { createAgent, defaultSystemPrompt, type AgentEvent } from '../src/index.js'
 
 const USAGE = {
   inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
@@ -52,10 +52,23 @@ const echoTool = defineTool({
   description: 'Echo the message back.',
   parameters: z.object({ message: z.string() }),
   display: 'json',
+  view: 'network.status',
   handler: async (_ctx, args) => ({ echoed: args.message, big: 42n }),
 })
 
 describe('createAgent', () => {
+  test('the default system prompt is short and names every tool', () => {
+    const deployment = resolveDeployment({
+      network: 'localnet',
+      mode: 'compose',
+      tools: [echoTool],
+    })
+    const prompt = defaultSystemPrompt(deployment)
+    expect(prompt.length).toBeLessThan(1200)
+    expect(prompt).toContain('Tools: echo')
+    expect(prompt).toContain('Answer from tool results only')
+  })
+
   test('streams text and keeps conversation history', async () => {
     const agent = createAgent({
       model: new MockLanguageModelV4({ doStream: [textStream('Hello from the mock!')] }),
@@ -106,6 +119,7 @@ describe('createAgent', () => {
     if (result.type === 'tool-result') {
       expect(result.isError).toBe(false)
       expect(result.display).toBe('json')
+      expect(result.view).toBe('network.status')
       // bigint made JSON-safe by the shared executeToolCall
       expect(result.output).toEqual({ echoed: 'ping', big: 42 })
     }

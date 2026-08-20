@@ -26,6 +26,14 @@ export const accountPortfolioWireSchema = z.object({
 /** The capability of looking an account up as an authoritative record. */
 export interface AccountLookupHost {
   lookupAccount(address: string): Promise<StructuredResult>
+  /** Looks several accounts up as one account.list record. */
+  lookupAccounts(addresses: readonly string[]): Promise<StructuredResult>
+  /** Lists assets held by an account. */
+  lookupAccountAssets(address: string): Promise<StructuredResult>
+  /** Lists application local state for apps an account has opted into. */
+  lookupAccountAppStates(address: string): Promise<StructuredResult>
+  /** Lists transactions involving an account. */
+  lookupAccountTransactions(address: string): Promise<StructuredResult>
 }
 
 /**

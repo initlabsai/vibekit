@@ -29,7 +29,7 @@ const fakeIndexerApp = {
 }
 
 describe('registry', () => {
-  test('exports 6 read-only tools with output schemas and display hints', () => {
+  test('exports 8 read-only tools with output schemas and view or display hints', () => {
     expect(contractTools.map((t) => t.name)).toEqual([
       'lookup_application',
       'search_applications',
@@ -37,11 +37,13 @@ describe('registry', () => {
       'read_global_state',
       'read_local_state',
       'read_box_state',
+      'app_get_info',
+      'app_list_methods',
     ])
     for (const tool of contractTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.display).toBeDefined()
+      expect(tool.view ?? tool.display).toBeDefined()
     }
   })
 })
@@ -360,5 +362,18 @@ describe('readBoxState', () => {
       },
     })
     expect(readBoxState(ctx, { appId: 1, boxName: 'b' })).rejects.toThrow('network down')
+  })
+})
+
+describe('app_list_methods', () => {
+  test('returns parsed methods without touching the chain', async () => {
+    const spec = JSON.stringify({
+      contract: { name: 'Old', methods: [{ name: 'go', args: [], returns: { type: 'void' } }] },
+    })
+    const tool = contractTools.find((t) => t.name === 'app_list_methods')!
+    const result = (await tool.handler(fakeContext({}), { appSpec: spec } as never)) as {
+      methods: Array<{ signature: string }>
+    }
+    expect(result.methods[0]?.signature).toBe('go()void')
   })
 })

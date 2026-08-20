@@ -32,6 +32,17 @@ export function createRemoteFlowHost(network = 'localnet'): PaymentFlowHost & Ac
     simulateDraft: (draftRecord: StructuredResult) =>
       postFlowAction({ action: 'simulate', draftRecord }),
     lookupAccount: (address: string) => postFlowAction({ action: 'lookup-account', address }),
+    lookupAccounts: (addresses: readonly string[]) =>
+      postFlowAction({ action: 'lookup-accounts', addresses: [...addresses] }),
+    lookupAccountAssets: async () => {
+      throw new Error('Account shelves are TUI-only in this slice')
+    },
+    lookupAccountAppStates: async () => {
+      throw new Error('Account shelves are TUI-only in this slice')
+    },
+    lookupAccountTransactions: async () => {
+      throw new Error('Account shelves are TUI-only in this slice')
+    },
   }
 }
 

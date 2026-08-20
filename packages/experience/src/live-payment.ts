@@ -168,8 +168,10 @@ export interface ToolResultEventLike {
   toolName: string
   output: unknown
   isError: boolean
-  /** The tool's declared display hint — the renderer's view cue. */
+  /** The tool's declared display hint — a fallback view cue. */
   display?: string
+  /** The tool's declared semantic view id, when present. */
+  view?: string
 }
 
 const toolErrorOutputSchema = z.object({

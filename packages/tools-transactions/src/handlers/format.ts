@@ -20,9 +20,18 @@ export interface FormattedTransaction {
   assetId?: number
   /** Base units; decimal string when the uint64 exceeds 2^53. */
   assetAmount?: number | string
+  assetName?: string
+  assetUnitName?: string
+  assetDecimals?: number
   applicationId?: number
+  onCompletion?: string
   note?: string
   group?: string
+  rekeyTo?: string
+  closeTo?: string
+  /** Pay: ALGO float. Axfer: base units. */
+  closeAmount?: number | string
+  clawbackFrom?: string
   innerTxns?: FormattedTransaction[]
   globalStateDelta?: unknown
   localStateDelta?: unknown
@@ -45,17 +54,37 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
     confirmedRound: tx.confirmedRound != null ? Number(tx.confirmedRound) : undefined,
     roundTime: tx.roundTime != null ? Number(tx.roundTime) : undefined,
   }
+  if (tx.rekeyTo) formatted.rekeyTo = String(tx.rekeyTo)
   if (tx.paymentTransaction) {
     formatted.paymentAmount = Number(tx.paymentTransaction.amount) / MICROALGOS_PER_ALGO
     formatted.receiver = String(tx.paymentTransaction.receiver)
+    if (tx.paymentTransaction.closeRemainderTo) {
+      formatted.closeTo = String(tx.paymentTransaction.closeRemainderTo)
+    }
+    if (tx.paymentTransaction.closeAmount != null) {
+      formatted.closeAmount = Number(tx.paymentTransaction.closeAmount) / MICROALGOS_PER_ALGO
+    }
   }
   if (tx.assetTransferTransaction) {
     formatted.assetId = Number(tx.assetTransferTransaction.assetId)
     formatted.assetAmount = uint64(tx.assetTransferTransaction.amount)
     formatted.receiver = String(tx.assetTransferTransaction.receiver)
+    if (tx.assetTransferTransaction.sender) {
+      formatted.clawbackFrom = String(tx.assetTransferTransaction.sender)
+    }
+    if (tx.assetTransferTransaction.closeTo) {
+      formatted.closeTo = String(tx.assetTransferTransaction.closeTo)
+    }
+    if (tx.assetTransferTransaction.closeAmount != null) {
+      formatted.closeAmount = uint64(tx.assetTransferTransaction.closeAmount)
+    }
   }
-  if (tx.applicationTransaction)
+  if (tx.applicationTransaction) {
     formatted.applicationId = Number(tx.applicationTransaction.applicationId)
+    if (tx.applicationTransaction.onCompletion) {
+      formatted.onCompletion = tx.applicationTransaction.onCompletion
+    }
+  }
   if (tx.note && tx.note.length > 0) {
     // Notes are untrusted chain data: surface printable text, anything else as base64.
     const decoded = new TextDecoder().decode(tx.note)

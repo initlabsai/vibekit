@@ -1,4 +1,7 @@
-/** The Explorer's shared palette and text helpers. */
+/**
+ * Init Labs palette for the TUI Explorer. Warm black and antique brass,
+ * matching initlabs.ai. The v1 Explorer's teal is not used.
+ */
 export const COLORS = {
   background: '#11100e',
   panel: '#191714',
@@ -7,9 +10,12 @@ export const COLORS = {
   brassBright: '#e0bd7b',
   text: '#e9e1d4',
   muted: '#8e8476',
-  green: '#8fbc8f',
+  faint: '#6e6a62',
+  green: '#9aaa6e',
   red: '#d88989',
   border: '#5f503c',
+  borderSoft: '#3c3428',
+  ink: '#1a160e',
 }
 
 export function shorten(value: string, width: number): string {

@@ -1,6 +1,7 @@
 import { parseAlgosToMicroAlgos } from '../algo.js'
 import type { AccountLookupHost } from '../live-account.js'
 import type { TransactionLookupHost } from '../live-transaction.js'
+import { createFixtureEntityLookup } from './entities.js'
 import type { PaymentFlowHost } from '../live-flow.js'
 import { createFixtureAccountLookup } from './account.js'
 import {
@@ -192,7 +193,8 @@ function reference(id: string): ResultReference {
  */
 export function createFixturePaymentHost(): PaymentFlowHost &
   AccountLookupHost &
-  TransactionLookupHost {
+  TransactionLookupHost &
+  ReturnType<typeof createFixtureEntityLookup> {
   let counter = 0
   const reidentify = (record: StructuredResult): StructuredResult => {
     counter += 1
@@ -209,11 +211,17 @@ export function createFixturePaymentHost(): PaymentFlowHost &
   }
   return {
     ...createFixtureAccountLookup(),
+    ...createFixtureEntityLookup(),
     async lookupTransaction(txid: string): Promise<StructuredResult> {
       if (txid !== FIXTURE_TRANSACTION_ID) {
         throw new Error('Only the sample transaction is available while localnet is offline')
       }
       return reidentify(transactionFixtureResult)
+    },
+    async lookupTransactionGroup(groupId: string): Promise<StructuredResult> {
+      throw new Error(
+        `No sample transaction group ${groupId} (connect localnet or paste a live group ID)`,
+      )
     },
     network: 'localnet',
     // The sample flow always replays the recorded 0.25 ALGO payment.

@@ -27,7 +27,7 @@ export const networkTools: AnyTool[] = [
       indexerUrl: z.string(),
       mode: z.enum(['execute', 'compose']),
     }),
-    display: 'json',
+    view: 'network.status',
     handler: async (ctx) => ({
       network: ctx.network.id,
       defaultNetwork: ctx.defaultNetwork,
@@ -67,13 +67,13 @@ export const networkTools: AnyTool[] = [
         }),
       ),
     }),
-    display: 'table',
+    view: 'network.status',
     handler: async (ctx) => getNetworkStatus(ctx),
   }),
   defineTool({
     name: 'lookup_block',
     description:
-      'Look up a block by its round number. If no round is provided, returns the latest block.',
+      'Look up a block by its round number. Omit round for the latest. Returns header facts and type totals only — not the transactions. To list or filter that round, call search_transactions with minRound and maxRound set to the round; add txType (pay, axfer, appl) to filter.',
     parameters: z.object({
       round: z.number().optional().describe('The round number of the block (omit for latest)'),
     }),
@@ -82,8 +82,14 @@ export const networkTools: AnyTool[] = [
       proposerPayout: z.number().optional(),
       previousBlockHash: z.string().optional(),
       seed: z.string().optional(),
+      transactionTypes: z.array(
+        z.object({
+          type: z.string(),
+          count: z.number().int().nonnegative(),
+        }),
+      ),
     }),
-    display: 'json',
+    view: 'block.detail',
     handler: async (ctx, args) => lookupBlock(ctx, args),
   }),
   defineTool({
@@ -102,7 +108,7 @@ export const networkTools: AnyTool[] = [
       blocks: z.array(blockSummary),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'block.list',
     handler: async (ctx, args) => searchBlockHeaders(ctx, args),
   }),
 ] as AnyTool[]

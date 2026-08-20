@@ -15,6 +15,7 @@ ${pc.bold('Usage:')}
   vibekit init [dir]          Set up AI coding agents (skills, MCP config)
   vibekit new [dir]           Scaffold a project from a starter template
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
+  vibekit explore             Open the full-screen Explorer TUI
   vibekit agent               Open the VibeKit Agent (web) — explore Algorand by conversation
   vibekit doctor              Diagnose setup problems (--fix repairs them)
   vibekit tool <name> [json]  Call any VibeKit tool from the shell (tool list to browse)
@@ -89,6 +90,11 @@ async function main(): Promise<boolean> {
     case 'doctor': {
       const { commandDoctor } = await import('./commands/doctor.js')
       await commandDoctor(args)
+      return true
+    }
+    case 'explore': {
+      const { commandExplore } = await import('./commands/explore.js')
+      await commandExplore(args)
       return true
     }
     case 'agent': {

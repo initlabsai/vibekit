@@ -25,6 +25,14 @@ const formattedTransaction = z.object({
     .optional()
     .describe('Asset amount in base units; decimal string when above 2^53'),
   applicationId: z.number().optional(),
+  onCompletion: z.string().optional(),
+  assetName: z.string().optional(),
+  assetUnitName: z.string().optional(),
+  assetDecimals: z.number().int().nonnegative().optional(),
+  rekeyTo: z.string().optional(),
+  closeTo: z.string().optional(),
+  closeAmount: z.union([z.number(), z.string()]).optional(),
+  clawbackFrom: z.string().optional(),
   note: z.string().optional(),
   group: z.string().optional(),
   get innerTxns() {
@@ -50,13 +58,13 @@ export const transactionTools: AnyTool[] = [
       txid: z.string().describe('The transaction ID to look up'),
     }),
     output: formattedTransaction,
-    display: 'txn',
+    view: 'transaction.detail',
     handler: async (ctx, args) => lookupTransaction(ctx, args),
   }),
   defineTool({
     name: 'search_transactions',
     description:
-      'Search transactions globally with filters like type, amount, date range, and round range',
+      'Search transactions and render a transaction list card. To list a block, set minRound and maxRound to that round. To filter by kind, set txType (pay, axfer, appl, …). Do not recap results as markdown — the list card is the answer.',
     parameters: z.object({
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
@@ -73,20 +81,22 @@ export const transactionTools: AnyTool[] = [
       transactions: z.array(formattedTransaction),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'transaction.list',
     handler: async (ctx, args) => searchTransactions(ctx, args),
   }),
   defineTool({
     name: 'lookup_transaction_group',
-    description: 'Look up all transactions in an atomic transaction group by group ID',
+    description:
+      'Look up all transactions in an atomic transaction group by group ID. The group ID is the base64 of the 32-byte group hash (44 characters, trailing =), as shown on a transaction card.',
     parameters: z.object({
-      groupId: z.string().describe('The base64-encoded group ID'),
+      groupId: z.string().describe('The base64-encoded 32-byte group ID'),
     }),
     output: z.object({
+      groupId: z.string(),
       transactions: z.array(formattedTransaction),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'transaction.group',
     handler: async (ctx, args) => lookupTransactionGroup(ctx, args),
   }),
 ] as AnyTool[]

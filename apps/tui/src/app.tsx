@@ -1,18 +1,23 @@
 import {
   addResult,
+  createAccountListViewModel,
   createAccountPortfolioViewModel,
+  createApplicationDetailViewModel,
+  createAssetDetailViewModel,
+  createBlockDetailViewModel,
   createFixturePaymentHost,
   createFixtureResultStore,
   createPaymentFlowViewModel,
+  createTransactionCollectionViewModel,
   createTransactionDetailViewModel,
   formatMicroAlgos,
   FIXTURE_ADDRESS_BOOK,
-  FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   bridgeToolResult,
+  lookupAmbiguousEntity,
   paymentComposeFromToolResult,
   performLivePaymentStep,
   startPaymentFlow,
@@ -21,6 +26,7 @@ import {
   EXPERIENCE_PROTOCOL_VERSION,
   type ResultStore,
   type StructuredResult,
+  type TrustedViewId,
   type ViewSpec,
   type WriteFlowState,
 } from '@initlabs/vibekit-experience'
@@ -37,7 +43,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createExplorerAgent, loadAgentConfig, runAgentTurn } from './agent-lane.js'
 import { ApprovalModal } from './approval-modal.js'
 import { nextAssetSort } from './cards.js'
-import { routeComposerInput } from './commands.js'
+import {
+  ShelfScreen,
+  TopBar,
+  WalletScreen,
+  type WorkspaceScreen,
+} from './chrome.js'
+import { paymentParties, routeComposerInput } from './commands.js'
+import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { createKeystorePaymentHost, type KeystorePaymentHost } from './keystore-host.js'
 import {
   ContentPane,
@@ -48,76 +61,19 @@ import {
 } from './sections.js'
 import { COLORS, shorten } from './theme.js'
 
-const WELCOME = [
-  'Ask anything about Algorand, or use a command:',
-  '  accounts        your keystore accounts',
-  '  pay 0.5         send a payment (you approve before anything is signed)',
-  '  sample          open a sample transaction',
-  '  network testnet whichever network to explore (ctrl+n cycles)',
-  '  …or paste any transaction ID or address.',
-  'Answers render here; the session pane on the left jumps between them.',
-  'Set VIBEKIT_AGENT_MODEL to chat in natural language.',
-  'help shows this again · ctrl+c quits',
-].join('\n')
+const HELP = 'pay 0.5 · list my accounts · sample · paste an id'
 
 const NETWORKS: LiveNetworkId[] = ['localnet', 'testnet', 'mainnet']
 
-const NETWORK_COLORS: Record<LiveNetworkId, string> = {
-  localnet: COLORS.green,
-  testnet: COLORS.brass,
-  mainnet: COLORS.red,
-}
-
 type Focus = 'composer' | 'nav' | 'content'
 
-function viewFor(
-  record: StructuredResult,
-  view: 'transaction.detail' | 'account.portfolio',
-): ViewSpec {
+function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
   return {
     protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },
   } as ViewSpec
-}
-
-function AccountsScreen({
-  accounts,
-  loading,
-  signerReady,
-  width,
-}: {
-  accounts: ReadonlyArray<{ address: string; name?: string }>
-  loading: boolean
-  signerReady: boolean
-  width: number
-}) {
-  return (
-    <box flexDirection="column" flexGrow={1} padding={1} backgroundColor={COLORS.panel}>
-      <box flexDirection="row" justifyContent="space-between">
-        <text fg={COLORS.brassBright}>ACCOUNTS</text>
-        <text fg={COLORS.muted}>{signerReady ? 'keystore address book' : 'sample accounts'}</text>
-      </box>
-      <text
-        fg={COLORS.text}
-        marginTop={1}
-        content={
-          loading
-            ? 'Loading accounts…'
-            : accounts.length === 0
-              ? 'No accounts found'
-              : accounts
-                  .map(
-                    (account, index) =>
-                      `[${index + 1}] ${(account.name ?? '—').padEnd(16)} ${shorten(account.address, width - 24)}`,
-                  )
-                  .join('\n')
-        }
-      />
-      <text fg={COLORS.brass} marginTop={1} content="[1-9] open an account · [esc] back to chat" />
-    </box>
-  )
 }
 
 function Composer({
@@ -145,11 +101,11 @@ function Composer({
       alignItems="center"
       paddingX={1}
       border
-      borderStyle="single"
+      borderStyle="rounded"
       borderColor={focused ? COLORS.brass : COLORS.border}
       backgroundColor={COLORS.panelRaised}
     >
-      <text fg={focused ? COLORS.brassBright : COLORS.muted}>› </text>
+      <text fg={focused ? COLORS.brassBright : COLORS.faint}>› </text>
       {/* Remount per submit: the input keeps its own buffer, so a fresh key is
           the only reliable way to clear it. */}
       <input
@@ -165,11 +121,11 @@ function Composer({
 }
 
 /**
- * The Explorer as index + pager: a session nav on the left (one line per
- * request, click or ↑/↓ to jump), and a reading pane on the right where each
- * request's narration, cards, and errors render together as a section. New
- * sections open at the top of the viewport. Tab cycles composer → nav →
- * content; a payment decision is a true modal over everything.
+ * The Explorer as a chat-first transcript plus results feed: a session index
+ * on the left (one line per request) and a sticky-bottom feed on the right
+ * where each request's narration, cards, and errors accrete as a group.
+ * Tab hands focus to the feed; a payment decision is a true modal over
+ * everything.
  */
 export function App() {
   const hostCache = useRef(new Map<LiveNetworkId, KeystorePaymentHost>())
@@ -189,6 +145,7 @@ export function App() {
   const dimensions = useTerminalDimensions()
   const [live, setLive] = useState<'probing' | boolean>('probing')
   const [signerReady, setSignerReady] = useState(false)
+  const [activeSender, setActiveSender] = useState<string | undefined>(FIXTURE_SENDER)
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
   const [sections, setSections] = useState<Section[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -197,13 +154,18 @@ export function App() {
   const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
   const [busy, setBusy] = useState(false)
   const [agentBusy, setAgentBusy] = useState(false)
-  const [screen, setScreen] = useState<'chat' | 'accounts'>('chat')
+  const [screen, setScreen] = useState<WorkspaceScreen>('chat')
+  const [shelfView, setShelfView] = useState<ViewSpec | undefined>()
+  const [shelfError, setShelfError] = useState<string | undefined>()
+  const [shelfLoading, setShelfLoading] = useState(false)
   const [accountList, setAccountList] = useState<ReadonlyArray<{ address: string; name?: string }>>(
     [],
   )
   const [accountsLoading, setAccountsLoading] = useState(false)
   const [status, setStatus] = useState('')
-  const [thinking, setThinking] = useState('')
+  const copyIdent = useCopyOnSelect((text) =>
+    setStatus(`copied ${shorten(text.replace(/\s+/g, ' '), 28)}`),
+  )
   const [inputEpoch, setInputEpoch] = useState(0)
   const [, setInput] = useState('')
 
@@ -231,9 +193,24 @@ export function App() {
     keystoreHost.probe().then((reachable) => {
       if (!cancelled) setLive(reachable)
     })
-    keystoreHost.canSign(FIXTURE_SENDER).then((ready) => {
-      if (!cancelled) setSignerReady(ready)
-    })
+    keystoreHost
+      .listSigningAccounts()
+      .then((accounts) => {
+        if (cancelled) return
+        setSignerReady(accounts.length > 0)
+        setAccountList(accounts)
+        setActiveSender((current) =>
+          current && accounts.some((account) => account.address === current)
+            ? current
+            : (accounts[0]?.address ?? FIXTURE_SENDER),
+        )
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSignerReady(false)
+        setAccountList([...FIXTURE_ADDRESS_BOOK])
+        setActiveSender(FIXTURE_SENDER)
+      })
     return () => {
       cancelled = true
     }
@@ -260,7 +237,7 @@ export function App() {
     return itemSeq.current
   }, [])
 
-  /** Aligns a section's header with the top of the reading pane. */
+  /** Jumps a feed group into view (nav click, enter, ←/→). New groups rely on sticky-bottom instead. */
   const scrollToSection = useCallback((id: number) => {
     const attempt = () => {
       const target = sectionRegistry.current.get(id)
@@ -273,13 +250,18 @@ export function App() {
     if (!attempt()) setTimeout(attempt, 50)
   }, [])
 
+  /** Highlights a feed group without moving the viewport. Used on content clicks so a drag-select does not jump. */
+  const markSection = useCallback((id: number) => {
+    setSelectedId(id)
+    selectedRef.current = id
+  }, [])
+
   const selectSection = useCallback(
     (id: number) => {
-      setSelectedId(id)
-      selectedRef.current = id
+      markSection(id)
       scrollToSection(id)
     },
-    [scrollToSection],
+    [markSection, scrollToSection],
   )
 
   /** Creates the section for one user request and returns its id. */
@@ -290,11 +272,9 @@ export function App() {
       commitSections([...sectionsRef.current, { id, prompt, sort: 'none', items: [] }])
       setSelectedId(id)
       selectedRef.current = id
-      // The renderable mounts a frame after the commit; align it then.
-      setTimeout(() => scrollToSection(id), 50)
       return id
     },
-    [commitSections, scrollToSection],
+    [commitSections],
   )
 
   const appendItem = useCallback(
@@ -302,6 +282,28 @@ export function App() {
       commitSections(
         sectionsRef.current.map((section) =>
           section.id === sectionId ? { ...section, items: [...section.items, item] } : section,
+        ),
+      )
+    },
+    [commitSections],
+  )
+
+  const patchSection = useCallback(
+    (sectionId: number, patch: Partial<Section>) => {
+      commitSections(
+        sectionsRef.current.map((section) =>
+          section.id === sectionId ? { ...section, ...patch } : section,
+        ),
+      )
+    },
+    [commitSections],
+  )
+
+  const toggleThinking = useCallback(
+    (sectionId: number) => {
+      commitSections(
+        sectionsRef.current.map((section) =>
+          section.id === sectionId ? { ...section, thinkingOpen: !section.thinkingOpen } : section,
         ),
       )
     },
@@ -397,8 +399,7 @@ export function App() {
         host: host(),
         store: storeRef.current,
         draftParams: {
-          sender: FIXTURE_SENDER,
-          receiver: FIXTURE_RECEIVER,
+          ...paymentParties(accountList, activeSender),
           amountMicroAlgos: amountMicroAlgos ?? PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
           note: 'Explorer live payment',
         },
@@ -416,6 +417,8 @@ export function App() {
       })
     },
     [
+      accountList,
+      activeSender,
       appendNote,
       busy,
       commitStore,
@@ -504,7 +507,7 @@ export function App() {
           const nextStore = addResult(storeRef.current, record)
           commitStore(nextStore)
           const view = viewFor(record, 'transaction.detail')
-          appendBlock(sectionId, { id: 0, kind: 'transaction', view })
+          appendBlock(sectionId, { id: 0, kind: 'view', view })
           const derived = createTransactionDetailViewModel(nextStore, view)
           const summary =
             derived.ok && derived.model.amountMicroAlgos !== undefined
@@ -538,7 +541,7 @@ export function App() {
           const nextStore = addResult(storeRef.current, record)
           commitStore(nextStore)
           const view = viewFor(record, 'account.portfolio')
-          appendBlock(sectionId, { id: 0, kind: 'account', view })
+          appendBlock(sectionId, { id: 0, kind: 'view', view })
           const derived = createAccountPortfolioViewModel(nextStore, view)
           if (derived.ok) {
             appendNote(
@@ -560,6 +563,206 @@ export function App() {
         })
     },
     [appendBlock, appendNote, busy, commitStore, host],
+  )
+
+  const presentRecord = useCallback(
+    (sectionId: number, record: StructuredResult, view: TrustedViewId) => {
+      commitStore(addResult(storeRef.current, record))
+      appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, view) })
+    },
+    [appendBlock, commitStore],
+  )
+
+  const openMyAccounts = useCallback(
+    (sectionId: number) => {
+      if (busy) return
+      setBusy(true)
+      setStatus('looking up your accounts…')
+      const source = signerReady
+        ? keystoreHost.listSigningAccounts()
+        : Promise.resolve([...FIXTURE_ADDRESS_BOOK])
+      void source
+        .then(async (accounts) => {
+          if (accounts.length === 0) {
+            setBusy(false)
+            setStatus('')
+            appendNote(
+              sectionId,
+              'No keystore accounts yet. Start the daemon, or paste an address.',
+            )
+            return
+          }
+          const record = await host().lookupAccounts(accounts.map((account) => account.address))
+          setBusy(false)
+          setStatus('')
+          presentRecord(sectionId, record, 'account.list')
+          const derived = createAccountListViewModel(
+            storeRef.current,
+            viewFor(record, 'account.list'),
+          )
+          if (derived.ok) {
+            appendNote(
+              sectionId,
+              `${derived.model.accounts.length} account${derived.model.accounts.length === 1 ? '' : 's'} on ${networkRef.current}.`,
+            )
+          }
+        })
+        .catch((error: unknown) => {
+          setBusy(false)
+          setStatus('')
+          appendNote(
+            sectionId,
+            `Couldn't list accounts — ${error instanceof Error ? error.message : String(error)}`,
+            'error',
+          )
+        })
+    },
+    [appendNote, busy, host, keystoreHost, presentRecord, signerReady],
+  )
+
+  const lookupById = useCallback(
+    (
+      sectionId: number,
+      label: string,
+      view: TrustedViewId,
+      run: () => Promise<StructuredResult>,
+      summary?: (record: StructuredResult) => string | undefined,
+    ) => {
+      if (busy) return
+      setBusy(true)
+      setStatus(`looking up ${label}…`)
+      void run()
+        .then((record) => {
+          setBusy(false)
+          setStatus('')
+          presentRecord(sectionId, record, view)
+          const line = summary?.(record)
+          if (line) appendNote(sectionId, line)
+        })
+        .catch((error: unknown) => {
+          setBusy(false)
+          setStatus('')
+          appendNote(
+            sectionId,
+            `Couldn't open ${label} — ${error instanceof Error ? error.message : String(error)}`,
+            'error',
+          )
+        })
+    },
+    [appendNote, busy, presentRecord],
+  )
+
+  const openAsset = useCallback(
+    (sectionId: number, assetId: number) => {
+      lookupById(sectionId, `asset ${assetId}`, 'asset.detail', () => host().lookupAsset(assetId), (record) => {
+        const derived = createAssetDetailViewModel(storeRef.current, viewFor(record, 'asset.detail'))
+        return derived.ok
+          ? `${derived.model.name ?? 'Asset'} · ${derived.model.decimals} decimals · supply ${derived.model.totalSupply}.`
+          : undefined
+      })
+    },
+    [host, lookupById],
+  )
+
+  const openApplication = useCallback(
+    (sectionId: number, applicationId: number) => {
+      lookupById(
+        sectionId,
+        `application ${applicationId}`,
+        'application.detail',
+        () => host().lookupApplication(applicationId),
+        (record) => {
+          const derived = createApplicationDetailViewModel(
+            storeRef.current,
+            viewFor(record, 'application.detail'),
+          )
+          return derived.ok
+            ? `App ${derived.model.applicationId} · ${derived.model.globalStateCount} global state key${derived.model.globalStateCount === 1 ? '' : 's'}.`
+            : undefined
+        },
+      )
+    },
+    [host, lookupById],
+  )
+
+  const openGroup = useCallback(
+    (sectionId: number, groupId: string) => {
+      lookupById(
+        sectionId,
+        `group ${groupId.slice(0, 8)}…`,
+        'transaction.group',
+        () => host().lookupTransactionGroup(groupId),
+        (record) => {
+          const derived = createTransactionCollectionViewModel(
+            storeRef.current,
+            viewFor(record, 'transaction.group'),
+          )
+          return derived.ok
+            ? `${derived.model.transactions.length} transaction${derived.model.transactions.length === 1 ? '' : 's'} in the group.`
+            : undefined
+        },
+      )
+    },
+    [host, lookupById],
+  )
+
+  const openBlock = useCallback(
+    (sectionId: number, round: number) => {
+      lookupById(sectionId, `block ${round}`, 'block.detail', () => host().lookupBlock(round), (record) => {
+        const derived = createBlockDetailViewModel(storeRef.current, viewFor(record, 'block.detail'))
+        return derived.ok
+          ? `Round ${derived.model.round} · ${derived.model.transactionCount} transaction${derived.model.transactionCount === 1 ? '' : 's'}.`
+          : undefined
+      })
+    },
+    [host, lookupById],
+  )
+
+  const openAmbiguous = useCallback(
+    (sectionId: number, raw: string) => {
+      const id = Number(raw)
+      if (busy || !Number.isSafeInteger(id)) return
+      setBusy(true)
+      setStatus(`looking up ${raw} as asset, application, and block…`)
+      void lookupAmbiguousEntity(host(), id)
+        .then((outcome) => {
+          setBusy(false)
+          setStatus('')
+          for (const match of outcome.matches) {
+            const view: TrustedViewId =
+              match.entity === 'asset'
+                ? 'asset.detail'
+                : match.entity === 'application'
+                  ? 'application.detail'
+                  : 'block.detail'
+            presentRecord(sectionId, match.record, view)
+          }
+          if (outcome.matches.length === 0) {
+            appendNote(
+              sectionId,
+              `No asset, application, or block ${raw} on ${networkRef.current}.`,
+              'error',
+            )
+            return
+          }
+          if (outcome.misses.length > 0) {
+            appendNote(
+              sectionId,
+              `Also checked: ${outcome.misses.map((miss) => miss.entity).join(', ')} — no match.`,
+            )
+          }
+        })
+        .catch((error: unknown) => {
+          setBusy(false)
+          setStatus('')
+          appendNote(
+            sectionId,
+            `Couldn't look up ${raw} — ${error instanceof Error ? error.message : String(error)}`,
+            'error',
+          )
+        })
+    },
+    [appendNote, busy, host, presentRecord],
   )
 
   const switchNetwork = useCallback(
@@ -585,8 +788,9 @@ export function App() {
     [appendNote],
   )
 
-  const openAccountsScreen = useCallback(() => {
-    setScreen('accounts')
+  const openWallet = useCallback(() => {
+    setScreen('wallet')
+    setFocus('composer')
     setAccountsLoading(true)
     const source = signerReady
       ? keystoreHost.listSigningAccounts()
@@ -601,6 +805,69 @@ export function App() {
         setAccountsLoading(false)
       })
   }, [keystoreHost, signerReady])
+
+  const loadShelf = useCallback(
+    (target: Exclude<WorkspaceScreen, 'chat' | 'wallet'>, address: string | undefined) => {
+      if (!address) {
+        setShelfView(undefined)
+        setShelfError(undefined)
+        setShelfLoading(false)
+        return
+      }
+      setShelfLoading(true)
+      setShelfError(undefined)
+      setShelfView(undefined)
+      const run =
+        target === 'assets'
+          ? () => host().lookupAccountAssets(address)
+          : target === 'apps'
+            ? () => host().lookupAccountAppStates(address)
+            : () => host().lookupAccountTransactions(address)
+      const viewId =
+        target === 'assets'
+          ? ('asset.list' as const)
+          : target === 'apps'
+            ? ('application.state' as const)
+            : ('transaction.list' as const)
+      void run()
+        .then((record) => {
+          const nextStore = addResult(storeRef.current, record)
+          commitStore(nextStore)
+          setShelfView(viewFor(record, viewId))
+          setShelfLoading(false)
+        })
+        .catch((error: unknown) => {
+          setShelfLoading(false)
+          setShelfError(error instanceof Error ? error.message : String(error))
+        })
+    },
+    [commitStore, host],
+  )
+
+  const openWorkspace = useCallback(
+    (target: Exclude<WorkspaceScreen, 'chat'>) => {
+      setScreen(target)
+      setFocus('composer')
+      if (target === 'wallet') openWallet()
+    },
+    [openWallet],
+  )
+
+  const cycleAccount = useCallback(
+    (delta: number) => {
+      if (accountList.length === 0) return
+      const current = accountList.findIndex((account) => account.address === activeSender)
+      const index = (current + delta + accountList.length) % accountList.length
+      setActiveSender(accountList[index]!.address)
+    },
+    [accountList, activeSender],
+  )
+
+  useEffect(() => {
+    if (screen === 'assets' || screen === 'apps' || screen === 'txns') {
+      loadShelf(screen, activeSender)
+    }
+  }, [activeSender, loadShelf, screen])
 
   const agentConfig = useMemo(() => loadAgentConfig(process.env), [])
 
@@ -619,10 +886,10 @@ export function App() {
         return
       }
       setAgentBusy(true)
-      setStatus('thinking…')
+      setStatus('')
       agentSectionRef.current = sectionId
       agentHasCardsRef.current = false
-      setThinking('')
+      patchSection(sectionId, { thinking: '', thinkingOpen: false })
       const agentNoteItem = { current: null as number | null }
       const appendAgentText = (delta: string) => {
         if (agentNoteItem.current === null) {
@@ -660,16 +927,18 @@ export function App() {
         }
         await runAgentTurn(agentRef.current, input, {
           onText: appendAgentText,
-          // The reasoning stream shows inside the section until its first
-          // card renders; capped so a long thinker can't grow without bound.
           onReasoning: (delta) => {
-            if (agentHasCardsRef.current) return
-            setThinking((current) => (current + delta).slice(-4000))
+            const section = sectionsRef.current.find((entry) => entry.id === sectionId)
+            const current = section?.thinking ?? ''
+            if (current.length >= 64_000) return
+            const next = current + delta
+            patchSection(sectionId, {
+              thinking: next.length > 64_000 ? next.slice(0, 64_000) : next,
+            })
           },
           onToolCall: (toolName) => setStatus(`agent → ${toolName}…`),
           onToolResult: (event) => {
             agentNoteItem.current = null
-            setThinking('')
             const compose = paymentComposeFromToolResult(event)
             if (compose && flowRef.current === null) {
               const draftRecord = draftRecordFromComposeWire(
@@ -704,11 +973,23 @@ export function App() {
                 network: networkRef.current,
               })
               commitStore(addResult(storeRef.current, record))
-              if (view === undefined) return
               agentHasCardsRef.current = true
+              if (view === undefined) {
+                const text =
+                  record.state === 'success'
+                    ? JSON.stringify(record.data, null, 2)
+                    : JSON.stringify(record.error, null, 2)
+                appendBlock(sectionId, {
+                  id: 0,
+                  kind: 'raw',
+                  title: event.toolName,
+                  text,
+                })
+                return
+              }
               appendBlock(sectionId, {
                 id: 0,
-                kind: view === 'transaction.detail' ? 'transaction' : 'account',
+                kind: 'view',
                 view: viewFor(record, view),
               })
             } catch {
@@ -726,7 +1007,6 @@ export function App() {
         })
         setAgentBusy(false)
         setStatus('')
-        setThinking('')
         agentSectionRef.current = null
       })()
     },
@@ -742,6 +1022,7 @@ export function App() {
       keystoreHost,
       newId,
       newItemId,
+      patchSection,
       signerReady,
       trackFlowStep,
       updateFlowBlock,
@@ -757,7 +1038,7 @@ export function App() {
       const outcome = routeComposerInput(trimmed)
       // Navigation-only inputs don't earn a section.
       if (outcome.status === 'nav') {
-        openAccountsScreen()
+        openWorkspace(outcome.screen)
         return
       }
       const sectionId = createSection(trimmed)
@@ -768,8 +1049,23 @@ export function App() {
         case 'transaction':
           openTransaction(sectionId, outcome.txid)
           return
+        case 'group':
+          openGroup(sectionId, outcome.groupId)
+          return
         case 'account':
           openAccount(sectionId, outcome.address)
+          return
+        case 'account-list':
+          openMyAccounts(sectionId)
+          return
+        case 'asset':
+          openAsset(sectionId, outcome.assetId)
+          return
+        case 'application':
+          openApplication(sectionId, outcome.applicationId)
+          return
+        case 'block':
+          openBlock(sectionId, outcome.round)
           return
         case 'network':
           if (outcome.network) switchNetwork(outcome.network, sectionId)
@@ -787,13 +1083,10 @@ export function App() {
           )
           return
         case 'help':
-          appendNote(sectionId, WELCOME)
+          appendNote(sectionId, HELP)
           return
         case 'ambiguous':
-          appendNote(
-            sectionId,
-            `${outcome.value} could be an asset, app, or block — those views are coming soon.`,
-          )
+          openAmbiguous(sectionId, outcome.value)
           return
         case 'text':
           runAgent(sectionId, outcome.text)
@@ -804,7 +1097,13 @@ export function App() {
       createSection,
       live,
       openAccount,
-      openAccountsScreen,
+      openWorkspace,
+      openAmbiguous,
+      openMyAccounts,
+      openApplication,
+      openAsset,
+      openBlock,
+      openGroup,
       openTransaction,
       runAgent,
       startPayment,
@@ -872,18 +1171,41 @@ export function App() {
           switchNetwork()
           return
         }
-        if (screen === 'accounts') {
+        if (key.ctrl && key.name === 'w') {
+          openWorkspace('wallet')
+          return
+        }
+        if (key.ctrl && key.name === '1') {
+          openWorkspace('assets')
+          return
+        }
+        if (key.ctrl && key.name === '2') {
+          openWorkspace('apps')
+          return
+        }
+        if (key.ctrl && key.name === '3') {
+          openWorkspace('txns')
+          return
+        }
+        if (screen !== 'chat') {
           if (key.name === 'escape') {
             setScreen('chat')
+            setFocus('composer')
             return
           }
-          const index = Number.parseInt(key.name, 10)
-          if (Number.isInteger(index) && accountList[index - 1]) {
-            const account = accountList[index - 1]!
-            const sectionId = createSection(
-              `accounts → ${account.name ?? shorten(account.address, 12)}`,
-            )
-            openAccount(sectionId, account.address)
+          if (key.name === '[' || key.name === 'left') {
+            cycleAccount(-1)
+            return
+          }
+          if (key.name === ']' || key.name === 'right') {
+            cycleAccount(1)
+            return
+          }
+          if (screen === 'wallet') {
+            const index = Number.parseInt(key.name, 10)
+            if (Number.isInteger(index) && accountList[index - 1]) {
+              setActiveSender(accountList[index - 1]!.address)
+            }
           }
           return
         }
@@ -964,14 +1286,14 @@ export function App() {
       [
         accountList,
         closeSelectedSection,
-        createSection,
+        cycleAccount,
         cycleSort,
         decide,
         focus,
         isNarrow,
         modalOpen,
         moveSelection,
-        openAccount,
+        openWorkspace,
         screen,
         scrollToSection,
         switchNetwork,
@@ -981,27 +1303,29 @@ export function App() {
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
-  const signerLabel = signerReady ? 'keystore' : 'none'
+  const senderAccount = accountList.find((account) => account.address === activeSender)
   const composerFocused = screen === 'chat' && !modalOpen && focus === 'composer'
-  const showNav = !isNarrow
+  const showNav = !isNarrow && screen === 'chat'
   const hint =
     agentBusy || busy
       ? 'working…'
       : agentConfig
-        ? 'Ask anything, or: accounts · pay 0.5 · sample · paste an ID'
-        : 'accounts · pay 0.5 · sample · paste an ID'
+        ? 'Ask anything, or: ^w wallet · ^1 assets · pay 0.5 · paste an ID'
+        : '^w wallet · ^1 assets · pay 0.5 · paste an ID'
 
   const keybar = modalOpen
     ? 'enter approve · esc deny'
-    : screen === 'accounts'
-      ? '1-9 open account · esc back to chat'
-      : focus === 'nav'
+    : screen === 'wallet'
+      ? '1-9 active account · esc chat · ^1 assets · ^2 apps · ^3 txns'
+      : screen === 'assets' || screen === 'apps' || screen === 'txns'
+        ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns'
+        : focus === 'nav'
         ? '↑/↓ select · enter view · s sort · x close · tab content · esc chat'
         : focus === 'content'
           ? '↑/↓ scroll · ←/→ sections · s sort · x close · tab/esc chat'
           : sections.length > 0
-            ? `enter send · tab session (${sections.length}) · ctrl+n network · ctrl+c quit`
-            : 'enter send · ctrl+n network · ctrl+c quit'
+            ? `enter send · tab session (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
+            : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
 
   const modalModel = useMemo(() => {
     if (!modalOpen || !flow) return undefined
@@ -1010,30 +1334,44 @@ export function App() {
   }, [flow, modalOpen, store])
 
   return (
+    <CopyContext.Provider value={copyIdent}>
     <box flexDirection="column" width="100%" height="100%" backgroundColor={COLORS.background}>
-      <box
-        height={1}
-        flexDirection="row"
-        justifyContent="space-between"
-        paddingX={1}
-        backgroundColor={COLORS.panelRaised}
-      >
-        <box flexDirection="row">
-          <text fg={COLORS.brassBright}>◆ VIBEKIT EXPLORER</text>
-        </box>
-        <box flexDirection="row">
-          <text fg={COLORS.muted}>{`${modeLabel} · signer ${signerLabel} `}</text>
-          <text fg={COLORS.background} bg={NETWORK_COLORS[network]}>
-            {` ${network.toUpperCase()} `}
-          </text>
-          <text fg={COLORS.muted}> ‹ctrl+n›</text>
-        </box>
-      </box>
-      {screen === 'accounts' ? (
-        <AccountsScreen
+      <TopBar
+        screen={screen}
+        modeLabel={modeLabel}
+        network={network}
+        accountName={senderAccount?.name}
+        address={activeSender}
+        width={width}
+        onOpenWallet={() => openWorkspace('wallet')}
+        onOpenScreen={openWorkspace}
+        onSwitchNetwork={() => switchNetwork()}
+      />
+      {screen === 'wallet' ? (
+        <WalletScreen
           accounts={accountList}
           loading={accountsLoading}
           signerReady={signerReady}
+          activeSender={activeSender}
+          width={width}
+          onSelect={setActiveSender}
+        />
+      ) : screen === 'assets' || screen === 'apps' || screen === 'txns' ? (
+        <ShelfScreen
+          title={screen === 'assets' ? 'ASSETS' : screen === 'apps' ? 'APPS' : 'TRANSACTIONS'}
+          accountName={senderAccount?.name}
+          address={activeSender}
+          loading={shelfLoading}
+          error={shelfError}
+          empty={
+            screen === 'assets'
+              ? 'No assets on this account.'
+              : screen === 'apps'
+                ? 'Not opted into any applications.'
+                : 'No transactions yet.'
+          }
+          store={store}
+          view={shelfView}
           width={width}
         />
       ) : (
@@ -1054,26 +1392,31 @@ export function App() {
             focused={focus === 'content'}
             navFocused={focus === 'nav'}
             busyPayment={busy && flow !== null}
-            thinking={agentBusy ? thinking : undefined}
-            thinkingSectionId={agentSectionRef.current}
-            emptyText={WELCOME}
+            liveThinkingSectionId={agentBusy ? agentSectionRef.current : null}
+            hasAgent={Boolean(agentConfig)}
             width={showNav ? width - navWidth : width}
             scrollRef={contentScrollRef}
             sectionRegistry={sectionRegistry}
-            onSelect={selectSection}
+            onSelect={markSection}
+            onToggleThinking={toggleThinking}
           />
         </box>
       )}
-      {status !== '' ? (
-        <text height={1} paddingX={1} fg={COLORS.muted} content={shorten(status, width - 4)} />
-      ) : null}
-      <Composer
-        epoch={inputEpoch}
-        focused={composerFocused}
-        hint={hint}
-        onChange={setInput}
-        onSubmit={submit}
+      <text
+        height={1}
+        paddingX={1}
+        fg={COLORS.muted}
+        content={status === '' ? ' ' : shorten(status, width - 4)}
       />
+      {screen === 'chat' ? (
+        <Composer
+          epoch={inputEpoch}
+          focused={composerFocused}
+          hint={hint}
+          onChange={setInput}
+          onSubmit={submit}
+        />
+      ) : null}
       <box height={1} paddingX={1} backgroundColor={COLORS.panelRaised}>
         <text fg={COLORS.muted} content={shorten(keybar, width - 2)} />
       </box>
@@ -1081,5 +1424,6 @@ export function App() {
         <ApprovalModal model={modalModel} screenWidth={width} screenHeight={height} />
       ) : null}
     </box>
+    </CopyContext.Provider>
   )
 }

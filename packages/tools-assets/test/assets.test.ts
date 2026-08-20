@@ -18,17 +18,18 @@ const usdcParams = {
 }
 
 describe('registry', () => {
-  test('exports 4 read-only tools with output schemas and display hints', () => {
+  test('exports 5 read-only tools with output schemas and view or display hints', () => {
     expect(assetTools.map((t) => t.name)).toEqual([
       'lookup_asset',
       'search_asset_balances',
       'search_asset_transactions',
       'search_assets',
+      'get_asset_info',
     ])
     for (const tool of assetTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.display).toBeDefined()
+      expect(tool.view ?? tool.display).toBeDefined()
     }
   })
 })
@@ -246,5 +247,33 @@ describe('searchAssets', () => {
     expect(result.assets[1]!.name).toBeUndefined()
     expect(result.assets[1]!.creator).toBeUndefined()
     expect(result.nextToken).toBeUndefined()
+  })
+})
+
+describe('get_asset_info', () => {
+  test('shapes algod response', async () => {
+    const creator = 'Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA'
+    const ctx = fakeContext({
+      algod: {
+        getAssetByID: () =>
+          chainable({
+            index: BigInt(42),
+            params: {
+              name: 'Coin',
+              unitName: 'C',
+              total: BigInt(9),
+              decimals: BigInt(0),
+              creator,
+            },
+          }),
+      },
+    })
+    const tool = assetTools.find((t) => t.name === 'get_asset_info')!
+    const info = (await tool.handler(ctx, { assetId: 42 } as never)) as {
+      assetId: number
+      creator: string
+    }
+    expect(info.assetId).toBe(42)
+    expect(info.creator).toBe(creator)
   })
 })

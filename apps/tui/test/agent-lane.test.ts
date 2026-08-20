@@ -15,7 +15,12 @@ import {
 } from '@initlabs/vibekit-experience'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
-import { createExplorerAgent, loadAgentConfig, runAgentTurn } from '../src/agent-lane.js'
+import {
+  createExplorerAgent,
+  explorerSystemPrompt,
+  loadAgentConfig,
+  runAgentTurn,
+} from '../src/agent-lane.js'
 
 const USAGE = {
   inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
@@ -90,6 +95,22 @@ let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
 describe('TUI agent lane', () => {
+  test('the explorer prompt tells the model to look up keystore accounts', () => {
+    const prompt = explorerSystemPrompt(
+      [{ name: 'batch_lookup_accounts' }, { name: 'lookup_account' }],
+      'localnet',
+      [{ address: TXN_WIRE.sender, name: 'SMOKE1' }],
+    )
+    expect(prompt).toContain('batch_lookup_accounts with every address below')
+    expect(prompt).toContain('search_transactions with minRound and maxRound')
+    expect(prompt).toContain('MUST call search_transactions')
+    expect(prompt).toContain('Never write a transaction table')
+    expect(prompt).toContain('lookup_transaction_group')
+    expect(prompt).toContain('SMOKE1')
+    expect(prompt).toContain(TXN_WIRE.sender)
+    expect(prompt).not.toContain('NEVER restate')
+  })
+
   test('loads provider config from the environment', () => {
     expect(loadAgentConfig({})).toBeUndefined()
     expect(loadAgentConfig({ VIBEKIT_AGENT_MODEL: 'qwen3:32b' })).toEqual({

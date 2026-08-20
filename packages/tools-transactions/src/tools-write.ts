@@ -9,100 +9,140 @@ import {
 } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 
-/**
- * One TxnSpec as zod — the JSON shape agents produce for grouped transactions.
- * Sender is required on every txn: there is no ambient active account.
- */
-export const txnSpecSchema = z.object({
-  type: z
-    .enum([
-      'payment',
-      'asset_transfer',
-      'asset_opt_in',
-      'asset_opt_out',
-      'asset_create',
-      'asset_config',
-      'asset_freeze',
-      'asset_destroy',
-      'app_call',
-      'app_opt_in',
-      'app_close_out',
-      'app_delete',
-    ])
-    .describe('Transaction type'),
-  sender: z.string().describe('Sender address (required — no ambient account)'),
-  receiver: z.string().optional().describe('(payment, asset_transfer) Receiver address'),
-  amount: z
-    .number()
-    .optional()
-    .describe('(payment) microALGO. (asset_transfer) base units of the asset'),
-  closeRemainderTo: z
-    .string()
-    .optional()
-    .describe('(payment) Address receiving remaining balance — CLOSES the account; requires confirmCloseAccount: true'),
-  confirmCloseAccount: z
-    .boolean()
-    .optional()
-    .describe('Must be true when closing (closeRemainderTo/closeAssetTo) — the position is emptied'),
-  confirmClearRoles: z
-    .boolean()
-    .optional()
-    .describe('(asset_config) Must be true to clear omitted role addresses (permanent)'),
-  assetId: z.number().optional().describe('(asset_*) The asset ID'),
-  total: z.number().optional().describe('(asset_create) Total supply'),
-  decimals: z.number().optional().describe('(asset_create) Decimals (0-19)'),
-  assetName: z.string().optional().describe('(asset_create) Asset name'),
-  unitName: z.string().optional().describe('(asset_create) Unit name'),
-  url: z.string().optional().describe('(asset_create) Asset URL'),
-  metadataHash: z
-    .string()
-    .optional()
-    .describe('(asset_create) 32-byte metadata hash (64 hex or 44 base64 chars)'),
-  defaultFrozen: z.boolean().optional().describe('(asset_create) Holdings frozen by default'),
-  manager: z.string().optional().describe('(asset_create, asset_config) Manager address'),
-  reserve: z.string().optional().describe('(asset_create, asset_config) Reserve address'),
-  freeze: z.string().optional().describe('(asset_create, asset_config) Freeze address'),
-  clawback: z.string().optional().describe('(asset_create, asset_config) Clawback address'),
-  freezeTarget: z.string().optional().describe('(asset_freeze) Account to freeze/unfreeze'),
-  frozen: z.boolean().optional().describe('(asset_freeze) Freeze (true) or unfreeze (false)'),
-  clawbackTarget: z
-    .string()
-    .optional()
-    .describe('(asset_transfer) Clawback: the account to claw back from'),
-  closeAssetTo: z
-    .string()
-    .optional()
-    .describe('(asset_opt_out, asset_transfer) Account receiving remaining asset balance'),
-  ensureZeroBalance: z
-    .boolean()
-    .optional()
-    .describe('(asset_opt_out) Fail if balance is non-zero. Default: true'),
-  appId: z.number().optional().describe('(app_*) The application ID'),
+const sender = z.string().describe('Sender address (required — no ambient account)')
+const note = z.string().optional().describe('Optional note (max 1000 bytes)')
+const appFields = {
+  appId: z.number().describe('The application ID'),
   methodSignature: z
     .string()
     .optional()
-    .describe('(app_*) ARC-4 method signature, e.g. "hello(string)string"'),
-  appSpec: z.string().optional().describe('(app_*) Full ARC-56/32 app spec JSON string'),
-  method: z.string().optional().describe('(app_*) Method name to look up in appSpec'),
+    .describe('ARC-4 method signature, e.g. "hello(string)string"'),
+  appSpec: z.string().optional().describe('Full ARC-56/32 app spec JSON string'),
+  method: z.string().optional().describe('Method name to look up in appSpec'),
   args: z
     .array(z.any())
     .optional()
     .describe(
-      '(app_*) Method arguments. Transaction-typed args are objects: {"type":"pay","receiver":"...","amount":1000}',
+      'Method arguments. Transaction-typed args are objects: {"type":"pay","receiver":"...","amount":1000}',
     ),
   extraFee: z
     .number()
     .optional()
-    .describe('(app_*) Extra fee in microALGO to cover inner transactions (1000 per inner txn)'),
-  maxFee: z.number().optional().describe('(app_*) Max fee in microALGO'),
-  note: z.string().optional().describe('Optional note (max 1000 bytes)'),
-})
+    .describe('Extra fee in microALGO to cover inner transactions (1000 per inner txn)'),
+  maxFee: z.number().optional().describe('Max fee in microALGO'),
+}
+
+/**
+ * One TxnSpec as zod — the JSON shape agents produce for grouped transactions.
+ * Discriminated on `type` so payment uses amountMicroAlgos and ASA transfers
+ * use amount in base units. Sender is required on every txn: there is no
+ * ambient active account.
+ */
+export const txnSpecSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('payment'),
+    sender,
+    receiver: z.string().describe('Receiver address'),
+    amountMicroAlgos: z.number().int().nonnegative().describe('Amount in microALGO'),
+    closeRemainderTo: z
+      .string()
+      .optional()
+      .describe('Address receiving remaining balance — CLOSES the account; requires confirmCloseAccount: true'),
+    confirmCloseAccount: z
+      .boolean()
+      .optional()
+      .describe('Must be true when closeRemainderTo is set — closing empties the account'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_transfer'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    receiver: z.string().describe('Receiver address'),
+    amount: z.number().describe('Amount in base units of the asset'),
+    clawbackTarget: z.string().optional().describe('Clawback: the account to claw back from'),
+    closeAssetTo: z
+      .string()
+      .optional()
+      .describe('Account receiving remaining asset balance — requires confirmCloseAccount: true'),
+    confirmCloseAccount: z
+      .boolean()
+      .optional()
+      .describe('Must be true when closeAssetTo is set — the position is emptied'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_opt_in'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_opt_out'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    closeAssetTo: z.string().describe('Account receiving remaining balance (usually the creator)'),
+    ensureZeroBalance: z.boolean().optional().describe('Fail if balance is non-zero. Default: true'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_create'),
+    sender,
+    total: z.number().describe('Total supply in base units'),
+    decimals: z.number().optional().describe('Decimals (0-19)'),
+    assetName: z.string().optional().describe('Asset name'),
+    unitName: z.string().optional().describe('Unit name'),
+    url: z.string().optional().describe('Asset URL'),
+    metadataHash: z
+      .string()
+      .optional()
+      .describe('32-byte metadata hash (64 hex or 44 base64 chars)'),
+    defaultFrozen: z.boolean().optional().describe('Holdings frozen by default'),
+    manager: z.string().optional().describe('Manager address'),
+    reserve: z.string().optional().describe('Reserve address'),
+    freeze: z.string().optional().describe('Freeze address'),
+    clawback: z.string().optional().describe('Clawback address'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_config'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    confirmClearRoles: z
+      .boolean()
+      .optional()
+      .describe('Must be true to clear omitted role addresses (permanent)'),
+    manager: z.string().optional().describe('New manager address'),
+    reserve: z.string().optional().describe('New reserve address'),
+    freeze: z.string().optional().describe('New freeze address'),
+    clawback: z.string().optional().describe('New clawback address'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_freeze'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    freezeTarget: z.string().describe('Account to freeze/unfreeze'),
+    frozen: z.boolean().describe('true = freeze, false = unfreeze'),
+    note,
+  }),
+  z.object({
+    type: z.literal('asset_destroy'),
+    sender,
+    assetId: z.number().describe('The asset ID'),
+    note,
+  }),
+  z.object({ type: z.literal('app_call'), sender, ...appFields, note }),
+  z.object({ type: z.literal('app_opt_in'), sender, ...appFields, note }),
+  z.object({ type: z.literal('app_close_out'), sender, ...appFields, note }),
+  z.object({ type: z.literal('app_delete'), sender, ...appFields, note }),
+])
 
 const GROUP_DESCRIPTION = `Send 1-16 transactions as an atomic group — all succeed or all fail.
 
 Types and required fields (sender always required):
-- payment: receiver, amount
-- asset_transfer: assetId, receiver, amount (optional: clawbackTarget, closeAssetTo)
+- payment: receiver, amountMicroAlgos
+- asset_transfer: assetId, receiver, amount in base units (optional: clawbackTarget, closeAssetTo)
 - asset_opt_in: assetId · asset_opt_out: assetId, closeAssetTo
 - asset_create: total (optional: decimals, assetName, unitName, url, metadataHash, defaultFrozen, manager, reserve, freeze, clawback)
 - asset_config: assetId · asset_freeze: assetId, freezeTarget, frozen · asset_destroy: assetId
@@ -142,7 +182,7 @@ export const transactionWriteTools: AnyTool[] = [
           type: 'payment',
           sender: args.sender,
           receiver: args.receiver,
-          amount: args.amountMicroAlgos,
+          amountMicroAlgos: args.amountMicroAlgos,
           closeRemainderTo: args.closeRemainderTo,
           confirmCloseAccount: args.confirmCloseAccount,
           note: args.note,

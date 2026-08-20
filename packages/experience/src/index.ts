@@ -1,4 +1,5 @@
 export {
+  formatBaseUnits,
   formatMicroAlgos,
   parseAlgosToMicroAlgos,
   sameUint64,
@@ -10,14 +11,18 @@ export {
 export {
   addressCandidateRecognizer,
   algorandAddressCandidateSchema,
+  algorandGroupIdSchema,
   algorandTransactionIdSchema,
   ambiguousNumericIdRecognizer,
   classifyExplorerInput,
   createInputClassifier,
   defaultInputRecognizers,
   explorerEntityKindSchema,
+  groupIdRecognizer,
   transactionIdRecognizer,
+  parseEntityComposerCommand,
   type ClassifiedExplorerInput,
+  type DirectedEntityCommand,
   type ExplorerEntityKind,
   type InputRecognizer,
 } from './classifier.js'
@@ -54,8 +59,23 @@ export {
   patchWorkspaceCommandSchema,
   pinWorkspaceCommandSchema,
   replaceWorkspaceCommandSchema,
+  accountListViewSpecSchema,
   accountPortfolioViewSpecSchema,
+  accountSummaryViewSpecSchema,
+  applicationBoxViewSpecSchema,
+  applicationDetailViewSpecSchema,
+  applicationListViewSpecSchema,
+  applicationLogsViewSpecSchema,
+  applicationStateViewSpecSchema,
+  assetDetailViewSpecSchema,
+  assetHoldersViewSpecSchema,
+  assetListViewSpecSchema,
+  blockDetailViewSpecSchema,
+  blockListViewSpecSchema,
+  networkStatusViewSpecSchema,
   transactionDetailViewSpecSchema,
+  transactionGroupViewSpecSchema,
+  transactionListViewSpecSchema,
   TRUSTED_VIEW_IDS,
   trustedViewIdSchema,
   viewSpecSchema,
@@ -73,6 +93,7 @@ export {
   type ApprovalRequest,
   type ExperienceMessage,
   type FocusTarget,
+  type TrustedViewId,
   type ViewSpec,
   type WorkspaceCommand,
   type WriteStageEvent,
@@ -151,8 +172,81 @@ export {
   bridgeToolResult,
   paymentComposeFromToolResult,
   recordForToolResult,
+  viewCueForToolResult,
   type BridgedToolResult,
 } from './agent-lane.js'
+export {
+  lookupAmbiguousEntity,
+  type AmbiguousEntityKind,
+  type AmbiguousEntityLookup,
+  type EntityLookupHost,
+  type EntityLookupMatch,
+  type EntityLookupMiss,
+} from './entity-lookup.js'
+export {
+  accountListDataSchema,
+  accountSummaryDataSchema,
+  applicationBoxDataSchema,
+  applicationListDataSchema,
+  applicationLogsDataSchema,
+  applicationStateDataSchema,
+  assetHoldersDataSchema,
+  assetListDataSchema,
+  blockListDataSchema,
+  transactionCollectionDataSchema,
+  type AccountListData,
+  type AccountSummaryData,
+  type ApplicationBoxData,
+  type ApplicationListData,
+  type ApplicationLogsData,
+  type ApplicationStateData,
+  type AssetHoldersData,
+  type AssetListData,
+  type BlockListData,
+  type TransactionCollectionData,
+} from './catalog.js'
+export {
+  buildAccountListRecord,
+  buildAccountSummaryRecord,
+  buildApplicationBoxRecord,
+  buildApplicationListRecord,
+  buildApplicationLogsRecord,
+  buildApplicationStateRecord,
+  buildAssetHoldersRecord,
+  buildAssetListRecord,
+  buildBlockListRecord,
+  buildTransactionGroupRecord,
+  buildTransactionListRecord,
+} from './live-catalog.js'
+export { assetDetailDataSchema, type AssetDetailData } from './assets.js'
+export {
+  applicationDetailDataSchema,
+  type ApplicationDetailData,
+} from './applications.js'
+export { blockDetailDataSchema, type BlockDetailData } from './blocks.js'
+export { networkStatusDataSchema, type NetworkStatusData } from './networks.js'
+export {
+  assetWireSchema,
+  buildAssetDetailRecord,
+  type AssetLookupHost,
+} from './live-asset.js'
+export {
+  applicationWireSchema,
+  buildApplicationDetailRecord,
+  type ApplicationLookupHost,
+} from './live-application.js'
+export {
+  blockWireSchema,
+  buildBlockDetailRecord,
+  type BlockLookupHost,
+} from './live-block.js'
+export { buildNetworkStatusRecord, networkStatusWireSchema } from './live-network.js'
+export {
+  createFixtureEntityLookup,
+  FIXTURE_APPLICATION_ID,
+  FIXTURE_ASSET_ID,
+  FIXTURE_BLOCK_ROUND,
+} from './fixtures/entities.js'
 export {
   accountPortfolioViewModelSchema,
   createAccountPortfolioViewModel,
@@ -230,6 +324,56 @@ export {
   type PaymentFlowViewModel,
   type PaymentFlowViewModelResult,
 } from './view-models/payment-flow.js'
+export {
+  assetDetailViewModelSchema,
+  createAssetDetailViewModel,
+  type AssetDetailViewModel,
+  type AssetDetailViewModelResult,
+} from './view-models/asset-detail.js'
+export {
+  applicationDetailViewModelSchema,
+  createApplicationDetailViewModel,
+  type ApplicationDetailViewModel,
+  type ApplicationDetailViewModelResult,
+} from './view-models/application-detail.js'
+export {
+  blockDetailViewModelSchema,
+  createBlockDetailViewModel,
+  formatBlockTime,
+  formatBlockTxnType,
+  formatExplorerTime,
+  formatOnCompletion,
+  type BlockDetailViewModel,
+  type BlockDetailViewModelResult,
+} from './view-models/block-detail.js'
+export {
+  createNetworkStatusViewModel,
+  networkStatusViewModelSchema,
+  type NetworkStatusViewModel,
+  type NetworkStatusViewModelResult,
+} from './view-models/network-status.js'
+export {
+  createAccountListViewModel,
+  createAccountSummaryViewModel,
+  createApplicationBoxViewModel,
+  createApplicationListViewModel,
+  createApplicationLogsViewModel,
+  createApplicationStateViewModel,
+  createAssetHoldersViewModel,
+  createAssetListViewModel,
+  createBlockListViewModel,
+  createTransactionCollectionViewModel,
+  type AccountListViewModel,
+  type AccountSummaryViewModel,
+  type ApplicationBoxViewModel,
+  type ApplicationListViewModel,
+  type ApplicationLogsViewModel,
+  type ApplicationStateViewModel,
+  type AssetHoldersViewModel,
+  type AssetListViewModel,
+  type BlockListViewModel,
+  type TransactionCollectionViewModel,
+} from './view-models/catalog.js'
 export {
   EXPERIENCE_PROTOCOL_VERSION,
   experienceProtocolVersionSchema,

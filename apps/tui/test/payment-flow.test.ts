@@ -12,6 +12,7 @@ import {
   startPaymentFlow,
 } from '@initlabs/vibekit-experience'
 
+import { paymentLines } from '../src/cards.js'
 import { routeComposerInput } from '../src/commands.js'
 
 let counter = 0
@@ -100,5 +101,23 @@ describe('TUI payment wiring', () => {
     if (!denied.ok) throw new Error(denied.message)
     expect(denied.flow.stage).toBe('denied')
     expect(denied.flow.signed).toBeUndefined()
+  })
+
+  test('payment lines keep the amount, parties, and confirmation facts', async () => {
+    const host = createFixturePaymentHost()
+    const prepared = await startPaymentFlow({
+      host,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
+    const derived = createPaymentFlowViewModel(prepared.store, prepared.flow)
+    if (!derived.ok) throw new Error(derived.error.message)
+    const lines = paymentLines(derived.model)
+    expect(lines[0]).toContain('ALGO')
+    expect(lines[1]).toContain(FIXTURE_SENDER)
+    expect(lines[2]).toContain(FIXTURE_RECEIVER)
+    expect(lines.join('\n')).toMatch(/would succeed|WOULD FAIL/)
   })
 })

@@ -38,7 +38,7 @@ function fakeCtx(overrides: Partial<ToolContext> = {}): ToolContext {
 describe('composeOrExecute (compose mode)', () => {
   test('single payment: returns decodable unsigned txn + summary', async () => {
     const result = await composeOrExecute(fakeCtx(), [
-      { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1000, note: 'hi' },
+      { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1000, note: 'hi' },
     ])
     if (!('unsignedGroup' in result)) throw new Error('expected compose result')
     expect(result.unsignedGroup).toHaveLength(1)
@@ -49,7 +49,7 @@ describe('composeOrExecute (compose mode)', () => {
 
   test('multi-txn group gets a shared group id', async () => {
     const result = await composeOrExecute(fakeCtx(), [
-      { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1 },
+      { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1 },
       { type: 'asset_opt_in', sender: ADDR_A, assetId: 123 },
     ])
     if (!('unsignedGroup' in result)) throw new Error('expected compose result')
@@ -111,7 +111,7 @@ describe('composeOrExecute (compose mode)', () => {
   test('invalid sender throws ToolError, group size validated', async () => {
     await expect(
       composeOrExecute(fakeCtx(), [
-        { type: 'payment', sender: 'nope', receiver: ADDR_B, amount: 1 },
+        { type: 'payment', sender: 'nope', receiver: ADDR_B, amountMicroAlgos: 1 },
       ]),
     ).rejects.toThrow(ToolError)
     await expect(composeOrExecute(fakeCtx(), [])).rejects.toThrow(/1-16/)
@@ -120,7 +120,7 @@ describe('composeOrExecute (compose mode)', () => {
   test('execute mode without resolveSigner throws NO_SIGNER', async () => {
     await expect(
       composeOrExecute(fakeCtx({ mode: 'execute' }), [
-        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1 },
+        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1 },
       ]),
     ).rejects.toThrow(/no signer configured/)
   })
@@ -182,7 +182,7 @@ describe('simulateGroup', () => {
     }
     try {
       const result = await simulateGroup(ctx, [
-        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1 },
+        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1 },
       ])
       expect(result.wouldSucceed).toBe(true)
       expect(result.simulatedRound).toBe(500)
@@ -200,7 +200,7 @@ describe('close/clear confirmations (adversarial review item 5)', () => {
     const ctx = fakeCtx()
     expect(
       buildGroup(ctx, [
-        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1, closeRemainderTo: ADDR_B },
+        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1, closeRemainderTo: ADDR_B },
       ]),
     ).rejects.toMatchObject({ code: 'CLOSE_NOT_CONFIRMED' })
   })
@@ -213,7 +213,7 @@ describe('close/clear confirmations (adversarial review item 5)', () => {
         type: 'payment',
         sender: ADDR_A,
         receiver: ADDR_B,
-        amount: 1,
+        amountMicroAlgos: 1,
         closeRemainderTo: ADDR_B,
         confirmCloseAccount: true,
       },

@@ -103,10 +103,11 @@ are in base units unless a decimals field says otherwise.
 | Balance & holdings | `lookup_account`, `get_account_portfolio`, `get_account_assets` |
 | Send ALGO | `send_payment` via MCP (sender, receiver, amountMicroAlgos, network) — never via shell |
 | Fund a localnet account | shell: `vibekit localnet fund <address>` |
-| Create / transfer ASAs | `create_asset`, `asset_transfer`, `asset_opt_in` |
+| Create / transfer ASAs | `asset_create`, `asset_transfer`, `asset_opt_in` |
 | Deploy / call contracts | `app_deploy`, `app_call`, `app_get_info`, `app_list_methods` |
 | Read contract state | `read_global_state`, `read_local_state`, `read_box_state` |
 | Debug a transaction | `lookup_transaction`, `lookup_application_logs`, `simulate_transactions` |
+| Latest block + its txns | `lookup_block` (omit round) for the header. Then `search_transactions` with `minRound`=`maxRound`=that round; add `txType` (`pay`, `axfer`, `appl`) to filter. Do not recap as a markdown table. |
 | Resolve names | `resolve_nfd`, `reverse_resolve_nfd` |
 | Network health | `get_network_status` (current round, TPS), `get_network` |
 

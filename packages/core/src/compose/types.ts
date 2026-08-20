@@ -14,7 +14,7 @@ export interface BaseTxnSpec {
 export interface PaymentTxnSpec extends BaseTxnSpec {
   type: 'payment'
   receiver: string
-  amount: number
+  amountMicroAlgos: number
   closeRemainderTo?: string
   /** Must be true when closeRemainderTo is set — closing empties the account. */
   confirmCloseAccount?: boolean

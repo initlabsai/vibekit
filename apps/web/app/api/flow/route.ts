@@ -27,6 +27,10 @@ const flowRequestSchema = z.discriminatedUnion('action', [
     action: z.literal('lookup-account'),
     address: z.string().min(1),
   }),
+  z.object({
+    action: z.literal('lookup-accounts'),
+    addresses: z.array(z.string().min(1)).min(1),
+  }),
 ])
 
 export async function GET(): Promise<Response> {
@@ -49,7 +53,9 @@ export async function POST(request: Request): Promise<Response> {
         ? await host.draftPayment(parsed.data.params)
         : parsed.data.action === 'simulate'
           ? await host.simulateDraft(parsed.data.draftRecord)
-          : await host.lookupAccount(parsed.data.address)
+          : parsed.data.action === 'lookup-accounts'
+            ? await host.lookupAccounts(parsed.data.addresses)
+            : await host.lookupAccount(parsed.data.address)
     return Response.json({ record })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

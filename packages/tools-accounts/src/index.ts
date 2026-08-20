@@ -23,6 +23,8 @@ const formattedAccount = z.object({
   totalCreatedAssets: z.number().optional(),
   totalCreatedApps: z.number().optional(),
   status: z.string().optional(),
+  minBalanceAlgos: z.number().optional(),
+  rekeyedTo: z.string().optional(),
   rewardBase: z.union([z.number(), z.string()]).optional(),
   createdAtRound: z.number().optional(),
 })
@@ -44,6 +46,14 @@ const formattedTransaction = z.object({
     .optional()
     .describe('Asset amount in base units; decimal string when above 2^53'),
   applicationId: z.number().optional(),
+  onCompletion: z.string().optional(),
+  assetName: z.string().optional(),
+  assetUnitName: z.string().optional(),
+  assetDecimals: z.number().int().nonnegative().optional(),
+  rekeyTo: z.string().optional(),
+  closeTo: z.string().optional(),
+  closeAmount: z.union([z.number(), z.string()]).optional(),
+  clawbackFrom: z.string().optional(),
   note: z.string().optional(),
   group: z.string().optional(),
   get innerTxns() {
@@ -97,7 +107,7 @@ export const accountTools: AnyTool[] = [
       address: z.string().describe('The Algorand address to look up'),
     }),
     output: formattedAccount,
-    display: 'account',
+    view: 'account.summary',
     handler: async (ctx, args) => lookupAccount(ctx, args),
   }),
   defineTool({
@@ -110,7 +120,7 @@ export const accountTools: AnyTool[] = [
     output: z.object({
       accounts: z.array(formattedAccount),
     }),
-    display: 'table',
+    view: 'account.list',
     handler: async (ctx, args) => batchLookupAccounts(ctx, args),
   }),
   defineTool({
@@ -129,7 +139,7 @@ export const accountTools: AnyTool[] = [
       accounts: z.array(formattedAccount),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'account.list',
     handler: async (ctx, args) => searchAccounts(ctx, args),
   }),
   defineTool({
@@ -151,7 +161,7 @@ export const accountTools: AnyTool[] = [
       transactions: z.array(formattedTransaction),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'transaction.list',
     handler: async (ctx, args) => searchAccountTransactions(ctx, args),
   }),
   defineTool({
@@ -166,7 +176,7 @@ export const accountTools: AnyTool[] = [
       assets: z.array(accountAsset),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'asset.list',
     handler: async (ctx, args) => getAccountAssets(ctx, args),
   }),
   defineTool({
@@ -183,7 +193,7 @@ export const accountTools: AnyTool[] = [
       appLocalStates: z.array(accountAppLocalState),
       nextToken: z.string().optional(),
     }),
-    display: 'table',
+    view: 'application.state',
     handler: async (ctx, args) => getAccountAppLocalStates(ctx, args),
   }),
   defineTool({
@@ -198,7 +208,7 @@ export const accountTools: AnyTool[] = [
       assets: z.array(accountAsset),
       totalAssets: z.number(),
     }),
-    display: 'account',
+    view: 'account.portfolio',
     handler: async (ctx, args) => getAccountPortfolio(ctx, args),
   }),
 ] as AnyTool[]

@@ -42,7 +42,18 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   requiresSigner?: boolean
   /** Changes state without spending user funds (key creation, faucet). Approval-gated. */
   mutatesState?: boolean
+  /**
+   * Coarse host hint (`table` / `txn` / `json` / …) for tools that have no
+   * Explorer `view`. Do not set both: `view` is the card cue, and this is
+   * only a fallback for MCP clients and plugins that have not declared one.
+   */
   display?: DisplayHint
+  /**
+   * Semantic Explorer view id this tool's success payload binds to
+   * (for example `transaction.detail`). Hosts that do not render views
+   * ignore it. The experience registry decides which ids are trusted.
+   */
+  view?: string
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>
 }
 

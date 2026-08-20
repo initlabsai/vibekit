@@ -91,7 +91,7 @@ Your project may have different MCPs configured. Check which tools are available
 - **Contracts**: \`app_deploy\`, \`app_call\`, \`app_get_info\`, \`app_list_methods\`
 - **State reads**: \`read_global_state\`, \`read_local_state\`, \`read_box_state\`
 - **Accounts**: \`lookup_account\`, \`get_account_portfolio\`, \`get_account_assets\`
-- **Assets**: \`create_asset\`, \`asset_transfer\`, \`asset_opt_in\`
+- **Assets**: \`asset_create\`, \`asset_transfer\`, \`asset_opt_in\`
 - **Transactions**: \`send_payment\`, \`send_group_transactions\`, \`simulate_transactions\`
 - **Debugging**: \`lookup_application_logs\`, \`lookup_transaction\`
 - **Network**: \`get_network\` (lists served networks), \`get_network_status\`

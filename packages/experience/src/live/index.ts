@@ -14,9 +14,22 @@ import {
   type ResolvedDeployment,
 } from '@initlabs/vibekit-core'
 import { accountTools } from '@initlabs/vibekit-tools-accounts'
+import { assetTools } from '@initlabs/vibekit-tools-assets'
+import { contractTools } from '@initlabs/vibekit-tools-contracts'
+import { networkTools } from '@initlabs/vibekit-tools-network'
 import { transactionTools, transactionWriteTools } from '@initlabs/vibekit-tools-transactions'
 
 import { buildAccountPortfolioRecord } from '../live-account.js'
+import {
+  buildAccountListRecord,
+  buildApplicationStateRecord,
+  buildAssetListRecord,
+  buildTransactionGroupRecord,
+  buildTransactionListRecord,
+} from '../live-catalog.js'
+import { buildApplicationDetailRecord } from '../live-application.js'
+import { buildAssetDetailRecord } from '../live-asset.js'
+import { buildBlockDetailRecord } from '../live-block.js'
 import { buildTransactionDetailRecord } from '../live-transaction.js'
 import {
   buildPaymentConfirmationRecord,
@@ -134,8 +147,24 @@ export interface PaymentComposeHost {
   submitSigned(signedRecord: StructuredResult): Promise<StructuredResult>
   /** Looks an account's portfolio up as an authoritative record. */
   lookupAccount(address: string): Promise<StructuredResult>
+  /** Looks several accounts up as one account.list record. */
+  lookupAccounts(addresses: readonly string[]): Promise<StructuredResult>
   /** Looks a transaction up as an authoritative record. */
   lookupTransaction(txid: string): Promise<StructuredResult>
+  /** Looks every transaction in an atomic group up as one transaction.group record. */
+  lookupTransactionGroup(groupId: string): Promise<StructuredResult>
+  /** Looks an ASA up as an authoritative record. */
+  lookupAsset(assetId: number): Promise<StructuredResult>
+  /** Looks an application up as an authoritative record. */
+  lookupApplication(applicationId: number): Promise<StructuredResult>
+  /** Looks a block up as an authoritative record. */
+  lookupBlock(round: number): Promise<StructuredResult>
+  /** Lists assets held by an account. */
+  lookupAccountAssets(address: string): Promise<StructuredResult>
+  /** Lists application local state for apps an account has opted into. */
+  lookupAccountAppStates(address: string): Promise<StructuredResult>
+  /** Lists transactions involving an account. */
+  lookupAccountTransactions(address: string): Promise<StructuredResult>
 }
 
 function requireTool(deployment: ResolvedDeployment, name: string): AnyTool {
@@ -162,14 +191,35 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     mode: 'compose',
     tools: [
       ...transactionWriteTools,
-      ...transactionTools.filter((tool) => tool.name === 'lookup_transaction'),
-      ...accountTools.filter((tool) => tool.name === 'get_account_portfolio'),
+      ...transactionTools.filter(
+        (tool) => tool.name === 'lookup_transaction' || tool.name === 'lookup_transaction_group',
+      ),
+      ...accountTools.filter((tool) =>
+        [
+          'get_account_portfolio',
+          'batch_lookup_accounts',
+          'get_account_assets',
+          'get_account_app_local_states',
+          'search_account_transactions',
+        ].includes(tool.name),
+      ),
+      ...assetTools.filter((tool) => tool.name === 'lookup_asset'),
+      ...contractTools.filter((tool) => tool.name === 'lookup_application'),
+      ...networkTools.filter((tool) => tool.name === 'lookup_block'),
     ],
   })
   const sendPayment = requireTool(deployment, 'send_payment')
   const simulateTransactions = requireTool(deployment, 'simulate_transactions')
   const accountPortfolio = requireTool(deployment, 'get_account_portfolio')
+  const batchLookupAccounts = requireTool(deployment, 'batch_lookup_accounts')
   const lookupTransactionTool = requireTool(deployment, 'lookup_transaction')
+  const lookupTransactionGroupTool = requireTool(deployment, 'lookup_transaction_group')
+  const lookupAssetTool = requireTool(deployment, 'lookup_asset')
+  const lookupApplicationTool = requireTool(deployment, 'lookup_application')
+  const lookupBlockTool = requireTool(deployment, 'lookup_block')
+  const accountAssetsTool = requireTool(deployment, 'get_account_assets')
+  const accountAppStatesTool = requireTool(deployment, 'get_account_app_local_states')
+  const accountTransactionsTool = requireTool(deployment, 'search_account_transactions')
   const context = deployment.contexts.get(network)
   if (!context) throw new Error(`Deployment is missing network ${network}`)
 
@@ -217,7 +267,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
             type: 'payment',
             sender: decoded.sender,
             receiver: decoded.receiver,
-            amount: Number(decoded.amountMicroAlgos),
+            amountMicroAlgos: Number(decoded.amountMicroAlgos),
             ...(decoded.note === undefined ? {} : { note: decoded.note }),
           },
         ],
@@ -260,6 +310,20 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         wire,
       )
     },
+    async lookupAccounts(addresses) {
+      const wire = await executeToolCall(deployment, batchLookupAccounts, {
+        addresses: [...addresses],
+      })
+      return buildAccountListRecord(
+        {
+          resultId: newId('result-live-accounts'),
+          toolCallId: newId('tool-call-live-accounts'),
+          network,
+        },
+        wire,
+        'batch_lookup_accounts',
+      )
+    },
     async lookupTransaction(txid) {
       const wire = await executeToolCall(deployment, lookupTransactionTool, { txid })
       return buildTransactionDetailRecord(
@@ -269,6 +333,89 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
           network,
         },
         wire,
+      )
+    },
+    async lookupTransactionGroup(groupId) {
+      const wire = await executeToolCall(deployment, lookupTransactionGroupTool, { groupId })
+      return buildTransactionGroupRecord(
+        {
+          resultId: newId('result-live-transaction-group'),
+          toolCallId: newId('tool-call-live-transaction-group'),
+          network,
+        },
+        wire,
+      )
+    },
+    async lookupAsset(assetId) {
+      const wire = await executeToolCall(deployment, lookupAssetTool, { assetId })
+      return buildAssetDetailRecord(
+        {
+          resultId: newId('result-live-asset'),
+          toolCallId: newId('tool-call-live-asset'),
+          network,
+        },
+        wire,
+      )
+    },
+    async lookupApplication(applicationId) {
+      const wire = await executeToolCall(deployment, lookupApplicationTool, { applicationId })
+      return buildApplicationDetailRecord(
+        {
+          resultId: newId('result-live-application'),
+          toolCallId: newId('tool-call-live-application'),
+          network,
+        },
+        wire,
+      )
+    },
+    async lookupBlock(round) {
+      const wire = await executeToolCall(deployment, lookupBlockTool, { round })
+      return buildBlockDetailRecord(
+        {
+          resultId: newId('result-live-block'),
+          toolCallId: newId('tool-call-live-block'),
+          network,
+        },
+        wire,
+      )
+    },
+    async lookupAccountAssets(address) {
+      const wire = await executeToolCall(deployment, accountAssetsTool, { address })
+      return buildAssetListRecord(
+        {
+          resultId: newId('result-live-account-assets'),
+          toolCallId: newId('tool-call-live-account-assets'),
+          network,
+        },
+        wire,
+        'get_account_assets',
+      )
+    },
+    async lookupAccountAppStates(address) {
+      const wire = await executeToolCall(deployment, accountAppStatesTool, { address })
+      return buildApplicationStateRecord(
+        {
+          resultId: newId('result-live-account-apps'),
+          toolCallId: newId('tool-call-live-account-apps'),
+          network,
+        },
+        { ...(wire as object), address },
+        'get_account_app_local_states',
+      )
+    },
+    async lookupAccountTransactions(address) {
+      const wire = await executeToolCall(deployment, accountTransactionsTool, {
+        address,
+        limit: 20,
+      })
+      return buildTransactionListRecord(
+        {
+          resultId: newId('result-live-account-txns'),
+          toolCallId: newId('tool-call-live-account-txns'),
+          network,
+        },
+        { ...(wire as object), address },
+        'search_account_transactions',
       )
     },
   }

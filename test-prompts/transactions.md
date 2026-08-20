@@ -22,7 +22,7 @@ or create+fund fresh ones the same way).
 
 ### Grouped transactions
 
-3. `send_group_transactions` with two payment TxnSpecs from ACCT_A (e.g. 100000 µALGO to ACCT_B and 100000 µALGO back to ACCT_A itself), `network: "localnet"`.
+3. `send_group_transactions` with two payment TxnSpecs from ACCT_A (e.g. `amountMicroAlgos: 100000` to ACCT_B and 100000 back to ACCT_A itself), `network: "localnet"`.
    - Verify: executes with 2 txids, one confirmedRound.
 4. `lookup_transaction` on the first txid; note its `group` field (base64).
 5. `lookup_transaction_group` with that group ID.

@@ -23,7 +23,19 @@ export const transactionDetailViewModelSchema = z
     roundTime: z.number().int().nonnegative().optional(),
     assetId: uint64JsonSchema.optional(),
     assetAmount: uint64JsonSchema.optional(),
+    assetName: z.string().min(1).optional(),
+    assetUnitName: z.string().min(1).optional(),
+    assetDecimals: z.number().int().nonnegative().optional(),
     applicationId: uint64JsonSchema.optional(),
+    onCompletion: z.string().min(1).optional(),
+    note: z.string().min(1).optional(),
+    group: z.string().min(1).optional(),
+    innerCount: z.number().int().nonnegative().optional(),
+    rekeyTo: algorandAddressCandidateSchema.optional(),
+    closeTo: algorandAddressCandidateSchema.optional(),
+    closeAmountMicroAlgos: uint64JsonSchema.optional(),
+    closeAssetAmount: uint64JsonSchema.optional(),
+    clawbackFrom: algorandAddressCandidateSchema.optional(),
     relatedActions: z.array(relatedEntityActionSchema),
   })
   .strict()
@@ -95,7 +107,21 @@ export function createTransactionDetailViewModel(
     ...(data.roundTime === undefined ? {} : { roundTime: data.roundTime }),
     ...(data.assetId === undefined ? {} : { assetId: data.assetId }),
     ...(data.assetAmount === undefined ? {} : { assetAmount: data.assetAmount }),
+    ...(data.assetName === undefined ? {} : { assetName: data.assetName }),
+    ...(data.assetUnitName === undefined ? {} : { assetUnitName: data.assetUnitName }),
+    ...(data.assetDecimals === undefined ? {} : { assetDecimals: data.assetDecimals }),
     ...(data.applicationId === undefined ? {} : { applicationId: data.applicationId }),
+    ...(data.onCompletion === undefined ? {} : { onCompletion: data.onCompletion }),
+    ...(data.note === undefined ? {} : { note: data.note }),
+    ...(data.group === undefined ? {} : { group: data.group }),
+    ...(data.innerCount === undefined ? {} : { innerCount: data.innerCount }),
+    ...(data.rekeyTo === undefined ? {} : { rekeyTo: data.rekeyTo }),
+    ...(data.closeTo === undefined ? {} : { closeTo: data.closeTo }),
+    ...(data.closeAmountMicroAlgos === undefined
+      ? {}
+      : { closeAmountMicroAlgos: data.closeAmountMicroAlgos }),
+    ...(data.closeAssetAmount === undefined ? {} : { closeAssetAmount: data.closeAssetAmount }),
+    ...(data.clawbackFrom === undefined ? {} : { clawbackFrom: data.clawbackFrom }),
     relatedActions: relatedActionsFor(view, data.relatedEntities),
   })
   return { ok: true, model }

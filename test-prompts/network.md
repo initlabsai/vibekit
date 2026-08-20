@@ -26,6 +26,7 @@ conventions and blanket assertions in [README.md](README.md).
 
 4. Call `lookup_block` for the round `get_network_status` reported as latest.
    - Verify: returns that round with a timestamp; byte-ish fields (seed, previous block hash) are base64 strings, not arrays or objects.
+   - Verify: `transactionTypes` lists each type present with a count, and `transactionCount` matches the sum. The result must not include per-transaction rows. To list the round, `search_transactions` with `minRound` = `maxRound` = that round; add `txType` to filter.
 5. Call `lookup_block` for round 0.
    - Verify: succeeds (genesis) or fails with a clear not-found style error — either is PASS, but report which.
 6. Call `search_block_headers` with `limit: 5`.

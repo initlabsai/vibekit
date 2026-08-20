@@ -13,7 +13,8 @@ units.
 ## Architecture
 
 Every tool is a `ToolDefinition`. A `ToolDefinition` has Zod parameters, an
-output schema, and a handler.
+output schema, and a handler. It may declare a semantic Explorer `view` id;
+the experience registry decides which ids are trusted.
 
 A deployment is a configured set of tools. It selects networks, execute or
 compose mode, and an optional signer.

@@ -2,7 +2,6 @@
 import {
   composeOrExecute,
   defineTool,
-  ToolError,
   writeResultSchema,
   type AnyTool,
   type TxnSpec,
@@ -31,7 +30,7 @@ function writeTool<P extends z.ZodType>(def: {
 
 export const assetWriteTools: AnyTool[] = [
   writeTool({
-    name: 'create_asset',
+    name: 'asset_create',
     description: 'Create a new Algorand Standard Asset (ASA).',
     parameters: z.object({
       sender,
@@ -131,45 +130,4 @@ export const assetWriteTools: AnyTool[] = [
     parameters: z.object({ sender, assetId: z.number().describe('The asset ID'), note }),
     toSpec: (a) => ({ ...a, type: 'asset_destroy' }),
   }),
-  defineTool({
-    name: 'get_asset_info',
-    description: 'Get an asset\'s current parameters directly from algod (name, supply, roles, frozen state).',
-    parameters: z.object({ assetId: z.number().describe('The asset ID') }),
-    output: z.object({
-      assetId: z.number(),
-      name: z.string().optional(),
-      unitName: z.string().optional(),
-      total: z.union([z.number(), z.string()]),
-      decimals: z.number(),
-      defaultFrozen: z.boolean().optional(),
-      url: z.string().optional(),
-      creator: z.string(),
-      manager: z.string().optional(),
-      reserve: z.string().optional(),
-      freeze: z.string().optional(),
-      clawback: z.string().optional(),
-    }),
-    display: 'asset',
-    handler: async (ctx, args) => {
-      const asset = await ctx.algod.getAssetByID(BigInt(args.assetId)).do()
-      const params = asset.params
-      if (!params) {
-        throw new ToolError('ASSET_NOT_FOUND', `Asset ${args.assetId} has no parameters`)
-      }
-      return {
-        assetId: Number(asset.index),
-        name: params.name,
-        unitName: params.unitName,
-        total: params.total,
-        decimals: Number(params.decimals),
-        defaultFrozen: params.defaultFrozen,
-        url: params.url,
-        creator: String(params.creator),
-        manager: params.manager ? String(params.manager) : undefined,
-        reserve: params.reserve ? String(params.reserve) : undefined,
-        freeze: params.freeze ? String(params.freeze) : undefined,
-        clawback: params.clawback ? String(params.clawback) : undefined,
-      }
-    },
-  }) as AnyTool,
 ]

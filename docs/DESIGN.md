@@ -56,12 +56,12 @@ updated: 2026-08-19.
 > stay tagged with the network that produced them). While a thinking model
 > reasons, the stream shows at the feed's tail and disappears when the
 > turn's first card renders. Cards dispatch on the
-> tool's declared view cue (the `display` hint today; a first-class
-> `view: 'transaction.detail'` declaration on ToolDefinition is planned
-> protocol work), so third-party tools that declare a cue and match the
-> wire schema get the same cards — or ship their own views. Wallet/signer
-> connection UI comes later; keystore signing after modal approval works
-> today.
+> tool's declared view cue (`view` on ToolDefinition; `display` only on
+> tools that have no view), so third-party tools that declare a
+> cue and match the wire schema get the same cards — or ship their own
+> views. Wallet/signer connection UI comes later; keystore signing after
+> modal approval works today. `vibekit explore` launches the TUI as a
+> separate process.
 
 VibeKit v2 is a restart of this repo from a new base. It is a clean,
 stateless MCP server for Algorand. It is built from reusable package
@@ -88,7 +88,7 @@ run the same tools through the same orchestrator and presentation protocol.
 | Explorer renderers     | **React on both heads**: `@opentui/react` for the full-screen TUI and Next.js/React for web. Share domain/view models, workspace state, hooks, and selected semantic component trees behind platform primitives. Do not target pixel-identical output.                                                                                                                      |
 | Generative UI boundary | The model can select and compose versioned, Zod-validated view specifications from a trusted registry. It never emits JSX, HTML, terminal markup, or executable UI code.                                                                                                                                                                                                    |
 | Models                 | **BYOM everywhere**. The harness brings its own (init path). TUI + API take API keys / local models via `@initlabs/vibekit-agent` provider config. Funded default on the API (Together today, x402 experiment later). Provider OAuth is opportunistic, never a pillar.                                                                                                      |
-| TUI                    | **Restored 2026-08-19 as a new product shape.** The private `apps/tui` OpenTUI app implements the fixture-backed chat/feed slice, deterministic lookup, agent lane, and keystore-approved payment flow. `vibekit explore` distribution remains pending.                                                                                                                     |
+| TUI                    | **Restored 2026-08-19 as a new product shape.** The private `apps/tui` OpenTUI app implements the fixture-backed chat/feed slice, deterministic lookup, agent lane, and keystore-approved payment flow. `vibekit explore` launches it as a separate process.                                                                                                                     |
 | CLI scope              | init + agent/skill/MCP setup, **plus** localnet lifecycle and template bootstrapping. This replaces the AlgoKit CLI for those jobs; compilation and typed-client generation remain separate.                                                                                                                                                                                |
 | Tests                  | Required. Each ported domain lands with handler tests. No untested migration.                                                                                                                                                                                                                                                                                               |
 
@@ -262,8 +262,10 @@ interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   requiresSigner?: boolean;
   /** Changes state without spending user funds. Host approval still applies. */
   mutatesState?: boolean;
-  /** Coarse compatibility fallback, not the Explorer layout contract. */
+  /** Coarse host hint for tools with no Explorer `view`. */
   display?: DisplayHint;
+  /** Semantic Explorer view id. A tool declares `view` or `display`, not both. */
+  view?: string;
   handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>;
 }
 
@@ -283,6 +285,12 @@ interface ToolContext {
   services: Record<string, unknown>;
 }
 ```
+
+Write tools are one-shot named verbs (`send_payment`, `asset_*`, `app_*`)
+plus `send_group_transactions` / `simulate_transactions` for atomic mixes.
+Payment specs use `amountMicroAlgos`; ASA transfers use `amount` in base
+units. Reads (`get_asset_info`, `app_get_info`, `app_list_methods`) live
+on the domain read arrays, not on the write exports.
 
 - **`ToolContext` is pooled per network at startup** (`resolveDeployment`)
   and selected per request. Nothing request-scoped is stored on it. That
@@ -321,17 +329,22 @@ interface ToolContext {
 ### 4.1 Presentation contract (provisional implementation, not frozen)
 
 `display` is deliberately too small to drive the new Explorer. It remains
-a generic fallback while Phase 7–8 introduce a separate, versioned
-presentation protocol. Tools own capabilities and structured data. They
-do not own layouts. A tool can advertise a default semantic view. The
-agent can issue workspace commands that compose one or more results.
+only on tools that have no trusted `view` (writes, plugins, generic JSON).
+A tool declares one or the other, not both. Tools own capabilities and
+structured data. They do not own layouts. The agent can issue workspace
+commands that compose one or more results.
 
 The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and
-references by result or tool-call id with optional data paths; trusts only
-`transaction.detail`; supports open, replace, patch, focus, and pin commands;
-represents approval request and decision states; and derives a transaction view
-model plus related-entity actions from an immutable client-owned result store.
+references by result or tool-call id with optional data paths; trusts
+`transaction.detail`/`list`/`group`, `account.portfolio`/`summary`/`list`,
+`asset.detail`/`list`/`holders`, `application.detail`/`list`/`state`/`logs`/`box`,
+`block.detail`/`list`, and `network.status`; supports open,
+replace, patch, focus, and pin commands; represents approval request and
+decision states; and derives renderer-ready view models plus related-entity
+actions from an immutable client-owned result store. `block.detail` is a header (type totals only). Listing or filtering that
+round is a separate `search_transactions` call (`minRound`/`maxRound`,
+optional `txType`) that renders `transaction.list`.
 The fixture-backed TUI and web passes now exercise the same provisional
 contract. The write flow is now observable protocol state: versioned
 `write.stage` events (draft, simulate, inspect, confirm) carry only result
@@ -364,20 +377,26 @@ auto-advances the mechanical stages (each still an observable protocol event,
 streamed as it lands) and pauses only at the approval card — the one human
 decision — then completes signing and submission after it. Sample mode runs
 the same controller through a fixture host that replays the recorded real
-flow. The trusted view registry now holds `transaction.detail` and
-`account.portfolio`; the Accounts surface is signer-scoped (the keystore
-address book as the landing, live indexer portfolios as the detail), and
-sender/receiver on a transaction open the corresponding account view.
-The TUI's natural-language lane runs `@initlabs/vibekit-agent` in-process
-(BYOM via `VIBEKIT_AGENT_MODEL`/`VIBEKIT_AGENT_PROVIDER` — ollama or any
-OpenAI-compatible endpoint) over a compose-only, signerless deployment.
-The model never emits UI or workspace commands in this slice: known tool
-results map deterministically onto trusted views renderer-side, unknown
-tools keep raw records, and an agent-composed `send_payment` group is
-intercepted into the same approval card as a typed `pay` — approval,
+flow. The trusted view registry now holds the first-party Explorer catalog:
+transaction detail/list/group, account portfolio/summary/list, asset
+detail/list/holders, application detail/list/state/logs/box, block
+detail/list, and network status. Plugin views (NFD, ecosystem) remain
+unwired. Tools declare that cue as `view` on
+`ToolDefinition` (`display` and first-party tool names remain fallbacks).
+The Accounts surface is signer-scoped (the keystore address book as the
+landing, live indexer portfolios as the detail). A typed `pay` uses the
+active keystore account as sender. Bare numeric ids query asset,
+application, and block candidates concurrently and present every typed
+match. The TUI's natural-language lane runs `@initlabs/vibekit-agent`
+in-process (BYOM via `VIBEKIT_AGENT_MODEL`/`VIBEKIT_AGENT_PROVIDER` —
+ollama or any OpenAI-compatible endpoint) over a compose-only, signerless
+deployment. The model never emits UI or workspace commands in this slice:
+known tool results map deterministically onto trusted views renderer-side,
+unknown tools keep raw records, and an agent-composed `send_payment` group
+is intercepted into the same approval card as a typed `pay` — approval,
 keystore signing, and submission stay outside the model's reach. Narration
-streams in a docked panel beside the views. A model-driven view-selection
-event is deferred to the API/protocol-freeze work.
+belongs to the request's feed group. A model-driven view-selection event
+is deferred to the API/protocol-freeze work.
 
 The exact `ViewSpec` / `WorkspaceCommand` schema is frozen only after the
 first fixture-backed TUI/web vertical slice. These constraints are
@@ -630,20 +649,41 @@ presentation/workspace protocol on top.
 | **Hosted API + SDK**  | Stateless orchestration and structured event stream  | BYOM or funded default | Compose only. Never holds keys.               |
 | **Web VibeKit Agent** | Same Explorer semantics in a richer browser renderer | Via API                | Connected wallet after explicit in-app review |
 
-The default screen has stable chrome: network and signer status at the top, a
+The default screen has stable chrome: a two-row top bar (wordmark and
+network, then the active wallet chip and assets/apps/txns buttons), a
 session index beside the results feed on wide terminals, and a compact
-composer docked at the bottom. Each request appends a feed group containing
+composer docked at the bottom. `ctrl+w` opens the wallet picker;
+`ctrl+1`/`ctrl+2`/`ctrl+3` open that account's assets, opted-in apps, and
+transactions using the existing list cards. `[`/`]` cycle the active
+account on those pages. The composer stays on the chat screen. Each request appends a feed group containing
 its narration and cards. Below roughly 96 columns the split collapses to one
 pane. The shared workspace protocol remains available to the web/API head,
 but the current TUI organizes the experience as an accretive feed rather than
 tabs or a canvas.
+
+TUI cards use the Init Labs warm-black and antique brass palette
+(`#c4a06a`). They take the v1 Explorer's information hierarchy — kicker,
+type chip, status pill, hero amount, from→to, labeled facts, stat strip —
+and render it with OpenTUI primitives (`rounded` frames, raised chips).
+List and detail cards for accounts, assets, applications, blocks, and
+transactions use Lora labeled-fact rows: id, from/to, type, human time,
+decimal amount with unit, fee, round, note, and holdings. `lookup_transaction`
+attaches ASA name/decimals so an asset transfer shows `520 HAFN`, not base
+units. Pasting a 44-character group ID, or `group <id>`, looks the atomic
+group up through `lookup_transaction_group` and renders the group card.
+Transaction IDs, asset IDs, accounts, application IDs, group IDs, and block
+rounds are brass and underlined: a click copies the full value even when
+the card truncates it. They do not use v1 teal or HTML layout. Web can
+share the same hierarchy later without sharing terminal markup.
 
 Input follows two lanes:
 
 1. A deterministic classifier recognizes transaction IDs, addresses, app
    IDs, asset IDs, and known commands before any model call. Ambiguous
    numeric IDs can query block, asset, and app candidates concurrently
-   and present typed matches.
+   and present typed matches. `accounts` opens the sender picker;
+   `list my accounts` looks the keystore address book up on chain and
+   renders an `account.list` card — it does not wait for the model.
 2. Natural language enters the agent loop. Tools return authoritative
    structured data. The current TUI maps known results to trusted cards
    renderer-side; the model does not emit UI or workspace commands in this
@@ -777,12 +817,11 @@ context. Wallet pairing stays client-side.
     scope. _Spike data point: CLI UX was solid
     (generate/list/export/sign/serve all clean). Leaning "defer to
     keystore CLI"._
-13. **TUI distribution:** source location is resolved as `apps/tui`. Decide
-    whether `vibekit explore` embeds OpenTUI in the main compiled CLI or
-    installs and launches a separately built TUI artifact from this repo.
-    Prefer the separate artifact unless cross-platform compiled-binary smoke
-    proves embedding reliable. The user-facing command remains
-    `vibekit explore` either way.
+13. ~~TUI distribution~~ **Resolved (2026-08-19):** `vibekit explore`
+    launches the private `apps/tui` OpenTUI app as a separate process
+    (workspace source, `dist`, or a sidecar binary; `VIBEKIT_EXPLORE`
+    overrides). OpenTUI is not embedded in the compiled CLI. Packaging the
+    sidecar next to published binaries remains a 1.0 install-channel task.
 14. **Presentation protocol:** freeze `AgentEvent`, approval events,
     `ViewSpec`, and `WorkspaceCommand` only after the same recorded
     fixtures render and update correctly in OpenTUI and web. The §4.1
@@ -834,7 +873,8 @@ Implementation facts learned:
   `createMcpHandler(factory)` builds a fresh server per HTTP request
   (exactly our per-request `ToolContext` model). `serveStdio(factory)`
   ditto per connection. `registerTool` takes full Zod schemas (Zod 4
-  works), annotations, and `_meta`. The `display` hint travels as
+  works), annotations, and `_meta`. A tool's `view` travels as
+  `_meta['ai.vibekit/view']`; tools without a view still send
   `_meta['ai.vibekit/display']`.
 - **Contract**: a `defineTool()` identity helper is required for
   `z.infer` to flow into handler args (annotating
@@ -975,7 +1015,7 @@ Implementation facts learned:
   middleware). `createAgent()` returns a session. In-memory message
   history (the conversation is the client's state, §10). `stream(input)`
   yields the **`AgentEvent` protocol**: text/reasoning deltas,
-  tool-call, tool-result carrying the §4 `display` hint, error,
+  tool-call, tool-result carrying `view` (or the §4 `display` fallback), error,
   finish+usage. Tool failures return `{ error: { code, message } }` to
   the model (loop continues) rather than throwing. 5 mock-model tests
   cover loop, network routing, ToolError surfacing, history.

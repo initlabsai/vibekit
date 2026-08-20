@@ -44,7 +44,7 @@ describe('transaction write tools', () => {
     const tool = transactionWriteTools.find((t) => t.name === 'send_group_transactions')!
     const result = (await tool.handler(ctx(), {
       transactions: [
-        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amount: 1 },
+        { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1 },
         { type: 'asset_opt_in', sender: ADDR_B, assetId: 42 },
       ],
     } as never)) as { unsignedGroup: string[]; summary: string }
