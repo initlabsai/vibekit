@@ -159,6 +159,18 @@ async function deployApp(
   }
 }
 
+/** Wire shape of app_deploy results: executed deployment, or unsigned group in compose mode. */
+export const appDeployResultSchema = z.union([
+  z.object({
+    appId: z.number(),
+    appAddress: z.string(),
+    txid: z.string(),
+    confirmedRound: z.number(),
+    return: z.unknown().optional(),
+  }),
+  z.object({ unsignedGroup: z.array(z.string()), summary: z.string() }),
+])
+
 export const contractWriteTools: AnyTool[] = [
   defineTool({
     name: 'app_deploy',
@@ -174,16 +186,7 @@ export const contractWriteTools: AnyTool[] = [
         .describe('TMPL_* template substitutions applied to TEAL source before compiling'),
       note: z.string().optional().describe('Optional note'),
     }),
-    output: z.union([
-      z.object({
-        appId: z.number(),
-        appAddress: z.string(),
-        txid: z.string(),
-        confirmedRound: z.number(),
-        return: z.unknown().optional(),
-      }),
-      z.object({ unsignedGroup: z.array(z.string()), summary: z.string() }),
-    ]),
+    output: appDeployResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => deployApp(ctx, args),

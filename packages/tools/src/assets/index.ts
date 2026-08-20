@@ -1,12 +1,15 @@
 import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
+import { transactionListSchema } from '../shared/format.js'
 import { lookupAsset } from './handlers/lookup.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from './handlers/search.js'
 
 export { lookupAsset, searchAssetBalances, searchAssetTransactions, searchAssets }
-export type { FormattedAsset, FormattedTransaction, AssetBalance } from './handlers/format.js'
+export type { FormattedAsset, AssetBalance } from './handlers/format.js'
+export type { FormattedTransaction } from '../shared/format.js'
 
-const assetSummary = z.object({
+/** Wire shape of lookup_asset ('asset.detail' view). */
+export const assetSummarySchema = z.object({
   assetId: z.number(),
   name: z.string().optional(),
   unitName: z.string().optional(),
@@ -21,40 +24,39 @@ const assetSummary = z.object({
   url: z.string().optional(),
 })
 
-const transactionSummary: z.ZodType = z.lazy(() =>
-  z.object({
-    // The indexer assigns no id to inner transactions, and txType is optional
-    // in the indexer model — both keys are absent when unset.
-    id: z.string().optional(),
-    type: z.string().optional(),
-    sender: z.string(),
-    fee: z.number().describe('Fee in ALGO (not microALGO)'),
-    confirmedRound: z.number().optional(),
-    roundTime: z.number().optional(),
-    paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
-    receiver: z.string().optional(),
-    assetId: z.number().optional(),
-    assetAmount: z
-      .union([z.number(), z.string()])
-      .optional()
-      .describe('Asset amount in base units; decimal string when above 2^53'),
-    applicationId: z.number().optional(),
-    onCompletion: z.string().optional(),
-    assetName: z.string().optional(),
-    assetUnitName: z.string().optional(),
-    assetDecimals: z.number().int().nonnegative().optional(),
-    rekeyTo: z.string().optional(),
-    closeTo: z.string().optional(),
-    closeAmount: z.union([z.number(), z.string()]).optional(),
-    clawbackFrom: z.string().optional(),
-    note: z.string().optional(),
-    group: z.string().optional(),
-    innerTxns: z.array(transactionSummary).optional(),
-    globalStateDelta: z.unknown().optional(),
-    localStateDelta: z.unknown().optional(),
-    logs: z.array(z.string()).optional(),
-  }),
-)
+/** Wire shape of search_asset_balances ('asset.holders' view). */
+export const assetHoldersSchema = z.object({
+  balances: z.array(
+    z.object({
+      address: z.string(),
+      amount: z.string(),
+      isFrozen: z.boolean(),
+    }),
+  ),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of search_assets ('asset.list' view). */
+export const assetListSchema = z.object({
+  assets: z.array(assetSummarySchema),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of get_asset_info ('asset.detail' view, algod-sourced). */
+export const assetInfoSchema = z.object({
+  assetId: z.number(),
+  name: z.string().optional(),
+  unitName: z.string().optional(),
+  totalSupply: z.string().regex(/^\d+$/),
+  decimals: z.number(),
+  defaultFrozen: z.boolean().optional(),
+  url: z.string().optional(),
+  creator: z.string(),
+  manager: z.string().optional(),
+  reserve: z.string().optional(),
+  freeze: z.string().optional(),
+  clawback: z.string().optional(),
+})
 
 export { assetWriteTools } from './tools-write.js'
 
@@ -66,7 +68,7 @@ export const assetTools: AnyTool[] = [
     parameters: z.object({
       assetId: z.number().describe('The asset ID to look up'),
     }),
-    output: assetSummary,
+    output: assetSummarySchema,
     view: 'asset.detail',
     handler: async (ctx, args) => lookupAsset(ctx, args),
   }),
@@ -87,16 +89,7 @@ export const assetTools: AnyTool[] = [
         .optional()
         .describe('Max balance in raw base units (before decimal adjustment)'),
     }),
-    output: z.object({
-      balances: z.array(
-        z.object({
-          address: z.string(),
-          amount: z.string(),
-          isFrozen: z.boolean(),
-        }),
-      ),
-      nextToken: z.string().optional(),
-    }),
+    output: assetHoldersSchema,
     view: 'asset.holders',
     handler: async (ctx, args) => searchAssetBalances(ctx, args),
   }),
@@ -110,10 +103,7 @@ export const assetTools: AnyTool[] = [
       beforeTime: z.string().optional().describe('Include results before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include results after this RFC 3339 time'),
     }),
-    output: z.object({
-      transactions: z.array(transactionSummary),
-      nextToken: z.string().optional(),
-    }),
+    output: transactionListSchema,
     view: 'transaction.list',
     handler: async (ctx, args) => searchAssetTransactions(ctx, args),
   }),
@@ -127,10 +117,7 @@ export const assetTools: AnyTool[] = [
       unit: z.string().optional().describe('Filter by asset unit name (exact match)'),
       creator: z.string().optional().describe('Filter by creator address'),
     }),
-    output: z.object({
-      assets: z.array(assetSummary),
-      nextToken: z.string().optional(),
-    }),
+    output: assetListSchema,
     view: 'asset.list',
     handler: async (ctx, args) => searchAssets(ctx, args),
   }),
@@ -139,20 +126,7 @@ export const assetTools: AnyTool[] = [
     description:
       "Get an asset's current parameters directly from algod (name, supply, roles, frozen state).",
     parameters: z.object({ assetId: z.number().describe('The asset ID') }),
-    output: z.object({
-      assetId: z.number(),
-      name: z.string().optional(),
-      unitName: z.string().optional(),
-      total: z.union([z.number(), z.string()]),
-      decimals: z.number(),
-      defaultFrozen: z.boolean().optional(),
-      url: z.string().optional(),
-      creator: z.string(),
-      manager: z.string().optional(),
-      reserve: z.string().optional(),
-      freeze: z.string().optional(),
-      clawback: z.string().optional(),
-    }),
+    output: assetInfoSchema,
     view: 'asset.detail',
     handler: async (ctx, args) => {
       const asset = await ctx.algod.getAssetByID(BigInt(args.assetId)).do()
@@ -164,7 +138,7 @@ export const assetTools: AnyTool[] = [
         assetId: Number(asset.index),
         name: params.name,
         unitName: params.unitName,
-        total: params.total,
+        totalSupply: String(params.total),
         decimals: Number(params.decimals),
         defaultFrozen: params.defaultFrozen,
         url: params.url,

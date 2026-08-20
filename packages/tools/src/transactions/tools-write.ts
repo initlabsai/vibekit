@@ -138,6 +138,26 @@ export const txnSpecSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('app_delete'), sender, ...appFields, note }),
 ])
 
+/** Wire shape of simulate_transactions results. */
+export const simulateResultSchema = z.object({
+  wouldSucceed: z.boolean(),
+  failureMessage: z.string().optional(),
+  failedAt: z.array(z.number()).optional(),
+  simulatedRound: z.number(),
+  txids: z.array(z.string()),
+  transactionResults: z.array(
+    z.object({
+      txid: z.string(),
+      logs: z.array(z.string()).optional(),
+      budgetConsumed: z.number().optional(),
+    }),
+  ),
+  // nullish: zod 4 treats bare z.unknown() as a required key (see core schemas.ts).
+  returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
+  appBudgetAdded: z.number().optional(),
+  appBudgetConsumed: z.number().optional(),
+})
+
 const GROUP_DESCRIPTION = `Send 1-16 transactions as an atomic group — all succeed or all fail.
 
 Types and required fields (sender always required):
@@ -210,24 +230,7 @@ export const transactionWriteTools: AnyTool[] = [
       allowUnnamedResources: z.boolean().optional().describe('Allow unnamed resource access'),
       extraOpcodeBudget: z.number().optional().describe('Extra opcode budget to grant'),
     }),
-    output: z.object({
-      wouldSucceed: z.boolean(),
-      failureMessage: z.string().optional(),
-      failedAt: z.array(z.number()).optional(),
-      simulatedRound: z.number(),
-      txids: z.array(z.string()),
-      transactionResults: z.array(
-        z.object({
-          txid: z.string(),
-          logs: z.array(z.string()).optional(),
-          budgetConsumed: z.number().optional(),
-        }),
-      ),
-      // nullish: zod 4 treats bare z.unknown() as a required key (see core schemas.ts).
-      returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
-      appBudgetAdded: z.number().optional(),
-      appBudgetConsumed: z.number().optional(),
-    }),
+    output: simulateResultSchema,
     view: 'json',
     handler: async (ctx, args) =>
       simulateGroup(ctx, args.transactions as TxnSpec[], {

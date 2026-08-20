@@ -17,7 +17,8 @@ const stateSchema = z.object({
   numUint: z.number(),
 })
 
-const formattedApplication = z.object({
+/** Wire shape of lookup_application ('application.detail' view). */
+export const formattedApplicationSchema = z.object({
   applicationId: z.number(),
   creator: z.string().optional(),
   globalState: z
@@ -50,6 +51,82 @@ const stateValue = z.object({
   type: z.enum(['uint', 'bytes']),
 })
 
+/** Wire shape of search_applications ('application.list' view). */
+export const applicationListSchema = z.object({
+  applications: z.array(formattedApplicationSchema),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of lookup_application_logs ('application.logs' view). */
+export const applicationLogsSchema = z.object({
+  applicationId: z.number(),
+  logData: z.array(
+    z.object({
+      txid: z.string(),
+      logs: z.array(z.string()).describe('base64-encoded log bytes'),
+    }),
+  ),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of read_global_state ('application.state' view). */
+export const globalStateSchema = z.object({
+  appId: z.number(),
+  state: z.array(stateValue),
+})
+
+/** Wire shape of read_local_state ('application.state' view). */
+export const localStateSchema = z.object({
+  appId: z.number(),
+  address: z.string(),
+  optedIn: z.boolean().describe('false = account is not opted in (state is then empty, not merely unset)'),
+  state: z.array(stateValue),
+})
+
+/** Wire shape of read_box_state ('application.box' view). */
+export const applicationBoxSchema = z.object({
+  appId: z.number(),
+  boxName: z.string(),
+  exists: z.boolean(),
+  value: z.string().optional(),
+  valueBase64: z.string().optional(),
+  size: z.number().optional(),
+})
+
+/** Wire shape of app_get_info ('json' view). */
+export const appInfoSchema = z.object({
+  appId: z.number(),
+  creator: z.string(),
+  appAddress: z.string(),
+  globalInts: z.number().optional(),
+  globalBytes: z.number().optional(),
+  localInts: z.number().optional(),
+  localBytes: z.number().optional(),
+  extraProgramPages: z.number().optional(),
+  approvalProgramSize: z.number(),
+  clearProgramSize: z.number(),
+})
+
+/** Wire shape of app_list_methods ('table' view). */
+export const appMethodsSchema = z.object({
+  name: z.string().optional(),
+  methods: z.array(
+    z.object({
+      name: z.string(),
+      signature: z.string(),
+      description: z.string().optional(),
+      args: z.array(
+        z.object({
+          name: z.string().optional(),
+          type: z.string(),
+          description: z.string().optional(),
+        }),
+      ),
+      returns: z.object({ type: z.string(), description: z.string().optional() }),
+    }),
+  ),
+})
+
 export { contractWriteTools } from './tools-write.js'
 
 export const contractTools: AnyTool[] = [
@@ -59,7 +136,7 @@ export const contractTools: AnyTool[] = [
     parameters: z.object({
       applicationId: z.number().describe('The application ID to look up'),
     }),
-    output: formattedApplication,
+    output: formattedApplicationSchema,
     view: 'application.detail',
     handler: async (ctx, args) => lookupApplication(ctx, args),
   }),
@@ -71,10 +148,7 @@ export const contractTools: AnyTool[] = [
       nextToken: z.string().optional().describe('Pagination token'),
       creator: z.string().optional().describe('Filter by creator address'),
     }),
-    output: z.object({
-      applications: z.array(formattedApplication),
-      nextToken: z.string().optional(),
-    }),
+    output: applicationListSchema,
     view: 'application.list',
     handler: async (ctx, args) => searchApplications(ctx, args),
   }),
@@ -89,16 +163,7 @@ export const contractTools: AnyTool[] = [
       minRound: z.number().optional().describe('Include logs at or after this round'),
       maxRound: z.number().optional().describe('Include logs at or before this round'),
     }),
-    output: z.object({
-      applicationId: z.number(),
-      logData: z.array(
-        z.object({
-          txid: z.string(),
-          logs: z.array(z.string()).describe('base64-encoded log bytes'),
-        }),
-      ),
-      nextToken: z.string().optional(),
-    }),
+    output: applicationLogsSchema,
     view: 'application.logs',
     handler: async (ctx, args) => lookupApplicationLogs(ctx, args),
   }),
@@ -109,10 +174,7 @@ export const contractTools: AnyTool[] = [
       appId: z.number().describe('The application ID'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    output: z.object({
-      appId: z.number(),
-      state: z.array(stateValue),
-    }),
+    output: globalStateSchema,
     view: 'application.state',
     handler: async (ctx, args) => readGlobalState(ctx, args),
   }),
@@ -124,12 +186,7 @@ export const contractTools: AnyTool[] = [
       address: z.string().describe('The account address to read local state for'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
     }),
-    output: z.object({
-      appId: z.number(),
-      address: z.string(),
-      optedIn: z.boolean().describe('false = account is not opted in (state is then empty, not merely unset)'),
-      state: z.array(stateValue),
-    }),
+    output: localStateSchema,
     view: 'application.state',
     handler: async (ctx, args) => readLocalState(ctx, args),
   }),
@@ -159,14 +216,7 @@ Examples:
         .describe('BoxMap key type. Defaults to uint64.'),
       appSpec: z.string().optional().describe('Optional app spec JSON for better value decoding'),
     }),
-    output: z.object({
-      appId: z.number(),
-      boxName: z.string(),
-      exists: z.boolean(),
-      value: z.string().optional(),
-      valueBase64: z.string().optional(),
-      size: z.number().optional(),
-    }),
+    output: applicationBoxSchema,
     view: 'application.box',
     handler: async (ctx, args) => readBoxState(ctx, args),
   }),
@@ -175,18 +225,7 @@ Examples:
     description:
       "Get an application's current parameters from algod: creator, schema, program sizes, extra pages.",
     parameters: z.object({ appId: z.number().describe('The application ID') }),
-    output: z.object({
-      appId: z.number(),
-      creator: z.string(),
-      appAddress: z.string(),
-      globalInts: z.number().optional(),
-      globalBytes: z.number().optional(),
-      localInts: z.number().optional(),
-      localBytes: z.number().optional(),
-      extraProgramPages: z.number().optional(),
-      approvalProgramSize: z.number(),
-      clearProgramSize: z.number(),
-    }),
+    output: appInfoSchema,
     view: 'json',
     handler: async (ctx, args) => {
       const app = await ctx.algod.getApplicationByID(BigInt(args.appId)).do()
@@ -219,24 +258,7 @@ Examples:
     parameters: z.object({
       appSpec: z.string().describe('ARC-56 or ARC-32 app spec JSON as a string'),
     }),
-    output: z.object({
-      name: z.string().optional(),
-      methods: z.array(
-        z.object({
-          name: z.string(),
-          signature: z.string(),
-          description: z.string().optional(),
-          args: z.array(
-            z.object({
-              name: z.string().optional(),
-              type: z.string(),
-              description: z.string().optional(),
-            }),
-          ),
-          returns: z.object({ type: z.string(), description: z.string().optional() }),
-        }),
-      ),
-    }),
+    output: appMethodsSchema,
     view: 'table',
     handler: async (_ctx, args) => {
       const spec = parseAppSpec(args.appSpec)

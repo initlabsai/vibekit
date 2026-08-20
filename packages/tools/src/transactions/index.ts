@@ -1,46 +1,19 @@
 import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
+import { formattedTransactionSchema, transactionListSchema } from '../shared/format.js'
 import { lookupTransaction, lookupTransactionGroup } from './handlers/lookup.js'
 import { searchTransactions } from './handlers/search.js'
 
 export { lookupTransaction, lookupTransactionGroup, searchTransactions }
 export type { SearchTransactionsArgs } from './handlers/search.js'
-export type { FormattedTransaction } from './handlers/format.js'
+export type { FormattedTransaction } from '../shared/format.js'
+export { formattedTransactionSchema, transactionListSchema } from '../shared/format.js'
 
-const formattedTransaction = z.object({
-  // The indexer assigns no id to inner transactions, and txType is optional
-  // in the indexer model — both keys are absent when unset (jsonSafe drops
-  // undefined entries).
-  id: z.string().optional(),
-  type: z.string().optional(),
-  sender: z.string(),
-  fee: z.number().describe('Fee in ALGO (not microALGO)'),
-  confirmedRound: z.number().optional(),
-  roundTime: z.number().optional(),
-  paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
-  receiver: z.string().optional(),
-  assetId: z.number().optional(),
-  assetAmount: z
-    .union([z.number(), z.string()])
-    .optional()
-    .describe('Asset amount in base units; decimal string when above 2^53'),
-  applicationId: z.number().optional(),
-  onCompletion: z.string().optional(),
-  assetName: z.string().optional(),
-  assetUnitName: z.string().optional(),
-  assetDecimals: z.number().int().nonnegative().optional(),
-  rekeyTo: z.string().optional(),
-  closeTo: z.string().optional(),
-  closeAmount: z.union([z.number(), z.string()]).optional(),
-  clawbackFrom: z.string().optional(),
-  note: z.string().optional(),
-  group: z.string().optional(),
-  get innerTxns() {
-    return z.array(formattedTransaction).optional()
-  },
-  globalStateDelta: z.unknown().optional(),
-  localStateDelta: z.unknown().optional(),
-  logs: z.array(z.string()).optional(),
+/** Wire shape of lookup_transaction_group ('transaction.group' view). */
+export const transactionGroupSchema = z.object({
+  groupId: z.string(),
+  transactions: z.array(formattedTransactionSchema),
+  nextToken: z.string().optional(),
 })
 
 const txTypeEnum = z
@@ -57,7 +30,7 @@ export const transactionTools: AnyTool[] = [
     parameters: z.object({
       txid: z.string().describe('The transaction ID to look up'),
     }),
-    output: formattedTransaction,
+    output: formattedTransactionSchema,
     view: 'transaction.detail',
     handler: async (ctx, args) => lookupTransaction(ctx, args),
   }),
@@ -77,10 +50,7 @@ export const transactionTools: AnyTool[] = [
       minAmount: z.number().optional().describe('Filter by minimum amount (microAlgos)'),
       applicationId: z.number().optional().describe('Filter by application ID'),
     }),
-    output: z.object({
-      transactions: z.array(formattedTransaction),
-      nextToken: z.string().optional(),
-    }),
+    output: transactionListSchema,
     view: 'transaction.list',
     handler: async (ctx, args) => searchTransactions(ctx, args),
   }),
@@ -91,11 +61,7 @@ export const transactionTools: AnyTool[] = [
     parameters: z.object({
       groupId: z.string().describe('The base64-encoded 32-byte group ID'),
     }),
-    output: z.object({
-      groupId: z.string(),
-      transactions: z.array(formattedTransaction),
-      nextToken: z.string().optional(),
-    }),
+    output: transactionGroupSchema,
     view: 'transaction.group',
     handler: async (ctx, args) => lookupTransactionGroup(ctx, args),
   }),

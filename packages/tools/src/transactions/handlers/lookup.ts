@@ -1,5 +1,5 @@
 import { stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
-import { formatTransaction, type FormattedTransaction } from './format.js'
+import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
 
 export async function lookupTransaction(
   ctx: ToolContext,

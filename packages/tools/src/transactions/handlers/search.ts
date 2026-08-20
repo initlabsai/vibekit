@@ -1,5 +1,5 @@
 import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
-import { formatTransaction, type FormattedTransaction } from './format.js'
+import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
 
 export interface SearchTransactionsArgs {
   limit?: number

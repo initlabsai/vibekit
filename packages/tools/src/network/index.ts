@@ -13,20 +13,70 @@ const blockSummary = z.object({
   proposer: z.string().optional(),
 })
 
+/** Wire shape of get_network ('network.status' view, deployment configuration). */
+export const networkConfigSchema = z.object({
+  network: z.string(),
+  defaultNetwork: z.string(),
+  servedNetworks: z.array(z.string()),
+  algodUrl: z.string(),
+  indexerUrl: z.string(),
+  mode: z.enum(['execute', 'compose']),
+})
+
+/** Wire shape of get_network_status ('network.status' view, health metrics). */
+export const networkStatusSchema = z.object({
+  network: z.string(),
+  latestRound: z.number(),
+  timeSinceLastRound: z.number(),
+  totalSupply: z.number(),
+  onlineStake: z.number(),
+  participation: z.number(),
+  avgBlockTime: z.number(),
+  avgTps: z.number(),
+  peakTps: z.number(),
+  avgTxnPerBlock: z.number(),
+  totalTxns: z.number(),
+  minBlockTime: z.number(),
+  maxBlockTime: z.number(),
+  consensusVersion: z.string(),
+  catchupTime: z.number(),
+  blockDetails: z.array(
+    z.object({
+      round: z.number(),
+      txnCount: z.number(),
+      blockTime: z.number(),
+      tps: z.number(),
+    }),
+  ),
+})
+
+/** Wire shape of lookup_block ('block.detail' view). */
+export const blockDetailSchema = blockSummary.extend({
+  feesCollected: z.number().optional(),
+  proposerPayout: z.number().optional(),
+  previousBlockHash: z.string().optional(),
+  seed: z.string().optional(),
+  transactionTypes: z.array(
+    z.object({
+      type: z.string(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+})
+
+/** Wire shape of search_block_headers ('block.list' view). */
+export const blockListSchema = z.object({
+  blocks: z.array(blockSummary),
+  nextToken: z.string().optional(),
+})
+
 export const networkTools: AnyTool[] = [
   defineTool({
     name: 'get_network',
     description:
       'Get this deployment\'s network configuration: which networks are served, the default network, endpoints, and signing mode. Use to orient before network-specific calls.',
     parameters: z.object({}),
-    output: z.object({
-      network: z.string(),
-      defaultNetwork: z.string(),
-      servedNetworks: z.array(z.string()),
-      algodUrl: z.string(),
-      indexerUrl: z.string(),
-      mode: z.enum(['execute', 'compose']),
-    }),
+    output: networkConfigSchema,
     view: 'network.status',
     handler: async (ctx) => ({
       network: ctx.network.id,
@@ -42,31 +92,7 @@ export const networkTools: AnyTool[] = [
     description:
       'Get network health dashboard: current round, TPS, block time, supply, participation. Use when users ask about network status, health, metrics, or stats.',
     parameters: z.object({}),
-    output: z.object({
-      network: z.string(),
-      latestRound: z.number(),
-      timeSinceLastRound: z.number(),
-      totalSupply: z.number(),
-      onlineStake: z.number(),
-      participation: z.number(),
-      avgBlockTime: z.number(),
-      avgTps: z.number(),
-      peakTps: z.number(),
-      avgTxnPerBlock: z.number(),
-      totalTxns: z.number(),
-      minBlockTime: z.number(),
-      maxBlockTime: z.number(),
-      consensusVersion: z.string(),
-      catchupTime: z.number(),
-      blockDetails: z.array(
-        z.object({
-          round: z.number(),
-          txnCount: z.number(),
-          blockTime: z.number(),
-          tps: z.number(),
-        }),
-      ),
-    }),
+    output: networkStatusSchema,
     view: 'network.status',
     handler: async (ctx) => getNetworkStatus(ctx),
   }),
@@ -77,18 +103,7 @@ export const networkTools: AnyTool[] = [
     parameters: z.object({
       round: z.number().optional().describe('The round number of the block (omit for latest)'),
     }),
-    output: blockSummary.extend({
-      feesCollected: z.number().optional(),
-      proposerPayout: z.number().optional(),
-      previousBlockHash: z.string().optional(),
-      seed: z.string().optional(),
-      transactionTypes: z.array(
-        z.object({
-          type: z.string(),
-          count: z.number().int().nonnegative(),
-        }),
-      ),
-    }),
+    output: blockDetailSchema,
     view: 'block.detail',
     handler: async (ctx, args) => lookupBlock(ctx, args),
   }),
@@ -104,10 +119,7 @@ export const networkTools: AnyTool[] = [
       beforeTime: z.string().optional().describe('Include blocks before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include blocks after this RFC 3339 time'),
     }),
-    output: z.object({
-      blocks: z.array(blockSummary),
-      nextToken: z.string().optional(),
-    }),
+    output: blockListSchema,
     view: 'block.list',
     handler: async (ctx, args) => searchBlockHeaders(ctx, args),
   }),

@@ -331,7 +331,10 @@ semantic Explorer views; the experience registry decides which are
 trusted. Plain words (`table`, `txn`, `json`, `markdown`, `account`) are
 coarse rendering hints for tools without a trusted view (writes, plugins,
 generic JSON). Tools own capabilities and structured data. They do not
-own layouts.
+own layouts. `@initlabs/vibekit-tools` exports `viewDataSchemas` and
+`ViewData<'…'>` — the wire shape per view id, pinned by test to the tool
+declarations — so a downstream consumer can build custom components
+against typed tool output without the experience package.
 
 The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and

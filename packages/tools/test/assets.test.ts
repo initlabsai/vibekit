@@ -272,8 +272,10 @@ describe('get_asset_info', () => {
     const info = (await tool.handler(ctx, { assetId: 42 } as never)) as {
       assetId: number
       creator: string
+      totalSupply: string
     }
     expect(info.assetId).toBe(42)
     expect(info.creator).toBe(creator)
+    expect(info.totalSupply).toBe('9')
   })
 })

@@ -43,4 +43,10 @@ export {
   lookupTransactionGroup,
   searchTransactions,
 } from './transactions/index.js'
-export type { SearchTransactionsArgs, FormattedTransaction } from './transactions/index.js'
+export type { SearchTransactionsArgs } from './transactions/index.js'
+
+export { formatTransaction, formattedTransactionSchema } from './shared/format.js'
+export type { FormattedTransaction } from './shared/format.js'
+
+export { viewDataSchemas } from './views.js'
+export type { ViewDataMap, ViewData } from './views.js'

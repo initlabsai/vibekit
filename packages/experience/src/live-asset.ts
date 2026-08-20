@@ -14,8 +14,7 @@ export const assetWireSchema = z.object({
   assetId: uint64JsonSchema,
   name: z.string().min(1).optional(),
   unitName: z.string().min(1).optional(),
-  totalSupply: z.union([z.string().regex(/^\d+$/), z.number().int().nonnegative()]).optional(),
-  total: z.union([z.string().regex(/^\d+$/), z.number().int().nonnegative()]).optional(),
+  totalSupply: z.union([z.string().regex(/^\d+$/), z.number().int().nonnegative()]),
   decimals: z.number().int().nonnegative(),
   creator: optionalAddress,
   manager: optionalAddress,
@@ -48,7 +47,7 @@ export function buildAssetDetailRecord(
     network: identity.network,
     data: assetDetailDataSchema.parse({
       assetId: asset.assetId,
-      totalSupply: String(asset.totalSupply ?? asset.total ?? 0),
+      totalSupply: String(asset.totalSupply),
       decimals: asset.decimals,
       ...(asset.name === undefined ? {} : { name: asset.name }),
       ...(asset.unitName === undefined ? {} : { unitName: asset.unitName }),

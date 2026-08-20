@@ -1,11 +1,6 @@
 import { DEFAULT_LIMIT, formatAssetAmount, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
-import {
-  formatAsset,
-  formatTransaction,
-  type AssetBalance,
-  type FormattedAsset,
-  type FormattedTransaction,
-} from './format.js'
+import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
+import { formatAsset, type AssetBalance, type FormattedAsset } from './format.js'
 
 export interface SearchAssetBalancesArgs {
   assetId: number

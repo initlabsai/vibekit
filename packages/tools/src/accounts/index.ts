@@ -1,5 +1,6 @@
 import { defineTool, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
+import { transactionListSchema } from '../shared/format.js'
 import { getAccountAppLocalStates, getAccountAssets } from './handlers/assets.js'
 import { batchLookupAccounts, lookupAccount } from './handlers/lookup.js'
 import { getAccountPortfolio } from './handlers/portfolio.js'
@@ -15,7 +16,8 @@ export {
   getAccountPortfolio,
 }
 
-const formattedAccount = z.object({
+/** Wire shape of lookup_account ('account.summary' view). */
+export const formattedAccountSchema = z.object({
   address: z.string(),
   balanceAlgos: z.number(),
   totalAssetsOptedIn: z.number().optional(),
@@ -29,39 +31,11 @@ const formattedAccount = z.object({
   createdAtRound: z.number().optional(),
 })
 
-const formattedTransaction = z.object({
-  // The indexer assigns no id to inner transactions, and txType is optional
-  // in the indexer model — both keys are absent when unset.
-  id: z.string().optional(),
-  type: z.string().optional(),
-  sender: z.string(),
-  fee: z.number().describe('Fee in ALGO (not microALGO)'),
-  confirmedRound: z.number().optional(),
-  roundTime: z.number().optional(),
-  paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
-  receiver: z.string().optional(),
-  assetId: z.number().optional(),
-  assetAmount: z
-    .union([z.number(), z.string()])
-    .optional()
-    .describe('Asset amount in base units; decimal string when above 2^53'),
-  applicationId: z.number().optional(),
-  onCompletion: z.string().optional(),
-  assetName: z.string().optional(),
-  assetUnitName: z.string().optional(),
-  assetDecimals: z.number().int().nonnegative().optional(),
-  rekeyTo: z.string().optional(),
-  closeTo: z.string().optional(),
-  closeAmount: z.union([z.number(), z.string()]).optional(),
-  clawbackFrom: z.string().optional(),
-  note: z.string().optional(),
-  group: z.string().optional(),
-  get innerTxns() {
-    return z.array(formattedTransaction).optional()
-  },
-  globalStateDelta: z.unknown().optional(),
-  localStateDelta: z.unknown().optional(),
-  logs: z.array(z.string()).optional(),
+/** Wire shape of batch_lookup_accounts and search_accounts ('account.list' view). */
+export const accountListSchema = z.object({
+  accounts: z.array(formattedAccountSchema),
+  // batch_lookup_accounts never paginates; the key is optional and absent there.
+  nextToken: z.string().optional(),
 })
 
 const accountAsset = z.object({
@@ -93,6 +67,26 @@ const accountAppLocalState = z.object({
   ),
 })
 
+/** Wire shape of get_account_assets ('asset.list' view, holdings rows). */
+export const accountAssetListSchema = z.object({
+  assets: z.array(accountAsset),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of get_account_app_local_states ('application.state' view). */
+export const appLocalStatesSchema = z.object({
+  appLocalStates: z.array(accountAppLocalState),
+  nextToken: z.string().optional(),
+})
+
+/** Wire shape of get_account_portfolio ('account.portfolio' view). */
+export const accountPortfolioSchema = z.object({
+  address: z.string(),
+  algoBalance: z.number(),
+  assets: z.array(accountAsset),
+  totalAssets: z.number(),
+})
+
 const txTypeEnum = z
   .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])
   .optional()
@@ -106,7 +100,7 @@ export const accountTools: AnyTool[] = [
     parameters: z.object({
       address: z.string().describe('The Algorand address to look up'),
     }),
-    output: formattedAccount,
+    output: formattedAccountSchema,
     view: 'account.summary',
     handler: async (ctx, args) => lookupAccount(ctx, args),
   }),
@@ -117,9 +111,7 @@ export const accountTools: AnyTool[] = [
     parameters: z.object({
       addresses: z.array(z.string()).describe('The Algorand addresses to look up'),
     }),
-    output: z.object({
-      accounts: z.array(formattedAccount),
-    }),
+    output: accountListSchema,
     view: 'account.list',
     handler: async (ctx, args) => batchLookupAccounts(ctx, args),
   }),
@@ -135,10 +127,7 @@ export const accountTools: AnyTool[] = [
       currencyGreaterThan: z.number().optional().describe('Min balance in microAlgos'),
       currencyLessThan: z.number().optional().describe('Max balance in microAlgos'),
     }),
-    output: z.object({
-      accounts: z.array(formattedAccount),
-      nextToken: z.string().optional(),
-    }),
+    output: accountListSchema,
     view: 'account.list',
     handler: async (ctx, args) => searchAccounts(ctx, args),
   }),
@@ -157,10 +146,7 @@ export const accountTools: AnyTool[] = [
       afterTime: z.string().optional().describe('Include results after this RFC 3339 time'),
       minAmount: z.number().optional().describe('Filter by minimum amount (microAlgos)'),
     }),
-    output: z.object({
-      transactions: z.array(formattedTransaction),
-      nextToken: z.string().optional(),
-    }),
+    output: transactionListSchema,
     view: 'transaction.list',
     handler: async (ctx, args) => searchAccountTransactions(ctx, args),
   }),
@@ -172,10 +158,7 @@ export const accountTools: AnyTool[] = [
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
     }),
-    output: z.object({
-      assets: z.array(accountAsset),
-      nextToken: z.string().optional(),
-    }),
+    output: accountAssetListSchema,
     view: 'asset.list',
     handler: async (ctx, args) => getAccountAssets(ctx, args),
   }),
@@ -189,10 +172,7 @@ export const accountTools: AnyTool[] = [
       nextToken: z.string().optional().describe('Pagination token'),
       applicationId: z.number().optional().describe('Filter by specific application ID'),
     }),
-    output: z.object({
-      appLocalStates: z.array(accountAppLocalState),
-      nextToken: z.string().optional(),
-    }),
+    output: appLocalStatesSchema,
     view: 'application.state',
     handler: async (ctx, args) => getAccountAppLocalStates(ctx, args),
   }),
@@ -202,12 +182,7 @@ export const accountTools: AnyTool[] = [
     parameters: z.object({
       address: z.string().describe('Algorand address'),
     }),
-    output: z.object({
-      address: z.string(),
-      algoBalance: z.number(),
-      assets: z.array(accountAsset),
-      totalAssets: z.number(),
-    }),
+    output: accountPortfolioSchema,
     view: 'account.portfolio',
     handler: async (ctx, args) => getAccountPortfolio(ctx, args),
   }),

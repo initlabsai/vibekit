@@ -1,4 +1,5 @@
 import { bytesToBase64 } from '@initlabs/vibekit-core'
+import { z } from 'zod'
 
 const MICROALGOS_PER_ALGO = 1_000_000
 
@@ -37,6 +38,49 @@ export interface FormattedTransaction {
   localStateDelta?: unknown
   logs?: string[]
 }
+
+/** Post-jsonSafe wire shape of {@link FormattedTransaction}. */
+export const formattedTransactionSchema = z.object({
+  // The indexer assigns no id to inner transactions, and txType is optional
+  // in the indexer model — both keys are absent when unset (jsonSafe drops
+  // undefined entries).
+  id: z.string().optional(),
+  type: z.string().optional(),
+  sender: z.string(),
+  fee: z.number().describe('Fee in ALGO (not microALGO)'),
+  confirmedRound: z.number().optional(),
+  roundTime: z.number().optional(),
+  paymentAmount: z.number().optional().describe('Payment amount in ALGO (not microALGO)'),
+  receiver: z.string().optional(),
+  assetId: z.number().optional(),
+  assetAmount: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe('Asset amount in base units; decimal string when above 2^53'),
+  applicationId: z.number().optional(),
+  onCompletion: z.string().optional(),
+  assetName: z.string().optional(),
+  assetUnitName: z.string().optional(),
+  assetDecimals: z.number().int().nonnegative().optional(),
+  rekeyTo: z.string().optional(),
+  closeTo: z.string().optional(),
+  closeAmount: z.union([z.number(), z.string()]).optional(),
+  clawbackFrom: z.string().optional(),
+  note: z.string().optional(),
+  group: z.string().optional(),
+  get innerTxns() {
+    return z.array(formattedTransactionSchema).optional()
+  },
+  globalStateDelta: z.unknown().optional(),
+  localStateDelta: z.unknown().optional(),
+  logs: z.array(z.string()).optional(),
+})
+
+/** Wire shape of every transaction-list tool result ('transaction.list' view). */
+export const transactionListSchema = z.object({
+  transactions: z.array(formattedTransactionSchema),
+  nextToken: z.string().optional(),
+})
 
 /** uint64 → number, or decimal string above 2^53 (Number() would silently round). */
 function uint64(value: bigint): number | string {
