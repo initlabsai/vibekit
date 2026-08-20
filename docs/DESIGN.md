@@ -153,12 +153,18 @@ modules per domain, zod-only import graph pinned by test), and
 maintaining shadow wire schemas (done — the shadow wire schemas are
 deleted; host-added envelope keys like `address` parse beside the tools
 schema).
-(4) Experience reorganizes into vertical slices (one module per view;
-flows together). (5) The TUI app reorganizes into vertical slices.
+(4) Experience reorganizes into vertical slices (done — `src/views/` has
+one module per entity family colocating data schemas, builders, and view
+models; `src/flows/` holds the payment machine; `src/core/` the spine).
+(5) The TUI app reorganizes into vertical slices (done — app.tsx is a
+~390-line composition root over seven feature hooks in `src/slices/`,
+with per-family cards in `src/cards/`).
 (6) `packages/agent` adds a first-class `zerosignal` provider (ZeroSignal
 is OpenAI-compatible at `localhost:8080/v1`, wallet-admission, USDC on
-Algorand) with `/v1/models` discovery in the wizard and a helpful
-daemon-down error.
+Algorand) with `/v1/models` discovery and a helpful daemon-down error
+(done — provider sugar plus probeZeroSignal/listZeroSignalModels
+helpers; the TUI preflights the daemon and lists the live catalog when
+no model is configured).
 
 Before the 1.0 publish gate: add the root license file and settle copyright
 metadata; package manifests currently declare Apache-2.0. Decide whether the
@@ -417,7 +423,8 @@ active keystore account as sender. Bare numeric ids query asset,
 application, and block candidates concurrently and present every typed
 match. The TUI's natural-language lane runs `@initlabs/vibekit-agent`
 in-process (BYOM via `VIBEKIT_AGENT_MODEL`/`VIBEKIT_AGENT_PROVIDER` —
-ollama or any OpenAI-compatible endpoint) over a compose-only, signerless
+anthropic, openai, ollama, zerosignal, or any OpenAI-compatible
+endpoint) over a compose-only, signerless
 deployment. The model never emits UI or workspace commands in this slice:
 known tool results map deterministically onto trusted views renderer-side,
 unknown tools keep raw records, and an agent-composed `send_payment` group
