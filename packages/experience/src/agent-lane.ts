@@ -5,35 +5,39 @@
  * gets the same card. Unknown cues or unexpected shapes fall back to a raw
  * record with no view — never a dropped result.
  */
-import { buildAccountPortfolioRecord } from './live-account.js'
-import { buildApplicationDetailRecord } from './live-application.js'
-import { buildAssetDetailRecord } from './live-asset.js'
-import { buildBlockDetailRecord } from './live-block.js'
+import { TRUSTED_VIEW_IDS, type TrustedViewId } from './core/protocol.js'
+import type { ResultIdentity, StructuredResult } from './core/results.js'
+import {
+  composeWireResultSchema,
+  structuredResultFromToolEvent,
+  type ToolResultEventLike,
+} from './flows/payment-live.js'
 import {
   buildAccountListRecord,
+  buildAccountPortfolioRecord,
   buildAccountSummaryRecord,
+} from './views/account.js'
+import {
   buildApplicationBoxRecord,
+  buildApplicationDetailRecord,
   buildApplicationListRecord,
   buildApplicationLocalsRecord,
   buildApplicationLogsRecord,
   buildApplicationStateRecord,
+} from './views/application.js'
+import {
+  buildAssetDetailRecord,
   buildAssetHoldersRecord,
   buildAssetHoldingsRecord,
   buildAssetListRecord,
-  buildBlockListRecord,
+} from './views/asset.js'
+import { buildBlockDetailRecord, buildBlockListRecord } from './views/block.js'
+import { buildNetworkStatusRecord } from './views/network.js'
+import {
+  buildTransactionDetailRecord,
   buildTransactionGroupRecord,
   buildTransactionListRecord,
-} from './live-catalog.js'
-import { buildNetworkStatusRecord } from './live-network.js'
-import {
-  composeWireResultSchema,
-  structuredResultFromToolEvent,
-  type ResultIdentity,
-  type ToolResultEventLike,
-} from './live-payment.js'
-import { buildTransactionDetailRecord } from './live-transaction.js'
-import { TRUSTED_VIEW_IDS, type TrustedViewId } from './protocol.js'
-import type { StructuredResult } from './results.js'
+} from './views/transaction.js'
 
 /** A structured record plus the trusted view its tool's cue selected, if any. */
 export interface BridgedToolResult {

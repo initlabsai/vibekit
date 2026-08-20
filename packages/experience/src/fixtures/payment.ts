@@ -1,8 +1,8 @@
-import { parseAlgosToMicroAlgos } from '../algo.js'
-import type { AccountLookupHost } from '../live-account.js'
-import type { TransactionLookupHost } from '../live-transaction.js'
+import { parseAlgosToMicroAlgos } from '../core/algo.js'
+import type { AccountLookupHost } from '../views/account.js'
+import type { TransactionLookupHost } from '../views/transaction.js'
 import { createFixtureEntityLookup } from './entities.js'
-import type { PaymentFlowHost } from '../live-flow.js'
+import type { PaymentFlowHost } from '../flows/payment-live.js'
 import { createFixtureAccountLookup } from './account.js'
 import {
   approvalDecisionSchema,
@@ -12,21 +12,22 @@ import {
   writeInspectEventSchema,
   writeSignEventSchema,
   writeSimulateEventSchema,
-} from '../protocol.js'
+} from '../core/protocol.js'
 import {
   paymentConfirmationDataSchema,
   paymentDraftDataSchema,
   paymentSignedGroupDataSchema,
   paymentSimulationDataSchema,
-} from '../payments.js'
+  type WriteFlowEvent,
+  type WriteFlowEventKind,
+} from '../flows/payment.js'
 import {
   createResultStore,
   type ResultReference,
   type ResultStore,
   type StructuredResult,
-} from '../results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../version.js'
-import { type WriteFlowEvent, type WriteFlowEventKind } from '../write-flow.js'
+} from '../core/results.js'
+import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
 import {
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,

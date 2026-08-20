@@ -1,7 +1,7 @@
-import type { ApplicationLookupHost } from './live-application.js'
-import type { AssetLookupHost } from './live-asset.js'
-import type { BlockLookupHost } from './live-block.js'
-import type { StructuredResult } from './results.js'
+import type { StructuredResult } from './core/results.js'
+import type { ApplicationLookupHost } from './views/application.js'
+import type { AssetLookupHost } from './views/asset.js'
+import type { BlockLookupHost } from './views/block.js'
 
 /** Entity kinds a bare numeric identifier can resolve to. */
 export type AmbiguousEntityKind = 'asset' | 'application' | 'block'

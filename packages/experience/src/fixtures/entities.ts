@@ -1,9 +1,9 @@
 import { FIXTURE_SENDER } from './transaction.js'
-import { buildApplicationDetailRecord, type ApplicationLookupHost } from '../live-application.js'
-import { buildAssetDetailRecord, type AssetLookupHost } from '../live-asset.js'
-import { buildBlockDetailRecord, type BlockLookupHost } from '../live-block.js'
+import { buildApplicationDetailRecord, type ApplicationLookupHost } from '../views/application.js'
+import { buildAssetDetailRecord, type AssetLookupHost } from '../views/asset.js'
+import { buildBlockDetailRecord, type BlockLookupHost } from '../views/block.js'
 import type { EntityLookupHost } from '../entity-lookup.js'
-import type { StructuredResult } from '../results.js'
+import type { StructuredResult } from '../core/results.js'
 
 /** Sample ASA id used when localnet is offline. */
 export const FIXTURE_ASSET_ID = 1042

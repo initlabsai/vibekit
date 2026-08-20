@@ -3,12 +3,12 @@ export {
   formatMicroAlgos,
   parseAlgosToMicroAlgos,
   sameUint64,
-} from './algo.js'
+} from './core/algo.js'
 export {
   algorandTransactionIdSchema,
   classifyExplorerInput,
   parseEntityComposerCommand,
-} from './classifier.js'
+} from './core/classifier.js'
 export {
   addResult,
   createResultStore,
@@ -16,7 +16,7 @@ export {
   structuredResultSchema,
   type ResultStore,
   type StructuredResult,
-} from './results.js'
+} from './core/results.js'
 export {
   approvalDecisionSchema,
   approvalRequestSchema,
@@ -29,7 +29,7 @@ export {
   type ExplorerArtifact,
   type TrustedViewId,
   type ViewSpec,
-} from './protocol.js'
+} from './core/protocol.js'
 export {
   writeFlowEventKinds,
   writeFlowEventSchema,
@@ -38,20 +38,20 @@ export {
   writeFlowStateSchema,
   type WriteFlowEventKind,
   type WriteFlowState,
-} from './write-flow.js'
+} from './flows/payment.js'
 export {
   paymentDraftDataSchema,
   paymentSignedGroupDataSchema,
   paymentSimulationDataSchema,
-} from './payments.js'
-export { transactionDetailDataSchema, type TransactionDetailData } from './transactions.js'
+} from './flows/payment.js'
+export { transactionDetailDataSchema, type TransactionDetailData } from './views/transaction.js'
 export {
   buildAccountPortfolioRecord,
   createAccountArtifact,
   type AccountLookupHost,
-} from './live-account.js'
+} from './views/account.js'
 export { createFixtureAccountLookup, FIXTURE_ADDRESS_BOOK } from './fixtures/account.js'
-export { buildTransactionDetailRecord } from './live-transaction.js'
+export { buildTransactionDetailRecord } from './views/transaction.js'
 export {
   bridgeToolResult,
   paymentComposeFromToolResult,
@@ -59,17 +59,17 @@ export {
   viewCueForToolResult,
 } from './agent-lane.js'
 export { lookupAmbiguousEntity, type EntityLookupHost } from './entity-lookup.js'
-export { assetDetailDataSchema, type AssetDetailData } from './assets.js'
-export { blockDetailDataSchema, type BlockDetailData } from './blocks.js'
-export { networkStatusDataSchema, type NetworkStatusData } from './networks.js'
-export { buildNetworkStatusRecord } from './live-network.js'
+export { assetDetailDataSchema, type AssetDetailData } from './views/asset.js'
+export { blockDetailDataSchema, type BlockDetailData } from './views/block.js'
+export { networkStatusDataSchema, type NetworkStatusData } from './views/network.js'
+export { buildNetworkStatusRecord } from './views/network.js'
 export {
   createFixtureEntityLookup,
   FIXTURE_APPLICATION_ID,
   FIXTURE_ASSET_ID,
   FIXTURE_BLOCK_ROUND,
 } from './fixtures/entities.js'
-export { createAccountPortfolioViewModel, type AccountPortfolioViewModel } from './view-models/account-portfolio.js'
+export { createAccountPortfolioViewModel, type AccountPortfolioViewModel } from './views/account.js'
 export {
   createFixtureResultStore,
   createTransactionFixtureViewSpec,
@@ -106,7 +106,7 @@ export {
   startPaymentFlowFromDraftRecord,
   type PaymentDraftParams,
   type PaymentFlowHost,
-} from './live-flow.js'
+} from './flows/payment-live.js'
 export {
   buildPaymentDraftRecord,
   buildPaymentConfirmationRecord,
@@ -115,11 +115,11 @@ export {
   structuredResultFromToolEvent,
   type DecodedPaymentFacts,
   type ToolResultEventLike,
-} from './live-payment.js'
-export { createTransactionDetailViewModel, type TransactionDetailViewModel } from './view-models/transaction-detail.js'
-export { createPaymentFlowViewModel, type PaymentFlowViewModel } from './view-models/payment-flow.js'
-export { createAssetDetailViewModel, type AssetDetailViewModel } from './view-models/asset-detail.js'
-export { createApplicationDetailViewModel, type ApplicationDetailViewModel } from './view-models/application-detail.js'
+} from './flows/payment-live.js'
+export { createTransactionDetailViewModel, type TransactionDetailViewModel } from './views/transaction.js'
+export { createPaymentFlowViewModel, type PaymentFlowViewModel } from './flows/payment.js'
+export { createAssetDetailViewModel, type AssetDetailViewModel } from './views/asset.js'
+export { createApplicationDetailViewModel, type ApplicationDetailViewModel } from './views/application.js'
 export {
   createBlockDetailViewModel,
   formatBlockTime,
@@ -127,20 +127,24 @@ export {
   formatExplorerTime,
   formatOnCompletion,
   type BlockDetailViewModel,
-} from './view-models/block-detail.js'
-export { createNetworkStatusViewModel, type NetworkStatusViewModel } from './view-models/network-status.js'
+} from './views/block.js'
+export { createNetworkStatusViewModel, type NetworkStatusViewModel } from './views/network.js'
 export {
   createAccountListViewModel,
   createAccountSummaryViewModel,
+} from './views/account.js'
+export {
   createApplicationBoxViewModel,
   createApplicationListViewModel,
   createApplicationLocalsViewModel,
   createApplicationLogsViewModel,
   createApplicationStateViewModel,
+} from './views/application.js'
+export {
   createAssetHoldersViewModel,
   createAssetHoldingsViewModel,
   createAssetListViewModel,
-  createBlockListViewModel,
-  createTransactionCollectionViewModel,
-} from './view-models/catalog.js'
-export { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
+} from './views/asset.js'
+export { createBlockListViewModel } from './views/block.js'
+export { createTransactionCollectionViewModel } from './views/transaction.js'
+export { EXPERIENCE_PROTOCOL_VERSION } from './core/version.js'

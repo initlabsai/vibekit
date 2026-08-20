@@ -1,11 +1,12 @@
-import { buildAccountPortfolioRecord, type AccountLookupHost } from '../live-account.js'
+import type { StructuredResult } from '../core/results.js'
 import {
   buildAccountListRecord,
-  buildApplicationLocalsRecord,
-  buildAssetHoldingsRecord,
-  buildTransactionListRecord,
-} from '../live-catalog.js'
-import type { StructuredResult } from '../results.js'
+  buildAccountPortfolioRecord,
+  type AccountLookupHost,
+} from '../views/account.js'
+import { buildApplicationLocalsRecord } from '../views/application.js'
+import { buildAssetHoldingsRecord } from '../views/asset.js'
+import { buildTransactionListRecord } from '../views/transaction.js'
 import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from './transaction.js'
 
 /**

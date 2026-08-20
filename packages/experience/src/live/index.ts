@@ -22,18 +22,18 @@ import {
   transactionWriteTools,
 } from '@initlabs/vibekit-tools'
 
-import { buildAccountPortfolioRecord } from '../live-account.js'
+import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'
 import {
-  buildAccountListRecord,
+  buildApplicationDetailRecord,
   buildApplicationLocalsRecord,
-  buildAssetHoldingsRecord,
+} from '../views/application.js'
+import { buildAssetDetailRecord, buildAssetHoldingsRecord } from '../views/asset.js'
+import { buildBlockDetailRecord } from '../views/block.js'
+import {
+  buildTransactionDetailRecord,
   buildTransactionGroupRecord,
   buildTransactionListRecord,
-} from '../live-catalog.js'
-import { buildApplicationDetailRecord } from '../live-application.js'
-import { buildAssetDetailRecord } from '../live-asset.js'
-import { buildBlockDetailRecord } from '../live-block.js'
-import { buildTransactionDetailRecord } from '../live-transaction.js'
+} from '../views/transaction.js'
 import {
   buildPaymentConfirmationRecord,
   buildPaymentDraftRecord,
@@ -41,9 +41,9 @@ import {
   buildPaymentSimulationRecord,
   decodedPaymentFactsSchema,
   type DecodedPaymentFacts,
-} from '../live-payment.js'
-import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../payments.js'
-import type { StructuredResult } from '../results.js'
+} from '../flows/payment-live.js'
+import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../flows/payment.js'
+import type { StructuredResult } from '../core/results.js'
 
 /**
  * Decodes the authoritative facts of one unsigned payment group. This slice

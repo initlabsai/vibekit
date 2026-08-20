@@ -1,12 +1,12 @@
-import { classifyExplorerInput, type ClassifiedExplorerInput } from '../classifier.js'
+import { classifyExplorerInput, type ClassifiedExplorerInput } from '../core/classifier.js'
 import {
   transactionDetailViewSpecSchema,
   type ExplorerArtifact,
   type ViewSpec,
-} from '../protocol.js'
-import { createResultStore, type ResultStore, type StructuredResult } from '../results.js'
-import { transactionDetailDataSchema } from '../transactions.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../version.js'
+} from '../core/protocol.js'
+import { createResultStore, type ResultStore, type StructuredResult } from '../core/results.js'
+import { transactionDetailDataSchema } from '../views/transaction.js'
+import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
 
 /** Transaction id from the verified 2026-08-16 localnet payment field run. */
 export const FIXTURE_TRANSACTION_ID = 'Y5OGL6BRVN32OAL54AB32C4SXSYAZOMOT3YPIG4N454RRR566YBA'

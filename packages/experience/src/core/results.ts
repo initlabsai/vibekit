@@ -109,6 +109,16 @@ export type ResultResolution =
   | { ok: true; record: SuccessfulResult; value: JsonValue }
   | { ok: false; error: ResultResolutionError }
 
+/** Failure to derive a trusted view model from authoritative result data. */
+export type ViewModelError = ResultResolutionError | { code: 'INVALID_VIEW_DATA'; message: string }
+
+/** Identifiers a host assigns to one mapped structured result. */
+export interface ResultIdentity {
+  resultId: string
+  toolCallId: string
+  network: string
+}
+
 function deepFreeze<T>(value: T): T {
   if (typeof value !== 'object' || value === null || Object.isFrozen(value)) return value
   for (const child of Object.values(value)) deepFreeze(child)
