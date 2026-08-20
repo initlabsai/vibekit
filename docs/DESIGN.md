@@ -1,8 +1,13 @@
 # VibeKit v2 — Design Doc
 
-Status: **executing.** Phases 0–6 are complete. Next: the Phase 7 protocol
-spine and first fixture-backed Phase 8 Explorer slice, alongside the 1.0
-publish gate. Owner: Gabriel Kuettel. Last updated: 2026-08-19.
+Status: **executing.** Phases 0–6 are complete. The first provisional
+`packages/experience` slice, its fixture-backed OpenTUI and web renderers, the
+write/approval flow, live compose/simulate wiring, and keystore signing with
+on-chain confirmation in the TUI (the full draft → simulate → inspect →
+approve → sign → confirm write path, live-verified on localnet) are
+implemented. Next: the hosted API/SDK, alongside the 1.0 publish gate.
+Hosted API and SDK work remains in Phase 7. Owner: Gabriel Kuettel. Last
+updated: 2026-08-19.
 
 > **Current snapshot (2026-08-19).** Phases 0–6 are complete. Live field
 > sessions hardened the stack. The implementation includes core, five tool
@@ -10,21 +15,53 @@ publish gate. Owner: Gabriel Kuettel. Last updated: 2026-08-19.
 > the CLI, skills, and the reference deployment. The codebase implements
 > the immediate findings of the 2026-08-16 adversarial review. The next
 > workstreams are the 1.0 package/binary release, the separate
-> contribution-safety gate, and Phases 7–8 in this monorepo. Internal app
-> development does not wait for npm publication; the public package boundary
+> contribution-safety gate, and the hosted API/SDK. The first
+> fixture-backed browser-safe experience spine now lives in
+> `packages/experience`; `apps/tui` and `apps/web` now render the same
+> fixture-backed vertical slice. Internal app
+> development does not wait for npm publication; the public
+> package boundary
 > is proven separately with packed external-consumer verification.
 > `DESIGN.md` and `CONSTITUTION.md` are the complete documentation set
 > under `docs/`. Git history retains retired handover and review
 > artifacts. The v1 repo (`gabrielkuettel/vibekit`) is heritage only.
 
-> **Product direction (2026-08-19).** The TUI is restored as a target. The
-> deleted chat-only Ink experiment stays deleted. The new Explorer is a
-> Lora-class, full-screen Algorand workspace. It has persistent
-> network/signer chrome, navigable domain views, workspace tabs, and
-> explicit transaction review. A docked agent composer controls a dynamic
-> main canvas. TUI and web share the experience model and selected
-> semantic React view trees. Rendering primitives stay
-> platform-specific.
+> **Product direction (2026-08-19, revised twice same day — owner's call).**
+> The Explorer is a **chat-first transcript with a results feed**: the left
+> column holds requests and brief one-sentence summaries; the right pane is
+> a chronological, sticky-bottom **feed of card groups — one group per
+> request (its truncated prompt is the divider), one block per tool
+> result**, so an agent turn that composes several tool calls ("my
+> portfolio") stacks several cards in one group, and follow-up questions
+> accrete below their predecessors instead of replacing them. (Paged
+> sheets were tried first and retired same-day: one-document-per-request
+> is an artifact model, and conversation is accretive.) Focus follows the
+> lazygit convention: the composer is always focused by default and plain
+> letters always type; `tab` hands focus to the feed where single keys
+> work (`tab`/`c`/`esc` back, `←/→` jump between groups, `↑/↓` scroll,
+> `s` sort, `x` close group); a bottom keybar always lists the keys valid
+> in the current mode; the focused pane carries the accent border. Below
+> ~96 columns the split collapses and `tab` toggles chat ↔ full-screen
+> feed. The payment
+> decision is a **true modal** — centered, double-bordered, rendering the
+> decoded draft bytes, owning all input until enter/esc. Navigation
+> (accounts, later assets/apps/blocks) exists as typed commands —
+> secondary, not the organizing surface. The earlier workspace/tabs/canvas
+> chrome was tried in full and retired as too complex; the workspace
+> command protocol remains in `packages/experience` for the web head and
+> API (a feed group is `workspace.open` in TUI clothing). A top bar
+> carries a network
+> chip (localnet/testnet/mainnet — core ships the public endpoints;
+> `ctrl+n` or `network <name>` switches, hosts are per-network, records
+> stay tagged with the network that produced them). While a thinking model
+> reasons, the stream shows at the feed's tail and disappears when the
+> turn's first card renders. Cards dispatch on the
+> tool's declared view cue (the `display` hint today; a first-class
+> `view: 'transaction.detail'` declaration on ToolDefinition is planned
+> protocol work), so third-party tools that declare a cue and match the
+> wire schema get the same cards — or ship their own views. Wallet/signer
+> connection UI comes later; keystore signing after modal approval works
+> today.
 
 VibeKit v2 is a restart of this repo from a new base. It is a clean,
 stateless MCP server for Algorand. It is built from reusable package
@@ -47,11 +84,11 @@ run the same tools through the same orchestrator and presentation protocol.
 | Chain SDK              | **`algosdk@3.7.0`** directly. No algokit-utils. The repository pins 3.7.0 while public packages declare a `>=3.7.0 <4` peer range.                                                                                                                                                                                                                                          |
 | Key custody            | **`@algorandfoundation/keystore-node`** (OS keychain + AES-sealed metadata, RPC daemon over local socket) through an adapter that satisfies `algosdk.TransactionSigner`                                                                                                                                                                                                     |
 | HashiCorp Vault        | **Dropped** (about 1,180 LOC deleted. The signer adapter boundary leaves room for another custody provider.)                                                                                                                                                                                                                                                                |
-| Agentic Explorer       | A stable explorer workspace controlled by an agent, not a chat transcript with cards. Persistent chrome owns network, signer/wallet, navigation, tabs, and approvals. The docked composer routes identifiers and natural language into trusted views in the main canvas.                                                                                                    |
+| Agentic Explorer       | A chat-first transcript with a chronological results feed. Each request owns a group of trusted result cards; persistent chrome owns network state and approval, while the composer routes identifiers and natural language into the feed.                                                                                                                                  |
 | Explorer renderers     | **React on both heads**: `@opentui/react` for the full-screen TUI and Next.js/React for web. Share domain/view models, workspace state, hooks, and selected semantic component trees behind platform primitives. Do not target pixel-identical output.                                                                                                                      |
 | Generative UI boundary | The model can select and compose versioned, Zod-validated view specifications from a trusted registry. It never emits JSX, HTML, terminal markup, or executable UI code.                                                                                                                                                                                                    |
 | Models                 | **BYOM everywhere**. The harness brings its own (init path). TUI + API take API keys / local models via `@initlabs/vibekit-agent` provider config. Funded default on the API (Together today, x402 experiment later). Provider OAuth is opportunistic, never a pillar.                                                                                                      |
-| TUI                    | **Restored 2026-08-19 as a new product shape.** `vibekit explore` targets the structured OpenTUI workspace above. The 2026-08-16 Ink chat head remains a useful discarded experiment. A generic harness can replace chat + tools. It cannot replace persistent Algorand views, live navigation, comparison workspaces, simulation, or signer-aware approval.                |
+| TUI                    | **Restored 2026-08-19 as a new product shape.** The private `apps/tui` OpenTUI app implements the fixture-backed chat/feed slice, deterministic lookup, agent lane, and keystore-approved payment flow. `vibekit explore` distribution remains pending.                                                                                                                     |
 | CLI scope              | init + agent/skill/MCP setup, **plus** localnet lifecycle and template bootstrapping. This replaces the AlgoKit CLI for those jobs; compilation and typed-client generation remain separate.                                                                                                                                                                                |
 | Tests                  | Required. Each ported domain lands with handler tests. No untested migration.                                                                                                                                                                                                                                                                                               |
 
@@ -118,9 +155,10 @@ registry. Before you accept outside plugins, add capability-scoped contexts:
 remove signer access from read-only plugins and test that the boundary is
 real. Apply the uncorrelated review rules in `CONSTITUTION.md`.
 
-Start Explorer work with one fixture-backed vertical slice that proves the
-browser-safe agent/approval/presentation protocol in both renderers. Do not
-freeze `ViewSpec` from prose alone.
+The first fixture-backed vertical slice is implemented in both renderers and
+proves the provisional browser-safe result, approval, presentation, and write
+flow contracts. Keep `ViewSpec` and `WorkspaceCommand` provisional until the
+hosted API/SDK work and an external consumer prove the package boundary.
 
 ## 3. Target repo layout
 
@@ -131,8 +169,8 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   │                              #   localnet, templates
 │   ├── mcp/                       # thin reference deployment of @initlabs/vibekit-mcp (stdio + streamable HTTP)
 │   ├── api/                       # planned private hosted API (Hono/Bun)
-│   ├── tui/                       # planned private full-screen @opentui/react Explorer
-│   └── web/                       # planned private Next.js Explorer/agent
+│   ├── tui/                       # private full-screen @opentui/react Explorer
+│   └── web/                       # private thin Next.js Explorer renderer
 ├── packages/
 │   ├── core/                      # @initlabs/vibekit-core — tool contract, ToolContext, NetworkClients,
 │   │                              #   compose engine, shared validators/formatters/utils
@@ -147,7 +185,7 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── signer-keystore/           # @initlabs/vibekit-signer-keystore — keystore-node adapter (the only signer pkg)
 │   ├── agent/                     # @initlabs/vibekit-agent — the orchestrator: LLM + tool loop + streaming over
 │   │                              #   ToolDefinition[]; BYOM provider config. Used by the TUI and the API
-│   ├── experience/                # planned browser-safe routing, protocol, reducer, fixtures, and view models
+│   ├── experience/                # provisional browser-safe routing, protocol, reducer, fixtures, and view models
 │   ├── views-react/               # planned selected semantic React view composition
 │   └── sdk/                       # planned @initlabs/vibekit-sdk hosted API client
 ├── skills/                        # canonical agent skills bundled into the CLI (see §7)
@@ -197,8 +235,10 @@ Conventions (one tier, no exceptions):
 - Versioning via **changesets**. Fixed version group across `core` +
   `mcp` + `tools-*` (they evolve together). Plugins and sdk version
   independently.
-- Apps are private and packages are publishable by default. Apps are leaves in
-  the dependency graph and remain separate release/deployment artifacts.
+- Apps are private and packages are publishable by default. The provisional
+  `packages/experience` package is currently private until its protocol is
+  frozen; apps are leaves in the dependency graph and remain separate
+  release/deployment artifacts.
 - Turbo `test` task from day one. CI builds and tests **every** workspace, plus
   the packed external-consumer fixture at the release gate.
 
@@ -278,13 +318,66 @@ interface ToolContext {
   **API**, not the MCP. The 2026 spec makes tool lists cacheable, so the
   MCP list must stay deterministic per deployment.
 
-### 4.1 Presentation contract (target. Implementation pending)
+### 4.1 Presentation contract (provisional implementation, not frozen)
 
 `display` is deliberately too small to drive the new Explorer. It remains
 a generic fallback while Phase 7–8 introduce a separate, versioned
 presentation protocol. Tools own capabilities and structured data. They
 do not own layouts. A tool can advertise a default semantic view. The
 agent can issue workspace commands that compose one or more results.
+
+The first `0.1.0-provisional` implementation now lives in
+`@initlabs/vibekit-experience`. It validates structured result records and
+references by result or tool-call id with optional data paths; trusts only
+`transaction.detail`; supports open, replace, patch, focus, and pin commands;
+represents approval request and decision states; and derives a transaction view
+model plus related-entity actions from an immutable client-owned result store.
+The fixture-backed TUI and web passes now exercise the same provisional
+contract. The write flow is now observable protocol state: versioned
+`write.stage` events (draft, simulate, inspect, confirm) carry only result
+references, a pure write-flow reducer enforces
+draft → simulate → inspect → approval request → decision → confirm ordering
+(approval must reference exactly the inspected result and correlate by
+tool-call and request id), and a payment flow view model derives authoritative
+sender, network, amount, fees, and balance effects from structured results,
+refusing to present a simulation that disagrees with the draft. Both renderers
+drive the same machine from the same fixture events. Amounts travel as
+microALGO integers (never floats) with exact digit-math formatting, and the
+draft record carries the actual base64 unsigned group as its ground truth.
+The flow now also runs on live data: a shared signerless compose-only host
+(`@initlabs/vibekit-experience/live`) composes real payments and simulations
+on localnet through `executeToolCall`, decodes the authoritative facts from
+the group bytes themselves, and a shared controller advances the same machine
+in both renderers — the TUI in-process and the browser through a thin
+provisional server route that Phase 7's API replaces. An orchestrator
+`tool-result` event mapper wraps `AgentEvent` payloads as structured result
+records. The full write path is now protocol state: a `signed` stage sits
+between `approved` and `confirmed` and is reachable only from a recorded
+approved decision. The TUI's renderer-specific custody adapter signs through
+the keystore daemon, the shared host verifies every signature wraps exactly
+the approved draft bytes before recording it, submission broadcasts through
+the same host, and the confirmation is a real on-chain record whose txId must
+match a signed txId. The browser remains custody-less: its live flow ends at
+the approval decision by explicit refusal until wallet adapters land.
+Interaction pacing is renderer-owned and human-shaped: a shared controller
+auto-advances the mechanical stages (each still an observable protocol event,
+streamed as it lands) and pauses only at the approval card — the one human
+decision — then completes signing and submission after it. Sample mode runs
+the same controller through a fixture host that replays the recorded real
+flow. The trusted view registry now holds `transaction.detail` and
+`account.portfolio`; the Accounts surface is signer-scoped (the keystore
+address book as the landing, live indexer portfolios as the detail), and
+sender/receiver on a transaction open the corresponding account view.
+The TUI's natural-language lane runs `@initlabs/vibekit-agent` in-process
+(BYOM via `VIBEKIT_AGENT_MODEL`/`VIBEKIT_AGENT_PROVIDER` — ollama or any
+OpenAI-compatible endpoint) over a compose-only, signerless deployment.
+The model never emits UI or workspace commands in this slice: known tool
+results map deterministically onto trusted views renderer-side, unknown
+tools keep raw records, and an agent-composed `send_payment` group is
+intercepted into the same approval card as a typed `pay` — approval,
+keystore signing, and submission stay outside the model's reach. Narration
+streams in a docked panel beside the views. A model-driven view-selection
+event is deferred to the API/protocol-freeze work.
 
 The exact `ViewSpec` / `WorkspaceCommand` schema is frozen only after the
 first fixture-backed TUI/web vertical slice. These constraints are
@@ -487,7 +580,7 @@ AlgoKit CLI" without this caveat overpromises.
 | `vibekit tool <name> [json]`    | **The full tool surface as a CLI** (added 2026-08-16): one generic `ToolDefinition → CLI` adapter over the same `resolveDeployment`/`executeToolCall` core. `tool list`, per-tool `--help` (JSON Schema from zod), args as one JSON string, results as JSON. Gives agents a _correct_ shell fallback when no MCP client is wired (observed failure mode: agents fell back to shell and hallucinated algokit commands) and humans a scriptable interface. Third thin host over the engine. Zero per-tool code.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | **Skills (canonical, in-repo)** | **Decided 2026-08-16**: `skills/` at the repo root is the canonical agent-skill set, bundled into the CLI at build time (no network fetch). It is the product channel for teaching coding agents correct contract, generated-client, frontend, and general Algorand patterns. The current safe bundle contains two vibekit-authored skills: `use-vibekit` covers tool access paths, meta-tool harnesses, the shell fallback, the account/keystore model, networks, signing, and denominations; `vibekit-project-setup` covers new/init/localnet/doctor. **Curated down to those two on the same day** (owner's call): the nine vendored upstream language/stack skills (algorand-devrel/algorand-agent-skills, MIT) proved too algokit-coupled. Live pi sessions showed weak models pattern-matching skill content over the generated AGENTS.md precedence table and flailing into algokit commands. They live in git history and return individually as each is refactored to be vibekit-consistent. The generated project AGENTS.md carries an algokit→vibekit command-precedence table for residual references.                                             |
 | `vibekit doctor`                | Diagnoses and repairs (`--fix`) field problems: v1 binaries shadowing v2 on PATH, broken/legacy MCP entries (`/$bunfs` compiled-binary paths, v1 `vibekit-mcp` key, v1 env vars), missing Docker/keystore. Added 2026-08-16 after live v1-conflict debugging. Init also merges into existing configs (foreign MCP servers survive, v1 key migrated).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `vibekit explore`               | **Planned Phase 8:** launch the local full-screen OpenTUI Explorer. The command does not exist today. Its distribution boundary is open question 13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `vibekit explore`               | **Pending CLI integration:** launch the private `apps/tui` OpenTUI Explorer. The app runs independently today; its distribution boundary remains open question 13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `vibekit agent`                 | Launch the hosted web VibeKit Agent in a browser. Until Phase 8 ships, it prints the current path (`vibekit init` with the user's own harness).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 Explicitly gone from v1: vault provisioning (about 500 LOC), provider trees,
@@ -511,8 +604,9 @@ deployment:
   protocol schemas generate its types. There is no
   regex-over-declarations sync step.
 - **`apps/tui`** is a full-screen `@opentui/react` Explorer using local or
-  BYOM models and the local keystore daemon. It is a structured
-  application, not a transcript-only Ink chat.
+  BYOM models and the local keystore daemon. It is a chat-first transcript and
+  results feed, with cards and an explicit approval modal; it is not the old
+  Ink experiment.
 - **`apps/web`** is the Next.js VibeKit Agent. It uses the hosted API,
   browser wallet adapters, web-native charts/media, and selected
   Beautiful UI parts.
@@ -532,16 +626,17 @@ presentation/workspace protocol on top.
 | Head                  | Experience                                           | Model                  | Signing                                       |
 | --------------------- | ---------------------------------------------------- | ---------------------- | --------------------------------------------- |
 | **Agent harness**     | MCP + skills installed by `vibekit init`             | Harness model          | Local keystore, execute mode                  |
-| **TUI Explorer**      | Lora-class terminal workspace with agent composer    | BYOM/local             | Local keystore after explicit in-app review   |
+| **TUI Explorer**      | Chat-first terminal transcript with results feed     | BYOM/local             | Local keystore after explicit in-app review   |
 | **Hosted API + SDK**  | Stateless orchestration and structured event stream  | BYOM or funded default | Compose only. Never holds keys.               |
 | **Web VibeKit Agent** | Same Explorer semantics in a richer browser renderer | Via API                | Connected wallet after explicit in-app review |
 
-The default screen has stable chrome: network and signer/wallet status at
-the top, primary navigation and workspace tabs, a large structured
-canvas, and a compact composer docked at the bottom. Conversation
-history is available. It is not the product's organizing surface. Tabs
-preserve investigations and artifacts (accounts, transactions, assets,
-apps, simulations, comparisons). Tabs are not chat sessions by default.
+The default screen has stable chrome: network and signer status at the top, a
+session index beside the results feed on wide terminals, and a compact
+composer docked at the bottom. Each request appends a feed group containing
+its narration and cards. Below roughly 96 columns the split collapses to one
+pane. The shared workspace protocol remains available to the web/API head,
+but the current TUI organizes the experience as an accretive feed rather than
+tabs or a canvas.
 
 Input follows two lanes:
 
@@ -550,10 +645,10 @@ Input follows two lanes:
    numeric IDs can query block, asset, and app candidates concurrently
    and present typed matches.
 2. Natural language enters the agent loop. Tools return authoritative
-   structured data. The agent emits validated workspace commands
-   selecting trusted view ids. Narration explains results without
-   copying tables, IDs, or amounts already rendered from the result
-   object.
+   structured data. The current TUI maps known results to trusted cards
+   renderer-side; the model does not emit UI or workspace commands in this
+   provisional slice. Narration explains results without copying tables, IDs,
+   or amounts already rendered from the result object.
 
 Writes always follow **draft → simulate → inspect → explicit approval →
 sign → confirm**. The approval view is protocol-driven. It shows the
@@ -937,14 +1032,32 @@ Implementation facts learned:
   workspace, presentation, and approval event spine in
   `packages/experience`, driven by the first fixture-backed slice. Keep
   workspace and presentation details provisional until both renderers prove
-  them. Deprecate `@getvibekit/sdk`.
-- **Phase 8 — Shared TUI/web Explorer.** Build one fixture-backed
-  vertical slice first: direct transaction lookup → trusted detail view
-  → related navigation → payment draft/simulation/approval. Render it in
-  `@opentui/react` and Next.js from the same experience state and
-  semantic view model, then freeze the protocol proven by that slice. Expand
-  toward Lora coverage, wallet/keystore signing, xArc, and terminal packaging
-  afterward. The Phase 6 transcript-oriented Ink TUI remains deleted. This is
+  them. Deprecate `@getvibekit/sdk`. **Experience checkpoint 2026-08-19:** the
+  fixture-backed result/workspace/presentation/approval subset, the
+  write flow (draft → simulate → inspect → approval → sign → confirm as
+  protocol events over a pure reducer), both renderers, the live
+  compose/simulate wiring (real localnet groups through `executeToolCall`, an
+  `AgentEvent` tool-result mapper, and a provisional signerless web route
+  standing in for the API), and keystore-daemon signing with real on-chain
+  confirmation in the TUI are implemented and tested; the hosted API, SDK,
+  browser wallet custody, hosted API agent loop, and SDK remain pending.
+- **Phase 8 — Shared TUI/web Explorer.** The first fixture-backed vertical
+  slice is complete: direct transaction lookup → trusted detail view → related
+  navigation → payment draft/simulation/approval. Both renderers use the
+  shared experience package, with renderer-native primitives and a TUI-local
+  feed controller. Expand toward broader domain coverage, browser wallet
+  custody, xArc, and CLI terminal packaging afterward. **Checkpoint
+  2026-08-19:** both renderers open the fixture
+  transaction, dispatch related focus commands, and drive the payment
+  draft/simulation/inspection/approval flow from the shared experience
+  package — against fixtures and against a live localnet, with the actual
+  unsigned group bytes on the approval view. The TUI completes the write
+  path: keystore-daemon signing after the recorded approved decision, then
+  submission and a real on-chain confirmation (field-verified, localnet
+  rounds 22–23). No `packages/views-react` extraction was earned because the
+  small transaction and flow trees remained clearer with platform-native
+  primitives. The Phase
+  6 transcript-oriented Ink TUI remains deleted. This is
   a different product shape. Archive the old vibekit repo after cutover.
 
 ## 13. Reference: what dies from v1

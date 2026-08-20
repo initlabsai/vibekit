@@ -1,0 +1,118 @@
+import { z } from 'zod'
+
+const TRANSACTION_ID_PATTERN = /^[A-Z2-7]{51}[AQ]$/
+const ADDRESS_PATTERN = /^[A-Z2-7]{57}[AEIMQUY4]$/
+const NUMERIC_ID_PATTERN = /^(0|[1-9]\d*)$/
+
+/** Canonical unpadded base32 shape of a 32-byte Algorand transaction hash. */
+export const algorandTransactionIdSchema = z
+  .string()
+  .regex(TRANSACTION_ID_PATTERN, 'Expected a canonical 52-character Algorand transaction ID')
+
+/**
+ * Structural Algorand address shape. Full checksum validation belongs at the
+ * lookup boundary; keeping the classifier dependency-free preserves browser use.
+ */
+export const algorandAddressCandidateSchema = z
+  .string()
+  .regex(ADDRESS_PATTERN, 'Expected a 58-character Algorand address candidate')
+
+/** Entity kinds the deterministic input lane can target or disambiguate. */
+export const explorerEntityKindSchema = z.enum([
+  'transaction',
+  'account',
+  'asset',
+  'application',
+  'block',
+])
+
+/** Entity kinds the deterministic input lane can target or disambiguate. */
+export type ExplorerEntityKind = z.infer<typeof explorerEntityKindSchema>
+
+/** Result of deterministic Explorer input classification. */
+export type ClassifiedExplorerInput =
+  | {
+      kind: 'entity'
+      entity: 'transaction'
+      value: string
+    }
+  | {
+      kind: 'entity'
+      entity: 'account'
+      value: string
+    }
+  | {
+      kind: 'ambiguous-entity'
+      value: string
+      candidates: readonly ['asset', 'application', 'block']
+    }
+  | {
+      kind: 'text'
+      value: string
+    }
+
+/** A pure recognizer that can extend the deterministic input lane. */
+export interface InputRecognizer {
+  readonly id: string
+  recognize(input: string): ClassifiedExplorerInput | undefined
+}
+
+/** Recognizes canonical transaction IDs without an LLM or network call. */
+export const transactionIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
+  id: 'algorand-transaction-id',
+  recognize(input) {
+    if (!algorandTransactionIdSchema.safeParse(input).success) return undefined
+    return { kind: 'entity', entity: 'transaction', value: input }
+  },
+})
+
+/** Recognizes address-shaped input for the account lookup extension point. */
+export const addressCandidateRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
+  id: 'algorand-address-candidate',
+  recognize(input) {
+    if (!algorandAddressCandidateSchema.safeParse(input).success) return undefined
+    return { kind: 'entity', entity: 'account', value: input }
+  },
+})
+
+/**
+ * Preserves bare numeric identifiers as an explicit asset/application/block
+ * ambiguity instead of guessing which domain owns the number.
+ */
+export const ambiguousNumericIdRecognizer: InputRecognizer = Object.freeze<InputRecognizer>({
+  id: 'algorand-numeric-entity-id',
+  recognize(input) {
+    if (!NUMERIC_ID_PATTERN.test(input)) return undefined
+    return {
+      kind: 'ambiguous-entity',
+      value: input,
+      candidates: ['asset', 'application', 'block'],
+    }
+  },
+})
+
+/** Default recognizer order for direct Explorer input. */
+export const defaultInputRecognizers: readonly InputRecognizer[] = Object.freeze([
+  transactionIdRecognizer,
+  addressCandidateRecognizer,
+  ambiguousNumericIdRecognizer,
+])
+
+/** Builds a deterministic classifier from an ordered recognizer registry. */
+export function createInputClassifier(
+  recognizers: readonly InputRecognizer[] = defaultInputRecognizers,
+): (raw: string) => ClassifiedExplorerInput {
+  const registry = Object.freeze([...recognizers])
+
+  return (raw: string): ClassifiedExplorerInput => {
+    const input = raw.trim()
+    for (const recognizer of registry) {
+      const classification = recognizer.recognize(input)
+      if (classification) return classification
+    }
+    return { kind: 'text', value: input }
+  }
+}
+
+/** Classifies input with the built-in transaction, account, and numeric lanes. */
+export const classifyExplorerInput = createInputClassifier()

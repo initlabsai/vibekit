@@ -40,11 +40,14 @@ HTML, or terminal markup.
 - `packages/signer-keystore` — keystore daemon signing, testnet dispenser
 - `packages/mcp` — ToolDefinition-to-MCP adapter for stdio and HTTP
 - `packages/agent` — LLM tool loop
-- Planned packages: `experience` for browser-safe Explorer state/protocol,
-  `views-react` for selected semantic React composition, and `sdk`
+- `packages/experience` — provisional browser-safe Explorer protocol, fixtures,
+  workspace state, and semantic view models
+- Planned packages: `views-react` for selected semantic React composition and
+  `sdk`
 - `apps/cli` — the `vibekit` binary
 - `apps/mcp` — reference MCP deployment
-- Planned private apps: `api`, `tui` (OpenTUI), and `web` (Next.js)
+- Private apps: `tui` (OpenTUI) and `web` (Next.js) are fixture-backed
+  renderers; `api` remains planned
 - `skills/` — canonical skills bundled into the CLI; currently
   `use-vibekit` and `vibekit-project-setup`
 - `test-prompts/` — agent-run acceptance tests

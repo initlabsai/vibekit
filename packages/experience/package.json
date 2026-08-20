@@ -1,0 +1,42 @@
+{
+  "name": "@initlabs/vibekit-experience",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds provisional signerless compose-only host wiring.",
+  "license": "Apache-2.0",
+  "author": "Init Labs LLC",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./live": {
+      "types": "./dist/live/index.d.ts",
+      "import": "./dist/live/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@initlabs/vibekit-core": "workspace:*",
+    "@initlabs/vibekit-tools-accounts": "workspace:*",
+    "@initlabs/vibekit-tools-transactions": "workspace:*",
+    "algosdk": "3.7.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.7.0"
+  }
+}

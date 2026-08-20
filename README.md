@@ -14,7 +14,7 @@ The same tool surface is available through an MCP server, the `vibekit` CLI,
 an agent runtime, and reusable TypeScript packages. Local writes are signed
 through a keystore daemon, so key material never enters the model context.
 Signerless deployments return unsigned groups for a wallet to review and
-sign. The planned hosted stack keeps the same custody boundary.
+sign. The hosted stack is planned to keep the same custody boundary.
 
 ## What is here
 
@@ -29,25 +29,27 @@ sign. The planned hosted stack keeps the same custody boundary.
 
 ## Explorer
 
-The next product surface is a Lora-like, agent-first Algorand Explorer for
-terminal and web. It combines persistent network and wallet state, navigation,
-tabs, direct identifier lookup, trusted transaction review, and a docked
-natural-language composer.
+The Explorer is a chat-first, agent-first Algorand surface for terminal and
+web. Each request becomes a chronological feed group containing its narration
+and trusted result cards; direct identifiers route deterministically before any
+model call, and writes pause at an explicit approval modal.
 
-The TUI uses React with OpenTUI; the web app uses React with Next.js. They
-share experience state, hooks, view models, and selected semantic component
-trees while keeping terminal and browser primitives native to each platform.
-The Explorer, hosted API, and SDK are developed in this monorepo as separate
-apps and packages. Each app remains independently built and deployed while
-consuming the same public `@initlabs/*` package surface.
+The fixture-backed TUI uses React with OpenTUI; the web renderer uses React
+with Next.js. They share the provisional `@initlabs/vibekit-experience`
+protocol, result store, write-flow machine, fixtures, and semantic view models
+while keeping terminal and browser primitives native to each platform. The
+private apps are independently built deployment units and consume the public
+package surface. The hosted API and SDK remain planned.
 
 ## Status
 
-The core engine, tools, plugins, signer, MCP adapters, agent loop, and CLI are
-implemented and tested. The first package and binary release is being prepared;
-the shared TUI/web Explorer is the next implementation phase. The current
-skill bundle covers VibeKit use and project setup; contract and frontend domain
-skills are being refactored against the current stack before they return.
+The core engine, tools, plugins, signer, MCP adapters, agent loop, CLI, the
+provisional experience package, and the fixture-backed TUI/web renderers are
+implemented and tested. The next work is the hosted API/SDK and the 1.0
+publish gate. The `vibekit explore` CLI entry point and browser wallet custody
+are still pending. The current skill bundle covers VibeKit use and project
+setup; contract and frontend domain skills are being refactored against the
+current stack before they return.
 
 ## Development
 
@@ -56,6 +58,13 @@ bun install
 bun run build
 bun run typecheck
 bun run test
+```
+
+To run only the Explorer apps during development:
+
+```bash
+bun --cwd apps/tui run dev
+bun --cwd apps/web run dev
 ```
 
 ## Documentation
