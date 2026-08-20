@@ -67,6 +67,39 @@ describe('agent lane result bridge', () => {
     expect(derived.model.note).toBe('Explorer fixture payment')
   })
 
+  test('acfg/afrz/created/signer fields flow into the detail record and view model', () => {
+    const wire = {
+      id: 'ACREATE2TXID2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      type: 'acfg',
+      sender: recorded.request.sender,
+      feeMicroAlgos: 1000,
+      confirmedRound: 23,
+      assetId: 0,
+      createdAssetId: 987,
+      assetConfig: { total: '18446744073709551615', decimals: 6, unitName: 'MAX', manager: recorded.request.sender },
+      signer: recorded.request.receiver,
+    }
+    const record = buildTransactionDetailRecord(identity(), wire)
+    expect(record.data).toMatchObject({
+      assetId: 0,
+      createdAssetId: 987,
+      assetConfig: { total: '18446744073709551615', decimals: 6, unitName: 'MAX' },
+      signer: recorded.request.receiver,
+    })
+
+    const store = [...createFixtureResultStore(), record]
+    const derived = createTransactionDetailViewModel(store, {
+      protocolVersion: '0.1.0-provisional',
+      type: 'view',
+      view: 'transaction.detail',
+      source: { source: 'result', id: record.resultId },
+    })
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.createdAssetId).toBe(987)
+    expect(derived.model.assetConfig?.total).toBe('18446744073709551615')
+    expect(derived.model.signer).toBe(recorded.request.receiver)
+  })
+
   test('no declared view means a raw record, even for a first-party tool name', () => {
     const event: ToolResultEventLike = {
       id: 'call-1b',

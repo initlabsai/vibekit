@@ -5,15 +5,20 @@ import {
   buildTransactionsGraph,
   type GraphHorizontal,
   type GraphTransaction,
-  type GraphVertical,
   type TransactionsGraph,
 } from '../src/index.js'
+import { buildTransactionGroupRecord } from '../src/views/transaction.js'
+// Naming note: transactions are mainnet; each group entry carries its own
+// `network` (two of Lora's snapshot groups only exist on testnet).
 import corpus from './recorded/mainnet-graph-corpus.json'
 
 const appAddressFor = (applicationId: number) => getApplicationAddress(applicationId).toString()
 
 const transactions = corpus.transactions as unknown as Record<string, GraphTransaction>
-const groups = corpus.groups as unknown as Record<string, { transactions: GraphTransaction[] }>
+const groups = corpus.groups as unknown as Record<
+  string,
+  { network: string; transactions: GraphTransaction[] }
+>
 
 const recordings: [string, GraphTransaction[]][] = [
   ...Object.entries(transactions).map(([id, txn]): [string, GraphTransaction[]] => [id, [txn]]),
@@ -28,6 +33,8 @@ const ESCROWS = {
   971368268: '2ZPNLKXWCOUJ2ONYWZEIWOUYRXL36VCIBGJ4ZJ2AAGET5SIRTHKSNFDJJ4',
   971350278: 'NOENFBPVMK24RFZDGE3ID4CJI3RT6PQ6JFJPKKKBA4EOHVVEEQF3Y2BZJI',
   1800533232: 'EG4G4PRHTEGUQJSLOBAQFIGOBJGTSEIFESANL7V6HJ3JYUXBXZ76QPKT5A',
+  2365972864: 'BPNOT3ZSQYVEKXD6ZGE76TLFTZRPMLUCODNH4RXJOPNMRCDWIYPW76IJ3M',
+  3679982959: 'WT3P37OKCYY7VD3NKJOMW6VZLZRPHOBRJHCMOMKX6HZUFZZVALRUXQV5AA',
 } as const
 
 function verticalIndexes(row: GraphHorizontal): number[] {
@@ -157,10 +164,13 @@ describe('hand-verified against algokit-lora snapshots', () => {
   // Expected structure read from Lora's rendered snapshot
   // asset-transfer-graph.JBDSQEI37W5KWPQICT2IGCG2FWMUGJEUYYK3KFKNSYRNAXU2ARUA.html:
   // two account columns (badges 1, 2) and one "Transfer 0.3 AKTA" vector.
-  test('JBDSQEI: plain asset transfer', () => {
+  // Deliberate deviation: the wire carries auth-addr (signer != sender), so the
+  // sender endpoint is rekey-tagged; Lora's snapshot renders a plain badge 1.
+  test('JBDSQEI: plain asset transfer from a rekeyed sender', () => {
     const txn = transactions['JBDSQEI37W5KWPQICT2IGCG2FWMUGJEUYYK3KFKNSYRNAXU2ARUA']!
     const graph = buildTransactionsGraph([txn], { appAddressFor })
 
+    expect(txn.signer).toBeDefined()
     expect(graph.verticals.map((v) => v.type)).toEqual(['account', 'account'])
     expect(graph.horizontals).toHaveLength(1)
     expect(graph.horizontals[0]!.representation).toEqual({
@@ -168,7 +178,7 @@ describe('hand-verified against algokit-lora snapshots', () => {
       fromVertical: 0,
       toVertical: 1,
       direction: 'leftToRight',
-      fromTag: 1,
+      fromTag: 'rekey',
       toTag: 2,
     })
     expect(graph.horizontals[0]!.label).toEqual({
@@ -213,12 +223,14 @@ describe('hand-verified against algokit-lora snapshots', () => {
     expect(graph.horizontals).toHaveLength(4)
     const [appCall, transfer, remainder, payment] = graph.horizontals
     expect(appCall!.label.type).toBe('appCall')
+    // Deviation from the snapshot's badge 1: the wire carries auth-addr, so
+    // the rekeyed sender endpoint is rekey-tagged.
     expect(appCall!.representation).toEqual({
       kind: 'vector',
       fromVertical: 0,
       toVertical: 1,
       direction: 'leftToRight',
-      fromTag: 1,
+      fromTag: 'rekey',
     })
 
     expect(transfer!.label).toEqual({ type: 'assetTransfer', assetAmount: 0, assetId: 847594689 })
@@ -410,23 +422,25 @@ describe('single transaction with nested inners', () => {
   })
 
   // Verified against Lora's rendered snapshot
-  // group-graph.wDegGrdXE32WoxPfioFELwPVWBIiZK0GF1bwos7fJs0%3D.html, modulo one
-  // wire gap: the wire lacks created-application-index, so the inner app create
-  // stays a column for application 0 instead of Lora's app 2365972864, and the
-  // created app's escrow keeps its own account column.
-  test('wDegGrdX group: inner app create with rekeyed escrow self-payments', () => {
+  // group-graph.wDegGrdXE32WoxPfioFELwPVWBIiZK0GF1bwos7fJs0%3D.html: the inner
+  // app create resolves to Lora's app 2365972864 via createdApplicationId.
+  // Deviation: Lora draws the created app's escrow BPNO…IJ3M(3) as its own
+  // account column beside the app column; we merge one entity into one column.
+  test('wDegGrdX group: inner app create resolved to its created id', () => {
     const group = groups['wDegGrdXE32WoxPfioFELwPVWBIiZK0GF1bwos7fJs0=']!
     const graph = buildTransactionsGraph(group.transactions, { appAddressFor })
 
-    expect(graph.verticals.map((v) => v.type)).toEqual(['account', 'application', 'application', 'account'])
-    const [, outerApp, createdApp, escrowAccount] = graph.verticals
+    expect(graph.verticals.map((v) => v.type)).toEqual(['account', 'application', 'application'])
+    const [, outerApp, createdApp] = graph.verticals
     expect(outerApp).toMatchObject({
       applicationId: 2174001591,
       linkedAccount: { accountNumber: 2 },
-      associatedAccounts: [{ kind: 'rekey', accountNumber: 3 }],
+      associatedAccounts: [{ kind: 'rekey', address: ESCROWS[2365972864], accountNumber: 3 }],
     })
-    expect(createdApp).toMatchObject({ applicationId: 0 })
-    expect((escrowAccount as Extract<GraphVertical, { type: 'account' }>).accountNumber).toBe(3)
+    expect(createdApp).toMatchObject({
+      applicationId: 2365972864,
+      linkedAccount: { address: ESCROWS[2365972864], accountNumber: 3 },
+    })
 
     expect(graph.horizontals.map((row) => row.label.type)).toEqual([
       'payment',
@@ -445,20 +459,174 @@ describe('single transaction with nested inners', () => {
       fromTag: 1,
       toTag: 2,
     })
-    // Rekeyed escrow self-payment and self opt-in are self loops on its column.
+    // The create row runs from the outer app to the created app's column.
+    expect(graph.horizontals[2]!.representation).toEqual({
+      kind: 'vector',
+      fromVertical: 1,
+      toVertical: 2,
+      direction: 'leftToRight',
+      fromTag: 2,
+    })
+    expect(graph.horizontals[2]!.ancestors).toEqual([1])
+    // The created app's own inner self-payment loops on its column, badge-tagged
+    // (its sender IS the created app's escrow, matching Lora's "3 Payment 0").
     expect(graph.horizontals[3]!.representation).toEqual({
       kind: 'selfLoop',
-      vertical: 3,
-      fromTag: 'rekey',
+      vertical: 2,
+      fromTag: 3,
       toTag: 3,
     })
     expect(graph.horizontals[3]!.ancestors).toEqual([1, 2])
+    // The escrow's opt-in under the outer app stays rekey-tagged (its sender
+    // is not the outer app's escrow).
     expect(graph.horizontals[5]!.representation).toEqual({
       kind: 'selfLoop',
-      vertical: 3,
+      vertical: 2,
       fromTag: 'rekey',
       toTag: 3,
     })
+  })
+})
+
+describe('created ids, freezes, and asset configs', () => {
+  const SENDER = 'ACFGSENDERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  const TARGET = 'FREEZETARGETAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  const base = { sender: SENDER, feeMicroAlgos: 1000 } as const
+
+  // Recorded mainnet app create: the row lands on the application column for
+  // the indexer's created-application-index, not a column for application 0,
+  // and the rekeyed signer (auth-addr) tags the sender endpoint.
+  test('5VJZ: recorded app create resolves the created application id', () => {
+    const txn = transactions['5VJZGNPXIFV4CW5TPJ6P2QSNF3TEMF4T5XDHPIPUOAICD6IGUIGQ']!
+    const graph = buildTransactionsGraph([txn], { appAddressFor })
+
+    expect(graph.verticals).toEqual([
+      { type: 'account', address: txn.sender, accountNumber: 1, associatedAccounts: [] },
+      {
+        type: 'application',
+        applicationId: 3679982959,
+        linkedAccount: { address: ESCROWS[3679982959], accountNumber: 2 },
+        associatedAccounts: [],
+      },
+    ])
+    expect(graph.horizontals).toHaveLength(1)
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'appCreate' })
+    expect(graph.horizontals[0]!.representation).toEqual({
+      kind: 'vector',
+      fromVertical: 0,
+      toVertical: 1,
+      direction: 'leftToRight',
+      fromTag: 'rekey',
+    })
+  })
+
+  test('afrz draws a sender → frozen-account vector with the asset in the label', () => {
+    const graph = buildTransactionsGraph(
+      [{ ...base, type: 'afrz', assetId: 4321, freezeTarget: TARGET, frozen: true }],
+      { appAddressFor },
+    )
+
+    expect(graph.verticals).toEqual([
+      { type: 'account', address: SENDER, accountNumber: 1, associatedAccounts: [] },
+      { type: 'account', address: TARGET, accountNumber: 2, associatedAccounts: [] },
+    ])
+    expect(graph.horizontals).toHaveLength(1)
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'assetFreeze', assetId: 4321 })
+    expect(graph.horizontals[0]!.representation).toEqual({
+      kind: 'vector',
+      fromVertical: 0,
+      toVertical: 1,
+      direction: 'leftToRight',
+      fromTag: 1,
+      toTag: 2,
+    })
+  })
+
+  test('afrz on the sender itself is a self loop', () => {
+    const graph = buildTransactionsGraph(
+      [{ ...base, type: 'afrz', assetId: 4321, freezeTarget: SENDER, frozen: false }],
+      { appAddressFor },
+    )
+    expect(graph.verticals).toHaveLength(1)
+    expect(graph.horizontals[0]!.representation).toEqual({
+      kind: 'selfLoop',
+      vertical: 0,
+      fromTag: 1,
+      toTag: 1,
+    })
+  })
+
+  test('acfg create resolves the created asset id into an asset column', () => {
+    const graph = buildTransactionsGraph(
+      [
+        {
+          ...base,
+          type: 'acfg',
+          assetId: 0,
+          createdAssetId: 987,
+          assetConfig: { total: 1000, decimals: 2, manager: SENDER },
+        },
+      ],
+      { appAddressFor },
+    )
+
+    expect(graph.verticals).toEqual([
+      { type: 'account', address: SENDER, accountNumber: 1, associatedAccounts: [] },
+      { type: 'asset', assetId: 987 },
+    ])
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'assetCreate' })
+    expect(graph.horizontals[0]!.representation).toEqual({
+      kind: 'vector',
+      fromVertical: 0,
+      toVertical: 1,
+      direction: 'leftToRight',
+      fromTag: 1,
+    })
+  })
+
+  test('acfg with params on an existing asset is a reconfigure', () => {
+    const graph = buildTransactionsGraph(
+      [{ ...base, type: 'acfg', assetId: 987, assetConfig: { total: 1000, decimals: 2 } }],
+      { appAddressFor },
+    )
+    expect(graph.verticals[1]).toEqual({ type: 'asset', assetId: 987 })
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'assetReconfigure' })
+  })
+
+  test('acfg without params on an existing asset is a destroy', () => {
+    const graph = buildTransactionsGraph([{ ...base, type: 'acfg', assetId: 987 }], { appAddressFor })
+    expect(graph.verticals[1]).toEqual({ type: 'asset', assetId: 987 })
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'assetDestroy' })
+  })
+
+  test('a pending acfg create without a created id stays a point at the sender', () => {
+    const graph = buildTransactionsGraph(
+      [{ ...base, type: 'acfg', assetId: 0, assetConfig: { total: 1, decimals: 0 } }],
+      { appAddressFor },
+    )
+    expect(graph.verticals).toHaveLength(1)
+    expect(graph.horizontals[0]!.label).toEqual({ type: 'assetCreate' })
+    expect(graph.horizontals[0]!.representation).toEqual({ kind: 'point', vertical: 0, fromTag: 1 })
+  })
+
+  test('a clawback keeps its revoked-account tag even when the operator is rekeyed', () => {
+    const graph = buildTransactionsGraph(
+      [
+        {
+          ...base,
+          type: 'axfer',
+          signer: 'REKEYEDSIGNERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+          assetId: 99,
+          assetAmount: 5,
+          receiver: TARGET,
+          clawbackFrom: 'REVOKEDACCOUNTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        },
+      ],
+      { appAddressFor },
+    )
+    expect(graph.horizontals[0]!.label.type).toBe('clawback')
+    // The clawback tag (revoked account badge) wins over the rekey tag.
+    expect(graph.horizontals[0]!.representation).toMatchObject({ kind: 'vector', fromTag: 2 })
   })
 })
 
@@ -547,5 +715,27 @@ describe('wire-level approximations', () => {
         expect(index).toBeLessThan(graph.verticals.length)
       }
     }
+  })
+})
+
+describe('stored group records feed the graph', () => {
+  test('a stored transaction.group record retains nested rows and graph-relevant fields', () => {
+    const wire = (corpus as { groups: Record<string, unknown> }).groups[
+      'wDegGrdXE32WoxPfioFELwPVWBIiZK0GF1bwos7fJs0='
+    ]
+    const record = buildTransactionGroupRecord(
+      { resultId: 'result-group-retention', toolCallId: 'tool-call-group-retention', network: 'testnet' },
+      wire,
+    )
+    if (record.state !== 'success') throw new Error('Expected success record')
+    const data = record.data as { transactions: Array<{ innerTxns?: unknown[]; signer?: string }> }
+    const nested = data.transactions.find((row) => row.innerTxns && row.innerTxns.length > 0)
+    expect(nested).toBeDefined()
+
+    // The graph built from the STORED record (not the raw wire) still nests.
+    const graph = buildTransactionsGraph(data.transactions as never, {
+      appAddressFor: (appId) => getApplicationAddress(BigInt(appId)).toString(),
+    })
+    expect(graph.horizontals.some((row) => row.depth > 0)).toBe(true)
   })
 })

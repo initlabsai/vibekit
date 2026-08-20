@@ -17,6 +17,22 @@ import { addressEnvelopeSchema, derive, record } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
+/** Acfg asset parameters carried by a transaction detail record. */
+export const transactionAssetConfigDataSchema = z
+  .object({
+    total: uint64JsonSchema.optional(),
+    decimals: z.number().int().nonnegative().optional(),
+    unitName: z.string().min(1).optional(),
+    assetName: z.string().min(1).optional(),
+    url: z.string().min(1).optional(),
+    manager: algorandAddressCandidateSchema.optional(),
+    reserve: algorandAddressCandidateSchema.optional(),
+    freeze: algorandAddressCandidateSchema.optional(),
+    clawback: algorandAddressCandidateSchema.optional(),
+    defaultFrozen: z.boolean().optional(),
+  })
+  .strict()
+
 /** Authoritative transaction data required by the first trusted detail view. */
 export const transactionDetailDataSchema = z
   .object({
@@ -44,27 +60,83 @@ export const transactionDetailDataSchema = z
     closeAmountMicroAlgos: uint64JsonSchema.optional(),
     closeAssetAmount: uint64JsonSchema.optional(),
     clawbackFrom: algorandAddressCandidateSchema.optional(),
+    freezeTarget: algorandAddressCandidateSchema.optional(),
+    frozen: z.boolean().optional(),
+    assetConfig: transactionAssetConfigDataSchema.optional(),
+    createdAssetId: uint64JsonSchema.optional(),
+    createdApplicationId: uint64JsonSchema.optional(),
+    signer: algorandAddressCandidateSchema.optional(),
   })
   .strict()
 
 /** Authoritative transaction data required by the first trusted detail view. */
 export type TransactionDetailData = z.infer<typeof transactionDetailDataSchema>
 
-/** One transaction row in a list or group. Inner transactions are counted, not nested. */
-export const transactionRowSchema = z
+/**
+ * One transaction row in a list or group. Rows nest recursively and carry
+ * everything the trusted flow-graph card renders (close-outs, clawbacks,
+ * freezes, created ids, signer) — a stored record must hold what its view
+ * shows.
+ */
+export interface TransactionRowData {
+  id?: string
+  type?: string
+  sender: string
+  receiver?: string
+  signer?: string
+  paymentAmountMicroAlgos?: string | number
+  feeMicroAlgos?: string | number
+  assetId?: string | number
+  assetAmount?: string | number
+  assetName?: string
+  assetUnitName?: string
+  assetDecimals?: number
+  applicationId?: string | number
+  confirmedRound?: number
+  roundTime?: number
+  innerCount?: number
+  closeTo?: string
+  closeAmountMicroAlgos?: string | number
+  closeAssetAmount?: string | number
+  clawbackFrom?: string
+  freezeTarget?: string
+  frozen?: boolean
+  assetConfig?: z.infer<typeof transactionAssetConfigDataSchema>
+  createdAssetId?: string | number
+  createdApplicationId?: string | number
+  innerTxns?: TransactionRowData[]
+}
+
+export const transactionRowSchema: z.ZodType<TransactionRowData> = z
   .object({
     id: z.string().min(1).optional(),
     type: z.string().min(1).optional(),
     sender: z.string().min(1),
     receiver: optionalAddress,
+    signer: optionalAddress,
     paymentAmountMicroAlgos: uint64JsonSchema.optional(),
     feeMicroAlgos: uint64JsonSchema.optional(),
     assetId: uint64JsonSchema.optional(),
     assetAmount: uint64JsonSchema.optional(),
+    assetName: z.string().min(1).optional(),
+    assetUnitName: z.string().min(1).optional(),
+    assetDecimals: z.number().int().nonnegative().optional(),
     applicationId: uint64JsonSchema.optional(),
     confirmedRound: z.number().int().nonnegative().optional(),
     roundTime: z.number().int().nonnegative().optional(),
     innerCount: z.number().int().nonnegative().optional(),
+    closeTo: optionalAddress,
+    closeAmountMicroAlgos: uint64JsonSchema.optional(),
+    closeAssetAmount: uint64JsonSchema.optional(),
+    clawbackFrom: optionalAddress,
+    freezeTarget: optionalAddress,
+    frozen: z.boolean().optional(),
+    assetConfig: transactionAssetConfigDataSchema.optional(),
+    createdAssetId: uint64JsonSchema.optional(),
+    createdApplicationId: uint64JsonSchema.optional(),
+    innerTxns: z
+      .array(z.lazy((): z.ZodType<TransactionRowData> => transactionRowSchema))
+      .optional(),
   })
   .strict()
 
@@ -124,6 +196,14 @@ export function buildTransactionDetailRecord(
         : { closeAmountMicroAlgos: txn.closeAmountMicroAlgos }),
       ...(txn.closeAssetAmount === undefined ? {} : { closeAssetAmount: txn.closeAssetAmount }),
       ...(txn.clawbackFrom === undefined ? {} : { clawbackFrom: txn.clawbackFrom }),
+      ...(txn.freezeTarget === undefined ? {} : { freezeTarget: txn.freezeTarget }),
+      ...(txn.frozen === undefined ? {} : { frozen: txn.frozen }),
+      ...(txn.assetConfig === undefined ? {} : { assetConfig: txn.assetConfig }),
+      ...(txn.createdAssetId === undefined ? {} : { createdAssetId: txn.createdAssetId }),
+      ...(txn.createdApplicationId === undefined
+        ? {}
+        : { createdApplicationId: txn.createdApplicationId }),
+      ...(txn.signer === undefined ? {} : { signer: txn.signer }),
     }),
   })
 }
@@ -135,7 +215,9 @@ export interface TransactionLookupHost {
   lookupTransactionGroup(groupId: string): Promise<StructuredResult>
 }
 
-function txnRow(wire: ViewData<'transaction.list'>['transactions'][number]) {
+function txnRow(
+  wire: ViewData<'transaction.list'>['transactions'][number],
+): z.infer<typeof transactionRowSchema> {
   const innerCount = wire.innerTxns?.length
   return {
     sender: wire.sender,
@@ -143,15 +225,37 @@ function txnRow(wire: ViewData<'transaction.list'>['transactions'][number]) {
     ...(wire.id === undefined ? {} : { id: wire.id }),
     ...(wire.type === undefined ? {} : { type: wire.type }),
     ...(wire.receiver === undefined ? {} : { receiver: wire.receiver }),
+    ...(wire.signer === undefined ? {} : { signer: wire.signer }),
     ...(wire.paymentAmountMicroAlgos === undefined
       ? {}
       : { paymentAmountMicroAlgos: wire.paymentAmountMicroAlgos }),
     ...(wire.assetId === undefined ? {} : { assetId: wire.assetId }),
     ...(wire.assetAmount === undefined ? {} : { assetAmount: wire.assetAmount }),
+    ...(wire.assetName === undefined ? {} : { assetName: wire.assetName }),
+    ...(wire.assetUnitName === undefined ? {} : { assetUnitName: wire.assetUnitName }),
+    ...(wire.assetDecimals === undefined ? {} : { assetDecimals: wire.assetDecimals }),
     ...(wire.applicationId === undefined ? {} : { applicationId: wire.applicationId }),
     ...(wire.confirmedRound === undefined ? {} : { confirmedRound: wire.confirmedRound }),
     ...(wire.roundTime === undefined ? {} : { roundTime: wire.roundTime }),
     ...(innerCount ? { innerCount } : {}),
+    ...(wire.closeTo === undefined ? {} : { closeTo: wire.closeTo }),
+    ...(wire.closeAmountMicroAlgos === undefined
+      ? {}
+      : { closeAmountMicroAlgos: wire.closeAmountMicroAlgos }),
+    ...(wire.closeAssetAmount === undefined ? {} : { closeAssetAmount: wire.closeAssetAmount }),
+    ...(wire.clawbackFrom === undefined ? {} : { clawbackFrom: wire.clawbackFrom }),
+    ...(wire.freezeTarget === undefined ? {} : { freezeTarget: wire.freezeTarget }),
+    ...(wire.frozen === undefined ? {} : { frozen: wire.frozen }),
+    ...(wire.assetConfig === undefined ? {} : { assetConfig: wire.assetConfig }),
+    ...(wire.createdAssetId === undefined ? {} : { createdAssetId: wire.createdAssetId }),
+    ...(wire.createdApplicationId === undefined
+      ? {}
+      : { createdApplicationId: wire.createdApplicationId }),
+    ...(wire.innerTxns && wire.innerTxns.length > 0
+      ? // Inner transactions share the outer wire shape; the subpath's
+        // inferred type flattens the recursion to Record<string, unknown>.
+        { innerTxns: wire.innerTxns.map((inner) => txnRow(inner as typeof wire)) }
+      : {}),
   }
 }
 
@@ -221,6 +325,12 @@ export const transactionDetailViewModelSchema = z
     closeAmountMicroAlgos: uint64JsonSchema.optional(),
     closeAssetAmount: uint64JsonSchema.optional(),
     clawbackFrom: algorandAddressCandidateSchema.optional(),
+    freezeTarget: algorandAddressCandidateSchema.optional(),
+    frozen: z.boolean().optional(),
+    assetConfig: transactionAssetConfigDataSchema.optional(),
+    createdAssetId: uint64JsonSchema.optional(),
+    createdApplicationId: uint64JsonSchema.optional(),
+    signer: algorandAddressCandidateSchema.optional(),
   })
   .strict()
 
@@ -285,6 +395,14 @@ export function createTransactionDetailViewModel(
       : { closeAmountMicroAlgos: data.closeAmountMicroAlgos }),
     ...(data.closeAssetAmount === undefined ? {} : { closeAssetAmount: data.closeAssetAmount }),
     ...(data.clawbackFrom === undefined ? {} : { clawbackFrom: data.clawbackFrom }),
+    ...(data.freezeTarget === undefined ? {} : { freezeTarget: data.freezeTarget }),
+    ...(data.frozen === undefined ? {} : { frozen: data.frozen }),
+    ...(data.assetConfig === undefined ? {} : { assetConfig: data.assetConfig }),
+    ...(data.createdAssetId === undefined ? {} : { createdAssetId: data.createdAssetId }),
+    ...(data.createdApplicationId === undefined
+      ? {}
+      : { createdApplicationId: data.createdApplicationId }),
+    ...(data.signer === undefined ? {} : { signer: data.signer }),
   })
   return { ok: true, model }
 }

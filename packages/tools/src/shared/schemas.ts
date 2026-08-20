@@ -1,5 +1,20 @@
 import { z } from 'zod'
 
+/** Asset parameters on an acfg body: present on creates and reconfigures, absent on destroys. */
+export interface FormattedAssetConfig {
+  /** Total supply in base units; decimal string when the uint64 exceeds 2^53. */
+  total?: number | string
+  decimals?: number
+  unitName?: string
+  assetName?: string
+  url?: string
+  manager?: string
+  reserve?: string
+  freeze?: string
+  clawback?: string
+  defaultFrozen?: boolean
+}
+
 /** Formatted transaction returned by handlers. */
 export interface FormattedTransaction {
   /** Absent on inner transactions — the indexer assigns them no id. */
@@ -13,6 +28,7 @@ export interface FormattedTransaction {
   /** microALGOs; decimal string when the uint64 exceeds 2^53. */
   paymentAmountMicroAlgos?: number | string
   receiver?: string
+  /** Asset touched by an axfer, acfg, or afrz; 0 on an acfg that creates the asset. */
   assetId?: number
   /** Base units; decimal string when the uint64 exceeds 2^53. */
   assetAmount?: number | string
@@ -30,11 +46,40 @@ export interface FormattedTransaction {
   /** Axfer close-out amount in base units; decimal string above 2^53. */
   closeAssetAmount?: number | string
   clawbackFrom?: string
+  /** Afrz target: the account whose asset holding is frozen or thawed. */
+  freezeTarget?: string
+  /** Afrz new freeze status of the target's holding. */
+  frozen?: boolean
+  /** Acfg asset parameters; present on creates and reconfigures, absent on destroys. */
+  assetConfig?: FormattedAssetConfig
+  /** Asset ID assigned when this transaction created an asset. */
+  createdAssetId?: number
+  /** Application ID assigned when this transaction created an application. */
+  createdApplicationId?: number
+  /** Signing authority (auth-addr); present only when it differs from the sender. */
+  signer?: string
   innerTxns?: FormattedTransaction[]
   globalStateDelta?: unknown
   localStateDelta?: unknown
   logs?: string[]
 }
+
+/** Post-jsonSafe wire shape of {@link FormattedAssetConfig}. */
+export const formattedAssetConfigSchema = z.object({
+  total: z
+    .union([z.number(), z.string()])
+    .optional()
+    .describe('Total supply in base units; decimal string when above 2^53'),
+  decimals: z.number().int().nonnegative().optional(),
+  unitName: z.string().optional(),
+  assetName: z.string().optional(),
+  url: z.string().optional(),
+  manager: z.string().optional(),
+  reserve: z.string().optional(),
+  freeze: z.string().optional(),
+  clawback: z.string().optional(),
+  defaultFrozen: z.boolean().optional(),
+})
 
 /** Post-jsonSafe wire shape of {@link FormattedTransaction}. */
 export const formattedTransactionSchema = z.object({
@@ -56,7 +101,10 @@ export const formattedTransactionSchema = z.object({
       'Payment amount in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
     ),
   receiver: z.string().optional(),
-  assetId: z.number().optional(),
+  assetId: z
+    .number()
+    .optional()
+    .describe('Asset touched by an axfer, acfg, or afrz; 0 on an acfg that creates the asset'),
   assetAmount: z
     .union([z.number(), z.string()])
     .optional()
@@ -79,6 +127,26 @@ export const formattedTransactionSchema = z.object({
     .optional()
     .describe('Axfer close-out amount in base units; decimal string when above 2^53'),
   clawbackFrom: z.string().optional(),
+  freezeTarget: z
+    .string()
+    .optional()
+    .describe('Afrz target: the account whose asset holding is frozen or thawed'),
+  frozen: z.boolean().optional().describe('Afrz new freeze status of the target holding'),
+  assetConfig: formattedAssetConfigSchema
+    .optional()
+    .describe('Acfg asset parameters; present on creates and reconfigures, absent on destroys'),
+  createdAssetId: z
+    .number()
+    .optional()
+    .describe('Asset ID assigned when this transaction created an asset'),
+  createdApplicationId: z
+    .number()
+    .optional()
+    .describe('Application ID assigned when this transaction created an application'),
+  signer: z
+    .string()
+    .optional()
+    .describe('Signing authority (auth-addr); present only when it differs from the sender'),
   note: z.string().optional(),
   group: z.string().optional(),
   get innerTxns() {

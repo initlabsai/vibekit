@@ -7,7 +7,8 @@ export async function lookupTransaction(
 ): Promise<FormattedTransaction> {
   const response = await ctx.indexer.lookupTransactionByID(args.txid).do()
   const formatted = formatTransaction(response.transaction)
-  if (formatted.assetId === undefined) return formatted
+  // Zero is an acfg create — the asset does not exist to look up.
+  if (formatted.assetId === undefined || formatted.assetId === 0) return formatted
   try {
     const asset = await ctx.algod.getAssetByID(BigInt(formatted.assetId)).do()
     const params = asset.params

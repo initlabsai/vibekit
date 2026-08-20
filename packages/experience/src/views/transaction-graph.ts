@@ -13,8 +13,8 @@ import { uint64JsonSchema } from '../core/algo.js'
  * - Application escrow addresses come from the injected
  *   {@link BuildTransactionsGraphOptions.appAddressFor} — this module stays
  *   browser-safe and never imports algosdk.
- * - Created application/asset ids, asset-freeze targets, asset-config bodies,
- *   and signers are absent from the wire; the affected rows degrade as noted.
+ * - The op-up test approximates Lora's program-bytes match with the
+ *   observable transaction shape (see {@link isOpUp}).
  * - Lora's trailing Placeholder vertical (spacing for a self-loop on the last
  *   column) is a rendering concern and is not emitted here.
  */
@@ -206,6 +206,27 @@ function isClawback(txn: GraphTransaction): boolean {
   return txn.type === 'axfer' && txn.clawbackFrom !== undefined
 }
 
+/** The application an appl row acts on: the target id, or the created id on creates. */
+function effectiveApplicationId(txn: GraphTransaction): number {
+  const applicationId = txn.applicationId ?? 0
+  return applicationId === 0 ? (txn.createdApplicationId ?? 0) : applicationId
+}
+
+/**
+ * The asset an acfg row acts on: the configured id, or the created id on
+ * creates. Undefined on a create whose wire predates createdAssetId (or a
+ * pending one), where no asset column can be drawn.
+ */
+function effectiveAssetId(txn: GraphTransaction): number | undefined {
+  if (txn.assetId === undefined || txn.assetId === 0) return txn.createdAssetId
+  return txn.assetId
+}
+
+/** An outer transaction signed by another key (auth-addr) acts through a rekeyed sender. */
+function hasRekeyedSigner(txn: GraphTransaction): boolean {
+  return txn.signer !== undefined && txn.signer !== txn.sender
+}
+
 function isEmptyDelta(delta: unknown): boolean {
   return delta == null || (Array.isArray(delta) && delta.length === 0)
 }
@@ -262,11 +283,10 @@ function rawVerticalsForTransaction(
     if (isOpUp(txn)) {
       verticals.push({ type: 'opUp' })
     } else {
-      // Wire gap: an app create carries applicationId 0 because the wire lacks
-      // the indexer's created-application-index, so the created app cannot be
-      // shown under its real id (Lora resolves it).
-      const applicationId = txn.applicationId ?? 0
-      const escrow = appAddressFor?.(applicationId)
+      // Creates resolve to the indexer's created id; a pending create (no
+      // createdApplicationId yet) falls back to a column for application 0.
+      const applicationId = effectiveApplicationId(txn)
+      const escrow = applicationId === 0 ? undefined : appAddressFor?.(applicationId)
       const associatedAccounts: MutableAssociated[] = []
       for (const inner of txn.innerTxns ?? []) {
         if (escrow !== undefined && inner.sender !== escrow) {
@@ -284,12 +304,13 @@ function rawVerticalsForTransaction(
       })
     }
   }
-  // Wire gap: acfg rows carry no asset-config body (and no assetId today), so
-  // an asset column only appears if the wire ever supplies assetId.
-  if (txn.type === 'acfg' && txn.assetId !== undefined) {
-    verticals.push({ type: 'asset', assetId: txn.assetId })
+  if (txn.type === 'acfg') {
+    const assetId = effectiveAssetId(txn)
+    if (assetId !== undefined) verticals.push({ type: 'asset', assetId })
   }
-  // Wire gap: afrz rows carry no freeze-target address, so no target column.
+  if (txn.type === 'afrz' && txn.freezeTarget !== undefined) {
+    verticals.push(accountVertical(txn.freezeTarget))
+  }
   return verticals
 }
 
@@ -484,10 +505,13 @@ function representationsFor(
   txn: GraphTransaction,
   parent: GraphTransaction | undefined,
 ): RowSeed[] {
-  const senderFrom = (tagAddress?: string) =>
-    parent
-      ? fromWithParent(verticals, txn.sender, parent.applicationId ?? 0, tagAddress)
-      : fromWithoutParent(verticals, txn.sender, tagAddress)
+  const senderFrom = (tagAddress?: string): FromTo => {
+    if (parent) return fromWithParent(verticals, txn.sender, effectiveApplicationId(parent), tagAddress)
+    const from = fromWithoutParent(verticals, txn.sender, tagAddress)
+    // Rekey-tag the sender endpoint when another key signed the outer
+    // transaction, unless a clawback tag already claims it.
+    return tagAddress === undefined && hasRekeyedSigner(txn) ? { ...from, tag: 'rekey' } : from
+  }
 
   switch (txn.type) {
     case 'pay': {
@@ -542,29 +566,40 @@ function representationsFor(
       return rows
     }
     case 'appl': {
-      const applicationId = txn.applicationId ?? 0
       const to = isOpUp(txn)
         ? verticals.findIndex((v) => v.type === 'opUp')
-        : verticals.findIndex((v) => v.type === 'application' && v.applicationId === applicationId)
-      const type = applicationId === 0 ? 'appCreate' : txn.onCompletion === 'update' ? 'appUpdate' : 'appCall'
+        : verticals.findIndex((v) => v.type === 'application' && v.applicationId === effectiveApplicationId(txn))
+      const type =
+        (txn.applicationId ?? 0) === 0 ? 'appCreate' : txn.onCompletion === 'update' ? 'appUpdate' : 'appCall'
       return [{ representation: asRepresentation(senderFrom(), { vertical: to }), label: { type } }]
     }
     case 'acfg': {
-      if (txn.assetId !== undefined) {
-        const to = verticals.findIndex((v) => v.type === 'asset' && v.assetId === txn.assetId)
-        // Wire gap: without the asset-config body, destroy is indistinguishable
-        // from reconfigure; an existing assetId is labeled reconfigure.
-        return [
-          { representation: asRepresentation(senderFrom(), { vertical: to }), label: { type: 'assetReconfigure' } },
-        ]
+      // assetId 0 creates; params present reconfigures; params absent destroys.
+      const label: GraphLabel = {
+        type:
+          (txn.assetId ?? 0) === 0
+            ? 'assetCreate'
+            : txn.assetConfig !== undefined
+              ? 'assetReconfigure'
+              : 'assetDestroy',
       }
-      // Wire gap: no assetId (nor created-asset-index) on acfg rows today.
-      return [asPoint(senderFrom(), { type: 'assetCreate' })]
+      const assetId = effectiveAssetId(txn)
+      // A create whose wire carries no createdAssetId has no asset column to point at.
+      if (assetId === undefined) return [asPoint(senderFrom(), label)]
+      const to = verticals.findIndex((v) => v.type === 'asset' && v.assetId === assetId)
+      return [{ representation: asRepresentation(senderFrom(), { vertical: to }), label }]
     }
-    case 'afrz':
-      // Wire gap: the freeze target is not on the wire, so the row is a point
-      // at the sender instead of Lora's sender → frozen-account vector.
-      return [asPoint(senderFrom(), { type: 'assetFreeze' })]
+    case 'afrz': {
+      const label: GraphLabel = { type: 'assetFreeze', ...assetLabelFields(txn) }
+      // A freeze whose wire predates freezeTarget degrades to a point at the sender.
+      if (txn.freezeTarget === undefined) return [asPoint(senderFrom(), label)]
+      return [
+        {
+          representation: asRepresentation(senderFrom(), toAccountOrApplication(verticals, txn.freezeTarget)),
+          label,
+        },
+      ]
+    }
     case 'keyreg':
       return [asPoint(senderFrom(), { type: 'keyReg' })]
     case 'stpf':

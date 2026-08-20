@@ -168,6 +168,165 @@ describe('lookupTransaction', () => {
     expect(tx.innerTxns?.[0]?.confirmedRound).toBeUndefined()
   })
 
+  test('formats an asset freeze with target, status, and asset enrichment', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'FRZ',
+              txType: 'afrz',
+              sender: 'FREEZEADMIN',
+              fee: BigInt(1_000),
+              assetFreezeTransaction: {
+                address: 'FROZENACCOUNT',
+                assetId: BigInt(4321),
+                newFreezeStatus: true,
+              },
+            },
+          }),
+      },
+      algod: {
+        getAssetByID: () =>
+          chainable({ index: BigInt(4321), params: { unitName: 'ICE', decimals: 0 } }),
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'FRZ' })
+    expect(tx.assetId).toBe(4321)
+    expect(tx.freezeTarget).toBe('FROZENACCOUNT')
+    expect(tx.frozen).toBe(true)
+    expect(tx.assetUnitName).toBe('ICE')
+  })
+
+  test('formats an asset create: assetId 0, createdAssetId, and the config body', async () => {
+    let algodCalls = 0
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'ACREATE',
+              txType: 'acfg',
+              sender: 'CREATOR',
+              fee: BigInt(1_000),
+              createdAssetIndex: BigInt(987_654),
+              assetConfigTransaction: {
+                // The indexer omits assetId entirely on creates.
+                params: {
+                  creator: 'CREATOR',
+                  total: BigInt('18446744073709551615'),
+                  decimals: 6,
+                  unitName: 'MAX',
+                  name: 'Max Coin',
+                  url: 'https://max.example',
+                  manager: 'MANAGER',
+                  reserve: 'RESERVE',
+                  freeze: 'FREEZER',
+                  clawback: 'CLAWBACK',
+                  defaultFrozen: false,
+                },
+              },
+            },
+          }),
+      },
+      algod: {
+        getAssetByID: () => {
+          algodCalls += 1
+          throw new Error('must not be called for asset 0')
+        },
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'ACREATE' })
+    expect(tx.assetId).toBe(0)
+    expect(tx.createdAssetId).toBe(987_654)
+    expect(tx.assetConfig).toEqual({
+      total: '18446744073709551615',
+      decimals: 6,
+      unitName: 'MAX',
+      assetName: 'Max Coin',
+      url: 'https://max.example',
+      manager: 'MANAGER',
+      reserve: 'RESERVE',
+      freeze: 'FREEZER',
+      clawback: 'CLAWBACK',
+      defaultFrozen: false,
+    })
+    expect(algodCalls).toBe(0)
+  })
+
+  test('formats an asset destroy: assetId without a config body', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'ADESTROY',
+              txType: 'acfg',
+              sender: 'MANAGER',
+              fee: BigInt(1_000),
+              assetConfigTransaction: { assetId: BigInt(987_654) },
+            },
+          }),
+      },
+      algod: {
+        getAssetByID: () => {
+          throw new Error('deleted asset')
+        },
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'ADESTROY' })
+    expect(tx.assetId).toBe(987_654)
+    expect(tx.assetConfig).toBeUndefined()
+  })
+
+  test('formats an app create with createdApplicationId and a rekeyed signer', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'APPCREATE',
+              txType: 'appl',
+              sender: 'DEPLOYER',
+              fee: BigInt(1_000),
+              authAddr: 'ACTUALSIGNER',
+              createdApplicationIndex: BigInt(3_679_982_959),
+              applicationTransaction: { applicationId: BigInt(0), onCompletion: 'noop' },
+            },
+          }),
+      },
+    })
+    const tx = await lookupTransaction(ctx, { txid: 'APPCREATE' })
+    expect(tx.applicationId).toBe(0)
+    expect(tx.createdApplicationId).toBe(3_679_982_959)
+    expect(tx.signer).toBe('ACTUALSIGNER')
+  })
+
+  test('output schema accepts the new acfg/afrz/created/signer fields on the wire', async () => {
+    const ctx = fakeContext({
+      indexer: {
+        lookupTransactionByID: () =>
+          chainable({
+            transaction: {
+              id: 'ACREATE',
+              txType: 'acfg',
+              sender: 'CREATOR',
+              fee: BigInt(1_000),
+              authAddr: 'ACTUALSIGNER',
+              createdAssetIndex: BigInt(987_654),
+              assetConfigTransaction: {
+                params: { creator: 'CREATOR', total: BigInt(1_000), decimals: 0 },
+              },
+            },
+          }),
+      },
+    })
+    const tool = transactionTools.find((t) => t.name === 'lookup_transaction')!
+    const wire = jsonSafe(await tool.handler(ctx, { txid: 'ACREATE' }))
+    const parsed = tool.output!.safeParse(wire)
+    expect(parsed.success).toBe(true)
+  })
+
   test('output schema accepts real indexer shapes: inner txns without id, uint64 amounts above 2^53', async () => {
     const hugeAmount = BigInt('18446744073709551615') // max uint64
     const ctx = fakeContext({

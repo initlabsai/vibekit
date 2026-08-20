@@ -44,7 +44,11 @@ export {
   paymentSignedGroupDataSchema,
   paymentSimulationDataSchema,
 } from './flows/payment.js'
-export { transactionDetailDataSchema, type TransactionDetailData } from './views/transaction.js'
+export {
+  transactionAssetConfigDataSchema,
+  transactionDetailDataSchema,
+  type TransactionDetailData,
+} from './views/transaction.js'
 export {
   buildAccountPortfolioRecord,
   createAccountArtifact,
