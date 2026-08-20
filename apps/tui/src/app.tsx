@@ -31,7 +31,12 @@ import {
   type WriteFlowState,
 } from '@initlabs/vibekit-experience'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-experience/live'
-import type { AgentSession } from '@initlabs/vibekit-agent'
+import {
+  listZeroSignalModels,
+  probeZeroSignal,
+  ZEROSIGNAL_SETUP_HINT,
+  type AgentSession,
+} from '@initlabs/vibekit-agent'
 import type {
   BoxRenderable,
   ScrollBoxRenderable,
@@ -874,6 +879,19 @@ export function App() {
   const runAgent = useCallback(
     (sectionId: number, input: string) => {
       if (!agentConfig) {
+        if (process.env.VIBEKIT_AGENT_PROVIDER === 'zerosignal') {
+          // ZeroSignal has no default model; offer the live catalog.
+          void listZeroSignalModels()
+            .then((models) =>
+              appendNote(
+                sectionId,
+                `Set VIBEKIT_AGENT_MODEL to a ZeroSignal model and restart. Available: ${models.slice(0, 8).join(', ')}${models.length > 8 ? ', …' : ''}`,
+                'error',
+              ),
+            )
+            .catch(() => appendNote(sectionId, ZEROSIGNAL_SETUP_HINT, 'error'))
+          return
+        }
         appendNote(
           sectionId,
           'No agent configured — set VIBEKIT_AGENT_MODEL (e.g. qwen3:32b) and restart to chat.',
@@ -916,6 +934,11 @@ export function App() {
       }
       void (async () => {
         if (!agentRef.current) {
+          if (agentConfig.provider === 'zerosignal' && !(await probeZeroSignal(agentConfig.baseUrl))) {
+            appendNote(sectionId, ZEROSIGNAL_SETUP_HINT, 'error')
+            setAgentBusy(false)
+            return
+          }
           const addressBook = signerReady
             ? await keystoreHost.listSigningAccounts().catch(() => [...FIXTURE_ADDRESS_BOOK])
             : [...FIXTURE_ADDRESS_BOOK]

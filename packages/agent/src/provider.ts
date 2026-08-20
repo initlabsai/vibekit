@@ -9,9 +9,16 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModel } from 'ai'
 
+import { ZEROSIGNAL_DEFAULT_BASE_URL } from './zerosignal.js'
+
 export interface ProviderConfig {
-  /** 'ollama' is sugar for openai-compatible with baseUrl http://localhost:11434/v1. */
-  provider: 'anthropic' | 'openai' | 'openai-compatible' | 'ollama'
+  /**
+   * 'ollama' is sugar for openai-compatible with baseUrl
+   * http://localhost:11434/v1; 'zerosignal' for the zs-proxy daemon at
+   * http://localhost:8080/v1 (wallet-admission — no API key; the model id
+   * must come from its live /v1/models catalog).
+   */
+  provider: 'anthropic' | 'openai' | 'openai-compatible' | 'ollama' | 'zerosignal'
   /** Model id, e.g. 'claude-sonnet-5', 'gpt-5', 'qwen3:8b'. */
   model: string
   /** Falls back to the provider's conventional env var (ANTHROPIC_API_KEY, OPENAI_API_KEY). */
@@ -46,6 +53,14 @@ export function createModel(config: ProviderConfig): LanguageModel {
         name: 'ollama',
         baseURL: config.baseUrl ?? 'http://localhost:11434/v1',
         ...(config.apiKey ? { apiKey: config.apiKey } : {}),
+      })(config.model)
+    case 'zerosignal':
+      // The proxy ignores the key (admission is the wallet's on-chain
+      // seal); a non-empty value only satisfies SDK plumbing.
+      return createOpenAICompatible({
+        name: 'zerosignal',
+        baseURL: config.baseUrl ?? ZEROSIGNAL_DEFAULT_BASE_URL,
+        apiKey: config.apiKey ?? 'zerosignal',
       })(config.model)
     case 'openai-compatible': {
       if (!config.baseUrl) {
