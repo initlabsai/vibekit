@@ -3,11 +3,10 @@
 import {
   addResult,
   completeApprovedPaymentFlow,
-  createAccountOpenCommand,
+  createAccountArtifact,
   createAccountPortfolioViewModel,
   createFixturePaymentHost,
   createFixtureResultStore,
-  createInitialWorkspaceState,
   createPaymentFlowViewModel,
   createTransactionDetailViewModel,
   FIXTURE_ADDRESS_BOOK,
@@ -17,16 +16,13 @@ import {
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   performLivePaymentStep,
-  selectActiveArtifact,
   startPaymentFlow,
-  workspaceReducer,
   type AccountLookupHost,
   type AccountPortfolioViewModel,
+  type ExplorerArtifact,
   type PaymentFlowHost,
   type PaymentFlowViewModel,
   type ResultStore,
-  type WorkspaceCommand,
-  type WorkspaceState,
   type TransactionDetailViewModel,
   type WriteFlowState,
 } from '@initlabs/vibekit-experience'
@@ -392,7 +388,7 @@ export default function Page() {
   const sampleHost = useMemo(() => createFixturePaymentHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
-  const [workspace, setWorkspace] = useState<WorkspaceState>(createInitialWorkspaceState)
+  const [artifact, setArtifact] = useState<ExplorerArtifact | null>(null)
   const [flow, setFlow] = useState<WriteFlowState | null>(null)
   const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
   const [busy, setBusy] = useState(false)
@@ -409,10 +405,6 @@ export default function Page() {
     return () => {
       cancelled = true
     }
-  }, [])
-
-  const dispatch = useCallback((command: WorkspaceCommand) => {
-    setWorkspace((current) => workspaceReducer(current, command))
   }, [])
 
   const startPayment = useCallback(
@@ -517,7 +509,7 @@ export default function Page() {
         .then((record) => {
           setBusy(false)
           setStore((current) => addResult(current, record))
-          dispatch(createAccountOpenCommand(record))
+          setArtifact(createAccountArtifact(record))
           setAccountsOpen(false)
           setStatus('Account opened')
         })
@@ -528,7 +520,7 @@ export default function Page() {
           )
         })
     },
-    [busy, dispatch, live, remoteHost, sampleHost],
+    [busy, live, remoteHost, sampleHost],
   )
 
   const submit = (raw: string) => {
@@ -539,7 +531,7 @@ export default function Page() {
     } else if (outcome.status === 'account') {
       openAccount(outcome.address)
     } else if (outcome.status === 'resolved') {
-      dispatch(outcome.command)
+      setArtifact(outcome.artifact)
       setStatus(
         flow !== null
           ? 'Transaction opened in the background — close the payment flow to view it'
@@ -554,7 +546,6 @@ export default function Page() {
     }
   }
 
-  const artifact = selectActiveArtifact(workspace)
   const activeViewKind = artifact?.view.view
   const viewModel =
     artifact && activeViewKind === 'transaction.detail'

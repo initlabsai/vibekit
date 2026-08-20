@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { accountPortfolioDataSchema } from './accounts.js'
 import { algorandAddressCandidateSchema } from './classifier.js'
-import { openWorkspaceCommandSchema, type WorkspaceCommand } from './protocol.js'
+import type { ExplorerArtifact } from './protocol.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
 import type { ResultIdentity } from './live-payment.js'
@@ -71,18 +71,14 @@ export function buildAccountPortfolioRecord(
   })
 }
 
-/** Builds the workspace command that opens a portfolio record as a tab. */
-export function createAccountOpenCommand(record: StructuredResult): WorkspaceCommand {
+/** Builds the titled trusted view that renders a portfolio record. */
+export function createAccountArtifact(record: StructuredResult): ExplorerArtifact {
   if (record.state !== 'success') {
     throw new Error('Cannot open a failed account record')
   }
   const data = accountPortfolioDataSchema.parse(record.data)
   const address = data.address
-  return openWorkspaceCommandSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'workspace.command',
-    command: 'open',
-    artifactId: `artifact-account-${address}`,
+  return {
     title: `Account ${address.slice(0, 6)}…${address.slice(-4)}`,
     view: {
       protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
@@ -90,6 +86,5 @@ export function createAccountOpenCommand(record: StructuredResult): WorkspaceCom
       view: 'account.portfolio',
       source: { source: 'result', id: record.resultId },
     },
-    activate: true,
-  })
+  }
 }

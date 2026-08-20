@@ -4,22 +4,19 @@ import {
   addResult,
   buildAccountPortfolioRecord,
   EXPERIENCE_PROTOCOL_VERSION,
-  createAccountOpenCommand,
+  createAccountArtifact,
   createAccountPortfolioViewModel,
   createFixtureAccountLookup,
   createFixturePaymentHost,
   createFixtureResultStore,
   createResultStore,
   createTransactionCollectionViewModel,
-  createInitialWorkspaceState,
   FIXTURE_ADDRESS_BOOK,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   formatMicroAlgos,
-  selectActiveArtifact,
   viewSpecSchema,
-  workspaceReducer,
 } from '../src/index.js'
 
 const RECORDED_WIRE = {
@@ -42,24 +39,19 @@ describe('account portfolio slice', () => {
     })
   })
 
-  test('the open command drives the workspace to a trusted portfolio view', () => {
+  test('the account artifact carries a trusted portfolio view', () => {
     const record = buildAccountPortfolioRecord(
       { resultId: 'result-account-002', toolCallId: 'tool-call-account-002', network: 'localnet' },
       RECORDED_WIRE,
     )
-    const command = createAccountOpenCommand(record)
-    expect(command).toMatchObject({
-      command: 'open',
-      artifactId: `artifact-account-${FIXTURE_SENDER}`,
+    const artifact = createAccountArtifact(record)
+    expect(artifact).toMatchObject({
+      title: `Account ${FIXTURE_SENDER.slice(0, 6)}…${FIXTURE_SENDER.slice(-4)}`,
       view: { view: 'account.portfolio', source: { source: 'result', id: 'result-account-002' } },
     })
-
-    const store = addResult(createFixtureResultStore(), record)
-    const workspace = workspaceReducer(createInitialWorkspaceState(), command)
-    const artifact = selectActiveArtifact(workspace)
-    if (!artifact) throw new Error('Expected account artifact')
     expect(viewSpecSchema.safeParse(artifact.view).success).toBeTrue()
 
+    const store = addResult(createFixtureResultStore(), record)
     const derived = createAccountPortfolioViewModel(store, artifact.view)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model).toEqual({

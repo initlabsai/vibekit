@@ -50,15 +50,7 @@ export {
 } from './results.js'
 export {
   approvalDecisionSchema,
-  approvalEventSchema,
   approvalRequestSchema,
-  experienceMessageSchema,
-  focusTargetSchema,
-  focusWorkspaceCommandSchema,
-  openWorkspaceCommandSchema,
-  patchWorkspaceCommandSchema,
-  pinWorkspaceCommandSchema,
-  replaceWorkspaceCommandSchema,
   accountListViewSpecSchema,
   accountPortfolioViewSpecSchema,
   accountSummaryViewSpecSchema,
@@ -78,7 +70,6 @@ export {
   transactionListViewSpecSchema,
   TRUSTED_VIEW_IDS,
   viewSpecSchema,
-  workspaceCommandSchema,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
   createWriteStageEvent,
@@ -90,11 +81,9 @@ export {
   writeStageEventSchema,
   type ApprovalDecision,
   type ApprovalRequest,
-  type ExperienceMessage,
-  type FocusTarget,
+  type ExplorerArtifact,
   type TrustedViewId,
   type ViewSpec,
-  type WorkspaceCommand,
   type WriteStageEvent,
 } from './protocol.js'
 export {
@@ -129,15 +118,6 @@ export {
   type PaymentSignedGroupData,
   type PaymentSimulationData,
 } from './payments.js'
-export {
-  createInitialWorkspaceState,
-  selectActiveArtifact,
-  workspaceArtifactSchema,
-  workspaceReducer,
-  workspaceStateSchema,
-  type WorkspaceArtifact,
-  type WorkspaceState,
-} from './workspace.js'
 export { transactionDetailDataSchema, type TransactionDetailData } from './transactions.js'
 export {
   accountAssetHoldingSchema,
@@ -147,7 +127,7 @@ export {
 export {
   accountPortfolioWireSchema,
   buildAccountPortfolioRecord,
-  createAccountOpenCommand,
+  createAccountArtifact,
   type AccountLookupHost,
 } from './live-account.js'
 export { createFixtureAccountLookup, FIXTURE_ADDRESS_BOOK } from './fixtures/account.js'
@@ -243,9 +223,7 @@ export {
 } from './view-models/account-portfolio.js'
 export {
   createFixtureResultStore,
-  createTransactionFixtureOpenCommand,
   createTransactionFixtureViewSpec,
-  FIXTURE_ARTIFACT_ID,
   FIXTURE_RECEIVER,
   FIXTURE_RESULT_ID,
   FIXTURE_SENDER,

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { resultReferenceSchema, structuredResultSchema, type ResultReference } from './results.js'
+import { resultReferenceSchema, type ResultReference } from './results.js'
 import { EXPERIENCE_PROTOCOL_VERSION, experienceProtocolVersionSchema } from './version.js'
 
 /** Trusted view identifiers proven by the current vertical slices. */
@@ -113,99 +113,11 @@ export const viewSpecSchema = z.discriminatedUnion('view', [
 /** A trusted presentation specification selected by the model or direct lane. */
 export type ViewSpec = z.infer<typeof viewSpecSchema>
 
-/** A target owned by the shared workspace while platform focus remains local. */
-export const focusTargetSchema = z.discriminatedUnion('area', [
-  z.object({ area: z.literal('navigation') }).strict(),
-  z
-    .object({
-      area: z.literal('workspace'),
-      artifactId: z.string().min(1).optional(),
-    })
-    .strict(),
-  z.object({ area: z.literal('composer') }).strict(),
-])
-
-/** A target owned by the shared workspace while platform focus remains local. */
-export type FocusTarget = z.infer<typeof focusTargetSchema>
-
-const workspaceCommandBase = {
-  protocolVersion: experienceProtocolVersionSchema,
-  type: z.literal('workspace.command'),
+/** A titled trusted view — what a head renders as its open artifact. */
+export interface ExplorerArtifact {
+  title: string
+  view: ViewSpec
 }
-
-/** Opens a new artifact tab or updates the artifact with the same id. */
-export const openWorkspaceCommandSchema = z
-  .object({
-    ...workspaceCommandBase,
-    command: z.literal('open'),
-    artifactId: z.string().min(1),
-    title: z.string().min(1),
-    view: viewSpecSchema,
-    activate: z.boolean(),
-  })
-  .strict()
-
-/** Replaces an artifact's trusted view while preserving its local identity. */
-export const replaceWorkspaceCommandSchema = z
-  .object({
-    ...workspaceCommandBase,
-    command: z.literal('replace'),
-    artifactId: z.string().min(1),
-    title: z.string().min(1).optional(),
-    view: viewSpecSchema,
-  })
-  .strict()
-
-const workspacePatchSchema = z
-  .object({
-    title: z.string().min(1).optional(),
-    source: resultReferenceSchema.optional(),
-  })
-  .strict()
-  .refine((patch) => patch.title !== undefined || patch.source !== undefined, {
-    message: 'A workspace patch must change title or source',
-  })
-
-/** Patches safe artifact metadata or its authoritative result reference. */
-export const patchWorkspaceCommandSchema = z
-  .object({
-    ...workspaceCommandBase,
-    command: z.literal('patch'),
-    artifactId: z.string().min(1),
-    patch: workspacePatchSchema,
-  })
-  .strict()
-
-/** Moves semantic focus without encoding renderer-specific focus mechanics. */
-export const focusWorkspaceCommandSchema = z
-  .object({
-    ...workspaceCommandBase,
-    command: z.literal('focus'),
-    target: focusTargetSchema,
-  })
-  .strict()
-
-/** Sets an artifact's pinned state explicitly and idempotently. */
-export const pinWorkspaceCommandSchema = z
-  .object({
-    ...workspaceCommandBase,
-    command: z.literal('pin'),
-    artifactId: z.string().min(1),
-    pinned: z.boolean(),
-  })
-  .strict()
-
-/** Versioned semantic mutations accepted by the shared workspace reducer. */
-export const workspaceCommandSchema = z.discriminatedUnion('command', [
-  openWorkspaceCommandSchema,
-  replaceWorkspaceCommandSchema,
-  patchWorkspaceCommandSchema,
-  focusWorkspaceCommandSchema,
-  pinWorkspaceCommandSchema,
-])
-
-/** Versioned semantic mutation accepted by the shared workspace reducer. */
-export type WorkspaceCommand = z.infer<typeof workspaceCommandSchema>
 
 const writeStageEventBase = {
   protocolVersion: experienceProtocolVersionSchema,
@@ -298,12 +210,6 @@ export const approvalDecisionSchema = z
   })
   .strict()
 
-/** Explicit approval request and decision states carried by the protocol. */
-export const approvalEventSchema = z.discriminatedUnion('type', [
-  approvalRequestSchema,
-  approvalDecisionSchema,
-])
-
 /** A pending human approval that references authoritative inspection data. */
 export type ApprovalRequest = z.infer<typeof approvalRequestSchema>
 
@@ -353,15 +259,3 @@ export function createApprovalDecisionEvent(input: {
     ...input,
   })
 }
-
-/** Any message in the first provisional browser-safe experience spine. */
-export const experienceMessageSchema = z.union([
-  structuredResultSchema,
-  viewSpecSchema,
-  workspaceCommandSchema,
-  writeStageEventSchema,
-  approvalEventSchema,
-])
-
-/** Any message in the first provisional browser-safe experience spine. */
-export type ExperienceMessage = z.infer<typeof experienceMessageSchema>

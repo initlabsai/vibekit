@@ -1,43 +1,33 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  createInitialWorkspaceState,
-  createTransactionFixtureOpenCommand,
+  FIXTURE_RESULT_ID,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
-  workspaceReducer,
 } from '@initlabs/vibekit-experience'
 
-import { createFocusCommand, routeComposerInput } from './commands.js'
+import { routeComposerInput } from './commands.js'
 
 describe('web semantic wiring', () => {
-  test('routes the fixture through the shared classifier and open command', () => {
+  test('routes the fixture through the shared classifier to a trusted artifact', () => {
     const outcome = routeComposerInput(FIXTURE_TRANSACTION_ID)
     expect(outcome.status).toBe('resolved')
-    expect(outcome.status === 'resolved' ? outcome.command : undefined).toEqual(
-      createTransactionFixtureOpenCommand(),
-    )
+    if (outcome.status !== 'resolved') throw new Error('Expected resolved fixture')
+    expect(outcome.artifact).toEqual({
+      title: 'Transaction detail',
+      view: {
+        protocolVersion: '0.1.0-provisional',
+        type: 'view',
+        view: 'transaction.detail',
+        source: { source: 'result', id: FIXTURE_RESULT_ID },
+      },
+    })
   })
 
   test('routes a pasted address to the account lane', () => {
     expect(routeComposerInput(FIXTURE_SENDER)).toEqual({
       status: 'account',
       address: FIXTURE_SENDER,
-    })
-  })
-
-  test('the reducer remains renderer-independent', () => {
-    const state = workspaceReducer(
-      createInitialWorkspaceState(),
-      createTransactionFixtureOpenCommand(),
-    )
-    const focused = workspaceReducer(
-      state,
-      createFocusCommand({ area: 'workspace', artifactId: 'artifact-fixture-transaction-001' }),
-    )
-    expect(focused.focus).toEqual({
-      area: 'workspace',
-      artifactId: 'artifact-fixture-transaction-001',
     })
   })
 })

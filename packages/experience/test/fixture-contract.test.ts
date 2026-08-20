@@ -1,20 +1,16 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  FIXTURE_ARTIFACT_ID,
   FIXTURE_RECEIVER,
   FIXTURE_RESULT_ID,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   createFixtureResultStore,
-  createInitialWorkspaceState,
   createTransactionDetailViewModel,
   lookupFixture,
-  selectActiveArtifact,
   transactionDetailDataSchema,
   transactionFixtureResult,
   viewSpecSchema,
-  workspaceReducer,
 } from '../src/index.js'
 
 function collectLeaves(value: unknown): unknown[] {
@@ -38,9 +34,8 @@ describe('fixture-backed transaction vertical slice', () => {
       view: 'transaction.detail',
       source: { source: 'result', id: FIXTURE_RESULT_ID },
     })
-    expect(lookup.command).toMatchObject({
-      command: 'open',
-      artifactId: FIXTURE_ARTIFACT_ID,
+    expect(lookup.artifact).toEqual({
+      title: 'Transaction detail',
       view: lookup.view,
     })
   })
@@ -60,14 +55,11 @@ describe('fixture-backed transaction vertical slice', () => {
     expect(lookup.view.source.id).toBe(transactionFixtureResult.resultId)
   })
 
-  test('derives the workspace and semantic view model from the structured result', () => {
+  test('derives the semantic view model from the structured result', () => {
     const lookup = lookupFixture(FIXTURE_TRANSACTION_ID)
     if (lookup.status !== 'resolved') throw new Error('Expected resolved fixture')
     const store = createFixtureResultStore()
-    const workspace = workspaceReducer(createInitialWorkspaceState(), lookup.command)
-    const artifact = selectActiveArtifact(workspace)
-    if (!artifact) throw new Error('Expected active fixture artifact')
-    const selected = createTransactionDetailViewModel(store, artifact.view)
+    const selected = createTransactionDetailViewModel(store, lookup.artifact.view)
 
     expect(selected).toMatchObject({
       ok: true,

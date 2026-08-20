@@ -47,9 +47,11 @@ updated: 2026-08-19.
 > decoded draft bytes, owning all input until enter/esc. Navigation
 > (accounts, later assets/apps/blocks) exists as typed commands —
 > secondary, not the organizing surface. The earlier workspace/tabs/canvas
-> chrome was tried in full and retired as too complex; the workspace
-> command protocol remains in `packages/experience` for the web head and
-> API (a feed group is `workspace.open` in TUI clothing). A top bar
+> chrome was tried in full and retired as too complex; its command
+> protocol and reducer were deleted (2026-08-20) once measurement showed
+> one head dispatching one command. A head renders one titled trusted
+> view (`ExplorerArtifact`); if the hosted API later needs a multi-artifact
+> model, it gets rebuilt from that consumer's real requirements. A top bar
 > carries a network
 > chip (localnet/testnet/mainnet — core ships the public endpoints;
 > `ctrl+n` or `network <name>` switches, hosts are per-network, records
@@ -331,8 +333,7 @@ on the domain read arrays, not on the write exports.
 `display` is deliberately too small to drive the new Explorer. It remains
 only on tools that have no trusted `view` (writes, plugins, generic JSON).
 A tool declares one or the other, not both. Tools own capabilities and
-structured data. They do not own layouts. The agent can issue workspace
-commands that compose one or more results.
+structured data. They do not own layouts.
 
 The first `0.1.0-provisional` implementation now lives in
 `@initlabs/vibekit-experience`. It validates structured result records and
@@ -629,8 +630,8 @@ deployment:
 - **`apps/web`** is the Next.js VibeKit Agent. It uses the hosted API,
   browser wallet adapters, web-native charts/media, and selected
   Beautiful UI parts.
-- **Shared experience packages** own input classification, workspace
-  commands, state transitions, view models, and semantic React
+- **Shared experience packages** own input classification, state
+  transitions, view models, and semantic React
   composition. TUI primitives (`<box>`, `<text>`, focus/key handling) and
   web primitives (HTML, CSS, responsive layout, wallet UX) stay in their apps.
   Extract renderer-specific packages only after a second consumer appears.
@@ -640,7 +641,7 @@ deployment:
 The shared brain is **`@initlabs/vibekit-agent`**: model providers, tool
 loop, streaming, and approval interception over the same
 `ToolDefinition[]` as every other host. The Explorer adds a typed
-presentation/workspace protocol on top.
+presentation protocol on top.
 
 | Head                  | Experience                                           | Model                  | Signing                                       |
 | --------------------- | ---------------------------------------------------- | ---------------------- | --------------------------------------------- |
@@ -657,9 +658,8 @@ composer docked at the bottom. `ctrl+w` opens the wallet picker;
 transactions using the existing list cards. `[`/`]` cycle the active
 account on those pages. The composer stays on the chat screen. Each request appends a feed group containing
 its narration and cards. Below roughly 96 columns the split collapses to one
-pane. The shared workspace protocol remains available to the web/API head,
-but the current TUI organizes the experience as an accretive feed rather than
-tabs or a canvas.
+pane. Both heads organize the experience without tabs or a canvas: the TUI
+as an accretive feed, the web head as one open `ExplorerArtifact` at a time.
 
 TUI cards use the Init Labs warm-black and antique brass palette
 (`#c4a06a`). They take the v1 Explorer's information hierarchy — kicker,
@@ -710,7 +710,7 @@ Scope guards:
 - BYO key/local models are the launch auth story. Provider OAuth is
   opportunistic.
 - x402 is an experiment, not a launch dependency.
-- The protocol carries agent, result, workspace, presentation, and
+- The protocol carries agent, result, presentation, and
   approval events. No critical flow can exist only inside one head's
   components.
 
@@ -732,7 +732,7 @@ Ambient lookup of "current X" is banned.
 | Current network (CLI/TUI)       | The local client process       | In-memory + human-readable config file. No db.                                        |
 | Current network (web)           | The browser                    | URL param / localStorage. API stateless per request.                                  |
 | Active wallet / sender          | Same per host                  | Tools take explicit `sender`. "Active account" is host-side sugar filling the param.  |
-| Explorer tabs, focus, artifacts | The TUI process or browser tab | Shared workspace reducer. Optional client-local persistence. Never API ambient state. |
+| Explorer open artifact          | The TUI process or browser tab | Plain client-local state over a titled trusted view. Never API ambient state.         |
 | Key material & metadata         | keystore-node daemon           | OS keychain + sealed file. Not our state.                                             |
 | Agent/skill/MCP config          | CLI config files               | Plain files, versionable                                                              |
 
@@ -1069,11 +1069,11 @@ Implementation facts learned:
   `packages/sdk` in this monorepo. The API is a thin Hono wrapper over the
   proven orchestrator (BYOM + per-request tool selection). Build the new SDK with
   registry-derived types. Establish the minimal browser-safe agent, result,
-  workspace, presentation, and approval event spine in
+  presentation, and approval event spine in
   `packages/experience`, driven by the first fixture-backed slice. Keep
-  workspace and presentation details provisional until both renderers prove
+  presentation details provisional until both renderers prove
   them. Deprecate `@getvibekit/sdk`. **Experience checkpoint 2026-08-19:** the
-  fixture-backed result/workspace/presentation/approval subset, the
+  fixture-backed result/presentation/approval subset, the
   write flow (draft → simulate → inspect → approval → sign → confirm as
   protocol events over a pure reducer), both renderers, the live
   compose/simulate wiring (real localnet groups through `executeToolCall`, an

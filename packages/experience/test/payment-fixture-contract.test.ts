@@ -7,7 +7,6 @@ import {
   createPaymentFixtureResultStore,
   createPaymentFlowViewModel,
   createResultStore,
-  experienceMessageSchema,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
@@ -23,6 +22,7 @@ import {
   paymentFixtureResults,
   paymentSimulationDataSchema,
   writeFlowEventKinds,
+  writeFlowEventSchema,
   writeFlowReducer,
   type StructuredResult,
   type WriteFlowEventKind,
@@ -57,7 +57,7 @@ describe('fixture-backed payment write flow', () => {
   test('fixture events validate as versioned protocol messages', () => {
     for (const kind of writeFlowEventKinds) {
       const event = createPaymentFixtureEvent(kind)
-      expect(experienceMessageSchema.parse(event).protocolVersion).toBe('0.1.0-provisional')
+      expect(writeFlowEventSchema.parse(event).protocolVersion).toBe('0.1.0-provisional')
     }
   })
 

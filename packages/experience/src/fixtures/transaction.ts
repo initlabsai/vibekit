@@ -1,9 +1,8 @@
 import { classifyExplorerInput, type ClassifiedExplorerInput } from '../classifier.js'
 import {
-  openWorkspaceCommandSchema,
   transactionDetailViewSpecSchema,
+  type ExplorerArtifact,
   type ViewSpec,
-  type WorkspaceCommand,
 } from '../protocol.js'
 import { createResultStore, type ResultStore, type StructuredResult } from '../results.js'
 import { transactionDetailDataSchema } from '../transactions.js'
@@ -23,9 +22,6 @@ export const FIXTURE_RESULT_ID = 'result-fixture-transaction-001'
 
 /** Opaque tool-call id used to exercise alternate result addressing. */
 export const FIXTURE_TOOL_CALL_ID = 'tool-call-fixture-transaction-001'
-
-/** Opaque workspace artifact id for the fixture transaction. */
-export const FIXTURE_ARTIFACT_ID = 'artifact-fixture-transaction-001'
 
 const fixtureData = transactionDetailDataSchema.parse({
   id: FIXTURE_TRANSACTION_ID,
@@ -67,19 +63,6 @@ export function createTransactionFixtureViewSpec(): ViewSpec {
   })
 }
 
-/** Creates the semantic workspace command used by either renderer to open the fixture. */
-export function createTransactionFixtureOpenCommand(): WorkspaceCommand {
-  return openWorkspaceCommandSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'workspace.command',
-    command: 'open',
-    artifactId: FIXTURE_ARTIFACT_ID,
-    title: 'Transaction detail',
-    view: createTransactionFixtureViewSpec(),
-    activate: true,
-  })
-}
-
 type TransactionClassification = Extract<
   ClassifiedExplorerInput,
   { kind: 'entity'; entity: 'transaction' }
@@ -92,7 +75,7 @@ export type FixtureLookupOutcome =
       classification: TransactionClassification
       result: StructuredResult
       view: ViewSpec
-      command: WorkspaceCommand
+      artifact: ExplorerArtifact
     }
   | {
       status: 'ambiguous'
@@ -111,12 +94,13 @@ export function lookupFixture(raw: string): FixtureLookupOutcome {
     classification.entity === 'transaction' &&
     classification.value === FIXTURE_TRANSACTION_ID
   ) {
+    const view = createTransactionFixtureViewSpec()
     return {
       status: 'resolved',
       classification,
       result: transactionFixtureResult,
-      view: createTransactionFixtureViewSpec(),
-      command: createTransactionFixtureOpenCommand(),
+      view,
+      artifact: { title: 'Transaction detail', view },
     }
   }
   if (classification.kind === 'ambiguous-entity') {

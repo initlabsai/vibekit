@@ -1,10 +1,7 @@
 import {
-  EXPERIENCE_PROTOCOL_VERSION,
-  focusWorkspaceCommandSchema,
   lookupFixture,
   parsePaymentComposerCommand,
   type FixtureLookupOutcome,
-  type WorkspaceCommand,
 } from '@initlabs/vibekit-experience'
 
 /** Composer routing outcome: a lookup, a payment, or an account to open. */
@@ -25,15 +22,4 @@ export function routeComposerInput(input: string): ComposerRoute {
     return { status: 'account', address: outcome.classification.value }
   }
   return outcome
-}
-
-export function createFocusCommand(
-  target: 'navigation' | 'composer' | { area: 'workspace'; artifactId?: string },
-): WorkspaceCommand {
-  return focusWorkspaceCommandSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'workspace.command',
-    command: 'focus',
-    target: typeof target === 'string' ? { area: target } : target,
-  })
 }
