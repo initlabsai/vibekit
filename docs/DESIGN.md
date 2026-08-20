@@ -174,6 +174,37 @@ may use ZeroSignal's browser-native path (passkey wallet, no daemon) so
 visitors bring their own metered inference — depends on whether an
 embeddable browser client exists beyond their chat app.
 
+**Explorer parity workstreams (2026-08-20, owner-approved; Lora is the
+reference bar — meet or exceed, TUI first, every feature lands
+renderer-independent in `packages/experience` before its first
+renderer).** (L1) Transaction group flow graph: a pure graph model
+mirroring Lora's proven shape — entity columns (account / application /
+asset / op-up, with app-escrow merging, rekey/clawback associated
+accounts, and account-number badges), depth-first transaction rows with
+inner-transaction nesting and close-out "remainder" sub-rows, and three
+edge representations (vector / self-loop / point) with typed labels —
+validated against wires recorded from Lora's real-transaction snapshot
+corpus; then a TUI swimlane card for `transaction.group`. (L2) My Apps:
+scan the launch directory for app specs (ARC-56, ARC-32, ARC-4 —
+normalized to ARC-56), a screen with deployed vs local-spec sections,
+NFD names accepted as direct-lane input. (L3) `toolsFromArc56(spec)` —
+the xArc seed, contracts domain — runtime ToolDefinition[] with typed
+arg forms, signerless simulate in compose mode, tools joining the
+agent's set; ABI decoding (method names on graph edges, args/returns on
+cards) wherever a My Apps spec is known. (L4) Write-flow
+generalization: interception by shape (any requiresSigner tool emitting
+UnsignedGroupResult) instead of by tool name, group-shaped flow
+records, and the L1 graph rendered inside the approval modal —
+sign-what-you-see. (L5) TUX shakedown: scripted tmux journeys over the
+real TUI, findings triaged and fixed. (L6) Live data: an algod
+wait-for-block tail feed (latest blocks/transactions, live entity
+activity), post-shakedown. Skipped deliberately: the transaction wizard
+(the agent plus compose tools is our answer), browser wallet-connect
+(keystore is the TUI signing story), media/PNG rendering (web-head
+material). Backlog: TEAL viewer, box browsing polish, asset
+metadata/traits, ASCII QR, custom-network CRUD, ARC-89, NFD reverse
+display beside addresses.
+
 Before the 1.0 publish gate: add the root license file and settle copyright
 metadata; package manifests currently declare Apache-2.0. Decide whether the
 keystore canary is acceptable for release. Add an install channel and

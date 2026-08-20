@@ -147,4 +147,24 @@ export {
 } from './views/asset.js'
 export { createBlockListViewModel } from './views/block.js'
 export { createTransactionCollectionViewModel } from './views/transaction.js'
+export {
+  buildTransactionsGraph,
+  graphHorizontalSchema,
+  graphLabelSchema,
+  graphLabelTypeSchema,
+  graphMarkerTagSchema,
+  graphRepresentationSchema,
+  graphVerticalSchema,
+  transactionsGraphSchema,
+  type BuildTransactionsGraphOptions,
+  type GraphAssociatedAccount,
+  type GraphHorizontal,
+  type GraphLabel,
+  type GraphLabelType,
+  type GraphMarkerTag,
+  type GraphRepresentation,
+  type GraphTransaction,
+  type GraphVertical,
+  type TransactionsGraph,
+} from './views/transaction-graph.js'
 export { EXPERIENCE_PROTOCOL_VERSION } from './core/version.js'
