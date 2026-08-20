@@ -2,18 +2,6 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from './algo.js'
 import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from './classifier.js'
-import { relatedEntityKindSchema } from './actions.js'
-import { resultPathSchema } from './results.js'
-
-/** Metadata describing related entity values already present in a result. */
-export const relatedEntityDescriptorSchema = z
-  .object({
-    relation: z.string().min(1),
-    label: z.string().min(1),
-    entity: relatedEntityKindSchema,
-    path: resultPathSchema.min(1),
-  })
-  .strict()
 
 /** Authoritative transaction data required by the first trusted detail view. */
 export const transactionDetailDataSchema = z
@@ -42,7 +30,6 @@ export const transactionDetailDataSchema = z
     closeAmountMicroAlgos: uint64JsonSchema.optional(),
     closeAssetAmount: uint64JsonSchema.optional(),
     clawbackFrom: algorandAddressCandidateSchema.optional(),
-    relatedEntities: z.array(relatedEntityDescriptorSchema),
   })
   .strict()
 

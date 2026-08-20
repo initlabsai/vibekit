@@ -36,26 +36,6 @@ const fixtureData = transactionDetailDataSchema.parse({
   paymentAmountMicroAlgos: 100000,
   feeMicroAlgos: 1000,
   confirmedRound: 8,
-  relatedEntities: [
-    {
-      relation: 'sender',
-      label: 'Sender',
-      entity: 'account',
-      path: ['sender'],
-    },
-    {
-      relation: 'receiver',
-      label: 'Receiver',
-      entity: 'account',
-      path: ['receiver'],
-    },
-    {
-      relation: 'confirmed-round',
-      label: 'Confirmed round',
-      entity: 'block',
-      path: ['confirmedRound'],
-    },
-  ],
 })
 
 /** A realistic, deeply immutable, JSON-safe structured transaction result. */

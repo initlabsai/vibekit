@@ -10,7 +10,6 @@ import {
   createInitialWorkspaceState,
   createTransactionDetailViewModel,
   lookupFixture,
-  resolveRelatedEntityAction,
   selectActiveArtifact,
   transactionDetailDataSchema,
   transactionFixtureResult,
@@ -86,21 +85,6 @@ describe('fixture-backed transaction vertical slice', () => {
     })
     if (!selected.ok) throw new Error('Expected transaction view model')
     expect(JSON.parse(JSON.stringify(selected.model))).toEqual(selected.model)
-
-    const targets = selected.model.relatedActions.map((action) =>
-      resolveRelatedEntityAction(store, action),
-    )
-    expect(targets).toEqual([
-      expect.objectContaining({ ok: true, value: FIXTURE_SENDER }),
-      expect.objectContaining({ ok: true, value: FIXTURE_RECEIVER }),
-      expect.objectContaining({ ok: true, value: 8 }),
-    ])
-    for (const action of selected.model.relatedActions) {
-      const leaves = collectLeaves(action)
-      expect(leaves).not.toContain(FIXTURE_SENDER)
-      expect(leaves).not.toContain(FIXTURE_RECEIVER)
-      expect(leaves).not.toContain(8)
-    }
   })
 
   test('reports unknown, malformed, and ambiguous direct inputs without model fallback', () => {

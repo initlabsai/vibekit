@@ -42,8 +42,6 @@ export interface BridgedToolResult {
 
 const VIEW_BY_DISPLAY: Record<string, TrustedViewId> = {
   txn: 'transaction.detail',
-  account: 'account.portfolio',
-  asset: 'asset.detail',
 }
 
 const VIEW_BY_TOOL: Record<string, TrustedViewId> = {

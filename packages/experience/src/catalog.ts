@@ -193,7 +193,6 @@ export const blockListDataSchema = z
   })
   .strict()
 
-export type TransactionRow = z.infer<typeof transactionRowSchema>
 export type TransactionCollectionData = z.infer<typeof transactionCollectionDataSchema>
 export type AccountSummaryData = z.infer<typeof accountSummaryDataSchema>
 export type AccountListData = z.infer<typeof accountListDataSchema>

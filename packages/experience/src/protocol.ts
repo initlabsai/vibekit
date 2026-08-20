@@ -27,9 +27,6 @@ export const TRUSTED_VIEW_IDS = [
 /** Trusted view identifiers proven by the current vertical slices. */
 export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]
 
-/** The trusted view registry accepted by the current provisional protocol. */
-export const trustedViewIdSchema = z.enum(TRUSTED_VIEW_IDS)
-
 function viewSpecFor<Id extends TrustedViewId>(view: Id) {
   return z
     .object({

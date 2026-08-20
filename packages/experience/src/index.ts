@@ -77,7 +77,6 @@ export {
   transactionGroupViewSpecSchema,
   transactionListViewSpecSchema,
   TRUSTED_VIEW_IDS,
-  trustedViewIdSchema,
   viewSpecSchema,
   workspaceCommandSchema,
   createApprovalDecisionEvent,
@@ -139,17 +138,7 @@ export {
   type WorkspaceArtifact,
   type WorkspaceState,
 } from './workspace.js'
-export {
-  relatedEntityActionSchema,
-  relatedEntityKindSchema,
-  resolveRelatedEntityAction,
-  type RelatedEntityAction,
-} from './actions.js'
-export {
-  relatedEntityDescriptorSchema,
-  transactionDetailDataSchema,
-  type TransactionDetailData,
-} from './transactions.js'
+export { transactionDetailDataSchema, type TransactionDetailData } from './transactions.js'
 export {
   accountAssetHoldingSchema,
   accountPortfolioDataSchema,
@@ -164,7 +153,6 @@ export {
 export { createFixtureAccountLookup, FIXTURE_ADDRESS_BOOK } from './fixtures/account.js'
 export {
   buildTransactionDetailRecord,
-  createTransactionOpenCommand,
   transactionWireSchema,
   type TransactionLookupHost,
 } from './live-transaction.js'

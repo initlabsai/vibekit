@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from './algo.js'
 import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from './classifier.js'
-import { openWorkspaceCommandSchema, type WorkspaceCommand } from './protocol.js'
 import { structuredResultSchema, type StructuredResult } from './results.js'
 import { transactionDetailDataSchema } from './transactions.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from './version.js'
@@ -83,29 +82,6 @@ export function buildTransactionDetailRecord(
           ? { closeAmountMicroAlgos: Math.round(txn.closeAmount * 1_000_000) }
           : { closeAssetAmount: txn.closeAmount }),
       ...(txn.clawbackFrom === undefined ? {} : { clawbackFrom: txn.clawbackFrom }),
-      relatedEntities: [
-        { relation: 'sender', label: 'Sender', entity: 'account', path: ['sender'] },
-        ...(txn.receiver === undefined
-          ? []
-          : [
-              {
-                relation: 'receiver',
-                label: 'Receiver',
-                entity: 'account',
-                path: ['receiver'],
-              } as const,
-            ]),
-        ...(txn.confirmedRound === undefined
-          ? []
-          : [
-              {
-                relation: 'confirmed-round',
-                label: 'Confirmed round',
-                entity: 'block',
-                path: ['confirmedRound'],
-              } as const,
-            ]),
-      ],
     }),
   })
 }
@@ -115,26 +91,4 @@ export interface TransactionLookupHost {
   lookupTransaction(txid: string): Promise<StructuredResult>
   /** Looks every transaction in an atomic group up as one transaction.group record. */
   lookupTransactionGroup(groupId: string): Promise<StructuredResult>
-}
-
-/** Builds the workspace command that opens a transaction record as a tab. */
-export function createTransactionOpenCommand(record: StructuredResult): WorkspaceCommand {
-  if (record.state !== 'success') {
-    throw new Error('Cannot open a failed transaction record')
-  }
-  const data = transactionDetailDataSchema.parse(record.data)
-  return openWorkspaceCommandSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'workspace.command',
-    command: 'open',
-    artifactId: `artifact-transaction-${data.id}`,
-    title: `Transaction ${data.id.slice(0, 6)}…${data.id.slice(-4)}`,
-    view: {
-      protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-      type: 'view',
-      view: 'transaction.detail',
-      source: { source: 'result', id: record.resultId },
-    },
-    activate: true,
-  })
 }

@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../algo.js'
-import { relatedEntityActionSchema, type RelatedEntityAction } from '../actions.js'
 import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../classifier.js'
 import type { ViewSpec } from '../protocol.js'
 import { resolveResultReference, type ResultResolutionError, type ResultStore } from '../results.js'
@@ -36,7 +35,6 @@ export const transactionDetailViewModelSchema = z
     closeAmountMicroAlgos: uint64JsonSchema.optional(),
     closeAssetAmount: uint64JsonSchema.optional(),
     clawbackFrom: algorandAddressCandidateSchema.optional(),
-    relatedActions: z.array(relatedEntityActionSchema),
   })
   .strict()
 
@@ -50,25 +48,7 @@ export type ViewModelError = ResultResolutionError | { code: 'INVALID_VIEW_DATA'
 export type TransactionDetailViewModelResult =
   { ok: true; model: TransactionDetailViewModel } | { ok: false; error: ViewModelError }
 
-function relatedActionsFor(
-  view: ViewSpec,
-  descriptors: z.infer<typeof transactionDetailDataSchema>['relatedEntities'],
-): RelatedEntityAction[] {
-  const basePath = view.source.path ?? []
-  return descriptors.map((descriptor) => ({
-    id: `related:${descriptor.relation}`,
-    label: descriptor.label,
-    action: 'open-related',
-    entity: descriptor.entity,
-    target: {
-      source: view.source.source,
-      id: view.source.id,
-      path: [...basePath, ...descriptor.path],
-    },
-  }))
-}
-
-/** Derives transaction presentation and related actions from one trusted result reference. */
+/** Derives transaction presentation from one trusted result reference. */
 export function createTransactionDetailViewModel(
   store: ResultStore,
   view: ViewSpec,
@@ -122,7 +102,6 @@ export function createTransactionDetailViewModel(
       : { closeAmountMicroAlgos: data.closeAmountMicroAlgos }),
     ...(data.closeAssetAmount === undefined ? {} : { closeAssetAmount: data.closeAssetAmount }),
     ...(data.clawbackFrom === undefined ? {} : { clawbackFrom: data.clawbackFrom }),
-    relatedActions: relatedActionsFor(view, data.relatedEntities),
   })
   return { ok: true, model }
 }
