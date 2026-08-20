@@ -16,6 +16,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@clack/prompts": "^0.8.2",
+        "@initlabs/vibekit-agent": "workspace:*",
         "@initlabs/vibekit-core": "workspace:*",
         "@initlabs/vibekit-mcp": "workspace:*",
         "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",

@@ -164,7 +164,15 @@ is OpenAI-compatible at `localhost:8080/v1`, wallet-admission, USDC on
 Algorand) with `/v1/models` discovery and a helpful daemon-down error
 (done — provider sugar plus probeZeroSignal/listZeroSignalModels
 helpers; the TUI preflights the daemon and lists the live catalog when
-no model is configured).
+no model is configured). Follow-up (done): `vibekit explore setup` — a
+CLI wizard scoped under the Explorer's namespace (the toolkit lanes
+never ask about models) that probes daemons, picks from live catalogs,
+and persists provider/model to `~/.config/vibekit/config.json`; the
+agent package serves it through a model-SDK-free `./config` subpath.
+Phase 7 note (owner direction, to investigate): the hosted web Explorer
+may use ZeroSignal's browser-native path (passkey wallet, no daemon) so
+visitors bring their own metered inference — depends on whether an
+embeddable browser client exists beyond their chat app.
 
 Before the 1.0 publish gate: add the root license file and settle copyright
 metadata; package manifests currently declare Apache-2.0. Decide whether the
@@ -422,9 +430,11 @@ landing, live indexer portfolios as the detail). A typed `pay` uses the
 active keystore account as sender. Bare numeric ids query asset,
 application, and block candidates concurrently and present every typed
 match. The TUI's natural-language lane runs `@initlabs/vibekit-agent`
-in-process (BYOM via `VIBEKIT_AGENT_MODEL`/`VIBEKIT_AGENT_PROVIDER` —
+in-process (BYOM: `vibekit explore setup` persists provider/model to
+`~/.config/vibekit/config.json`, `VIBEKIT_AGENT_*` env vars override —
 anthropic, openai, ollama, zerosignal, or any OpenAI-compatible
-endpoint) over a compose-only, signerless
+endpoint; API keys stay in env, never on disk) over a compose-only,
+signerless
 deployment. The model never emits UI or workspace commands in this slice:
 known tool results map deterministically onto trusted views renderer-side,
 unknown tools keep raw records, and an agent-composed `send_payment` group

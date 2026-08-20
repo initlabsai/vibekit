@@ -56,6 +56,11 @@ function bunCommand(): string {
 
 /** Spawns the Explorer TUI and waits until it exits. */
 export async function commandExplore(args: string[]): Promise<void> {
+  if (args[0] === 'setup') {
+    const { commandExploreSetup } = await import('./explore-setup.js')
+    await commandExploreSetup(args.slice(1))
+    return
+  }
   const entry = resolveExploreEntry()
   if (!entry) {
     console.error(`Could not find the Explorer TUI.

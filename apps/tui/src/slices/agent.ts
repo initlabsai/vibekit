@@ -91,7 +91,7 @@ export function useAgentLane({
         }
         appendNote(
           sectionId,
-          'No agent configured — set VIBEKIT_AGENT_MODEL (e.g. qwen3:32b) and restart to chat.',
+          'No agent configured — run `vibekit explore setup` (or set VIBEKIT_AGENT_MODEL) and restart to chat.',
           'error',
         )
         return

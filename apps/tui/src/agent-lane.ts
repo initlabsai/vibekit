@@ -20,24 +20,19 @@ import {
   transactionWriteTools,
 } from "@initlabs/vibekit-tools";
 import type { AnyTool } from "@initlabs/vibekit-core";
-import type { ProviderConfig } from "@initlabs/vibekit-agent";
+import {
+  resolveAgentConfig,
+  type ProviderConfig,
+} from "@initlabs/vibekit-agent";
 
-/** Reads the BYOM config from the environment; undefined disables the lane. */
+/**
+ * BYOM config: env vars first, then the file `vibekit explore setup`
+ * wrote; undefined disables the lane.
+ */
 export function loadAgentConfig(
   env: Record<string, string | undefined>,
 ): ProviderConfig | undefined {
-  const model = env.VIBEKIT_AGENT_MODEL;
-  if (!model) return undefined;
-  const provider = (env.VIBEKIT_AGENT_PROVIDER ??
-    "ollama") as ProviderConfig["provider"];
-  return {
-    provider,
-    model,
-    ...(env.VIBEKIT_AGENT_BASE_URL
-      ? { baseUrl: env.VIBEKIT_AGENT_BASE_URL }
-      : {}),
-    ...(env.VIBEKIT_AGENT_API_KEY ? { apiKey: env.VIBEKIT_AGENT_API_KEY } : {}),
-  };
+  return resolveAgentConfig(env);
 }
 
 function explorerTools(): AnyTool[] {

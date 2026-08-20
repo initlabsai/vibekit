@@ -16,6 +16,7 @@ ${pc.bold('Usage:')}
   vibekit new [dir]           Scaffold a project from a starter template
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
   vibekit explore             Open the full-screen Explorer TUI
+  vibekit explore setup       Configure the Explorer's agent model (provider, model)
   vibekit agent               Open the VibeKit Agent (web) — explore Algorand by conversation
   vibekit doctor              Diagnose setup problems (--fix repairs them)
   vibekit tool <name> [json]  Call any VibeKit tool from the shell (tool list to browse)

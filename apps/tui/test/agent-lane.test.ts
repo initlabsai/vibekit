@@ -113,13 +113,16 @@ describe('TUI agent lane', () => {
   })
 
   test('loads provider config from the environment', () => {
-    expect(loadAgentConfig({})).toBeUndefined()
-    expect(loadAgentConfig({ VIBEKIT_AGENT_MODEL: 'qwen3:32b' })).toEqual({
+    // XDG points at an empty dir so a real ~/.config/vibekit file cannot leak in.
+    const isolated = { XDG_CONFIG_HOME: '/nonexistent-vibekit-test' }
+    expect(loadAgentConfig(isolated)).toBeUndefined()
+    expect(loadAgentConfig({ ...isolated, VIBEKIT_AGENT_MODEL: 'qwen3:32b' })).toEqual({
       provider: 'ollama',
       model: 'qwen3:32b',
     })
     expect(
       loadAgentConfig({
+        ...isolated,
         VIBEKIT_AGENT_MODEL: 'gpt-5',
         VIBEKIT_AGENT_PROVIDER: 'openai-compatible',
         VIBEKIT_AGENT_BASE_URL: 'http://box:8000/v1',
