@@ -138,6 +138,23 @@ Development has confirmation on Linux with Bun, Node/npm, Docker Compose
 v2, and a Secret Service keychain. macOS, Windows, their
 keychains/sockets, and compiled-binary CI remain without confirmation.
 
+**Consolidation workstreams (2026-08-20, owner-approved, in execution
+order).** (1) A packed out-of-workspace consumer check (`verify:packed`)
+runs from now on, not just at the 1.0 gate. (2) View-id honesty: one view
+id = one wire shape — `application.locals` splits from a unified
+`application.state` (with a `scope: 'global' | 'local'` discriminator),
+`asset.holdings` splits from `asset.list`, and `get_network` demotes to
+the coarse `table` hint. (3) One schema family: monetary wire fields
+align to integer `*MicroAlgos` (the freeze-review follow-up), tools gains
+a dependency-clean `./views` subpath, and `packages/experience` parses
+wires with `viewDataSchemas` instead of maintaining shadow wire schemas.
+(4) Experience reorganizes into vertical slices (one module per view;
+flows together). (5) The TUI app reorganizes into vertical slices.
+(6) `packages/agent` adds a first-class `zerosignal` provider (ZeroSignal
+is OpenAI-compatible at `localhost:8080/v1`, wallet-admission, USDC on
+Algorand) with `/v1/models` discovery in the wizard and a helpful
+daemon-down error.
+
 Before the 1.0 publish gate: add the root license file and settle copyright
 metadata; package manifests currently declare Apache-2.0. Decide whether the
 keystore canary is acceptable for release. Add an install channel and
