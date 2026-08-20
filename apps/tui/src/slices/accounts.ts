@@ -85,7 +85,7 @@ export function useAccounts({
   }, [keystoreHost, setFocus, signerReady])
 
   const loadShelf = useCallback(
-    (target: Exclude<WorkspaceScreen, 'chat' | 'wallet'>, address: string | undefined) => {
+    (target: 'assets' | 'txns', address: string | undefined) => {
       if (!address) {
         setShelfView(undefined)
         setShelfError(undefined)
@@ -98,15 +98,8 @@ export function useAccounts({
       const run =
         target === 'assets'
           ? () => host().lookupAccountAssets(address)
-          : target === 'apps'
-            ? () => host().lookupAccountAppStates(address)
-            : () => host().lookupAccountTransactions(address)
-      const viewId =
-        target === 'assets'
-          ? ('asset.holdings' as const)
-          : target === 'apps'
-            ? ('application.locals' as const)
-            : ('transaction.list' as const)
+          : () => host().lookupAccountTransactions(address)
+      const viewId = target === 'assets' ? ('asset.holdings' as const) : ('transaction.list' as const)
       void run()
         .then((record) => {
           const nextStore = addResult(storeRef.current, record)
@@ -141,8 +134,9 @@ export function useAccounts({
     [accountList, activeSender],
   )
 
+  // 'apps' is not shelf-shaped — its screen owns its own data (slices/apps.ts).
   useEffect(() => {
-    if (screen === 'assets' || screen === 'apps' || screen === 'txns') {
+    if (screen === 'assets' || screen === 'txns') {
       loadShelf(screen, activeSender)
     }
   }, [activeSender, loadShelf, screen])

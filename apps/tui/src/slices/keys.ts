@@ -25,6 +25,9 @@ export function useExplorerKeys({
   toggleFlowView,
   closeSelectedSection,
   isNarrow,
+  appsDetailOpen,
+  closeAppsDetail,
+  activateAppsEntry,
 }: {
   feed: Feed
   modalOpen: boolean
@@ -40,6 +43,9 @@ export function useExplorerKeys({
   toggleFlowView: () => void
   closeSelectedSection: () => void
   isNarrow: boolean
+  appsDetailOpen: boolean
+  closeAppsDetail: () => void
+  activateAppsEntry: (index: number) => void
 }) {
   const {
     focus,
@@ -82,8 +88,18 @@ export function useExplorerKeys({
         }
         if (screen !== 'chat') {
           if (key.name === 'escape') {
+            // The apps detail pane is a layer inside the screen: esc peels it first.
+            if (screen === 'apps' && appsDetailOpen) {
+              closeAppsDetail()
+              return
+            }
             setScreen('chat')
             setFocus('composer')
+            return
+          }
+          if (screen === 'apps') {
+            const index = Number.parseInt(key.name, 10)
+            if (Number.isInteger(index)) activateAppsEntry(index)
             return
           }
           if (key.name === '[' || key.name === 'left') {
@@ -184,6 +200,9 @@ export function useExplorerKeys({
       },
       [
         accountList,
+        activateAppsEntry,
+        appsDetailOpen,
+        closeAppsDetail,
         closeSelectedSection,
         contentScrollRef,
         cycleAccount,

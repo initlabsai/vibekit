@@ -30,8 +30,18 @@ export {
   readLocalState,
   parseAppSpec,
   substituteTemplateParams,
+  detectAppSpecFormat,
+  normalizeAppSpec,
+  tryNormalizeAppSpec,
 } from './contracts/index.js'
-export type { FormattedApplication, StateValue } from './contracts/index.js'
+export type {
+  FormattedApplication,
+  StateValue,
+  AppSpecFormat,
+  NormalizedAppSpec,
+  ParsedAppSpec,
+  ParsedMethod,
+} from './contracts/index.js'
 
 export { networkTools, lookupBlock, getNetworkStatus, searchBlockHeaders } from './network/index.js'
 

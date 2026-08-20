@@ -5,8 +5,10 @@ import { join } from 'node:path'
 
 import {
   loadStoredAgentConfig,
+  loadStoredApps,
   resolveAgentConfig,
   saveStoredAgentConfig,
+  saveStoredApps,
   vibekitConfigPath,
 } from '../src/config.js'
 
@@ -37,6 +39,22 @@ describe('persisted agent config', () => {
   test('absent or malformed file reads as undefined', () => {
     const env = freshEnv()
     expect(loadStoredAgentConfig(env)).toBeUndefined()
+  })
+
+  test('apps section round-trips keyed by network and coexists with agent', () => {
+    const env = freshEnv()
+    saveStoredAgentConfig({ provider: 'ollama', model: 'qwen3:8b' }, env)
+    saveStoredApps({ testnet: [{ name: 'Counter', appId: 1042 }], localnet: [] }, env)
+    expect(loadStoredApps(env)).toEqual({ testnet: [{ name: 'Counter', appId: 1042 }], localnet: [] })
+    expect(loadStoredAgentConfig(env)).toEqual({ provider: 'ollama', model: 'qwen3:8b' })
+    expect(statSync(vibekitConfigPath(env)).mode & 0o777).toBe(0o600)
+  })
+
+  test('absent or malformed apps section reads as empty', async () => {
+    const env = freshEnv()
+    expect(loadStoredApps(env)).toEqual({})
+    await Bun.write(vibekitConfigPath(env), JSON.stringify({ apps: { testnet: 'nope' } }))
+    expect(loadStoredApps(env)).toEqual({})
   })
 
   test('env vars override the stored file', () => {

@@ -1,0 +1,27 @@
+{
+  "name": "Greeter",
+  "desc": "A bare ARC-4 contract sample used by app-spec tests.",
+  "methods": [
+    {
+      "name": "hello",
+      "desc": "Say hello.",
+      "args": [
+        {
+          "type": "string",
+          "name": "name"
+        }
+      ],
+      "returns": {
+        "type": "string"
+      }
+    },
+    {
+      "name": "ping",
+      "args": [],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "networks": {}
+}

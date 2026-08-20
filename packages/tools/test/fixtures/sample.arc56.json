@@ -1,0 +1,75 @@
+{
+  "arcs": [
+    22,
+    28
+  ],
+  "name": "Counter",
+  "desc": "A tiny ARC-56 sample used by app-spec tests.",
+  "structs": {},
+  "methods": [
+    {
+      "name": "increment",
+      "desc": "Add an amount to the stored counter.",
+      "args": [
+        {
+          "name": "amount",
+          "type": "uint64",
+          "desc": "How much to add"
+        }
+      ],
+      "returns": {
+        "type": "uint64",
+        "desc": "The new counter value"
+      }
+    },
+    {
+      "name": "greet",
+      "args": [
+        {
+          "name": "who",
+          "type": "string"
+        }
+      ],
+      "returns": {
+        "type": "string"
+      }
+    }
+  ],
+  "state": {
+    "schema": {
+      "global": {
+        "ints": 1,
+        "bytes": 1
+      },
+      "local": {
+        "ints": 0,
+        "bytes": 0
+      }
+    },
+    "keys": {
+      "global": {},
+      "local": {},
+      "box": {}
+    },
+    "maps": {
+      "global": {},
+      "local": {},
+      "box": {}
+    }
+  },
+  "bareActions": {
+    "create": [
+      "NoOp"
+    ],
+    "call": []
+  },
+  "source": {
+    "approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludCBUTVBMX0xJTUlUCg==",
+    "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCmludCAxCg=="
+  },
+  "templateVariables": {
+    "LIMIT": {
+      "type": "uint64"
+    }
+  }
+}

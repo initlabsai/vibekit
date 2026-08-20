@@ -58,4 +58,22 @@ describe('deterministic Explorer input classification', () => {
       candidates: ['asset', 'application', 'block'],
     })
   })
+
+  test.each(['alice.algo', 'sub.name.algo', 'a-1.algo', '  vibekit.algo\n'])(
+    'recognizes an NFD-shaped account name: %s',
+    (input) => {
+      expect(classifyExplorerInput(input)).toEqual({
+        kind: 'entity',
+        entity: 'account-name',
+        value: input.trim(),
+      })
+    },
+  )
+
+  test.each(['Alice.algo', '.algo', 'alice.', 'alice.algo.', 'al ice.algo', 'alice.algorand'])(
+    'does not classify malformed name-like input as an account name: %s',
+    (input) => {
+      expect(classifyExplorerInput(input).kind).toBe('text')
+    },
+  )
 })

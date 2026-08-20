@@ -9,11 +9,12 @@ import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useRef, useState } from 'react'
 
 import { ApprovalModal } from './approval-modal.js'
-import { Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
+import { AppsScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { ContentPane, NavPane } from './sections.js'
 import { useAccounts } from './slices/accounts.js'
+import { useApps } from './slices/apps.js'
 import { useAgentLane } from './slices/agent.js'
 import { useFeed } from './slices/feed.js'
 import { useExplorerKeys } from './slices/keys.js'
@@ -22,7 +23,7 @@ import { NETWORKS, useNetwork } from './slices/network.js'
 import { usePaymentFlow } from './slices/payment.js'
 import { COLORS, shorten } from './theme.js'
 
-const HELP = 'pay 0.5 · list my accounts · sample · paste an id'
+const HELP = 'pay 0.5 · list my accounts · alice.algo · sample · paste an id'
 
 /**
  * The Explorer as a chat-first transcript plus results feed: a session index
@@ -91,6 +92,7 @@ export function App() {
   const {
     openTransaction,
     openAccount,
+    openAccountName,
     openMyAccounts,
     openAsset,
     openApplication,
@@ -98,6 +100,24 @@ export function App() {
     openBlock,
     openAmbiguous,
   } = lookup
+
+  const apps = useApps({ screen, network })
+  const activateAppsEntry = useCallback(
+    (index: number) => {
+      const entry = apps.entries[index - 1]
+      if (!entry) return
+      if (entry.kind === 'local') {
+        apps.setSelectedSpec(entry.spec)
+        return
+      }
+      // A deployed app opens through the same direct lane as `app <id>`.
+      setScreen('chat')
+      const sectionId = createSection(`app ${entry.appId}`)
+      openApplication(sectionId, entry.appId)
+    },
+    [apps.entries, apps.setSelectedSpec, createSection, openApplication, setScreen],
+  )
+  const closeAppsDetail = useCallback(() => apps.setSelectedSpec(null), [apps.setSelectedSpec])
 
   const payment = usePaymentFlow({
     feed,
@@ -187,6 +207,9 @@ export function App() {
         case 'account':
           openAccount(sectionId, outcome.address)
           return
+        case 'account-name':
+          openAccountName(sectionId, outcome.name)
+          return
         case 'account-list':
           openMyAccounts(sectionId)
           return
@@ -230,6 +253,7 @@ export function App() {
       live,
       networkRef,
       openAccount,
+      openAccountName,
       openWorkspace,
       openAmbiguous,
       openMyAccounts,
@@ -263,6 +287,9 @@ export function App() {
     toggleFlowView,
     closeSelectedSection,
     isNarrow,
+    appsDetailOpen: apps.selectedSpec !== null,
+    closeAppsDetail,
+    activateAppsEntry,
   })
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
@@ -274,14 +301,18 @@ export function App() {
     agentBusy || busy
       ? 'working…'
       : agentConfig
-        ? 'Ask anything, or: ^w wallet · ^1 assets · pay 0.5 · paste an ID'
-        : '^w wallet · ^1 assets · pay 0.5 · paste an ID'
+        ? 'Ask anything, or: ^w wallet · pay 0.5 · paste an ID or name.algo'
+        : '^w wallet · ^1 assets · pay 0.5 · paste an ID or name.algo'
 
   const keybar = modalOpen
     ? 'enter approve · esc deny'
     : screen === 'wallet'
       ? '1-9 active account · esc chat · ^1 assets · ^2 apps · ^3 txns'
-      : screen === 'assets' || screen === 'apps' || screen === 'txns'
+      : screen === 'apps'
+        ? apps.selectedSpec
+          ? 'esc back · ^w wallet · ^1 assets · ^3 txns'
+          : '1-9 open · esc chat · ^w wallet · ^1 assets · ^3 txns'
+      : screen === 'assets' || screen === 'txns'
         ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns'
         : focus === 'nav'
         ? '↑/↓ select · enter view · s sort · v flow · x close · tab content · esc chat'
@@ -314,20 +345,22 @@ export function App() {
           width={width}
           onSelect={setActiveSender}
         />
-      ) : screen === 'assets' || screen === 'apps' || screen === 'txns' ? (
+      ) : screen === 'apps' ? (
+        <AppsScreen
+          network={network}
+          entries={apps.entries}
+          selected={apps.selectedSpec}
+          width={width}
+          onActivate={activateAppsEntry}
+        />
+      ) : screen === 'assets' || screen === 'txns' ? (
         <ShelfScreen
-          title={screen === 'assets' ? 'ASSETS' : screen === 'apps' ? 'APPS' : 'TRANSACTIONS'}
+          title={screen === 'assets' ? 'ASSETS' : 'TRANSACTIONS'}
           accountName={senderAccount?.name}
           address={activeSender}
           loading={accounts.shelfLoading}
           error={accounts.shelfError}
-          empty={
-            screen === 'assets'
-              ? 'No assets on this account.'
-              : screen === 'apps'
-                ? 'Not opted into any applications.'
-                : 'No transactions yet.'
-          }
+          empty={screen === 'assets' ? 'No assets on this account.' : 'No transactions yet.'}
           store={store}
           view={accounts.shelfView}
           width={width}

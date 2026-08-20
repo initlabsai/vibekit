@@ -17,7 +17,8 @@ import {
   type ViewSpec,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
-import { useCallback } from 'react'
+import { nfdPlugin, type NfdService } from '@initlabs/vibekit-plugin-nfd'
+import { useCallback, useRef } from 'react'
 
 import type { WorkspaceScreen } from '../chrome.js'
 import type { KeystorePaymentHost } from '../keystore-host.js'
@@ -132,6 +133,51 @@ export function useLookups({
         })
     },
     [appendBlock, appendNote, busy, commitStore, host, setBusy, setScreen, setStatus, storeRef],
+  )
+
+  // The NFD plugin's service is its client cache; built lazily on first name.
+  const nfdRef = useRef<NfdService | null>(null)
+
+  const openAccountName = useCallback(
+    (sectionId: number, name: string) => {
+      if (busy) return
+      const network = networkRef.current
+      if (network !== 'mainnet' && network !== 'testnet') {
+        appendNote(
+          sectionId,
+          `NFD names resolve on mainnet and testnet only — you're on ${network}. Paste an address instead.`,
+          'error',
+        )
+        return
+      }
+      setBusy(true)
+      setStatus(`resolving ${name}…`)
+      const openResolved = openAccount
+      void Promise.resolve()
+        .then(() => {
+          nfdRef.current ??= nfdPlugin().service as NfdService
+          return nfdRef.current.clientFor(network).resolve(name)
+        })
+        .then((nfd) => {
+          const address = nfd.depositAccount ?? nfd.owner
+          if (!address) throw new Error('the name has no deposit address')
+          setBusy(false)
+          setStatus('')
+          appendNote(sectionId, `${name} → ${shorten(address, 20)}`)
+          // From here the name behaves exactly like a pasted address.
+          openResolved(sectionId, address)
+        })
+        .catch((error: unknown) => {
+          setBusy(false)
+          setStatus('')
+          appendNote(
+            sectionId,
+            `Couldn't resolve ${name} — ${error instanceof Error ? error.message : String(error)}`,
+            'error',
+          )
+        })
+    },
+    [appendNote, busy, networkRef, openAccount, setBusy, setStatus],
   )
 
   const presentRecord = useCallback(
@@ -337,6 +383,7 @@ export function useLookups({
   return {
     openTransaction,
     openAccount,
+    openAccountName,
     openMyAccounts,
     openAsset,
     openApplication,

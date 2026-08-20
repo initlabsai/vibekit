@@ -57,6 +57,53 @@ export function saveStoredAgentConfig(
   return path
 }
 
+const appEntrySchema = z.object({
+  name: z.string().min(1),
+  appId: z.number().int().nonnegative(),
+})
+
+const appsSectionSchema = z.record(z.string(), z.array(appEntrySchema))
+
+/** One deployed-app association shown on the Explorer's My Apps screen. */
+export type StoredAppEntry = z.infer<typeof appEntrySchema>
+
+/** Deployed-app associations keyed by network id (localnet/testnet/mainnet). */
+export type StoredApps = z.infer<typeof appsSectionSchema>
+
+/** The stored apps section; absent or malformed reads as empty. */
+export function loadStoredApps(
+  env: Record<string, string | undefined> = process.env,
+): StoredApps {
+  try {
+    const raw = JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as { apps?: unknown }
+    const parsed = appsSectionSchema.safeParse(raw.apps)
+    return parsed.success ? parsed.data : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Writes the apps section, preserving any other keys in config.json. */
+export function saveStoredApps(
+  apps: StoredApps,
+  env: Record<string, string | undefined> = process.env,
+): string {
+  const path = vibekitConfigPath(env)
+  let existing: Record<string, unknown> = {}
+  try {
+    existing = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
+  } catch {
+    // First write, or unreadable JSON — start fresh rather than fail.
+  }
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(
+    path,
+    `${JSON.stringify({ ...existing, apps: appsSectionSchema.parse(apps) }, null, 2)}\n`,
+    { mode: 0o600 },
+  )
+  return path
+}
+
 /**
  * Effective agent config: env vars win over the stored file, so power
  * users and CI can override without touching setup.

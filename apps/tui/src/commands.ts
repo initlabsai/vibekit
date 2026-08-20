@@ -15,6 +15,7 @@ export type ComposerRoute =
   | { status: 'transaction'; txid: string }
   | { status: 'group'; groupId: string }
   | { status: 'account'; address: string }
+  | { status: 'account-name'; name: string }
   | { status: 'asset'; assetId: number }
   | { status: 'application'; applicationId: number }
   | { status: 'block'; round: number }
@@ -85,6 +86,9 @@ export function routeComposerInput(input: string): ComposerRoute {
   }
   if (classified.kind === 'entity' && classified.entity === 'account') {
     return { status: 'account', address: classified.value }
+  }
+  if (classified.kind === 'entity' && classified.entity === 'account-name') {
+    return { status: 'account-name', name: classified.value }
   }
   if (classified.kind === 'entity' && classified.entity === 'group') {
     return { status: 'group', groupId: classified.value }

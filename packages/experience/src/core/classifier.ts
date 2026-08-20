@@ -6,6 +6,12 @@ const NUMERIC_ID_PATTERN = /^(0|[1-9]\d*)$/
 /** 32-byte group digest as RFC 4648 base64 (44 chars, one trailing pad). */
 const GROUP_ID_PATTERN = /^[A-Za-z0-9+/]{43}=$/
 const GROUP_ID_URLSAFE_PATTERN = /^[A-Za-z0-9_-]{43}=$/
+/**
+ * NFD-shaped account name: lowercase [a-z0-9-] segments ending in `.algo`
+ * (alice.algo, sub.name.algo). Cannot collide with the base32 shapes above —
+ * those never contain a dot — so order only matters against the text fallback.
+ */
+const ACCOUNT_NAME_PATTERN = /^(?:[a-z0-9-]+\.)+algo$/
 
 /** Canonical unpadded base32 shape of a 32-byte Algorand transaction hash. */
 export const algorandTransactionIdSchema = z
@@ -46,6 +52,11 @@ export type ClassifiedExplorerInput =
       value: string
     }
   | {
+      kind: 'entity'
+      entity: 'account-name'
+      value: string
+    }
+  | {
       kind: 'ambiguous-entity'
       value: string
       candidates: readonly ['asset', 'application', 'block']
@@ -70,6 +81,9 @@ export function classifyExplorerInput(raw: string): ClassifiedExplorerInput {
   }
   if (algorandGroupIdSchema.safeParse(input).success) {
     return { kind: 'entity', entity: 'group', value: input }
+  }
+  if (ACCOUNT_NAME_PATTERN.test(input)) {
+    return { kind: 'entity', entity: 'account-name', value: input }
   }
   if (NUMERIC_ID_PATTERN.test(input)) {
     return {

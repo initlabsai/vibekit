@@ -20,6 +20,12 @@ export * from './schemas.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { readBoxState, readGlobalState, readLocalState }
 export { parseAppSpec, substituteTemplateParams }
+export {
+  detectAppSpecFormat,
+  normalizeAppSpec,
+  tryNormalizeAppSpec,
+} from './lib/app-spec.js'
+export type { AppSpecFormat, NormalizedAppSpec, ParsedAppSpec, ParsedMethod } from './lib/app-spec.js'
 export type { FormattedApplication } from './lib/format.js'
 export type { StateValue } from './handlers/state.js'
 

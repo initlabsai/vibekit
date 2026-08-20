@@ -61,6 +61,16 @@ describe('transcript command routing', () => {
     })
   })
 
+  test('NFD-shaped names route to the account-name lane', () => {
+    expect(routeComposerInput('alice.algo')).toEqual({ status: 'account-name', name: 'alice.algo' })
+    expect(routeComposerInput('  sub.name.algo ')).toEqual({
+      status: 'account-name',
+      name: 'sub.name.algo',
+    })
+    expect(routeComposerInput('Alice.algo')).toEqual({ status: 'text', text: 'Alice.algo' })
+    expect(routeComposerInput('alice.algos')).toEqual({ status: 'text', text: 'alice.algos' })
+  })
+
   test('typed pay uses the active keystore account as sender', () => {
     expect(paymentParties([], undefined)).toEqual({
       sender: FIXTURE_SENDER,

@@ -4,6 +4,7 @@ import type { SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
 import { Ident } from './ui.js'
 import { ResultView } from './views.js'
+import type { AppsEntry, LocalAppSpec } from './slices/apps.js'
 import { COLORS, shorten } from './theme.js'
 
 /** Workspace pages that sit beside the chat transcript. */
@@ -181,6 +182,125 @@ export function WalletScreen({
         marginTop={1}
         content="[1-9] set active · [esc] chat · assets ^1 · apps ^2 · txns ^3"
       />
+    </box>
+  )
+}
+
+function SpecDetailPane({ selected, width }: { selected: LocalAppSpec; width: number }) {
+  const { spec } = selected
+  const schemaLine =
+    `state: ${spec.schema.globalInts} global ints · ${spec.schema.globalBytes} global bytes · ` +
+    `${spec.schema.localInts} local ints · ${spec.schema.localBytes} local bytes`
+  return (
+    <box flexGrow={1} flexDirection="column">
+      <box flexDirection="row" justifyContent="space-between" height={1} marginTop={1}>
+        <text fg={COLORS.brassBright}>{spec.name}</text>
+        <text fg={COLORS.faint}>{spec.format.toUpperCase()}</text>
+      </box>
+      <text fg={COLORS.faint} content={shorten(selected.path, width - 6)} />
+      {spec.description ? <text fg={COLORS.muted} content={shorten(spec.description, width - 6)} /> : null}
+      <text fg={COLORS.muted} marginTop={1} content={schemaLine} />
+      {spec.templateVariables.length > 0 ? (
+        <text fg={COLORS.muted} content={`templates: ${spec.templateVariables.join(', ')}`} />
+      ) : null}
+      <text fg={COLORS.brassBright} marginTop={1} content={`METHODS (${spec.methods.length})`} />
+      <scrollbox flexGrow={1} stickyScroll={false}>
+        {spec.methods.length === 0 ? (
+          <text fg={COLORS.muted} content="No ABI methods declared." />
+        ) : (
+          spec.methods.map((method) => (
+            <box key={method.signature} flexDirection="column">
+              <text fg={COLORS.text} content={shorten(method.signature, width - 6)} />
+              {method.description ? (
+                <text fg={COLORS.faint} content={`  ${shorten(method.description, width - 8)}`} />
+              ) : null}
+            </box>
+          ))
+        )}
+      </scrollbox>
+      <text fg={COLORS.faint} marginTop={1} content="Deploying from here lands in a later drop." />
+      <text fg={COLORS.faint} content="[esc] back to apps · ^w wallet" />
+    </box>
+  )
+}
+
+/** My Apps: persisted deployed associations plus specs found near the launch dir. */
+export function AppsScreen({
+  network,
+  entries,
+  selected,
+  width,
+  onActivate,
+}: {
+  network: string
+  entries: ReadonlyArray<AppsEntry>
+  selected: LocalAppSpec | null
+  width: number
+  onActivate: (index: number) => void
+}) {
+  const deployed = entries.filter((entry) => entry.kind === 'deployed')
+  const locals = entries.filter((entry) => entry.kind === 'local')
+  return (
+    <box
+      flexGrow={1}
+      flexDirection="column"
+      padding={1}
+      border
+      borderStyle="rounded"
+      borderColor={COLORS.brass}
+      backgroundColor={COLORS.panel}
+    >
+      <box flexDirection="row" justifyContent="space-between" height={1}>
+        <text fg={COLORS.brassBright}>MY APPS</text>
+        <text fg={COLORS.faint}>{network}</text>
+      </box>
+      {selected ? (
+        <SpecDetailPane selected={selected} width={width} />
+      ) : (
+        <>
+          <text fg={COLORS.muted} marginTop={1} content={`Deployed (${network})`} />
+          {deployed.length === 0 ? (
+            <text fg={COLORS.faint} content="  No deployed apps recorded on this network yet." />
+          ) : (
+            deployed.map((entry, index) => (
+              <box
+                key={`${entry.name}-${entry.appId}`}
+                paddingX={1}
+                onMouseDown={() => onActivate(index + 1)}
+              >
+                <text fg={COLORS.text} content={`[${index + 1}] ${entry.name} · app ${entry.appId}`} />
+              </box>
+            ))
+          )}
+          <text fg={COLORS.muted} marginTop={1} content="Local specs (not deployed)" />
+          {locals.length === 0 ? (
+            <text fg={COLORS.faint} content="  No app specs found under the launch directory." />
+          ) : (
+            <scrollbox flexGrow={1} stickyScroll={false}>
+              {locals.map((entry, index) => (
+                <box
+                  key={entry.spec.path}
+                  paddingX={1}
+                  onMouseDown={() => onActivate(deployed.length + index + 1)}
+                >
+                  <text
+                    fg={COLORS.text}
+                    content={shorten(
+                      `[${deployed.length + index + 1}] ${entry.spec.spec.name} · ${entry.spec.spec.methods.length} method${entry.spec.spec.methods.length === 1 ? '' : 's'} · ${entry.spec.path}`,
+                      width - 6,
+                    )}
+                  />
+                </box>
+              ))}
+            </scrollbox>
+          )}
+          <text
+            fg={COLORS.faint}
+            marginTop={1}
+            content="[1-9] open · [esc] chat · ^w wallet · ^1 assets · ^3 txns"
+          />
+        </>
+      )}
     </box>
   )
 }
