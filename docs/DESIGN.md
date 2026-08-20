@@ -177,11 +177,9 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── core/                      # @initlabs/vibekit-core — tool contract, ToolContext, NetworkClients,
 │   │                              #   compose engine, shared validators/formatters/utils
 │   ├── mcp/                       # @initlabs/vibekit-mcp — createVibekitMcp() server library (2026-07-28 spec)
-│   ├── tools-network/             # @initlabs/vibekit-tools-network      ┐
-│   ├── tools-accounts/            # @initlabs/vibekit-tools-accounts     │
-│   ├── tools-assets/              # @initlabs/vibekit-tools-assets       │  publishable domain tool packages
-│   ├── tools-transactions/        # @initlabs/vibekit-tools-transactions │  (each: ToolDefinition[] + handlers)
-│   ├── tools-contracts/           # @initlabs/vibekit-tools-contracts    ┘
+│   ├── tools/                     # @initlabs/vibekit-tools — the domain tools (accounts, assets,
+│   │                              #   contracts, network, transactions) as per-domain exports; merged
+│   │                              #   from five packages 2026-08-20 — every consumer imported all five
 │   ├── plugin-nfd/                # @initlabs/vibekit-plugin-nfd          ┐ optional plugins — prove the
 │   ├── plugin-alpha-arcade/       # @initlabs/vibekit-plugin-alpha-arcade ┘ plugin system from day one
 │   ├── signer-keystore/           # @initlabs/vibekit-signer-keystore — keystore-node adapter (the only signer pkg)
@@ -235,7 +233,7 @@ Conventions (one tier, no exceptions):
   consumer's graph. If not, type identity breaks.
 - **ESM-only** unless a concrete CJS consumer appears (open question 8).
 - Versioning via **changesets**. Fixed version group across `core` +
-  `mcp` + `tools-*` (they evolve together). Plugins and sdk version
+  `mcp` + `tools` (they evolve together). Plugins and sdk version
   independently.
 - Apps are private and packages are publishable by default. The provisional
   `packages/experience` package is currently private until its protocol is
@@ -323,7 +321,7 @@ on the domain read arrays, not on the write exports.
 - **Dynamic tools are first-class.** Nothing in the contract assumes
   tools are statically compiled in. An ARC-56 spec can be turned into
   `ToolDefinition[]` at runtime. This is the seed of the explorer xArc
-  feature. It will live in `tools-contracts` as `toolsFromArc56(spec)`
+  feature. It will live in the tools package's contracts domain as `toolsFromArc56(spec)`
   (Phase 7/8 work, not yet implemented). Note: xArc runs through the
   **API**, not the MCP. The 2026 spec makes tool lists cacheable, so the
   MCP list must stay deterministic per deployment.
@@ -436,8 +434,7 @@ A library, not an app:
 
 ```ts
 import { createVibekitMcp } from "@initlabs/vibekit-mcp";
-import { networkTools } from "@initlabs/vibekit-tools-network";
-import { accountTools } from "@initlabs/vibekit-tools-accounts";
+import { accountTools, networkTools } from "@initlabs/vibekit-tools";
 import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
 
 const server = createVibekitMcp({

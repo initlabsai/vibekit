@@ -30,11 +30,7 @@
   },
   "dependencies": {
     "@initlabs/vibekit-core": "workspace:*",
-    "@initlabs/vibekit-tools-accounts": "workspace:*",
-    "@initlabs/vibekit-tools-assets": "workspace:*",
-    "@initlabs/vibekit-tools-contracts": "workspace:*",
-    "@initlabs/vibekit-tools-network": "workspace:*",
-    "@initlabs/vibekit-tools-transactions": "workspace:*",
+    "@initlabs/vibekit-tools": "workspace:*",
     "algosdk": "3.7.0",
     "zod": "^4.4.3"
   },

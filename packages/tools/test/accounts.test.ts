@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import { ToolError, jsonSafe } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
-import { getAccountAppLocalStates, getAccountAssets } from '../src/handlers/assets.js'
-import { batchLookupAccounts, lookupAccount } from '../src/handlers/lookup.js'
-import { getAccountPortfolio } from '../src/handlers/portfolio.js'
-import { searchAccounts, searchAccountTransactions } from '../src/handlers/search.js'
-import { accountTools } from '../src/index.js'
+import { getAccountAppLocalStates, getAccountAssets } from '../src/accounts/handlers/assets.js'
+import { batchLookupAccounts, lookupAccount } from '../src/accounts/handlers/lookup.js'
+import { getAccountPortfolio } from '../src/accounts/handlers/portfolio.js'
+import { searchAccounts, searchAccountTransactions } from '../src/accounts/handlers/search.js'
+import { accountTools } from '../src/accounts/index.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR = algosdk.generateAccount().addr.toString()

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '@initlabs/vibekit-core'
-import { transactionTools } from '../src/index.js'
-import { lookupTransaction, lookupTransactionGroup } from '../src/handlers/lookup.js'
-import { searchTransactions } from '../src/handlers/search.js'
+import { transactionTools } from '../src/transactions/index.js'
+import { lookupTransaction, lookupTransactionGroup } from '../src/transactions/handlers/lookup.js'
+import { searchTransactions } from '../src/transactions/handlers/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {

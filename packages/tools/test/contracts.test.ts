@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { ToolError } from '@initlabs/vibekit-core'
-import { contractTools } from '../src/index.js'
-import { lookupApplication, lookupApplicationLogs } from '../src/handlers/lookup.js'
-import { searchApplications } from '../src/handlers/search.js'
-import { readBoxState, readGlobalState, readLocalState } from '../src/handlers/state.js'
+import { contractTools } from '../src/contracts/index.js'
+import { lookupApplication, lookupApplicationLogs } from '../src/contracts/handlers/lookup.js'
+import { searchApplications } from '../src/contracts/handlers/search.js'
+import { readBoxState, readGlobalState, readLocalState } from '../src/contracts/handlers/state.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const utf8 = (s: string) => new TextEncoder().encode(s)

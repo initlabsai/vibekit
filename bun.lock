@@ -21,11 +21,7 @@
         "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools-accounts": "workspace:*",
-        "@initlabs/vibekit-tools-assets": "workspace:*",
-        "@initlabs/vibekit-tools-contracts": "workspace:*",
-        "@initlabs/vibekit-tools-network": "workspace:*",
-        "@initlabs/vibekit-tools-transactions": "workspace:*",
+        "@initlabs/vibekit-tools": "workspace:*",
         "algosdk": "3.7.0",
         "picocolors": "^1.1.1",
         "zod": "^4.4.3",
@@ -44,11 +40,7 @@
         "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools-accounts": "workspace:*",
-        "@initlabs/vibekit-tools-assets": "workspace:*",
-        "@initlabs/vibekit-tools-contracts": "workspace:*",
-        "@initlabs/vibekit-tools-network": "workspace:*",
-        "@initlabs/vibekit-tools-transactions": "workspace:*",
+        "@initlabs/vibekit-tools": "workspace:*",
         "algosdk": "3.7.0",
         "zod": "^4.4.3",
       },
@@ -64,11 +56,7 @@
         "@initlabs/vibekit-core": "workspace:*",
         "@initlabs/vibekit-experience": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools-accounts": "workspace:*",
-        "@initlabs/vibekit-tools-assets": "workspace:*",
-        "@initlabs/vibekit-tools-contracts": "workspace:*",
-        "@initlabs/vibekit-tools-network": "workspace:*",
-        "@initlabs/vibekit-tools-transactions": "workspace:*",
+        "@initlabs/vibekit-tools": "workspace:*",
         "@opentui/core": "0.5.4",
         "@opentui/react": "0.5.4",
         "algosdk": "3.7.0",
@@ -140,11 +128,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-tools-accounts": "workspace:*",
-        "@initlabs/vibekit-tools-assets": "workspace:*",
-        "@initlabs/vibekit-tools-contracts": "workspace:*",
-        "@initlabs/vibekit-tools-network": "workspace:*",
-        "@initlabs/vibekit-tools-transactions": "workspace:*",
+        "@initlabs/vibekit-tools": "workspace:*",
         "algosdk": "3.7.0",
         "zod": "^4.4.3",
       },
@@ -229,68 +213,8 @@
         "zod": "^4.0.0",
       },
     },
-    "packages/tools-accounts": {
-      "name": "@initlabs/vibekit-tools-accounts",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.2.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/tools-assets": {
-      "name": "@initlabs/vibekit-tools-assets",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.2.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/tools-contracts": {
-      "name": "@initlabs/vibekit-tools-contracts",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.2.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/tools-network": {
-      "name": "@initlabs/vibekit-tools-network",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.2.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/tools-transactions": {
-      "name": "@initlabs/vibekit-tools-transactions",
+    "packages/tools": {
+      "name": "@initlabs/vibekit-tools",
       "version": "0.1.0",
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
@@ -444,15 +368,7 @@
 
     "@initlabs/vibekit-signer-keystore": ["@initlabs/vibekit-signer-keystore@workspace:packages/signer-keystore"],
 
-    "@initlabs/vibekit-tools-accounts": ["@initlabs/vibekit-tools-accounts@workspace:packages/tools-accounts"],
-
-    "@initlabs/vibekit-tools-assets": ["@initlabs/vibekit-tools-assets@workspace:packages/tools-assets"],
-
-    "@initlabs/vibekit-tools-contracts": ["@initlabs/vibekit-tools-contracts@workspace:packages/tools-contracts"],
-
-    "@initlabs/vibekit-tools-network": ["@initlabs/vibekit-tools-network@workspace:packages/tools-network"],
-
-    "@initlabs/vibekit-tools-transactions": ["@initlabs/vibekit-tools-transactions@workspace:packages/tools-transactions"],
+    "@initlabs/vibekit-tools": ["@initlabs/vibekit-tools@workspace:packages/tools"],
 
     "@initlabs/vibekit-tui": ["@initlabs/vibekit-tui@workspace:apps/tui"],
 

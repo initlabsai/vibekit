@@ -248,7 +248,9 @@ wins.
 - Per-tool code in a host is a bug in the making. Hosts are generic
   adapters.
 - Treat private apps as terminal nodes and separate deployment artifacts. A
-  monorepo change may land atomically; it may not collapse package boundaries.
+  monorepo change may land atomically; it may not collapse the app/package
+  boundary. Merging sibling packages that always ship, evolve, and get
+  imported together is not a collapse — it is the line-count winning.
 - Before publishing, verify packed packages in an out-of-workspace consumer.
 - The agent can compose trusted views from structured results. The agent
   never emits JSX, HTML, terminal markup, imports, or executable UI.

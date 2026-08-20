@@ -20,11 +20,16 @@ import {
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
 import type { AnyTool, NetworkId } from '@initlabs/vibekit-core'
-import { accountTools } from '@initlabs/vibekit-tools-accounts'
-import { assetTools, assetWriteTools } from '@initlabs/vibekit-tools-assets'
-import { contractTools, contractWriteTools } from '@initlabs/vibekit-tools-contracts'
-import { networkTools } from '@initlabs/vibekit-tools-network'
-import { transactionTools, transactionWriteTools } from '@initlabs/vibekit-tools-transactions'
+import {
+  accountTools,
+  assetTools,
+  assetWriteTools,
+  contractTools,
+  contractWriteTools,
+  networkTools,
+  transactionTools,
+  transactionWriteTools,
+} from '@initlabs/vibekit-tools'
 
 const tools: AnyTool[] = [
   ...networkTools,

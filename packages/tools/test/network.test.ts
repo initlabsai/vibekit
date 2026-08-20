@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { networkTools } from '../src/index.js'
-import { lookupBlock } from '../src/handlers/block.js'
-import { searchBlockHeaders } from '../src/handlers/block-headers.js'
-import { getNetworkStatus } from '../src/handlers/status.js'
+import { networkTools } from '../src/network/index.js'
+import { lookupBlock } from '../src/network/handlers/block.js'
+import { searchBlockHeaders } from '../src/network/handlers/block-headers.js'
+import { getNetworkStatus } from '../src/network/handlers/status.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {

@@ -36,7 +36,8 @@ HTML, or terminal markup.
 ## Layout
 
 - `packages/core` — contract, deployment, codec, compose engine
-- `packages/tools-*` — tools, one package per domain
+- `packages/tools` — the domain tools (accounts, assets, contracts, network,
+  transactions) as per-domain exports from one package
 - `packages/plugin-*` — third-party tool plugins
 - `packages/signer-keystore` — keystore daemon signing, testnet dispenser
 - `packages/mcp` — ToolDefinition-to-MCP adapter for stdio and HTTP

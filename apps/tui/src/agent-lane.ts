@@ -11,14 +11,14 @@ import {
   type AgentEvent,
   type AgentSession,
 } from "@initlabs/vibekit-agent";
-import { accountTools } from "@initlabs/vibekit-tools-accounts";
-import { assetTools } from "@initlabs/vibekit-tools-assets";
-import { contractTools } from "@initlabs/vibekit-tools-contracts";
-import { networkTools } from "@initlabs/vibekit-tools-network";
 import {
+  accountTools,
+  assetTools,
+  contractTools,
+  networkTools,
   transactionTools,
   transactionWriteTools,
-} from "@initlabs/vibekit-tools-transactions";
+} from "@initlabs/vibekit-tools";
 import type { AnyTool } from "@initlabs/vibekit-core";
 import type { ProviderConfig } from "@initlabs/vibekit-agent";
 

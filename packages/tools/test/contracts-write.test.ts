@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '@initlabs/vibekit-core'
-import { parseAppSpec, substituteTemplateParams } from '../src/lib/app-spec.js'
-import { contractWriteTools } from '../src/tools-write.js'
+import { parseAppSpec, substituteTemplateParams } from '../src/contracts/lib/app-spec.js'
+import { contractWriteTools } from '../src/contracts/tools-write.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR_A = 'Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA'

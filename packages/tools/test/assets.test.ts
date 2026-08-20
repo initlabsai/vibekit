@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '@initlabs/vibekit-core'
-import { assetTools } from '../src/index.js'
-import { lookupAsset } from '../src/handlers/lookup.js'
-import { searchAssetBalances, searchAssetTransactions, searchAssets } from '../src/handlers/search.js'
+import { assetTools } from '../src/assets/index.js'
+import { lookupAsset } from '../src/assets/handlers/lookup.js'
+import { searchAssetBalances, searchAssetTransactions, searchAssets } from '../src/assets/handlers/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const usdcParams = {
