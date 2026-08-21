@@ -16,7 +16,7 @@ export interface FormattedAsset {
   url?: string
 }
 
-/** Asset balance entry. */
+/** Asset balance entry. Amount is raw base units; the page carries `decimals`. */
 export interface AssetBalance {
   address: string
   amount: string

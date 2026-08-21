@@ -2,7 +2,6 @@ import {
   DEFAULT_LIMIT,
   ToolError,
   bytesToBase64,
-  formatAssetAmount,
   indexerSemaphore as indexerSem,
   stripFinalToken,
   type ToolContext,
@@ -46,7 +45,7 @@ export async function getAccountAssets(
       const decimals = params?.decimals != null ? Number(params.decimals) : undefined
       return {
         ...h,
-        amount: decimals != null ? formatAssetAmount(h.amount, decimals) : h.amount,
+        ...(decimals != null ? { decimals } : {}),
         name: params?.name as string | undefined,
         unitName: params?.unitName as string | undefined,
       }

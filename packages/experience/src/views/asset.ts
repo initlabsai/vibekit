@@ -45,11 +45,12 @@ export const assetListDataSchema = z.object({
   nextToken: z.string().min(1).optional(),
 })
 
-/** One asset an account holds, with its balance. */
+/** One asset an account holds; amount is raw base units, scaled by decimals for display. */
 export const assetHoldingRowSchema = z.object({
   assetId: uint64JsonSchema,
   amount: z.string().min(1),
   isFrozen: z.boolean(),
+  decimals: z.number().int().nonnegative().optional(),
   name: z.string().min(1).optional(),
   unitName: z.string().min(1).optional(),
 })
@@ -67,9 +68,10 @@ export const assetHolderRowSchema = z.object({
   isFrozen: z.boolean(),
 })
 
-/** A page of asset holders. */
+/** A page of asset holders; amounts are raw base units, scaled by decimals for display. */
 export const assetHoldersDataSchema = z.object({
   balances: z.array(assetHolderRowSchema),
+  decimals: z.number().int().nonnegative().optional(),
   nextToken: z.string().min(1).optional(),
 })
 

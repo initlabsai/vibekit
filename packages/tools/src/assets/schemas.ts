@@ -25,10 +25,11 @@ export const assetHoldersSchema = z.object({
   balances: z.array(
     z.object({
       address: z.string(),
-      amount: z.string(),
+      amount: z.string().describe('Raw base units as a decimal string; scale by decimals for display'),
       isFrozen: z.boolean(),
     }),
   ),
+  decimals: z.number().optional().describe('Asset decimals; absent when metadata lookup failed'),
   nextToken: z.string().optional(),
 })
 

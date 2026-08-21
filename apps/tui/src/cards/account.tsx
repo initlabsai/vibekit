@@ -1,4 +1,5 @@
 import {
+  formatBaseUnits,
   formatMicroAlgos,
   type AccountPortfolioViewModel,
 } from '@initlabs/vibekit-experience'
@@ -16,8 +17,9 @@ import {
 } from '../ui.js'
 import { algo, pageNotes } from './shared.js'
 
-function holdingAmount(amount: number | string, unitName?: string): string {
-  return unitName ? `${amount} ${unitName}` : String(amount)
+function holdingAmount(amount: number | string, decimals?: number, unitName?: string): string {
+  const display = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
+  return unitName ? `${display} ${unitName}` : display
 }
 
 /** How an account card's asset rows are ordered; cycled with the `s` key. */
@@ -89,7 +91,7 @@ export function AccountCard({
                 value={asset.name ?? asset.unitName ?? `asset ${asset.assetId}`}
                 width={body}
               />
-              <Fact label="amount" value={holdingAmount(asset.amount, asset.unitName)} width={body} />
+              <Fact label="amount" value={holdingAmount(asset.amount, asset.decimals, asset.unitName)} width={body} />
               {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
               {index < shown.length - 1 ? <Rule width={body} /> : null}
             </box>

@@ -1,4 +1,4 @@
-import { DEFAULT_LIMIT, formatAssetAmount, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
+import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
 import { formatAsset, type AssetBalance, type FormattedAsset } from './format.js'
 
@@ -25,18 +25,18 @@ export async function searchAssetBalances(
 
   const response = await query.do()
 
-  let decimals = 0
+  let decimals: number | undefined
   try {
     const assetRes = await indexer.lookupAssetByID(args.assetId).do()
     decimals = Number(assetRes.asset.params.decimals ?? 0)
   } catch {
-    /* fall back to raw amounts */
+    /* decimals stay unknown; amounts are raw base units regardless */
   }
 
   const allBalances = (response.balances ?? [])
     .map((b) => ({
       address: String(b.address),
-      amount: formatAssetAmount(String(b.amount), decimals),
+      amount: String(b.amount),
       rawAmount: BigInt(b.amount),
       isFrozen: b.isFrozen,
     }))
@@ -47,6 +47,7 @@ export async function searchAssetBalances(
 
   return {
     balances,
+    ...(decimals === undefined ? {} : { decimals }),
     nextToken: stripFinalToken(allBalances.length, 100, response.nextToken),
   }
 }

@@ -74,9 +74,10 @@ describe('searchAssetBalances', () => {
     })
     const result = await searchAssetBalances(ctx, { assetId: 31566704, limit: 2 })
     expect(result.balances).toEqual([
-      { address: 'BIG', amount: '5.5', isFrozen: true },
-      { address: 'MID', amount: '2', isFrozen: false },
+      { address: 'BIG', amount: '5500000', isFrozen: true },
+      { address: 'MID', amount: '2000000', isFrozen: false },
     ])
+    expect(result.decimals).toBe(6)
     // page of 3 < 100 → final page, token stripped
     expect(result.nextToken).toBeUndefined()
   })
@@ -96,7 +97,8 @@ describe('searchAssetBalances', () => {
       },
     })
     const result = await searchAssetBalances(ctx, { assetId: 123 })
-    expect(result.balances).toEqual([{ address: 'A', amount: '1,500,000', isFrozen: false }])
+    expect(result.balances).toEqual([{ address: 'A', amount: '1500000', isFrozen: false }])
+    expect(result.decimals).toBeUndefined()
   })
 })
 

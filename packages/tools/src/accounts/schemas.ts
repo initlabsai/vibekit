@@ -33,8 +33,9 @@ export const accountListSchema = z.object({
 
 const accountAsset = z.object({
   assetId: z.number(),
-  amount: z.string(),
+  amount: z.string().describe('Raw base units as a decimal string; scale by decimals for display'),
   isFrozen: z.boolean(),
+  decimals: z.number().optional().describe('Asset decimals; absent when metadata lookup failed'),
   name: z.string().optional(),
   unitName: z.string().optional(),
 })

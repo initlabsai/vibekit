@@ -62,10 +62,14 @@ stop it first (they are interchangeable; same ports and genesis layout).
 vibekit keystore serve                       # signing daemon — enables execute mode
                                              # (vibekit provisions the pinned daemon
                                              # itself; nothing installed globally)
-vibekit keystore list                        # list keys
+vibekit keystore accounts                    # list signing accounts (address, name, key id)
+vibekit keystore list                        # list raw keys
 vibekit keystore generate ed25519 --name <label>   # create an account (agents should
                                                    # use create_signing_account instead)
+vibekit keystore remove <address|name>       # destroy a key — confirms; irreversible
 ```
+
+Names are fixed at creation; the daemon has no rename.
 
 ## When something is broken
 

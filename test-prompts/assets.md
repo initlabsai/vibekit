@@ -32,7 +32,7 @@ fund ACCT_B too: `vibekit localnet fund <ACCT_B>`).
 6. `asset_transfer`: 500 base units of ASSET_ID from ACCT_A to ACCT_B.
    - Verify: executes.
 7. `search_asset_balances` for ASSET_ID.
-   - Verify: ACCT_A and ACCT_B both listed; ACCT_B's amount corresponds to 500 base units (report exactly how the amount is formatted — raw base units vs decimal-shifted string — as a WARN if ambiguous).
+   - Verify: ACCT_A and ACCT_B both listed; amounts are raw base-unit decimal strings (ACCT_B exactly "500") and the page carries a `decimals` field matching the asset.
 8. `search_asset_transactions` for ASSET_ID, `limit: 10`.
    - Verify: the transfer appears with `assetAmount` 500 and correct sender/receiver.
 

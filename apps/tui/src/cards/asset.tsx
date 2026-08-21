@@ -135,6 +135,11 @@ export function AssetListCard({
   )
 }
 
+/** Raw base units scaled for display; unknown decimals stay raw. */
+function baseUnits(amount: string, decimals?: number): string {
+  return decimals === undefined ? amount : formatBaseUnits(amount, decimals)
+}
+
 export function AssetHoldingsCard({
   assets,
   nextToken,
@@ -144,6 +149,7 @@ export function AssetHoldingsCard({
     assetId: number | string
     amount: string
     isFrozen: boolean
+    decimals?: number
     name?: string
     unitName?: string
   }>
@@ -174,7 +180,7 @@ export function AssetHoldingsCard({
             {asset.unitName && asset.name ? (
               <Fact label="unit" value={asset.unitName} width={body} />
             ) : null}
-            <Fact label="amount" value={asset.amount} width={body} />
+            <Fact label="amount" value={baseUnits(asset.amount, asset.decimals)} width={body} />
             {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
@@ -189,10 +195,12 @@ export function AssetHoldingsCard({
 
 export function AssetHoldersCard({
   balances,
+  decimals,
   nextToken,
   width,
 }: {
   balances: ReadonlyArray<{ address: string; amount: string; isFrozen: boolean }>
+  decimals?: number
   nextToken?: string
   width: number
 }) {
@@ -205,7 +213,7 @@ export function AssetHoldersCard({
         {rows.map((holder, index) => (
           <box key={holder.address} flexDirection="column" marginTop={1}>
             <Fact label="address" value={holder.address} copy={holder.address} width={body} />
-            <Fact label="amount" value={holder.amount} width={body} />
+            <Fact label="amount" value={baseUnits(holder.amount, decimals)} width={body} />
             {holder.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>

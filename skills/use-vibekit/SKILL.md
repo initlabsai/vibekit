@@ -47,6 +47,12 @@ access paths — pick whichever your harness supports.
   keychain, and only the address comes back. It is a gated (approval-carrying)
   action: it mints key material on the user's machine.
   Shell equivalent: `vibekit tool create_signing_account '{"name":"..."}'`.
+- **"remove/delete an account" → human-only**: `vibekit keystore remove
+  <address|name>` destroys the key in the OS keychain after a confirmation
+  prompt. Irreversible — funds on the account become unrecoverable. There is
+  deliberately no tool for this; hand the exact command to the user.
+- Labels are fixed at creation — there is no rename. Shell listing:
+  `vibekit keystore accounts` (address, label, key id).
 - Every write tool takes an explicit `sender`. There is no switch-account
   concept; remember the user's chosen address in conversation and pass it
   explicitly each time.
@@ -77,8 +83,8 @@ default. Tools accept a `network` parameter — optional on reads (defaults),
 Monetary fields in tool *results* (`feeMicroAlgos`, `paymentAmountMicroAlgos`,
 `balanceMicroAlgos`, ...) and tool *inputs* named `amountMicroAlgos` are integer
 microALGO (1 ALGO = 1,000,000 microALGO) — divide by 1,000,000 only when
-reporting ALGO to the user. ASA amounts are in base units unless a decimals
-field says otherwise.
+reporting ALGO to the user. ASA amounts are raw base units; holdings and
+balance results carry a `decimals` field to scale for display.
 
 ## Funding accounts
 

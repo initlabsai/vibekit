@@ -25,8 +25,11 @@ export interface FormattedAccount {
 /** Account asset holding. */
 export interface AccountAsset {
   assetId: number
+  /** Raw base units as a decimal string; scale by `decimals` for display. */
   amount: string
   isFrozen: boolean
+  /** Asset decimals; absent when the metadata lookup failed. */
+  decimals?: number
   name?: string
   unitName?: string
 }

@@ -193,6 +193,7 @@ export function ResultView({
       return (
         <AssetHoldersCard
           balances={derived.model.balances}
+          decimals={derived.model.decimals}
           nextToken={derived.model.nextToken}
           width={width}
         />

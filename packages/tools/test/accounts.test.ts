@@ -250,7 +250,7 @@ describe('getAccountAssets', () => {
     })
     const result = await getAccountAssets(ctx, { address: ADDR })
     expect(result.assets).toEqual([
-      { assetId: 31566704, amount: '2.5', isFrozen: false, name: 'USDC', unitName: 'USDC' },
+      { assetId: 31566704, amount: '2500000', isFrozen: false, decimals: 6, name: 'USDC', unitName: 'USDC' },
     ])
     expect(result.nextToken).toBeUndefined()
   })

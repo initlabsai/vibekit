@@ -12,6 +12,7 @@ export const accountAssetHoldingSchema = z.object({
   assetId: uint64JsonSchema,
   amount: uint64JsonSchema.describe('Base units of the asset'),
   isFrozen: z.boolean(),
+  decimals: z.number().int().nonnegative().optional(),
   name: z.string().min(1).optional(),
   unitName: z.string().min(1).optional(),
 })
