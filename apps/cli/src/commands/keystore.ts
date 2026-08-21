@@ -6,6 +6,7 @@
  * binary — we manage its presence and version, never its code or storage.
  */
 
+import algosdk from 'algosdk'
 import pc from 'picocolors'
 import { homedir } from 'os'
 import { join } from 'path'
@@ -69,7 +70,104 @@ export async function provisionKeystoreCli(quiet = false): Promise<string> {
   return managedKeystoreBin(dir)
 }
 
-export async function commandKeystore(args: string[]): Promise<void> {
+/** Connect to the running daemon, or undefined when it is not up. */
+async function connectSigner(): Promise<
+  import('@initlabs/vibekit-signer-keystore').KeystoreSigner | undefined
+> {
+  const { createKeystoreSigner } = await import('@initlabs/vibekit-signer-keystore')
+  try {
+    return await createKeystoreSigner()
+  } catch {
+    return undefined
+  }
+}
+
+const DAEMON_HINT = `The keystore daemon is not running. Start it first: ${pc.cyan('vibekit keystore serve')}`
+
+/** `vibekit keystore accounts [--json]` — addresses with names and key ids, via the daemon. */
+async function keystoreAccounts(args: string[]): Promise<void> {
+  const signer = await connectSigner()
+  if (!signer) {
+    console.error(pc.red(DAEMON_HINT))
+    process.exit(1)
+  }
+  try {
+    const accounts = await signer.listAccounts()
+    if (args.includes('--json')) {
+      console.log(JSON.stringify(accounts, null, 2))
+    } else if (accounts.length === 0) {
+      console.log('No signing accounts. Create one: vibekit keystore generate ed25519 --name <label>')
+    } else {
+      for (const account of accounts) {
+        const name = account.name ? `  ${pc.cyan(account.name)}` : ''
+        console.log(`${account.address}${name}  ${pc.dim(account.keyId)}`)
+      }
+    }
+  } finally {
+    await signer.close()
+  }
+}
+
+/**
+ * `vibekit keystore remove <address|name|key-id> [--yes]` — resolve an
+ * account through the daemon and destroy its key. Unresolved non-address
+ * targets fall through to the raw keystore CLI, which removes by key id
+ * without a daemon.
+ */
+async function keystoreRemove(args: string[]): Promise<void> {
+  const yes = args.includes('--yes') || args.includes('-y')
+  const target = args.find((arg) => !arg.startsWith('-'))
+  if (!target) {
+    console.error(pc.red('usage: vibekit keystore remove <address|name|key-id> [--yes]'))
+    process.exit(1)
+  }
+
+  const signer = await connectSigner()
+  if (signer) {
+    try {
+      const accounts = await signer.listAccounts()
+      const byName = accounts.filter((account) => account.name === target)
+      if (byName.length > 1) {
+        console.error(pc.red(`Name "${target}" matches ${byName.length} accounts — remove by address:`))
+        for (const account of byName) console.error(`  ${account.address}`)
+        process.exit(1)
+      }
+      const match = accounts.find((account) => account.address === target) ?? byName[0]
+      if (match) {
+        if (!yes) {
+          const { confirm } = await import('../utils/prompts.js')
+          const label = match.name ? `${match.name} (${match.address})` : match.address
+          const approved = await confirm(
+            `Destroy the key for ${label}? Funds on this account become unrecoverable.`,
+            false,
+          )
+          if (!approved) {
+            console.log('Kept.')
+            return
+          }
+        }
+        const { keyId } = await signer.removeAccount(match.address)
+        console.log(`Removed ${match.address} (${keyId})`)
+        return
+      }
+      if (algosdk.isValidAddress(target)) {
+        console.error(pc.red(`No key in the keystore daemon for address ${target}`))
+        process.exit(1)
+      }
+      // Not an address and not a known name — likely a raw key id; the
+      // keystore CLI handles those (and works without the daemon).
+    } finally {
+      await signer.close()
+    }
+  } else if (algosdk.isValidAddress(target)) {
+    // Address resolution needs the daemon's address book.
+    console.error(pc.red(DAEMON_HINT))
+    process.exit(1)
+  }
+  await passthrough(['remove', target])
+}
+
+async function passthrough(args: string[]): Promise<void> {
   let bin: string
   try {
     bin = await provisionKeystoreCli()
@@ -80,4 +178,11 @@ export async function commandKeystore(args: string[]): Promise<void> {
 
   const proc = Bun.spawn([bin, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' })
   process.exitCode = await proc.exited
+}
+
+export async function commandKeystore(args: string[]): Promise<void> {
+  const [sub = '', ...rest] = args
+  if (sub === 'accounts') return keystoreAccounts(rest)
+  if (sub === 'remove') return keystoreRemove(rest)
+  await passthrough(args)
 }

@@ -11,15 +11,19 @@ const publicKey = algosdk.decodeAddress(account.addr.toString()).publicKey
 
 function fakeKeystore() {
   let closed = false
+  const removed: string[] = []
   const keystore = {
     export: async (id: string) =>
       id === 'key-1' ? { publicKey } : { publicKey: new Uint8Array(16) }, // key-2: wrong length
     sign: async (_id: string, data: Uint8Array) => nacl.sign.detached(data, secretKey),
+    remove: async (id: string) => {
+      removed.push(id)
+    },
     close: async () => {
       closed = true
     },
   }
-  return { keystore, isClosed: () => closed }
+  return { keystore, isClosed: () => closed, removed }
 }
 
 const suggestedParams: algosdk.SuggestedParams = {
@@ -33,6 +37,18 @@ const suggestedParams: algosdk.SuggestedParams = {
 }
 
 describe('createSignerFromKeystore', () => {
+  test('removeAccount destroys the key behind an address and forgets it', async () => {
+    const { keystore, removed } = fakeKeystore()
+    const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }])
+    const { keyId } = await signer.removeAccount(account.addr.toString())
+    expect(keyId).toBe('key-1')
+    expect(removed).toEqual(['key-1'])
+    // Unknown addresses refuse rather than silently no-op.
+    await expect(signer.removeAccount(algosdk.generateAccount().addr.toString())).rejects.toThrow(
+      'No key in the keystore daemon',
+    )
+  })
+
   test('builds address book from exportable ed25519 keys only', async () => {
     const { keystore } = fakeKeystore()
     const signer = createSignerFromKeystore(keystore, () => [{ id: 'key-1' }, { id: 'key-2' }])

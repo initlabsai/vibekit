@@ -27,6 +27,8 @@ export interface KeystoreLike {
     keyUsages: string[]
     params?: Record<string, unknown>
   }): Promise<string>
+  /** Destroy a key and its metadata inside the keystore. Irreversible. */
+  remove?(id: string): Promise<void>
   close?(): Promise<void>
 }
 
@@ -45,6 +47,12 @@ export interface KeystoreSigner {
    * CLI-side generates are not, until the daemon restarts.
    */
   createAccount(name?: string): Promise<{ address: string; keyId: string }>
+  /**
+   * Destroy the key behind an address (material and metadata). Irreversible:
+   * without the key the account's funds are unrecoverable. Callers confirm
+   * with the user before calling this.
+   */
+  removeAccount(address: string): Promise<{ keyId: string }>
   /** Drop the socket. Required in short-lived processes. */
   close(): Promise<void>
   /**
@@ -142,6 +150,15 @@ export function createSignerFromKeystore(
       const address = algosdk.encodeAddress(data.publicKey)
       addressBook.set(address, { keyId, ...(name ? { name } : {}) })
       return { address, keyId }
+    },
+    async removeAccount(address) {
+      if (!keystore.remove) {
+        throw new Error('This keystore connection does not support key removal')
+      }
+      const keyId = await keyIdFor(address)
+      await keystore.remove(keyId)
+      addressBook.delete(address)
+      return { keyId }
     },
     async close() {
       await keystore.close?.()

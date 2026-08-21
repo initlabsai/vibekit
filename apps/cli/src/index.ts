@@ -45,7 +45,9 @@ ${pc.bold('Headless setup (no prompts — agents/CI):')}
 ${pc.bold('Accounts:')}
   Keys live in the OS keystore behind the keystore daemon (managed install, no global needed):
     vibekit keystore serve      Start the signing daemon (required for execute mode)
-    vibekit keystore list       List keys (or ask your agent: list_signing_addresses)
+    vibekit keystore accounts   List signing accounts: address, name, key id (daemon required)
+    vibekit keystore list       List raw keys (or ask your agent: list_signing_addresses)
+    vibekit keystore remove <address|name|key-id>   Destroy a key (confirms; --yes to skip)
     Ask your agent to create accounts (create_signing_account); mnemonic/seed flows:
     vibekit keystore generate seed
 
