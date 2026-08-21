@@ -66,6 +66,21 @@ export const transactionDetailDataSchema = z
     createdAssetId: uint64JsonSchema.optional(),
     createdApplicationId: uint64JsonSchema.optional(),
     signer: algorandAddressCandidateSchema.optional(),
+    logs: z.array(z.string().min(1)).optional(),
+    applicationArgs: z.array(z.string().min(1)).optional(),
+    methodName: z.string().min(1).optional(),
+    methodArgs: z
+      .array(
+        z
+          .object({
+            name: z.string().min(1).optional(),
+            type: z.string().min(1),
+            value: z.unknown().optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+    methodReturn: z.unknown().optional(),
   })
   .strict()
 
@@ -104,6 +119,11 @@ export interface TransactionRowData {
   assetConfig?: z.infer<typeof transactionAssetConfigDataSchema>
   createdAssetId?: string | number
   createdApplicationId?: string | number
+  logs?: string[]
+  applicationArgs?: string[]
+  methodName?: string
+  methodArgs?: Array<{ name?: string; type: string; value?: unknown }>
+  methodReturn?: unknown
   innerTxns?: TransactionRowData[]
 }
 
@@ -134,6 +154,21 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z
     assetConfig: transactionAssetConfigDataSchema.optional(),
     createdAssetId: uint64JsonSchema.optional(),
     createdApplicationId: uint64JsonSchema.optional(),
+    logs: z.array(z.string().min(1)).optional(),
+    applicationArgs: z.array(z.string().min(1)).optional(),
+    methodName: z.string().min(1).optional(),
+    methodArgs: z
+      .array(
+        z
+          .object({
+            name: z.string().min(1).optional(),
+            type: z.string().min(1),
+            value: z.unknown().optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+    methodReturn: z.unknown().optional(),
     innerTxns: z
       .array(z.lazy((): z.ZodType<TransactionRowData> => transactionRowSchema))
       .optional(),
@@ -204,6 +239,11 @@ export function buildTransactionDetailRecord(
         ? {}
         : { createdApplicationId: txn.createdApplicationId }),
       ...(txn.signer === undefined ? {} : { signer: txn.signer }),
+      ...(txn.logs === undefined ? {} : { logs: txn.logs }),
+      ...(txn.applicationArgs === undefined ? {} : { applicationArgs: txn.applicationArgs }),
+      ...(txn.methodName === undefined ? {} : { methodName: txn.methodName }),
+      ...(txn.methodArgs === undefined ? {} : { methodArgs: txn.methodArgs }),
+      ...(txn.methodReturn === undefined ? {} : { methodReturn: txn.methodReturn }),
     }),
   })
 }
@@ -251,6 +291,11 @@ function txnRow(
     ...(wire.createdApplicationId === undefined
       ? {}
       : { createdApplicationId: wire.createdApplicationId }),
+    ...(wire.logs === undefined ? {} : { logs: wire.logs }),
+    ...(wire.applicationArgs === undefined ? {} : { applicationArgs: wire.applicationArgs }),
+    ...(wire.methodName === undefined ? {} : { methodName: wire.methodName }),
+    ...(wire.methodArgs === undefined ? {} : { methodArgs: wire.methodArgs }),
+    ...(wire.methodReturn === undefined ? {} : { methodReturn: wire.methodReturn }),
     ...(wire.innerTxns && wire.innerTxns.length > 0
       ? // Inner transactions share the outer wire shape; the subpath's
         // inferred type flattens the recursion to Record<string, unknown>.
@@ -331,6 +376,19 @@ export const transactionDetailViewModelSchema = z
     createdAssetId: uint64JsonSchema.optional(),
     createdApplicationId: uint64JsonSchema.optional(),
     signer: algorandAddressCandidateSchema.optional(),
+    methodName: z.string().min(1).optional(),
+    methodArgs: z
+      .array(
+        z
+          .object({
+            name: z.string().min(1).optional(),
+            type: z.string().min(1),
+            value: z.unknown().optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+    methodReturn: z.unknown().optional(),
   })
   .strict()
 
@@ -403,6 +461,9 @@ export function createTransactionDetailViewModel(
       ? {}
       : { createdApplicationId: data.createdApplicationId }),
     ...(data.signer === undefined ? {} : { signer: data.signer }),
+    ...(data.methodName === undefined ? {} : { methodName: data.methodName }),
+    ...(data.methodArgs === undefined ? {} : { methodArgs: data.methodArgs }),
+    ...(data.methodReturn === undefined ? {} : { methodReturn: data.methodReturn }),
   })
   return { ok: true, model }
 }

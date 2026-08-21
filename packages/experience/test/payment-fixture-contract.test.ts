@@ -100,6 +100,7 @@ describe('fixture-backed payment write flow', () => {
         },
       })
       expect(JSON.parse(JSON.stringify(derived.model))).toEqual(derived.model)
+      expect(derived.model.graph?.horizontals[0]?.label.type).toBe('payment')
     }
     if (!state) throw new Error('Expected confirmed flow')
 

@@ -235,6 +235,39 @@ describe('view cue', () => {
     expect(derived.model.note).toBe('0464557001787207684-54-16')
   })
 
+  test('transaction detail keeps decoded ABI method, args, and return', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: '1',
+        toolName: 'lookup_transaction',
+        view: 'transaction.detail',
+        output: {
+          id: FIXTURE_TRANSACTION_ID,
+          type: 'appl',
+          sender: FIXTURE_SENDER,
+          feeMicroAlgos: 1000,
+          confirmedRound: 10,
+          applicationId: 1042,
+          applicationArgs: ['AQIDBA=='],
+          methodName: 'increment',
+          methodArgs: [{ name: 'amount', type: 'uint64', value: 7 }],
+          methodReturn: 8,
+        },
+        isError: false,
+      },
+      identity,
+    )
+    const store = addResult(createResultStore(), bridged.record)
+    const derived = createTransactionDetailViewModel(
+      store,
+      viewFor(bridged.record, 'transaction.detail'),
+    )
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.methodName).toBe('increment')
+    expect(derived.model.methodArgs).toEqual([{ name: 'amount', type: 'uint64', value: 7 }])
+    expect(derived.model.methodReturn).toBe(8)
+  })
+
   test('bridges get_network_status onto the network card', () => {
     const bridged = bridgeToolResult(
       {

@@ -20,7 +20,7 @@ import {
 } from '../src/index.js'
 import { base64ToBytes } from '@initlabs/vibekit-core'
 
-import { decodePaymentGroup, signedGroupRecordFor } from '../src/live/index.js'
+import { decodePaymentGroup, decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
 import recorded from './recorded/localnet-payment.json'
 
 const DRAFT_IDENTITY = {
@@ -40,13 +40,18 @@ function decodedFacts(): DecodedPaymentFacts {
 
 describe('live payment mapping over recorded engine outputs', () => {
   test('decodes the authoritative facts from the real group bytes', () => {
-    expect(decodedFacts()).toEqual({
+    expect(decodedFacts()).toMatchObject({
       sender: recorded.request.sender,
       receiver: recorded.request.receiver,
       amountMicroAlgos: recorded.request.amountMicroAlgos,
       feeMicroAlgos: 1000,
       note: recorded.request.note,
       transactionTypes: ['pay'],
+    })
+    expect(decodedFacts().graphTransactions?.[0]).toMatchObject({
+      type: 'pay',
+      sender: recorded.request.sender,
+      receiver: recorded.request.receiver,
     })
   })
 
@@ -58,6 +63,15 @@ describe('live payment mapping over recorded engine outputs', () => {
     const txn = recorded.compose.unsignedGroup[0]!
     expect(() => decodePaymentGroup([txn, txn])).toThrow('group size')
     expect(() => decodePaymentGroup(['aGVsbG8='])).toThrow()
+  })
+
+  test('decodeUnsignedGroup accepts a multi-transaction group', () => {
+    const txn = recorded.compose.unsignedGroup[0]!
+    const facts = decodeUnsignedGroup([txn, txn])
+    expect(facts.transactionTypes).toEqual(['pay', 'pay'])
+    expect(facts.receiver).toBeUndefined()
+    expect(facts.graphTransactions).toHaveLength(2)
+    expect(facts.sender).toBe(recorded.request.sender)
   })
 
   test('wraps the recorded compose output as a valid draft record', () => {

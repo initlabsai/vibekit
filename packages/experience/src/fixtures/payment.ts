@@ -28,6 +28,7 @@ import {
   type StructuredResult,
 } from '../core/results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import type { BlockTailTick } from '../live/block-tail.js'
 import {
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
@@ -93,10 +94,22 @@ const draftData = paymentDraftDataSchema.parse({
   receiver: FIXTURE_RECEIVER,
   amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   note: 'Explorer fixture payment',
+  feeMicroAlgos: PAYMENT_FIXTURE_FEE_MICROALGOS,
+  transactionTypes: ['pay'],
   unsignedGroup: {
     transactions: [PAYMENT_FIXTURE_UNSIGNED_TRANSACTION],
     summary: PAYMENT_FIXTURE_GROUP_SUMMARY,
   },
+  graphTransactions: [
+    {
+      type: 'pay',
+      sender: FIXTURE_SENDER,
+      receiver: FIXTURE_RECEIVER,
+      paymentAmountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
+      feeMicroAlgos: PAYMENT_FIXTURE_FEE_MICROALGOS,
+      note: 'Explorer fixture payment',
+    },
+  ],
 })
 
 const simulationData = paymentSimulationDataSchema.parse({
@@ -195,7 +208,11 @@ function reference(id: string): ResultReference {
 export function createFixturePaymentHost(): PaymentFlowHost &
   AccountLookupHost &
   TransactionLookupHost &
-  ReturnType<typeof createFixtureEntityLookup> {
+  ReturnType<typeof createFixtureEntityLookup> & {
+    statusRound(): Promise<{ lastRound: number }>
+    waitAfterBlock(round: number): Promise<{ lastRound: number }>
+    readBlockTick(round: number): Promise<BlockTailTick>
+  } {
   let counter = 0
   const reidentify = (record: StructuredResult): StructuredResult => {
     counter += 1
@@ -237,6 +254,15 @@ export function createFixturePaymentHost(): PaymentFlowHost &
     },
     async submitSigned() {
       return reidentify(recordById(PAYMENT_FIXTURE_CONFIRMATION_RESULT_ID))
+    },
+    async statusRound() {
+      throw new Error('sample data has no block tail')
+    },
+    async waitAfterBlock() {
+      throw new Error('sample data has no block tail')
+    },
+    async readBlockTick() {
+      throw new Error('sample data has no block tail')
     },
   }
 }

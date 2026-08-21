@@ -34,6 +34,8 @@ import {
   buildTransactionGroupRecord,
   buildTransactionListRecord,
 } from '../views/transaction.js'
+import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
+import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
   buildPaymentConfirmationRecord,
   buildPaymentDraftRecord,
@@ -45,31 +47,100 @@ import {
 import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../flows/payment.js'
 import type { StructuredResult } from '../core/results.js'
 
+
+
 /**
- * Decodes the authoritative facts of one unsigned payment group. This slice
- * supports exactly one plain pay transaction: anything else — groups, other
- * types, account-closing payments — is refused rather than partially shown.
+ * Decodes the authoritative facts of an unsigned group of 1–16 transactions.
+ * Payment receiver/amount are filled only when every transaction is a plain pay
+ * and there is exactly one of them — mixed groups stay group-shaped.
+ */
+export function decodeUnsignedGroup(transactions: readonly string[]): DecodedPaymentFacts {
+  if (transactions.length === 0 || transactions.length > 16) {
+    throw new Error(`Unsupported group size: ${transactions.length}`)
+  }
+  const decoded = transactions.map((entry) => algosdk.decodeUnsignedTransaction(base64ToBytes(entry)))
+  const graphTransactions = decoded.map((txn) => formatAlgodTransaction(txn))
+  let fee = 0n
+  for (const txn of decoded) fee += BigInt(txn.fee)
+  const types = decoded.map((txn) => String(txn.type))
+  const note = printableNote(decoded[0]?.note)
+  const singlePay =
+    decoded.length === 1 &&
+    decoded[0]!.type === algosdk.TransactionType.pay &&
+    decoded[0]!.payment &&
+    decoded[0]!.payment.closeRemainderTo === undefined
+  return decodedPaymentFactsSchema.parse({
+    sender: decoded[0]!.sender.toString(),
+    ...(singlePay
+      ? {
+          receiver: decoded[0]!.payment!.receiver.toString(),
+          amountMicroAlgos: safeUint64(decoded[0]!.payment!.amount),
+        }
+      : {}),
+    feeMicroAlgos: safeUint64(fee),
+    ...(note === undefined ? {} : { note }),
+    transactionTypes: types,
+    graphTransactions,
+  })
+}
+
+/**
+ * Decodes the authoritative facts of one unsigned payment group. This helper
+ * still refuses anything but a single plain pay so payment-only callers do
+ * not silently present a mixed group.
  */
 export function decodePaymentGroup(transactions: readonly string[]): DecodedPaymentFacts {
-  if (transactions.length !== 1) {
-    throw new Error(`Unsupported group size for the payment slice: ${transactions.length}`)
+  const facts = decodeUnsignedGroup(transactions)
+  if (
+    facts.transactionTypes.length !== 1 ||
+    facts.transactionTypes[0] !== 'pay' ||
+    facts.receiver === undefined ||
+    facts.amountMicroAlgos === undefined
+  ) {
+    throw new Error(
+      facts.transactionTypes.length !== 1
+        ? `Unsupported group size for the payment slice: ${facts.transactionTypes.length}`
+        : `Unsupported transaction type for the payment slice: ${facts.transactionTypes[0]}`,
+    )
   }
-  const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(transactions[0]!))
-  if (txn.type !== algosdk.TransactionType.pay || !txn.payment) {
-    throw new Error(`Unsupported transaction type for the payment slice: ${txn.type}`)
+  return facts
+}
+
+/**
+ * Simulates the exact unsigned group bytes (empty signatures allowed). Used
+ * by the live host so approval reviews the drafted transactions, not a
+ * reconstructed spec.
+ */
+export async function simulateUnsignedGroup(
+  algod: algosdk.Algodv2,
+  transactions: readonly string[],
+): Promise<{
+  wouldSucceed: boolean
+  failureMessage?: string
+  simulatedRound: number
+  txids: string[]
+}> {
+  const emptySigner = algosdk.makeEmptyTransactionSigner()
+  const atc = new algosdk.AtomicTransactionComposer()
+  for (const encoded of transactions) {
+    atc.addTransaction({
+      txn: algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)),
+      signer: emptySigner,
+    })
   }
-  if (txn.payment.closeRemainderTo !== undefined) {
-    throw new Error('Account-closing payments are not part of the payment slice')
-  }
-  const note = txn.note && txn.note.length > 0 ? new TextDecoder().decode(txn.note) : undefined
-  return decodedPaymentFactsSchema.parse({
-    sender: txn.sender.toString(),
-    receiver: txn.payment.receiver.toString(),
-    amountMicroAlgos: Number(txn.payment.amount),
-    feeMicroAlgos: Number(txn.fee),
-    ...(note === undefined ? {} : { note }),
-    transactionTypes: [txn.type],
+  const request = new algosdk.modelsv2.SimulateRequest({
+    txnGroups: [],
+    allowEmptySignatures: true,
   })
+  const { simulateResponse } = await atc.simulate(algod, request)
+  const group = simulateResponse.txnGroups[0]
+  const txids = atc.buildGroup().map((entry) => entry.txn.txID())
+  return {
+    wouldSucceed: !group?.failureMessage,
+    ...(group?.failureMessage ? { failureMessage: group.failureMessage } : {}),
+    simulatedRound: Number(simulateResponse.lastRound),
+    txids,
+  }
 }
 
 /** Decodes a draft record's group into algosdk transactions for a signer. */
@@ -116,14 +187,15 @@ export function signedGroupRecordFor(
   })
 }
 
-/** Builds a draft record from a compose-mode send_payment wire result. */
+/** Builds a draft record from a compose-mode unsigned-group wire result. */
 export function draftRecordFromComposeWire(
   identity: { resultId: string; toolCallId: string; network: string },
   wire: unknown,
+  toolName = 'send_payment',
 ): StructuredResult {
   const { unsignedGroup } = wire as { unsignedGroup: string[] }
-  const decoded = decodePaymentGroup(unsignedGroup)
-  return buildPaymentDraftRecord(identity, wire, decoded)
+  const decoded = decodeUnsignedGroup(unsignedGroup)
+  return buildPaymentDraftRecord(identity, wire, decoded, toolName)
 }
 
 /** Parameters for composing one live unsigned payment. */
@@ -168,6 +240,12 @@ export interface PaymentComposeHost {
   lookupAccountAppStates(address: string): Promise<StructuredResult>
   /** Lists transactions involving an account. */
   lookupAccountTransactions(address: string): Promise<StructuredResult>
+  /** Current algod lastRound. */
+  statusRound(): Promise<{ lastRound: number }>
+  /** Resolves when lastRound is greater than `round` (algod wait-for-block). */
+  waitAfterBlock(round: number): Promise<{ lastRound: number }>
+  /** Reads one confirmed round from algod as feed-ready block + transaction records. */
+  readBlockTick(round: number): Promise<BlockTailTick>
 }
 
 function requireTool(deployment: ResolvedDeployment, name: string): AnyTool {
@@ -212,7 +290,6 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     ],
   })
   const sendPayment = requireTool(deployment, 'send_payment')
-  const simulateTransactions = requireTool(deployment, 'simulate_transactions')
   const accountPortfolio = requireTool(deployment, 'get_account_portfolio')
   const batchLookupAccounts = requireTool(deployment, 'batch_lookup_accounts')
   const lookupTransactionTool = requireTool(deployment, 'lookup_transaction')
@@ -262,19 +339,9 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         throw new Error('Cannot simulate a failed draft record')
       }
       const draft = paymentDraftDataSchema.parse(draftRecord.data)
-      // The group bytes, not the request parameters, are the simulated truth.
-      const decoded = decodePaymentGroup(draft.unsignedGroup.transactions)
-      const wire = await executeToolCall(deployment, simulateTransactions, {
-        transactions: [
-          {
-            type: 'payment',
-            sender: decoded.sender,
-            receiver: decoded.receiver,
-            amountMicroAlgos: Number(decoded.amountMicroAlgos),
-            ...(decoded.note === undefined ? {} : { note: decoded.note }),
-          },
-        ],
-      })
+      // The group bytes, not reconstructed specs, are the simulated truth.
+      const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions)
+      const wire = await simulateUnsignedGroup(context.algod, draft.unsignedGroup.transactions)
       return buildPaymentSimulationRecord(
         {
           resultId: newId('result-live-payment-simulation'),
@@ -421,5 +488,41 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         'search_account_transactions',
       )
     },
+    async statusRound() {
+      const status = await context.algod.status().do()
+      return { lastRound: Number(status.lastRound) }
+    },
+    async waitAfterBlock(round) {
+      const status = await context.algod.statusAfterBlock(round).do()
+      return { lastRound: Number(status.lastRound) }
+    },
+    async readBlockTick(round) {
+      const response = await context.algod.block(round).do()
+      const header = response.block.header
+      const payset = response.block.payset ?? []
+      return tickFromAlgodBlock(
+        {
+          resultId: newId('result-live-block-tick'),
+          toolCallId: newId('tool-call-live-block-tick'),
+          network,
+        },
+        header,
+        payset.map((entry) => ({
+          txn: entry.signedTxn.signedTxn.txn,
+          apply: entry.signedTxn.applyData,
+        })),
+      )
+    },
   }
 }
+
+export {
+  matchesInTick,
+  runBlockTail,
+  tickFromAlgodBlock,
+  withRelated,
+  type BlockTailClock,
+  type BlockTailMatch,
+  type BlockTailTick,
+  type BlockTailWatch,
+} from './block-tail.js'

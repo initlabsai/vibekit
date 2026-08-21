@@ -12,6 +12,7 @@ import {
   createResultStore,
   createTransactionCollectionViewModel,
   FIXTURE_ADDRESS_BOOK,
+  FIXTURE_APPLICATION_ID,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
@@ -78,14 +79,17 @@ describe('account portfolio slice', () => {
     ).rejects.toThrow('sample accounts')
   })
 
-  test('the sample host serves empty assets/apps and the recorded sender payment', async () => {
+  test('the sample host serves empty assets, the sample opted-in app, and the recorded sender payment', async () => {
     const host = createFixturePaymentHost()
     const assets = await host.lookupAccountAssets(FIXTURE_SENDER)
     expect(assets).toMatchObject({ toolName: 'get_account_assets', data: { assets: [] } })
     const apps = await host.lookupAccountAppStates(FIXTURE_SENDER)
     expect(apps).toMatchObject({
       toolName: 'get_account_app_local_states',
-      data: { address: FIXTURE_SENDER, apps: [] },
+      data: {
+        address: FIXTURE_SENDER,
+        apps: [{ applicationId: FIXTURE_APPLICATION_ID }],
+      },
     })
     const txns = await host.lookupAccountTransactions(FIXTURE_SENDER)
     const derived = createTransactionCollectionViewModel(

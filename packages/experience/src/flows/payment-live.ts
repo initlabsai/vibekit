@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
+
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
 import {
@@ -47,39 +49,75 @@ export const simulateWireResultSchema = z.object({
 /**
  * Facts a host decodes from the actual unsigned group bytes with algosdk.
  * The bytes are authoritative; these fields must come from them, never from
- * request parameters.
+ * request parameters. Receiver/amount are set when the group is a single pay.
  */
 export const decodedPaymentFactsSchema = z
   .object({
     sender: algorandAddressCandidateSchema,
-    receiver: algorandAddressCandidateSchema,
-    amountMicroAlgos: uint64JsonSchema,
+    receiver: algorandAddressCandidateSchema.optional(),
+    amountMicroAlgos: uint64JsonSchema.optional(),
     feeMicroAlgos: uint64JsonSchema,
     note: z.string().min(1).optional(),
     transactionTypes: z.array(z.string().min(1)).min(1),
+    graphTransactions: z.array(viewDataSchemas['transaction.detail']).min(1).optional(),
   })
   .strict()
 
 /** Facts a host decodes from the actual unsigned group bytes. */
 export type DecodedPaymentFacts = z.infer<typeof decodedPaymentFactsSchema>
 
+function algoEffectsFromFacts(
+  facts: DecodedPaymentFacts,
+  toJson: (value: bigint) => number | string,
+): Array<{ account: string; deltaMicroAlgos: number | string }> {
+  const byAccount = new Map<string, bigint>()
+  const add = (account: string, delta: bigint) => {
+    byAccount.set(account, (byAccount.get(account) ?? 0n) + delta)
+  }
+  if (facts.graphTransactions && facts.graphTransactions.length > 0) {
+    for (const txn of facts.graphTransactions) {
+      add(txn.sender, -BigInt(txn.feeMicroAlgos))
+      if (txn.type === 'pay' && txn.receiver !== undefined && txn.paymentAmountMicroAlgos !== undefined) {
+        const amount = BigInt(txn.paymentAmountMicroAlgos)
+        add(txn.sender, -amount)
+        add(txn.receiver, amount)
+      }
+    }
+  } else if (facts.amountMicroAlgos !== undefined && facts.receiver !== undefined) {
+    const amount = BigInt(facts.amountMicroAlgos)
+    const fee = BigInt(facts.feeMicroAlgos)
+    add(facts.sender, -(amount + fee))
+    add(facts.receiver, amount)
+  } else {
+    add(facts.sender, -BigInt(facts.feeMicroAlgos))
+  }
+  return [...byAccount.entries()].map(([account, delta]) => ({
+    account,
+    deltaMicroAlgos: toJson(delta),
+  }))
+}
+
 /** Wraps a compose-mode payment result and its decoded facts as a draft record. */
 export function buildPaymentDraftRecord(
   identity: ResultIdentity,
   wire: unknown,
   decoded: DecodedPaymentFacts,
+  toolName = 'send_payment',
 ): StructuredResult {
   const compose = composeWireResultSchema.parse(wire)
   const facts = decodedPaymentFactsSchema.parse(decoded)
   const data: PaymentDraftData = paymentDraftDataSchema.parse({
     sender: facts.sender,
-    receiver: facts.receiver,
-    amountMicroAlgos: facts.amountMicroAlgos,
+    ...(facts.receiver === undefined ? {} : { receiver: facts.receiver }),
+    ...(facts.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: facts.amountMicroAlgos }),
     ...(facts.note === undefined ? {} : { note: facts.note }),
+    feeMicroAlgos: facts.feeMicroAlgos,
+    transactionTypes: facts.transactionTypes,
     unsignedGroup: {
       transactions: compose.unsignedGroup,
       summary: compose.summary,
     },
+    ...(facts.graphTransactions === undefined ? {} : { graphTransactions: facts.graphTransactions }),
   })
   return structuredResultSchema.parse({
     protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
@@ -87,16 +125,16 @@ export function buildPaymentDraftRecord(
     state: 'success',
     resultId: identity.resultId,
     toolCallId: identity.toolCallId,
-    toolName: 'send_payment',
+    toolName,
     network: identity.network,
     data,
   })
 }
 
 /**
- * Wraps a simulate_transactions result as a simulation record. Sender,
- * receiver, amount, and fee come from the decoded draft group — the bytes
- * under approval — and balance effects derive from them with integer math.
+ * Wraps a simulate_transactions result as a simulation record. Sender, fee,
+ * and optional payment facts come from the decoded draft group — the bytes
+ * under approval — and ALGO balance effects derive from them with integer math.
  */
 export function buildPaymentSimulationRecord(
   identity: ResultIdentity,
@@ -105,26 +143,22 @@ export function buildPaymentSimulationRecord(
 ): StructuredResult {
   const simulation = simulateWireResultSchema.parse(wire)
   const facts = decodedPaymentFactsSchema.parse(decoded)
-  const amount = BigInt(facts.amountMicroAlgos)
-  const fee = BigInt(facts.feeMicroAlgos)
   const toJson = (value: bigint): number | string => {
     const absolute = value < 0n ? -value : value
     return absolute <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
   }
+  const effects = algoEffectsFromFacts(facts, toJson)
   const data = paymentSimulationDataSchema.parse({
     wouldSucceed: simulation.wouldSucceed,
     ...(simulation.failureMessage === undefined
       ? {}
       : { failureMessage: simulation.failureMessage }),
     sender: facts.sender,
-    receiver: facts.receiver,
-    amountMicroAlgos: facts.amountMicroAlgos,
+    ...(facts.receiver === undefined ? {} : { receiver: facts.receiver }),
+    ...(facts.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: facts.amountMicroAlgos }),
     feeMicroAlgos: facts.feeMicroAlgos,
     group: { size: facts.transactionTypes.length, transactionTypes: facts.transactionTypes },
-    effects: [
-      { account: facts.sender, deltaMicroAlgos: toJson(-(amount + fee)) },
-      { account: facts.receiver, deltaMicroAlgos: toJson(amount) },
-    ],
+    effects,
     simulatedRound: simulation.simulatedRound,
   })
   return structuredResultSchema.parse({

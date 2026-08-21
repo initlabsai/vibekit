@@ -1,6 +1,12 @@
+import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
 import { z } from 'zod'
 
 import { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema } from '../core/algo.js'
+import {
+  buildTransactionsGraph,
+  transactionsGraphSchema,
+  type GraphTransaction,
+} from '../views/transaction-graph.js'
 import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../core/classifier.js'
 import {
   approvalDecisionSchema,
@@ -32,26 +38,31 @@ export const paymentEffectSchema = z
   .strict()
 
 /**
- * Authoritative data of a composed, unsigned payment draft result. The
- * base64 group bytes are the ground truth the flow inspects and approves.
+ * Authoritative data of a composed, unsigned write-group draft. The base64
+ * group bytes are the ground truth the flow inspects and approves. Payment
+ * receiver/amount are present when the group is a single plain pay.
  */
 export const paymentDraftDataSchema = z
   .object({
     sender: algorandAddressCandidateSchema,
-    receiver: algorandAddressCandidateSchema,
-    amountMicroAlgos: uint64JsonSchema,
+    receiver: algorandAddressCandidateSchema.optional(),
+    amountMicroAlgos: uint64JsonSchema.optional(),
     note: z.string().min(1).optional(),
+    feeMicroAlgos: uint64JsonSchema,
+    transactionTypes: z.array(z.string().min(1)).min(1),
     unsignedGroup: z
       .object({
         transactions: z.array(z.string().min(1)).min(1).describe('base64, group order'),
         summary: z.string().min(1),
       })
       .strict(),
+    // Decoded txn rows for the flow graph; omitted on records that predate L4.
+    graphTransactions: z.array(viewDataSchemas['transaction.detail']).min(1).optional(),
   })
   .strict()
 
 /**
- * Authoritative data of a payment simulation result. It restates the reviewed
+ * Authoritative data of a write-group simulation. It restates the reviewed
  * group facts so the approval view has one authoritative source; the view
  * model cross-checks them against the draft before presenting.
  */
@@ -60,8 +71,8 @@ export const paymentSimulationDataSchema = z
     wouldSucceed: z.boolean(),
     failureMessage: z.string().min(1).optional(),
     sender: algorandAddressCandidateSchema,
-    receiver: algorandAddressCandidateSchema,
-    amountMicroAlgos: uint64JsonSchema,
+    receiver: algorandAddressCandidateSchema.optional(),
+    amountMicroAlgos: uint64JsonSchema.optional(),
     feeMicroAlgos: uint64JsonSchema,
     group: z
       .object({
@@ -505,7 +516,7 @@ const paymentEffectViewSchema = z
   })
   .strict()
 
-/** Renderer-ready semantic model for one observable payment write flow. */
+/** Renderer-ready semantic model for one observable write flow. */
 export const paymentFlowViewModelSchema = z
   .object({
     flow: z.literal('payment'),
@@ -514,8 +525,8 @@ export const paymentFlowViewModelSchema = z
     nextEventKinds: z.array(z.enum(writeFlowEventKinds)),
     network: z.string().min(1),
     sender: algorandAddressCandidateSchema,
-    receiver: algorandAddressCandidateSchema,
-    amountMicroAlgos: uint64JsonSchema,
+    receiver: algorandAddressCandidateSchema.optional(),
+    amountMicroAlgos: uint64JsonSchema.optional(),
     note: z.string().min(1).optional(),
     unsignedGroup: z
       .object({
@@ -524,6 +535,7 @@ export const paymentFlowViewModelSchema = z
         transactions: z.array(z.string().min(1)).min(1),
       })
       .strict(),
+    graph: transactionsGraphSchema.optional(),
     simulation: z
       .object({
         wouldSucceed: z.boolean(),
@@ -574,11 +586,11 @@ function invalid(message: string): PaymentFlowViewModelResult {
 }
 
 /**
- * Derives one renderer-ready payment flow model from the flow's result
- * references. Authoritative sender, network, amount, fees, effects, and the
- * unsigned group bytes come from structured results; a simulation that
- * disagrees with the draft, or a record from another network, refuses to
- * present rather than showing facts the approval would not act on.
+ * Derives one renderer-ready write-flow model from the flow's result
+ * references. Authoritative sender, network, fees, effects, and the unsigned
+ * group bytes come from structured results; a simulation that disagrees with
+ * the draft, or a record from another network, refuses to present rather
+ * than showing facts the approval would not act on.
  */
 export function createPaymentFlowViewModel(
   store: ResultStore,
@@ -607,9 +619,22 @@ export function createPaymentFlowViewModel(
       )
     }
     const data = parsed.data
+    if (data.sender !== draftData.sender) {
+      return invalid('Simulation result does not simulate the drafted group')
+    }
+    if (data.group.size !== draftData.unsignedGroup.transactions.length) {
+      return invalid('Simulation group size does not match the drafted group')
+    }
     if (
-      data.sender !== draftData.sender ||
-      data.receiver !== draftData.receiver ||
+      draftData.receiver !== undefined &&
+      data.receiver !== undefined &&
+      data.receiver !== draftData.receiver
+    ) {
+      return invalid('Simulation result does not simulate the drafted payment')
+    }
+    if (
+      draftData.amountMicroAlgos !== undefined &&
+      data.amountMicroAlgos !== undefined &&
       !sameUint64(data.amountMicroAlgos, draftData.amountMicroAlgos)
     ) {
       return invalid('Simulation result does not simulate the drafted payment')
@@ -625,7 +650,7 @@ export function createPaymentFlowViewModel(
         role:
           effect.account === draftData.sender
             ? ('sender' as const)
-            : effect.account === draftData.receiver
+            : draftData.receiver !== undefined && effect.account === draftData.receiver
               ? ('receiver' as const)
               : ('other' as const),
       })),
@@ -675,6 +700,16 @@ export function createPaymentFlowViewModel(
     confirmation = parsed.data
   }
 
+  let graph: PaymentFlowViewModel['graph']
+  if (draftData.graphTransactions && draftData.graphTransactions.length > 0) {
+    try {
+      const built = buildTransactionsGraph(draftData.graphTransactions as GraphTransaction[])
+      if (built.horizontals.length > 0) graph = built
+    } catch {
+      // A group the graph mapper does not model still presents as facts.
+    }
+  }
+
   const model = paymentFlowViewModelSchema.parse({
     flow: 'payment',
     flowId: flow.flowId,
@@ -682,14 +717,15 @@ export function createPaymentFlowViewModel(
     nextEventKinds: [...writeFlowNextEventKinds(flow)],
     network,
     sender: draftData.sender,
-    receiver: draftData.receiver,
-    amountMicroAlgos: draftData.amountMicroAlgos,
+    ...(draftData.receiver === undefined ? {} : { receiver: draftData.receiver }),
+    ...(draftData.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: draftData.amountMicroAlgos }),
     ...(draftData.note === undefined ? {} : { note: draftData.note }),
     unsignedGroup: {
       size: draftData.unsignedGroup.transactions.length,
       summary: draftData.unsignedGroup.summary,
       transactions: draftData.unsignedGroup.transactions,
     },
+    ...(graph === undefined ? {} : { graph }),
     ...(simulation === undefined ? {} : { simulation }),
     ...(flow.approvalRequest === undefined
       ? {}

@@ -129,23 +129,17 @@ export function bridgeToolResult(
   }
 }
 
-/** Back-compatible record-only wrapper over bridgeToolResult. */
-export function recordForToolResult(
-  event: ToolResultEventLike,
-  identity: ResultIdentity,
-): StructuredResult {
-  return bridgeToolResult(event, identity).record
-}
-
 /**
- * Detects an agent-composed payment: a compose-mode send_payment result whose
- * unsigned group the renderer must route into the approval flow instead of
- * leaving it as chat output.
+ * Detects an agent-composed write: any successful tool output that is core's
+ * UnsignedGroupResult. The renderer routes it into the approval flow instead
+ * of leaving it as chat output. Tool name is not consulted — compose-mode
+ * app_call, asset_create, send_payment, and generated ARC-56 writes share
+ * this wire.
  */
-export function paymentComposeFromToolResult(
+export function unsignedGroupFromToolResult(
   event: ToolResultEventLike,
 ): { unsignedGroup: string[]; summary: string } | undefined {
-  if (event.isError || event.toolName !== 'send_payment') return undefined
+  if (event.isError) return undefined
   const parsed = composeWireResultSchema.safeParse(event.output)
   return parsed.success ? parsed.data : undefined
 }

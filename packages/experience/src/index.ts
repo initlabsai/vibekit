@@ -58,8 +58,7 @@ export { createFixtureAccountLookup, FIXTURE_ADDRESS_BOOK } from './fixtures/acc
 export { buildTransactionDetailRecord } from './views/transaction.js'
 export {
   bridgeToolResult,
-  paymentComposeFromToolResult,
-  recordForToolResult,
+  unsignedGroupFromToolResult,
   viewCueForToolResult,
 } from './agent-lane.js'
 export { lookupAmbiguousEntity, type EntityLookupHost } from './entity-lookup.js'

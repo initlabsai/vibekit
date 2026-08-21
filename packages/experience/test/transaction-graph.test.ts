@@ -739,3 +739,27 @@ describe('stored group records feed the graph', () => {
     expect(graph.horizontals.some((row) => row.depth > 0)).toBe(true)
   })
 })
+
+describe('ABI method names on app-call rows', () => {
+  const appl = {
+    type: 'appl' as const,
+    sender: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+    feeMicroAlgos: 1000,
+    applicationId: 1042,
+    methodName: 'increment',
+  }
+
+  test('copies methodName from the transaction onto the appCall label', () => {
+    const graph = buildTransactionsGraph([appl], { appAddressFor })
+    expect(graph.horizontals[0]?.label).toEqual({ type: 'appCall', methodName: 'increment' })
+  })
+
+  test('methodNameFor fills the label when the transaction has none', () => {
+    const { methodName: _drop, ...bare } = appl
+    const graph = buildTransactionsGraph([bare], {
+      appAddressFor,
+      methodNameFor: () => 'greet',
+    })
+    expect(graph.horizontals[0]?.label.methodName).toBe('greet')
+  })
+})

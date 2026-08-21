@@ -7,6 +7,7 @@ import {
 import { buildApplicationLocalsRecord } from '../views/application.js'
 import { buildAssetHoldingsRecord } from '../views/asset.js'
 import { buildTransactionListRecord } from '../views/transaction.js'
+import { FIXTURE_APPLICATION_ID } from './entities.js'
 import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from './transaction.js'
 
 /**
@@ -90,13 +91,23 @@ export function createFixtureAccountLookup(): AccountLookupHost {
     async lookupAccountAppStates(address: string): Promise<StructuredResult> {
       recordedWire(address)
       counter += 1
+      const appLocalStates =
+        address === FIXTURE_SENDER
+          ? [
+              {
+                applicationId: FIXTURE_APPLICATION_ID,
+                schema: { numByteSlice: 0, numUint: 1 },
+                keyValue: [],
+              },
+            ]
+          : []
       return buildApplicationLocalsRecord(
         {
           resultId: `result-fixture-apps-${counter}`,
           toolCallId: `tool-call-fixture-apps-${counter}`,
           network: 'localnet',
         },
-        { appLocalStates: [], address },
+        { appLocalStates, address },
         'get_account_app_local_states',
       )
     },

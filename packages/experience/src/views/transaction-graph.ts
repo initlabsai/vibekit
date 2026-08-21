@@ -90,7 +90,7 @@ export const graphLabelSchema = z
     assetId: z.number().int().nonnegative().optional(),
     assetDecimals: z.number().int().nonnegative().optional(),
     assetUnitName: z.string().min(1).optional(),
-    // Left undefined at this layer; ABI decoding fills it in later.
+    // Filled from the transaction's methodName or methodNameFor (My Apps spec).
     methodName: z.string().min(1).optional(),
   })
   .strict()
@@ -169,6 +169,12 @@ export interface BuildTransactionsGraphOptions {
    * application's vertical, and inner senders are not tagged as rekeys.
    */
   appAddressFor?: (applicationId: number) => string
+  /**
+   * ABI method name for an application call. Hosts that have a My Apps spec
+   * for the application fill this; the transaction may already carry
+   * `methodName` from earlier enrichment.
+   */
+  methodNameFor?: (txn: GraphTransaction) => string | undefined
 }
 
 interface MutableAssociated {
@@ -504,6 +510,7 @@ function representationsFor(
   verticals: MutableVertical[],
   txn: GraphTransaction,
   parent: GraphTransaction | undefined,
+  methodNameFor?: (txn: GraphTransaction) => string | undefined,
 ): RowSeed[] {
   const senderFrom = (tagAddress?: string): FromTo => {
     if (parent) return fromWithParent(verticals, txn.sender, effectiveApplicationId(parent), tagAddress)
@@ -571,7 +578,13 @@ function representationsFor(
         : verticals.findIndex((v) => v.type === 'application' && v.applicationId === effectiveApplicationId(txn))
       const type =
         (txn.applicationId ?? 0) === 0 ? 'appCreate' : txn.onCompletion === 'update' ? 'appUpdate' : 'appCall'
-      return [{ representation: asRepresentation(senderFrom(), { vertical: to }), label: { type } }]
+      const methodName = txn.methodName ?? methodNameFor?.(txn)
+      return [
+        {
+          representation: asRepresentation(senderFrom(), { vertical: to }),
+          label: { type, ...(methodName ? { methodName } : {}) },
+        },
+      ]
     }
     case 'acfg': {
       // assetId 0 creates; params present reconfigures; params absent destroys.
@@ -619,8 +632,9 @@ function appendRows(
   ancestors: number[],
   hasNextSibling: boolean,
   depth: number,
+  methodNameFor?: (txn: GraphTransaction) => string | undefined,
 ): void {
-  const seeds = representationsFor(verticals, txn, parent)
+  const seeds = representationsFor(verticals, txn, parent, methodNameFor)
   const rowIndex = horizontals.length
   seeds.forEach((seed, index) => {
     horizontals.push({
@@ -636,7 +650,16 @@ function appendRows(
   if (txn.type !== 'appl') return
   const inners = txn.innerTxns ?? []
   inners.forEach((inner, index) => {
-    appendRows(verticals, horizontals, inner, txn, [...ancestors, rowIndex], index < inners.length - 1, depth + 1)
+    appendRows(
+      verticals,
+      horizontals,
+      inner,
+      txn,
+      [...ancestors, rowIndex],
+      index < inners.length - 1,
+      depth + 1,
+      methodNameFor,
+    )
   })
 }
 
@@ -655,7 +678,7 @@ export function buildTransactionsGraph(
   )
   const horizontals: GraphHorizontal[] = []
   for (const txn of transactions) {
-    appendRows(verticals, horizontals, txn, undefined, [], false, 0)
+    appendRows(verticals, horizontals, txn, undefined, [], false, 0, options.methodNameFor)
   }
   return transactionsGraphSchema.parse({ verticals, horizontals })
 }

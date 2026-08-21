@@ -7,9 +7,8 @@ import {
   createPaymentFlowViewModel,
   createTransactionDetailViewModel,
   bridgeToolResult,
-  paymentComposeFromToolResult,
+  unsignedGroupFromToolResult,
   PAYMENT_FIXTURE_TRANSACTION_ID,
-  recordForToolResult,
   startPaymentFlowFromDraftRecord,
   type ToolResultEventLike,
 } from '../src/index.js'
@@ -154,7 +153,7 @@ describe('agent lane result bridge', () => {
       output: recorded.compose,
       isError: false,
     }
-    const compose = paymentComposeFromToolResult(event)
+    const compose = unsignedGroupFromToolResult(event)
     expect(compose?.unsignedGroup).toEqual(recorded.compose.unsignedGroup)
 
     const draftRecord = draftRecordFromComposeWire(identity(), compose)
@@ -173,18 +172,30 @@ describe('agent lane result bridge', () => {
     expect(derived.model.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)
   })
 
-  test('non-payment results never trigger the payment interception', () => {
+  test('unsigned-group shaped results intercept regardless of tool name', () => {
     expect(
-      paymentComposeFromToolResult({
+      unsignedGroupFromToolResult({
         id: 'call-6',
-        toolName: 'lookup_transaction',
+        toolName: 'app_call',
         output: recorded.compose,
+        isError: false,
+      })?.unsignedGroup,
+    ).toEqual(recorded.compose.unsignedGroup)
+    expect(
+      unsignedGroupFromToolResult({
+        id: 'call-7',
+        toolName: 'lookup_transaction',
+        output: {
+          id: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+          sender: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+          feeMicroAlgos: 1000,
+        },
         isError: false,
       }),
     ).toBeUndefined()
     expect(
-      paymentComposeFromToolResult({
-        id: 'call-7',
+      unsignedGroupFromToolResult({
+        id: 'call-8',
         toolName: 'send_payment',
         output: { error: { code: 'DENIED', message: 'denied' } },
         isError: true,
