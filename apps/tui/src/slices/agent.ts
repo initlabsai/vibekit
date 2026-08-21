@@ -20,7 +20,7 @@ import { enrichResultWithAbi } from '../abi-catalog.js'
 import { createExplorerAgent, runAgentTurn } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
-import type { KeystorePaymentHost } from '../keystore-host.js'
+import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
 import { viewFor } from './lookup.js'
@@ -71,6 +71,7 @@ export function useAgentLane({
   const { flowRef, setFlowMode, trackFlowStep, updateFlowBlock, finishPayment } = payment
 
   const agentSectionRef = useRef<number | null>(null)
+  const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
   const agentHasCardsRef = useRef(false)
   const agentRef = useRef<AgentSession | null>(null)
 
@@ -153,6 +154,7 @@ export function useAgentLane({
           const addressBook = signerReady
             ? await keystoreHost.listSigningAccounts().catch(() => [...FIXTURE_ADDRESS_BOOK])
             : [...FIXTURE_ADDRESS_BOOK]
+          addressBookRef.current = addressBook
           agentRef.current = createExplorerAgent({
             model: agentConfig,
             addressBook,
@@ -208,7 +210,10 @@ export function useAgentLane({
                 toolCallId: event.id,
                 network: networkRef.current,
               })
-              const enriched = enrichResultWithAbi(record, specCatalog)
+              const enriched = withAccountNames(
+                enrichResultWithAbi(record, specCatalog),
+                addressBookRef.current,
+              )
               commitStore(addResult(storeRef.current, enriched))
               agentHasCardsRef.current = true
               if (view === undefined) {

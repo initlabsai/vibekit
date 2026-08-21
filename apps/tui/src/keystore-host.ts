@@ -43,6 +43,30 @@ export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
   close(): Promise<void>
 }
 
+/**
+ * Overlays keystore labels onto an account record's rows (account.list /
+ * account.summary shapes). Copy-on-write; names never leave this process.
+ */
+export function withAccountNames(
+  record: StructuredResult,
+  book: ReadonlyArray<{ address: string; name?: string }>,
+): StructuredResult {
+  if (record.state !== 'success') return record
+  const data = record.data as { accounts?: Array<{ address?: string; name?: string }> }
+  if (!Array.isArray(data?.accounts)) return record
+  const names = new Map(
+    book.filter((entry) => entry.name).map((entry) => [entry.address, entry.name!]),
+  )
+  let changed = false
+  const accounts = data.accounts.map((row) => {
+    const name = row.address ? names.get(row.address) : undefined
+    if (!name || row.name) return row
+    changed = true
+    return { ...row, name }
+  })
+  return changed ? { ...record, data: { ...data, accounts } } : record
+}
+
 /** Creates the TUI host over one named network and the local keystore daemon. */
 export function createKeystorePaymentHost(
   network: LiveNetworkId = 'localnet',

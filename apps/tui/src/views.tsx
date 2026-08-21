@@ -105,6 +105,7 @@ export function ResultView({
       return (
         <AccountSummaryCard
           address={model.address}
+          name={model.name}
           network={model.network}
           status={model.status}
           balanceMicroAlgos={model.balanceMicroAlgos}

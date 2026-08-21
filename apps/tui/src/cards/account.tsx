@@ -110,6 +110,7 @@ export function AccountCard({
 
 export function AccountSummaryCard({
   address,
+  name,
   network,
   status,
   balanceMicroAlgos,
@@ -123,6 +124,7 @@ export function AccountSummaryCard({
   width,
 }: {
   address: string
+  name?: string
   network: string
   status?: string
   balanceMicroAlgos: number | string
@@ -147,7 +149,8 @@ export function AccountSummaryCard({
       <Hero value={formatMicroAlgos(balanceMicroAlgos)} unit="ALGO" />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact label="address" value={address} copy={address} width={body} />
+        {name ? <Fact label="name" value={name} width={body} /> : null}
+      <Fact label="address" value={address} copy={address} width={body} />
         {minBalanceMicroAlgos === undefined ? null : (
           <Fact label="min bal" value={algo(minBalanceMicroAlgos) ?? '—'} width={body} />
         )}
@@ -184,6 +187,7 @@ export function AccountListCard({
 }: {
   accounts: ReadonlyArray<{
     address: string
+    name?: string
     balanceMicroAlgos: number | string
     status?: string
     minBalanceMicroAlgos?: number | string
@@ -200,6 +204,7 @@ export function AccountListCard({
       <box flexDirection="column">
         {rows.map((account, index) => (
           <box key={account.address} flexDirection="column" marginTop={1}>
+            {account.name ? <Fact label="name" value={account.name} width={body} /> : null}
             <Fact label="address" value={account.address} copy={account.address} width={body} />
             <Fact label="balance" value={algo(account.balanceMicroAlgos) ?? '—'} width={body} />
             {account.status ? <Fact label="status" value={account.status} width={body} /> : null}

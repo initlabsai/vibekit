@@ -16,6 +16,12 @@ import {
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
 import { resolveAgentConfig } from '@initlabs/vibekit-agent'
+import {
+  addResult,
+  createAccountListViewModel,
+  createResultStore,
+} from '@initlabs/vibekit-experience'
+import { withAccountNames } from '../src/keystore-host.js'
 
 import {
   createExplorerAgent,
@@ -97,6 +103,39 @@ let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
 describe('TUI agent lane', () => {
+  test('keystore labels overlay onto account.list records and survive derivation', () => {
+    const bridged = bridgeToolResult(
+      {
+        id: 'call-accounts-1',
+        toolName: 'batch_lookup_accounts',
+        output: {
+          accounts: [
+            { address: TXN_WIRE.sender, balanceMicroAlgos: 1000000 },
+            { address: TXN_WIRE.receiver, balanceMicroAlgos: 2000000 },
+          ],
+        },
+        view: 'account.list',
+        isError: false,
+      },
+      { resultId: 'result-name-overlay', toolCallId: 'call-accounts-1', network: 'localnet' },
+    )
+    const named = withAccountNames(bridged.record, [
+      { address: TXN_WIRE.sender, name: 'SMOKE1' },
+      { address: TXN_WIRE.receiver },
+    ])
+    const store = addResult(createResultStore([]), named)
+    const derived = createAccountListViewModel(store, {
+      protocolVersion: named.protocolVersion,
+      type: 'view',
+      view: 'account.list',
+      source: { source: 'result', id: 'result-name-overlay' },
+    })
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.accounts[0]).toMatchObject({ address: TXN_WIRE.sender, name: 'SMOKE1' })
+    expect(derived.model.accounts[1]!.name).toBeUndefined()
+  })
+
+
   test('the explorer prompt tells the model to look up keystore accounts', () => {
     const prompt = explorerSystemPrompt(
       [{ name: 'batch_lookup_accounts' }, { name: 'lookup_account' }],

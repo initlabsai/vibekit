@@ -21,7 +21,7 @@ import { nfdPlugin, type NfdService } from '@initlabs/vibekit-plugin-nfd'
 import { useCallback, useRef } from 'react'
 
 import type { WorkspaceScreen } from '../chrome.js'
-import type { KeystorePaymentHost } from '../keystore-host.js'
+import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
 import { enrichResultWithAbi } from '../abi-catalog.js'
@@ -213,7 +213,10 @@ export function useLookups({
             )
             return
           }
-          const record = await host().lookupAccounts(accounts.map((account) => account.address))
+          const record = withAccountNames(
+            await host().lookupAccounts(accounts.map((account) => account.address)),
+            accounts,
+          )
           setBusy(false)
           setStatus('')
           presentRecord(sectionId, record, 'account.list')

@@ -34,6 +34,8 @@ export type AccountPortfolioData = z.infer<typeof accountPortfolioDataSchema>
 /** Compact account facts for summary and list cards. */
 export const accountSummaryDataSchema = z.object({
   address: algorandAddressCandidateSchema,
+  // Keystore label overlaid by the host; never on-chain data.
+  name: z.string().min(1).optional(),
   balanceMicroAlgos: uint64JsonSchema,
   status: z.string().min(1).optional(),
   minBalanceMicroAlgos: uint64JsonSchema.optional(),
