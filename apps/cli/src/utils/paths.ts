@@ -6,7 +6,7 @@ export function expandPath(inputPath: string): string {
   let expanded = inputPath
   if (expanded === '~') {
     expanded = homedir()
-  } else if (expanded.startsWith('~/')) {
+  } else if (expanded.startsWith('~/') || expanded.startsWith('~\\')) {
     expanded = join(homedir(), expanded.slice(2))
   }
   return resolve(expanded)
