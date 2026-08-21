@@ -7,10 +7,10 @@ on-chain confirmation in the TUI (the full draft → simulate → inspect →
 approve → sign → confirm write path, live-verified on localnet) are
 implemented. Next: the hosted API/SDK, alongside the 1.0 publish gate.
 Hosted API and SDK work remains in Phase 7. Owner: Gabriel Kuettel. Last
-updated: 2026-08-19.
+updated: 2026-08-22.
 
-> **Current snapshot (2026-08-19).** Phases 0–6 are complete. Live field
-> sessions hardened the stack. The implementation includes core, five tool
+> **Current snapshot (2026-08-22).** Phases 0–6 are complete. Explorer
+> parity L1–L6 are landed. Live field sessions hardened the stack. The implementation includes core, five tool
 > domains, two plugins, the keystore signer, the agent loop, MCP adapters,
 > the CLI, skills, and the reference deployment. The codebase implements
 > the immediate findings of the 2026-08-16 adversarial review. The next
@@ -186,22 +186,34 @@ edge representations (vector / self-loop / point) with typed labels —
 validated against wires recorded from Lora's real-transaction snapshot
 corpus; then a TUI swimlane card for `transaction.group`. (L2) My Apps (done —
 normalizeAppSpec accepts all three formats via plain algosdk; the ^2
-screen shows deployed associations from the config apps section beside
-scanned local specs; name.algo input resolves through the NFD plugin):
+screen shows deployed associations from the config apps section, the
+active account's opted-in apps, and scanned local specs; name.algo input
+resolves through the NFD plugin):
 scan the launch directory for app specs (ARC-56, ARC-32, ARC-4 —
-normalized to ARC-56), a screen with deployed vs local-spec sections,
-NFD names accepted as direct-lane input. (L3) `toolsFromArc56(spec)` —
-the xArc seed, contracts domain — runtime ToolDefinition[] with typed
-arg forms, signerless simulate in compose mode, tools joining the
-agent's set; ABI decoding (method names on graph edges, args/returns on
-cards) wherever a My Apps spec is known. (L4) Write-flow
-generalization: interception by shape (any requiresSigner tool emitting
-UnsignedGroupResult) instead of by tool name, group-shaped flow
-records, and the L1 graph rendered inside the approval modal —
-sign-what-you-see. (L5) TUX shakedown: scripted tmux journeys over the
-real TUI, findings triaged and fixed. (L6) Live data: an algod
-wait-for-block tail feed (latest blocks/transactions, live entity
-activity), post-shakedown. Skipped deliberately: the transaction wizard
+normalized to ARC-56), a screen with deployed / opted-in / local-spec sections,
+NFD names accepted as direct-lane input. (L3) `toolsFromArc56(spec)` (done — each ABI method becomes a
+typed ToolDefinition; readonly methods simulate without a signer and
+join the Explorer agent; recorded app calls decode against the My Apps
+catalog onto graph methodName labels and transaction cards): runtime
+ToolDefinition[] with typed arg forms, signerless simulate in compose
+mode, tools joining the agent's set; ABI decoding (method names on
+graph edges, args/returns on cards) wherever a My Apps spec is known. (L4) Write-flow
+generalization (done — compose-mode writes intercept by UnsignedGroupResult
+shape, draft/simulation records carry group facts, and the TUI approval
+modal renders the L1 flow graph of the drafted bytes): interception by
+shape (any requiresSigner tool emitting UnsignedGroupResult) instead of
+by tool name, group-shaped flow records, and the L1 graph rendered
+inside the approval modal — sign-what-you-see. (L5) TUX shakedown (done — scripted tmux
+journeys over the real TUI live in `apps/tui/test/tux.test.ts`; My Apps has
+three sections, deployed / opted-in / local specs; the Explorer agent
+registers `nfdPlugin()` so `resolve_nfd` is a tool, not only a TUI-lane
+classifier; `sample` always serves the fixture host so a live algod cannot
+404 the recorded card; shelf shortcuts accept alt/option as well as ctrl
+because most terminals, including tmux, never deliver ctrl+digit). (L6) Live data (done — an
+algod `statusAfterBlock` tail in `packages/experience/live` emits the same
+`block.detail` records as the lookup tools. The TUI shows them on a Blocks
+page (`^4` / `blocks`), fetches only while that page is open and not paused,
+and `s` starts or stops the tail). Skipped deliberately: the transaction wizard
 (the agent plus compose tools is our answer), browser wallet-connect
 (keystore is the TUI signing story), media/PNG rendering (web-head
 material). Backlog: TEAL viewer, box browsing polish, asset
@@ -389,8 +401,9 @@ on the domain read arrays, not on the write exports.
 - **Dynamic tools are first-class.** Nothing in the contract assumes
   tools are statically compiled in. An ARC-56 spec can be turned into
   `ToolDefinition[]` at runtime. This is the seed of the explorer xArc
-  feature. It will live in the tools package's contracts domain as `toolsFromArc56(spec)`
-  (Phase 7/8 work, not yet implemented). Note: xArc runs through the
+  feature. It lives in the tools package's contracts domain as `toolsFromArc56(spec)`.
+  The TUI Explorer joins the readonly generated tools into its compose-only
+  agent set from My Apps specs. Note: xArc runs through the
   **API**, not the MCP. The 2026 spec makes tool lists cacheable, so the
   MCP list must stay deterministic per deployment.
 
@@ -471,8 +484,9 @@ endpoint; API keys stay in env, never on disk) over a compose-only,
 signerless
 deployment. The model never emits UI or workspace commands in this slice:
 known tool results map deterministically onto trusted views renderer-side,
-unknown tools keep raw records, and an agent-composed `send_payment` group
-is intercepted into the same approval card as a typed `pay` — approval,
+unknown tools keep raw records, and an agent-composed unsigned group
+(any `requiresSigner` tool whose output is `UnsignedGroupResult`) is
+intercepted into the same approval card as a typed `pay` — approval,
 keystore signing, and submission stay outside the model's reach. Narration
 belongs to the request's feed group. A model-driven view-selection event
 is deferred to the API/protocol-freeze work.
@@ -730,9 +744,12 @@ presentation protocol on top.
 The default screen has stable chrome: a two-row top bar (wordmark and
 network, then the active wallet chip and assets/apps/txns buttons), a
 session index beside the results feed on wide terminals, and a compact
-composer docked at the bottom. `ctrl+w` opens the wallet picker;
-`ctrl+1`/`ctrl+2`/`ctrl+3` open that account's assets, opted-in apps, and
-transactions using the existing list cards. `[`/`]` cycle the active
+composer docked at the bottom. `ctrl+4` (or `blocks`) opens a Blocks page
+that tails algod only while that page is highlighted; `s` pauses it.
+`ctrl+w` opens the wallet picker;
+`ctrl+1`/`ctrl+3` open that account's assets and transactions using the
+existing list cards; `ctrl+2` opens My Apps (deployed associations, the
+active account's opted-in apps, and local specs). `[`/`]` cycle the active
 account on those pages. The composer stays on the chat screen. Each request appends a feed group containing
 its narration and cards. Below roughly 96 columns the split collapses to one
 pane. Both heads organize the experience without tabs or a canvas: the TUI
