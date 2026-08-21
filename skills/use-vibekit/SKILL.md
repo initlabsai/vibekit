@@ -86,6 +86,23 @@ microALGO (1 ALGO = 1,000,000 microALGO) — divide by 1,000,000 only when
 reporting ALGO to the user. ASA amounts are raw base units; holdings and
 balance results carry a `decimals` field to scale for display.
 
+## Deploying a contract from a project
+
+1. **Build** with the project's own build script (`npm run build` /
+   `algokit project run build`) — it compiles `*.algo.ts` sources to an
+   ARC-56 app spec (usually under `artifacts/`).
+2. **Deploy with `app_deploy`** via MCP: `appSpec` is the spec JSON as a
+   string, `sender` is a funded keystore address, `network` explicit.
+   The keystore daemon signs — no key material is ever needed.
+
+Template projects also ship `deploy.ts` and `.env.*.example` with a
+`DEPLOYER_MNEMONIC` slot. That is the human fallback for environments
+without the keystore daemon — **never your path**. Never ask the user for
+a mnemonic, never search for one, and never try to export a key to fill
+that slot: keystore keys are unextractable by design, so there is nothing
+to export. If `app_deploy` is absent (read-only deployment), say so and
+hand the deploy to the user.
+
 ## Funding accounts
 
 - **Localnet**: agent-complete — shell: `vibekit localnet fund <address>` (kmd dispenser, no auth).
