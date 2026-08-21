@@ -39,11 +39,6 @@ export function paymentParties(
   return { sender, receiver }
 }
 
-/** Natural-language "show me my accounts" — not the wallet picker (`accounts`). */
-function isAccountListQuery(word: string): boolean {
-  return isMineQuery(word, 'accounts')
-}
-
 function isMineQuery(word: string, noun: string): boolean {
   const stripped = word.replace(/[?.!]+$/g, '').trim()
   const alt = noun === 'apps' ? 'applications' : noun === 'txns' ? 'transactions' : noun
@@ -73,7 +68,8 @@ export function routeComposerInput(input: string): ComposerRoute {
   if (isMineQuery(word, 'apps')) return { status: 'nav', screen: 'apps' }
   if (isMineQuery(word, 'txns')) return { status: 'nav', screen: 'txns' }
   if (word === 'blocks' || word === 'live' || word === 'tail') return { status: 'nav', screen: 'blocks' }
-  if (isAccountListQuery(word)) return { status: 'account-list' }
+  // Natural-language "show me my accounts" — not the wallet picker (`accounts`).
+  if (isMineQuery(word, 'accounts')) return { status: 'account-list' }
   if (word === 'network') return { status: 'network' }
   const networkMatch = /^network\s+(localnet|testnet|mainnet)$/.exec(word)
   if (networkMatch) {

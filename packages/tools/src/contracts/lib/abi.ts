@@ -231,13 +231,6 @@ export function enrichTransactionsWithAbi<T extends AppCallTxn>(
   return transactions
 }
 
-/** Look up a spec method by name; first match if overloaded. */
-export function findParsedMethod(spec: Pick<NormalizedAppSpec, 'methods'>, name: string): ParsedMethod {
-  const method = spec.methods.find((entry) => entry.name === name)
-  if (!method) throw new ToolError('METHOD_NOT_FOUND', `Method "${name}" not found in app spec`)
-  return method
-}
-
 /** Encode JSON args into the list ATC addMethodCall expects. Txn-typed slots pass through for core to build. */
 export function encodeMethodArgs(method: ParsedMethod, named: Record<string, unknown>): unknown[] {
   return method.args.map((arg, index) => {

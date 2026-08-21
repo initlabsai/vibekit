@@ -10,13 +10,14 @@ import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibeki
 import {
   listZeroSignalModels,
   probeZeroSignal,
+  resolveAgentConfig,
   ZEROSIGNAL_SETUP_HINT,
   type AgentSession,
 } from '@initlabs/vibekit-agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { enrichResultWithAbi } from '../abi-catalog.js'
-import { createExplorerAgent, loadAgentConfig, runAgentTurn } from '../agent-lane.js'
+import { createExplorerAgent, runAgentTurn } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import type { KeystorePaymentHost } from '../keystore-host.js'
@@ -73,7 +74,7 @@ export function useAgentLane({
   const agentHasCardsRef = useRef(false)
   const agentRef = useRef<AgentSession | null>(null)
 
-  const agentConfig = useMemo(() => loadAgentConfig(process.env), [])
+  const agentConfig = useMemo(() => resolveAgentConfig(process.env), [])
   const extraToolNames = extraTools.map((tool) => tool.name).join(',')
 
   /** Drops the live session, e.g. when the network changes under it. */
@@ -276,5 +277,3 @@ export function useAgentLane({
 
   return { agentConfig, runAgent, agentSectionRef, reset }
 }
-
-export type AgentLane = ReturnType<typeof useAgentLane>

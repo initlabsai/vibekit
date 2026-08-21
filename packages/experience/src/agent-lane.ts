@@ -55,52 +55,28 @@ export function viewCueForToolResult(event: ToolResultEventLike): TrustedViewId 
   return undefined
 }
 
-function recordForView(
-  view: TrustedViewId,
-  identity: ResultIdentity,
-  output: unknown,
-  toolName: string,
-): StructuredResult {
-  switch (view) {
-    case 'transaction.detail':
-      return buildTransactionDetailRecord(identity, output, toolName)
-    case 'transaction.list':
-      return buildTransactionListRecord(identity, output, toolName)
-    case 'transaction.group':
-      return buildTransactionGroupRecord(identity, output, toolName)
-    case 'account.portfolio':
-      return buildAccountPortfolioRecord(identity, output, toolName)
-    case 'account.summary':
-      return buildAccountSummaryRecord(identity, output, toolName)
-    case 'account.list':
-      return buildAccountListRecord(identity, output, toolName)
-    case 'asset.detail':
-      return buildAssetDetailRecord(identity, output, toolName)
-    case 'asset.list':
-      return buildAssetListRecord(identity, output, toolName)
-    case 'asset.holdings':
-      return buildAssetHoldingsRecord(identity, output, toolName)
-    case 'asset.holders':
-      return buildAssetHoldersRecord(identity, output, toolName)
-    case 'application.detail':
-      return buildApplicationDetailRecord(identity, output, toolName)
-    case 'application.list':
-      return buildApplicationListRecord(identity, output, toolName)
-    case 'application.state':
-      return buildApplicationStateRecord(identity, output, toolName)
-    case 'application.locals':
-      return buildApplicationLocalsRecord(identity, output, toolName)
-    case 'application.logs':
-      return buildApplicationLogsRecord(identity, output, toolName)
-    case 'application.box':
-      return buildApplicationBoxRecord(identity, output, toolName)
-    case 'block.detail':
-      return buildBlockDetailRecord(identity, output, toolName)
-    case 'block.list':
-      return buildBlockListRecord(identity, output, toolName)
-    case 'network.status':
-      return buildNetworkStatusRecord(identity, output, toolName)
-  }
+type RecordBuilder = (identity: ResultIdentity, output: unknown, toolName: string) => StructuredResult
+
+const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
+  'transaction.detail': buildTransactionDetailRecord,
+  'transaction.list': buildTransactionListRecord,
+  'transaction.group': buildTransactionGroupRecord,
+  'account.portfolio': buildAccountPortfolioRecord,
+  'account.summary': buildAccountSummaryRecord,
+  'account.list': buildAccountListRecord,
+  'asset.detail': buildAssetDetailRecord,
+  'asset.list': buildAssetListRecord,
+  'asset.holdings': buildAssetHoldingsRecord,
+  'asset.holders': buildAssetHoldersRecord,
+  'application.detail': buildApplicationDetailRecord,
+  'application.list': buildApplicationListRecord,
+  'application.state': buildApplicationStateRecord,
+  'application.locals': buildApplicationLocalsRecord,
+  'application.logs': buildApplicationLogsRecord,
+  'application.box': buildApplicationBoxRecord,
+  'block.detail': buildBlockDetailRecord,
+  'block.list': buildBlockListRecord,
+  'network.status': buildNetworkStatusRecord,
 }
 
 /**
@@ -115,7 +91,7 @@ export function bridgeToolResult(
     const view = viewCueForToolResult(event)
     if (view) {
       try {
-        return { record: recordForView(view, identity, event.output, event.toolName), view }
+        return { record: RECORD_BUILDERS[view](identity, event.output, event.toolName), view }
       } catch {
         // Wire didn't match the trusted shape — keep the raw record instead.
       }

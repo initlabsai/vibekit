@@ -159,5 +159,3 @@ export function useAccounts({
     },
   }
 }
-
-export type AccountsLane = ReturnType<typeof useAccounts>

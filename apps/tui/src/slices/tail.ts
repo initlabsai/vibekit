@@ -94,5 +94,3 @@ export function useBlockTail({
     togglePause,
   }
 }
-
-export type BlockTailLane = ReturnType<typeof useBlockTail>

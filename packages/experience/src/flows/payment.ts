@@ -11,13 +11,7 @@ import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../
 import {
   approvalDecisionSchema,
   approvalRequestSchema,
-  createApprovalDecisionEvent,
-  createApprovalRequestEvent,
-  createWriteStageEvent,
   writeStageEventSchema,
-  type ApprovalDecision,
-  type ApprovalRequest,
-  type WriteStageEvent,
 } from '../core/protocol.js'
 import {
   resolveResultReference,
@@ -389,100 +383,6 @@ export const writeFlowEventKinds = [
 
 /** Semantic event kind a client can offer next. */
 export type WriteFlowEventKind = (typeof writeFlowEventKinds)[number]
-
-/**
- * Builds the draft event for a freshly produced draft record. The event
- * carries only the record's identifiers; correlation to later approval flows
- * from the record's tool-call id.
- */
-export function createDraftEventForRecord(
-  flowId: string,
-  record: StructuredResult,
-): WriteStageEvent {
-  return createWriteStageEvent({
-    stage: 'draft',
-    flowId,
-    toolCallId: record.toolCallId,
-    draft: { source: 'result', id: record.resultId },
-  })
-}
-
-/** Builds the simulate event that attaches a produced simulation record to a flow. */
-export function createSimulateEventForRecord(
-  flow: WriteFlowState,
-  record: StructuredResult,
-): WriteStageEvent {
-  return createWriteStageEvent({
-    stage: 'simulate',
-    flowId: flow.flowId,
-    simulation: { source: 'result', id: record.resultId },
-  })
-}
-
-/** Builds the inspect event over the flow's simulation, or undefined before one exists. */
-export function createInspectEventForFlow(flow: WriteFlowState): WriteStageEvent | undefined {
-  if (!flow.simulation) return undefined
-  return createWriteStageEvent({
-    stage: 'inspect',
-    flowId: flow.flowId,
-    inspection: flow.simulation,
-  })
-}
-
-/**
- * Builds the approval request over exactly the flow's inspected reference and
- * tool-call id — the correlations the machine enforces — or undefined before
- * inspection.
- */
-export function createApprovalRequestForFlow(
-  flow: WriteFlowState,
-  requestId: string,
-): ApprovalRequest | undefined {
-  if (!flow.inspection) return undefined
-  return createApprovalRequestEvent({
-    requestId,
-    toolCallId: flow.toolCallId,
-    inspection: flow.inspection,
-  })
-}
-
-/** Builds the sign event that attaches a produced signed-group record to a flow. */
-export function createSignEventForRecord(
-  flow: WriteFlowState,
-  record: StructuredResult,
-): WriteStageEvent {
-  return createWriteStageEvent({
-    stage: 'sign',
-    flowId: flow.flowId,
-    signed: { source: 'result', id: record.resultId },
-  })
-}
-
-/** Builds the confirm event that attaches a produced confirmation record to a flow. */
-export function createConfirmEventForRecord(
-  flow: WriteFlowState,
-  record: StructuredResult,
-): WriteStageEvent {
-  return createWriteStageEvent({
-    stage: 'confirm',
-    flowId: flow.flowId,
-    confirmation: { source: 'result', id: record.resultId },
-  })
-}
-
-/** Builds the decision for the flow's pending request, or undefined without one. */
-export function createDecisionForFlow(
-  flow: WriteFlowState,
-  state: 'approved' | 'denied',
-  reason?: string,
-): ApprovalDecision | undefined {
-  if (!flow.approvalRequest) return undefined
-  return createApprovalDecisionEvent({
-    requestId: flow.approvalRequest.requestId,
-    state,
-    ...(reason === undefined ? {} : { reason }),
-  })
-}
 
 /** Lists the event kinds the machine accepts next, for renderer affordances. */
 export function writeFlowNextEventKinds(

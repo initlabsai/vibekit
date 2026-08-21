@@ -1,3 +1,4 @@
+import { jsonSafe } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 
 import type { ViewSpec } from '../core/protocol.js'
@@ -24,7 +25,9 @@ export function record(
     toolCallId: identity.toolCallId,
     toolName,
     network: identity.network,
-    data,
+    // Builders construct data with plain optional fields; undefined entries
+    // are not JSON and must not reach the stored record.
+    data: jsonSafe(data),
   })
 }
 
@@ -33,14 +36,16 @@ export function record(
  * the tool result; the tools schemas know nothing about it, so it is parsed
  * beside them.
  */
-export const addressEnvelopeSchema = z.object({ address: z.string().min(1).optional() })
+export const addressEnvelopeSchema = z.object({
+  address: z.string().min(1).optional(),
+})
 
 export function derive<S extends z.ZodType, View extends string>(
   store: ResultStore,
   view: ViewSpec,
   schema: S,
   viewId: View,
-  message: string,
+  label: string,
 ):
   | { ok: true; model: { view: View; network: string } & z.infer<S> }
   | { ok: false; error: ViewModelError } {
@@ -48,7 +53,16 @@ export function derive<S extends z.ZodType, View extends string>(
   if (!resolution.ok) return resolution
   const parsed = schema.safeParse(resolution.value)
   if (!parsed.success) {
-    return { ok: false, error: { code: 'INVALID_VIEW_DATA', message } }
+    const issue = parsed.error.issues[0]
+    return {
+      ok: false,
+      error: {
+        code: 'INVALID_VIEW_DATA',
+        message: issue
+          ? `${label} ${issue.path.join('.') || '(root)'}: ${issue.message}`
+          : `${label} did not match the trusted schema`,
+      },
+    }
   }
   return {
     ok: true,
@@ -66,5 +80,5 @@ export function viewModelFor<S extends z.ZodType, View extends string>(
   label: string,
 ) {
   return (store: ResultStore, view: ViewSpec) =>
-    derive(store, view, schema, viewId, `${label} did not match the trusted schema`)
+    derive(store, view, schema, viewId, label)
 }

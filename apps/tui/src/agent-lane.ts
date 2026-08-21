@@ -22,21 +22,8 @@ import {
   transactionWriteTools,
 } from "@initlabs/vibekit-tools";
 import type { AnyTool } from "@initlabs/vibekit-core";
-import {
-  resolveAgentConfig,
-  type ProviderConfig,
-} from "@initlabs/vibekit-agent";
+import type { ProviderConfig } from "@initlabs/vibekit-agent";
 import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
-
-/**
- * BYOM config: env vars first, then the file `vibekit explore setup`
- * wrote; undefined disables the lane.
- */
-export function loadAgentConfig(
-  env: Record<string, string | undefined>,
-): ProviderConfig | undefined {
-  return resolveAgentConfig(env);
-}
 
 function explorerTools(extra: readonly AnyTool[] = []): AnyTool[] {
   return [

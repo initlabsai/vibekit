@@ -20,7 +20,7 @@ import {
 } from '../src/index.js'
 import { base64ToBytes } from '@initlabs/vibekit-core'
 
-import { decodePaymentGroup, decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
+import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
 import recorded from './recorded/localnet-payment.json'
 
 const DRAFT_IDENTITY = {
@@ -35,7 +35,7 @@ const SIMULATION_IDENTITY = {
 }
 
 function decodedFacts(): DecodedPaymentFacts {
-  return decodePaymentGroup(recorded.compose.unsignedGroup)
+  return decodeUnsignedGroup(recorded.compose.unsignedGroup)
 }
 
 describe('live payment mapping over recorded engine outputs', () => {
@@ -59,10 +59,9 @@ describe('live payment mapping over recorded engine outputs', () => {
     expect(recorded.compose.unsignedGroup).toEqual([PAYMENT_FIXTURE_UNSIGNED_TRANSACTION])
   })
 
-  test('refuses groups this slice cannot present faithfully', () => {
-    const txn = recorded.compose.unsignedGroup[0]!
-    expect(() => decodePaymentGroup([txn, txn])).toThrow('group size')
-    expect(() => decodePaymentGroup(['aGVsbG8='])).toThrow()
+  test('refuses empty groups and malformed bytes', () => {
+    expect(() => decodeUnsignedGroup([])).toThrow('group size')
+    expect(() => decodeUnsignedGroup(['aGVsbG8='])).toThrow()
   })
 
   test('decodeUnsignedGroup accepts a multi-transaction group', () => {

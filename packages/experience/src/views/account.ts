@@ -1,67 +1,54 @@
-import { viewDataSchemas, type ViewData } from '@initlabs/vibekit-tools/views'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
-import type { ExplorerArtifact, ViewSpec } from '../core/protocol.js'
-import {
-  resolveResultReference,
-  structuredResultSchema,
-  type ResultIdentity,
-  type ResultStore,
-  type StructuredResult,
-  type ViewModelError,
-} from '../core/results.js'
+import type { ExplorerArtifact } from '../core/protocol.js'
+import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
 import { record, viewModelFor } from './derive.js'
 
 /** One asset holding on an account. */
-export const accountAssetHoldingSchema = z
-  .object({
-    assetId: uint64JsonSchema,
-    amount: uint64JsonSchema.describe('Base units of the asset'),
-    isFrozen: z.boolean(),
-    name: z.string().min(1).optional(),
-    unitName: z.string().min(1).optional(),
-  })
-  .strict()
+export const accountAssetHoldingSchema = z.object({
+  assetId: uint64JsonSchema,
+  amount: uint64JsonSchema.describe('Base units of the asset'),
+  isFrozen: z.boolean(),
+  name: z.string().min(1).optional(),
+  unitName: z.string().min(1).optional(),
+})
 
-/** Authoritative account data required by the trusted portfolio view. */
-export const accountPortfolioDataSchema = z
-  .object({
-    address: algorandAddressCandidateSchema,
-    balanceMicroAlgos: uint64JsonSchema,
-    totalAssets: z.number().int().nonnegative(),
-    assets: z.array(accountAssetHoldingSchema),
-  })
-  .strict()
+/**
+ * Authoritative account data required by the trusted portfolio view.
+ * Extra wire fields are dropped.
+ */
+export const accountPortfolioDataSchema = z.object({
+  address: algorandAddressCandidateSchema,
+  balanceMicroAlgos: uint64JsonSchema,
+  totalAssets: z.number().int().nonnegative(),
+  assets: z.array(accountAssetHoldingSchema),
+})
 
 /** Authoritative account data required by the trusted portfolio view. */
 export type AccountPortfolioData = z.infer<typeof accountPortfolioDataSchema>
 
 /** Compact account facts for summary and list cards. */
-export const accountSummaryDataSchema = z
-  .object({
-    address: algorandAddressCandidateSchema,
-    balanceMicroAlgos: uint64JsonSchema,
-    status: z.string().min(1).optional(),
-    minBalanceMicroAlgos: uint64JsonSchema.optional(),
-    rekeyedTo: algorandAddressCandidateSchema.optional(),
-    totalAssetsOptedIn: z.number().int().nonnegative().optional(),
-    totalAppsOptedIn: z.number().int().nonnegative().optional(),
-    totalCreatedAssets: z.number().int().nonnegative().optional(),
-    totalCreatedApps: z.number().int().nonnegative().optional(),
-    createdAtRound: z.number().int().nonnegative().optional(),
-  })
-  .strict()
+export const accountSummaryDataSchema = z.object({
+  address: algorandAddressCandidateSchema,
+  balanceMicroAlgos: uint64JsonSchema,
+  status: z.string().min(1).optional(),
+  minBalanceMicroAlgos: uint64JsonSchema.optional(),
+  rekeyedTo: algorandAddressCandidateSchema.optional(),
+  totalAssetsOptedIn: z.number().int().nonnegative().optional(),
+  totalAppsOptedIn: z.number().int().nonnegative().optional(),
+  totalCreatedAssets: z.number().int().nonnegative().optional(),
+  totalCreatedApps: z.number().int().nonnegative().optional(),
+  createdAtRound: z.number().int().nonnegative().optional(),
+})
 
 /** A page of account summaries. */
-export const accountListDataSchema = z
-  .object({
-    accounts: z.array(accountSummaryDataSchema),
-    nextToken: z.string().min(1).optional(),
-  })
-  .strict()
+export const accountListDataSchema = z.object({
+  accounts: z.array(accountSummaryDataSchema),
+  nextToken: z.string().min(1).optional(),
+})
 
 export type AccountSummaryData = z.infer<typeof accountSummaryDataSchema>
 export type AccountListData = z.infer<typeof accountListDataSchema>
@@ -85,26 +72,17 @@ export function buildAccountPortfolioRecord(
   wire: unknown,
   toolName = 'get_account_portfolio',
 ): StructuredResult {
-  const portfolio = viewDataSchemas['account.portfolio'].parse(wire)
-  return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName,
-    network: identity.network,
-    data: accountPortfolioDataSchema.parse(portfolio),
-  })
+  return record(identity, toolName, accountPortfolioDataSchema.parse(wire))
 }
 
 /** Builds the titled trusted view that renders a portfolio record. */
-export function createAccountArtifact(record: StructuredResult): ExplorerArtifact {
+export function createAccountArtifact(
+  record: StructuredResult,
+): ExplorerArtifact {
   if (record.state !== 'success') {
     throw new Error('Cannot open a failed account record')
   }
-  const data = accountPortfolioDataSchema.parse(record.data)
-  const address = data.address
+  const { address } = accountPortfolioDataSchema.parse(record.data)
   return {
     title: `Account ${address.slice(0, 6)}…${address.slice(-4)}`,
     view: {
@@ -116,30 +94,13 @@ export function createAccountArtifact(record: StructuredResult): ExplorerArtifac
   }
 }
 
-function accountSummary(wire: ViewData<'account.summary'>) {
-  return accountSummaryDataSchema.parse({
-    address: wire.address,
-    balanceMicroAlgos: wire.balanceMicroAlgos,
-    ...(wire.status === undefined ? {} : { status: wire.status }),
-    ...(wire.minBalanceMicroAlgos === undefined
-      ? {}
-      : { minBalanceMicroAlgos: wire.minBalanceMicroAlgos }),
-    ...(wire.rekeyedTo === undefined ? {} : { rekeyedTo: wire.rekeyedTo }),
-    ...(wire.totalAssetsOptedIn === undefined ? {} : { totalAssetsOptedIn: wire.totalAssetsOptedIn }),
-    ...(wire.totalAppsOptedIn === undefined ? {} : { totalAppsOptedIn: wire.totalAppsOptedIn }),
-    ...(wire.totalCreatedAssets === undefined ? {} : { totalCreatedAssets: wire.totalCreatedAssets }),
-    ...(wire.totalCreatedApps === undefined ? {} : { totalCreatedApps: wire.totalCreatedApps }),
-    ...(wire.createdAtRound === undefined ? {} : { createdAtRound: wire.createdAtRound }),
-  })
-}
-
 /** Wraps lookup_account. */
 export function buildAccountSummaryRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'lookup_account',
 ): StructuredResult {
-  return record(identity, toolName, accountSummary(viewDataSchemas['account.summary'].parse(wire)))
+  return record(identity, toolName, accountSummaryDataSchema.parse(wire))
 }
 
 /** Wraps search_accounts / batch_lookup_accounts. */
@@ -148,67 +109,31 @@ export function buildAccountListRecord(
   wire: unknown,
   toolName = 'search_accounts',
 ): StructuredResult {
-  const page = viewDataSchemas['account.list'].parse(wire)
-  return record(
-    identity,
-    toolName,
-    accountListDataSchema.parse({
-      accounts: page.accounts.map(accountSummary),
-      ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
-    }),
-  )
+  return record(identity, toolName, accountListDataSchema.parse(wire))
 }
-
-/** Renderer-ready semantic model for the trusted account portfolio view. */
-export const accountPortfolioViewModelSchema = z
-  .object({
-    view: z.literal('account.portfolio'),
-    network: z.string().min(1),
-    address: algorandAddressCandidateSchema,
-    balanceMicroAlgos: uint64JsonSchema,
-    totalAssets: z.number().int().nonnegative(),
-    assets: z.array(accountAssetHoldingSchema),
-  })
-  .strict()
-
-/** Renderer-ready semantic model for the trusted account portfolio view. */
-export type AccountPortfolioViewModel = z.infer<typeof accountPortfolioViewModelSchema>
-
-/** Result of deriving the renderer-ready account portfolio model. */
-export type AccountPortfolioViewModelResult =
-  { ok: true; model: AccountPortfolioViewModel } | { ok: false; error: ViewModelError }
 
 /** Derives account presentation from one trusted result reference. */
-export function createAccountPortfolioViewModel(
-  store: ResultStore,
-  view: ViewSpec,
-): AccountPortfolioViewModelResult {
-  const resolution = resolveResultReference(store, view.source)
-  if (!resolution.ok) return resolution
+export const createAccountPortfolioViewModel = viewModelFor(
+  accountPortfolioDataSchema,
+  'account.portfolio' as const,
+  'Account portfolio',
+)
+export const createAccountSummaryViewModel = viewModelFor(
+  accountSummaryDataSchema,
+  'account.summary' as const,
+  'Account summary',
+)
+export const createAccountListViewModel = viewModelFor(
+  accountListDataSchema,
+  'account.list' as const,
+  'Account list',
+)
 
-  const parsed = accountPortfolioDataSchema.safeParse(resolution.value)
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: {
-        code: 'INVALID_VIEW_DATA',
-        message: 'Account result did not match the trusted portfolio schema',
-      },
-    }
-  }
-  return {
-    ok: true,
-    model: accountPortfolioViewModelSchema.parse({
-      view: 'account.portfolio',
-      network: resolution.record.network,
-      ...parsed.data,
-    }),
-  }
-}
-
-export const createAccountSummaryViewModel = viewModelFor(accountSummaryDataSchema, 'account.summary' as const, 'Account summary')
-export const createAccountListViewModel = viewModelFor(accountListDataSchema, 'account.list' as const, 'Account list')
-
+/** Renderer-ready semantic model for the trusted account portfolio view. */
+export type AccountPortfolioViewModel = Extract<
+  ReturnType<typeof createAccountPortfolioViewModel>,
+  { ok: true }
+>['model']
 export type AccountSummaryViewModel = Extract<
   ReturnType<typeof createAccountSummaryViewModel>,
   { ok: true }

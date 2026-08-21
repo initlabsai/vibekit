@@ -398,5 +398,3 @@ export function useLookups({
     openAmbiguous,
   }
 }
-
-export type LookupLane = ReturnType<typeof useLookups>

@@ -340,5 +340,3 @@ export function useApps({
     submitCall,
   }
 }
-
-export type AppsLane = ReturnType<typeof useApps>

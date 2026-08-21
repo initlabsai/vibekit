@@ -85,28 +85,6 @@ export function decodeUnsignedGroup(transactions: readonly string[]): DecodedPay
 }
 
 /**
- * Decodes the authoritative facts of one unsigned payment group. This helper
- * still refuses anything but a single plain pay so payment-only callers do
- * not silently present a mixed group.
- */
-export function decodePaymentGroup(transactions: readonly string[]): DecodedPaymentFacts {
-  const facts = decodeUnsignedGroup(transactions)
-  if (
-    facts.transactionTypes.length !== 1 ||
-    facts.transactionTypes[0] !== 'pay' ||
-    facts.receiver === undefined ||
-    facts.amountMicroAlgos === undefined
-  ) {
-    throw new Error(
-      facts.transactionTypes.length !== 1
-        ? `Unsupported group size for the payment slice: ${facts.transactionTypes.length}`
-        : `Unsupported transaction type for the payment slice: ${facts.transactionTypes[0]}`,
-    )
-  }
-  return facts
-}
-
-/**
  * Simulates the exact unsigned group bytes (empty signatures allowed). Used
  * by the live host so approval reviews the drafted transactions, not a
  * reconstructed spec.

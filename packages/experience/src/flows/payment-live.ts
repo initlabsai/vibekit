@@ -14,13 +14,11 @@ import {
 } from '../core/results.js'
 import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
 import {
-  createApprovalRequestForFlow,
-  createConfirmEventForRecord,
-  createDecisionForFlow,
-  createDraftEventForRecord,
-  createInspectEventForFlow,
-  createSignEventForRecord,
-  createSimulateEventForRecord,
+  createApprovalDecisionEvent,
+  createApprovalRequestEvent,
+  createWriteStageEvent,
+} from '../core/protocol.js'
+import {
   paymentConfirmationDataSchema,
   paymentDraftDataSchema,
   paymentSignedGroupDataSchema,
@@ -300,6 +298,20 @@ export interface PaymentFlowRun {
   flow: WriteFlowState | null
 }
 
+function resultRef(record: StructuredResult): { source: 'result'; id: string } {
+  return { source: 'result', id: record.resultId }
+}
+
+/** The draft event carries the record's identifiers; later approvals correlate on its tool-call id. */
+function draftEventFor(flowId: string, record: StructuredResult): WriteFlowEvent {
+  return createWriteStageEvent({
+    stage: 'draft',
+    flowId,
+    toolCallId: record.toolCallId,
+    draft: resultRef(record),
+  })
+}
+
 /**
  * Performs one semantic step of the live payment flow: produce the needed
  * authoritative record through the host, then advance the shared machine with
@@ -333,7 +345,7 @@ export async function performLivePaymentStep(input: {
         if (!input.draftParams) return { ok: false, message: 'Draft parameters are required' }
         const record = await host.draftPayment(input.draftParams)
         store = addResult(store, record)
-        return advance(createDraftEventForRecord(newId('flow-live-payment'), record), null)
+        return advance(draftEventFor(newId('flow-live-payment'), record), null)
       }
       case 'simulate': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
@@ -341,23 +353,52 @@ export async function performLivePaymentStep(input: {
         if (!draftRecord) return { ok: false, message: 'The draft record is missing' }
         const record = await host.simulateDraft(draftRecord)
         store = addResult(store, record)
-        return advance(createSimulateEventForRecord(flow, record), flow)
+        return advance(
+          createWriteStageEvent({ stage: 'simulate', flowId: flow.flowId, simulation: resultRef(record) }),
+          flow,
+        )
       }
       case 'inspect': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
-        return advance(createInspectEventForFlow(flow), flow)
+        // Inspection reviews exactly the flow's simulation; before one exists there is no event.
+        return advance(
+          flow.simulation &&
+            createWriteStageEvent({ stage: 'inspect', flowId: flow.flowId, inspection: flow.simulation }),
+          flow,
+        )
       }
       case 'request-approval': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
-        return advance(createApprovalRequestForFlow(flow, newId('approval-live-payment')), flow)
+        // The request covers exactly the inspected reference and tool-call id the machine enforces.
+        return advance(
+          flow.inspection &&
+            createApprovalRequestEvent({
+              requestId: newId('approval-live-payment'),
+              toolCallId: flow.toolCallId,
+              inspection: flow.inspection,
+            }),
+          flow,
+        )
       }
       case 'approve': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
-        return advance(createDecisionForFlow(flow, 'approved'), flow)
+        return advance(
+          flow.approvalRequest &&
+            createApprovalDecisionEvent({ requestId: flow.approvalRequest.requestId, state: 'approved' }),
+          flow,
+        )
       }
       case 'deny': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
-        return advance(createDecisionForFlow(flow, 'denied', 'Denied in Explorer review'), flow)
+        return advance(
+          flow.approvalRequest &&
+            createApprovalDecisionEvent({
+              requestId: flow.approvalRequest.requestId,
+              state: 'denied',
+              reason: 'Denied in Explorer review',
+            }),
+          flow,
+        )
       }
       case 'sign': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
@@ -371,7 +412,10 @@ export async function performLivePaymentStep(input: {
         if (!draftRecord) return { ok: false, message: 'The draft record is missing' }
         const record = await host.signDraft(draftRecord)
         store = addResult(store, record)
-        return advance(createSignEventForRecord(flow, record), flow)
+        return advance(
+          createWriteStageEvent({ stage: 'sign', flowId: flow.flowId, signed: resultRef(record) }),
+          flow,
+        )
       }
       case 'confirm': {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
@@ -385,7 +429,10 @@ export async function performLivePaymentStep(input: {
         if (!signedRecord) return { ok: false, message: 'The signed record is missing' }
         const record = await host.submitSigned(signedRecord)
         store = addResult(store, record)
-        return advance(createConfirmEventForRecord(flow, record), flow)
+        return advance(
+          createWriteStageEvent({ stage: 'confirm', flowId: flow.flowId, confirmation: resultRef(record) }),
+          flow,
+        )
       }
     }
   } catch (error) {
@@ -493,7 +540,7 @@ export async function startPaymentFlowFromDraftRecord(input: {
   }
   const transition = writeFlowReducer(
     null,
-    createDraftEventForRecord(input.newId('flow-live-payment'), input.draftRecord),
+    draftEventFor(input.newId('flow-live-payment'), input.draftRecord),
   )
   if (!transition.ok) {
     return { ok: false, message: transition.error.message, store, flow: null }

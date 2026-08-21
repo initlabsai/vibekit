@@ -1,65 +1,50 @@
-import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
-import type { ViewSpec } from '../core/protocol.js'
-import {
-  resolveResultReference,
-  structuredResultSchema,
-  type ResultIdentity,
-  type ResultStore,
-  type StructuredResult,
-  type ViewModelError,
-} from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
 /** Counts of each transaction type in a block (pay, axfer, appl, …). */
-export const blockTransactionTypeCountSchema = z
-  .object({
-    type: z.string().min(1),
-    count: z.number().int().nonnegative(),
-  })
-  .strict()
+export const blockTransactionTypeCountSchema = z.object({
+  type: z.string().min(1),
+  count: z.number().int().nonnegative(),
+})
 
-/** Authoritative block data required by the trusted block detail view. */
-export const blockDetailDataSchema = z
-  .object({
-    round: z.number().int().nonnegative(),
-    timestamp: z.number().int().nonnegative(),
-    transactionCount: z.number().int().nonnegative(),
-    proposer: algorandAddressCandidateSchema.optional(),
-    feesCollectedMicroAlgos: uint64JsonSchema.optional(),
-    proposerPayoutMicroAlgos: uint64JsonSchema.optional(),
-    previousRound: z.number().int().nonnegative().optional(),
-    nextRound: z.number().int().nonnegative().optional(),
-    transactionTypes: z.array(blockTransactionTypeCountSchema).default([]),
-  })
-  .strict()
+/**
+ * Authoritative block data required by the trusted block detail view.
+ * Extra wire fields are dropped.
+ */
+export const blockDetailDataSchema = z.object({
+  round: z.number().int().nonnegative(),
+  timestamp: z.number().int().nonnegative(),
+  transactionCount: z.number().int().nonnegative(),
+  proposer: algorandAddressCandidateSchema.optional(),
+  feesCollectedMicroAlgos: uint64JsonSchema.optional(),
+  proposerPayoutMicroAlgos: uint64JsonSchema.optional(),
+  previousRound: z.number().int().nonnegative().optional(),
+  nextRound: z.number().int().nonnegative().optional(),
+  transactionTypes: z.array(blockTransactionTypeCountSchema).default([]),
+})
 
 /** Authoritative block data required by the trusted block detail view. */
 export type BlockDetailData = z.infer<typeof blockDetailDataSchema>
 
 /** One block header row. */
-export const blockRowSchema = z
-  .object({
-    round: z.number().int().nonnegative(),
-    timestamp: z.number().int().nonnegative(),
-    transactionCount: z.number().int().nonnegative(),
-    proposer: optionalAddress,
-  })
-  .strict()
+export const blockRowSchema = z.object({
+  round: z.number().int().nonnegative(),
+  timestamp: z.number().int().nonnegative(),
+  transactionCount: z.number().int().nonnegative(),
+  proposer: optionalAddress,
+})
 
 /** A page of block headers. */
-export const blockListDataSchema = z
-  .object({
-    blocks: z.array(blockRowSchema),
-    nextToken: z.string().min(1).optional(),
-  })
-  .strict()
+export const blockListDataSchema = z.object({
+  blocks: z.array(blockRowSchema),
+  nextToken: z.string().min(1).optional(),
+})
 
 export type BlockListData = z.infer<typeof blockListDataSchema>
 
@@ -68,36 +53,17 @@ export interface BlockLookupHost {
   lookupBlock(round: number): Promise<StructuredResult>
 }
 
-/** Wraps a lookup_block result as a block detail record. */
+/** Wraps a lookup_block result as a block detail record; prev/next rounds derive from the round. */
 export function buildBlockDetailRecord(
   identity: ResultIdentity,
   wire: unknown,
   toolName = 'lookup_block',
 ): StructuredResult {
-  const block = viewDataSchemas['block.detail'].parse(wire)
-  return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName,
-    network: identity.network,
-    data: blockDetailDataSchema.parse({
-      round: block.round,
-      timestamp: block.timestamp,
-      transactionCount: block.transactionCount,
-      ...(block.proposer === undefined ? {} : { proposer: block.proposer }),
-      ...(block.feesCollectedMicroAlgos === undefined
-        ? {}
-        : { feesCollectedMicroAlgos: block.feesCollectedMicroAlgos }),
-      ...(block.proposerPayoutMicroAlgos === undefined
-        ? {}
-        : { proposerPayoutMicroAlgos: block.proposerPayoutMicroAlgos }),
-      ...(block.round > 0 ? { previousRound: block.round - 1 } : {}),
-      nextRound: block.round + 1,
-      transactionTypes: block.transactionTypes,
-    }),
+  const block = blockDetailDataSchema.parse(wire)
+  return record(identity, toolName, {
+    ...block,
+    ...(block.round > 0 ? { previousRound: block.round - 1 } : {}),
+    nextRound: block.round + 1,
   })
 }
 
@@ -107,72 +73,30 @@ export function buildBlockListRecord(
   wire: unknown,
   toolName = 'search_block_headers',
 ): StructuredResult {
-  const page = viewDataSchemas['block.list'].parse(wire)
-  return record(
-    identity,
-    toolName,
-    blockListDataSchema.parse({
-      blocks: page.blocks,
-      ...(page.nextToken === undefined ? {} : { nextToken: page.nextToken }),
-    }),
-  )
+  return record(identity, toolName, blockListDataSchema.parse(wire))
 }
-
-/** Renderer-ready semantic model for the trusted block detail view. */
-export const blockDetailViewModelSchema = z
-  .object({
-    view: z.literal('block.detail'),
-    network: z.string().min(1),
-    round: z.number().int().nonnegative(),
-    timestamp: z.number().int().nonnegative(),
-    transactionCount: z.number().int().nonnegative(),
-    proposer: z.string().optional(),
-    feesCollectedMicroAlgos: blockDetailDataSchema.shape.feesCollectedMicroAlgos,
-    proposerPayoutMicroAlgos: blockDetailDataSchema.shape.proposerPayoutMicroAlgos,
-    previousRound: z.number().int().nonnegative().optional(),
-    nextRound: z.number().int().nonnegative().optional(),
-    transactionTypes: blockDetailDataSchema.shape.transactionTypes,
-  })
-  .strict()
-
-/** Renderer-ready semantic model for the trusted block detail view. */
-export type BlockDetailViewModel = z.infer<typeof blockDetailViewModelSchema>
-
-/** Result of deriving the renderer-ready block detail model. */
-export type BlockDetailViewModelResult =
-  { ok: true; model: BlockDetailViewModel } | { ok: false; error: ViewModelError }
 
 /** Derives block presentation from one trusted result reference. */
-export function createBlockDetailViewModel(
-  store: ResultStore,
-  view: ViewSpec,
-): BlockDetailViewModelResult {
-  const resolution = resolveResultReference(store, view.source)
-  if (!resolution.ok) return resolution
+export const createBlockDetailViewModel = viewModelFor(
+  blockDetailDataSchema,
+  'block.detail' as const,
+  'Block detail',
+)
+export const createBlockListViewModel = viewModelFor(
+  blockListDataSchema,
+  'block.list' as const,
+  'Block list',
+)
 
-  const parsed = blockDetailDataSchema.safeParse(resolution.value)
-  if (!parsed.success) {
-    return {
-      ok: false,
-      error: {
-        code: 'INVALID_VIEW_DATA',
-        message: 'Block result did not match the trusted block schema',
-      },
-    }
-  }
-  return {
-    ok: true,
-    model: blockDetailViewModelSchema.parse({
-      view: 'block.detail',
-      network: resolution.record.network,
-      ...parsed.data,
-    }),
-  }
-}
-
-export const createBlockListViewModel = viewModelFor(blockListDataSchema, 'block.list' as const, 'Block list')
-
-export type BlockListViewModel = Extract<ReturnType<typeof createBlockListViewModel>, { ok: true }>['model']
+/** Renderer-ready semantic model for the trusted block detail view. */
+export type BlockDetailViewModel = Extract<
+  ReturnType<typeof createBlockDetailViewModel>,
+  { ok: true }
+>['model']
+export type BlockListViewModel = Extract<
+  ReturnType<typeof createBlockListViewModel>,
+  { ok: true }
+>['model']
 
 /** Formats a unix timestamp as an ISO-8601 UTC string for card copy. */
 export function formatBlockTime(timestamp: number): string {

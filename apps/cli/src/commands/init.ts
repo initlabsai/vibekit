@@ -9,7 +9,7 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { basename, dirname, extname, join } from 'path'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 
 import {
   AGENTS,
@@ -30,7 +30,7 @@ import {
 import { agentsMdContent } from '../config/agents-md.js'
 import { LEGACY_SERVER_KEY } from './doctor.js'
 import { getSkillNames, getSkillsByNames, type SkillSelection } from '../skills/index.js'
-import { ensureDir, fileExists, writeJsonFile, writeTextFile } from '../utils/files.js'
+import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
 import { expandPath } from '../utils/paths.js'
 import { confirm, multiselect, select, text } from '../utils/prompts.js'
@@ -268,7 +268,7 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
     // v1's 'vibekit-mcp' entry is migrated out. (TOML configs are rewritten
     // wholesale — we don't parse TOML.)
     let config = structuredClone(agent.baseConfigTemplate) as Record<string, unknown>
-    if (agent.configFormat !== 'toml' && fileExists(outputPath)) {
+    if (agent.configFormat !== 'toml' && existsSync(outputPath)) {
       try {
         config = JSON.parse(readFileSync(outputPath, 'utf-8')) as Record<string, unknown>
       } catch {
@@ -326,7 +326,7 @@ async function installAgentFiles(context: SetupContext, flags?: InitFlags): Prom
 
   const existingFiles = templates
     .map((t) => t.path)
-    .filter((path) => fileExists(join(context.installPath, path)))
+    .filter((path) => existsSync(join(context.installPath, path)))
 
   let action: 'skip' | 'overwrite' = 'overwrite'
   if (existingFiles.length > 0) {

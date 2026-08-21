@@ -253,51 +253,6 @@ export function StatGrid({
   )
 }
 
-/** Two-column list header in faint caps. */
-export function ColumnHead({
-  left,
-  right,
-  width,
-}: {
-  left: string
-  right?: string
-  width: number
-}) {
-  return (
-    <box flexDirection="row" justifyContent="space-between" height={1}>
-      <text fg={COLORS.faint}>{left}</text>
-      {right ? <text fg={COLORS.faint}>{shorten(right, Math.max(6, Math.floor(width / 3)))}</text> : null}
-    </box>
-  )
-}
-
-/** Primary/secondary list row with an optional trailing value. */
-export function ListRow({
-  primary,
-  secondary,
-  trailing,
-  width,
-}: {
-  primary: string
-  secondary?: string
-  trailing?: string
-  width: number
-}) {
-  const trailW = trailing ? Math.min(18, Math.max(8, trailing.length + 1)) : 0
-  const primaryW = Math.max(8, width - trailW - 1)
-  return (
-    <box flexDirection="column" marginTop={1}>
-      <box flexDirection="row" justifyContent="space-between" height={1}>
-        <text fg={COLORS.text} content={shorten(primary, primaryW)} />
-        {trailing ? <text fg={COLORS.brassBright}>{shorten(trailing, trailW)}</text> : null}
-      </box>
-      {secondary ? (
-        <text fg={COLORS.muted} content={shorten(secondary, width)} />
-      ) : null}
-    </box>
-  )
-}
-
 export function FooterNote({ text, width }: { text: string; width: number }) {
   return <text fg={COLORS.faint} marginTop={1} content={shorten(text, width)} />
 }

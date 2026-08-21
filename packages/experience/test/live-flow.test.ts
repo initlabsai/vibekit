@@ -16,14 +16,14 @@ import {
   type ResultStore,
   type WriteFlowState,
 } from '../src/index.js'
-import { decodePaymentGroup } from '../src/live/index.js'
+import { decodeUnsignedGroup } from '../src/live/index.js'
 import recorded from './recorded/localnet-payment.json'
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
 function stubHost(overrides: Partial<PaymentFlowHost> = {}): PaymentFlowHost {
-  const decoded = decodePaymentGroup(recorded.compose.unsignedGroup)
+  const decoded = decodeUnsignedGroup(recorded.compose.unsignedGroup)
   return {
     network: 'localnet',
     async draftPayment() {
