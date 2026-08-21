@@ -51,7 +51,8 @@ export function zodForAbiType(type: string): z.ZodType {
   if (type === 'application' || type === 'asset') return z.number().int().nonnegative()
   if (type === 'bool') return z.boolean()
   if (type === 'string') return z.string()
-  if (type === 'byte' || type === 'byte[]' || /^byte\[\d+]$/.test(type)) return z.string()
+  if (type === 'byte') return z.union([z.number().int().min(0).max(255), z.string()])
+  if (type === 'byte[]' || /^byte\[\d+]$/.test(type)) return z.string()
   if (/^uint(\d+)$/.test(type)) {
     const bits = Number(/^uint(\d+)$/.exec(type)![1])
     return bits <= 64 ? z.union([z.number(), z.string()]) : z.string()
@@ -67,7 +68,9 @@ export function jsonToAbiValue(type: string, value: unknown): unknown {
   if (value === undefined || value === null) return value
   if (type === 'address' || type === 'account') return value
   if (type === 'bool' || type === 'string') return value
-  if (type === 'byte' || type === 'byte[]' || /^byte\[\d+]$/.test(type)) {
+  // A bare `byte` is a single 0-255 number, not a byte string.
+  if (type === 'byte') return typeof value === 'string' ? Number(value) : value
+  if (type === 'byte[]' || /^byte\[\d+]$/.test(type)) {
     if (typeof value !== 'string') return value
     try {
       return base64ToBytes(value)

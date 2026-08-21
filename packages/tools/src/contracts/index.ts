@@ -26,8 +26,13 @@ export {
   tryNormalizeAppSpec,
 } from './lib/app-spec.js'
 export type { AppSpecFormat, NormalizedAppSpec, ParsedAppSpec, ParsedMethod } from './lib/app-spec.js'
-export { toolsFromArc56, arc56SimulateResultSchema } from './lib/from-arc56.js'
-export type { ToolsFromArc56Options } from './lib/from-arc56.js'
+export {
+  toolsFromArc56,
+  toolsWithMethods,
+  toolArgsFor,
+  arc56SimulateResultSchema,
+} from './lib/from-arc56.js'
+export type { GeneratedAppTool, ToolsFromArc56Options } from './lib/from-arc56.js'
 export {
   decodeAppCall,
   decodeAppCallForApp,

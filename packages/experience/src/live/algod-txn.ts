@@ -20,6 +20,31 @@ export function printableNote(note: Uint8Array | undefined): string | undefined 
   return /^[^\p{C}]*$/u.test(decoded) ? decoded : undefined
 }
 
+/**
+ * Transaction id for one payset entry. Block encoding strips `gen`/`gh` from
+ * every transaction and records whether they were there as the entry's
+ * hasGenesisID/hasGenesisHash flags, so hashing a payset transaction as it
+ * arrives yields an id that matches nothing on chain. Put them back first.
+ */
+export function txIdInBlock(
+  txn: algosdk.Transaction,
+  flags: { hasGenesisID?: boolean; hasGenesisHash?: boolean },
+  header: { genesisID?: string; genesisHash?: Uint8Array },
+): string | undefined {
+  try {
+    const restoreId = flags.hasGenesisID === true && txn.genesisID === undefined && header.genesisID
+    const restoreHash =
+      flags.hasGenesisHash === true && txn.genesisHash === undefined && header.genesisHash
+    if (!restoreId && !restoreHash) return txn.txID()
+    const data = txn.toEncodingData()
+    if (restoreId) data.set('gen', header.genesisID)
+    if (restoreHash) data.set('gh', header.genesisHash)
+    return algosdk.Transaction.fromEncodingData(data).txID()
+  } catch {
+    return undefined
+  }
+}
+
 export interface AlgodTxnExtras {
   id?: string
   confirmedRound?: number

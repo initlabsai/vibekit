@@ -157,6 +157,30 @@ function toolForMethod(
   }) as AnyTool
 }
 
+/** A generated tool paired with the spec method it calls. */
+export interface GeneratedAppTool {
+  tool: AnyTool
+  method: ParsedMethod
+}
+
+/**
+ * Generated tools paired with their methods. Callers that need to invoke a
+ * specific method must pair this way: tool names are slugged and
+ * deduplicated, so neither the method name nor its signature can be
+ * recovered from the tool alone.
+ */
+export function toolsWithMethods(
+  spec: string | NormalizedAppSpec,
+  options: ToolsFromArc56Options = {},
+): GeneratedAppTool[] {
+  const normalized = typeof spec === 'string' ? normalizeAppSpec(spec) : spec
+  const taken = new Set<string>()
+  return normalized.methods.map((method) => ({
+    method,
+    tool: toolForMethod(normalized, method, options, taken),
+  }))
+}
+
 /**
  * Turn an app spec into one ToolDefinition per ABI method. Pass a JSON string
  * or an already-normalized spec. Bind `appId` when the deployment is known
@@ -166,7 +190,25 @@ export function toolsFromArc56(
   spec: string | NormalizedAppSpec,
   options: ToolsFromArc56Options = {},
 ): AnyTool[] {
-  const normalized = typeof spec === 'string' ? normalizeAppSpec(spec) : spec
-  const taken = new Set<string>()
-  return normalized.methods.map((method) => toolForMethod(normalized, method, options, taken))
+  return toolsWithMethods(spec, options).map((entry) => entry.tool)
+}
+
+/**
+ * Map arguments keyed by their ABI names onto the generated tool's parameter
+ * names. Parameters are slugged (`userName` becomes `username`) and may be
+ * prefixed to dodge reserved names, so spec-named arguments never reach the
+ * handler intact.
+ */
+export function toolArgsFor(
+  method: ParsedMethod,
+  namedBySpecName: Record<string, unknown>,
+): Record<string, unknown> {
+  const used = new Set<string>()
+  const mapped: Record<string, unknown> = {}
+  method.args.forEach((arg, index) => {
+    const param = argParamName(arg, index, used)
+    const specKey = arg.name && arg.name.length > 0 ? arg.name : `arg${index}`
+    if (specKey in namedBySpecName) mapped[param] = namedBySpecName[specKey]
+  })
+  return mapped
 }

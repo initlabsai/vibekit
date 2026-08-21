@@ -509,6 +509,8 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         header,
         payset.map((entry) => ({
           txn: entry.signedTxn.signedTxn.txn,
+          hasGenesisID: entry.hasGenesisID,
+          hasGenesisHash: entry.hasGenesisHash,
           apply: entry.signedTxn.applyData,
         })),
       )

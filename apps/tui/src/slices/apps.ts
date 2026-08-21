@@ -3,7 +3,9 @@ import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit-agent/con
 import type { StructuredResult } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import {
+  toolArgsFor,
   toolsFromArc56,
+  toolsWithMethods,
   tryNormalizeAppSpec,
   type NormalizedAppSpec,
   type ParsedMethod,
@@ -163,8 +165,10 @@ export function useApps({
   }, [])
 
   useEffect(() => {
+    // Re-read on screen open too: a deploy or a hand-edit of config.json
+    // must not leave the list (and the generated tool set) stale.
     setDeployed(loadStoredApps()[network] ?? [])
-  }, [network])
+  }, [network, screen])
 
   useEffect(() => {
     if (screen !== 'apps') return
@@ -287,18 +291,22 @@ export function useApps({
         return
       }
     }
-    const tool = toolsFromArc56(selected.spec.spec, { appId: selected.appId }).find(
-      (entry) => !entry.requiresSigner && entry.description.includes(selectedMethod.signature),
+    // Pair by method: tool names are slugged, and one signature can be a
+    // substring of another (`add` inside `readd`).
+    const generated = toolsWithMethods(selected.spec.spec, { appId: selected.appId }).find(
+      (entry) => !entry.tool.requiresSigner && entry.method.signature === selectedMethod.signature,
     )
-    if (!tool) {
+    if (!generated) {
       setCallError('No readonly tool generated for this method.')
       return
     }
+    const { tool, method } = generated
     setCallBusy(true)
     setCallError(null)
     setCallResult(null)
     const deployment = resolveDeployment({ network, mode: 'compose', tools: [tool] })
-    void executeToolCall(deployment, tool, { sender, ...named })
+    // Args are typed by their ABI names; the tool's parameters are slugged.
+    void executeToolCall(deployment, tool, { sender, ...toolArgsFor(method, named) })
       .then((result) => {
         setCallResult(result)
         setCallBusy(false)

@@ -34,6 +34,8 @@ export {
   normalizeAppSpec,
   tryNormalizeAppSpec,
   toolsFromArc56,
+  toolsWithMethods,
+  toolArgsFor,
   decodeAppCall,
   decodeAppCallForApp,
   enrichTransactionsWithAbi,
@@ -47,6 +49,7 @@ export type {
   ParsedMethod,
   DecodedAppCall,
   DecodedAbiValue,
+  GeneratedAppTool,
   ToolsFromArc56Options,
 } from './contracts/index.js'
 

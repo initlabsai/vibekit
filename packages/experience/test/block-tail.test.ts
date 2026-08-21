@@ -182,3 +182,68 @@ describe('runBlockTail', () => {
     expect(emitted).toHaveLength(8)
   })
 })
+
+describe('payset transaction ids', () => {
+  test('restores the genesis fields the block encoding stripped', () => {
+    // A payset transaction arrives without gen/gh; hashing it as-is yields an
+    // id that matches nothing on chain.
+    const signed = payTxn()
+    const onChainId = signed.txID()
+    const stripped = algosdk.Transaction.fromEncodingData(
+      (() => {
+        const data = signed.toEncodingData()
+        data.delete('gen')
+        data.delete('gh')
+        return data
+      })(),
+    )
+    expect(stripped.txID()).not.toBe(onChainId)
+
+    const result = tickFromAlgodBlock(
+      { resultId: 'r-gen', toolCallId: 't-gen', network: 'localnet' },
+      {
+        round: 42,
+        timestamp: 1_700_000_042,
+        genesisID: params.genesisID,
+        genesisHash: params.genesisHash,
+      },
+      [{ txn: stripped, hasGenesisID: true, hasGenesisHash: true }],
+    )
+    if (result.transactions.state !== 'success') throw new Error('expected success')
+    const rows = (result.transactions.data as { transactions: Array<{ id?: string }> }).transactions
+    expect(rows[0]?.id).toBe(onChainId)
+  })
+})
+
+describe('runBlockTail failure handling', () => {
+  test('a mid-catch-up failure does not replay rounds already emitted', async () => {
+    const emitted: number[] = []
+    const abort = new AbortController()
+    let failed = false
+    let waits = 0
+    const clock: BlockTailClock = {
+      async status() {
+        return { lastRound: 10 }
+      },
+      async waitAfter() {
+        waits += 1
+        if (waits > 2) {
+          abort.abort()
+          return { lastRound: 14 }
+        }
+        return { lastRound: 14 }
+      },
+      async fetchRound(round) {
+        if (round === 13 && !failed) {
+          failed = true
+          throw new Error('indexer hiccup')
+        }
+        return tick(round)
+      },
+    }
+    await runBlockTail(clock, { signal: abort.signal, onTick: (t) => void emitted.push(t.round) })
+    // 11 and 12 emitted before the throw; the retry resumes at 13, never repeats.
+    expect(emitted).toEqual([...new Set(emitted)])
+    expect(emitted.slice(0, 2)).toEqual([11, 12])
+  })
+})

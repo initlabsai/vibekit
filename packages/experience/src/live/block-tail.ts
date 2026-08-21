@@ -9,7 +9,7 @@ import type { FormattedTransaction } from '@initlabs/vibekit-tools'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { buildBlockDetailRecord } from '../views/block.js'
 import { buildTransactionListRecord } from '../views/transaction.js'
-import { formatAlgodTransaction, safeUint64, typeCounts } from './algod-txn.js'
+import { formatAlgodTransaction, safeUint64, txIdInBlock, typeCounts } from './algod-txn.js'
 import type algosdk from 'algosdk'
 
 /** How many historical rounds to emit after a reconnect gap. */
@@ -47,6 +47,9 @@ export interface BlockTailClock {
 
 export interface AlgodPaysetEntry {
   txn: algosdk.Transaction
+  /** SignedTxnInBlock flags: the block stripped `gen`/`gh` from `txn`. */
+  hasGenesisID?: boolean
+  hasGenesisHash?: boolean
   apply?: {
     configAsset?: bigint
     applicationID?: bigint
@@ -58,6 +61,9 @@ export interface AlgodPaysetEntry {
 export interface AlgodBlockHeader {
   round: bigint | number
   timestamp: bigint | number
+  /** Needed to restore each payset transaction's stripped genesis fields. */
+  genesisID?: string
+  genesisHash?: Uint8Array
   proposer?: { toString(): string }
   feesCollected?: bigint
   proposerPayout?: bigint
@@ -73,12 +79,7 @@ export function tickFromAlgodBlock(
   const timestamp = Number(header.timestamp)
   const transactions: FormattedTransaction[] = []
   for (const entry of payset) {
-    let id: string | undefined
-    try {
-      id = entry.txn.txID()
-    } catch {
-      id = undefined
-    }
+    const id = txIdInBlock(entry.txn, entry, header)
     const createdAsset = entry.apply?.configAsset != null ? Number(entry.apply.configAsset) : 0
     const createdApp = entry.apply?.applicationID != null ? Number(entry.apply.applicationID) : 0
     transactions.push(
@@ -236,8 +237,10 @@ export async function runBlockTail(
         const tick = await clock.fetchRound(next)
         if (options.signal.aborted) return
         await options.onTick(tick)
+        // Advance per emitted round: a throw mid-catch-up must not replay
+        // the rounds already in the feed on the next pass.
+        round = next
       }
-      round = latest
     } catch (error) {
       if (options.signal.aborted) return
       options.onError?.(error)

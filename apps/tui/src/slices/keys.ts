@@ -120,6 +120,9 @@ export function useExplorerKeys({
           }
           if (screen === 'apps') {
             if (appsMethodOpen && (key.name === 'return' || key.name === 'enter')) {
+              // The focused args input submits on its own; without this the
+              // call fires twice and the two runs race on callBusy/callResult.
+              key.preventDefault()
               submitAppsCall()
               return
             }

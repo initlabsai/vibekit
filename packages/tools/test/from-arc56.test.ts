@@ -5,6 +5,8 @@ import algosdk, { ABIMethod, ABIType } from 'algosdk'
 import { bytesToBase64 } from '@initlabs/vibekit-core'
 
 import {
+  toolArgsFor,
+  toolsWithMethods,
   decodeAppCall,
   enrichTransactionsWithAbi,
   normalizeAppSpec,
@@ -141,5 +143,54 @@ describe('decodeAppCall', () => {
     enrichTransactionsWithAbi([txn], new Map([[1042, spec]]))
     expect(txn).toMatchObject({ methodName: 'greet' })
     expect(txn).toHaveProperty('methodArgs')
+  })
+})
+
+describe('spec-named args reach the generated handler', () => {
+  const camelSpec = {
+    name: 'Camel',
+    methods: [
+      {
+        name: 'store',
+        readonly: true,
+        args: [
+          { name: 'userName', type: 'string' },
+          { name: 'sender', type: 'uint64' },
+        ],
+        returns: { type: 'void' },
+      },
+    ],
+  }
+
+  test('toolArgsFor maps ABI names onto the slugged tool parameters', () => {
+    const [generated] = toolsWithMethods(JSON.stringify(camelSpec), { appId: 7 })
+    if (!generated) throw new Error('expected a generated tool')
+    const params = Object.keys(
+      (generated.tool.parameters as unknown as { shape: Record<string, unknown> }).shape,
+    )
+    // userName slugs to lowercase; an arg literally named `sender` is prefixed
+    // so it cannot collide with the tool's own sender parameter.
+    expect(params).toContain('username')
+    expect(params).not.toContain('userName')
+
+    const mapped = toolArgsFor(generated.method, { userName: 'ada', sender: 5 })
+    expect(mapped['username']).toBe('ada')
+    expect(Object.keys(mapped)).not.toContain('userName')
+    // Every mapped key is a real tool parameter — nothing is silently dropped.
+    for (const key of Object.keys(mapped)) expect(params).toContain(key)
+  })
+
+  test('pairing is by method, so one signature inside another cannot mismatch', () => {
+    const overlap = {
+      name: 'Overlap',
+      methods: [
+        { name: 'add', readonly: true, args: [{ name: 'x', type: 'uint64' }], returns: { type: 'uint64' } },
+        { name: 'readd', readonly: true, args: [{ name: 'x', type: 'uint64' }], returns: { type: 'uint64' } },
+      ],
+    }
+    const generated = toolsWithMethods(JSON.stringify(overlap), { appId: 7 })
+    const add = generated.find((entry) => entry.method.signature === 'add(uint64)uint64')
+    expect(add?.method.name).toBe('add')
+    expect(generated.filter((e) => e.tool.description.includes('add(uint64)uint64')).length).toBe(2)
   })
 })
