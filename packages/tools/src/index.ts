@@ -33,6 +33,10 @@ export {
   detectAppSpecFormat,
   normalizeAppSpec,
   tryNormalizeAppSpec,
+  toolsFromArc56,
+  decodeAppCall,
+  decodeAppCallForApp,
+  enrichTransactionsWithAbi,
 } from './contracts/index.js'
 export type {
   FormattedApplication,
@@ -41,6 +45,9 @@ export type {
   NormalizedAppSpec,
   ParsedAppSpec,
   ParsedMethod,
+  DecodedAppCall,
+  DecodedAbiValue,
+  ToolsFromArc56Options,
 } from './contracts/index.js'
 
 export { networkTools, lookupBlock, getNetworkStatus, searchBlockHeaders } from './network/index.js'

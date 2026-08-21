@@ -53,6 +53,10 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
     if (tx.applicationTransaction.onCompletion) {
       formatted.onCompletion = tx.applicationTransaction.onCompletion
     }
+    const appArgs = tx.applicationTransaction.applicationArgs
+    if (appArgs && appArgs.length > 0) {
+      formatted.applicationArgs = appArgs.map((arg) => bytesToBase64(arg))
+    }
   }
   if (tx.assetConfigTransaction) {
     // Zero means this acfg creates the asset (createdAssetId carries the result).

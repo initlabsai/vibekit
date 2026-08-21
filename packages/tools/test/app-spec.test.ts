@@ -41,6 +41,8 @@ describe('normalizeAppSpec', () => {
       'increment(uint64)uint64',
       'greet(string)string',
     ])
+    expect(spec.methods[0]?.readonly).toBeUndefined()
+    expect(spec.methods[1]?.readonly).toBe(true)
     expect(spec.methods[0]?.args[0]).toEqual({
       name: 'amount',
       type: 'uint64',

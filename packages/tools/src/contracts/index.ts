@@ -26,6 +26,15 @@ export {
   tryNormalizeAppSpec,
 } from './lib/app-spec.js'
 export type { AppSpecFormat, NormalizedAppSpec, ParsedAppSpec, ParsedMethod } from './lib/app-spec.js'
+export { toolsFromArc56, arc56SimulateResultSchema } from './lib/from-arc56.js'
+export type { ToolsFromArc56Options } from './lib/from-arc56.js'
+export {
+  decodeAppCall,
+  decodeAppCallForApp,
+  enrichTransactionsWithAbi,
+  methodFromParsed,
+} from './lib/abi.js'
+export type { DecodedAppCall, DecodedAbiValue } from './lib/abi.js'
 export type { FormattedApplication } from './lib/format.js'
 export type { StateValue } from './handlers/state.js'
 

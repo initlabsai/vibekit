@@ -15,6 +15,8 @@ export interface ParsedMethod {
   description?: string
   args: Array<{ name?: string; type: string; description?: string }>
   returns: { type: string; description?: string }
+  /** ARC-22/ARC-56: a simulate-only method; omitted means a write. */
+  readonly?: boolean
 }
 
 /** The ARC-56 subset VibeKit consumes, whatever format the file arrived in. */
@@ -52,6 +54,7 @@ const methodSchema = z.object({
   name: z.string().min(1),
   desc: z.string().optional(),
   description: z.string().optional(),
+  readonly: z.boolean().optional(),
   args: z.array(methodArgSchema).optional(),
   returns: z
     .object({ type: z.string().min(1), desc: z.string().optional(), description: z.string().optional() })
@@ -141,6 +144,7 @@ function methodsViaAbiContract(name: string, rawMethods: RawMethod[]): ParsedMet
       methods: rawMethods.map((method) => ({
         name: method.name,
         desc: method.desc ?? method.description,
+        readonly: method.readonly,
         args: (method.args ?? []).map((arg) => ({
           type: arg.type,
           name: arg.name,
@@ -157,7 +161,7 @@ function methodsViaAbiContract(name: string, rawMethods: RawMethod[]): ParsedMet
       `appSpec contract is not valid ARC-4: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
-  return abi.methods.map((method) => ({
+  return abi.methods.map((method, index) => ({
     name: method.name,
     signature: method.getSignature(),
     description: method.description,
@@ -167,6 +171,7 @@ function methodsViaAbiContract(name: string, rawMethods: RawMethod[]): ParsedMet
       description: arg.description,
     })),
     returns: { type: String(method.returns.type), description: method.returns.description },
+    ...(rawMethods[index]?.readonly ? { readonly: true } : {}),
   }))
 }
 
@@ -187,6 +192,7 @@ function methodsVerbatim(rawMethods: RawMethod[]): ParsedMethod[] {
       description: method.desc ?? method.description,
       args,
       returns,
+      ...(method.readonly ? { readonly: true } : {}),
     }
   })
 }

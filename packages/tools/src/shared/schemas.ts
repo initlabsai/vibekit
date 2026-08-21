@@ -37,6 +37,12 @@ export interface FormattedTransaction {
   assetDecimals?: number
   applicationId?: number
   onCompletion?: string
+  /** Base64 application-args, selector first. Present on ABI method calls. */
+  applicationArgs?: string[]
+  /** Filled when a My Apps spec is known for this applicationId. */
+  methodName?: string
+  methodArgs?: Array<{ name?: string; type: string; value?: unknown }>
+  methodReturn?: unknown
   note?: string
   group?: string
   rekeyTo?: string
@@ -111,6 +117,18 @@ export const formattedTransactionSchema = z.object({
     .describe('Asset amount in base units; decimal string when above 2^53'),
   applicationId: z.number().optional(),
   onCompletion: z.string().optional(),
+  applicationArgs: z.array(z.string()).optional().describe('Base64 application-args, selector first'),
+  methodName: z.string().optional().describe('ABI method name, when a spec is known'),
+  methodArgs: z
+    .array(
+      z.object({
+        name: z.string().optional(),
+        type: z.string(),
+        value: z.unknown().optional(),
+      }),
+    )
+    .optional(),
+  methodReturn: z.unknown().optional(),
   assetName: z.string().optional(),
   assetUnitName: z.string().optional(),
   assetDecimals: z.number().int().nonnegative().optional(),

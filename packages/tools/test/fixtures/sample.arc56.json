@@ -24,6 +24,7 @@
     },
     {
       "name": "greet",
+      "readonly": true,
       "args": [
         {
           "name": "who",
