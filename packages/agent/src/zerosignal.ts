@@ -10,8 +10,8 @@ export const ZEROSIGNAL_DEFAULT_BASE_URL = 'http://localhost:8080/v1'
 
 /** Shown when the daemon is unreachable. */
 export const ZEROSIGNAL_SETUP_HINT =
-  'zs-proxy is not running. Install it (brew install txnlab/tap/zs-proxy), start it ' +
-  '(zs-proxy proxy start), and fund the wallet (zs-proxy fund). Docs: https://txnlab.gitbook.io/zerosignal'
+  'zs-proxy is not running. Install it, start it (zs-proxy proxy start), and fund the wallet ' +
+  '(zs-proxy fund). Quickstart: https://txnlab.gitbook.io/zerosignal/using-the-proxy/quick-start'
 
 function serverRoot(baseUrl: string): string {
   return baseUrl.replace(/\/v1\/?$/, '')
