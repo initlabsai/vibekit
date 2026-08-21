@@ -57,6 +57,13 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
     if (appArgs && appArgs.length > 0) {
       formatted.applicationArgs = appArgs.map((arg) => bytesToBase64(arg))
     }
+    // Referenced (foreign) accounts: the indexer matches address searches on
+    // these, so without them a txn can appear in an account's history for no
+    // visible reason.
+    const appAccounts = tx.applicationTransaction.accounts
+    if (appAccounts && appAccounts.length > 0) {
+      formatted.applicationAccounts = appAccounts.map((account) => String(account))
+    }
   }
   if (tx.assetConfigTransaction) {
     // Zero means this acfg creates the asset (createdAssetId carries the result).

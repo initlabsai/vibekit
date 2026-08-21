@@ -142,6 +142,7 @@ describe('lookupTransaction', () => {
               applicationTransaction: {
                 applicationId: BigInt(123),
                 applicationArgs: [new Uint8Array([1, 2, 3, 4]), new Uint8Array([0, 0, 0, 0, 0, 0, 0, 7])],
+                accounts: ['REFACCOUNT'],
               },
               globalStateDelta: [{ key: 'aw==' }],
               innerTxns: [
@@ -164,6 +165,7 @@ describe('lookupTransaction', () => {
     const tx = await lookupTransaction(ctx, { txid: 'APPTX' })
     expect(tx.applicationId).toBe(123)
     expect(tx.applicationArgs).toEqual(['AQIDBA==', 'AAAAAAAAAAc='])
+    expect(tx.applicationAccounts).toEqual(['REFACCOUNT'])
     expect(tx.globalStateDelta).toEqual([{ key: 'aw==' }])
     expect(tx.innerTxns).toHaveLength(1)
     expect(tx.innerTxns?.[0]?.assetId).toBe(777)

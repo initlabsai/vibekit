@@ -51,6 +51,7 @@ export const transactionDetailDataSchema = z.object({
   assetUnitName: z.string().min(1).optional(),
   assetDecimals: z.number().int().nonnegative().optional(),
   applicationId: uint64JsonSchema.optional(),
+  applicationAccounts: z.array(algorandAddressCandidateSchema).optional(),
   onCompletion: z.string().min(1).optional(),
   note: z.string().min(1).optional(),
   group: z.string().min(1).optional(),

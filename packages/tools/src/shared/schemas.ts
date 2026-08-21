@@ -39,6 +39,7 @@ export interface FormattedTransaction {
   onCompletion?: string
   /** Base64 application-args, selector first. Present on ABI method calls. */
   applicationArgs?: string[]
+  applicationAccounts?: string[]
   /** Filled when a My Apps spec is known for this applicationId. */
   methodName?: string
   methodArgs?: Array<{ name?: string; type: string; value?: unknown }>
@@ -118,6 +119,10 @@ export const formattedTransactionSchema = z.object({
   applicationId: z.number().optional(),
   onCompletion: z.string().optional(),
   applicationArgs: z.array(z.string()).optional().describe('Base64 application-args, selector first'),
+  applicationAccounts: z
+    .array(z.string())
+    .optional()
+    .describe('Referenced (foreign) accounts of an app call — address searches match on these'),
   methodName: z.string().optional().describe('ABI method name, when a spec is known'),
   methodArgs: z
     .array(
