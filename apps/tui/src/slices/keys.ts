@@ -28,6 +28,10 @@ export function useExplorerKeys({
   appsDetailOpen,
   closeAppsDetail,
   activateAppsEntry,
+  appsMethodOpen,
+  selectAppsMethod,
+  submitAppsCall,
+  toggleBlocksTail,
 }: {
   feed: Feed
   modalOpen: boolean
@@ -46,6 +50,10 @@ export function useExplorerKeys({
   appsDetailOpen: boolean
   closeAppsDetail: () => void
   activateAppsEntry: (index: number) => void
+  appsMethodOpen: boolean
+  selectAppsMethod: (index: number) => void
+  submitAppsCall: () => void
+  toggleBlocksTail: () => void
 }) {
   const {
     focus,
@@ -67,23 +75,36 @@ export function useExplorerKeys({
           return
         }
         if (key.ctrl && key.name === 'n') {
+          key.preventDefault()
           switchNetwork()
           return
         }
         if (key.ctrl && key.name === 'w') {
+          key.preventDefault()
           openWorkspace('wallet')
           return
         }
-        if (key.ctrl && key.name === '1') {
+        // Ctrl+digit is dropped by most terminals (including tmux); Alt/option
+        // still arrives as meta/option plus the digit, which is what ^1/^2/^3
+        // have to mean outside Kitty's keyboard protocol.
+        if ((key.ctrl || key.meta || key.option) && key.name === '1') {
+          key.preventDefault()
           openWorkspace('assets')
           return
         }
-        if (key.ctrl && key.name === '2') {
+        if ((key.ctrl || key.meta || key.option) && key.name === '2') {
+          key.preventDefault()
           openWorkspace('apps')
           return
         }
-        if (key.ctrl && key.name === '3') {
+        if ((key.ctrl || key.meta || key.option) && key.name === '3') {
+          key.preventDefault()
           openWorkspace('txns')
+          return
+        }
+        if ((key.ctrl || key.meta || key.option) && key.name === '4') {
+          key.preventDefault()
+          openWorkspace('blocks')
           return
         }
         if (screen !== 'chat') {
@@ -98,8 +119,31 @@ export function useExplorerKeys({
             return
           }
           if (screen === 'apps') {
+            if (appsMethodOpen && (key.name === 'return' || key.name === 'enter')) {
+              submitAppsCall()
+              return
+            }
             const index = Number.parseInt(key.name, 10)
-            if (Number.isInteger(index)) activateAppsEntry(index)
+            if (Number.isInteger(index)) {
+              if (appsDetailOpen && !appsMethodOpen) selectAppsMethod(index)
+              else if (!appsDetailOpen) activateAppsEntry(index)
+              return
+            }
+            if (!appsDetailOpen && (key.name === '[' || key.name === 'left')) {
+              cycleAccount(-1)
+              return
+            }
+            if (!appsDetailOpen && (key.name === ']' || key.name === 'right')) {
+              cycleAccount(1)
+              return
+            }
+            return
+          }
+          if (screen === 'blocks') {
+            if (key.name === 's') {
+              toggleBlocksTail()
+              return
+            }
             return
           }
           if (key.name === '[' || key.name === 'left') {
@@ -202,7 +246,10 @@ export function useExplorerKeys({
         accountList,
         activateAppsEntry,
         appsDetailOpen,
+        appsMethodOpen,
         closeAppsDetail,
+        selectAppsMethod,
+        submitAppsCall,
         closeSelectedSection,
         contentScrollRef,
         cycleAccount,
@@ -221,6 +268,7 @@ export function useExplorerKeys({
         setFocus,
         setScreen,
         switchNetwork,
+        toggleBlocksTail,
         toggleFlowView,
       ],
     ),

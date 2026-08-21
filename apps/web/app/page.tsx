@@ -247,7 +247,11 @@ function PaymentFlow({
       <div className="section-heading">
         <div>
           <p className="kicker">PAYMENT</p>
-          <h1>{formatMicroAlgos(model.amountMicroAlgos)} ALGO payment</h1>
+          <h1>
+            {model.amountMicroAlgos === undefined
+              ? model.unsignedGroup.summary
+              : `${formatMicroAlgos(model.amountMicroAlgos)} ALGO payment`}
+          </h1>
         </div>
         <span className={`status ${model.stage === 'denied' || failed ? 'status-denied' : ''}`}>
           {badge}
@@ -271,14 +275,18 @@ function PaymentFlow({
           <dt>Sender</dt>
           <dd>{model.sender}</dd>
         </div>
-        <div>
-          <dt>Receiver</dt>
-          <dd>{model.receiver}</dd>
-        </div>
-        <div>
-          <dt>Amount</dt>
-          <dd>{formatMicroAlgos(model.amountMicroAlgos)} ALGO</dd>
-        </div>
+        {model.receiver ? (
+          <div>
+            <dt>Receiver</dt>
+            <dd>{model.receiver}</dd>
+          </div>
+        ) : null}
+        {model.amountMicroAlgos === undefined ? null : (
+          <div>
+            <dt>Amount</dt>
+            <dd>{formatMicroAlgos(model.amountMicroAlgos)} ALGO</dd>
+          </div>
+        )}
         {model.note ? (
           <div>
             <dt>Note</dt>

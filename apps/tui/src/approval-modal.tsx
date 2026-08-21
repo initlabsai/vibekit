@@ -1,13 +1,15 @@
 import type { PaymentFlowViewModel } from '@initlabs/vibekit-experience'
 
 import { PaymentBody } from './cards/index.js'
+import { computeGraphLayout } from './cards/transaction-graph-layout.js'
 import { COLORS } from './theme.js'
 import { Header } from './ui.js'
 
 /**
- * The payment decision as a true modal: centered over the app, it owns all
- * input until answered. The facts shown come from the decoded draft bytes —
- * the same record the signer will be handed, never the model's narration.
+ * The write decision as a true modal: centered over the app, it owns all
+ * input until answered. The graph and facts come from the decoded draft
+ * bytes — the same record the signer will be handed, never the model's
+ * narration.
  */
 export function ApprovalModal({
   model,
@@ -23,10 +25,17 @@ export function ApprovalModal({
   const keys = failed
     ? '[enter] approve anyway · [esc] deny'
     : '[enter] approve & send · [esc] deny'
+  const body = Math.max(8, width - 6)
+  const layout = model?.graph ? computeGraphLayout(model.graph, body) : undefined
+  const graphLines = layout?.lines.length ?? 0
   const effectCount = model?.simulation?.effects.length ?? 0
-  const height = Math.min(screenHeight - 2, 10 + effectCount + (model?.note ? 1 : 0))
+  const height = Math.min(
+    screenHeight - 2,
+    12 + graphLines + effectCount + (model?.note ? 1 : 0) + (model?.amountMicroAlgos === undefined ? 1 : 2),
+  )
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
+  const payment = model?.amountMicroAlgos !== undefined
   return (
     <box
       position="absolute"
@@ -43,17 +52,30 @@ export function ApprovalModal({
       paddingY={0}
     >
       <Header
-        kicker="APPROVE THIS PAYMENT?"
+        kicker={payment ? 'APPROVE THIS PAYMENT?' : 'APPROVE THIS GROUP?'}
         pill={failed ? 'WOULD FAIL' : 'SIMULATED OK'}
         tone={failed ? 'bad' : 'ok'}
       />
       {model ? (
-        <PaymentBody model={model} width={Math.max(8, width - 6)} />
+        <>
+          {layout ? (
+            <box flexDirection="column" marginTop={1}>
+              {layout.lines.map((line, index) => (
+                <box key={index} flexDirection="row" height={1}>
+                  {line.map((span, spanIndex) => (
+                    <text key={spanIndex} fg={span.fg} content={span.text} />
+                  ))}
+                </box>
+              ))}
+            </box>
+          ) : null}
+          <PaymentBody model={model} width={body} />
+        </>
       ) : (
-        <text fg={COLORS.muted} marginTop={1} content="The payment record could not be derived." />
+        <text fg={COLORS.muted} marginTop={1} content="The write record could not be derived." />
       )}
       {failed ? (
-        <text fg={COLORS.red} marginTop={1} content="This payment WOULD FAIL if submitted." />
+        <text fg={COLORS.red} marginTop={1} content="This group WOULD FAIL if submitted." />
       ) : null}
       <text fg={COLORS.brassBright} marginTop={1} content={keys} />
     </box>

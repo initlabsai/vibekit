@@ -414,6 +414,10 @@ export interface GraphSourceRow {
   globalStateDelta?: unknown
   localStateDelta?: unknown
   logs?: string[]
+  applicationArgs?: string[]
+  methodName?: string
+  methodArgs?: Array<{ name?: string; type: string; value?: unknown }>
+  methodReturn?: unknown
   innerTxns?: GraphSourceRow[]
 }
 
@@ -443,6 +447,10 @@ function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
     ...(row.globalStateDelta === undefined ? {} : { globalStateDelta: row.globalStateDelta }),
     ...(row.localStateDelta === undefined ? {} : { localStateDelta: row.localStateDelta }),
     ...(row.logs === undefined ? {} : { logs: row.logs }),
+    ...(row.applicationArgs === undefined ? {} : { applicationArgs: row.applicationArgs }),
+    ...(row.methodName === undefined ? {} : { methodName: row.methodName }),
+    ...(row.methodArgs === undefined ? {} : { methodArgs: row.methodArgs }),
+    ...(row.methodReturn === undefined ? {} : { methodReturn: row.methodReturn }),
     ...(row.innerTxns === undefined ? {} : { innerTxns: row.innerTxns.map(toGraphTransaction) }),
   }
 }

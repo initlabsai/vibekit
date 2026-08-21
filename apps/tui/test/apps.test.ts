@@ -3,7 +3,13 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { appsEntries, isAppSpecCandidate, scanAppSpecs } from '../src/slices/apps.js'
+import { specCatalog } from '../src/abi-catalog.js'
+import {
+  appsEntries,
+  isAppSpecCandidate,
+  optedInFromRecord,
+  scanAppSpecs,
+} from '../src/slices/apps.js'
 
 const arc56 = JSON.stringify({
   arcs: [22],
@@ -74,10 +80,51 @@ describe('app spec discovery scan', () => {
 })
 
 describe('apps screen entries', () => {
-  test('deployed rows come first so 1-9 favors on-chain apps', () => {
+  test('deployed, then opted-in, then local so 1-9 favors on-chain apps', () => {
     const local = scanAppSpecs(tree()).slice(0, 1)
-    const entries = appsEntries([{ name: 'Counter', appId: 1042 }], local)
+    const entries = appsEntries(
+      [{ name: 'Counter', appId: 1042 }],
+      [{ appId: 1071, name: 'Sample' }],
+      local,
+    )
     expect(entries[0]).toEqual({ kind: 'deployed', name: 'Counter', appId: 1042 })
-    expect(entries[1]).toEqual({ kind: 'local', spec: local[0]! })
+    expect(entries[1]).toEqual({ kind: 'optedIn', appId: 1071, name: 'Sample' })
+    expect(entries[2]).toEqual({ kind: 'local', spec: local[0]! })
+  })
+
+  test('optedInFromRecord reads application.locals app ids and ignores junk', () => {
+    expect(
+      optedInFromRecord({
+        protocolVersion: '0.1.0-provisional',
+        type: 'result',
+        resultId: 'r',
+        toolCallId: 't',
+        toolName: 'get_account_app_local_states',
+        network: 'localnet',
+        state: 'success',
+        data: { address: 'X', apps: [{ applicationId: 1071 }, { applicationId: 0 }, { nope: true }] },
+      }),
+    ).toEqual([{ appId: 1071 }])
+    expect(
+      optedInFromRecord({
+        protocolVersion: '0.1.0-provisional',
+        type: 'result',
+        resultId: 'r',
+        toolCallId: 't',
+        toolName: 'get_account_app_local_states',
+        network: 'localnet',
+        state: 'error',
+        error: { code: 'X', message: 'no' },
+      }),
+    ).toEqual([])
+  })
+})
+
+describe('spec catalog', () => {
+  test('binds a deployed app id to the local spec of the same name', () => {
+    const local = scanAppSpecs(tree())
+    const catalog = specCatalog([{ name: 'Counter', appId: 1042 }], local)
+    expect(catalog.get(1042)?.name).toBe('Counter')
+    expect(catalog.get(99)).toBeUndefined()
   })
 })

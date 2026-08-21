@@ -7,7 +7,7 @@ import {
   createFixturePaymentHost,
   createFixtureResultStore,
   bridgeToolResult,
-  paymentComposeFromToolResult,
+  unsignedGroupFromToolResult,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   startPaymentFlowFromDraftRecord,
@@ -109,6 +109,7 @@ describe('TUI agent lane', () => {
     expect(prompt).toContain('lookup_transaction_group')
     expect(prompt).toContain('SMOKE1')
     expect(prompt).toContain(TXN_WIRE.sender)
+    expect(prompt).toContain('resolve_nfd')
     expect(prompt).not.toContain('NEVER restate')
   })
 
@@ -197,7 +198,7 @@ describe('TUI agent lane', () => {
       },
     })
 
-    const compose = paymentComposeFromToolResult(toolResults[0]!)
+    const compose = unsignedGroupFromToolResult(toolResults[0]!)
     expect(compose?.unsignedGroup).toEqual([PAYMENT_FIXTURE_UNSIGNED_TRANSACTION])
 
     const draftRecord = draftRecordFromComposeWire(
@@ -214,5 +215,26 @@ describe('TUI agent lane', () => {
     // The one human decision: the agent got the flow to the approval card, no further.
     expect(run.flow.stage).toBe('awaiting-approval')
     expect(run.flow.signed).toBeUndefined()
+  })
+
+  test('the default explorer agent registers resolve_nfd', async () => {
+    const session = createExplorerAgent({
+      model: new MockLanguageModelV4({
+        doStream: toolCallThenText('resolve_nfd', { name: 'alice.algo' }, 'Need a live network for that.'),
+      }),
+      addressBook: [],
+      network: 'localnet',
+    })
+    const toolResults: ToolResultEventLike[] = []
+    await runAgentTurn(session, 'resolve alice.algo', {
+      onText: () => {},
+      onToolCall: () => {},
+      onToolResult: (event) => toolResults.push(event),
+      onError: () => {
+        throw new Error('unexpected agent error')
+      },
+    })
+    expect(toolResults).toHaveLength(1)
+    expect(toolResults[0]?.toolName).toBe('resolve_nfd')
   })
 })

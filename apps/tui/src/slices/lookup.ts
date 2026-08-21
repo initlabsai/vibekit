@@ -24,7 +24,9 @@ import type { WorkspaceScreen } from '../chrome.js'
 import type { KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
+import { enrichResultWithAbi } from '../abi-catalog.js'
 import type { ExplorerHost } from './network.js'
+import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 
 /** Wraps a stored record in a trusted view spec. */
 export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
@@ -49,6 +51,7 @@ export function useLookups({
   setBusy,
   setStatus,
   setScreen,
+  specCatalog,
 }: {
   feed: Feed
   host: () => ExplorerHost
@@ -61,22 +64,24 @@ export function useLookups({
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
   setScreen: (screen: WorkspaceScreen) => void
+  specCatalog: ReadonlyMap<number, NormalizedAppSpec>
 }) {
   const { appendBlock, appendNote } = feed
 
   const openTransaction = useCallback(
-    (sectionId: number, txid: string) => {
+    (sectionId: number, txid: string, lookupHost?: ExplorerHost) => {
       if (busy) return
       setBusy(true)
       setStatus(`looking up ${txid.slice(0, 8)}…`)
-      void host()
+      void (lookupHost ?? host())
         .lookupTransaction(txid)
         .then((record) => {
           setBusy(false)
           setStatus('')
-          const nextStore = addResult(storeRef.current, record)
+          const enriched = enrichResultWithAbi(record, specCatalog)
+          const nextStore = addResult(storeRef.current, enriched)
           commitStore(nextStore)
-          const view = viewFor(record, 'transaction.detail')
+          const view = viewFor(enriched, 'transaction.detail')
           appendBlock(sectionId, { id: 0, kind: 'view', view })
           const derived = createTransactionDetailViewModel(nextStore, view)
           const summary =
@@ -95,7 +100,7 @@ export function useLookups({
           )
         })
     },
-    [appendBlock, appendNote, busy, commitStore, host, setBusy, setStatus, storeRef],
+    [appendBlock, appendNote, busy, commitStore, host, setBusy, setStatus, specCatalog, storeRef],
   )
 
   const openAccount = useCallback(
@@ -182,10 +187,11 @@ export function useLookups({
 
   const presentRecord = useCallback(
     (sectionId: number, record: StructuredResult, view: TrustedViewId) => {
-      commitStore(addResult(storeRef.current, record))
-      appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, view) })
+      const enriched = enrichResultWithAbi(record, specCatalog)
+      commitStore(addResult(storeRef.current, enriched))
+      appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(enriched, view) })
     },
-    [appendBlock, commitStore, storeRef],
+    [appendBlock, commitStore, specCatalog, storeRef],
   )
 
   const openMyAccounts = useCallback(

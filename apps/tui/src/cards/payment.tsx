@@ -25,10 +25,12 @@ function signedDelta(value: number | string): string {
 /** Flat lines for tests and for hosts that still want a text dump. */
 export function paymentLines(model: PaymentFlowViewModel): string[] {
   const lines = [
-    `${formatMicroAlgos(model.amountMicroAlgos)} ALGO · ${model.network}`,
+    model.amountMicroAlgos === undefined
+      ? `${model.unsignedGroup.summary} · ${model.network}`
+      : `${formatMicroAlgos(model.amountMicroAlgos)} ALGO · ${model.network}`,
     `from  ${model.sender}`,
-    `to    ${model.receiver}`,
   ]
+  if (model.receiver) lines.push(`to    ${model.receiver}`)
   if (model.simulation) {
     lines.push(
       `${model.simulation.wouldSucceed ? 'would succeed' : 'WOULD FAIL'} · fee ${formatMicroAlgos(model.simulation.feeMicroAlgos)} ALGO${model.simulation.simulatedRound === undefined ? '' : ` · round ${model.simulation.simulatedRound}`}`,
@@ -62,8 +64,12 @@ export function PaymentBody({
   const failed = model.simulation?.wouldSucceed === false
   return (
     <box flexDirection="column">
-      <Hero value={formatMicroAlgos(model.amountMicroAlgos)} unit="ALGO" />
-      <PartyPath from={model.sender} to={model.receiver} width={width} />
+      {model.amountMicroAlgos === undefined ? (
+        <text fg={COLORS.brassBright} marginTop={1} content={model.unsignedGroup.summary} />
+      ) : (
+        <Hero value={formatMicroAlgos(model.amountMicroAlgos)} unit="ALGO" />
+      )}
+      {model.receiver ? <PartyPath from={model.sender} to={model.receiver} width={width} /> : null}
       <box marginTop={1} flexDirection="column">
         <Rule width={width} />
         <Fact label="network" value={model.network} width={width} />
@@ -174,7 +180,11 @@ export function PaymentCard({
     stage === 'denied' || failed ? 'bad' : stage === 'confirmed' ? 'ok' : 'warn'
   return (
     <Frame width={width} accent={tone === 'bad' ? COLORS.red : tone === 'ok' ? COLORS.green : COLORS.brass}>
-      <Header kicker="PAYMENT" pill={badge} tone={tone} />
+      <Header
+        kicker={model.amountMicroAlgos === undefined ? 'WRITE' : 'PAYMENT'}
+        pill={badge}
+        tone={tone}
+      />
       <PaymentBody model={model} width={innerWidth(width)} />
     </Frame>
   )

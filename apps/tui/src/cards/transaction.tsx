@@ -22,6 +22,16 @@ import {
 } from '../ui.js'
 import { algo, pageNotes } from './shared.js'
 
+function formatAbiValue(value: unknown): string {
+  if (value === undefined || value === null) return '—'
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
 function assetUnits(
   amount: number | string | undefined,
   decimals?: number,
@@ -94,6 +104,18 @@ export function TransactionCard({
             copy={String(model.applicationId)}
             width={body}
           />
+        )}
+        {model.methodName ? <Fact label="method" value={model.methodName} width={body} /> : null}
+        {(model.methodArgs ?? []).map((arg, index) => (
+          <Fact
+            key={`${arg.name ?? arg.type}-${index}`}
+            label={arg.name ?? arg.type}
+            value={formatAbiValue(arg.value)}
+            width={body}
+          />
+        ))}
+        {model.methodReturn === undefined ? null : (
+          <Fact label="return" value={formatAbiValue(model.methodReturn)} width={body} />
         )}
         {model.onCompletion ? (
           <Fact label="on-comp" value={formatOnCompletion(model.onCompletion)} width={body} />

@@ -2,7 +2,7 @@ import {
   addResult,
   bridgeToolResult,
   FIXTURE_ADDRESS_BOOK,
-  paymentComposeFromToolResult,
+  unsignedGroupFromToolResult,
   startPaymentFlowFromDraftRecord,
   type ResultStore,
 } from '@initlabs/vibekit-experience'
@@ -13,9 +13,12 @@ import {
   ZEROSIGNAL_SETUP_HINT,
   type AgentSession,
 } from '@initlabs/vibekit-agent'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
+import { enrichResultWithAbi } from '../abi-catalog.js'
 import { createExplorerAgent, loadAgentConfig, runAgentTurn } from '../agent-lane.js'
+import type { AnyTool } from '@initlabs/vibekit-core'
+import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import type { KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
@@ -38,6 +41,8 @@ export function useAgentLane({
   agentBusy,
   setAgentBusy,
   setStatus,
+  extraTools,
+  specCatalog,
 }: {
   feed: Feed
   payment: PaymentLane
@@ -50,6 +55,8 @@ export function useAgentLane({
   agentBusy: boolean
   setAgentBusy: (busy: boolean) => void
   setStatus: (status: string) => void
+  extraTools: readonly AnyTool[]
+  specCatalog: ReadonlyMap<number, NormalizedAppSpec>
 }) {
   const {
     appendBlock,
@@ -67,11 +74,17 @@ export function useAgentLane({
   const agentRef = useRef<AgentSession | null>(null)
 
   const agentConfig = useMemo(() => loadAgentConfig(process.env), [])
+  const extraToolNames = extraTools.map((tool) => tool.name).join(',')
 
   /** Drops the live session, e.g. when the network changes under it. */
   const reset = useCallback(() => {
     agentRef.current = null
   }, [])
+
+  // Spec scan / deployed associations can land after the first turn.
+  useEffect(() => {
+    agentRef.current = null
+  }, [extraToolNames])
 
   const runAgent = useCallback(
     (sectionId: number, input: string) => {
@@ -143,6 +156,7 @@ export function useAgentLane({
             model: agentConfig,
             addressBook,
             network: networkRef.current,
+            extraTools,
           })
         }
         await runAgentTurn(agentRef.current, input, {
@@ -159,7 +173,7 @@ export function useAgentLane({
           onToolCall: (toolName) => setStatus(`agent → ${toolName}…`),
           onToolResult: (event) => {
             agentNoteItem.current = null
-            const compose = paymentComposeFromToolResult(event)
+            const compose = unsignedGroupFromToolResult(event)
             if (compose && flowRef.current === null) {
               const draftRecord = draftRecordFromComposeWire(
                 {
@@ -168,6 +182,7 @@ export function useAgentLane({
                   network: networkRef.current,
                 },
                 compose,
+                event.toolName,
               )
               setFlowMode('live')
               agentHasCardsRef.current = true
@@ -192,7 +207,8 @@ export function useAgentLane({
                 toolCallId: event.id,
                 network: networkRef.current,
               })
-              commitStore(addResult(storeRef.current, record))
+              const enriched = enrichResultWithAbi(record, specCatalog)
+              commitStore(addResult(storeRef.current, enriched))
               agentHasCardsRef.current = true
               if (view === undefined) {
                 const text =
@@ -233,6 +249,8 @@ export function useAgentLane({
     [
       agentBusy,
       agentConfig,
+      extraTools,
+      specCatalog,
       appendBlock,
       appendItem,
       appendNote,

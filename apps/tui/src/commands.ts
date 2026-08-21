@@ -19,7 +19,7 @@ export type ComposerRoute =
   | { status: 'asset'; assetId: number }
   | { status: 'application'; applicationId: number }
   | { status: 'block'; round: number }
-  | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' }
+  | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: 'localnet' | 'testnet' | 'mainnet' }
   | { status: 'sample' }
@@ -72,6 +72,7 @@ export function routeComposerInput(input: string): ComposerRoute {
   if (isMineQuery(word, 'assets')) return { status: 'nav', screen: 'assets' }
   if (isMineQuery(word, 'apps')) return { status: 'nav', screen: 'apps' }
   if (isMineQuery(word, 'txns')) return { status: 'nav', screen: 'txns' }
+  if (word === 'blocks' || word === 'live' || word === 'tail') return { status: 'nav', screen: 'blocks' }
   if (isAccountListQuery(word)) return { status: 'account-list' }
   if (word === 'network') return { status: 'network' }
   const networkMatch = /^network\s+(localnet|testnet|mainnet)$/.exec(word)

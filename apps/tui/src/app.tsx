@@ -1,7 +1,6 @@
 import {
   createFixtureResultStore,
   FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_TRANSACTION_ID,
   type ResultStore,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
@@ -9,7 +8,7 @@ import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useRef, useState } from 'react'
 
 import { ApprovalModal } from './approval-modal.js'
-import { AppsScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
+import { AppsScreen, BlocksScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { ContentPane, NavPane } from './sections.js'
@@ -21,9 +20,10 @@ import { useExplorerKeys } from './slices/keys.js'
 import { useLookups } from './slices/lookup.js'
 import { NETWORKS, useNetwork } from './slices/network.js'
 import { usePaymentFlow } from './slices/payment.js'
+import { useBlockTail } from './slices/tail.js'
 import { COLORS, shorten } from './theme.js'
 
-const HELP = 'pay 0.5 · list my accounts · alice.algo · sample · paste an id'
+const HELP = 'pay 0.5 · blocks · list my accounts · alice.algo · sample · paste an id'
 
 /**
  * The Explorer as a chat-first transcript plus results feed: a session index
@@ -59,7 +59,7 @@ export function App() {
   )
 
   const net = useNetwork()
-  const { network, networkRef, keystoreHost, host, live, setNetwork } = net
+  const { network, networkRef, keystoreHost, host, sampleHost, live, setNetwork } = net
 
   const feed = useFeed()
   const { focus, setFocus, sections, selectedId, appendNote, createSection, cycleSort, toggleFlowView } = feed
@@ -76,6 +76,8 @@ export function App() {
     openWorkspace,
   } = accounts
 
+  const apps = useApps({ screen, network, sender: activeSender, live, host })
+
   const lookup = useLookups({
     feed,
     host,
@@ -88,6 +90,7 @@ export function App() {
     setBusy,
     setStatus,
     setScreen,
+    specCatalog: apps.catalog,
   })
   const {
     openTransaction,
@@ -100,24 +103,41 @@ export function App() {
     openBlock,
     openAmbiguous,
   } = lookup
-
-  const apps = useApps({ screen, network })
   const activateAppsEntry = useCallback(
     (index: number) => {
       const entry = apps.entries[index - 1]
       if (!entry) return
       if (entry.kind === 'local') {
-        apps.setSelectedSpec(entry.spec)
+        const match = apps.deployed.find((deployed) => deployed.name === entry.spec.spec.name)
+        apps.selectSpec({ spec: entry.spec, appId: match?.appId })
         return
       }
-      // A deployed app opens through the same direct lane as `app <id>`.
+      if (entry.kind === 'optedIn') {
+        setScreen('chat')
+        const sectionId = createSection(`app ${entry.appId}`)
+        openApplication(sectionId, entry.appId)
+        return
+      }
+      const match = apps.localSpecs.find((local) => local.spec.name === entry.name)
+      if (match) {
+        apps.selectSpec({ spec: match, appId: entry.appId })
+        return
+      }
+      // A deployed app without a local spec opens through the same lane as `app <id>`.
       setScreen('chat')
       const sectionId = createSection(`app ${entry.appId}`)
       openApplication(sectionId, entry.appId)
     },
-    [apps.entries, apps.setSelectedSpec, createSection, openApplication, setScreen],
+    [apps, createSection, openApplication, setScreen],
   )
-  const closeAppsDetail = useCallback(() => apps.setSelectedSpec(null), [apps.setSelectedSpec])
+  const selectAppsMethod = useCallback(
+    (index: number) => {
+      const method = apps.selected?.spec.spec.methods[index - 1]
+      if (method) apps.selectMethod(method)
+    },
+    [apps],
+  )
+  const closeAppsDetail = useCallback(() => apps.closeDetail(), [apps])
 
   const payment = usePaymentFlow({
     feed,
@@ -136,6 +156,15 @@ export function App() {
   })
   const { flow, flowRef, startPayment, decide, isFlowSection, modalOpen, modalModel } = payment
 
+  const tail = useBlockTail({
+    live,
+    host,
+    network,
+    screen,
+    commitStore,
+    storeRef,
+  })
+
   const agent = useAgentLane({
     feed,
     payment,
@@ -148,6 +177,8 @@ export function App() {
     agentBusy,
     setAgentBusy,
     setStatus,
+    extraTools: apps.extraTools,
+    specCatalog: apps.catalog,
   })
   const { agentConfig, runAgent, agentSectionRef, reset: resetAgent } = agent
 
@@ -232,10 +263,9 @@ export function App() {
           }
           return
         case 'sample':
-          openTransaction(
-            sectionId,
-            live === true ? PAYMENT_FIXTURE_TRANSACTION_ID : FIXTURE_TRANSACTION_ID,
-          )
+          // Always the recorded card. Looking the fixture txid up through the
+          // live host 404s on a real network that never confirmed that payment.
+          openTransaction(sectionId, FIXTURE_TRANSACTION_ID, sampleHost)
           return
         case 'help':
           appendNote(sectionId, HELP)
@@ -250,7 +280,6 @@ export function App() {
     [
       appendNote,
       createSection,
-      live,
       networkRef,
       openAccount,
       openAccountName,
@@ -263,6 +292,7 @@ export function App() {
       openGroup,
       openTransaction,
       runAgent,
+      sampleHost,
       startPayment,
       switchNetwork,
     ],
@@ -287,9 +317,13 @@ export function App() {
     toggleFlowView,
     closeSelectedSection,
     isNarrow,
-    appsDetailOpen: apps.selectedSpec !== null,
+    appsDetailOpen: apps.selected !== null,
     closeAppsDetail,
     activateAppsEntry,
+    appsMethodOpen: apps.selectedMethod !== null,
+    selectAppsMethod,
+    submitAppsCall: apps.submitCall,
+    toggleBlocksTail: tail.togglePause,
   })
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
@@ -307,13 +341,19 @@ export function App() {
   const keybar = modalOpen
     ? 'enter approve · esc deny'
     : screen === 'wallet'
-      ? '1-9 active account · esc chat · ^1 assets · ^2 apps · ^3 txns'
+      ? '1-9 active account · esc chat · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
       : screen === 'apps'
-        ? apps.selectedSpec
-          ? 'esc back · ^w wallet · ^1 assets · ^3 txns'
-          : '1-9 open · esc chat · ^w wallet · ^1 assets · ^3 txns'
+        ? apps.selectedMethod
+          ? 'enter simulate · esc methods'
+          : apps.selected
+            ? '1-9 method · esc apps · ^w wallet'
+            : '1-9 open · [ ] cycle · esc chat · ^w wallet · ^1 assets · ^3 txns'
+      : screen === 'blocks'
+        ? tail.running
+          ? 's stop · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
+          : 's start · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
       : screen === 'assets' || screen === 'txns'
-        ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns'
+        ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
         : focus === 'nav'
         ? '↑/↓ select · enter view · s sort · v flow · x close · tab content · esc chat'
         : focus === 'content'
@@ -329,6 +369,7 @@ export function App() {
         screen={screen}
         modeLabel={modeLabel}
         network={network}
+        latestRound={tail.latestRound}
         accountName={senderAccount?.name}
         address={activeSender}
         width={width}
@@ -349,9 +390,32 @@ export function App() {
         <AppsScreen
           network={network}
           entries={apps.entries}
-          selected={apps.selectedSpec}
+          selected={apps.selected}
+          selectedMethod={apps.selectedMethod}
+          sender={activeSender}
+          optedInLoading={apps.optedInLoading}
           width={width}
           onActivate={activateAppsEntry}
+          onSelectMethod={apps.selectMethod}
+          callInput={apps.callInput}
+          callEpoch={apps.callEpoch}
+          callBusy={apps.callBusy}
+          callError={apps.callError}
+          callResult={apps.callResult}
+          onInput={apps.setCallInput}
+          onSubmit={apps.submitCall}
+        />
+      ) : screen === 'blocks' ? (
+        <BlocksScreen
+          network={network}
+          live={live}
+          running={tail.running}
+          paused={tail.paused}
+          latestRound={tail.latestRound}
+          error={tail.error}
+          store={store}
+          views={tail.views}
+          width={width}
         />
       ) : screen === 'assets' || screen === 'txns' ? (
         <ShelfScreen

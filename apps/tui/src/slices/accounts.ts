@@ -154,6 +154,9 @@ export function useAccounts({
     accountsLoading,
     openWorkspace,
     cycleAccount,
+    refreshTxnsShelf: () => {
+      if (screen === 'txns') loadShelf('txns', activeSender)
+    },
   }
 }
 

@@ -21,6 +21,8 @@ describe('transcript command routing', () => {
     expect(routeComposerInput('show me my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput(' SAMPLE ')).toEqual({ status: 'sample' })
+    expect(routeComposerInput('blocks')).toEqual({ status: 'nav', screen: 'blocks' })
+    expect(routeComposerInput('live')).toEqual({ status: 'nav', screen: 'blocks' })
     expect(routeComposerInput('help')).toEqual({ status: 'help' })
     expect(routeComposerInput('pay 1.5')).toEqual({ status: 'payment', amountMicroAlgos: 1500000 })
     expect(routeComposerInput('pay')).toEqual({

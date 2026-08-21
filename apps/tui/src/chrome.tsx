@@ -4,16 +4,18 @@ import type { SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
 import { Ident } from './ui.js'
 import { ResultView } from './views.js'
-import type { AppsEntry, LocalAppSpec } from './slices/apps.js'
+import type { AppsEntry, SpecSelection } from './slices/apps.js'
+import type { ParsedMethod } from '@initlabs/vibekit-tools'
 import { COLORS, shorten } from './theme.js'
 
 /** Workspace pages that sit beside the chat transcript. */
-export type WorkspaceScreen = 'chat' | 'wallet' | 'assets' | 'apps' | 'txns'
+export type WorkspaceScreen = 'chat' | 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks'
 
 const SHELF: ReadonlyArray<{ id: Exclude<WorkspaceScreen, 'chat' | 'wallet'>; label: string; shortcut: string }> = [
   { id: 'assets', label: 'assets', shortcut: '^1' },
   { id: 'apps', label: 'apps', shortcut: '^2' },
   { id: 'txns', label: 'txns', shortcut: '^3' },
+  { id: 'blocks', label: 'blocks', shortcut: '^4' },
 ]
 
 function NavButton({
@@ -43,6 +45,7 @@ export function TopBar({
   screen,
   modeLabel,
   network,
+  latestRound,
   accountName,
   address,
   width,
@@ -53,6 +56,7 @@ export function TopBar({
   screen: WorkspaceScreen
   modeLabel: string
   network: LiveNetworkId
+  latestRound?: number
   accountName?: string
   address?: string
   width: number
@@ -84,6 +88,9 @@ export function TopBar({
           <text fg={COLORS.ink} bg={networkColors[network]}>
             {` ${network.toUpperCase()} `}
           </text>
+          {latestRound === undefined ? null : (
+            <text fg={COLORS.faint}>{`  ${latestRound}`}</text>
+          )}
           <text fg={COLORS.faint}> ^n</text>
         </box>
       </box>
@@ -180,24 +187,170 @@ export function WalletScreen({
       <text
         fg={COLORS.faint}
         marginTop={1}
-        content="[1-9] set active · [esc] chat · assets ^1 · apps ^2 · txns ^3"
+        content="[1-9] set active · [esc] chat · assets ^1 · apps ^2 · txns ^3 · blocks ^4"
       />
     </box>
   )
 }
 
-function SpecDetailPane({ selected, width }: { selected: LocalAppSpec; width: number }) {
-  const { spec } = selected
+function formatCallResult(result: unknown): string {
+  if (result === null || result === undefined) return ''
+  if (typeof result !== 'object') return String(result)
+  const record = result as {
+    wouldSucceed?: boolean
+    failureMessage?: string
+    returns?: Array<{ value?: unknown }>
+  }
+  const lines: string[] = []
+  if (typeof record.wouldSucceed === 'boolean') {
+    lines.push(record.wouldSucceed ? 'simulate: would succeed' : 'simulate: would fail')
+  }
+  if (record.failureMessage) lines.push(record.failureMessage)
+  const value = record.returns?.[0]?.value
+  if (value !== undefined) {
+    lines.push(`return: ${typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value)}`)
+  }
+  return lines.join('\n') || JSON.stringify(result)
+}
+
+function MethodCallPane({
+  selected,
+  method,
+  width,
+  callEpoch,
+  callBusy,
+  callError,
+  callResult,
+  onInput,
+  onSubmit,
+}: {
+  selected: SpecSelection
+  method: ParsedMethod
+  width: number
+  callInput: string
+  callEpoch: number
+  callBusy: boolean
+  callError: string | null
+  callResult: unknown
+  onInput: (value: string) => void
+  onSubmit: () => void
+}) {
+  const readonly = method.readonly === true
+  const argHint =
+    method.args.length === 0
+      ? 'no args — enter simulates'
+      : `JSON args, e.g. {${method.args.map((arg) => `"${arg.name ?? 'arg'}": …`).join(', ')}}`
+  const submitHandler = onSubmit as unknown as ((event: OpenTUISubmitEvent) => void) & (() => void)
+  return (
+    <box flexGrow={1} flexDirection="column">
+      <text fg={COLORS.brassBright} marginTop={1} content={shorten(method.signature, width - 6)} />
+      {method.description ? <text fg={COLORS.muted} content={shorten(method.description, width - 6)} /> : null}
+      <text
+        fg={COLORS.faint}
+        content={
+          selected.appId === undefined
+            ? 'No deployed app id bound for this spec name.'
+            : `app ${selected.appId}${readonly ? ' · read (simulate)' : ' · write'}`
+        }
+      />
+      {readonly ? (
+        <>
+          <text fg={COLORS.muted} marginTop={1} content={argHint} />
+          <box
+            height={3}
+            marginTop={1}
+            flexDirection="row"
+            alignItems="center"
+            paddingX={1}
+            border
+            borderStyle="rounded"
+            borderColor={COLORS.brass}
+          >
+            <text fg={COLORS.brassBright}>› </text>
+            <input
+              key={callEpoch}
+              flexGrow={1}
+              focused
+              placeholder={method.args.length === 0 ? 'enter to simulate' : '{ ... }'}
+              onInput={onInput}
+              onSubmit={submitHandler}
+            />
+          </box>
+          {callBusy ? <text fg={COLORS.muted} marginTop={1} content="Simulating…" /> : null}
+          {callError ? <text fg={COLORS.red} marginTop={1} content={callError} /> : null}
+          {callResult !== null ? (
+            <text fg={COLORS.text} marginTop={1} content={formatCallResult(callResult)} />
+          ) : null}
+          <text fg={COLORS.faint} marginTop={1} content="[enter] simulate · [esc] methods" />
+        </>
+      ) : (
+        <>
+          <text fg={COLORS.muted} marginTop={1} content="Write methods wait for the approval-flow drop." />
+          <text fg={COLORS.faint} marginTop={1} content="[esc] methods" />
+        </>
+      )}
+    </box>
+  )
+}
+
+function SpecDetailPane({
+  selected,
+  selectedMethod,
+  width,
+  callInput,
+  callEpoch,
+  callBusy,
+  callError,
+  callResult,
+  onSelectMethod,
+  onInput,
+  onSubmit,
+}: {
+  selected: SpecSelection
+  selectedMethod: ParsedMethod | null
+  width: number
+  callInput: string
+  callEpoch: number
+  callBusy: boolean
+  callError: string | null
+  callResult: unknown
+  onSelectMethod: (method: ParsedMethod) => void
+  onInput: (value: string) => void
+  onSubmit: () => void
+}) {
+  const { spec } = selected.spec
+  if (selectedMethod) {
+    return (
+      <MethodCallPane
+        selected={selected}
+        method={selectedMethod}
+        width={width}
+        callInput={callInput}
+        callEpoch={callEpoch}
+        callBusy={callBusy}
+        callError={callError}
+        callResult={callResult}
+        onInput={onInput}
+        onSubmit={onSubmit}
+      />
+    )
+  }
   const schemaLine =
     `state: ${spec.schema.globalInts} global ints · ${spec.schema.globalBytes} global bytes · ` +
     `${spec.schema.localInts} local ints · ${spec.schema.localBytes} local bytes`
+  const methods = spec.methods.slice(0, 9)
   return (
     <box flexGrow={1} flexDirection="column">
       <box flexDirection="row" justifyContent="space-between" height={1} marginTop={1}>
         <text fg={COLORS.brassBright}>{spec.name}</text>
         <text fg={COLORS.faint}>{spec.format.toUpperCase()}</text>
       </box>
-      <text fg={COLORS.faint} content={shorten(selected.path, width - 6)} />
+      <text fg={COLORS.faint} content={shorten(selected.spec.path, width - 6)} />
+      {selected.appId !== undefined ? (
+        <text fg={COLORS.muted} content={`deployed app ${selected.appId}`} />
+      ) : (
+        <text fg={COLORS.faint} content="Not bound to a deployed app on this network." />
+      )}
       {spec.description ? <text fg={COLORS.muted} content={shorten(spec.description, width - 6)} /> : null}
       <text fg={COLORS.muted} marginTop={1} content={schemaLine} />
       {spec.templateVariables.length > 0 ? (
@@ -205,12 +358,18 @@ function SpecDetailPane({ selected, width }: { selected: LocalAppSpec; width: nu
       ) : null}
       <text fg={COLORS.brassBright} marginTop={1} content={`METHODS (${spec.methods.length})`} />
       <scrollbox flexGrow={1} stickyScroll={false}>
-        {spec.methods.length === 0 ? (
+        {methods.length === 0 ? (
           <text fg={COLORS.muted} content="No ABI methods declared." />
         ) : (
-          spec.methods.map((method) => (
-            <box key={method.signature} flexDirection="column">
-              <text fg={COLORS.text} content={shorten(method.signature, width - 6)} />
+          methods.map((method, index) => (
+            <box key={method.signature} flexDirection="column" onMouseDown={() => onSelectMethod(method)}>
+              <text
+                fg={COLORS.text}
+                content={shorten(
+                  `[${index + 1}] ${method.readonly ? 'read' : 'write'} ${method.signature}`,
+                  width - 6,
+                )}
+              />
               {method.description ? (
                 <text fg={COLORS.faint} content={`  ${shorten(method.description, width - 8)}`} />
               ) : null}
@@ -218,28 +377,70 @@ function SpecDetailPane({ selected, width }: { selected: LocalAppSpec; width: nu
           ))
         )}
       </scrollbox>
-      <text fg={COLORS.faint} marginTop={1} content="Deploying from here lands in a later drop." />
-      <text fg={COLORS.faint} content="[esc] back to apps · ^w wallet" />
+      <text
+        fg={COLORS.faint}
+        marginTop={1}
+        content="[1-9] method · [esc] apps · read methods simulate"
+      />
     </box>
   )
 }
 
-/** My Apps: persisted deployed associations plus specs found near the launch dir. */
+function appsRowLabel(entry: AppsEntry, index: number, width: number): string {
+  const prefix = `[${index + 1}] `
+  if (entry.kind === 'deployed') return `${prefix}${entry.name} · app ${entry.appId}`
+  if (entry.kind === 'optedIn') {
+    return entry.name
+      ? `${prefix}${entry.name} · app ${entry.appId}`
+      : `${prefix}app ${entry.appId}`
+  }
+  return shorten(
+    `${prefix}${entry.spec.spec.name} · ${entry.spec.spec.methods.length} method${entry.spec.spec.methods.length === 1 ? '' : 's'} · ${entry.spec.path}`,
+    width - 6,
+  )
+}
+
+/** My Apps: deployed associations, opted-in apps for the active account, local specs. */
 export function AppsScreen({
   network,
   entries,
   selected,
+  selectedMethod,
+  sender,
+  optedInLoading,
   width,
   onActivate,
+  onSelectMethod,
+  callInput,
+  callEpoch,
+  callBusy,
+  callError,
+  callResult,
+  onInput,
+  onSubmit,
 }: {
   network: string
   entries: ReadonlyArray<AppsEntry>
-  selected: LocalAppSpec | null
+  selected: SpecSelection | null
+  selectedMethod: ParsedMethod | null
+  sender?: string
+  optedInLoading: boolean
   width: number
   onActivate: (index: number) => void
+  onSelectMethod: (method: ParsedMethod) => void
+  callInput: string
+  callEpoch: number
+  callBusy: boolean
+  callError: string | null
+  callResult: unknown
+  onInput: (value: string) => void
+  onSubmit: () => void
 }) {
   const deployed = entries.filter((entry) => entry.kind === 'deployed')
+  const optedIn = entries.filter((entry) => entry.kind === 'optedIn')
   const locals = entries.filter((entry) => entry.kind === 'local')
+  const optedOffset = deployed.length
+  const localOffset = deployed.length + optedIn.length
   return (
     <box
       flexGrow={1}
@@ -255,49 +456,73 @@ export function AppsScreen({
         <text fg={COLORS.faint}>{network}</text>
       </box>
       {selected ? (
-        <SpecDetailPane selected={selected} width={width} />
+        <SpecDetailPane
+          selected={selected}
+          selectedMethod={selectedMethod}
+          width={width}
+          callInput={callInput}
+          callEpoch={callEpoch}
+          callBusy={callBusy}
+          callError={callError}
+          callResult={callResult}
+          onSelectMethod={onSelectMethod}
+          onInput={onInput}
+          onSubmit={onSubmit}
+        />
       ) : (
         <>
-          <text fg={COLORS.muted} marginTop={1} content={`Deployed (${network})`} />
-          {deployed.length === 0 ? (
-            <text fg={COLORS.faint} content="  No deployed apps recorded on this network yet." />
-          ) : (
-            deployed.map((entry, index) => (
-              <box
-                key={`${entry.name}-${entry.appId}`}
-                paddingX={1}
-                onMouseDown={() => onActivate(index + 1)}
-              >
-                <text fg={COLORS.text} content={`[${index + 1}] ${entry.name} · app ${entry.appId}`} />
-              </box>
-            ))
-          )}
-          <text fg={COLORS.muted} marginTop={1} content="Local specs (not deployed)" />
-          {locals.length === 0 ? (
-            <text fg={COLORS.faint} content="  No app specs found under the launch directory." />
-          ) : (
-            <scrollbox flexGrow={1} stickyScroll={false}>
-              {locals.map((entry, index) => (
+          <scrollbox flexGrow={1} stickyScroll={false}>
+            <text fg={COLORS.muted} marginTop={1} content={`Deployed (${network})`} />
+            {deployed.length === 0 ? (
+              <text fg={COLORS.faint} content="  No deployed apps recorded on this network yet." />
+            ) : (
+              deployed.map((entry, index) => (
+                <box
+                  key={`deployed-${entry.name}-${entry.appId}`}
+                  paddingX={1}
+                  onMouseDown={() => onActivate(index + 1)}
+                >
+                  <text fg={COLORS.text} content={appsRowLabel(entry, index, width)} />
+                </box>
+              ))
+            )}
+            <text fg={COLORS.muted} marginTop={1} content="Opted in (this account)" />
+            {optedInLoading ? (
+              <text fg={COLORS.faint} content="  Looking up…" />
+            ) : !sender ? (
+              <text fg={COLORS.faint} content="  Pick a wallet with ^w first." />
+            ) : optedIn.length === 0 ? (
+              <text fg={COLORS.faint} content="  No opted-in apps for this account." />
+            ) : (
+              optedIn.map((entry, index) => (
+                <box
+                  key={`opted-${entry.appId}`}
+                  paddingX={1}
+                  onMouseDown={() => onActivate(optedOffset + index + 1)}
+                >
+                  <text fg={COLORS.text} content={appsRowLabel(entry, optedOffset + index, width)} />
+                </box>
+              ))
+            )}
+            <text fg={COLORS.muted} marginTop={1} content="Local specs (not deployed)" />
+            {locals.length === 0 ? (
+              <text fg={COLORS.faint} content="  No app specs found under the launch directory." />
+            ) : (
+              locals.map((entry, index) => (
                 <box
                   key={entry.spec.path}
                   paddingX={1}
-                  onMouseDown={() => onActivate(deployed.length + index + 1)}
+                  onMouseDown={() => onActivate(localOffset + index + 1)}
                 >
-                  <text
-                    fg={COLORS.text}
-                    content={shorten(
-                      `[${deployed.length + index + 1}] ${entry.spec.spec.name} · ${entry.spec.spec.methods.length} method${entry.spec.spec.methods.length === 1 ? '' : 's'} · ${entry.spec.path}`,
-                      width - 6,
-                    )}
-                  />
+                  <text fg={COLORS.text} content={appsRowLabel(entry, localOffset + index, width)} />
                 </box>
-              ))}
-            </scrollbox>
-          )}
+              ))
+            )}
+          </scrollbox>
           <text
             fg={COLORS.faint}
             marginTop={1}
-            content="[1-9] open · [esc] chat · ^w wallet · ^1 assets · ^3 txns"
+            content="[1-9] open · [ ] cycle · [esc] chat · ^w wallet · ^1 assets · ^3 txns"
           />
         </>
       )}
@@ -305,7 +530,7 @@ export function AppsScreen({
   )
 }
 
-/** One account-scoped list (assets, apps, or txns) using existing cards. */
+/** One account-scoped list (assets or txns) using existing cards. */
 export function ShelfScreen({
   title,
   accountName,
@@ -358,6 +583,85 @@ export function ShelfScreen({
         <text fg={COLORS.faint} marginTop={1} content={empty} />
       )}
       <text fg={COLORS.faint} marginTop={1} content="[esc] chat · ^w wallet · [ ] cycle account" />
+    </box>
+  )
+}
+
+/** Live block tail: only fetches while this page is open and not paused. */
+export function BlocksScreen({
+  network,
+  live,
+  running,
+  paused,
+  latestRound,
+  error,
+  store,
+  views,
+  width,
+}: {
+  network: string
+  live: 'probing' | boolean
+  running: boolean
+  paused: boolean
+  latestRound?: number
+  error?: string
+  store: ResultStore
+  views: readonly ViewSpec[]
+  width: number
+}) {
+  const inner = Math.max(30, width - 6)
+  const pill =
+    live === 'probing'
+      ? 'probing…'
+      : live !== true
+        ? 'sample — no tail'
+        : running
+          ? 'LIVE'
+          : paused
+            ? 'STOPPED'
+            : 'idle'
+  return (
+    <box
+      flexGrow={1}
+      flexDirection="column"
+      padding={1}
+      border
+      borderStyle="rounded"
+      borderColor={running ? COLORS.brass : COLORS.border}
+      backgroundColor={COLORS.panel}
+    >
+      <box flexDirection="row" justifyContent="space-between" height={1}>
+        <text fg={COLORS.brassBright}>BLOCKS</text>
+        <text fg={running ? COLORS.green : COLORS.muted}>
+          {latestRound === undefined ? `${pill}  ${network}` : `${pill}  ${network}  ${latestRound}`}
+        </text>
+      </box>
+      {live !== true ? (
+        <text
+          fg={COLORS.muted}
+          marginTop={1}
+          content="Need a live network for the tail. ^n to switch, then open this page again."
+        />
+      ) : error ? (
+        <text fg={COLORS.red} marginTop={1} content={error} />
+      ) : views.length === 0 ? (
+        <text
+          fg={COLORS.faint}
+          marginTop={1}
+          content={running ? 'Waiting for the next block…' : 's starts the tail.'}
+        />
+      ) : (
+        <scrollbox flexGrow={1} marginTop={1} stickyScroll={true}>
+          {views.map((view, index) => (
+            <ResultView key={`${view.source.id}-${index}`} store={store} view={view} width={inner} />
+          ))}
+        </scrollbox>
+      )}
+      <text
+        fg={COLORS.faint}
+        marginTop={1}
+        content={running ? '[s] stop · [esc] chat' : '[s] start · [esc] chat'}
+      />
     </box>
   )
 }
