@@ -15,10 +15,11 @@ import {
 } from '@initlabs/vibekit-experience'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
+import { resolveAgentConfig } from '@initlabs/vibekit-agent'
+
 import {
   createExplorerAgent,
   explorerSystemPrompt,
-  loadAgentConfig,
   runAgentTurn,
 } from '../src/agent-lane.js'
 
@@ -40,7 +41,7 @@ function toolCallThenText(toolName: string, input: Record<string, unknown>, text
             toolName,
             input: JSON.stringify(input),
           },
-          { type: 'finish' as const, finishReason: 'tool-calls' as const, usage: USAGE },
+          { type: 'finish' as const, finishReason: { unified: 'tool-calls' as const, raw: 'tool-calls' }, usage: USAGE },
         ] as never,
       }),
     },
@@ -51,7 +52,7 @@ function toolCallThenText(toolName: string, input: Record<string, unknown>, text
           { type: 'text-start' as const, id: 't1' },
           { type: 'text-delta' as const, id: 't1', delta: text },
           { type: 'text-end' as const, id: 't1' },
-          { type: 'finish' as const, finishReason: 'stop' as const, usage: USAGE },
+          { type: 'finish' as const, finishReason: { unified: 'stop' as const, raw: 'stop' }, usage: USAGE },
         ] as never,
       }),
     },
@@ -116,13 +117,13 @@ describe('TUI agent lane', () => {
   test('loads provider config from the environment', () => {
     // XDG points at an empty dir so a real ~/.config/vibekit file cannot leak in.
     const isolated = { XDG_CONFIG_HOME: '/nonexistent-vibekit-test' }
-    expect(loadAgentConfig(isolated)).toBeUndefined()
-    expect(loadAgentConfig({ ...isolated, VIBEKIT_AGENT_MODEL: 'qwen3:32b' })).toEqual({
+    expect(resolveAgentConfig(isolated)).toBeUndefined()
+    expect(resolveAgentConfig({ ...isolated, VIBEKIT_AGENT_MODEL: 'qwen3:32b' })).toEqual({
       provider: 'ollama',
       model: 'qwen3:32b',
     })
     expect(
-      loadAgentConfig({
+      resolveAgentConfig({
         ...isolated,
         VIBEKIT_AGENT_MODEL: 'gpt-5',
         VIBEKIT_AGENT_PROVIDER: 'openai-compatible',

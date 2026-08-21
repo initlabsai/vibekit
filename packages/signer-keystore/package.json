@@ -29,7 +29,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.0",
+    "@types/bun": "^1.4.0",
     "algosdk": "3.7.0",
     "tweetnacl": "^1.0.3",
     "@initlabs/vibekit-core": "workspace:*",
@@ -38,7 +38,7 @@
   "dependencies": {
     "@algorandfoundation/keystore-core": "1.0.0-canary.3",
     "@algorandfoundation/keystore-node": "1.0.0-canary.3",
-    "@tanstack/store": "^0.7.0"
+    "@tanstack/store": "0.9.3"
   },
   "repository": {
     "type": "git",

@@ -18,7 +18,7 @@ function textStream(text: string) {
         { type: 'text-start' as const, id: 't1' },
         { type: 'text-delta' as const, id: 't1', delta: text },
         { type: 'text-end' as const, id: 't1' },
-        { type: 'finish' as const, finishReason: 'stop' as const, usage: USAGE },
+        { type: 'finish' as const, finishReason: { unified: 'stop' as const, raw: 'stop' }, usage: USAGE },
       ],
     }),
   }
@@ -35,7 +35,7 @@ function toolCallStream(toolName: string, input: Record<string, unknown>) {
           toolName,
           input: JSON.stringify(input),
         },
-        { type: 'finish' as const, finishReason: 'tool-calls' as const, usage: USAGE },
+        { type: 'finish' as const, finishReason: { unified: 'tool-calls' as const, raw: 'tool-calls' }, usage: USAGE },
       ],
     }),
   }

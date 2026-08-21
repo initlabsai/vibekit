@@ -18,7 +18,7 @@
     "clean": "rm -rf bin"
   },
   "dependencies": {
-    "@clack/prompts": "^0.8.2",
+    "@clack/prompts": "^1.7.0",
     "@initlabs/vibekit-agent": "workspace:*",
     "@initlabs/vibekit-core": "workspace:*",
     "@initlabs/vibekit-mcp": "workspace:*",
@@ -31,7 +31,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.0",
-    "typescript": "^5.7.0"
+    "@types/bun": "^1.4.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@initlabs/vibekit-core": "workspace:*",
-    "@types/bun": "^1.2.0",
+    "@types/bun": "^1.4.0",
     "algosdk": "3.7.0",
     "zod": "^4.4.3"
   },
