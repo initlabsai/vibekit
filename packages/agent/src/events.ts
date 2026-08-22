@@ -11,6 +11,8 @@ export type AgentEvent =
       type: 'tool-result'
       id: string
       toolName: string
+      /** The arguments the model passed (includes `network` on multi-network deployments). */
+      input?: unknown
       /** JSON-safe tool output; on isError, `{ error: { code, message } }`. */
       output: unknown
       /** The tool's declared view cue: a semantic Explorer id or a coarse hint. */

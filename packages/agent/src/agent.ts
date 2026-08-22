@@ -64,8 +64,10 @@ function toToolErrorOutput(err: unknown): ToolErrorOutput {
   if (err instanceof ToolError) {
     return { error: { code: err.code, message: err.message } }
   }
+  // Some SDKs reject with plain objects; take their message before falling back to String().
+  const message = (err as { message?: unknown } | null)?.message
   return {
-    error: { code: 'TOOL_ERROR', message: err instanceof Error ? err.message : String(err) },
+    error: { code: 'TOOL_ERROR', message: typeof message === 'string' ? message : String(err) },
   }
 }
 
@@ -137,6 +139,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             type: 'tool-result',
             id: part.toolCallId,
             toolName: part.toolName,
+            input: part.input,
             output,
             view: viewByTool.get(part.toolName),
             isError: isToolErrorOutput(output),
@@ -150,6 +153,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
             type: 'tool-result',
             id: part.toolCallId,
             toolName: part.toolName,
+            input: part.input,
             output: toToolErrorOutput(part.error),
             view: viewByTool.get(part.toolName),
             isError: true,
