@@ -5,7 +5,29 @@ import {
   listZeroSignalModels,
   probeZeroSignal,
   ZEROSIGNAL_DEFAULT_BASE_URL,
+  zeroSignalBaseUrl,
+  zeroSignalSetupHint,
 } from '../src/zerosignal.js'
+
+describe('zeroSignalBaseUrl', () => {
+  const env = { XDG_CONFIG_HOME: '/cfg' }
+  test('follows the address the daemon wrote', () => {
+    const read = (path: string) => {
+      expect(path).toBe('/cfg/zerosignal/daemon.json')
+      return JSON.stringify({ listen: '127.0.0.1:9376' })
+    }
+    expect(zeroSignalBaseUrl(env, read)).toBe('http://127.0.0.1:9376/v1')
+    expect(zeroSignalBaseUrl(env, () => JSON.stringify({ listen: '0.0.0.0:8080' }))).toBe('http://127.0.0.1:8080/v1')
+  })
+  test('falls back to the default when the file is absent or malformed', () => {
+    expect(zeroSignalBaseUrl(env, () => { throw new Error('ENOENT') })).toBe(ZEROSIGNAL_DEFAULT_BASE_URL)
+    expect(zeroSignalBaseUrl(env, () => '{bad')).toBe(ZEROSIGNAL_DEFAULT_BASE_URL)
+    expect(zeroSignalBaseUrl(env, () => JSON.stringify({ listen: 'nonsense' }))).toBe(ZEROSIGNAL_DEFAULT_BASE_URL)
+  })
+  test('the hint names the address it tried', () => {
+    expect(zeroSignalSetupHint('http://127.0.0.1:9376/v1')).toContain('not running at http://127.0.0.1:9376/v1')
+  })
+})
 
 function fakeFetch(byPath: Record<string, { status: number; body?: unknown }>): typeof fetch {
   return (async (input: URL | RequestInfo) => {

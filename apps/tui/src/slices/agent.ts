@@ -11,7 +11,7 @@ import {
   listZeroSignalModels,
   probeZeroSignal,
   resolveAgentConfig,
-  ZEROSIGNAL_SETUP_HINT,
+  zeroSignalSetupHint,
   type AgentSession,
 } from '@initlabs/vibekit-agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -103,7 +103,7 @@ export function useAgentLane({
                 'error',
               ),
             )
-            .catch(() => appendNote(sectionId, ZEROSIGNAL_SETUP_HINT, 'error'))
+            .catch(() => appendNote(sectionId, zeroSignalSetupHint(), 'error'))
           return
         }
         appendNote(
@@ -151,7 +151,7 @@ export function useAgentLane({
       void (async () => {
         if (!agentRef.current) {
           if (agentConfig.provider === 'zerosignal' && !(await probeZeroSignal(agentConfig.baseUrl))) {
-            appendNote(sectionId, ZEROSIGNAL_SETUP_HINT, 'error')
+            appendNote(sectionId, zeroSignalSetupHint(agentConfig.baseUrl), 'error')
             setAgentBusy(false)
             return
           }

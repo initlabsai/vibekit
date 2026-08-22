@@ -128,4 +128,6 @@ export {
   probeZeroSignal,
   ZEROSIGNAL_DEFAULT_BASE_URL,
   ZEROSIGNAL_SETUP_HINT,
+  zeroSignalBaseUrl,
+  zeroSignalSetupHint,
 } from './zerosignal.js'

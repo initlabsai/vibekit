@@ -9,7 +9,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModel } from 'ai'
 
-import { ZEROSIGNAL_DEFAULT_BASE_URL } from './zerosignal.js'
+import { zeroSignalBaseUrl } from './zerosignal.js'
 
 export interface ProviderConfig {
   /**
@@ -59,7 +59,7 @@ export function createModel(config: ProviderConfig): LanguageModel {
       // seal); a non-empty value only satisfies SDK plumbing.
       return createOpenAICompatible({
         name: 'zerosignal',
-        baseURL: config.baseUrl ?? ZEROSIGNAL_DEFAULT_BASE_URL,
+        baseURL: config.baseUrl ?? zeroSignalBaseUrl(),
         apiKey: config.apiKey ?? 'zerosignal',
       })(config.model)
     case 'openai-compatible': {

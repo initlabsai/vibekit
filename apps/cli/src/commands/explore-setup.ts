@@ -11,7 +11,7 @@ import {
   loadStoredAgentConfig,
   probeZeroSignal,
   saveStoredAgentConfig,
-  ZEROSIGNAL_DEFAULT_BASE_URL,
+  zeroSignalBaseUrl,
   type StoredAgentConfig,
 } from "@initlabs/vibekit-agent/config";
 
@@ -82,7 +82,7 @@ async function pickModel(
 async function zeroSignalFlow(): Promise<StoredAgentConfig> {
   for (;;) {
     if (await probeZeroSignal()) break;
-    p.log.warn(`zs-proxy is not running at ${ZEROSIGNAL_DEFAULT_BASE_URL}.
+    p.log.warn(`zs-proxy is not running at ${zeroSignalBaseUrl()}.
 
 To set it up:
   ${zeroSignalInstallSteps()}
