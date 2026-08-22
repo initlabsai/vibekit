@@ -7,8 +7,9 @@ import {
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 
-import { PaymentCard, type AssetSort } from './cards/index.js'
+import { PaymentCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
+import { Button } from './ui.js'
 import { RawCard, ResultView } from './views.js'
 
 /** One rendered result inside a section — a request may compose several. */
@@ -30,9 +31,6 @@ export interface Section {
   id: number
   /** The user request, shown in the nav and as the section header. */
   prompt: string
-  sort: AssetSort
-  /** transaction.group cards in this section: flow graph or row table. */
-  flow: 'graph' | 'table'
   items: SectionItem[]
   /** Model reasoning for this request; folded by default. */
   thinking?: string
@@ -40,7 +38,7 @@ export interface Section {
 }
 
 function promptKicker(prompt: string, width: number, selected: boolean): string {
-  return shorten(`${selected ? '▌' : '›'} ${prompt}`, Math.max(8, width))
+  return shorten(`${selected ? '▸' : '›'} ${prompt}`, Math.max(8, width))
 }
 
 function promptRule(width: number, selected: boolean): string {
@@ -233,6 +231,7 @@ export function ContentPane({
   onSelect,
   onToggleThinking,
   onOpenTransaction,
+  onClose,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -252,8 +251,10 @@ export function ContentPane({
   onSelect: (id: number) => void
   onToggleThinking: (id: number) => void
   onOpenTransaction: (txid: string) => void
+  onClose: (id: number) => void
 }) {
-  const innerWidth = Math.max(24, width - 4)
+  // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
+  const innerWidth = Math.max(24, width - 6)
   const cardWidth = Math.max(30, innerWidth - 2)
   // Entering chat (this pane mounts) lands on the newest content.
   useEffect(() => {
@@ -285,7 +286,8 @@ export function ContentPane({
             return (
               <box
                 key={section.id}
-                flexDirection="column"
+                flexDirection="row"
+                marginTop={1}
                 onMouseDown={() => {
                   // Mark the group only. Scrolling here would jump the
                   // viewport when the user is starting a text selection.
@@ -296,11 +298,16 @@ export function ContentPane({
                   else sectionRegistry.current.delete(section.id)
                 }}
               >
-                <text
-                  marginTop={1}
-                  fg={selected ? COLORS.brassBright : COLORS.faint}
-                  content={promptKicker(section.prompt, innerWidth, selected)}
-                />
+                {/* Full-height gutter: the selection stays visible however far you scroll. */}
+                <box width={1} backgroundColor={selected ? COLORS.brass : COLORS.borderSoft} />
+                <box flexDirection="column" flexGrow={1} paddingLeft={1}>
+                <box flexDirection="row" justifyContent="space-between" height={1}>
+                  <text
+                    fg={selected ? COLORS.brassBright : COLORS.faint}
+                    content={promptKicker(section.prompt, innerWidth - 4, selected)}
+                  />
+                  <Button label="✕" onPress={() => onClose(section.id)} />
+                </box>
                 <text
                   fg={selected ? COLORS.brass : COLORS.borderSoft}
                   content={promptRule(innerWidth, selected)}
@@ -330,9 +337,7 @@ export function ContentPane({
                         store={store}
                         view={block.view}
                         width={cardWidth}
-                        sort={section.sort}
                         maxAssets={20}
-                        flow={section.flow}
                         onOpenTransaction={onOpenTransaction}
                       />
                     )
@@ -363,6 +368,7 @@ export function ContentPane({
                     onToggle={() => onToggleThinking(section.id)}
                   />
                 ) : null}
+                </box>
               </box>
             )
           })}

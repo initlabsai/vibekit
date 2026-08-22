@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
   createAccountListViewModel,
   createAccountPortfolioViewModel,
@@ -46,6 +48,7 @@ import {
   TransactionGraphCard,
   TransactionListCard,
   Unavailable,
+  nextAssetSort,
   type AssetSort,
 } from './cards/index.js'
 
@@ -56,21 +59,19 @@ export function ResultView({
   store,
   view,
   width,
-  sort = 'none',
   maxAssets = 20,
-  flow = 'graph',
   onOpenTransaction,
 }: {
   store: ResultStore
   view: ViewSpec
   width: number
-  sort?: AssetSort
   maxAssets?: number
-  /** transaction.group presentation: flow graph (primary) or the row table. */
-  flow?: 'graph' | 'table'
   /** Opens a transaction's detail card from a list row. */
   onOpenTransaction?: (txid: string) => void
 }) {
+  // Presentation toggles are this card's own: the header buttons flip them.
+  const [sort, setSort] = useState<AssetSort>('none')
+  const [flow, setFlow] = useState<'graph' | 'table'>('graph')
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
@@ -100,6 +101,7 @@ export function ResultView({
           width={width}
           sort={sort}
           maxAssets={maxAssets}
+          onCycleSort={() => setSort(nextAssetSort(sort))}
         />
       )
     }
@@ -174,6 +176,7 @@ export function ResultView({
               groupId={derived.model.groupId}
               transactionCount={derived.model.transactions.length}
               width={width}
+              onShowTable={() => setFlow('table')}
             />
           )
         }
@@ -187,6 +190,7 @@ export function ResultView({
           query={derived.model.query}
           width={width}
           onOpen={onOpenTransaction}
+          onShowGraph={view.view === 'transaction.group' ? () => setFlow('graph') : undefined}
         />
       )
     }

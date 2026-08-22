@@ -6,6 +6,7 @@ import {
 
 import { COLORS, shorten } from '../theme.js'
 import {
+  Button,
   Fact,
   FooterNote,
   Frame,
@@ -57,19 +58,26 @@ export function AccountCard({
   width,
   sort = 'none',
   maxAssets = 4,
+  onCycleSort,
 }: {
   model: AccountPortfolioViewModel | undefined
   width: number
   sort?: AssetSort
   maxAssets?: number
+  /** Cycles the holdings order; the button shows the current one. */
+  onCycleSort?: () => void
 }) {
   if (!model) return <Unavailable title="ACCOUNT" width={width} />
   const body = innerWidth(width)
   const ordered = sortedAssets(model.assets, sort)
   const shown = ordered.slice(0, maxAssets)
+  const sortButton =
+    onCycleSort && model.assets.length > 1 ? (
+      <Button label={sort === 'none' ? 'sort ▾' : `sort ▾ ${ASSET_SORT_LABEL[sort]}`} onPress={onCycleSort} />
+    ) : undefined
   return (
     <Frame width={width}>
-      <Header kicker="ACCOUNT" pill={model.network.toUpperCase()} tone="idle" />
+      <Header kicker="ACCOUNT" pill={model.network.toUpperCase()} tone="idle" action={sortButton} />
       <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit="ALGO" />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />

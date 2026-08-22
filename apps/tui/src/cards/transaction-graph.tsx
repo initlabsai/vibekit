@@ -1,6 +1,6 @@
 import type { TransactionsGraph } from '@initlabs/vibekit-experience'
 
-import { Fact, FooterNote, Frame, Header, innerWidth } from '../ui.js'
+import { Button, Fact, Frame, Header, innerWidth } from '../ui.js'
 import { computeGraphLayout } from './transaction-graph-layout.js'
 
 /**
@@ -14,12 +14,15 @@ export function TransactionGraphCard({
   transactionCount,
   kicker = 'TRANSACTION GROUP',
   width,
+  onShowTable,
 }: {
   graph: TransactionsGraph
   groupId?: string
   transactionCount: number
   kicker?: string
   width: number
+  /** Switch this card to the row table. */
+  onShowTable?: () => void
 }) {
   const body = innerWidth(width)
   const layout = computeGraphLayout(graph, body)
@@ -30,6 +33,7 @@ export function TransactionGraphCard({
         chip={layout.mode === 'lanes' ? 'FLOW' : 'FLOW LIST'}
         pill={String(transactionCount)}
         tone="idle"
+        action={onShowTable ? <Button label="table" onPress={onShowTable} /> : undefined}
       />
       {groupId ? <Fact label="group" value={groupId} copy={groupId} width={body} /> : null}
       <box flexDirection="column" marginTop={1}>
@@ -41,7 +45,6 @@ export function TransactionGraphCard({
           </box>
         ))}
       </box>
-      <FooterNote text="v table" width={body} />
     </Frame>
   )
 }

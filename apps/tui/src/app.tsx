@@ -67,7 +67,7 @@ export function App() {
   const { network, networkRef, keystoreHost, host, live, setNetwork } = net
 
   const feed = useFeed()
-  const { focus, setFocus, sections, selectedId, appendNote, createSection, cycleSort, toggleFlowView } = feed
+  const { focus, setFocus, sections, selectedId, appendNote, createSection } = feed
 
   const accounts = useAccounts({ keystoreHost, host, commitStore, storeRef, setFocus })
   const {
@@ -226,6 +226,13 @@ export function App() {
       () => setStatus('Finish or deny the payment before closing its section.'),
     )
   }, [feed.closeSelectedSection, isFlowSection])
+  const closeSection = useCallback(
+    (id: number) => {
+      feed.markSection(id)
+      closeSelectedSection()
+    },
+    [closeSelectedSection, feed.markSection],
+  )
 
   const submit = useCallback(
     (raw: string) => {
@@ -322,8 +329,6 @@ export function App() {
     accountList,
     setActiveSender,
     cycleAccount,
-    cycleSort,
-    toggleFlowView,
     closeSelectedSection,
     isNarrow,
     appsDetailOpen: apps.selected !== null,
@@ -363,14 +368,14 @@ export function App() {
             : '1-9 open · [ ] cycle · esc chat · ^w wallet · ^1 assets · ^3 txns'
       : screen === 'blocks'
         ? tail.running
-          ? 's stop · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
-          : 's start · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
+          ? 'space stop · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
+          : 'space start · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
       : screen === 'assets' || screen === 'txns'
         ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
         : focus === 'nav'
-        ? '↑/↓ select · enter view · s sort · v flow · x close · tab content · esc chat'
+        ? '↑/↓ select · enter view · x close · tab content · esc chat'
         : focus === 'content'
-          ? '↑/↓ scroll · ←/→ sections · s sort · v flow · x close · tab/esc chat'
+          ? '↑/↓ scroll · ←/→ sections · x close · tab/esc chat'
           : sections.length > 0
             ? `enter send · tab session (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
@@ -436,6 +441,7 @@ export function App() {
           store={store}
           views={tail.views}
           width={width}
+          onToggle={tail.togglePause}
         />
       ) : screen === 'assets' || screen === 'txns' ? (
         <ShelfScreen
@@ -477,6 +483,7 @@ export function App() {
             onSelect={feed.markSection}
             onToggleThinking={feed.toggleThinking}
             onOpenTransaction={openTransactionDetail}
+            onClose={closeSection}
           />
         </box>
       )}

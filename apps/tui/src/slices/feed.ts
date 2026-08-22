@@ -1,7 +1,6 @@
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useCallback, useRef, useState } from 'react'
 
-import { nextAssetSort } from '../cards/index.js'
 import type { Section, SectionBlock, SectionItem } from '../sections.js'
 
 /** Which pane owns the keyboard on the chat screen. */
@@ -77,7 +76,7 @@ export function useFeed() {
     (prompt: string): number => {
       sectionSeq.current += 1
       const id = sectionSeq.current
-      commitSections([...sectionsRef.current, { id, prompt, sort: 'none', flow: 'graph', items: [] }])
+      commitSections([...sectionsRef.current, { id, prompt, items: [] }])
       setSelectedId(id)
       selectedRef.current = id
       scrollToBottom()
@@ -149,27 +148,6 @@ export function useFeed() {
     [selectSection],
   )
 
-  /** Flips the selected section's transaction.group cards between graph and table. */
-  const toggleFlowView = useCallback(() => {
-    commitSections(
-      sectionsRef.current.map((section) =>
-        section.id === selectedRef.current
-          ? { ...section, flow: section.flow === 'graph' ? 'table' : 'graph' }
-          : section,
-      ),
-    )
-  }, [commitSections])
-
-  const cycleSort = useCallback(() => {
-    commitSections(
-      sectionsRef.current.map((section) =>
-        section.id === selectedRef.current
-          ? { ...section, sort: nextAssetSort(section.sort) }
-          : section,
-      ),
-    )
-  }, [commitSections])
-
   /** Closes the selected section unless `canClose` vetoes it (then `onBlocked` runs instead). */
   const closeSelectedSection = useCallback(
     (canClose: (sectionId: number) => boolean, onBlocked: () => void) => {
@@ -215,8 +193,6 @@ export function useFeed() {
     appendNote,
     appendBlock,
     moveSelection,
-    cycleSort,
-    toggleFlowView,
     closeSelectedSection,
   }
 }

@@ -1,5 +1,4 @@
 import { base64ToBytes } from '@initlabs/vibekit-core'
-import type { MouseEvent } from '@opentui/core'
 import {
   formatBaseUnits,
   formatBlockTxnType,
@@ -11,6 +10,7 @@ import {
 
 import { COLORS } from '../theme.js'
 import {
+  Button,
   Chip,
   Fact,
   FooterNote,
@@ -237,22 +237,6 @@ function queryLabel(query: {
   return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
-/** Row action: a padded, filled chip reads as a button and is a 3-column-wider target. */
-function OpenButton({ onPress }: { onPress: () => void }) {
-  return (
-    <box
-      paddingX={1}
-      backgroundColor={COLORS.signalDim}
-      onMouseDown={(event: MouseEvent) => {
-        event.stopPropagation()
-        onPress()
-      }}
-    >
-      <text fg={COLORS.text}>{'open ▸'}</text>
-    </box>
-  )
-}
-
 export function TransactionListCard({
   title,
   groupId,
@@ -261,6 +245,7 @@ export function TransactionListCard({
   query,
   width,
   onOpen,
+  onShowGraph,
 }: {
   title: string
   groupId?: string
@@ -283,6 +268,8 @@ export function TransactionListCard({
   width: number
   /** Opens one row's detail card; rows grow an open button when provided. */
   onOpen?: (txid: string) => void
+  /** Group tables: switch this card back to its flow graph. */
+  onShowGraph?: () => void
 }) {
   const body = innerWidth(width)
   const rows = transactions.slice(0, 10)
@@ -295,7 +282,13 @@ export function TransactionListCard({
     : 0
   return (
     <Frame width={width}>
-      <Header kicker={title} chip={filter} pill={String(transactions.length)} tone="idle" />
+      <Header
+        kicker={title}
+        chip={filter}
+        pill={String(transactions.length)}
+        tone="idle"
+        action={onShowGraph ? <Button label="graph" onPress={onShowGraph} /> : undefined}
+      />
       {groupId ? <Fact label="group" value={groupId} copy={groupId} width={body} /> : null}
       <box flexDirection="column">
         {rows.map((row, index) => {
@@ -321,7 +314,7 @@ export function TransactionListCard({
                   />
                   {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
                 </box>
-                {onOpen && row.id ? <OpenButton onPress={() => onOpen(row.id!)} /> : null}
+                {onOpen && row.id ? <Button label="open ▸" onPress={() => onOpen(row.id!)} /> : null}
               </box>
               <Fact label="from" value={row.sender} copy={row.sender} width={body} />
               {to ? (

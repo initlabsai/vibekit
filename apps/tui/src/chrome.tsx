@@ -4,7 +4,7 @@ import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentu
 
 import { useEffect, useState, type RefObject } from 'react'
 
-import { Ident } from './ui.js'
+import { Button, Ident } from './ui.js'
 import { ResultView } from './views.js'
 import type { AppsEntry, SpecSelection } from './slices/apps.js'
 import type { ParsedMethod } from '@initlabs/vibekit-tools'
@@ -620,6 +620,7 @@ export function BlocksScreen({
   store,
   views,
   width,
+  onToggle,
 }: {
   network: string
   live: 'probing' | boolean
@@ -630,6 +631,7 @@ export function BlocksScreen({
   store: ResultStore
   views: readonly ViewSpec[]
   width: number
+  onToggle: () => void
 }) {
   const inner = Math.max(30, width - 6)
   const pill =
@@ -654,6 +656,11 @@ export function BlocksScreen({
       titleColor={running ? COLORS.green : COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
+      {live === true ? (
+        <box flexDirection="row" height={1}>
+          <Button label={running ? '■ stop' : '▶ start'} onPress={onToggle} active={running} />
+        </box>
+      ) : null}
       {live !== true ? (
         <text
           fg={COLORS.muted}
@@ -666,7 +673,7 @@ export function BlocksScreen({
         <text
           fg={COLORS.faint}
           marginTop={1}
-          content={running ? 'Waiting for the next block…' : 's starts the tail.'}
+          content={running ? 'Waiting for the next block…' : 'space starts the tail.'}
         />
       ) : (
         <scrollbox flexGrow={1} marginTop={1} stickyScroll={true}>
@@ -678,7 +685,7 @@ export function BlocksScreen({
       <text
         fg={COLORS.faint}
         marginTop={1}
-        content={running ? '[s] stop · [esc] chat' : '[s] start · [esc] chat'}
+        content={running ? '[space] stop · [esc] chat' : '[space] start · [esc] chat'}
       />
     </box>
   )

@@ -21,8 +21,6 @@ export function useExplorerKeys({
   accountList,
   setActiveSender,
   cycleAccount,
-  cycleSort,
-  toggleFlowView,
   closeSelectedSection,
   isNarrow,
   appsDetailOpen,
@@ -43,8 +41,6 @@ export function useExplorerKeys({
   accountList: ReadonlyArray<{ address: string; name?: string }>
   setActiveSender: (address: string) => void
   cycleAccount: (delta: number) => void
-  cycleSort: () => void
-  toggleFlowView: () => void
   closeSelectedSection: () => void
   isNarrow: boolean
   appsDetailOpen: boolean
@@ -143,7 +139,7 @@ export function useExplorerKeys({
             return
           }
           if (screen === 'blocks') {
-            if (key.name === 's') {
+            if (key.name === 'space') {
               toggleBlocksTail()
               return
             }
@@ -186,12 +182,6 @@ export function useExplorerKeys({
             case 'enter':
               if (selectedRef.current !== null) scrollToSection(selectedRef.current)
               return
-            case 's':
-              cycleSort()
-              return
-            case 'v':
-              toggleFlowView()
-              return
             case 'x':
               closeSelectedSection()
               return
@@ -228,12 +218,6 @@ export function useExplorerKeys({
             case ']':
               moveSelection(1)
               return
-            case 's':
-              cycleSort()
-              return
-            case 'v':
-              toggleFlowView()
-              return
             case 'x':
               closeSelectedSection()
               return
@@ -256,7 +240,6 @@ export function useExplorerKeys({
         closeSelectedSection,
         contentScrollRef,
         cycleAccount,
-        cycleSort,
         decide,
         focus,
         isNarrow,
@@ -272,7 +255,6 @@ export function useExplorerKeys({
         setScreen,
         switchNetwork,
         toggleBlocksTail,
-        toggleFlowView,
       ],
     ),
   )

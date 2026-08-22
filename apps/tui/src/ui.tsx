@@ -58,6 +58,30 @@ export function Chip({ label }: { label: string }) {
   )
 }
 
+/** Clickable chip: padded and filled so it reads, and hits, as a button. */
+export function Button({
+  label,
+  onPress,
+  active = false,
+}: {
+  label: string
+  onPress: () => void
+  active?: boolean
+}) {
+  return (
+    <box
+      paddingX={1}
+      backgroundColor={active ? COLORS.brass : COLORS.signalDim}
+      onMouseDown={(event: MouseEvent) => {
+        event.stopPropagation()
+        onPress()
+      }}
+    >
+      <text fg={active ? COLORS.ink : COLORS.text}>{label}</text>
+    </box>
+  )
+}
+
 /** Status badge: confirmed, failed, awaiting, and so on. */
 export function Pill({ label, tone = 'idle' }: { label: string; tone?: Tone }) {
   const colors = PILL[tone]
@@ -77,11 +101,14 @@ export function Header({
   chip,
   pill,
   tone,
+  action,
 }: {
   kicker: string
   chip?: string
   pill?: string
   tone?: Tone
+  /** Card-local control (sort, graph/table), drawn beside the pill. */
+  action?: ReactNode
 }) {
   return (
     <box flexDirection="row" justifyContent="space-between" height={1}>
@@ -90,7 +117,10 @@ export function Header({
         {chip ? <text fg={COLORS.panel}> </text> : null}
         {chip ? <Chip label={chip} /> : null}
       </box>
-      {pill ? <Pill label={pill} tone={tone} /> : null}
+      <box flexDirection="row" gap={1}>
+        {action}
+        {pill ? <Pill label={pill} tone={tone} /> : null}
+      </box>
     </box>
   )
 }
