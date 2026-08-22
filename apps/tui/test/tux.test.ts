@@ -168,7 +168,7 @@ describe('TUI tmux journeys', () => {
       session.type('txns')
       session.send('Enter')
       const txns = await session.waitFor('TRANSACTIONS')
-      expect(txns).toMatch(/TRANSACTIONS[\s\S]*esc chat|TRANSACTION LIST|No transactions/)
+      expect(txns).toMatch(/TRANSACTIONS[\s\S]*\[esc\] chat|TRANSACTION LIST|No transactions/)
     },
     { timeout: 20_000 },
   )

@@ -29,6 +29,8 @@ export const accountListSchema = z.object({
   accounts: z.array(formattedAccountSchema),
   // batch_lookup_accounts never paginates; the key is optional and absent there.
   nextToken: z.string().optional(),
+  /** batch_lookup_accounts only: requested addresses the indexer had no record for. */
+  missing: z.array(z.string()).optional(),
 })
 
 const accountAsset = z.object({

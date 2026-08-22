@@ -16,7 +16,7 @@ export async function lookupAccount(
 export async function batchLookupAccounts(
   ctx: ToolContext,
   args: { addresses: string[] },
-): Promise<{ accounts: FormattedAccount[] }> {
+): Promise<{ accounts: FormattedAccount[]; missing: string[] }> {
   const invalid = args.addresses.filter((address) => !algosdk.isValidAddress(address))
   if (invalid.length > 0) {
     throw new ToolError('INVALID_ADDRESS', `Invalid Algorand address(es): ${invalid.join(', ')}`)
@@ -35,5 +35,6 @@ export async function batchLookupAccounts(
     accounts: results
       .filter((r): r is PromiseFulfilledResult<FormattedAccount> => r.status === 'fulfilled')
       .map((r) => r.value),
+    missing: args.addresses.filter((_, i) => results[i]!.status === 'rejected'),
   }
 }

@@ -98,6 +98,7 @@ describe('batchLookupAccounts', () => {
     expect(result.accounts).toHaveLength(1)
     expect(result.accounts[0].address).toBe(ADDR)
     expect(result.accounts[0].balanceMicroAlgos).toBe(1_000_000)
+    expect(result.missing).toEqual([ADDR2])
   })
 
   test('throws ToolError when any address is invalid', async () => {

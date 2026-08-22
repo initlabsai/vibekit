@@ -51,6 +51,8 @@ export const accountSummaryDataSchema = z.object({
 export const accountListDataSchema = z.object({
   accounts: z.array(accountSummaryDataSchema),
   nextToken: z.string().min(1).optional(),
+  /** Requested addresses with no record on this network (batch lookups). */
+  missing: z.array(z.string()).optional(),
 })
 
 export type AccountSummaryData = z.infer<typeof accountSummaryDataSchema>

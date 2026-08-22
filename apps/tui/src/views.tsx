@@ -145,6 +145,7 @@ export function ResultView({
         <AccountListCard
           accounts={derived.model.accounts}
           nextToken={derived.model.nextToken}
+          missing={derived.model.missing}
           width={width}
         />
       )

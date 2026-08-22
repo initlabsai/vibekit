@@ -18,6 +18,7 @@ describe('transcript command routing', () => {
     expect(routeComposerInput('my apps')).toEqual({ status: 'nav', screen: 'apps' })
     expect(routeComposerInput('list my txns')).toEqual({ status: 'nav', screen: 'txns' })
     expect(routeComposerInput('list my accounts')).toEqual({ status: 'account-list' })
+    expect(routeComposerInput('list my wallets')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('show me my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('blocks')).toEqual({ status: 'nav', screen: 'blocks' })

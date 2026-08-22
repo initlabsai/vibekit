@@ -48,7 +48,14 @@ export function resolvePaymentParties(
 
 function isMineQuery(word: string, noun: string): boolean {
   const stripped = word.replace(/[?.!]+$/g, '').trim()
-  const alt = noun === 'apps' ? 'applications' : noun === 'txns' ? 'transactions' : noun
+  const alt =
+    noun === 'apps'
+      ? 'applications'
+      : noun === 'txns'
+        ? 'transactions'
+        : noun === 'accounts'
+          ? 'wallets'
+          : noun
   const names = noun === alt ? noun : `${noun}|${alt}`
   return (
     stripped === noun ||

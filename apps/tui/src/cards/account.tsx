@@ -4,7 +4,7 @@ import {
   type AccountPortfolioViewModel,
 } from '@initlabs/vibekit-experience'
 
-import { COLORS } from '../theme.js'
+import { COLORS, shorten } from '../theme.js'
 import {
   Fact,
   FooterNote,
@@ -183,6 +183,7 @@ export function AccountSummaryCard({
 export function AccountListCard({
   accounts,
   nextToken,
+  missing,
   width,
 }: {
   accounts: ReadonlyArray<{
@@ -194,10 +195,15 @@ export function AccountListCard({
     rekeyedTo?: string
   }>
   nextToken?: string
+  missing?: ReadonlyArray<string>
   width: number
 }) {
   const body = innerWidth(width)
   const rows = accounts.slice(0, 10)
+  const missingNote =
+    missing && missing.length > 0
+      ? `${missing.length} not found on this network: ${missing.map((address) => shorten(address, 12)).join(', ')}`
+      : undefined
   return (
     <Frame width={width}>
       <Header kicker="ACCOUNTS" pill={String(accounts.length)} tone="idle" />
@@ -217,6 +223,10 @@ export function AccountListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
+        {accounts.length === 0 ? (
+          <FooterNote text="No accounts found on this network." width={body} />
+        ) : null}
+        {missingNote ? <FooterNote text={missingNote} width={body} /> : null}
         {pageNotes(accounts.length, rows.length, nextToken).map((note) => (
           <FooterNote key={note} text={note} width={body} />
         ))}
