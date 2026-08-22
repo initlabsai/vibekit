@@ -71,17 +71,15 @@ export function ResultView({
       const derived = createTransactionDetailViewModel(store, view)
       if (!derived.ok) return <TransactionCard model={undefined} width={width} />
       const { amountMicroAlgos, ...model } = derived.model
-      // Inner transactions get the same flow graph a group does.
-      const graph = model.innerTxns?.length
-        ? buildGroupGraph([{ ...model, paymentAmountMicroAlgos: amountMicroAlgos }])
-        : undefined
+      // Every detail gets the flow graph a group does (inner txns included).
+      const graph = buildGroupGraph([{ ...model, paymentAmountMicroAlgos: amountMicroAlgos }])
       return (
         <box flexDirection="column">
           <TransactionCard model={derived.model} width={width} />
           {graph ? (
             <TransactionGraphCard
               graph={graph}
-              kicker="INNER TRANSACTIONS"
+              kicker={model.innerTxns?.length ? 'INNER TRANSACTIONS' : 'TRANSACTION'}
               transactionCount={1 + (model.innerTxns?.length ?? 0)}
               width={width}
             />

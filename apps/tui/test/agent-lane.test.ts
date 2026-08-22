@@ -8,6 +8,7 @@ import {
   createFixtureResultStore,
   bridgeToolResult,
   unsignedGroupFromToolResult,
+  FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   startPaymentFlowFromDraftRecord,
@@ -25,6 +26,7 @@ import { withAccountNames } from '../src/keystore-host.js'
 
 import {
   createExplorerAgent,
+  explorerContext,
   explorerSystemPrompt,
   runAgentTurn,
 } from '../src/agent-lane.js'
@@ -103,6 +105,15 @@ let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
 describe('TUI agent lane', () => {
+  test('explorer context names the cards on screen, newest last', () => {
+    const store = createFixtureResultStore()
+    const context = explorerContext(store)
+    expect(context.startsWith('Cards on screen')).toBe(true)
+    expect(context).toContain('lookup_transaction')
+    expect(context).toContain(`id=${FIXTURE_TRANSACTION_ID}`)
+    expect(explorerContext(createResultStore([]))).toBe('')
+  })
+
   test('keystore labels overlay onto account.list records and survive derivation', () => {
     const bridged = bridgeToolResult(
       {

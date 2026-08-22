@@ -17,7 +17,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { enrichResultWithAbi } from '../abi-catalog.js'
-import { createExplorerAgent, runAgentTurn } from '../agent-lane.js'
+import { createExplorerAgent, explorerContext, runAgentTurn } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
@@ -164,7 +164,8 @@ export function useAgentLane({
             extraTools,
           })
         }
-        await runAgentTurn(agentRef.current, input, {
+        const context = explorerContext(storeRef.current)
+        await runAgentTurn(agentRef.current, context ? `${context}\n\n${input}` : input, {
           onText: appendAgentText,
           onReasoning: (delta) => {
             const section = sectionsRef.current.find((entry) => entry.id === sectionId)
