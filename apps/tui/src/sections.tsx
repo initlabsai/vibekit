@@ -100,21 +100,50 @@ export function ThinkingFold({
   )
 }
 
-/** Quiet empty-feed invite. Commands also live in the composer hint. */
+const WELCOME_COMMANDS: ReadonlyArray<[string, string]> = [
+  ['pay 0.5', 'compose a payment — you approve before anything signs'],
+  ['list my accounts', 'keystore accounts with live balances'],
+  ['sample', 'a recorded transaction, no network needed'],
+  ['paste an id', 'address, txn, group, asset/app/block number, or name.algo'],
+]
+
+/** Empty-feed invite: what works, and what this is (tool calls, not magic). */
 export function WelcomePanel({ hasAgent }: { hasAgent: boolean }) {
   return (
     <box flexGrow={1} padding={2} flexDirection="column">
       <text fg={COLORS.faint}>VIBEKIT</text>
       <text fg={COLORS.brassBright}>explorer</text>
-      <text fg={COLORS.muted} marginTop={2} content="Ask about Algorand." />
-      <text fg={COLORS.text} marginTop={2} content="  pay 0.5" />
-      <text fg={COLORS.text} content="  list my accounts" />
-      <text fg={COLORS.text} content="  sample" />
       <text
-        fg={COLORS.faint}
+        fg={COLORS.muted}
         marginTop={2}
-        content={hasAgent ? 'or paste an id' : 'set VIBEKIT_AGENT_MODEL to chat'}
+        content="Algorand, by conversation. Every card is real chain data; the agent only narrates what the tools return."
       />
+      <box flexDirection="column" marginTop={2}>
+        {WELCOME_COMMANDS.map(([command, hint]) => (
+          <box key={command} flexDirection="row" height={1}>
+            <text fg={COLORS.text}>{`  ${command.padEnd(18)}`}</text>
+            <text fg={COLORS.faint}>{hint}</text>
+          </box>
+        ))}
+      </box>
+      {hasAgent ? (
+        <box flexDirection="column" marginTop={2}>
+          <text fg={COLORS.text} content="  who holds asset 31566704" />
+          <text fg={COLORS.text} content="  what happened in round 64291911" />
+          <text fg={COLORS.text} content="  what does nf.algo hold" />
+          <text
+            fg={COLORS.faint}
+            marginTop={1}
+            content="Not magic: each answer is an indexer or algod lookup. Specific beats sweeping — give it an id, a round, a name, and it does the rest."
+          />
+        </box>
+      ) : (
+        <text
+          fg={COLORS.faint}
+          marginTop={2}
+          content="set VIBEKIT_AGENT_MODEL to chat  (or run: vibekit explore setup)"
+        />
+      )}
     </box>
   )
 }

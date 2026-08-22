@@ -175,7 +175,7 @@ describe('TUI tmux journeys', () => {
       const assets = await session.waitFor('ASSET HOLDINGS')
       expect(assets).toContain('ASSETS')
       session.send('Escape')
-      await session.waitFor('Ask about Algorand.')
+      await session.waitFor('Algorand, by conversation')
       session.type('txns')
       session.send('Enter')
       const txns = await session.waitFor('TRANSACTIONS')
