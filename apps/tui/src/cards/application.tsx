@@ -180,13 +180,17 @@ export function ApplicationMethodsCard({
   const bySelector = new Map(model.methods.map((m) => [`0x${m.selector}`, m]))
   const rows = model.analysis.entrypoints.map((entry) => {
     const known = bySelector.get(entry)
-    const label = known?.name ?? entry
-    const detail = known?.signature
-      ? `${known.args?.map((a) => (a.name ? `${a.name}: ${a.type}` : a.type)).join(', ') ?? ''}) → ${known.returns ?? 'void'}`
-      : ''
-    return { label, detail: detail ? `(${detail}` : '', readonly: known?.readonly === true, description: known?.description }
+    const args = known?.args?.map((a) => (a.name ? `${a.name}: ${a.type}` : a.type)).join(', ')
+    return {
+      name: known?.name ?? entry,
+      signature: known?.signature ? `(${args ?? ''}) → ${known.returns ?? 'void'}` : '',
+      readonly: known?.readonly === true,
+      description: known?.description,
+    }
   })
   const arc4 = model.methods.length > 0
+  const specKnown = rows.some((row) => row.signature)
+  const nameWidth = Math.min(18, Math.max(6, ...rows.map((row) => row.name.length))) + 2
   return (
     <Frame width={width}>
       <Header
@@ -200,18 +204,26 @@ export function ApplicationMethodsCard({
           <text fg={COLORS.faint} content="no entrypoints — bare calls only" />
         ) : (
           rows.map((row) => (
-            <box key={row.label} flexDirection="column">
+            <box key={row.name} flexDirection="column">
               <box flexDirection="row" height={1}>
-                <text fg={COLORS.text} content={shorten(row.label, body - 12)} />
-                {row.detail ? <text fg={COLORS.muted} content={shorten(row.detail, Math.max(8, body - row.label.length - 12))} /> : null}
+                <text fg={COLORS.text} content={shorten(row.name, nameWidth - 1).padEnd(nameWidth)} />
+                {row.signature ? (
+                  <text fg={COLORS.muted} content={shorten(row.signature, Math.max(8, body - nameWidth - 12))} />
+                ) : null}
                 {row.readonly ? <text fg={COLORS.faint} content="  read-only" /> : null}
               </box>
               {row.description ? (
-                <text fg={COLORS.faint} content={`  ${shorten(row.description, body - 2)}`} />
+                <text fg={COLORS.faint} content={`${' '.repeat(nameWidth)}${shorten(row.description, body - nameWidth)}`} />
               ) : null}
             </box>
           ))
         )}
+        {rows.length > 0 && !specKnown ? (
+          <FooterNote
+            text="no spec · put the app's ARC-56 in the working directory to see arguments"
+            width={body}
+          />
+        ) : null}
       </box>
     </Frame>
   )

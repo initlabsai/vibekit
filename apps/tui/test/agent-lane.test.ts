@@ -19,6 +19,9 @@ import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
 import { viewFor } from '../src/slices/lookup.js'
+import { enrichResultWithAbi } from '../src/abi-catalog.js'
+import { normalizeAppSpec } from '@initlabs/vibekit-tools'
+import { readFileSync } from 'node:fs'
 import {
   addResult,
   createAccountListViewModel,
@@ -363,4 +366,42 @@ test('the methods view derives from a program record', () => {
   const methods = createApplicationMethodsViewModel(store, viewFor(bridged.record, 'application.methods'))
   expect(methods.ok).toBe(true)
   if (methods.ok) expect(methods.model.analysis.entrypoints).toEqual(['0x02bece11', 'bootstrap'])
+})
+
+test('a known spec labels program selectors with names and args', () => {
+  const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/tools/test/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
+  const record = bridgeToolResult(
+    {
+      id: 'call-h',
+      toolName: 'get_application_program',
+      output: {
+        applicationId: 1001,
+        program: 'approval',
+        bytes: 1,
+        totalLines: 1,
+        fromLine: 1,
+        toLine: 1,
+        teal: '#pragma version 11',
+        analysis: {
+          instructions: 0,
+          entrypoints: ['0x02bece11', '0x4f92e173'],
+          selectors: ['02bece11', '4f92e173'],
+          strings: [],
+          stateKeys: { global: [], local: [], box: [] },
+          guards: { rekey: false, closeRemainder: false, assetClose: false },
+          innerTransactions: 0,
+          onCompletion: [],
+        },
+        methods: [{ selector: '02bece11' }, { selector: '4f92e173' }],
+      },
+      view: 'application.program',
+      isError: false,
+    },
+    { resultId: newId('result-hello'), toolCallId: 'call-h', network: 'localnet' },
+  ).record
+  const enriched = enrichResultWithAbi(record, new Map([[1001, spec]]))
+  const methods = (enriched as unknown as { data: { methods: Array<{ name?: string; args?: unknown[]; returns?: string }> } }).data.methods
+  expect(methods[0]).toMatchObject({ name: 'hello', returns: 'string' })
+  expect(methods[0]!.args).toHaveLength(1)
+  expect(methods[1]).toMatchObject({ name: 'getMessage' })
 })
