@@ -169,6 +169,7 @@ export function App() {
     payment,
     keystoreHost,
     networkRef,
+    activeSender,
     signerReady,
     commitStore,
     storeRef,

@@ -67,6 +67,20 @@ export function explorerContext(store: ResultStore, limit = 3): string {
   return lines.length === 0 ? "" : `Cards on screen (oldest first):\n${lines.join("\n")}`;
 }
 
+/**
+ * The wallet's active account as a default-sender line for the agent, or ''
+ * when there is none. Resolves a keystore label when known.
+ */
+export function activeSenderLine(
+  activeSender: string | undefined,
+  addressBook: ReadonlyArray<{ address: string; name?: string }>,
+): string {
+  if (!activeSender) return "";
+  const named = addressBook.find((entry) => entry.address === activeSender);
+  const label = named?.name ? `${named.name} (${activeSender})` : activeSender;
+  return `Active account (default sender): ${label}. Use it as sender for writes unless the user names another.`;
+}
+
 /** One short Explorer prompt: tools, cards, keystore. Replaces the default. */
 export function explorerSystemPrompt(
   tools: readonly { name: string }[],
@@ -81,6 +95,7 @@ export function explorerSystemPrompt(
     `Tools: ${tools.map((tool) => tool.name).join(", ")}.`,
     "Every tool result becomes a card. After tools, one short sentence. No markdown, no tables, no recap of IDs or amounts the card already shows.",
     "Named accounts (SMOKE1, etc.) map to addresses below. Resolve NFD names (name.algo) with resolve_nfd on mainnet/testnet, then pass the address. Never pass names to other tools.",
+    "A turn may open with an 'Active account (default sender)' line — the wallet's current account. Use it as the sender for a write unless the user names a different one.",
     "When asked for my/your accounts, call batch_lookup_accounts with every address below. Do not answer from this list.",
     "lookup_* for one entity, search_* for lists. Do not guess whether a number is an asset, app, or block — look up all that apply.",
     "A group ID is the 44-character base64 hash on a transaction card (group fact). Look those up with lookup_transaction_group. That call renders the group card.",

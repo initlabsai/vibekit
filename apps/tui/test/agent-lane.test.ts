@@ -25,6 +25,7 @@ import {
 import { withAccountNames } from '../src/keystore-host.js'
 
 import {
+  activeSenderLine,
   createExplorerAgent,
   explorerContext,
   explorerSystemPrompt,
@@ -105,6 +106,19 @@ let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
 describe('TUI agent lane', () => {
+  test('activeSenderLine names the active account, with its label when known', () => {
+    const book = [
+      { address: TXN_WIRE.sender, name: 'SMOKE1' },
+      { address: TXN_WIRE.receiver },
+    ]
+    expect(activeSenderLine(TXN_WIRE.sender, book)).toContain('SMOKE1')
+    expect(activeSenderLine(TXN_WIRE.sender, book)).toContain('default sender')
+    // Unlabeled active account: bare address, still a default-sender line.
+    expect(activeSenderLine(TXN_WIRE.receiver, book)).toContain(TXN_WIRE.receiver)
+    // No active account: no line.
+    expect(activeSenderLine(undefined, book)).toBe('')
+  })
+
   test('explorer context names the cards on screen, newest last', () => {
     const store = createFixtureResultStore()
     const context = explorerContext(store)

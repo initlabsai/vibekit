@@ -17,7 +17,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { enrichResultWithAbi } from '../abi-catalog.js'
-import { createExplorerAgent, explorerContext, runAgentTurn } from '../agent-lane.js'
+import { activeSenderLine, createExplorerAgent, explorerContext, runAgentTurn } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
@@ -35,6 +35,7 @@ export function useAgentLane({
   payment,
   keystoreHost,
   networkRef,
+  activeSender,
   signerReady,
   commitStore,
   storeRef,
@@ -47,6 +48,7 @@ export function useAgentLane({
 }: {
   feed: Feed
   payment: PaymentLane
+  activeSender: string | undefined
   keystoreHost: KeystorePaymentHost
   networkRef: { current: LiveNetworkId }
   signerReady: boolean
@@ -164,7 +166,12 @@ export function useAgentLane({
             extraTools,
           })
         }
-        const context = explorerContext(storeRef.current)
+        const context = [
+          activeSenderLine(activeSender, addressBookRef.current),
+          explorerContext(storeRef.current),
+        ]
+          .filter(Boolean)
+          .join('\n')
         await runAgentTurn(agentRef.current, context ? `${context}\n\n${input}` : input, {
           onText: appendAgentText,
           onReasoning: (delta) => {
@@ -273,6 +280,7 @@ export function useAgentLane({
     },
     [
       agentBusy,
+      activeSender,
       agentConfig,
       extraTools,
       specCatalog,
