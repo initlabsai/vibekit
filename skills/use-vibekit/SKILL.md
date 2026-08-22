@@ -140,6 +140,7 @@ hand the deploy to the user.
 | Read contract state | `read_global_state`, `read_local_state`; `list_application_boxes` to discover boxes, then `read_box_state` for one |
 | Debug a transaction | `lookup_transaction`, `lookup_application_logs`, `simulate_transactions` |
 | Latest block + its txns | `lookup_block` (omit round) for the header. Then `search_transactions` with `minRound`=`maxRound`=that round; add `txType` (`pay`, `axfer`, `appl`) to filter. Do not recap as a markdown table. |
+| Filter a search | `search_transactions` filters compose: `txType`, `assetId`, `applicationId`, `minRound`/`maxRound`, `beforeTime`/`afterTime`, `minAmount`/`maxAmount` (µALGO, inclusive), `notePrefix` (UTF-8, e.g. a protocol tag). Set several at once; the more specific, the better. `search_account_transactions` and `search_asset_transactions` take the same filters scoped to an address / asset. |
 | Resolve names | `resolve_nfd`, `reverse_resolve_nfd` |
 | Network health | `get_network_status` (current round, TPS), `get_network` |
 

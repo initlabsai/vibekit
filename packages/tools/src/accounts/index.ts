@@ -82,6 +82,11 @@ export const accountTools: AnyTool[] = [
       beforeTime: z.string().optional().describe('Include results before this RFC 3339 time'),
       afterTime: z.string().optional().describe('Include results after this RFC 3339 time'),
       minAmount: z.number().optional().describe('Filter by minimum amount (microAlgos)'),
+      maxAmount: z.number().optional().describe('Filter by maximum amount (microAlgos, inclusive)'),
+      notePrefix: z
+        .string()
+        .optional()
+        .describe('Only transactions whose note starts with this UTF-8 text (e.g. a protocol tag)'),
     }),
     output: transactionListSchema,
     view: 'transaction.list',

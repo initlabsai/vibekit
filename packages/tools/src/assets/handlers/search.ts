@@ -58,6 +58,9 @@ export interface SearchAssetTransactionsArgs {
   nextToken?: string
   beforeTime?: string
   afterTime?: string
+  minAmount?: number
+  maxAmount?: number
+  notePrefix?: string
 }
 
 export async function searchAssetTransactions(
@@ -70,6 +73,9 @@ export async function searchAssetTransactions(
   if (args.nextToken) query = query.nextToken(args.nextToken)
   if (args.beforeTime) query = query.beforeTime(args.beforeTime)
   if (args.afterTime) query = query.afterTime(args.afterTime)
+  if (args.minAmount) query = query.currencyGreaterThan(args.minAmount - 1)
+  if (args.maxAmount !== undefined) query = query.currencyLessThan(args.maxAmount + 1)
+  if (args.notePrefix) query = query.notePrefix(new TextEncoder().encode(args.notePrefix))
 
   const response = await query.do()
   const transactions = (response.transactions ?? []).map(formatTransaction)

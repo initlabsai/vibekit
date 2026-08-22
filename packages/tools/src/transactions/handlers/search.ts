@@ -10,8 +10,10 @@ export interface SearchTransactionsArgs {
   maxRound?: number
   beforeTime?: string
   afterTime?: string
+  maxAmount?: number
   minAmount?: number
   applicationId?: number
+  notePrefix?: string
 }
 
 export async function searchTransactions(
@@ -29,7 +31,9 @@ export async function searchTransactions(
   if (args.beforeTime) query = query.beforeTime(args.beforeTime)
   if (args.afterTime) query = query.afterTime(args.afterTime)
   if (args.minAmount) query = query.currencyGreaterThan(args.minAmount - 1)
+  if (args.maxAmount !== undefined) query = query.currencyLessThan(args.maxAmount + 1)
   if (args.applicationId) query = query.applicationID(args.applicationId)
+  if (args.notePrefix) query = query.notePrefix(new TextEncoder().encode(args.notePrefix))
 
   const response = await query.do()
   const transactions = (response.transactions ?? []).map(formatTransaction)

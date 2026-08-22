@@ -437,12 +437,18 @@ describe('searchTransactions', () => {
       txType: 'axfer',
       assetId: 31566704,
       minAmount: 1_000_000,
+      maxAmount: 2_000_000,
+      notePrefix: 'af/gov',
       minRound: 10,
       nextToken: 'prev',
     })
     expect(calls.txType).toEqual(['axfer'])
     expect(calls.assetID).toEqual([31566704])
     expect(calls.currencyGreaterThan).toEqual([999_999])
+    // maxAmount is inclusive: currencyLessThan(maxAmount + 1)
+    expect(calls.currencyLessThan).toEqual([2_000_001])
+    // notePrefix matches UTF-8 bytes
+    expect(calls.notePrefix).toEqual([new TextEncoder().encode('af/gov')])
     expect(calls.minRound).toEqual([10])
     expect(calls.nextToken).toEqual(['prev'])
     expect(calls.limit).toEqual([20]) // DEFAULT_LIMIT
