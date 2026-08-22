@@ -1,8 +1,8 @@
 import type { ResultStore, ViewSpec } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
-import type { SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
+import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 
 import { Ident } from './ui.js'
 import { ResultView } from './views.js'
@@ -233,11 +233,13 @@ function MethodCallPane({
   callResult,
   onInput,
   onSubmit,
+  inputRef,
 }: {
   selected: SpecSelection
   method: ParsedMethod
   width: number
   callInput: string
+  inputRef?: RefObject<InputRenderable | null>
   callEpoch: number
   callBusy: boolean
   callError: string | null
@@ -279,6 +281,7 @@ function MethodCallPane({
             <text fg={COLORS.brassBright}>❯ </text>
             <input
               key={callEpoch}
+              ref={inputRef}
               flexGrow={1}
               focused
               placeholder={method.args.length === 0 ? 'enter to simulate' : '{ ... }'}
@@ -315,11 +318,13 @@ function SpecDetailPane({
   onSelectMethod,
   onInput,
   onSubmit,
+  inputRef,
 }: {
   selected: SpecSelection
   selectedMethod: ParsedMethod | null
   width: number
   callInput: string
+  inputRef?: RefObject<InputRenderable | null>
   callEpoch: number
   callBusy: boolean
   callError: string | null
@@ -342,6 +347,7 @@ function SpecDetailPane({
         callResult={callResult}
         onInput={onInput}
         onSubmit={onSubmit}
+        inputRef={inputRef}
       />
     )
   }
@@ -428,6 +434,7 @@ export function AppsScreen({
   callResult,
   onInput,
   onSubmit,
+  inputRef,
 }: {
   network: string
   entries: ReadonlyArray<AppsEntry>
@@ -445,6 +452,7 @@ export function AppsScreen({
   callResult: unknown
   onInput: (value: string) => void
   onSubmit: () => void
+  inputRef?: RefObject<InputRenderable | null>
 }) {
   const deployed = entries.filter((entry) => entry.kind === 'deployed')
   const optedIn = entries.filter((entry) => entry.kind === 'optedIn')
@@ -476,6 +484,7 @@ export function AppsScreen({
           onSelectMethod={onSelectMethod}
           onInput={onInput}
           onSubmit={onSubmit}
+          inputRef={inputRef}
         />
       ) : (
         <>
@@ -680,12 +689,17 @@ export function Composer({
   epoch,
   focused,
   hint,
+  inputRef,
+  onFocus,
   onChange,
   onSubmit,
 }: {
   epoch: number
   focused: boolean
   hint: string
+  inputRef: RefObject<InputRenderable | null>
+  /** A click on the composer claims app focus, like esc does from the feed. */
+  onFocus: () => void
   onChange: (value: string) => void
   onSubmit: (value: string) => void
 }) {
@@ -704,12 +718,14 @@ export function Composer({
       borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
       backgroundColor={COLORS.panelRaised}
+      onMouseDown={onFocus}
     >
       <text fg={focused ? COLORS.brassBright : COLORS.faint}>❯ </text>
       {/* Remount per submit: the input keeps its own buffer, so a fresh key is
           the only reliable way to clear it. */}
       <input
         key={epoch}
+        ref={inputRef}
         flexGrow={1}
         focused={focused}
         placeholder={hint}

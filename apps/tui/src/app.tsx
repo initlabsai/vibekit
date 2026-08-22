@@ -3,6 +3,7 @@ import {
   type ResultStore,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useRef, useState } from 'react'
 
@@ -45,6 +46,11 @@ export function App() {
   const [status, setStatus] = useState('')
   const [inputEpoch, setInputEpoch] = useState(0)
   const [, setInput] = useState('')
+
+  // The renderer blurs the focused input on any click; these let the app
+  // hand focus back to whichever input it still considers focused.
+  const composerRef = useRef<InputRenderable | null>(null)
+  const methodInputRef = useRef<InputRenderable | null>(null)
 
   const storeRef = useRef<ResultStore>(store)
   storeRef.current = store
@@ -333,6 +339,10 @@ export function App() {
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
   const senderAccount = accountList.find((account) => account.address === activeSender)
   const composerFocused = screen === 'chat' && !modalOpen && focus === 'composer'
+  const reclaimFocus = useCallback(() => {
+    if (composerFocused) composerRef.current?.focus()
+    else if (screen === 'apps' && apps.selectedMethod) methodInputRef.current?.focus()
+  }, [apps.selectedMethod, composerFocused, screen])
   const showNav = !isNarrow && screen === 'chat'
   const hint =
     agentBusy || busy
@@ -367,7 +377,13 @@ export function App() {
 
   return (
     <CopyContext.Provider value={copyIdent}>
-    <box flexDirection="column" width="100%" height="100%" backgroundColor={COLORS.background}>
+    <box
+      flexDirection="column"
+      width="100%"
+      height="100%"
+      backgroundColor={COLORS.background}
+      onMouseUp={reclaimFocus}
+    >
       <TopBar
         screen={screen}
         modeLabel={modeLabel}
@@ -407,6 +423,7 @@ export function App() {
           callResult={apps.callResult}
           onInput={apps.setCallInput}
           onSubmit={apps.submitCall}
+          inputRef={methodInputRef}
         />
       ) : screen === 'blocks' ? (
         <BlocksScreen
@@ -474,6 +491,8 @@ export function App() {
           epoch={inputEpoch}
           focused={composerFocused}
           hint={hint}
+          inputRef={composerRef}
+          onFocus={() => setFocus('composer')}
           onChange={setInput}
           onSubmit={submit}
         />
