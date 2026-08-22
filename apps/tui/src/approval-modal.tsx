@@ -34,7 +34,7 @@ export function ApprovalModal({
   const effectCount = model?.simulation?.effects.length ?? 0
   const height = Math.min(
     screenHeight - 2,
-    11 + graphLines + effectCount + (model?.note ? 1 : 0) + (model?.amountMicroAlgos === undefined ? 1 : 2),
+    11 + graphLines + effectCount + (model?.note ? 1 : 0) + (model?.amountMicroAlgos === undefined ? 1 : 3),
   )
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
@@ -77,7 +77,7 @@ export function ApprovalModal({
               ))}
             </box>
           ) : null}
-          <PaymentBody model={model} width={body} />
+          <PaymentBody model={model} width={body} big />
         </>
       ) : (
         <text fg={COLORS.muted} marginTop={1} content="The write record could not be derived." />

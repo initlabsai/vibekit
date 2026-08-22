@@ -119,7 +119,7 @@ export function WelcomePanel({ hasAgent, width }: { hasAgent: boolean; width: nu
   return (
     <box flexGrow={1} padding={2} flexDirection="column">
       {width >= 60 ? (
-        <ascii-font font="tiny" text="VIBEKIT" color={COLORS.brassBright} />
+        <ascii-font font="tiny" text="VIBEKIT" color={[COLORS.brassBright, COLORS.signal]} />
       ) : (
         <text fg={COLORS.brassBright}>VIBEKIT</text>
       )}
@@ -226,6 +226,7 @@ export function ContentPane({
   busyPayment,
   liveThinkingSectionId,
   hasAgent,
+  keys,
   width,
   scrollRef,
   sectionRegistry,
@@ -241,6 +242,8 @@ export function ContentPane({
   /** Section currently streaming reasoning, if any. */
   liveThinkingSectionId?: number | null
   hasAgent: boolean
+  /** Key hints for the current focus, shown in the bottom frame line. */
+  keys: string
   width: number
   scrollRef: RefObject<ScrollBoxRenderable | null>
   /** Section renderables by id, for top-aligned jumps. */
@@ -259,6 +262,8 @@ export function ContentPane({
       borderColor={focused ? COLORS.brass : COLORS.border}
       title=" FEED "
       titleColor={focused ? COLORS.brassBright : COLORS.faint}
+      bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
+      bottomTitleAlignment="right"
       backgroundColor={COLORS.background}
     >
       {sections.length === 0 ? (

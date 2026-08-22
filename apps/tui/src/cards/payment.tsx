@@ -57,15 +57,27 @@ export function paymentLines(model: PaymentFlowViewModel): string[] {
 export function PaymentBody({
   model,
   width,
+  big = false,
 }: {
   model: PaymentFlowViewModel
   width: number
+  /** Render the amount as a two-row ascii figure (the approval modal). */
+  big?: boolean
 }) {
   const failed = model.simulation?.wouldSucceed === false
   return (
     <box flexDirection="column">
       {model.amountMicroAlgos === undefined ? (
         <text fg={COLORS.brassBright} marginTop={1} content={model.unsignedGroup.summary} />
+      ) : big ? (
+        <box flexDirection="row" alignItems="flex-end" marginTop={1} height={2}>
+          <ascii-font
+            font="tiny"
+            text={formatMicroAlgos(model.amountMicroAlgos)}
+            color={[COLORS.brassBright, COLORS.signal]}
+          />
+          <text fg={COLORS.muted}>{'  ALGO'}</text>
+        </box>
       ) : (
         <Hero value={formatMicroAlgos(model.amountMicroAlgos)} unit="ALGO" />
       )}

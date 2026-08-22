@@ -443,6 +443,7 @@ export function App() {
             busyPayment={busy && flow !== null}
             liveThinkingSectionId={agentBusy ? agentSectionRef.current : null}
             hasAgent={Boolean(agentConfig)}
+            keys={keybar}
             width={showNav ? width - navWidth : width}
             scrollRef={feed.contentScrollRef}
             sectionRegistry={feed.sectionRegistry}
@@ -466,9 +467,6 @@ export function App() {
           onSubmit={submit}
         />
       ) : null}
-      <box height={1} paddingX={1} backgroundColor={COLORS.panelRaised}>
-        <text fg={COLORS.muted} content={shorten(keybar, width - 2)} />
-      </box>
       {modalOpen ? (
         <ApprovalModal model={modalModel} network={network} screenWidth={width} screenHeight={height} />
       ) : null}
