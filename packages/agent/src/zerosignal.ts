@@ -38,6 +38,64 @@ export function zeroSignalBaseUrl(
   }
 }
 
+/** What the operator catalog says about one model id. */
+export interface ZeroSignalModelInfo {
+  /** USD per 1M tokens; absent when no operator advertises a price. */
+  inputUsdPer1M?: number
+  outputUsdPer1M?: number
+  /** False for image-only models, which cannot drive the Explorer. */
+  text: boolean
+  toolUse: boolean
+}
+
+/**
+ * The proxy's cached operator catalog (refreshed by zs-proxy itself), keyed
+ * by model id. A model served by several operators keeps the lowest price.
+ * Empty when the file is absent, so callers degrade to the bare id list.
+ */
+export function readZeroSignalCatalog(
+  env: Record<string, string | undefined> = process.env,
+  read: (path: string) => string = (path) => readFileSync(path, 'utf8'),
+): Map<string, ZeroSignalModelInfo> {
+  const catalog = new Map<string, ZeroSignalModelInfo>()
+  try {
+    const path = join(zeroSignalDaemonPath(env), '..', 'operator-catalog.json')
+    const parsed = JSON.parse(read(path)) as {
+      operators?: Array<{ model_capacities?: Record<string, Record<string, unknown>> }>
+    }
+    for (const operator of parsed.operators ?? []) {
+      for (const [id, cap] of Object.entries(operator.model_capacities ?? {})) {
+        const outputs = cap.OutputModalities
+        const text = !Array.isArray(outputs) || outputs.includes('text')
+        const price = (value: unknown) => (typeof value === 'number' && value > 0 ? value : undefined)
+        const next: ZeroSignalModelInfo = {
+          inputUsdPer1M: price(cap.InputUSDPer1M),
+          outputUsdPer1M: price(cap.OutputUSDPer1M),
+          text,
+          toolUse: cap.ToolUse === true,
+        }
+        const prev = catalog.get(id)
+        const cheaper =
+          !prev ||
+          (next.outputUsdPer1M ?? Infinity) + (next.inputUsdPer1M ?? Infinity) <
+            (prev.outputUsdPer1M ?? Infinity) + (prev.inputUsdPer1M ?? Infinity)
+        if (cheaper) catalog.set(id, next)
+      }
+    }
+  } catch {
+    // No catalog yet (fresh install) — the id list still works.
+  }
+  return catalog
+}
+
+/** `$0.10 / $0.24 per 1M`, `no price listed` (0 in the catalog), or undefined when the catalog has no price. */
+export function formatZeroSignalPrice(info: ZeroSignalModelInfo | undefined): string | undefined {
+  if (!info) return undefined
+  if (info.inputUsdPer1M === undefined && info.outputUsdPer1M === undefined) return 'no price listed'
+  const usd = (value: number | undefined) => (value === undefined ? '—' : `$${value.toFixed(value < 1 ? 3 : 2)}`)
+  return `${usd(info.inputUsdPer1M)} / ${usd(info.outputUsdPer1M)} per 1M`
+}
+
 /** Shown when the daemon is unreachable; names the address that was tried. */
 export function zeroSignalSetupHint(baseUrl: string = zeroSignalBaseUrl()): string {
   return (

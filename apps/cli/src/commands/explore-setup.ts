@@ -12,6 +12,8 @@ import {
   probeZeroSignal,
   saveStoredAgentConfig,
   zeroSignalBaseUrl,
+  readZeroSignalCatalog,
+  formatZeroSignalPrice,
   type StoredAgentConfig,
 } from "@initlabs/vibekit-agent/config";
 
@@ -62,16 +64,18 @@ async function listOllamaModels(): Promise<string[]> {
 async function pickModel(
   models: string[],
   providerLabel: string,
+  hint: (id: string) => string | undefined = () => undefined,
 ): Promise<string> {
   if (models.length === 0) {
     return text({
       message: `No models listed — enter a ${providerLabel} model id`,
     });
   }
+  // The whole list: the select scrolls, and a silent cap once hid the cheapest half.
   const choice = await select({
     message: `Model (live from ${providerLabel})`,
     options: [
-      ...models.slice(0, 20).map((id) => ({ value: id, label: id })),
+      ...models.map((id) => ({ value: id, label: id, hint: hint(id) })),
       { value: "__other__", label: "other — type an id" },
     ],
   });
@@ -96,8 +100,17 @@ Quickstart: https://txnlab.gitbook.io/zerosignal/using-the-proxy/quick-start`);
       process.exit(0);
     }
   }
-  const models = await listZeroSignalModels();
-  const model = await pickModel(models, "the ZeroSignal operator network");
+  const catalog = readZeroSignalCatalog();
+  const price = (id: string) =>
+    (catalog.get(id)?.inputUsdPer1M ?? Infinity) + (catalog.get(id)?.outputUsdPer1M ?? Infinity);
+  // Text models only (an image model cannot drive the Explorer), cheapest first;
+  // ids the catalog does not know keep their proxy order at the end.
+  const models = (await listZeroSignalModels())
+    .filter((id) => catalog.get(id)?.text !== false)
+    .sort((a, b) => price(a) - price(b));
+  const model = await pickModel(models, "the ZeroSignal operator network", (id) =>
+    formatZeroSignalPrice(catalog.get(id)),
+  );
   return { provider: "zerosignal", model };
 }
 

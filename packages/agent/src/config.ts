@@ -130,4 +130,7 @@ export {
   ZEROSIGNAL_SETUP_HINT,
   zeroSignalBaseUrl,
   zeroSignalSetupHint,
+  readZeroSignalCatalog,
+  formatZeroSignalPrice,
+  type ZeroSignalModelInfo,
 } from './zerosignal.js'

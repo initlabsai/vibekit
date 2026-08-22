@@ -7,7 +7,46 @@ import {
   ZEROSIGNAL_DEFAULT_BASE_URL,
   zeroSignalBaseUrl,
   zeroSignalSetupHint,
+  readZeroSignalCatalog,
+  formatZeroSignalPrice,
 } from '../src/zerosignal.js'
+
+describe('readZeroSignalCatalog', () => {
+  const env = { XDG_CONFIG_HOME: '/cfg' }
+  const catalog = JSON.stringify({
+    operators: [
+      {
+        model_capacities: {
+          'glm-5': { InputUSDPer1M: 1.1, OutputUSDPer1M: 3.52, OutputModalities: null, ToolUse: true },
+          zimage: { InputUSDPer1M: 0, OutputUSDPer1M: 0, OutputModalities: ['image'] },
+          'grok-4.5': { InputUSDPer1M: 2.2, OutputUSDPer1M: 6.6, OutputModalities: ['text'], ToolUse: true },
+        },
+      },
+      {
+        model_capacities: {
+          'grok-4.5': { InputUSDPer1M: 2.552, OutputUSDPer1M: 7.656, OutputModalities: ['text'], ToolUse: true },
+          'free/model': { InputUSDPer1M: 0, OutputUSDPer1M: 0, OutputModalities: ['text'], ToolUse: true },
+        },
+      },
+    ],
+  })
+  test('keys by id, marks image models, keeps the cheapest operator', () => {
+    const read = (path: string) => {
+      expect(path).toBe('/cfg/zerosignal/operator-catalog.json')
+      return catalog
+    }
+    const map = readZeroSignalCatalog(env, read)
+    expect(map.get('glm-5')).toEqual({ inputUsdPer1M: 1.1, outputUsdPer1M: 3.52, text: true, toolUse: true })
+    expect(map.get('zimage')?.text).toBe(false)
+    expect(map.get('grok-4.5')?.outputUsdPer1M).toBe(6.6)
+    expect(formatZeroSignalPrice(map.get('glm-5'))).toBe('$1.10 / $3.52 per 1M')
+    expect(formatZeroSignalPrice(map.get('free/model'))).toBe('no price listed')
+    expect(formatZeroSignalPrice(undefined)).toBeUndefined()
+  })
+  test('is empty without a catalog file', () => {
+    expect(readZeroSignalCatalog(env, () => { throw new Error('ENOENT') }).size).toBe(0)
+  })
+})
 
 describe('zeroSignalBaseUrl', () => {
   const env = { XDG_CONFIG_HOME: '/cfg' }
