@@ -1,4 +1,3 @@
-import { base64ToBytes } from '@initlabs/vibekit-core'
 import type { ApplicationDetailViewModel } from '@initlabs/vibekit-experience'
 
 import { COLORS, shorten } from '../theme.js'
@@ -12,7 +11,7 @@ import {
   Rule,
   Unavailable,
 } from '../ui.js'
-import { pageNotes } from './shared.js'
+import { bytesDisplay, pageNotes } from './shared.js'
 
 export function ApplicationCard({
   model,
@@ -65,16 +64,6 @@ export function ApplicationCard({
       </box>
     </Frame>
   )
-}
-
-/** base64 bytes as printable text when they are, else the base64 itself. */
-function bytesDisplay(base64: string): string {
-  try {
-    const text = new TextDecoder().decode(base64ToBytes(base64))
-    return /^[^\p{C}]+$/u.test(text) ? text : base64
-  } catch {
-    return base64
-  }
 }
 
 export function ApplicationListCard({

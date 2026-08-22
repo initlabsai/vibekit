@@ -1,7 +1,26 @@
-import { wrapLines } from '../theme.js'
+import algosdk from 'algosdk'
+
+import { base64ToBytes } from '@initlabs/vibekit-core'
 import { formatMicroAlgos } from '@initlabs/vibekit-experience'
 
+import { wrapLines } from '../theme.js'
 import { Card, innerWidth } from '../ui.js'
+
+/**
+ * Chain bytes for display, the way Lora reads them without a spec: a 32-byte
+ * value is an Algorand address (checksummed), printable bytes are text,
+ * everything else stays base64. A bound ARC-56 spec still overrides with names.
+ */
+export function bytesDisplay(base64: string): string {
+  try {
+    const bytes = base64ToBytes(base64)
+    if (bytes.length === 32) return algosdk.encodeAddress(bytes)
+    const text = new TextDecoder().decode(bytes)
+    return /^[^\p{C}]+$/u.test(text) ? text : base64
+  } catch {
+    return base64
+  }
+}
 
 export function algo(value: number | string | undefined): string | undefined {
   if (value === undefined) return undefined

@@ -21,20 +21,10 @@ import {
   Unavailable,
   type Tone,
 } from '../ui.js'
-import { algo, pageNotes } from './shared.js'
+import { algo, bytesDisplay, pageNotes } from './shared.js'
 
 /** ARC-4 return logs start with 0x151f7c75. */
 const ARC4_RETURN_PREFIX = 'FR98dQ'
-
-/** Base64 chain bytes as printable text when they are, else the base64 itself. */
-function bytesDisplay(base64: string): string {
-  try {
-    const text = new TextDecoder().decode(base64ToBytes(base64))
-    return /^[^\p{C}]+$/u.test(text) ? text : base64
-  } catch {
-    return base64
-  }
-}
 
 /**
  * An ARC-4 return log whose payload is an ABI `string` (2-byte length prefix
