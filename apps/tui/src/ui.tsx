@@ -224,10 +224,12 @@ export function Fact({
   valueColor?: string
   copy?: string
 }) {
-  const room = Math.max(8, width - LABEL_WIDTH)
+  // Long labels keep one space of air instead of running into the value.
+  const gutter = Math.max(LABEL_WIDTH, label.length + 1)
+  const room = Math.max(8, width - gutter)
   return (
     <box flexDirection="row" height={1}>
-      <text fg={COLORS.faint} content={label.padEnd(LABEL_WIDTH)} />
+      <text fg={COLORS.faint} content={label.padEnd(gutter)} />
       {copyableIdent(copy) ? (
         <Ident value={copy!} display={value} width={room} />
       ) : (

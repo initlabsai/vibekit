@@ -190,7 +190,7 @@ export function useAgentLane({
               const key = `${target}:${applicationId}`
               if (approvedProgramsRef.current.has(key)) return true
               const lines = await programCostLines(applicationId, target, agentConfig)
-              const approved = await askConfirm('ANALYZE THIS CONTRACT?', lines)
+              const approved = await askConfirm('EXPLAIN THIS CONTRACT?', lines)
               if (approved) approvedProgramsRef.current.add(key)
               return approved
             },

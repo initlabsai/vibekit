@@ -258,7 +258,7 @@ export function App() {
           openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
           return
         case 'program': {
-          const prompt = `analyze app ${target.applicationId}`
+          const prompt = `explain app ${target.applicationId}`
           runAgent(createSection(prompt), prompt)
           return
         }

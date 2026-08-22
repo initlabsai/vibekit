@@ -195,7 +195,7 @@ Examples:
   defineTool({
     name: 'get_application_program',
     description:
-      "Fetch and disassemble an application's on-chain program into TEAL, with deterministic facts: version, ABI method selectors, state keys, rekey/close guards, inner transactions, OnCompletion handling. Use when asked to analyze, audit, explain, or review a smart contract. Large result — call it once; page with fromLine/toLine only when the facts and first page are not enough.",
+      "Fetch and disassemble an application's on-chain program into TEAL, with static facts: version, entrypoints (ARC-4 selectors or string-routed names), state keys, which transaction fields it reads, inner transactions, OnCompletion handling. Use to explain what a smart contract does. Not a security audit: the facts describe behavior, never safety. Large result — call it once; page with fromLine/toLine only when the facts and first page are not enough.",
     parameters: z.object({
       applicationId: z.number().describe('The application ID'),
       program: z.enum(['approval', 'clear']).optional().describe('Which program (default approval)'),

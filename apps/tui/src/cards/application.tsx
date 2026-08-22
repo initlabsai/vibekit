@@ -21,13 +21,13 @@ export function ApplicationCard({
   model,
   width,
   onTransactions,
-  onAnalyze,
+  onExplain,
 }: {
   model: ApplicationDetailViewModel | undefined
   width: number
   onTransactions?: () => void
   /** Asks the agent to read and explain the program (cost-confirmed). */
-  onAnalyze?: () => void
+  onExplain?: () => void
 }) {
   if (!model) return <Unavailable title="APPLICATION" width={width} />
   const body = innerWidth(width)
@@ -41,7 +41,7 @@ export function ApplicationCard({
         tone="idle"
         action={
           <>
-            {onAnalyze ? <Button label="analyze ▸" onPress={onAnalyze} /> : null}
+            {onExplain ? <Button label="explain ▸" onPress={onExplain} /> : null}
             {onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : null}
           </>
         }
@@ -104,7 +104,11 @@ export function ApplicationProgramCard({
     entrypoints.length === 0
       ? 'none found (bare calls only)'
       : `${entrypoints.length}${facts.selectors.length > 0 ? ' ABI' : ''} · ${entrypoints.join(', ')}`
-  const mark = (on: boolean) => (on ? '✓' : '✗')
+  const reads = [
+    facts.guards.rekey ? 'RekeyTo' : '',
+    facts.guards.closeRemainder ? 'CloseRemainderTo' : '',
+    facts.guards.assetClose ? 'AssetCloseTo' : '',
+  ].filter(Boolean)
   const handled = facts.onCompletion.filter((e) => e.outcome === 'handled').map((e) => e.action)
   const rejected = facts.onCompletion.filter((e) => e.outcome === 'rejected').map((e) => e.action)
   const onComplete = [
@@ -115,6 +119,17 @@ export function ApplicationProgramCard({
     .join(' · ')
   const preview = model.teal.split('\n').slice(0, PROGRAM_PREVIEW_LINES)
   const hidden = model.totalLines - model.fromLine + 1 - preview.length
+  const tail = hidden > 0 ? `${hidden.toLocaleString()} more lines · the agent read ${model.fromLine}–${model.toLine}` : ''
+  // Later pages of the same program: the facts are on the first card already.
+  if (model.fromLine > 1) {
+    return (
+      <Frame width={width}>
+        <Header kicker="PROGRAM" chip={`${model.program} · lines ${model.fromLine}–${model.toLine}`} pill={model.network.toUpperCase()} tone="idle" />
+        <text fg={COLORS.faint} marginTop={1} content={preview.map((line) => shorten(line, body)).join('\n')} />
+        {tail ? <FooterNote text={tail} width={body} /> : null}
+      </Frame>
+    )
+  }
   return (
     <Frame width={width}>
       <Header kicker="PROGRAM" chip={model.program} pill={model.network.toUpperCase()} tone="idle" />
@@ -135,11 +150,7 @@ export function ApplicationProgramCard({
         {facts.stateKeys.box.length > 0 ? (
           <Fact label="boxes" value={facts.stateKeys.box.join(', ')} width={body} />
         ) : null}
-        <Fact
-          label="guards"
-          value={`rekey ${mark(facts.guards.rekey)}  close-to ${mark(facts.guards.closeRemainder)}  asset-close ${mark(facts.guards.assetClose)}`}
-          width={body}
-        />
+        <Fact label="reads" value={reads.length ? reads.join(', ') : 'none of RekeyTo, CloseRemainderTo, AssetCloseTo'} width={body} />
         <Fact label="inner txns" value={String(facts.innerTransactions)} width={body} />
         {onComplete ? <Fact label="oncomplete" value={onComplete} width={body} /> : null}
         <Rule width={body} />
@@ -147,12 +158,7 @@ export function ApplicationProgramCard({
           fg={COLORS.faint}
           content={preview.map((line) => shorten(line, body)).join('\n')}
         />
-        {hidden > 0 ? (
-          <FooterNote
-            text={`${hidden.toLocaleString()} more lines · the agent read ${model.fromLine}–${model.toLine}`}
-            width={body}
-          />
-        ) : null}
+        {tail ? <FooterNote text={tail} width={body} /> : null}
       </box>
     </Frame>
   )

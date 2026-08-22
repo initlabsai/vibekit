@@ -64,7 +64,7 @@ export type OpenTarget =
   | { kind: 'account'; address: string }
   | { kind: 'asset'; assetId: number }
   | { kind: 'application'; applicationId: number }
-  /** Ask the agent to read and explain an application's program. */
+  /** Ask the agent to read and explain an application's program — never to audit it. */
   | { kind: 'program'; applicationId: number }
   | { kind: 'block'; round: number }
   | { kind: 'transactions'; filter: TransactionSearchFilter }
@@ -159,7 +159,7 @@ export function ResultView({
                   })
               : undefined
           }
-          onAnalyze={
+          onExplain={
             onOpen && derived.ok
               ? () => onOpen({ kind: 'program', applicationId: Number(derived.model.applicationId) })
               : undefined
