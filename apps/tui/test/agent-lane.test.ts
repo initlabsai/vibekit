@@ -19,7 +19,7 @@ import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
 import { viewFor } from '../src/slices/lookup.js'
-import { enrichResultWithAbi, specsByProgramHash } from '../src/abi-catalog.js'
+import { labelProgramMethods, specsByProgramHash } from '../src/abi-catalog.js'
 import { normalizeAppSpec } from '@initlabs/vibekit-tools'
 import { readFileSync } from 'node:fs'
 import {
@@ -368,45 +368,60 @@ test('the methods view derives from a program record', () => {
   if (methods.ok) expect(methods.model.analysis.entrypoints).toEqual(['0x02bece11', 'bootstrap'])
 })
 
-test('a known spec labels program selectors with names and args', () => {
+test('a known spec labels program selectors with names and args — inside the tool call', async () => {
   const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/tools/test/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
-  // The same spec also matches by compiled-program hash, with no deploy record at all.
+  // The spec matches by compiled-program hash, with no deploy record at all.
   const byHash = specsByProgramHash([{ spec }])
   expect(byHash.size).toBe(1)
   const hash = [...byHash.keys()][0]!
-  const record = bridgeToolResult(
-    {
-      id: 'call-h',
-      toolName: 'get_application_program',
-      output: {
-        applicationId: 1001,
-        program: 'approval',
-        programHash: hash,
-        bytes: 1,
-        totalLines: 1,
-        fromLine: 1,
-        toLine: 1,
-        teal: '#pragma version 11',
-        analysis: {
-              entrypoints: ['0x02bece11', '0x4f92e173'],
-          selectors: ['02bece11', '4f92e173'],
+  const program = {
+    applicationId: 1001,
+    program: 'approval',
+    programHash: hash,
+    bytes: 1,
+    totalLines: 1,
+    fromLine: 1,
+    toLine: 1,
+    teal: '#pragma version 11',
+    analysis: {
+      entrypoints: ['0x02bece11', '0x4f92e173'],
+      selectors: ['02bece11', '4f92e173'],
       arc4Returns: true,
-          strings: [],
-          stateKeys: { global: [], local: [], box: [] },
-          guards: { rekey: false, closeRemainder: false, assetClose: false },
-          innerTransactions: 0,
-          onCompletion: [],
-        },
-        methods: [{ selector: '02bece11' }, { selector: '4f92e173' }],
-      },
-      view: 'application.program',
-      isError: false,
+      strings: [],
+      stateKeys: { global: [], local: [], box: [] },
+      guards: { rekey: false, closeRemainder: false, assetClose: false },
+      innerTransactions: 0,
+      onCompletion: [],
     },
-    { resultId: newId('result-hello'), toolCallId: 'call-h', network: 'localnet' },
-  ).record
-  const enriched = enrichResultWithAbi(record, new Map(), byHash)
-  const methods = (enriched as unknown as { data: { methods: Array<{ name?: string; args?: unknown[]; returns?: string }> } }).data.methods
-  expect(methods[0]).toMatchObject({ name: 'hello', returns: 'string' })
-  expect(methods[0]!.args).toHaveLength(1)
-  expect(methods[1]).toMatchObject({ name: 'getMessage' })
+    methods: [{ selector: '02bece11' }, { selector: '4f92e173' }],
+  }
+  const labelled = labelProgramMethods(program, new Map(), byHash)!
+  expect(labelled[0]).toMatchObject({ name: 'hello', returns: 'string' })
+  expect(labelled[1]).toMatchObject({ name: 'getMessage' })
+
+  // And the model sees those names: the explorer agent labels before the result leaves the tool.
+  const stubProgram = defineTool({
+    name: 'get_application_program',
+    description: 'stub',
+    parameters: z.object({ applicationId: z.number() }),
+    handler: async () => program,
+  })
+  const session = createExplorerAgent({
+    model: new MockLanguageModelV4({
+      doStream: toolCallThenText('get_application_program', { applicationId: 1001 }, 'Done.'),
+    }),
+    addressBook: [],
+    tools: [stubProgram],
+    labelProgram: (p) => labelProgramMethods(p as typeof program, new Map(), byHash),
+  })
+  const outputs: unknown[] = []
+  await runAgentTurn(session, 'explain app 1001', {
+    onText: () => {},
+    onToolCall: () => {},
+    onToolResult: (event) => outputs.push(event.output),
+    onError: () => {
+      throw new Error('unexpected agent error')
+    },
+  })
+  expect((outputs[0] as { methods: Array<{ name?: string }> }).methods.map((m) => m.name)).toEqual(['hello', 'getMessage'])
 })

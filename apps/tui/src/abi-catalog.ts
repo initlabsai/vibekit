@@ -57,6 +57,23 @@ type ProgramData = {
   methods?: Array<{ selector: string; name?: string; signature?: string }>
 }
 
+/**
+ * A program's methods with spec names and args when a spec is known — by
+ * deploy record first, then by compiled-program hash. Runs inside the tool
+ * call so the model reads the names too, not just the card.
+ */
+export function labelProgramMethods(
+  program: ProgramData,
+  catalog: ReadonlyMap<number, NormalizedAppSpec>,
+  byProgramHash: ReadonlyMap<string, NormalizedAppSpec>,
+): ProgramData['methods'] {
+  const spec =
+    (program.applicationId !== undefined ? catalog.get(program.applicationId) : undefined) ??
+    (program.programHash !== undefined ? byProgramHash.get(program.programHash) : undefined)
+  if (!spec || !program.analysis) return program.methods
+  return labelSelectors(program.analysis.selectors, spec.methods)
+}
+
 type AppCallData = {
   applicationId?: number
   applicationArgs?: string[]
@@ -72,18 +89,8 @@ type AppCallData = {
 export function enrichResultWithAbi(
   record: StructuredResult,
   catalog: ReadonlyMap<number, NormalizedAppSpec>,
-  byProgramHash: ReadonlyMap<string, NormalizedAppSpec> = new Map(),
 ): StructuredResult {
-  if (record.state !== 'success' || (catalog.size === 0 && byProgramHash.size === 0)) return record
-  if (record.toolName === 'get_application_program') {
-    const program = record.data as ProgramData
-    const spec =
-      (program.applicationId !== undefined ? catalog.get(program.applicationId) : undefined) ??
-      (program.programHash !== undefined ? byProgramHash.get(program.programHash) : undefined)
-    if (spec && program.analysis) program.methods = labelSelectors(program.analysis.selectors, spec.methods)
-    return record
-  }
-  if (catalog.size === 0) return record
+  if (record.state !== 'success' || catalog.size === 0) return record
   const data = record.data as AppCallData
   if (Array.isArray(data.transactions)) {
     enrichTransactionsWithAbi(data.transactions, catalog)

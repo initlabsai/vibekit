@@ -16,7 +16,7 @@ import {
 } from '@initlabs/vibekit-agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { enrichResultWithAbi } from '../abi-catalog.js'
+import { enrichResultWithAbi, labelProgramMethods } from '../abi-catalog.js'
 import {
   activeSenderLine,
   createExplorerAgent,
@@ -188,6 +188,7 @@ export function useAgentLane({
             addressBook,
             network: networkRef.current,
             extraTools,
+            labelProgram: (program) => labelProgramMethods(program, specCatalog, specHashCatalog),
             approveToolCall: async ({ toolName, input }) => {
               if (toolName !== 'get_application_program') return true
               const { applicationId, network } = (input ?? {}) as { applicationId?: number; network?: string }
@@ -261,7 +262,7 @@ export function useAgentLane({
                 network: usedNetwork,
               })
               const enriched = withAccountNames(
-                enrichResultWithAbi(record, specCatalog, specHashCatalog),
+                enrichResultWithAbi(record, specCatalog),
                 addressBookRef.current,
               )
               commitStore(addResult(storeRef.current, enriched))

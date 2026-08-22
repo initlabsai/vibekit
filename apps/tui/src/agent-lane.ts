@@ -177,6 +177,24 @@ export interface ExplorerAgentOptions {
   extraTools?: readonly AnyTool[];
   /** Gate for expensive tool calls (a whole program); writes are not gated here — they are compose-only. */
   approveToolCall?: Parameters<typeof createAgent>[0]["approveToolCall"];
+  /** Names a program's selectors from a known spec, inside the tool call, so the model reads them. */
+  labelProgram?: (program: { methods?: unknown }) => unknown;
+}
+
+/** get_application_program with its methods labelled before the result leaves the tool. */
+function withProgramLabels(tools: AnyTool[], label: ExplorerAgentOptions["labelProgram"]): AnyTool[] {
+  if (!label) return tools;
+  return tools.map((tool) =>
+    tool.name === "get_application_program"
+      ? {
+          ...tool,
+          handler: async (ctx, args) => {
+            const program = (await tool.handler(ctx, args)) as { methods?: unknown };
+            return { ...program, methods: label(program) ?? program.methods };
+          },
+        }
+      : tool,
+  );
 }
 
 /** Creates the Explorer's agent session (compose-only, signerless). */
@@ -185,7 +203,7 @@ export function createExplorerAgent(
 ): AgentSession {
   const network = options.network ?? "localnet";
   const nfd = nfdPlugin();
-  const tools = options.tools ?? explorerTools(options.extraTools);
+  const tools = withProgramLabels(options.tools ?? explorerTools(options.extraTools), options.labelProgram);
   // Plugin tools are merged by resolveDeployment; listing them here keeps the prompt honest.
   const promptTools = options.tools ? tools : [...tools, ...nfd.tools];
   return createAgent({
