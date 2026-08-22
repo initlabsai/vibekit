@@ -20,6 +20,7 @@ import {
 import {
   buildApplicationBoxRecord,
   buildApplicationBoxesRecord,
+  buildApplicationProgramRecord,
   buildApplicationDetailRecord,
   buildApplicationListRecord,
   buildApplicationLocalsRecord,
@@ -76,6 +77,7 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'application.logs': buildApplicationLogsRecord,
   'application.box': buildApplicationBoxRecord,
   'application.boxes': buildApplicationBoxesRecord,
+  'application.program': buildApplicationProgramRecord,
   'block.detail': buildBlockDetailRecord,
   'block.list': buildBlockListRecord,
   'network.status': buildNetworkStatusRecord,

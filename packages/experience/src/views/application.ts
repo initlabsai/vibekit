@@ -110,6 +110,10 @@ export const applicationBoxDataSchema = z.object({
   size: z.number().int().nonnegative().optional(),
 })
 
+/** One page of an application's disassembled program plus its static facts. */
+export const applicationProgramDataSchema = viewDataSchemas['application.program']
+export type ApplicationProgramData = z.infer<typeof applicationProgramDataSchema>
+
 export type ApplicationListData = z.infer<typeof applicationListDataSchema>
 export type ApplicationStateData = z.infer<typeof applicationStateDataSchema>
 export type ApplicationLocalsData = z.infer<typeof applicationLocalsDataSchema>
@@ -247,6 +251,15 @@ export function buildApplicationLogsRecord(
   return record(identity, toolName, applicationLogsDataSchema.parse(wire))
 }
 
+/** Wraps get_application_program. */
+export function buildApplicationProgramRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'get_application_program',
+): StructuredResult {
+  return record(identity, toolName, applicationProgramDataSchema.parse(wire))
+}
+
 /** Wraps read_box_state. */
 export function buildApplicationBoxRecord(
   identity: ResultIdentity,
@@ -305,6 +318,11 @@ export const createApplicationLogsViewModel = viewModelFor(
   'application.logs' as const,
   'Application logs',
 )
+export const createApplicationProgramViewModel = viewModelFor(
+  applicationProgramDataSchema,
+  'application.program' as const,
+  'Application program',
+)
 export const createApplicationBoxViewModel = viewModelFor(
   applicationBoxDataSchema,
   'application.box' as const,
@@ -331,6 +349,10 @@ export type ApplicationStateViewModel = Extract<
 >['model']
 export type ApplicationLocalsViewModel = Extract<
   ReturnType<typeof createApplicationLocalsViewModel>,
+  { ok: true }
+>['model']
+export type ApplicationProgramViewModel = Extract<
+  ReturnType<typeof createApplicationProgramViewModel>,
   { ok: true }
 >['model']
 export type ApplicationLogsViewModel = Extract<
