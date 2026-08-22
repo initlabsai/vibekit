@@ -78,6 +78,52 @@ describe('composeOrExecute (compose mode)', () => {
     expect(appCall.fee).toBe(BigInt(3000)) // minFee 1000 + extraFee 2000
   })
 
+  test('auto-populates box references from a simulate probe', async () => {
+    const boxName = new TextEncoder().encode('msggreeting1')
+    // Fake algod whose simulate reports one unnamed box the call touched.
+    const ctx = fakeCtx({
+      algod: {
+        getTransactionParams: () => ({ do: async () => suggestedParams }),
+        simulateTransactions: () => ({
+          do: async () => ({
+            version: 2,
+            lastRound: 1,
+            txnGroups: [
+              {
+                txnResults: [
+                  {
+                    txnResult: { txn: {} },
+                    unnamedResourcesAccessed: {
+                      boxes: [new algosdk.modelsv2.BoxReference({ app: 0, name: boxName })],
+                    },
+                  },
+                ],
+              },
+            ],
+          }),
+        }),
+      } as unknown as ToolContext['algod'],
+    })
+    const result = (await composeOrExecute(ctx, [
+      { type: 'app_call', sender: ADDR_A, appId: 1244, methodSignature: 'storeMessage(string,string)void', args: ['greeting1', 'hi'] },
+    ])) as { unsignedGroup: string[] }
+    const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(result.unsignedGroup[0]!))
+    expect(txn.applicationCall?.boxes?.some((b) => b.name.length === boxName.length)).toBe(true)
+  })
+
+  test('attaches populated box/foreign references to an app-call txn', async () => {
+    const boxName = new TextEncoder().encode('msggreeting1')
+    const built = await buildGroup(
+      fakeCtx(),
+      [{ type: 'app_call', sender: ADDR_A, appId: 1244, methodSignature: 'storeMessage(string,string)void', args: ['greeting1', 'hi'] }],
+      new Map([[0, { boxes: [{ appIndex: 0, name: boxName }], foreignAssets: [31566704] }]]),
+    )
+    const txn = built.atc.buildGroup()[0]!.txn
+    // The box the method opens is now declared on the transaction.
+    expect(txn.applicationCall?.boxes?.some((b) => b.name.length === boxName.length)).toBe(true)
+    expect(txn.applicationCall?.foreignAssets?.map(Number)).toContain(31566704)
+  })
+
   test('maxFee caps extraFee', async () => {
     const built = await buildGroup(fakeCtx(), [
       {

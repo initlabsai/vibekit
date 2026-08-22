@@ -15,6 +15,14 @@ export interface BuiltGroup {
   methodIndexes: number[]
 }
 
+/** Resource references attached to one app-call transaction. */
+export interface GroupResources {
+  boxes?: algosdk.BoxReference[]
+  accounts?: string[]
+  foreignApps?: number[]
+  foreignAssets?: number[]
+}
+
 function encodeNote(note?: string): Uint8Array | undefined {
   return note ? new TextEncoder().encode(note) : undefined
 }
@@ -170,7 +178,11 @@ export function resolveAbiMethod(
  * from ctx.resolveSigner (cached per sender); otherwise empty signers are used
  * (compose returns unsigned txns; simulate allows empty signatures).
  */
-export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<BuiltGroup> {
+export async function buildGroup(
+  ctx: ToolContext,
+  specs: TxnSpec[],
+  resourcesByIndex?: ReadonlyMap<number, GroupResources>,
+): Promise<BuiltGroup> {
   if (specs.length === 0 || specs.length > 16) {
     throw new ToolError('INVALID_GROUP', `Transaction group must have 1-16 transactions (got ${specs.length})`)
   }
@@ -355,6 +367,7 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
               ? { txn: buildTransactionArg(arg, sender, suggestedParams, i), signer }
               : arg,
           )
+          const resources = resourcesByIndex?.get(i)
           atc.addMethodCall({
             appID: BigInt(spec.appId),
             method: abiMethod,
@@ -364,15 +377,24 @@ export async function buildGroup(ctx: ToolContext, specs: TxnSpec[]): Promise<Bu
             onComplete,
             note,
             suggestedParams: params,
+            ...(resources?.boxes ? { boxes: resources.boxes } : {}),
+            ...(resources?.accounts ? { appAccounts: resources.accounts } : {}),
+            ...(resources?.foreignApps ? { appForeignApps: resources.foreignApps } : {}),
+            ...(resources?.foreignAssets ? { appForeignAssets: resources.foreignAssets } : {}),
           })
           methodIndexes.push(i)
         } else {
+          const resources = resourcesByIndex?.get(i)
           const txn = algosdk.makeApplicationCallTxnFromObject({
             sender,
             appIndex: BigInt(spec.appId),
             onComplete,
             note,
             suggestedParams: params,
+            ...(resources?.boxes ? { boxes: resources.boxes } : {}),
+            ...(resources?.accounts ? { accounts: resources.accounts } : {}),
+            ...(resources?.foreignApps ? { foreignApps: resources.foreignApps } : {}),
+            ...(resources?.foreignAssets ? { foreignAssets: resources.foreignAssets } : {}),
           })
           atc.addTransaction({ txn, signer })
         }
