@@ -188,7 +188,8 @@ export function WalletScreen({
                   </text>
                 ) : null}
               </box>
-              <Ident value={account.address} width={inner} />
+              {/* Plain text on purpose: a click here selects the account; drag still copies. */}
+              <text fg={selected ? COLORS.signal : COLORS.muted} content={shorten(account.address, inner)} />
             </box>
           )
         })
