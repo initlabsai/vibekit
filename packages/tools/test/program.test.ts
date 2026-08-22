@@ -98,6 +98,7 @@ describe('getApplicationProgram', () => {
     const ctx = fakeContext({ algod: algod(chainable({ result: TINYMAN })) })
     const page = await getApplicationProgram(ctx, { applicationId: 1002541853 })
     expect(page.bytes).toBe(4)
+    expect(page.programHash).toMatch(/^[0-9a-f]{64}$/)
     expect(page.fromLine).toBe(1)
     expect(page.toLine).toBe(600)
     expect(page.teal.split('\n')).toHaveLength(600)

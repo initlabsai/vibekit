@@ -119,6 +119,7 @@ export const applicationProgramSchema = z.object({
   applicationId: z.number(),
   program: z.enum(['approval', 'clear']),
   bytes: z.number(),
+  programHash: z.string().describe('sha512/256 of the bytecode, hex'),
   totalLines: z.number(),
   fromLine: z.number(),
   toLine: z.number(),

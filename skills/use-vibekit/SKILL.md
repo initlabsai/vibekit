@@ -101,9 +101,10 @@ balance results carry a `decimals` field to scale for display.
    ARC-56 app spec (usually under `artifacts/`).
 2. **Deploy with `app_deploy`** via MCP: `appSpecPath` is the path to the
    built artifact (`artifacts/<Name>.arc56.json`), `sender` is a funded
-   keystore address, `network` explicit. The tool reads the file — never
-   `cat` the spec or paste its JSON into `appSpec`; that burns thousands of
-   tokens and truncates. The same `appSpecPath` works for `app_call`,
+   keystore address, `network` explicit. The tool reads the file — don't
+   `cat` the spec or paste its JSON into `appSpec` unless you absolutely
+   have to (no file anywhere); pasting burns thousands of tokens and
+   truncates. The same `appSpecPath` works for `app_call`,
    `app_list_methods`, and the `read_*_state` decoders.
    The keystore daemon signs — no key material is ever needed.
 

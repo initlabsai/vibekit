@@ -59,7 +59,7 @@ const DEPLOY_DESCRIPTION = `Deploy a new smart contract instance from an ARC-56/
 Bare create (omit method) for contracts without constructor args — most contracts.
 ABI create (method + args) for contracts with a constructor (e.g. "createApplication").
 Plain create only: no idempotent update semantics (deploy again = new app).
-Pass appSpecPath — the built artifact (artifacts/<Name>.arc56.json). Do not paste the spec JSON.
+Pass appSpecPath — the built artifact (artifacts/<Name>.arc56.json). Paste appSpec JSON only if no file is available.
 Returns the new application ID and address (execute mode), or the unsigned create transaction (compose mode).`
 
 async function deployApp(

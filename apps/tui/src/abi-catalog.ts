@@ -3,9 +3,11 @@
  * then decode recorded app calls onto stored results.
  */
 import type { StructuredResult } from '@initlabs/vibekit-experience'
+import { base64ToBytes } from '@initlabs/vibekit-core'
 import {
   enrichTransactionsWithAbi,
   labelSelectors,
+  programHash,
   type NormalizedAppSpec,
 } from '@initlabs/vibekit-tools'
 
@@ -26,8 +28,31 @@ export function specCatalog(
   return catalog
 }
 
+/**
+ * Local specs by the hash of their compiled approval program. A program
+ * record carrying the same hash proves the spec is this app's — no deploy
+ * record or name match needed. Template-variable contracts won't match.
+ */
+export function specsByProgramHash(
+  localSpecs: ReadonlyArray<{ spec: NormalizedAppSpec }>,
+): Map<string, NormalizedAppSpec> {
+  const byHash = new Map<string, NormalizedAppSpec>()
+  for (const { spec } of localSpecs) {
+    const approval = spec.byteCode?.approval
+    if (!approval) continue
+    try {
+      const hash = programHash(base64ToBytes(approval))
+      if (!byHash.has(hash)) byHash.set(hash, spec)
+    } catch {
+      // Malformed byteCode: the spec still serves by name.
+    }
+  }
+  return byHash
+}
+
 type ProgramData = {
   applicationId?: number
+  programHash?: string
   analysis?: { selectors: string[] }
   methods?: Array<{ selector: string; name?: string; signature?: string }>
 }
@@ -47,14 +72,18 @@ type AppCallData = {
 export function enrichResultWithAbi(
   record: StructuredResult,
   catalog: ReadonlyMap<number, NormalizedAppSpec>,
+  byProgramHash: ReadonlyMap<string, NormalizedAppSpec> = new Map(),
 ): StructuredResult {
-  if (record.state !== 'success' || catalog.size === 0) return record
+  if (record.state !== 'success' || (catalog.size === 0 && byProgramHash.size === 0)) return record
   if (record.toolName === 'get_application_program') {
     const program = record.data as ProgramData
-    const spec = program.applicationId !== undefined ? catalog.get(program.applicationId) : undefined
+    const spec =
+      (program.applicationId !== undefined ? catalog.get(program.applicationId) : undefined) ??
+      (program.programHash !== undefined ? byProgramHash.get(program.programHash) : undefined)
     if (spec && program.analysis) program.methods = labelSelectors(program.analysis.selectors, spec.methods)
     return record
   }
+  if (catalog.size === 0) return record
   const data = record.data as AppCallData
   if (Array.isArray(data.transactions)) {
     enrichTransactionsWithAbi(data.transactions, catalog)

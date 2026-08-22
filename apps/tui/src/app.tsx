@@ -213,6 +213,7 @@ export function App() {
     setStatus,
     extraTools: agentExtraTools,
     specCatalog: apps.catalog,
+    specHashCatalog: apps.hashCatalog,
     onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
     askConfirm,
   })

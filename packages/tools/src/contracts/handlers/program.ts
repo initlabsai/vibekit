@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { ToolError, type ToolContext } from '@initlabs/vibekit-core'
 import { analyzeTeal, type TealAnalysis } from '../lib/teal.js'
 
@@ -21,6 +23,11 @@ export function estimateProgramTokens(bytes: number): { tokens: number; totalLin
   }
 }
 
+/** sha512/256 hex of a program, the hash ARC-56 tooling and algod both use for programs. */
+export function programHash(bytecode: Uint8Array): string {
+  return createHash('sha512-256').update(bytecode).digest('hex')
+}
+
 export interface GetApplicationProgramArgs {
   applicationId: number
   program?: 'approval' | 'clear'
@@ -32,6 +39,8 @@ export interface ApplicationProgram {
   applicationId: number
   program: 'approval' | 'clear'
   bytes: number
+  /** sha512/256 of the bytecode, hex — matches an ARC-56 byteCode to prove a spec belongs to this app. */
+  programHash: string
   totalLines: number
   fromLine: number
   toLine: number
@@ -68,6 +77,7 @@ export async function getApplicationProgram(
     applicationId: args.applicationId,
     program,
     bytes: bytecode.length,
+    programHash: programHash(bytecode),
     totalLines: lines.length,
     fromLine,
     toLine,

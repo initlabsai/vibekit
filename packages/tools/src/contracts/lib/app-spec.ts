@@ -19,12 +19,12 @@ export const appSpecParams = {
     .string()
     .optional()
     .describe(
-      'Path to the ARC-56/ARC-32 app spec file, e.g. artifacts/HelloWorld.arc56.json. Preferred — the file is read here; never paste its contents.',
+      'Path to the ARC-56/ARC-32 app spec file, e.g. artifacts/HelloWorld.arc56.json. Preferred whenever the spec exists as a file — it is read here, nothing to paste.',
     ),
   appSpec: z
     .string()
     .optional()
-    .describe('The app spec JSON as a string. Only when no file exists; otherwise pass appSpecPath.'),
+    .describe('The app spec JSON as a string. Use only when the spec is not available as a file (then appSpecPath cannot apply).'),
 }
 
 /** Resolves appSpecPath into appSpec; an explicit appSpec wins. */

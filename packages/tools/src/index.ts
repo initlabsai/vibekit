@@ -43,6 +43,7 @@ export {
   labelSelectors,
   estimateProgramTokens,
   getApplicationProgram,
+  programHash,
   PROGRAM_PAGE_LINES,
 } from './contracts/index.js'
 export type {

@@ -2,7 +2,7 @@ import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { z } from 'zod'
 import { lookupApplication, lookupApplicationLogs } from './handlers/lookup.js'
-import { estimateProgramTokens, getApplicationProgram, PROGRAM_PAGE_LINES } from './handlers/program.js'
+import { estimateProgramTokens, getApplicationProgram, programHash, PROGRAM_PAGE_LINES } from './handlers/program.js'
 import { analyzeTeal, labelSelectors } from './lib/teal.js'
 import { searchApplications } from './handlers/search.js'
 import {
@@ -32,7 +32,7 @@ import {
 } from './schemas.js'
 
 export * from './schemas.js'
-export { analyzeTeal, labelSelectors, estimateProgramTokens, getApplicationProgram, PROGRAM_PAGE_LINES }
+export { analyzeTeal, labelSelectors, estimateProgramTokens, getApplicationProgram, programHash, PROGRAM_PAGE_LINES }
 export type { TealAnalysis, OnCompletionAction, LabelledMethod } from './lib/teal.js'
 export type { ApplicationProgram } from './handlers/program.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }

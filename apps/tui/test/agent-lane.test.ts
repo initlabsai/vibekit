@@ -19,7 +19,7 @@ import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
 import { viewFor } from '../src/slices/lookup.js'
-import { enrichResultWithAbi } from '../src/abi-catalog.js'
+import { enrichResultWithAbi, specsByProgramHash } from '../src/abi-catalog.js'
 import { normalizeAppSpec } from '@initlabs/vibekit-tools'
 import { readFileSync } from 'node:fs'
 import {
@@ -370,6 +370,10 @@ test('the methods view derives from a program record', () => {
 
 test('a known spec labels program selectors with names and args', () => {
   const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/tools/test/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
+  // The same spec also matches by compiled-program hash, with no deploy record at all.
+  const byHash = specsByProgramHash([{ spec }])
+  expect(byHash.size).toBe(1)
+  const hash = [...byHash.keys()][0]!
   const record = bridgeToolResult(
     {
       id: 'call-h',
@@ -377,6 +381,7 @@ test('a known spec labels program selectors with names and args', () => {
       output: {
         applicationId: 1001,
         program: 'approval',
+        programHash: hash,
         bytes: 1,
         totalLines: 1,
         fromLine: 1,
@@ -399,7 +404,7 @@ test('a known spec labels program selectors with names and args', () => {
     },
     { resultId: newId('result-hello'), toolCallId: 'call-h', network: 'localnet' },
   ).record
-  const enriched = enrichResultWithAbi(record, new Map([[1001, spec]]))
+  const enriched = enrichResultWithAbi(record, new Map(), byHash)
   const methods = (enriched as unknown as { data: { methods: Array<{ name?: string; args?: unknown[]; returns?: string }> } }).data.methods
   expect(methods[0]).toMatchObject({ name: 'hello', returns: 'string' })
   expect(methods[0]!.args).toHaveLength(1)

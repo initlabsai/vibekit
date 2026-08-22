@@ -53,6 +53,7 @@ export function useAgentLane({
   setStatus,
   extraTools,
   specCatalog,
+  specHashCatalog,
   onNetworkUsed,
   askConfirm,
 }: {
@@ -70,6 +71,8 @@ export function useAgentLane({
   setStatus: (status: string) => void
   extraTools: readonly AnyTool[]
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
+  /** Local specs by compiled-program hash: proves a spec is an app's without a deploy record. */
+  specHashCatalog: ReadonlyMap<string, NormalizedAppSpec>
   /** The agent queried a network other than the active one. */
   onNetworkUsed: (network: LiveNetworkId, sectionId: number) => void
   /** Modal yes/no before an expensive tool call runs. */
@@ -258,7 +261,7 @@ export function useAgentLane({
                 network: usedNetwork,
               })
               const enriched = withAccountNames(
-                enrichResultWithAbi(record, specCatalog),
+                enrichResultWithAbi(record, specCatalog, specHashCatalog),
                 addressBookRef.current,
               )
               commitStore(addResult(storeRef.current, enriched))

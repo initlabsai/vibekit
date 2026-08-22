@@ -14,7 +14,7 @@ import { readdirSync, readFileSync, type Dirent } from 'node:fs'
 import { join } from 'node:path'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { specCatalog } from '../abi-catalog.js'
+import { specCatalog, specsByProgramHash } from '../abi-catalog.js'
 import type { WorkspaceScreen } from '../chrome.js'
 
 /** A validated app spec file found under the launch directory. */
@@ -207,6 +207,7 @@ export function useApps({
   }, [screen])
 
   const catalog = useMemo(() => specCatalog(deployed, localSpecs), [deployed, localSpecs])
+  const hashCatalog = useMemo(() => specsByProgramHash(localSpecs), [localSpecs])
   const entries = useMemo(
     () =>
       appsEntries(
@@ -325,6 +326,7 @@ export function useApps({
     optedInLoading,
     entries,
     catalog,
+    hashCatalog,
     extraTools,
     selected,
     selectedMethod,
