@@ -42,7 +42,6 @@ export function NfdCard({
         kicker="NFD"
         chip={data.state}
         pill={network.toUpperCase()}
-        tone="idle"
         action={onOpenAccount ? <Button label="account ▸" onPress={onOpenAccount} /> : undefined}
       />
       <box flexDirection="row" marginTop={1} height={3}>

@@ -101,12 +101,6 @@ export function ApplicationProgramCard({
   if (!model) return <Unavailable title="PROGRAM" width={width} />
   const body = innerWidth(width)
   const facts = model.analysis
-  const nameOf = new Map(model.methods.filter((m) => m.name).map((m) => [`0x${m.selector}`, m.name!]))
-  const entrypoints = facts.entrypoints.map((entry) => nameOf.get(entry) ?? entry)
-  const methodsLine =
-    entrypoints.length === 0
-      ? 'none found (bare calls only)'
-      : `${entrypoints.length}${facts.selectors.length > 0 ? ' ABI' : ''} · ${entrypoints.join(', ')}`
   const reads = [
     facts.guards.rekey ? 'RekeyTo' : '',
     facts.guards.closeRemainder ? 'CloseRemainderTo' : '',
@@ -127,7 +121,7 @@ export function ApplicationProgramCard({
   if (model.fromLine > 1) {
     return (
       <Frame width={width}>
-        <Header kicker="PROGRAM" chip={`${model.program} · lines ${model.fromLine}–${model.toLine}`} pill={model.network.toUpperCase()} tone="idle" />
+        <Header kicker="PROGRAM" chip={`${model.program} · lines ${model.fromLine}–${model.toLine}`} pill={model.network.toUpperCase()} />
         <text fg={COLORS.faint} marginTop={1} content={preview.map((line) => shorten(line, body)).join('\n')} />
         {tail ? <FooterNote text={tail} width={body} /> : null}
       </Frame>
@@ -135,7 +129,11 @@ export function ApplicationProgramCard({
   }
   return (
     <Frame width={width}>
-      <Header kicker="PROGRAM" chip={model.program} pill={model.network.toUpperCase()} tone="idle" />
+      <Header
+        kicker="PROGRAM"
+        chip={facts.entrypoints.length === 0 ? `${model.program} · bare calls only` : model.program}
+        pill={model.network.toUpperCase()}
+      />
       <Hero
         value={`#${model.applicationId}`}
         copy={String(model.applicationId)}
@@ -143,7 +141,6 @@ export function ApplicationProgramCard({
       />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact label="entrypoints" value={methodsLine} width={body} />
         {facts.stateKeys.global.length > 0 ? (
           <Fact label="global" value={facts.stateKeys.global.join(', ')} width={body} />
         ) : null}
@@ -200,7 +197,6 @@ export function ApplicationMethodsCard({
         kicker="METHODS"
         chip={`${rows.length} · ${arc4 ? 'ARC-4' : 'string-routed'}`}
         pill={model.network.toUpperCase()}
-        tone="idle"
       />
       <box marginTop={1} flexDirection="column">
         {rows.length === 0 ? (

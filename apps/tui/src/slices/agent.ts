@@ -301,7 +301,7 @@ export function useAgentLane({
                 view === 'application.program' &&
                 program?.fromLine === 1 &&
                 program.program === 'approval' &&
-                (program.analysis?.entrypoints?.length ?? 0) > 0
+                program.analysis?.entrypoints?.length
               ) {
                 appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
               }

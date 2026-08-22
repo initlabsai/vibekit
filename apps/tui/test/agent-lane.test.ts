@@ -347,7 +347,6 @@ test('the methods view derives from a program record', () => {
     teal: '#pragma version 10\nint 1',
     analysis: {
       version: 10,
-      instructions: 1,
       entrypoints: ['0x02bece11', 'bootstrap'],
       selectors: ['02bece11'],
       arc4Returns: true,
@@ -389,8 +388,7 @@ test('a known spec labels program selectors with names and args', () => {
         toLine: 1,
         teal: '#pragma version 11',
         analysis: {
-          instructions: 0,
-          entrypoints: ['0x02bece11', '0x4f92e173'],
+              entrypoints: ['0x02bece11', '0x4f92e173'],
           selectors: ['02bece11', '4f92e173'],
       arc4Returns: true,
           strings: [],

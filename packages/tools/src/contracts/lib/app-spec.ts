@@ -5,6 +5,7 @@
  */
 import { base64ToBytes, ToolError } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
+import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 
 export type AppSpecFormat = 'arc56' | 'arc32' | 'arc4'
@@ -31,7 +32,6 @@ export const appSpecParams = {
 export async function withAppSpecFile<T extends { appSpec?: string; appSpecPath?: string }>(args: T): Promise<T> {
   if (args.appSpec !== undefined || args.appSpecPath === undefined) return args
   try {
-    const { readFile } = await import('node:fs/promises')
     return { ...args, appSpec: await readFile(args.appSpecPath, 'utf8') }
   } catch (error: unknown) {
     throw new ToolError(

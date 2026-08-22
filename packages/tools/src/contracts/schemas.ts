@@ -126,7 +126,6 @@ export const applicationProgramSchema = z.object({
   teal: z.string().describe('Disassembled TEAL, lines fromLine..toLine'),
   analysis: z.object({
     version: z.number().optional(),
-    instructions: z.number(),
     entrypoints: z.array(z.string()).describe('Constants compared against ApplicationArgs 0: ARC-4 selectors as 0x-hex, string method names as text'),
     selectors: z.array(z.string()).describe('The ARC-4 subset of entrypoints, bare hex'),
     arc4Returns: z.boolean().describe('Logs return values behind the ARC-4 prefix 0x151f7c75 (sha512/256("return")[:4])'),

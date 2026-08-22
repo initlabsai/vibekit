@@ -16,8 +16,6 @@ export type OnCompletionAction =
 
 export interface TealAnalysis {
   version?: number
-  /** Instruction lines (labels, pragmas, and blanks excluded). */
-  instructions: number
   /**
    * Constants compared against ApplicationArgs 0: ARC-4 selectors as 0x-hex,
    * string-routed method names as text. The contract's call surface.
@@ -204,10 +202,7 @@ export function analyzeTeal(teal: string): TealAnalysis {
   const keyBefore = (index: number): string | undefined => {
     for (let back = 1; back <= 4 && index - back >= 0; back++) {
       const constants = byteConstants(instructions[index - back]!, bytePool)
-      if (constants.length === 1) {
-        const hex = constants[0]!
-        return hexToText(hex) ?? `0x${hex}`
-      }
+      if (constants.length === 1) return label(constants[0]!)
     }
     return undefined
   }
@@ -222,7 +217,7 @@ export function analyzeTeal(teal: string): TealAnalysis {
     if (isArg0(instructions[index - 1]) && instructions[index + 1]?.op === '==') {
       for (const hex of byteConstants(inst, bytePool)) entrypoints.add(label(hex))
     }
-    // <const>…; txna ApplicationArgs 0; match l0 l1 …   — one per label
+    // <const>…; txna ApplicationArgs 0; match l0 l1 …   — one per label (pushbytess included)
     if (inst.op === 'match' && isArg0(instructions[index - 1])) {
       const count = inst.args.length
       for (let back = 2; back <= count + 1; back++) {
@@ -230,10 +225,6 @@ export function analyzeTeal(teal: string): TealAnalysis {
           entrypoints.add(label(hex))
         }
       }
-    }
-    // pushbytess a b c; txna ApplicationArgs 0; match …   — the whole list
-    if (inst.op === 'match' && isArg0(instructions[index - 1]) && instructions[index - 2]?.op === 'pushbytess') {
-      for (const hex of byteConstants(instructions[index - 2]!, bytePool)) entrypoints.add(label(hex))
     }
     const scope = STATE_OPS[inst.op]
     if (scope) {
@@ -284,7 +275,6 @@ export function analyzeTeal(teal: string): TealAnalysis {
 
   return {
     ...(version !== undefined ? { version } : {}),
-    instructions: instructions.length,
     entrypoints: [...entrypoints],
     selectors,
     arc4Returns,
