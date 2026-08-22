@@ -21,11 +21,51 @@ import {
   transactionTools,
   transactionWriteTools,
 } from "@initlabs/vibekit-tools";
-import type { AnyTool } from "@initlabs/vibekit-core";
+import { createNetworkClients, resolveNetwork, type AnyTool } from "@initlabs/vibekit-core";
+import { estimateProgramTokens } from "@initlabs/vibekit-tools";
+import { readZeroSignalCatalog } from "@initlabs/vibekit-agent";
 import type { ResultStore } from "@initlabs/vibekit-experience";
 import type { ProviderConfig } from "@initlabs/vibekit-agent";
 import type { LiveNetworkId } from "@initlabs/vibekit-experience/live";
 import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
+
+/**
+ * What a get_application_program call will cost, for the confirm modal: one
+ * algod read for the program size, then the page estimate and, on ZeroSignal,
+ * the catalog price of the session's model.
+ */
+export async function programCostLines(
+  applicationId: number | undefined,
+  network: LiveNetworkId,
+  config: { provider: string; model: string },
+): Promise<string[]> {
+  if (applicationId === undefined) return ["The model asked for a program without an application id."];
+  let bytes: number | undefined;
+  try {
+    const { algod } = createNetworkClients(resolveNetwork(network));
+    const app = await algod.getApplicationByID(applicationId).do();
+    bytes = app.params?.approvalProgram?.length;
+  } catch {
+    // Size unknown: the estimate below falls back to a full page.
+  }
+  const lines = [`app ${applicationId} on ${network}`];
+  if (bytes === undefined) {
+    lines.push("program size unknown — a page of TEAL is about 3k tokens");
+    return lines;
+  }
+  const est = estimateProgramTokens(bytes);
+  lines.push(
+    `${bytes.toLocaleString()} bytes of bytecode · ~${est.totalLines.toLocaleString()} lines of TEAL · ${est.pages} page${est.pages === 1 ? "" : "s"}`,
+  );
+  let cost = `~${(est.tokens / 1000).toFixed(1)}k tokens for the first page`;
+  if (config.provider === "zerosignal") {
+    const usd = readZeroSignalCatalog().get(config.model)?.inputUsdPer1M;
+    if (usd !== undefined) cost += ` · ≈ $${((est.tokens / 1e6) * usd).toFixed(4)} on ${config.model.split("/").pop()}`;
+  }
+  lines.push(cost);
+  if (est.pages > 1) lines.push("Further pages cost about the same and won't ask again.");
+  return lines;
+}
 
 /** The network a tool call queried: its explicit `network` arg, else the session default. */
 export function networkOfCall(input: unknown, sessionNetwork: LiveNetworkId): LiveNetworkId {
@@ -113,6 +153,7 @@ export function explorerSystemPrompt(
     "To list one kind of transaction for an account (asset transfers, payments, app calls), call search_account_transactions with txType set (axfer, pay, appl, …); do not fetch everything and filter by hand. Do not look up individual rows afterwards unless asked.",
     "lookup_block is a header: type totals only. To list or filter txns in that round you MUST call search_transactions with minRound and maxRound set to the round; add txType (pay, axfer, appl, …) to filter. That call renders the list card. Never write a transaction table yourself.",
     "Write tools (send_payment, app_call, asset_*, generated app methods) compose an unsigned group. They do not send. Say it is ready for review.",
+    "To analyze, audit, explain, or review a contract ('analyze app N' from the card's button means exactly this), call get_application_program first — no other lookups before it; the user confirms its cost. That call renders the PROGRAM card with the proven facts. Then — the one time you go long — write a thorough summary under it: what the contract does, its entrypoints and who may call them, the state it keeps, which guards are present and which are missing, inner transactions, and anything that smells. Plain prose and short dash lines only: the feed shows raw text, so no markdown tables, headings, or bold. Page with fromLine only when the facts and the first page leave a real question open.",
     `The active network is ${network}; tools default to it. When the user names another network (localnet, testnet, mainnet), pass \`network\` on the call — the Explorer follows you there. Writes always need \`network\`; on testnet or mainnet, confirm the network with the user before composing a write; on localnet, proceed.`,
     "An account's transaction history includes txns that merely reference the address (inner txns, app-call account refs). Check sender/receiver before saying the account did something.",
     "A message may open with 'Cards on screen' — what the user is looking at. 'That'/'this' means the newest card; look it up by its id before answering.",
@@ -131,6 +172,8 @@ export interface ExplorerAgentOptions {
   tools?: AnyTool[];
   /** Readonly tools generated from My Apps specs. */
   extraTools?: readonly AnyTool[];
+  /** Gate for expensive tool calls (a whole program); writes are not gated here — they are compose-only. */
+  approveToolCall?: Parameters<typeof createAgent>[0]["approveToolCall"];
 }
 
 /** Creates the Explorer's agent session (compose-only, signerless). */
@@ -150,6 +193,7 @@ export function createExplorerAgent(
     tools,
     plugins: options.tools ? undefined : [nfd],
     model: options.model,
+    approveToolCall: options.approveToolCall,
     maxSteps: 8,
     systemPrompt: explorerSystemPrompt(promptTools, network, options.addressBook),
   });

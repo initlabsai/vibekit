@@ -17,6 +17,7 @@ export {
   ApplicationListCard,
   ApplicationLocalsCard,
   ApplicationLogsCard,
+  ApplicationProgramCard,
   ApplicationStateCard,
 } from './application.js'
 export { AssetCard, AssetHoldersCard, AssetHoldingsCard, AssetListCard } from './asset.js'

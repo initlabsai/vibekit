@@ -1,4 +1,7 @@
-import type { ApplicationDetailViewModel } from '@initlabs/vibekit-experience'
+import type {
+  ApplicationDetailViewModel,
+  ApplicationProgramViewModel,
+} from '@initlabs/vibekit-experience'
 
 import { COLORS, shorten } from '../theme.js'
 import {
@@ -18,10 +21,13 @@ export function ApplicationCard({
   model,
   width,
   onTransactions,
+  onAnalyze,
 }: {
   model: ApplicationDetailViewModel | undefined
   width: number
   onTransactions?: () => void
+  /** Asks the agent to read and explain the program (cost-confirmed). */
+  onAnalyze?: () => void
 }) {
   if (!model) return <Unavailable title="APPLICATION" width={width} />
   const body = innerWidth(width)
@@ -33,7 +39,12 @@ export function ApplicationCard({
         kicker="APPLICATION"
         pill={model.network.toUpperCase()}
         tone="idle"
-        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
+        action={
+          <>
+            {onAnalyze ? <Button label="analyze ▸" onPress={onAnalyze} /> : null}
+            {onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : null}
+          </>
+        }
       />
       <Hero value={`#${model.applicationId}`} copy={String(model.applicationId)} />
       <box marginTop={1} flexDirection="column">
@@ -68,6 +79,79 @@ export function ApplicationCard({
               />
             ))}
           </>
+        ) : null}
+      </box>
+    </Frame>
+  )
+}
+
+const PROGRAM_PREVIEW_LINES = 10
+
+/** One page of disassembled TEAL with the facts a static pass can prove. */
+export function ApplicationProgramCard({
+  model,
+  width,
+}: {
+  model: ApplicationProgramViewModel | undefined
+  width: number
+}) {
+  if (!model) return <Unavailable title="PROGRAM" width={width} />
+  const body = innerWidth(width)
+  const facts = model.analysis
+  const nameOf = new Map(model.methods.filter((m) => m.name).map((m) => [`0x${m.selector}`, m.name!]))
+  const entrypoints = facts.entrypoints.map((entry) => nameOf.get(entry) ?? entry)
+  const methodsLine =
+    entrypoints.length === 0
+      ? 'none found (bare calls only)'
+      : `${entrypoints.length}${facts.selectors.length > 0 ? ' ABI' : ''} · ${entrypoints.join(', ')}`
+  const mark = (on: boolean) => (on ? '✓' : '✗')
+  const handled = facts.onCompletion.filter((e) => e.outcome === 'handled').map((e) => e.action)
+  const rejected = facts.onCompletion.filter((e) => e.outcome === 'rejected').map((e) => e.action)
+  const onComplete = [
+    handled.length ? `${handled.join(', ')} handled` : '',
+    rejected.length ? `${rejected.join(', ')} rejected` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const preview = model.teal.split('\n').slice(0, PROGRAM_PREVIEW_LINES)
+  const hidden = model.totalLines - model.fromLine + 1 - preview.length
+  return (
+    <Frame width={width}>
+      <Header kicker="PROGRAM" chip={model.program} pill={model.network.toUpperCase()} tone="idle" />
+      <Hero
+        value={`#${model.applicationId}`}
+        copy={String(model.applicationId)}
+        unit={`${facts.version !== undefined ? `v${facts.version} · ` : ''}${model.bytes.toLocaleString()} bytes · ${model.totalLines.toLocaleString()} lines`}
+      />
+      <box marginTop={1} flexDirection="column">
+        <Rule width={body} />
+        <Fact label="entrypoints" value={methodsLine} width={body} />
+        {facts.stateKeys.global.length > 0 ? (
+          <Fact label="global" value={facts.stateKeys.global.join(', ')} width={body} />
+        ) : null}
+        {facts.stateKeys.local.length > 0 ? (
+          <Fact label="local" value={facts.stateKeys.local.join(', ')} width={body} />
+        ) : null}
+        {facts.stateKeys.box.length > 0 ? (
+          <Fact label="boxes" value={facts.stateKeys.box.join(', ')} width={body} />
+        ) : null}
+        <Fact
+          label="guards"
+          value={`rekey ${mark(facts.guards.rekey)}  close-to ${mark(facts.guards.closeRemainder)}  asset-close ${mark(facts.guards.assetClose)}`}
+          width={body}
+        />
+        <Fact label="inner txns" value={String(facts.innerTransactions)} width={body} />
+        {onComplete ? <Fact label="oncomplete" value={onComplete} width={body} /> : null}
+        <Rule width={body} />
+        <text
+          fg={COLORS.faint}
+          content={preview.map((line) => shorten(line, body)).join('\n')}
+        />
+        {hidden > 0 ? (
+          <FooterNote
+            text={`${hidden.toLocaleString()} more lines · the agent read ${model.fromLine}–${model.toLine}`}
+            width={body}
+          />
         ) : null}
       </box>
     </Frame>

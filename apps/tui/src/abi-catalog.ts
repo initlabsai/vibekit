@@ -5,6 +5,7 @@
 import type { StructuredResult } from '@initlabs/vibekit-experience'
 import {
   enrichTransactionsWithAbi,
+  labelSelectors,
   type NormalizedAppSpec,
 } from '@initlabs/vibekit-tools'
 
@@ -25,6 +26,12 @@ export function specCatalog(
   return catalog
 }
 
+type ProgramData = {
+  applicationId?: number
+  analysis?: { selectors: string[] }
+  methods?: Array<{ selector: string; name?: string; signature?: string }>
+}
+
 type AppCallData = {
   applicationId?: number
   applicationArgs?: string[]
@@ -42,6 +49,12 @@ export function enrichResultWithAbi(
   catalog: ReadonlyMap<number, NormalizedAppSpec>,
 ): StructuredResult {
   if (record.state !== 'success' || catalog.size === 0) return record
+  if (record.toolName === 'get_application_program') {
+    const program = record.data as ProgramData
+    const spec = program.applicationId !== undefined ? catalog.get(program.applicationId) : undefined
+    if (spec && program.analysis) program.methods = labelSelectors(program.analysis.selectors, spec.methods)
+    return record
+  }
   const data = record.data as AppCallData
   if (Array.isArray(data.transactions)) {
     enrichTransactionsWithAbi(data.transactions, catalog)

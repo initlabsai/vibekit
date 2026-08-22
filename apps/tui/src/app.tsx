@@ -9,7 +9,7 @@ import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useRef, useState } from 'react'
 
-import { ApprovalModal } from './approval-modal.js'
+import { ApprovalModal, ConfirmModal } from './approval-modal.js'
 import { AppsScreen, BlocksScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
@@ -49,6 +49,12 @@ export function App() {
   const [agentBusy, setAgentBusy] = useState(false)
   const [status, setStatus] = useState('')
   const [inputEpoch, setInputEpoch] = useState(0)
+  const [confirm, setConfirm] = useState<{ title: string; lines: string[]; resolve: (ok: boolean) => void } | null>(null)
+  const askConfirm = useCallback(
+    (title: string, lines: string[]) =>
+      new Promise<boolean>((resolve) => setConfirm({ title, lines, resolve })),
+    [],
+  )
   const [, setInput] = useState('')
 
   // The renderer blurs the focused input on any click; these let the app
@@ -164,7 +170,20 @@ export function App() {
     setBusy,
     setStatus,
   })
-  const { flow, flowRef, startPayment, decide, isFlowSection, modalOpen, modalModel } = payment
+  const { flow, flowRef, startPayment, decide: decidePayment, isFlowSection, modalOpen: paymentModalOpen, modalModel } = payment
+  // One modal at a time: the payment approval or an expensive-call confirm.
+  const modalOpen = paymentModalOpen || confirm !== null
+  const decide = useCallback(
+    (decision: 'approve' | 'deny') => {
+      if (confirm) {
+        confirm.resolve(decision === 'approve')
+        setConfirm(null)
+        return
+      }
+      decidePayment(decision)
+    },
+    [confirm, decidePayment],
+  )
 
   const tail = useBlockTail({
     live,
@@ -193,6 +212,7 @@ export function App() {
     extraTools: apps.extraTools,
     specCatalog: apps.catalog,
     onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
+    askConfirm,
   })
   const { agentConfig, runAgent, agentSectionRef, reset: resetAgent } = agent
 
@@ -237,6 +257,11 @@ export function App() {
         case 'application':
           openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
           return
+        case 'program': {
+          const prompt = `analyze app ${target.applicationId}`
+          runAgent(createSection(prompt), prompt)
+          return
+        }
         case 'block':
           openBlock(createSection(`block ${target.round}`), target.round)
           return
@@ -253,7 +278,7 @@ export function App() {
         }
       }
     },
-    [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, setScreen],
+    [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, runAgent, setScreen],
   )
 
   // Keyboard path for table rows: the newest transaction list in the selected section.
@@ -591,8 +616,17 @@ export function App() {
           onSubmit={submit}
         />
       ) : null}
-      {modalOpen ? (
+      {paymentModalOpen ? (
         <ApprovalModal model={modalModel} network={network} screenWidth={width} screenHeight={height} />
+      ) : null}
+      {confirm ? (
+        <ConfirmModal
+          title={`AGENT ▸ ${network.toUpperCase()}`}
+          kicker={confirm.title}
+          lines={confirm.lines}
+          screenWidth={width}
+          screenHeight={height}
+        />
       ) : null}
     </box>
     </CopyContext.Provider>

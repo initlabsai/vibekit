@@ -10,6 +10,7 @@ import {
   createApplicationListViewModel,
   createApplicationLocalsViewModel,
   createApplicationLogsViewModel,
+  createApplicationProgramViewModel,
   createApplicationStateViewModel,
   createAssetDetailViewModel,
   createAssetHoldersViewModel,
@@ -36,6 +37,7 @@ import {
   ApplicationListCard,
   ApplicationLocalsCard,
   ApplicationLogsCard,
+  ApplicationProgramCard,
   ApplicationStateCard,
   AssetCard,
   AssetHoldersCard,
@@ -62,6 +64,8 @@ export type OpenTarget =
   | { kind: 'account'; address: string }
   | { kind: 'asset'; assetId: number }
   | { kind: 'application'; applicationId: number }
+  /** Ask the agent to read and explain an application's program. */
+  | { kind: 'program'; applicationId: number }
   | { kind: 'block'; round: number }
   | { kind: 'transactions'; filter: TransactionSearchFilter }
 
@@ -153,6 +157,11 @@ export function ResultView({
                     kind: 'transactions',
                     filter: { applicationId: Number(derived.model.applicationId) },
                   })
+              : undefined
+          }
+          onAnalyze={
+            onOpen && derived.ok
+              ? () => onOpen({ kind: 'program', applicationId: Number(derived.model.applicationId) })
               : undefined
           }
         />
@@ -327,6 +336,10 @@ export function ResultView({
           width={width}
         />
       )
+    }
+    case 'application.program': {
+      const derived = createApplicationProgramViewModel(store, view)
+      return <ApplicationProgramCard model={derived.ok ? derived.model : undefined} width={width} />
     }
     case 'application.logs': {
       const derived = createApplicationLogsViewModel(store, view)

@@ -22,6 +22,7 @@ import {
   createExplorerAgent,
   explorerContext,
   networkOfCall,
+  programCostLines,
   runAgentTurn,
 } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
@@ -53,6 +54,7 @@ export function useAgentLane({
   extraTools,
   specCatalog,
   onNetworkUsed,
+  askConfirm,
 }: {
   feed: Feed
   payment: PaymentLane
@@ -70,6 +72,8 @@ export function useAgentLane({
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
   /** The agent queried a network other than the active one. */
   onNetworkUsed: (network: LiveNetworkId, sectionId: number) => void
+  /** Modal yes/no before an expensive tool call runs. */
+  askConfirm: (title: string, lines: string[]) => Promise<boolean>
 }) {
   const {
     appendBlock,
@@ -86,6 +90,8 @@ export function useAgentLane({
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
   const agentHasCardsRef = useRef(false)
   const agentRef = useRef<AgentSession | null>(null)
+  /** Programs the user already agreed to pay for; further pages don't ask again. */
+  const approvedProgramsRef = useRef(new Set<string>())
   /** The session's default network, fixed at creation. */
   const sessionNetworkRef = useRef<LiveNetworkId>(networkRef.current)
 
@@ -177,6 +183,17 @@ export function useAgentLane({
             addressBook,
             network: networkRef.current,
             extraTools,
+            approveToolCall: async ({ toolName, input }) => {
+              if (toolName !== 'get_application_program') return true
+              const { applicationId, network } = (input ?? {}) as { applicationId?: number; network?: string }
+              const target = networkOfCall({ network }, sessionNetworkRef.current)
+              const key = `${target}:${applicationId}`
+              if (approvedProgramsRef.current.has(key)) return true
+              const lines = await programCostLines(applicationId, target, agentConfig)
+              const approved = await askConfirm('ANALYZE THIS CONTRACT?', lines)
+              if (approved) approvedProgramsRef.current.add(key)
+              return approved
+            },
           })
         }
         const context = [

@@ -6,6 +6,54 @@ import { computeGraphLayout } from './cards/transaction-graph-layout.js'
 import { COLORS } from './theme.js'
 import { Header } from './ui.js'
 
+/** A yes/no gate with a few lines of context — the cost of an expensive tool call. */
+export function ConfirmModal({
+  title,
+  kicker,
+  lines,
+  screenWidth,
+  screenHeight,
+}: {
+  title: string
+  kicker: string
+  lines: string[]
+  screenWidth: number
+  screenHeight: number
+}) {
+  const width = Math.min(72, Math.max(44, screenWidth - 6))
+  const height = Math.min(screenHeight - 2, 5 + lines.length)
+  const left = Math.max(0, Math.floor((screenWidth - width) / 2))
+  const top = Math.max(0, Math.floor((screenHeight - height) / 2))
+  return (
+    <box
+      position="absolute"
+      left={left}
+      top={top}
+      width={width}
+      zIndex={100}
+      flexDirection="column"
+      border
+      borderStyle="double"
+      borderColor={COLORS.brass}
+      title={` ${title} `}
+      titleColor={COLORS.brassBright}
+      bottomTitle=" [enter] run · [esc] skip "
+      bottomTitleAlignment="right"
+      titleAlignment="left"
+      backgroundColor={COLORS.panelRaised}
+      paddingX={2}
+      paddingY={0}
+    >
+      <Header kicker={kicker} pill="COSTS TOKENS" tone="warn" />
+      <box flexDirection="column" marginTop={1}>
+        {lines.map((line, index) => (
+          <text key={index} fg={index === 0 ? COLORS.text : COLORS.muted} content={line} />
+        ))}
+      </box>
+    </box>
+  )
+}
+
 /**
  * The write decision as a true modal: centered over the app, it owns all
  * input until answered. The graph and facts come from the decoded draft
