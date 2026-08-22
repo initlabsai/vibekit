@@ -1,6 +1,7 @@
+import { wrapLines } from '../theme.js'
 import { formatMicroAlgos } from '@initlabs/vibekit-experience'
 
-import { Card } from '../ui.js'
+import { Card, innerWidth } from '../ui.js'
 
 export function algo(value: number | string | undefined): string | undefined {
   if (value === undefined) return undefined
@@ -23,7 +24,8 @@ export function RawCard({
   text: string
   width: number
 }) {
-  const lines = text.split('\n')
+  // Wrap rather than shorten: the tail of an error message is the useful part.
+  const lines = text.split('\n').flatMap((line) => wrapLines(line, innerWidth(width)))
   const shown = lines.slice(0, 14)
   if (lines.length > 14) shown.push(`… ${lines.length - 14} more lines`)
   return (
