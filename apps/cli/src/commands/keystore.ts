@@ -10,8 +10,9 @@ import algosdk from 'algosdk'
 import pc from 'picocolors'
 import { homedir } from 'os'
 import { join } from 'path'
-import { existsSync, readFileSync } from 'fs'
+import { closeSync, existsSync, openSync, readFileSync } from 'fs'
 import { mkdir } from 'fs/promises'
+import { spawn } from 'node:child_process'
 
 /** The one place the keystore-node version lives; bump with a tested release. */
 export const KEYSTORE_NODE_VERSION = '1.0.0-canary.3'
@@ -84,9 +85,74 @@ async function connectSigner(): Promise<
 
 const DAEMON_HINT = `The keystore daemon is not running. Start it first: ${pc.cyan('vibekit keystore serve')}`
 
+/** Where a daemon started by vibekit writes its output. */
+export function keystoreLogPath(): string {
+  return join(keystoreDataDir(), '..', 'keystore.log')
+}
+
+/** True when the daemon answers on its socket. */
+export async function keystoreDaemonUp(): Promise<boolean> {
+  const signer = await connectSigner()
+  if (!signer) return false
+  await signer.close()
+  return true
+}
+
+/**
+ * Starts the keystore daemon in the background when it is not running, so
+ * nobody has to keep a terminal open for it. The child is detached with its
+ * output in keystoreLogPath(); it outlives this process and the terminal.
+ * Returns whether the daemon is up. Never throws: a failure here degrades
+ * the Explorer to sample accounts, it does not block it.
+ */
+export async function ensureKeystoreDaemon(
+  options: {
+    quiet?: boolean
+    probe?: () => Promise<boolean>
+    start?: () => Promise<number | undefined>
+    waitMs?: number
+  } = {},
+): Promise<boolean> {
+  const probe = options.probe ?? keystoreDaemonUp
+  if (await probe()) return true
+  const start =
+    options.start ??
+    (async () => {
+      const bin = await provisionKeystoreCli(options.quiet)
+      const log = keystoreLogPath()
+      await mkdir(join(log, '..'), { recursive: true })
+      const fd = openSync(log, 'a')
+      const child = spawn(bin, ['serve'], { detached: true, stdio: ['ignore', fd, fd] })
+      child.unref()
+      closeSync(fd)
+      return child.pid
+    })
+  let pid: number | undefined
+  try {
+    pid = await start()
+  } catch (error) {
+    if (!options.quiet) {
+      console.error(pc.yellow(`keystore: ${error instanceof Error ? error.message : String(error)}`))
+    }
+    return false
+  }
+  const deadline = Date.now() + (options.waitMs ?? 5000)
+  while (Date.now() < deadline) {
+    await Bun.sleep(200)
+    if (await probe()) {
+      if (!options.quiet) {
+        console.error(pc.dim(`keystore daemon started${pid ? ` (pid ${pid})` : ''} · log ${keystoreLogPath()}`))
+      }
+      return true
+    }
+  }
+  if (!options.quiet) console.error(pc.yellow(`keystore daemon did not answer in time — see ${keystoreLogPath()}`))
+  return false
+}
+
 /** `vibekit keystore accounts [--json]` — addresses with names and key ids, via the daemon. */
 async function keystoreAccounts(args: string[]): Promise<void> {
-  const signer = await connectSigner()
+  const signer = (await ensureKeystoreDaemon()) ? await connectSigner() : undefined
   if (!signer) {
     console.error(pc.red(DAEMON_HINT))
     process.exit(1)
@@ -122,7 +188,7 @@ async function keystoreRemove(args: string[]): Promise<void> {
     process.exit(1)
   }
 
-  const signer = await connectSigner()
+  const signer = (await ensureKeystoreDaemon()) ? await connectSigner() : undefined
   if (signer) {
     try {
       const accounts = await signer.listAccounts()

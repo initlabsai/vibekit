@@ -54,6 +54,41 @@ function bunCommand(): string {
   return 'bun'
 }
 
+/**
+ * Brings up what the Explorer leans on — the keystore daemon, and zs-proxy
+ * when the agent is ZeroSignal — so nobody keeps terminals open for them.
+ * Best effort: anything that cannot start is reported once and the TUI
+ * still launches (sample accounts / no agent).
+ */
+async function ensureDaemons(): Promise<void> {
+  const { ensureKeystoreDaemon } = await import('./keystore.js')
+  await ensureKeystoreDaemon()
+
+  const { loadStoredAgentConfig, probeZeroSignal, zeroSignalBaseUrl, zeroSignalSetupHint } =
+    await import('@initlabs/vibekit-agent/config')
+  const stored = loadStoredAgentConfig()
+  const provider = process.env.VIBEKIT_AGENT_PROVIDER ?? stored?.provider
+  if (provider !== 'zerosignal') return
+  const baseUrl = process.env.VIBEKIT_AGENT_BASE_URL ?? stored?.baseUrl
+  if (await probeZeroSignal(baseUrl)) return
+  const bin = Bun.which('zs-proxy')
+  if (!bin) {
+    console.error(pc.dim(zeroSignalSetupHint(baseUrl)))
+    return
+  }
+  // `proxy start` daemonizes itself and returns; its first run may prompt,
+  // so it keeps the terminal.
+  console.error(pc.dim('starting zs-proxy…'))
+  await Bun.spawn([bin, 'proxy', 'start'], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }).exited
+  const deadline = Date.now() + 5000
+  while (Date.now() < deadline) {
+    await Bun.sleep(200)
+    // Re-resolve: a freshly started proxy may have written a new address.
+    if (await probeZeroSignal(baseUrl ?? zeroSignalBaseUrl())) return
+  }
+  console.error(pc.yellow(`zs-proxy did not answer at ${baseUrl ?? zeroSignalBaseUrl()} in time.`))
+}
+
 /** Spawns the Explorer TUI and waits until it exits. */
 export async function commandExplore(args: string[]): Promise<void> {
   if (args[0] === 'setup') {
@@ -61,6 +96,7 @@ export async function commandExplore(args: string[]): Promise<void> {
     await commandExploreSetup(args.slice(1))
     return
   }
+  if (!args.includes('--no-daemons')) await ensureDaemons()
   const entry = resolveExploreEntry()
   if (!entry) {
     console.error(`Could not find the Explorer TUI.
