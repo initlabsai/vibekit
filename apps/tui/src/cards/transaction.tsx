@@ -271,6 +271,12 @@ export function TransactionListCard({
   const body = innerWidth(width)
   const rows = transactions.slice(0, 10)
   const filter = query ? queryLabel(query) : undefined
+  // The indexer's type filter also matches inner txns and returns the root,
+  // so a row of another type is an app call that matched through its inners.
+  const innerType = query?.txType
+  const viaInner = innerType
+    ? transactions.filter((row) => row.type !== undefined && row.type !== innerType).length
+    : 0
   return (
     <Frame width={width}>
       <Header kicker={title} chip={filter} pill={String(transactions.length)} tone="idle" />
@@ -290,7 +296,13 @@ export function TransactionListCard({
             <box key={row.id ?? `${row.sender}-${index}`} flexDirection="column" marginTop={1}>
               <box flexDirection="row" height={1} justifyContent="space-between">
                 <box flexDirection="row">
-                  <Chip label={formatBlockTxnType(row.type ?? 'txn')} />
+                  <Chip
+                    label={
+                      innerType && row.type !== undefined && row.type !== innerType
+                        ? `${formatBlockTxnType(row.type)} · inner ${formatBlockTxnType(innerType)}`
+                        : formatBlockTxnType(row.type ?? 'txn')
+                    }
+                  />
                   {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
                 </box>
                 {onOpen && row.id ? (
@@ -336,6 +348,12 @@ export function TransactionListCard({
             </box>
           )
         })}
+        {viaInner > 0 && innerType ? (
+          <FooterNote
+            text={`${viaInner} app call${viaInner === 1 ? '' : 's'} matched through inner ${formatBlockTxnType(innerType)} txns`}
+            width={body}
+          />
+        ) : null}
         {pageNotes(transactions.length, rows.length, nextToken).map((note) => (
           <FooterNote key={note} text={note} width={body} />
         ))}
