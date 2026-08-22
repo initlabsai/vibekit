@@ -250,6 +250,8 @@ export function analyzeTeal(teal: string): TealAnalysis {
         if (branch.op === 'bnz') onCompletion.set(action, outcomeAt(branch.args[0] ?? ''))
         else if (branch.op === 'bz' || branch.op === 'assert') onCompletion.set(action, 'handled')
       }
+      // txn OnCompletion; !; assert   — NoOp only (PuyaPy's form)
+      if (next?.op === '!' && after?.op === 'assert') onCompletion.set('NoOp', 'handled')
       // <ints…>; txn OnCompletion; match l0 l1 … / txn OnCompletion; switch l0 l1 …
       if (next?.op === 'switch') {
         next.args.forEach((label, i) => {

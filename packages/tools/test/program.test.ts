@@ -3,11 +3,15 @@ import { readFileSync } from 'node:fs'
 import { ToolError } from '@initlabs/vibekit-core'
 
 import { getApplicationProgram } from '../src/contracts/handlers/program.js'
+import { normalizeAppSpec } from '../src/contracts/lib/app-spec.js'
 import { analyzeTeal, labelSelectors } from '../src/contracts/lib/teal.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 /** Tinyman AMM v2 approval program (mainnet app 1002541853), disassembled by algod. */
 const TINYMAN = readFileSync(new URL('./fixtures/tinyman-amm-approval.teal', import.meta.url), 'utf8')
+/** AlgoKit HelloWorld (PuyaPy 5.10): the ARC-56 byteCode, disassembled by algod. */
+const HELLO = readFileSync(new URL('./fixtures/hello-world-approval.teal', import.meta.url), 'utf8')
+const HELLO_SPEC = readFileSync(new URL('./fixtures/hello-world.arc56.json', import.meta.url), 'utf8')
 
 describe('analyzeTeal', () => {
   test('reads the facts out of a real disassembled program', () => {
@@ -28,6 +32,21 @@ describe('analyzeTeal', () => {
     expect(byAction.OptIn).toBe('handled')
     expect(byAction.UpdateApplication).toBe('rejected')
     expect(byAction.DeleteApplication).toBe('rejected')
+  })
+
+  test('reads a PuyaPy ARC-4 router: pushbytess + match, NoOp-only OnCompletion, spec names', () => {
+    const facts = analyzeTeal(HELLO)
+    expect(facts.version).toBe(11)
+    expect(facts.entrypoints).toEqual(['0x02bece11', '0x72e3a928', '0x4f92e173'])
+    expect(facts.onCompletion).toEqual([{ action: 'NoOp', outcome: 'handled' }])
+    expect(facts.stateKeys.box).toEqual(['msg'])
+    const spec = normalizeAppSpec(HELLO_SPEC)
+    const labelled = labelSelectors(facts.selectors, spec.methods)
+    expect(labelled.map((m) => m.signature)).toEqual([
+      'hello(string)string',
+      'storeMessage(string,string)void',
+      'getMessage(string)string',
+    ])
   })
 
   test('finds ARC-4 selectors from pushbytes, bytecblock refs, and method pseudo-ops', () => {
