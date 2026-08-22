@@ -81,16 +81,18 @@ export function TopBar({
           <text fg={COLORS.faint}>VIBEKIT </text>
           <text fg={COLORS.brassBright}>EXPLORER</text>
         </box>
-        <box flexDirection="row" gap={1}>
-          <text fg={COLORS.faint}>{modeLabel}</text>
+        <box flexDirection="row" gap={3}>
+          <box flexDirection="row" gap={1}>
+            <text fg={COLORS.faint}>{modeLabel}</text>
+            {latestRound === undefined ? null : <RoundTick round={latestRound} />}
+          </box>
           <box paddingX={1} backgroundColor={networkColors[network]} onMouseDown={onSwitchNetwork}>
             <text fg={COLORS.ink}>{`${network.toUpperCase()} ^n`}</text>
           </box>
-          {latestRound === undefined ? null : <RoundTick round={latestRound} />}
         </box>
       </box>
       <box flexDirection="row" justifyContent="space-between" height={1}>
-        <box flexDirection="row" gap={1}>
+        <box flexDirection="row" gap={2}>
           <Button label="explore esc" active={screen === 'chat'} onPress={onOpenChat} />
           {SHELF.map((item) => (
             <Button
