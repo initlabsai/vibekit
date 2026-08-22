@@ -424,27 +424,27 @@ export function App() {
         ? 'Ask anything, or: ^w wallet · pay 0.5 to <label> · paste an ID or name.algo'
         : '^w wallet · ^1 assets · pay 0.5 to <label> · paste an ID or name.algo'
 
+  // One grammar everywhere: `key verb`, dots between, no brackets; drawn in
+  // the active pane's bottom frame line. Global keys live in the masthead.
   const keybar = modalOpen
     ? 'enter approve · esc deny'
     : screen === 'wallet'
-      ? '1-9 active account · esc chat · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
+      ? '1-9 select · esc explore'
       : screen === 'apps'
         ? apps.selectedMethod
           ? 'enter simulate · esc methods'
           : apps.selected
-            ? '1-9 method · esc apps · ^w wallet'
-            : '1-9 open · [ ] cycle · esc chat · ^w wallet · ^1 assets · ^3 txns'
+            ? '1-9 method · esc apps'
+            : '1-9 open · ←/→ account · esc explore'
       : screen === 'blocks'
-        ? tail.running
-          ? 'space stop · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
-          : 'space start · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
+        ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
       : screen === 'assets' || screen === 'txns'
-        ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
+        ? '←/→ account · esc explore'
         : focus === 'content'
-          ? '↑/↓ scroll · ←/→ sections · 1-9 open row · x close · tab/esc chat'
+          ? '↑/↓ scroll · ←/→ sections · 1-9 open row · x close · tab/esc composer'
           : sections.length > 0
-            ? `enter send · tab feed (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
-            : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
+            ? `enter send · tab feed (${sections.length}) · ^n network · ctrl+c quit`
+            : 'enter send · drag copies · ^n network · ctrl+c quit'
 
   return (
     <CopyContext.Provider value={copyIdent}>
@@ -481,6 +481,7 @@ export function App() {
           activeSender={activeSender}
           width={width}
           onSelect={setActiveSender}
+          keys={keybar}
         />
       ) : screen === 'apps' ? (
         <AppsScreen
@@ -501,6 +502,7 @@ export function App() {
           onInput={apps.setCallInput}
           onSubmit={apps.submitCall}
           inputRef={methodInputRef}
+          keys={keybar}
         />
       ) : screen === 'blocks' ? (
         <BlocksScreen
@@ -515,6 +517,7 @@ export function App() {
           width={width}
           onToggle={tail.togglePause}
           onOpen={openTarget}
+          keys={keybar}
         />
       ) : screen === 'assets' || screen === 'txns' ? (
         <ShelfScreen
@@ -530,6 +533,7 @@ export function App() {
           onOpen={openTarget}
           onMore={accounts.loadMoreShelf}
           loadingMore={accounts.shelfLoadingMore}
+          keys={keybar}
         />
       ) : (
         <box flexGrow={1} flexDirection="row">

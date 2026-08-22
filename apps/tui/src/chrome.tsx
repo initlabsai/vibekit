@@ -123,7 +123,10 @@ export function WalletScreen({
   activeSender,
   width,
   onSelect,
+  keys,
 }: {
+  /** Key hints for this screen, drawn in the bottom frame line. */
+  keys: string
   accounts: ReadonlyArray<{ address: string; name?: string }>
   loading: boolean
   signerReady: boolean
@@ -145,7 +148,9 @@ export function WalletScreen({
       borderColor={COLORS.brass}
       title={` WALLET · ${signerReady ? 'keystore' : 'sample'} `}
       titleColor={COLORS.brassBright}
-      backgroundColor={COLORS.panel}
+      bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
+      bottomTitleAlignment="right"
+      backgroundColor={COLORS.background}
     >
       <text
         fg={COLORS.muted}
@@ -190,11 +195,6 @@ export function WalletScreen({
           )
         })
       )}
-      <text
-        fg={COLORS.faint}
-        marginTop={1}
-        content="[1-9] set active · [esc] chat · assets ^1 · apps ^2 · txns ^3 · blocks ^4"
-      />
     </box>
   )
 }
@@ -290,12 +290,10 @@ function MethodCallPane({
           {callResult !== null ? (
             <text fg={COLORS.text} marginTop={1} content={formatCallResult(callResult)} />
           ) : null}
-          <text fg={COLORS.faint} marginTop={1} content="[enter] simulate · [esc] methods" />
         </>
       ) : (
         <>
           <text fg={COLORS.muted} marginTop={1} content="Write methods wait for the approval-flow drop." />
-          <text fg={COLORS.faint} marginTop={1} content="[esc] methods" />
         </>
       )}
     </box>
@@ -389,11 +387,6 @@ function SpecDetailPane({
           ))
         )}
       </scrollbox>
-      <text
-        fg={COLORS.faint}
-        marginTop={1}
-        content="[1-9] method · [esc] apps · read methods simulate"
-      />
     </box>
   )
 }
@@ -431,7 +424,10 @@ export function AppsScreen({
   onInput,
   onSubmit,
   inputRef,
+  keys,
 }: {
+  /** Key hints for this screen, drawn in the bottom frame line. */
+  keys: string
   network: string
   entries: ReadonlyArray<AppsEntry>
   selected: SpecSelection | null
@@ -465,7 +461,9 @@ export function AppsScreen({
       borderColor={COLORS.brass}
       title={` MY APPS · ${network} `}
       titleColor={COLORS.brassBright}
-      backgroundColor={COLORS.panel}
+      bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
+      bottomTitleAlignment="right"
+      backgroundColor={COLORS.background}
     >
       {selected ? (
         <SpecDetailPane
@@ -532,11 +530,6 @@ export function AppsScreen({
               ))
             )}
           </scrollbox>
-          <text
-            fg={COLORS.faint}
-            marginTop={1}
-            content="[1-9] open · [ ] cycle · [esc] chat · ^w wallet · ^1 assets · ^3 txns"
-          />
         </>
       )}
     </box>
@@ -557,7 +550,10 @@ export function ShelfScreen({
   onOpen,
   onMore,
   loadingMore,
+  keys,
 }: {
+  /** Key hints for this screen, drawn in the bottom frame line. */
+  keys: string
   title: string
   accountName?: string
   address?: string
@@ -583,7 +579,9 @@ export function ShelfScreen({
       borderColor={COLORS.brass}
       title={` ${title} · ${owner} `}
       titleColor={COLORS.brassBright}
-      backgroundColor={COLORS.panel}
+      bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
+      bottomTitleAlignment="right"
+      backgroundColor={COLORS.background}
     >
       {address ? <Ident value={address} width={inner} /> : null}
       {loading ? (
@@ -606,7 +604,6 @@ export function ShelfScreen({
       ) : (
         <text fg={COLORS.faint} marginTop={1} content={empty} />
       )}
-      <text fg={COLORS.faint} marginTop={1} content="[esc] chat · ^w wallet · [ ] cycle account" />
     </box>
   )
 }
@@ -624,7 +621,10 @@ export function BlocksScreen({
   width,
   onToggle,
   onOpen,
+  keys,
 }: {
+  /** Key hints for this screen, drawn in the bottom frame line. */
+  keys: string
   network: string
   live: 'probing' | boolean
   running: boolean
@@ -658,7 +658,9 @@ export function BlocksScreen({
       borderColor={running ? COLORS.brass : COLORS.border}
       title={` BLOCKS · ${pill} · ${network}${latestRound === undefined ? '' : ` · ${latestRound}`} `}
       titleColor={running ? COLORS.green : COLORS.brassBright}
-      backgroundColor={COLORS.panel}
+      bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
+      bottomTitleAlignment="right"
+      backgroundColor={COLORS.background}
     >
       {live === true ? (
         <box flexDirection="row" height={1}>
@@ -695,11 +697,6 @@ export function BlocksScreen({
             .reverse()}
         </scrollbox>
       )}
-      <text
-        fg={COLORS.faint}
-        marginTop={1}
-        content={running ? '[space] stop · [esc] chat' : '[space] start · [esc] chat'}
-      />
     </box>
   )
 }

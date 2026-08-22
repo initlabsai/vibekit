@@ -149,7 +149,7 @@ describe('TUI tmux journeys', () => {
       expect(pane).toContain('Opted in')
       expect(pane).toContain('Local specs')
       expect(pane).toMatch(/app \d+|No opted-in apps/)
-      expect(pane).toMatch(/\[ \] cycle/)
+      expect(pane).toMatch(/←\/→ account/)
     },
     { timeout: 20_000 },
   )
@@ -168,7 +168,7 @@ describe('TUI tmux journeys', () => {
       session.type('txns')
       session.send('Enter')
       const txns = await session.waitFor('TRANSACTIONS')
-      expect(txns).toMatch(/TRANSACTIONS[\s\S]*\[esc\] chat|TRANSACTION LIST|No transactions/)
+      expect(txns).toMatch(/TRANSACTIONS[\s\S]*esc explore|TRANSACTION LIST|No transactions/)
     },
     { timeout: 20_000 },
   )
