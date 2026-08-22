@@ -142,6 +142,8 @@ export function useAgentLane({
       patchSection(sectionId, { thinking: '', thinkingOpen: false })
       const agentNoteItem = { current: null as number | null }
       let spoke = false
+      // A tool result between two thoughts: the next thought starts a paragraph.
+      let thoughtBreak = false
       const appendAgentText = (delta: string) => {
         spoke = true
         if (agentNoteItem.current === null) {
@@ -198,7 +200,7 @@ export function useAgentLane({
         }
         const context = [
           activeSenderLine(activeSender, addressBookRef.current),
-          explorerContext(storeRef.current),
+          explorerContext(storeRef.current, 3, networkRef.current),
         ]
           .filter(Boolean)
           .join('\n')
@@ -208,7 +210,8 @@ export function useAgentLane({
             const section = sectionsRef.current.find((entry) => entry.id === sectionId)
             const current = section?.thinking ?? ''
             if (current.length >= 64_000) return
-            const next = current + delta
+            const next = current + (thoughtBreak && current.length > 0 ? '\n\n' : '') + delta
+            thoughtBreak = false
             patchSection(sectionId, {
               thinking: next.length > 64_000 ? next.slice(0, 64_000) : next,
             })
@@ -216,6 +219,7 @@ export function useAgentLane({
           onToolCall: (toolName) => setStatus(`agent → ${toolName}…`),
           onToolResult: (event) => {
             spoke = true
+            thoughtBreak = true
             agentNoteItem.current = null
             const usedNetwork = networkOfCall(event.input, sessionNetworkRef.current)
             if (usedNetwork !== networkRef.current) onNetworkUsed(usedNetwork, sectionId)
@@ -287,8 +291,15 @@ export function useAgentLane({
                 view: viewFor(record, view),
               })
               // The program's first page also carries its call surface.
-              const page = record.state === 'success' ? (record.data as { fromLine?: number }).fromLine : undefined
-              if (view === 'application.program' && page === 1) {
+              const program = record.state === 'success'
+                ? (record.data as { fromLine?: number; program?: string; analysis?: { entrypoints?: string[] } })
+                : undefined
+              if (
+                view === 'application.program' &&
+                program?.fromLine === 1 &&
+                program.program === 'approval' &&
+                (program.analysis?.entrypoints?.length ?? 0) > 0
+              ) {
                 appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
               }
             } catch (error: unknown) {

@@ -108,8 +108,11 @@ function describeRecord(data: unknown): string {
  * model. Cards from the deterministic lane never enter the agent session
  * otherwise. Oldest first; the newest card is "this one".
  */
-export function explorerContext(store: ResultStore, limit = 3): string {
+export function explorerContext(store: ResultStore, limit = 3, network?: string): string {
   const lines = store
+    // Cards from another network (sample data, above all) would send the model
+    // looking for ids that do not exist where it is.
+    .filter((record) => network === undefined || record.network === network)
     .filter((record) => record.state === "success")
     .slice(-limit)
     .map((record) => `- ${record.toolName}: ${describeRecord(record.data)}`);
