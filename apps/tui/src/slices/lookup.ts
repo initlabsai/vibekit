@@ -1,4 +1,6 @@
 import {
+  mergeTransactionPages,
+  nextPageFilter,
   type TransactionSearchFilter,
   addResult,
   createAccountListViewModel,
@@ -30,6 +32,31 @@ import type { ExplorerHost } from './network.js'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 
 /** Wraps a stored record in a trusted view spec. */
+/**
+ * Fetches the page after `view`'s record and returns a view over the merged
+ * record (first page + next), or undefined when there is no next page.
+ */
+export async function loadNextPage(args: {
+  host: ExplorerHost
+  storeRef: { current: ResultStore }
+  commitStore: (next: ResultStore) => void
+  network: string
+  view: ViewSpec
+}): Promise<ViewSpec | undefined> {
+  const current = args.storeRef.current.find((record) => record.resultId === args.view.source.id)
+  if (!current) return undefined
+  const filter = nextPageFilter(current)
+  if (!filter) return undefined
+  const page = await args.host.searchTransactions(filter)
+  const merged = mergeTransactionPages(current, page, {
+    resultId: `result-page-${crypto.randomUUID()}`,
+    toolCallId: `tool-call-page-${crypto.randomUUID()}`,
+    network: args.network,
+  })
+  args.commitStore(addResult(args.storeRef.current, merged))
+  return viewFor(merged, args.view.view)
+}
+
 export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
   return {
     protocolVersion: EXPERIENCE_PROTOCOL_VERSION,

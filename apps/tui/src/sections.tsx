@@ -229,6 +229,8 @@ export function ContentPane({
   onToggleThinking,
   onOpen,
   onClose,
+  onMore,
+  loadingMoreItemId,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -248,6 +250,9 @@ export function ContentPane({
   onToggleThinking: (id: number) => void
   onOpen: (target: OpenTarget) => void
   onClose: (id: number) => void
+  onMore: (sectionId: number, itemId: number, view: ViewSpec) => void
+  /** Item id of the list currently fetching its next page. */
+  loadingMoreItemId: number | null
 }) {
   // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
   const innerWidth = Math.max(24, width - 6)
@@ -343,6 +348,8 @@ export function ContentPane({
                         width={cardWidth}
                         maxAssets={20}
                         onOpen={onOpen}
+                        onMore={() => onMore(section.id, item.id, block.view)}
+                        loadingMore={loadingMoreItemId === item.id}
                       />
                     )
                   }

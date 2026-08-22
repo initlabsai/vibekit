@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { WorkspaceScreen } from '../chrome.js'
 import type { KeystorePaymentHost } from '../keystore-host.js'
 import type { Focus } from './feed.js'
-import { viewFor } from './lookup.js'
+import { loadNextPage, viewFor } from './lookup.js'
 import type { ExplorerHost } from './network.js'
 
 /**
@@ -38,6 +38,18 @@ export function useAccounts({
   const [shelfView, setShelfView] = useState<ViewSpec | undefined>()
   const [shelfError, setShelfError] = useState<string | undefined>()
   const [shelfLoading, setShelfLoading] = useState(false)
+  const [shelfLoadingMore, setShelfLoadingMore] = useState(false)
+
+  const loadMoreShelf = useCallback(() => {
+    if (!shelfView || shelfLoadingMore) return
+    setShelfLoadingMore(true)
+    void loadNextPage({ host: host(), storeRef, commitStore, network, view: shelfView })
+      .then((next) => {
+        if (next) setShelfView(next)
+      })
+      .catch((error: unknown) => setShelfError(error instanceof Error ? error.message : String(error)))
+      .finally(() => setShelfLoadingMore(false))
+  }, [commitStore, host, network, shelfLoadingMore, shelfView, storeRef])
   const [accountList, setAccountList] = useState<ReadonlyArray<{ address: string; name?: string }>>(
     [],
   )
@@ -170,6 +182,8 @@ export function useAccounts({
     screen,
     setScreen,
     shelfView,
+    shelfLoadingMore,
+    loadMoreShelf,
     shelfError,
     shelfLoading,
     accountList,

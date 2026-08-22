@@ -1,6 +1,7 @@
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useCallback, useRef, useState } from 'react'
 
+import type { ViewSpec } from '@initlabs/vibekit-experience'
 import type { Section, SectionBlock, SectionItem } from '../sections.js'
 
 /** Which pane owns the keyboard on the chat screen. */
@@ -98,6 +99,27 @@ export function useFeed() {
     [commitSections, scrollToBottom],
   )
 
+  /** Swaps one rendered block's view (a merged page replaces its first page). */
+  const replaceBlockView = useCallback(
+    (sectionId: number, itemId: number, view: ViewSpec) => {
+      commitSections(
+        sectionsRef.current.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                items: section.items.map((item) =>
+                  item.id === itemId && item.kind === 'block' && item.block.kind === 'view'
+                    ? { ...item, block: { ...item.block, view } }
+                    : item,
+                ),
+              }
+            : section,
+        ),
+      )
+    },
+    [commitSections],
+  )
+
   const patchSection = useCallback(
     (sectionId: number, patch: Partial<Section>) => {
       commitSections(
@@ -188,6 +210,7 @@ export function useFeed() {
     selectSection,
     createSection,
     appendItem,
+    replaceBlockView,
     patchSection,
     toggleThinking,
     appendNote,

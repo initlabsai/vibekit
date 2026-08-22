@@ -183,6 +183,7 @@ export const formattedTransactionSchema = z.object({
 /** Wire shape of every transaction-list tool result ('transaction.list' view). */
 /** The filter a transaction search ran with, echoed so the card can show it. */
 export const transactionQuerySchema = z.object({
+  address: z.string().optional(),
   txType: z.string().optional(),
   assetId: z.number().optional(),
   applicationId: z.number().optional(),
@@ -192,9 +193,9 @@ export const transactionQuerySchema = z.object({
 })
 export type TransactionQuery = z.infer<typeof transactionQuerySchema>
 
-export function transactionQueryOf(args: TransactionQuery): TransactionQuery | undefined {
+export function transactionQueryOf(args: TransactionQuery & { address?: string }): TransactionQuery | undefined {
   const query = Object.fromEntries(
-    (['txType', 'assetId', 'applicationId', 'minRound', 'maxRound', 'notePrefix'] as const)
+    (['address', 'txType', 'assetId', 'applicationId', 'minRound', 'maxRound', 'notePrefix'] as const)
       .filter((key) => args[key] !== undefined)
       .map((key) => [key, args[key]]),
   ) as TransactionQuery

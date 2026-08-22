@@ -71,6 +71,8 @@ export function ResultView({
   width,
   maxAssets = 20,
   onOpen,
+  onMore,
+  loadingMore,
 }: {
   store: ResultStore
   view: ViewSpec
@@ -78,6 +80,9 @@ export function ResultView({
   maxAssets?: number
   /** Drill-in from a row or a card action; the app routes it to a lane. */
   onOpen?: (target: OpenTarget) => void
+  /** Fetches the next page of a transaction list into this card. */
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   // Presentation toggles are this card's own: the header buttons flip them.
   const [sort, setSort] = useState<AssetSort>('none')
@@ -240,6 +245,8 @@ export function ResultView({
           query={derived.model.query}
           width={width}
           onOpen={onOpen ? (txid) => onOpen({ kind: 'transaction', txid }) : undefined}
+          onMore={view.view === 'transaction.list' && derived.model.nextToken ? onMore : undefined}
+          loadingMore={loadingMore}
           onShowGraph={view.view === 'transaction.group' ? () => setFlow('graph') : undefined}
         />
       )

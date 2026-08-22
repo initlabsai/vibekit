@@ -251,6 +251,8 @@ export function TransactionListCard({
   width,
   onOpen,
   onShowGraph,
+  onMore,
+  loadingMore = false,
 }: {
   title: string
   groupId?: string
@@ -277,9 +279,13 @@ export function TransactionListCard({
   onOpen?: (txid: string) => void
   /** Group tables: switch this card back to its flow graph. */
   onShowGraph?: () => void
+  /** Fetches the next page into this card; present only when there is one. */
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const rows = transactions.slice(0, 10)
+  // Every row the record holds: pages merge into this card, so no display cap.
+  const rows = transactions
   const unitFor = (assetId: number) =>
     transactions.find((row) => Number(row.assetId) === assetId && row.assetUnitName)?.assetUnitName
   const filter = query ? queryLabel(query, unitFor) : undefined
@@ -367,9 +373,16 @@ export function TransactionListCard({
             width={body}
           />
         ) : null}
-        {pageNotes(transactions.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        {onMore ? (
+          <box flexDirection="row" marginTop={1} height={1} gap={2}>
+            <Button label={loadingMore ? 'loading…' : 'more ▸'} onPress={loadingMore ? () => {} : onMore} />
+            <text fg={COLORS.faint}>{`${transactions.length} so far`}</text>
+          </box>
+        ) : (
+          pageNotes(transactions.length, rows.length, nextToken).map((note) => (
+            <FooterNote key={note} text={note} width={body} />
+          ))
+        )}
       </box>
     </Frame>
   )

@@ -456,8 +456,12 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
       )
     },
     async searchTransactions(filter) {
-      const { address, assetId, applicationId, round, nextToken } = filter
-      const page = { limit: 20, ...(nextToken ? { nextToken } : {}) }
+      const { address, assetId, applicationId, round, txType, nextToken } = filter
+      const page = {
+        limit: 20,
+        ...(nextToken ? { nextToken } : {}),
+        ...(txType ? { txType } : {}),
+      }
       const wire = address
         ? await executeToolCall(deployment, accountTransactionsTool, {
             ...page,

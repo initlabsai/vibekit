@@ -1,6 +1,7 @@
 import {
   createFixtureResultStore,
   type ResultStore,
+  type ViewSpec,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import type { InputRenderable } from '@opentui/core'
@@ -19,6 +20,7 @@ import { useAgentLane } from './slices/agent.js'
 import { useFeed } from './slices/feed.js'
 import { useExplorerKeys } from './slices/keys.js'
 import { useLookups } from './slices/lookup.js'
+import { loadNextPage } from './slices/lookup.js'
 import { NETWORKS, useNetwork } from './slices/network.js'
 import { usePaymentFlow } from './slices/payment.js'
 import { useBlockTail } from './slices/tail.js'
@@ -247,6 +249,23 @@ export function App() {
       }
     },
     [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, setScreen],
+  )
+
+  const [loadingMoreItemId, setLoadingMoreItemId] = useState<number | null>(null)
+  const loadMore = useCallback(
+    (sectionId: number, itemId: number, view: ViewSpec) => {
+      if (loadingMoreItemId !== null) return
+      setLoadingMoreItemId(itemId)
+      void loadNextPage({ host: host(), storeRef, commitStore, network: networkRef.current, view })
+        .then((next) => {
+          if (next) feed.replaceBlockView(sectionId, itemId, next)
+        })
+        .catch((error: unknown) =>
+          appendNote(sectionId, `Couldn't load more — ${error instanceof Error ? error.message : String(error)}`, 'error'),
+        )
+        .finally(() => setLoadingMoreItemId(null))
+    },
+    [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
   )
 
   const closeSelectedSection = useCallback(() => {
@@ -487,6 +506,8 @@ export function App() {
           view={accounts.shelfView}
           width={width}
           onOpen={openTarget}
+          onMore={accounts.loadMoreShelf}
+          loadingMore={accounts.shelfLoadingMore}
         />
       ) : (
         <box flexGrow={1} flexDirection="row">
@@ -514,6 +535,8 @@ export function App() {
             onToggleThinking={feed.toggleThinking}
             onOpen={openTarget}
             onClose={closeSection}
+            onMore={loadMore}
+            loadingMoreItemId={loadingMoreItemId}
           />
         </box>
       )}

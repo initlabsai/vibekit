@@ -555,6 +555,8 @@ export function ShelfScreen({
   view,
   width,
   onOpen,
+  onMore,
+  loadingMore,
 }: {
   title: string
   accountName?: string
@@ -566,6 +568,8 @@ export function ShelfScreen({
   view?: ViewSpec
   width: number
   onOpen: (target: OpenTarget) => void
+  onMore: () => void
+  loadingMore: boolean
 }) {
   const inner = Math.max(24, width - 6)
   const owner = address ? (accountName ?? shorten(address, 16)) : 'no wallet'
@@ -595,6 +599,8 @@ export function ShelfScreen({
             view={view}
             width={Math.max(30, width - 6)}
             onOpen={onOpen}
+            onMore={onMore}
+            loadingMore={loadingMore}
           />
         </scrollbox>
       ) : (
