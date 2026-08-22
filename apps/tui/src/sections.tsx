@@ -83,8 +83,9 @@ export function ThinkingFold({
   const arrow = expanded ? '▾' : '▸'
   const size = !expanded && text.length > 0 ? `  ${thinkingSize(text)}` : ''
   return (
-    <box flexDirection="column" marginTop={1} onMouseDown={onToggle}>
-      <box flexDirection="row" height={1} live={live}>
+    <box flexDirection="column" marginTop={1}>
+      {/* Only the header toggles: a drag across the text is a copy, not a fold. */}
+      <box flexDirection="row" height={1} live={live} onMouseDown={onToggle}>
         <text fg={COLORS.faint}>{`${arrow} `}</text>
         {live ? <ThinkingSpinner /> : null}
         <text fg={COLORS.faint}>{live ? ' thinking' : 'thoughts'}</text>
