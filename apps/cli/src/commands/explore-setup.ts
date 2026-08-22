@@ -101,13 +101,10 @@ Quickstart: https://txnlab.gitbook.io/zerosignal/using-the-proxy/quick-start`);
     }
   }
   const catalog = readZeroSignalCatalog();
-  const price = (id: string) =>
-    (catalog.get(id)?.inputUsdPer1M ?? Infinity) + (catalog.get(id)?.outputUsdPer1M ?? Infinity);
-  // Text models only (an image model cannot drive the Explorer), cheapest first;
-  // ids the catalog does not know keep their proxy order at the end.
+  // Text models only (an image model cannot drive the Explorer), alphabetical.
   const models = (await listZeroSignalModels())
     .filter((id) => catalog.get(id)?.text !== false)
-    .sort((a, b) => price(a) - price(b));
+    .sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
   const model = await pickModel(models, "the ZeroSignal operator network", (id) =>
     formatZeroSignalPrice(catalog.get(id)),
   );
