@@ -70,6 +70,14 @@ default. Tools accept a `network` parameter — optional on reads (defaults),
 **required on writes** so nothing spends on a silently-defaulted chain. Use
 `get_network` to see what is served; never invent endpoints.
 
+**Confirm the network before any write on a real chain.** For a write tool
+(`send_payment`, `asset_*`, `app_deploy`, `app_call`, generated app methods)
+targeting **testnet or mainnet**, state the network and what will happen and
+get the user's explicit go-ahead first — never infer testnet/mainnet from the
+default or from an earlier read. **localnet** needs no confirmation: proceed.
+Reads never need confirmation on any network. When unsure which chain the user
+means, ask rather than pick.
+
 ## Signing modes
 
 - **execute** (keystore daemon running): write tools sign and submit, returning
