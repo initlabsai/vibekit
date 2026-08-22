@@ -20,12 +20,14 @@ import type { ExplorerHost } from './network.js'
 export function useAccounts({
   keystoreHost,
   host,
+  network,
   commitStore,
   storeRef,
   setFocus,
 }: {
   keystoreHost: KeystorePaymentHost
   host: () => ExplorerHost
+  network: string
   commitStore: (next: ResultStore) => void
   storeRef: { current: ResultStore }
   setFocus: (focus: Focus) => void
@@ -40,6 +42,26 @@ export function useAccounts({
     [],
   )
   const [accountsLoading, setAccountsLoading] = useState(false)
+  /** address → microALGO on the current network; absent while loading or unknown. */
+  const [balances, setBalances] = useState<Record<string, number | string>>({})
+
+  // Wallet page balances: one batch lookup per (network, address book).
+  useEffect(() => {
+    if (screen !== 'wallet' || accountList.length === 0) return
+    let cancelled = false
+    setBalances({})
+    void host()
+      .lookupAccounts(accountList.map((account) => account.address))
+      .then((record) => {
+        if (cancelled || record.state !== 'success') return
+        const data = record.data as { accounts?: Array<{ address: string; balanceMicroAlgos: number | string }> }
+        setBalances(Object.fromEntries((data.accounts ?? []).map((a) => [a.address, a.balanceMicroAlgos])))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [accountList, host, network, screen])
 
   useEffect(() => {
     let cancelled = false
@@ -152,6 +174,7 @@ export function useAccounts({
     shelfLoading,
     accountList,
     accountsLoading,
+    balances,
     openWorkspace,
     cycleAccount,
     refreshTxnsShelf: () => {

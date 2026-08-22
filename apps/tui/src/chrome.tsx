@@ -1,4 +1,4 @@
-import type { ResultStore, ViewSpec } from '@initlabs/vibekit-experience'
+import { formatMicroAlgos, type ResultStore, type ViewSpec } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
@@ -116,6 +116,8 @@ export function WalletScreen({
   accounts,
   loading,
   signerReady,
+  network,
+  balances,
   activeSender,
   width,
   onSelect,
@@ -123,6 +125,9 @@ export function WalletScreen({
   accounts: ReadonlyArray<{ address: string; name?: string }>
   loading: boolean
   signerReady: boolean
+  network: string
+  /** address → microALGO on `network`; missing means not funded there (or still loading). */
+  balances: Record<string, number | string>
   activeSender: string | undefined
   width: number
   onSelect: (address: string) => void
@@ -140,7 +145,10 @@ export function WalletScreen({
       titleColor={COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
-      <text fg={COLORS.muted} content="Active account is used for pay, assets, apps, and txns." />
+      <text
+        fg={COLORS.muted}
+        content={`Active account is used for pay, assets, apps, and txns. Balances on ${network}.`}
+      />
       {loading ? (
         <text fg={COLORS.muted} marginTop={1} content="Loading accounts…" />
       ) : accounts.length === 0 ? (
@@ -161,11 +169,18 @@ export function WalletScreen({
                 <text fg={selected ? COLORS.brassBright : COLORS.text}>
                   {`${selected ? '▸' : ' '}[${index + 1}] ${account.name ?? '—'}`}
                 </text>
-                {selected ? (
-                  <text fg={COLORS.ink} bg={COLORS.brass}>
-                    {' ACTIVE '}
+                <box flexDirection="row" gap={2}>
+                  <text fg={balances[account.address] === undefined ? COLORS.faint : COLORS.brassBright}>
+                    {balances[account.address] === undefined
+                      ? '—'
+                      : `${formatMicroAlgos(balances[account.address]!)} ALGO`}
                   </text>
-                ) : null}
+                  {selected ? (
+                    <text fg={COLORS.ink} bg={COLORS.brass}>
+                      {' ACTIVE '}
+                    </text>
+                  ) : null}
+                </box>
               </box>
               {/* Plain text on purpose: a click here selects the account; drag still copies. */}
               <text fg={selected ? COLORS.signal : COLORS.muted} content={shorten(account.address, inner)} />

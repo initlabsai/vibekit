@@ -69,7 +69,7 @@ export function App() {
   const feed = useFeed()
   const { focus, setFocus, sections, selectedId, appendNote, createSection } = feed
 
-  const accounts = useAccounts({ keystoreHost, host, commitStore, storeRef, setFocus })
+  const accounts = useAccounts({ keystoreHost, host, network, commitStore, storeRef, setFocus })
   const {
     signerReady,
     activeSender,
@@ -407,6 +407,8 @@ export function App() {
           accounts={accountList}
           loading={accounts.accountsLoading}
           signerReady={signerReady}
+          network={network}
+          balances={accounts.balances}
           activeSender={activeSender}
           width={width}
           onSelect={setActiveSender}
