@@ -40,6 +40,8 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   requiresSigner?: boolean
   /** Changes state without spending user funds (key creation, faucet). Approval-gated. */
   mutatesState?: boolean
+  /** Read whose result is large (a whole program). Hosts may ask before running it. */
+  expensive?: boolean
   /**
    * The tool's one view cue. Either a semantic Explorer view id the success
    * payload binds to (dotted, for example `transaction.detail` — the
