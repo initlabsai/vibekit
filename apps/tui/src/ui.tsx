@@ -41,6 +41,7 @@ export function Frame({
       borderStyle="single"
       borderColor={accent ?? COLORS.border}
       paddingX={1}
+      paddingY={1}
       backgroundColor={COLORS.panel}
       marginTop={1}
     >
