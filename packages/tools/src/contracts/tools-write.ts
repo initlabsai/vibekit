@@ -12,7 +12,13 @@ import {
 } from '@initlabs/vibekit-core'
 import algosdk, { AtomicTransactionComposer } from 'algosdk'
 import { z } from 'zod'
-import { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
+import {
+  appSpecParams,
+  parseAppSpec,
+  requireAppSpec,
+  substituteTemplateParams,
+  withAppSpecFile,
+} from './lib/app-spec.js'
 
 const appCallParams = z.object({
   sender: z.string().describe('Sender address'),
@@ -21,8 +27,8 @@ const appCallParams = z.object({
     .string()
     .optional()
     .describe('ARC-4 method signature, e.g. "hello(string)string". Alternative to appSpec+method.'),
-  appSpec: z.string().optional().describe('Full ARC-56/32 app spec JSON string (with method)'),
-  method: z.string().optional().describe('Method name to look up in appSpec'),
+  ...appSpecParams,
+  method: z.string().optional().describe('Method name to look up in the app spec'),
   args: z
     .array(z.any())
     .optional()
@@ -44,7 +50,8 @@ function appTool(
     output: writeResultSchema,
     requiresSigner: true,
     view: 'txn',
-    handler: async (ctx, args) => composeOrExecute(ctx, [{ ...args, type } as TxnSpec]),
+    handler: async (ctx, args) =>
+      composeOrExecute(ctx, [{ ...(await withAppSpecFile(args)), type } as TxnSpec]),
   }) as AnyTool
 }
 
@@ -52,6 +59,7 @@ const DEPLOY_DESCRIPTION = `Deploy a new smart contract instance from an ARC-56/
 Bare create (omit method) for contracts without constructor args — most contracts.
 ABI create (method + args) for contracts with a constructor (e.g. "createApplication").
 Plain create only: no idempotent update semantics (deploy again = new app).
+Pass appSpecPath — the built artifact (artifacts/<Name>.arc56.json). Do not paste the spec JSON.
 Returns the new application ID and address (execute mode), or the unsigned create transaction (compose mode).`
 
 async function deployApp(
@@ -177,7 +185,7 @@ export const contractWriteTools: AnyTool[] = [
     description: DEPLOY_DESCRIPTION,
     parameters: z.object({
       sender: z.string().describe('Creator/sender address'),
-      appSpec: z.string().describe('ARC-56 or ARC-32 app spec JSON as a string'),
+      ...appSpecParams,
       method: z.string().optional().describe('ABI create method name (omit for bare create)'),
       args: z.array(z.any()).optional().describe('Arguments for the ABI create method'),
       deployTimeParams: z
@@ -189,7 +197,10 @@ export const contractWriteTools: AnyTool[] = [
     output: appDeployResultSchema,
     requiresSigner: true,
     view: 'txn',
-    handler: async (ctx, args) => deployApp(ctx, args),
+    handler: async (ctx, args) => {
+      const resolved = await withAppSpecFile(args)
+      return deployApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
+    },
   }) as AnyTool,
   appTool('app_call', 'app_call', 'Call a smart contract method (or bare NoOp).'),
   appTool('app_opt_in', 'app_opt_in', 'Opt the sender into an application (allocates local state).'),

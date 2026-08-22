@@ -11,7 +11,13 @@ import {
   readGlobalState,
   readLocalState,
 } from './handlers/state.js'
-import { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
+import {
+  appSpecParams,
+  parseAppSpec,
+  requireAppSpec,
+  substituteTemplateParams,
+  withAppSpecFile,
+} from './lib/app-spec.js'
 
 import {
   appInfoSchema,
@@ -100,11 +106,11 @@ export const contractTools: AnyTool[] = [
     description: 'Read global state from a deployed application. Returns decoded key-value pairs.',
     parameters: z.object({
       appId: z.number().describe('The application ID'),
-      appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
+      ...appSpecParams,
     }),
     output: applicationStateSchema,
     view: 'application.state',
-    handler: async (ctx, args) => readGlobalState(ctx, args),
+    handler: async (ctx, args) => readGlobalState(ctx, await withAppSpecFile(args)),
   }),
   defineTool({
     name: 'read_local_state',
@@ -112,11 +118,11 @@ export const contractTools: AnyTool[] = [
     parameters: z.object({
       appId: z.number().describe('The application ID'),
       address: z.string().describe('The account address to read local state for'),
-      appSpec: z.string().optional().describe('Optional app spec JSON for better state decoding'),
+      ...appSpecParams,
     }),
     output: applicationStateSchema,
     view: 'application.state',
-    handler: async (ctx, args) => readLocalState(ctx, args),
+    handler: async (ctx, args) => readLocalState(ctx, await withAppSpecFile(args)),
   }),
   defineTool({
     name: 'read_box_state',
@@ -142,11 +148,11 @@ Examples:
         .enum(['uint64', 'address', 'string'])
         .optional()
         .describe('BoxMap key type. Defaults to uint64.'),
-      appSpec: z.string().optional().describe('Optional app spec JSON for better value decoding'),
+      ...appSpecParams,
     }),
     output: applicationBoxSchema,
     view: 'application.box',
-    handler: async (ctx, args) => readBoxState(ctx, args),
+    handler: async (ctx, args) => readBoxState(ctx, await withAppSpecFile(args)),
   }),
   defineTool({
     name: 'list_application_boxes',
@@ -210,13 +216,11 @@ Examples:
   defineTool({
     name: 'app_list_methods',
     description: 'List the ABI methods of an app spec: signatures, args, returns, descriptions.',
-    parameters: z.object({
-      appSpec: z.string().describe('ARC-56 or ARC-32 app spec JSON as a string'),
-    }),
+    parameters: z.object(appSpecParams),
     output: appMethodsSchema,
     view: 'table',
     handler: async (_ctx, args) => {
-      const spec = parseAppSpec(args.appSpec)
+      const spec = parseAppSpec(requireAppSpec(await withAppSpecFile(args)))
       return { name: spec.name, methods: spec.methods }
     },
   }),

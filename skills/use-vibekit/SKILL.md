@@ -99,8 +99,12 @@ balance results carry a `decimals` field to scale for display.
 1. **Build** with the project's own build script (`npm run build` /
    `algokit project run build`) — it compiles `*.algo.ts` sources to an
    ARC-56 app spec (usually under `artifacts/`).
-2. **Deploy with `app_deploy`** via MCP: `appSpec` is the spec JSON as a
-   string, `sender` is a funded keystore address, `network` explicit.
+2. **Deploy with `app_deploy`** via MCP: `appSpecPath` is the path to the
+   built artifact (`artifacts/<Name>.arc56.json`), `sender` is a funded
+   keystore address, `network` explicit. The tool reads the file — never
+   `cat` the spec or paste its JSON into `appSpec`; that burns thousands of
+   tokens and truncates. The same `appSpecPath` works for `app_call`,
+   `app_list_methods`, and the `read_*_state` decoders.
    The keystore daemon signs — no key material is ever needed.
 
 Template projects also ship `deploy.ts` and `.env.*.example` with a

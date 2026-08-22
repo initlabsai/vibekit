@@ -9,6 +9,46 @@ import { z } from 'zod'
 
 export type AppSpecFormat = 'arc56' | 'arc32' | 'arc4'
 
+/**
+ * The two ways a tool can receive an app spec. The path form is what agents
+ * should use: the spec is read here, so a 10 KB artifact never has to be
+ * re-typed into a tool call.
+ */
+export const appSpecParams = {
+  appSpecPath: z
+    .string()
+    .optional()
+    .describe(
+      'Path to the ARC-56/ARC-32 app spec file, e.g. artifacts/HelloWorld.arc56.json. Preferred — the file is read here; never paste its contents.',
+    ),
+  appSpec: z
+    .string()
+    .optional()
+    .describe('The app spec JSON as a string. Only when no file exists; otherwise pass appSpecPath.'),
+}
+
+/** Resolves appSpecPath into appSpec; an explicit appSpec wins. */
+export async function withAppSpecFile<T extends { appSpec?: string; appSpecPath?: string }>(args: T): Promise<T> {
+  if (args.appSpec !== undefined || args.appSpecPath === undefined) return args
+  try {
+    const { readFile } = await import('node:fs/promises')
+    return { ...args, appSpec: await readFile(args.appSpecPath, 'utf8') }
+  } catch (error: unknown) {
+    throw new ToolError(
+      'APP_SPEC_NOT_FOUND',
+      `Could not read the app spec at ${args.appSpecPath}: ${error instanceof Error ? error.message : String(error)}`,
+    )
+  }
+}
+
+/** The spec string for tools that cannot work without one. */
+export function requireAppSpec(args: { appSpec?: string; appSpecPath?: string }): string {
+  if (args.appSpec === undefined) {
+    throw new ToolError('APP_SPEC_REQUIRED', 'Pass appSpecPath (the built artifact, preferred) or appSpec.')
+  }
+  return args.appSpec
+}
+
 export interface ParsedMethod {
   name: string
   signature: string
