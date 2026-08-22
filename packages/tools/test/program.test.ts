@@ -24,6 +24,7 @@ describe('analyzeTeal', () => {
     // Tinyman routes on strings, not ARC-4 selectors.
     expect(facts.entrypoints).toEqual(expect.arrayContaining(['bootstrap', 'swap', 'add_liquidity']))
     expect(facts.selectors).toEqual([])
+    expect(facts.arc4Returns).toBe(false)
     expect(facts.guards.rekey).toBe(true)
     expect(facts.innerTransactions).toBeGreaterThan(0)
     // The create/OnCompletion router: NoOp and OptIn handled, CloseOut/Update/Delete rejected.
@@ -39,6 +40,7 @@ describe('analyzeTeal', () => {
     expect(facts.version).toBe(11)
     expect(facts.entrypoints).toEqual(['0x02bece11', '0x72e3a928', '0x4f92e173'])
     expect(facts.onCompletion).toEqual([{ action: 'NoOp', outcome: 'handled' }])
+    expect(facts.arc4Returns).toBe(true)
     expect(facts.stateKeys.box).toEqual(['msg'])
     const spec = normalizeAppSpec(HELLO_SPEC)
     const labelled = labelSelectors(facts.selectors, spec.methods)

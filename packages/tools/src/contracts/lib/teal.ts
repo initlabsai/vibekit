@@ -25,6 +25,8 @@ export interface TealAnalysis {
   entrypoints: string[]
   /** The ARC-4 subset of entrypoints, as bare hex. */
   selectors: string[]
+  /** The program logs ARC-4 return values (the 0x151f7c75 prefix appears). */
+  arc4Returns: boolean
   /** Printable byte constants, in first-use order. */
   strings: string[]
   stateKeys: { global: string[]; local: string[]; box: string[] }
@@ -34,6 +36,9 @@ export interface TealAnalysis {
   /** OnCompletion values the program routes on, and what that branch does. */
   onCompletion: Array<{ action: OnCompletionAction; outcome: 'handled' | 'rejected' }>
 }
+
+/** First four bytes of sha512/256("return"): every ARC-4 return value is logged behind it. */
+const ARC4_RETURN_PREFIX = '151f7c75'
 
 const ACTIONS: OnCompletionAction[] = [
   'NoOp',
@@ -172,6 +177,7 @@ export function analyzeTeal(teal: string): TealAnalysis {
 
   const entrypoints = new Set<string>()
   const strings = new Set<string>()
+  let arc4Returns = false
   const isArg0 = (inst: Instruction | undefined) =>
     inst !== undefined &&
     ((inst.op === 'txna' && inst.args[0] === 'ApplicationArgs' && inst.args[1] === '0') ||
@@ -210,6 +216,7 @@ export function analyzeTeal(teal: string): TealAnalysis {
     for (const hex of byteConstants(inst, bytePool)) {
       const text = hexToText(hex)
       if (text !== undefined && text.length >= 2) strings.add(text)
+      if (hex === ARC4_RETURN_PREFIX) arc4Returns = true
     }
     // txna ApplicationArgs 0; <const>; ==   — one entrypoint
     if (isArg0(instructions[index - 1]) && instructions[index + 1]?.op === '==') {
@@ -280,6 +287,7 @@ export function analyzeTeal(teal: string): TealAnalysis {
     instructions: instructions.length,
     entrypoints: [...entrypoints],
     selectors,
+    arc4Returns,
     strings: [...strings],
     stateKeys: { global: [...keys.global], local: [...keys.local], box: [...keys.box] },
     guards,

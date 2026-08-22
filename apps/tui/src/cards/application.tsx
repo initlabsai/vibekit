@@ -153,6 +153,9 @@ export function ApplicationProgramCard({
         {facts.stateKeys.box.length > 0 ? (
           <Fact label="boxes" value={facts.stateKeys.box.join(', ')} width={body} />
         ) : null}
+        {facts.arc4Returns ? (
+          <Fact label="returns" value="ARC-4 — logged behind the 0x151f7c75 return prefix" width={body} />
+        ) : null}
         <Fact label="reads" value={reads.length ? reads.join(', ') : 'none of RekeyTo, CloseRemainderTo, AssetCloseTo'} width={body} />
         <Fact label="inner txns" value={String(facts.innerTransactions)} width={body} />
         {onComplete ? <Fact label="oncomplete" value={onComplete} width={body} /> : null}
