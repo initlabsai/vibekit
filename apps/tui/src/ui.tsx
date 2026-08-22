@@ -42,7 +42,7 @@ export function Frame({
       borderColor={accent ?? COLORS.border}
       paddingX={2}
       paddingY={1}
-      backgroundColor={COLORS.panel}
+      backgroundColor={COLORS.card}
       marginTop={1}
     >
       {children}

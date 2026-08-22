@@ -6,8 +6,12 @@
  */
 export const COLORS = {
   background: '#0a0b0e',
+  /** Section tint: one step off the ground. */
   panel: '#111318',
-  panelRaised: '#181b22',
+  /** Card surface: clearly lifted off the section, so its padding reads as padding. */
+  card: '#191d26',
+  /** Chips, stat cells, masthead, composer: lifted off a card. */
+  panelRaised: '#262b36',
   brass: '#c4a06a',
   brassBright: '#ffb454',
   signal: '#6fd3d3',
