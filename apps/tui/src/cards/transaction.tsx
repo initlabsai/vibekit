@@ -1,3 +1,4 @@
+import { base64ToBytes } from '@initlabs/vibekit-core'
 import {
   formatBaseUnits,
   formatBlockTxnType,
@@ -21,6 +22,46 @@ import {
   type Tone,
 } from '../ui.js'
 import { algo, pageNotes } from './shared.js'
+
+/** ARC-4 return logs start with 0x151f7c75. */
+const ARC4_RETURN_PREFIX = 'FR98dQ'
+
+/** Base64 chain bytes as printable text when they are, else the base64 itself. */
+function bytesDisplay(base64: string): string {
+  try {
+    const text = new TextDecoder().decode(base64ToBytes(base64))
+    return /^[^\p{C}]+$/u.test(text) ? text : base64
+  } catch {
+    return base64
+  }
+}
+
+/**
+ * An ARC-4 return log whose payload is an ABI `string` (2-byte length prefix
+ * matching the remainder) shows as text; anything else stays base64 —
+ * without the spec there is no honest decode.
+ */
+function returnDisplay(log: string): string {
+  try {
+    const bytes = base64ToBytes(log).slice(4)
+    if (bytes.length >= 2) {
+      const length = (bytes[0]! << 8) | bytes[1]!
+      if (length === bytes.length - 2) {
+        const text = new TextDecoder().decode(bytes.slice(2))
+        if (/^[^\p{C}]*$/u.test(text)) return `"${text}"`
+      }
+    }
+  } catch {
+    /* fall through to base64 */
+  }
+  return log
+}
+
+function stateValue(value: { action: number; bytes?: string; uint?: number | string }): string {
+  if (value.action === 3) return 'deleted'
+  if (value.uint !== undefined) return String(value.uint)
+  return value.bytes === undefined ? '—' : bytesDisplay(value.bytes)
+}
 
 function formatAbiValue(value: unknown): string {
   if (value === undefined || value === null) return '—'
@@ -116,6 +157,38 @@ export function TransactionCard({
         ))}
         {model.methodReturn === undefined ? null : (
           <Fact label="return" value={formatAbiValue(model.methodReturn)} width={body} />
+        )}
+        {model.methodName
+          ? null
+          : (model.applicationArgs ?? []).map((arg, index) => (
+              <Fact key={`arg-${index}`} label={`arg ${index}`} value={bytesDisplay(arg)} width={body} />
+            ))}
+        {model.methodReturn !== undefined
+          ? null
+          : (model.logs ?? []).map((log, index) =>
+              log.startsWith(ARC4_RETURN_PREFIX) ? (
+                <Fact key={`log-${index}`} label="return" value={returnDisplay(log)} width={body} />
+              ) : (
+                <Fact key={`log-${index}`} label={`log ${index}`} value={bytesDisplay(log)} width={body} />
+              ),
+            )}
+        {(model.globalStateDelta ?? []).map((entry, index) => (
+          <Fact
+            key={`gd-${index}`}
+            label="Δ global"
+            value={`${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`}
+            width={body}
+          />
+        ))}
+        {(model.localStateDelta ?? []).flatMap((local) =>
+          local.delta.map((entry, index) => (
+            <Fact
+              key={`ld-${local.address}-${index}`}
+              label="Δ local"
+              value={`${local.address.slice(0, 8)}… ${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`}
+              width={body}
+            />
+          )),
         )}
         {model.onCompletion ? (
           <Fact label="on-comp" value={formatOnCompletion(model.onCompletion)} width={body} />

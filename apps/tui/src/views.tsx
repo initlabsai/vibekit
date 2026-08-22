@@ -69,7 +69,25 @@ export function ResultView({
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
-      return <TransactionCard model={derived.ok ? derived.model : undefined} width={width} />
+      if (!derived.ok) return <TransactionCard model={undefined} width={width} />
+      const { amountMicroAlgos, ...model } = derived.model
+      // Inner transactions get the same flow graph a group does.
+      const graph = model.innerTxns?.length
+        ? buildGroupGraph([{ ...model, paymentAmountMicroAlgos: amountMicroAlgos }])
+        : undefined
+      return (
+        <box flexDirection="column">
+          <TransactionCard model={derived.model} width={width} />
+          {graph ? (
+            <TransactionGraphCard
+              graph={graph}
+              kicker="INNER TRANSACTIONS"
+              transactionCount={1 + (model.innerTxns?.length ?? 0)}
+              width={width}
+            />
+          ) : null}
+        </box>
+      )
     }
     case 'account.portfolio': {
       const derived = createAccountPortfolioViewModel(store, view)

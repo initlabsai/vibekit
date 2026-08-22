@@ -12,11 +12,13 @@ export function TransactionGraphCard({
   graph,
   groupId,
   transactionCount,
+  kicker = 'TRANSACTION GROUP',
   width,
 }: {
   graph: TransactionsGraph
   groupId?: string
   transactionCount: number
+  kicker?: string
   width: number
 }) {
   const body = innerWidth(width)
@@ -24,7 +26,7 @@ export function TransactionGraphCard({
   return (
     <Frame width={width}>
       <Header
-        kicker="TRANSACTION GROUP"
+        kicker={kicker}
         chip={layout.mode === 'lanes' ? 'FLOW' : 'FLOW LIST'}
         pill={String(transactionCount)}
         tone="idle"

@@ -31,59 +31,19 @@ export const transactionAssetConfigDataSchema = z.object({
   defaultFrozen: z.boolean().optional(),
 })
 
-/**
- * Authoritative transaction data required by the first trusted detail view.
- * Extra wire fields are dropped.
- */
-export const transactionDetailDataSchema = z.object({
-  id: algorandTransactionIdSchema,
-  type: z.string().min(1),
-  status: z.enum(['confirmed', 'pending', 'failed']),
-  sender: algorandAddressCandidateSchema,
-  receiver: algorandAddressCandidateSchema.optional(),
-  feeMicroAlgos: uint64JsonSchema,
-  confirmedRound: z.number().int().nonnegative().optional(),
-  roundTime: z.number().int().nonnegative().optional(),
-  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
-  assetId: uint64JsonSchema.optional(),
-  assetAmount: uint64JsonSchema.optional(),
-  assetName: z.string().min(1).optional(),
-  assetUnitName: z.string().min(1).optional(),
-  assetDecimals: z.number().int().nonnegative().optional(),
-  applicationId: uint64JsonSchema.optional(),
-  applicationAccounts: z.array(algorandAddressCandidateSchema).optional(),
-  onCompletion: z.string().min(1).optional(),
-  note: z.string().min(1).optional(),
-  group: z.string().min(1).optional(),
-  innerCount: z.number().int().nonnegative().optional(),
-  rekeyTo: algorandAddressCandidateSchema.optional(),
-  closeTo: algorandAddressCandidateSchema.optional(),
-  closeAmountMicroAlgos: uint64JsonSchema.optional(),
-  closeAssetAmount: uint64JsonSchema.optional(),
-  clawbackFrom: algorandAddressCandidateSchema.optional(),
-  freezeTarget: algorandAddressCandidateSchema.optional(),
-  frozen: z.boolean().optional(),
-  assetConfig: transactionAssetConfigDataSchema.optional(),
-  createdAssetId: uint64JsonSchema.optional(),
-  createdApplicationId: uint64JsonSchema.optional(),
-  signer: algorandAddressCandidateSchema.optional(),
-  logs: z.array(z.string().min(1)).optional(),
-  applicationArgs: z.array(z.string().min(1)).optional(),
-  methodName: z.string().min(1).optional(),
-  methodArgs: z
-    .array(
-      z.object({
-        name: z.string().min(1).optional(),
-        type: z.string().min(1),
-        value: z.unknown().optional(),
-      }),
-    )
-    .optional(),
-  methodReturn: z.unknown().optional(),
+/** One app state change as the indexer reports it (action 1 bytes, 2 uint, 3 delete). */
+export const stateDeltaEntrySchema = z.object({
+  key: z.string(),
+  value: z.object({
+    action: z.number().int(),
+    bytes: z.string().optional(),
+    uint: uint64JsonSchema.optional(),
+  }),
 })
 
-/** Authoritative transaction data required by the first trusted detail view. */
-export type TransactionDetailData = z.infer<typeof transactionDetailDataSchema>
+export const localStateDeltaSchema = z.array(
+  z.object({ address: z.string(), delta: z.array(stateDeltaEntrySchema) }),
+)
 
 /**
  * One transaction row in a list or group. Rows nest recursively and carry
@@ -169,6 +129,64 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
     .optional(),
 })
 
+/**
+ * Authoritative transaction data required by the first trusted detail view.
+ * Extra wire fields are dropped.
+ */
+export const transactionDetailDataSchema = z.object({
+  id: algorandTransactionIdSchema,
+  type: z.string().min(1),
+  status: z.enum(['confirmed', 'pending', 'failed']),
+  sender: algorandAddressCandidateSchema,
+  receiver: algorandAddressCandidateSchema.optional(),
+  feeMicroAlgos: uint64JsonSchema,
+  confirmedRound: z.number().int().nonnegative().optional(),
+  roundTime: z.number().int().nonnegative().optional(),
+  paymentAmountMicroAlgos: uint64JsonSchema.optional(),
+  assetId: uint64JsonSchema.optional(),
+  assetAmount: uint64JsonSchema.optional(),
+  assetName: z.string().min(1).optional(),
+  assetUnitName: z.string().min(1).optional(),
+  assetDecimals: z.number().int().nonnegative().optional(),
+  applicationId: uint64JsonSchema.optional(),
+  applicationAccounts: z.array(algorandAddressCandidateSchema).optional(),
+  onCompletion: z.string().min(1).optional(),
+  note: z.string().min(1).optional(),
+  group: z.string().min(1).optional(),
+  innerCount: z.number().int().nonnegative().optional(),
+  rekeyTo: algorandAddressCandidateSchema.optional(),
+  closeTo: algorandAddressCandidateSchema.optional(),
+  closeAmountMicroAlgos: uint64JsonSchema.optional(),
+  closeAssetAmount: uint64JsonSchema.optional(),
+  clawbackFrom: algorandAddressCandidateSchema.optional(),
+  freezeTarget: algorandAddressCandidateSchema.optional(),
+  frozen: z.boolean().optional(),
+  assetConfig: transactionAssetConfigDataSchema.optional(),
+  createdAssetId: uint64JsonSchema.optional(),
+  createdApplicationId: uint64JsonSchema.optional(),
+  signer: algorandAddressCandidateSchema.optional(),
+  logs: z.array(z.string().min(1)).optional(),
+  applicationArgs: z.array(z.string().min(1)).optional(),
+  methodName: z.string().min(1).optional(),
+  methodArgs: z
+    .array(
+      z.object({
+        name: z.string().min(1).optional(),
+        type: z.string().min(1),
+        value: z.unknown().optional(),
+      }),
+    )
+    .optional(),
+  methodReturn: z.unknown().optional(),
+  globalStateDelta: z.array(stateDeltaEntrySchema).optional(),
+  localStateDelta: localStateDeltaSchema.optional(),
+  // Inner rows, so the detail view can draw the same flow graph as a group.
+  innerTxns: z.array(transactionRowSchema).optional(),
+})
+
+/** Authoritative transaction data required by the first trusted detail view. */
+export type TransactionDetailData = z.infer<typeof transactionDetailDataSchema>
+
 /** A page of transactions, optionally scoped to a group id or account. */
 export const transactionCollectionDataSchema = z.object({
   groupId: z.string().min(1).optional(),
@@ -188,16 +206,16 @@ export function buildTransactionDetailRecord(
   toolName = 'lookup_transaction',
 ): StructuredResult {
   const txn = viewDataSchemas['transaction.detail'].parse(wire)
-  return record(
-    identity,
-    toolName,
-    transactionDetailDataSchema.parse({
-      ...txn,
-      type: txn.type ?? 'txn',
-      status: txn.confirmedRound === undefined ? 'pending' : 'confirmed',
-      ...(txn.innerTxns?.length ? { innerCount: txn.innerTxns.length } : {}),
-    }),
-  )
+  const data = transactionDetailDataSchema.parse({
+    ...txn,
+    type: txn.type ?? 'txn',
+    status: txn.confirmedRound === undefined ? 'pending' : 'confirmed',
+    ...(txn.innerTxns?.length ? { innerCount: txn.innerTxns.length } : {}),
+  })
+  return record(identity, toolName, {
+    ...data,
+    ...(data.innerTxns ? { innerTxns: data.innerTxns.map(withInnerCounts) } : {}),
+  })
 }
 
 /** The capability of looking a transaction up as an authoritative record. */

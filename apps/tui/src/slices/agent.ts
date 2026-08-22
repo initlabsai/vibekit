@@ -121,7 +121,9 @@ export function useAgentLane({
       agentHasCardsRef.current = false
       patchSection(sectionId, { thinking: '', thinkingOpen: false })
       const agentNoteItem = { current: null as number | null }
+      let spoke = false
       const appendAgentText = (delta: string) => {
+        spoke = true
         if (agentNoteItem.current === null) {
           const id = newItemId()
           agentNoteItem.current = id
@@ -175,6 +177,7 @@ export function useAgentLane({
           },
           onToolCall: (toolName) => setStatus(`agent → ${toolName}…`),
           onToolResult: (event) => {
+            spoke = true
             agentNoteItem.current = null
             const compose = unsignedGroupFromToolResult(event)
             if (compose && flowRef.current === null) {
@@ -234,19 +237,34 @@ export function useAgentLane({
                 kind: 'view',
                 view: viewFor(record, view),
               })
-            } catch {
-              // A duplicate or malformed record is dropped; the narration still answers.
+            } catch (error: unknown) {
+              // Say so: a silently dropped result looks like the agent said nothing.
+              appendNote(
+                sectionId,
+                `Dropped a malformed result from ${event.toolName} — ${error instanceof Error ? shorten(error.message, 100) : 'unknown error'}`,
+                'error',
+              )
             }
           },
-          onError: (message) =>
-            appendNote(sectionId, `Agent error — ${shorten(message, 120)}`, 'error'),
+          onError: (message) => {
+            spoke = true
+            appendNote(sectionId, `Agent error — ${shorten(message, 120)}`, 'error')
+          },
         }).catch((error: unknown) => {
+          spoke = true
           appendNote(
             sectionId,
             `Agent failed — ${error instanceof Error ? shorten(error.message, 120) : 'unknown error'}`,
             'error',
           )
         })
+        if (!spoke) {
+          appendNote(
+            sectionId,
+            'The agent returned nothing. Try a more specific ask — an id, a round, a name.',
+            'error',
+          )
+        }
         setAgentBusy(false)
         setStatus('')
         agentSectionRef.current = null
