@@ -237,6 +237,22 @@ function queryLabel(query: {
   return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
+/** Row action: a padded, filled chip reads as a button and is a 3-column-wider target. */
+function OpenButton({ onPress }: { onPress: () => void }) {
+  return (
+    <box
+      paddingX={1}
+      backgroundColor={COLORS.signalDim}
+      onMouseDown={(event: MouseEvent) => {
+        event.stopPropagation()
+        onPress()
+      }}
+    >
+      <text fg={COLORS.text}>{'open ▸'}</text>
+    </box>
+  )
+}
+
 export function TransactionListCard({
   title,
   groupId,
@@ -305,17 +321,7 @@ export function TransactionListCard({
                   />
                   {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
                 </box>
-                {onOpen && row.id ? (
-                  <text
-                    fg={COLORS.signal}
-                    onMouseDown={(event: MouseEvent) => {
-                      event.stopPropagation()
-                      onOpen(row.id!)
-                    }}
-                  >
-                    {'open ▸'}
-                  </text>
-                ) : null}
+                {onOpen && row.id ? <OpenButton onPress={() => onOpen(row.id!)} /> : null}
               </box>
               <Fact label="from" value={row.sender} copy={row.sender} width={body} />
               {to ? (

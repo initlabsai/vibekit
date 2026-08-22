@@ -255,6 +255,14 @@ export function ContentPane({
 }) {
   const innerWidth = Math.max(24, width - 4)
   const cardWidth = Math.max(30, innerWidth - 2)
+  // Entering chat (this pane mounts) lands on the newest content.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const scroll = scrollRef.current
+      if (scroll) scroll.scrollTo({ x: 0, y: scroll.scrollHeight })
+    }, 0)
+    return () => clearTimeout(id)
+  }, [scrollRef])
   return (
     <box
       flexGrow={1}

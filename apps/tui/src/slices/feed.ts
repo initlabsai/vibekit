@@ -48,6 +48,16 @@ export function useFeed() {
     if (!attempt()) setTimeout(attempt, 50)
   }, [])
 
+  /** Pins the viewport to the newest content once layout has caught up with the commit. */
+  const scrollToBottom = useCallback(() => {
+    const go = () => {
+      const scroll = contentScrollRef.current
+      if (scroll) scroll.scrollTo({ x: 0, y: scroll.scrollHeight })
+    }
+    setTimeout(go, 0)
+    setTimeout(go, 50)
+  }, [])
+
   /** Highlights a feed group without moving the viewport. Used on content clicks so a drag-select does not jump. */
   const markSection = useCallback((id: number) => {
     setSelectedId(id)
@@ -70,9 +80,10 @@ export function useFeed() {
       commitSections([...sectionsRef.current, { id, prompt, sort: 'none', flow: 'graph', items: [] }])
       setSelectedId(id)
       selectedRef.current = id
+      scrollToBottom()
       return id
     },
-    [commitSections],
+    [commitSections, scrollToBottom],
   )
 
   const appendItem = useCallback(
@@ -82,8 +93,10 @@ export function useFeed() {
           section.id === sectionId ? { ...section, items: [...section.items, item] } : section,
         ),
       )
+      // A new card or note always comes from the user's own request: show it.
+      scrollToBottom()
     },
-    [commitSections],
+    [commitSections, scrollToBottom],
   )
 
   const patchSection = useCallback(
@@ -188,6 +201,7 @@ export function useFeed() {
     sectionsRef,
     selectedRef,
     contentScrollRef,
+    scrollToBottom,
     sectionRegistry,
     commitSections,
     newItemId,
