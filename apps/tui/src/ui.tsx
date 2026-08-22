@@ -7,7 +7,7 @@ import { COLORS, shorten } from './theme.js'
 const IDENT_ATTR = createTextAttributes({ underline: true })
 
 /** Horizontal padding inside a framed card (border + paddingX). */
-export const FRAME_GUTTER = 4
+export const FRAME_GUTTER = 6
 
 /** Status color for pills and accents. */
 export type Tone = 'ok' | 'warn' | 'bad' | 'idle'
@@ -40,7 +40,7 @@ export function Frame({
       border
       borderStyle="single"
       borderColor={accent ?? COLORS.border}
-      paddingX={1}
+      paddingX={2}
       paddingY={1}
       backgroundColor={COLORS.panel}
       marginTop={1}
