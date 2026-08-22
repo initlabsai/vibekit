@@ -23,7 +23,7 @@ export function innerWidth(width: number): number {
   return Math.max(8, width - FRAME_GUTTER)
 }
 
-/** Rounded brass-framed surface used by every result card. */
+/** Framed surface used by every result card. */
 export function Frame({
   width,
   accent,
@@ -38,7 +38,7 @@ export function Frame({
       width={width}
       flexDirection="column"
       border
-      borderStyle="rounded"
+      borderStyle="single"
       borderColor={accent ?? COLORS.border}
       paddingX={1}
       backgroundColor={COLORS.panel}
@@ -119,13 +119,13 @@ export function Hero({
 
 /**
  * Truncated identifier that copies the full value on click.
- * Brass + underline marks it as copyable.
+ * Signal + underline marks it as copyable.
  */
 export function Ident({
   value,
   display,
   width,
-  color = COLORS.brass,
+  color = COLORS.signal,
 }: {
   value: string
   display?: string

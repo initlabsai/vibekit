@@ -39,12 +39,12 @@ export interface Section {
   thinkingOpen?: boolean
 }
 
-function promptKicker(prompt: string, width: number): string {
-  return shorten(`› ${prompt}`, Math.max(8, width))
+function promptKicker(prompt: string, width: number, selected: boolean): string {
+  return shorten(`${selected ? '▌' : '›'} ${prompt}`, Math.max(8, width))
 }
 
-function promptRule(width: number): string {
-  return '─'.repeat(Math.max(4, width))
+function promptRule(width: number, selected: boolean): string {
+  return (selected ? '━' : '─').repeat(Math.max(4, width))
 }
 
 const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
@@ -115,11 +115,15 @@ const WELCOME_QUESTIONS = [
 ] as const
 
 /** Empty-feed invite: what works, and what this is (tool calls, not magic). */
-export function WelcomePanel({ hasAgent }: { hasAgent: boolean }) {
+export function WelcomePanel({ hasAgent, width }: { hasAgent: boolean; width: number }) {
   return (
     <box flexGrow={1} padding={2} flexDirection="column">
-      <text fg={COLORS.faint}>VIBEKIT</text>
-      <text fg={COLORS.brassBright}>explorer</text>
+      {width >= 60 ? (
+        <ascii-font font="tiny" text="VIBEKIT" color={COLORS.brassBright} />
+      ) : (
+        <text fg={COLORS.brassBright}>VIBEKIT</text>
+      )}
+      <text fg={COLORS.faint}>explorer</text>
       <text
         fg={COLORS.muted}
         marginTop={2}
@@ -128,7 +132,7 @@ export function WelcomePanel({ hasAgent }: { hasAgent: boolean }) {
       <box flexDirection="column" marginTop={2}>
         {WELCOME_COMMANDS.map(([command, hint]) => (
           <box key={command} flexDirection="row" height={1}>
-            <text fg={COLORS.text}>{`  ${command.padEnd(18)}`}</text>
+            <text fg={COLORS.text}>{`  ${command.padEnd(19)}`}</text>
             <text fg={COLORS.faint}>{hint}</text>
           </box>
         ))}
@@ -176,13 +180,12 @@ export function NavPane({
       width={width}
       flexDirection="column"
       border
-      borderStyle="rounded"
+      borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
+      title=" SESSION "
+      titleColor={focused ? COLORS.brassBright : COLORS.faint}
       backgroundColor={COLORS.background}
     >
-      <box height={1} paddingX={1}>
-        <text fg={focused ? COLORS.brassBright : COLORS.faint}>SESSION</text>
-      </box>
       <scrollbox flexGrow={1} stickyScroll stickyStart="bottom">
         {sections.map((section, index) => {
           const selected = section.id === selectedId
@@ -252,12 +255,14 @@ export function ContentPane({
       flexGrow={1}
       flexDirection="column"
       border
-      borderStyle="rounded"
+      borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
+      title=" FEED "
+      titleColor={focused ? COLORS.brassBright : COLORS.faint}
       backgroundColor={COLORS.background}
     >
       {sections.length === 0 ? (
-        <WelcomePanel hasAgent={hasAgent} />
+        <WelcomePanel hasAgent={hasAgent} width={innerWidth} />
       ) : (
         <scrollbox ref={scrollRef} flexGrow={1} paddingX={1} stickyScroll stickyStart="bottom">
           {sections.map((section) => {
@@ -278,12 +283,12 @@ export function ContentPane({
               >
                 <text
                   marginTop={1}
-                  fg={selected && (focused || navFocused) ? COLORS.brassBright : COLORS.faint}
-                  content={promptKicker(section.prompt, innerWidth)}
+                  fg={selected ? COLORS.brassBright : COLORS.faint}
+                  content={promptKicker(section.prompt, innerWidth, selected)}
                 />
                 <text
-                  fg={COLORS.borderSoft}
-                  content={promptRule(innerWidth)}
+                  fg={selected ? COLORS.brass : COLORS.borderSoft}
+                  content={promptRule(innerWidth, selected)}
                 />
                 {section.items.map((item) => {
                   if (item.kind === 'note') {

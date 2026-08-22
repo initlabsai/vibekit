@@ -1,21 +1,25 @@
 /**
- * Init Labs palette for the TUI Explorer. Warm black and antique brass,
- * matching initlabs.ai. The v1 Explorer's teal is not used.
+ * Init Labs palette for the TUI Explorer, amber-phosphor edition: cold
+ * near-black, antique brass for structure, hot amber for figures, and one
+ * cold signal color reserved for live data you can act on (identifiers,
+ * the round counter). Brass says "frame"; signal says "touch this".
  */
 export const COLORS = {
-  background: '#11100e',
-  panel: '#191714',
-  panelRaised: '#211d18',
+  background: '#0a0b0e',
+  panel: '#111318',
+  panelRaised: '#181b22',
   brass: '#c4a06a',
-  brassBright: '#e0bd7b',
+  brassBright: '#ffb454',
+  signal: '#6fd3d3',
+  signalDim: '#2e5c5e',
   text: '#e9e1d4',
   muted: '#8e8476',
-  faint: '#6e6a62',
+  faint: '#605c56',
   green: '#9aaa6e',
-  red: '#d88989',
-  border: '#5f503c',
-  borderSoft: '#3c3428',
-  ink: '#1a160e',
+  red: '#e07c7c',
+  border: '#4a4236',
+  borderSoft: '#2a2723',
+  ink: '#0a0b0e',
 }
 
 export function shorten(value: string, width: number): string {

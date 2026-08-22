@@ -1,4 +1,5 @@
 import type { PaymentFlowViewModel } from '@initlabs/vibekit-experience'
+import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 
 import { PaymentBody } from './cards/index.js'
 import { computeGraphLayout } from './cards/transaction-graph-layout.js'
@@ -13,10 +14,12 @@ import { Header } from './ui.js'
  */
 export function ApprovalModal({
   model,
+  network,
   screenWidth,
   screenHeight,
 }: {
   model: PaymentFlowViewModel | undefined
+  network: LiveNetworkId
   screenWidth: number
   screenHeight: number
 }) {
@@ -31,7 +34,7 @@ export function ApprovalModal({
   const effectCount = model?.simulation?.effects.length ?? 0
   const height = Math.min(
     screenHeight - 2,
-    12 + graphLines + effectCount + (model?.note ? 1 : 0) + (model?.amountMicroAlgos === undefined ? 1 : 2),
+    11 + graphLines + effectCount + (model?.note ? 1 : 0) + (model?.amountMicroAlgos === undefined ? 1 : 2),
   )
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
@@ -46,7 +49,12 @@ export function ApprovalModal({
       flexDirection="column"
       border
       borderStyle="double"
-      borderColor={failed ? COLORS.red : COLORS.brass}
+      borderColor={failed || network === 'mainnet' ? COLORS.red : COLORS.brass}
+      title={` SIGN ▸ ${network.toUpperCase()} `}
+      titleColor={network === 'mainnet' ? COLORS.red : COLORS.brassBright}
+      bottomTitle={` ${keys} `}
+      bottomTitleAlignment="right"
+      titleAlignment="left"
       backgroundColor={COLORS.panelRaised}
       paddingX={2}
       paddingY={0}
@@ -77,7 +85,6 @@ export function ApprovalModal({
       {failed ? (
         <text fg={COLORS.red} marginTop={1} content="This group WOULD FAIL if submitted." />
       ) : null}
-      <text fg={COLORS.brassBright} marginTop={1} content={keys} />
     </box>
   )
 }

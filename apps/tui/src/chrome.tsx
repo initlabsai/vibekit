@@ -2,6 +2,8 @@ import type { ResultStore, ViewSpec } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import type { SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
+import { useEffect, useState } from 'react'
+
 import { Ident } from './ui.js'
 import { ResultView } from './views.js'
 import type { AppsEntry, SpecSelection } from './slices/apps.js'
@@ -17,6 +19,17 @@ const SHELF: ReadonlyArray<{ id: Exclude<WorkspaceScreen, 'chat' | 'wallet'>; la
   { id: 'txns', label: 'txns', shortcut: '^3' },
   { id: 'blocks', label: 'blocks', shortcut: '^4' },
 ]
+
+/** The chain's heartbeat: signal-colored, flashes amber for a beat on each new round. */
+function RoundTick({ round }: { round: number }) {
+  const [hot, setHot] = useState(false)
+  useEffect(() => {
+    setHot(true)
+    const id = setTimeout(() => setHot(false), 350)
+    return () => clearTimeout(id)
+  }, [round])
+  return <text fg={hot ? COLORS.brassBright : COLORS.signal}>{`  ${round}`}</text>
+}
 
 function NavButton({
   label,
@@ -76,7 +89,7 @@ export function TopBar({
     mainnet: COLORS.red,
   }
   return (
-    <box flexDirection="column" height={2} backgroundColor={COLORS.panelRaised} paddingX={1}>
+    <box flexDirection="column" height={4} backgroundColor={COLORS.panelRaised} paddingX={2} paddingY={1}>
       <box flexDirection="row" justifyContent="space-between" height={1}>
         <box flexDirection="row">
           <text fg={COLORS.brass}>◆ </text>
@@ -84,13 +97,11 @@ export function TopBar({
           <text fg={COLORS.brassBright}>EXPLORER</text>
         </box>
         <box flexDirection="row" onMouseDown={onSwitchNetwork}>
-          <text fg={COLORS.faint}>{`${modeLabel}  `}</text>
+          <text fg={COLORS.faint}>{`${modeLabel}   `}</text>
           <text fg={COLORS.ink} bg={networkColors[network]}>
             {` ${network.toUpperCase()} `}
           </text>
-          {latestRound === undefined ? null : (
-            <text fg={COLORS.faint}>{`  ${latestRound}`}</text>
-          )}
+          {latestRound === undefined ? null : <RoundTick round={latestRound} />}
           <text fg={COLORS.faint}> ^n</text>
         </box>
       </box>
@@ -105,7 +116,7 @@ export function TopBar({
             {`▸ ${shorten(walletLabel, compact ? 16 : 28)} ^w`}
           </text>
         </box>
-        <box flexDirection="row">
+        <box flexDirection="row" gap={1}>
           {SHELF.map((item) => (
             <NavButton
               key={item.id}
@@ -144,14 +155,12 @@ export function WalletScreen({
       flexDirection="column"
       padding={1}
       border
-      borderStyle="rounded"
+      borderStyle="heavy"
       borderColor={COLORS.brass}
+      title={` WALLET · ${signerReady ? 'keystore' : 'sample'} `}
+      titleColor={COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
-      <box flexDirection="row" justifyContent="space-between" height={1}>
-        <text fg={COLORS.brassBright}>WALLET</text>
-        <text fg={COLORS.faint}>{signerReady ? 'keystore' : 'sample'}</text>
-      </box>
       <text fg={COLORS.muted} content="Active account is used for pay, assets, apps, and txns." />
       {loading ? (
         <text fg={COLORS.muted} marginTop={1} content="Loading accounts…" />
@@ -263,10 +272,10 @@ function MethodCallPane({
             alignItems="center"
             paddingX={1}
             border
-            borderStyle="rounded"
+            borderStyle="single"
             borderColor={COLORS.brass}
           >
-            <text fg={COLORS.brassBright}>› </text>
+            <text fg={COLORS.brassBright}>❯ </text>
             <input
               key={callEpoch}
               flexGrow={1}
@@ -447,14 +456,12 @@ export function AppsScreen({
       flexDirection="column"
       padding={1}
       border
-      borderStyle="rounded"
+      borderStyle="heavy"
       borderColor={COLORS.brass}
+      title={` MY APPS · ${network} `}
+      titleColor={COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
-      <box flexDirection="row" justifyContent="space-between" height={1}>
-        <text fg={COLORS.brassBright}>MY APPS</text>
-        <text fg={COLORS.faint}>{network}</text>
-      </box>
       {selected ? (
         <SpecDetailPane
           selected={selected}
@@ -560,14 +567,12 @@ export function ShelfScreen({
       flexDirection="column"
       padding={1}
       border
-      borderStyle="rounded"
-      borderColor={COLORS.border}
+      borderStyle="heavy"
+      borderColor={COLORS.brass}
+      title={` ${title} · ${owner} `}
+      titleColor={COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
-      <box flexDirection="row" justifyContent="space-between" height={1}>
-        <text fg={COLORS.brassBright}>{title}</text>
-        <text fg={COLORS.muted}>{owner}</text>
-      </box>
       {address ? <Ident value={address} width={inner} /> : null}
       {loading ? (
         <text fg={COLORS.muted} marginTop={1} content="Looking up…" />
@@ -626,16 +631,12 @@ export function BlocksScreen({
       flexDirection="column"
       padding={1}
       border
-      borderStyle="rounded"
+      borderStyle={running ? 'heavy' : 'single'}
       borderColor={running ? COLORS.brass : COLORS.border}
+      title={` BLOCKS · ${pill} · ${network}${latestRound === undefined ? '' : ` · ${latestRound}`} `}
+      titleColor={running ? COLORS.green : COLORS.brassBright}
       backgroundColor={COLORS.panel}
     >
-      <box flexDirection="row" justifyContent="space-between" height={1}>
-        <text fg={COLORS.brassBright}>BLOCKS</text>
-        <text fg={running ? COLORS.green : COLORS.muted}>
-          {latestRound === undefined ? `${pill}  ${network}` : `${pill}  ${network}  ${latestRound}`}
-        </text>
-      </box>
       {live !== true ? (
         <text
           fg={COLORS.muted}
@@ -692,11 +693,11 @@ export function Composer({
       alignItems="center"
       paddingX={1}
       border
-      borderStyle="rounded"
+      borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
       backgroundColor={COLORS.panelRaised}
     >
-      <text fg={focused ? COLORS.brassBright : COLORS.faint}>› </text>
+      <text fg={focused ? COLORS.brassBright : COLORS.faint}>❯ </text>
       {/* Remount per submit: the input keeps its own buffer, so a fresh key is
           the only reliable way to clear it. */}
       <input

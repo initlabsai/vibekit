@@ -470,7 +470,7 @@ export function App() {
         <text fg={COLORS.muted} content={shorten(keybar, width - 2)} />
       </box>
       {modalOpen ? (
-        <ApprovalModal model={modalModel} screenWidth={width} screenHeight={height} />
+        <ApprovalModal model={modalModel} network={network} screenWidth={width} screenHeight={height} />
       ) : null}
     </box>
     </CopyContext.Provider>
