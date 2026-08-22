@@ -655,10 +655,13 @@ export function BlocksScreen({
           content={running ? 'Waiting for the next block…' : 'space starts the tail.'}
         />
       ) : (
-        <scrollbox flexGrow={1} marginTop={1} stickyScroll={true}>
-          {views.map((view, index) => (
-            <ResultView key={`${view.source.id}-${index}`} store={store} view={view} width={inner} />
-          ))}
+        <scrollbox flexGrow={1} marginTop={1} stickyScroll stickyStart="top">
+          {/* Newest block on top: the tail reads like a ticker, not a log. */}
+          {views
+            .map((view, index) => (
+              <ResultView key={`${view.source.id}-${index}`} store={store} view={view} width={inner} />
+            ))
+            .reverse()}
         </scrollbox>
       )}
       <text
