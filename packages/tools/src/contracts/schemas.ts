@@ -45,6 +45,18 @@ export const applicationListSchema = z.object({
   nextToken: z.string().optional(),
 })
 
+/** Wire shape of list_application_boxes ('application.boxes' view). */
+export const applicationBoxesSchema = z.object({
+  appId: z.number(),
+  boxes: z.array(
+    z.object({
+      name: z.string().describe('Box name: utf-8 when printable, else base64'),
+      nameBase64: z.string().describe('base64 of the exact box-name bytes'),
+    }),
+  ),
+  truncated: z.boolean().optional().describe('True when more boxes exist beyond the returned page'),
+})
+
 /** Wire shape of lookup_application_logs ('application.logs' view). */
 export const applicationLogsSchema = z.object({
   applicationId: z.number(),

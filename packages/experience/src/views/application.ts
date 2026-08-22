@@ -94,6 +94,13 @@ export const applicationLogsDataSchema = z.object({
   nextToken: z.string().min(1).optional(),
 })
 
+/** A page of an application's box names (no values). */
+export const applicationBoxesDataSchema = z.object({
+  applicationId: uint64JsonSchema,
+  boxes: z.array(z.object({ name: z.string(), nameBase64: z.string() })),
+  truncated: z.boolean().optional(),
+})
+
 /** One application box value. */
 export const applicationBoxDataSchema = z.object({
   applicationId: uint64JsonSchema,
@@ -257,6 +264,21 @@ export function buildApplicationBoxRecord(
   return record(identity, toolName, data)
 }
 
+/** Wraps list_application_boxes. */
+export function buildApplicationBoxesRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'list_application_boxes',
+): StructuredResult {
+  const page = viewDataSchemas['application.boxes'].parse(wire)
+  const data = {
+    applicationId: page.appId,
+    boxes: page.boxes,
+    truncated: page.truncated,
+  }
+  return record(identity, toolName, data)
+}
+
 /** Derives application presentation from one trusted result reference. */
 export const createApplicationDetailViewModel = viewModelFor(
   applicationDetailDataSchema,
@@ -287,6 +309,11 @@ export const createApplicationBoxViewModel = viewModelFor(
   applicationBoxDataSchema,
   'application.box' as const,
   'Application box',
+)
+export const createApplicationBoxesViewModel = viewModelFor(
+  applicationBoxesDataSchema,
+  'application.boxes' as const,
+  'Application boxes',
 )
 
 /** Renderer-ready semantic model for the trusted application detail view. */

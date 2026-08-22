@@ -16,6 +16,7 @@ import {
 import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './assets/schemas.js'
 import {
   applicationBoxSchema,
+  applicationBoxesSchema,
   applicationListSchema,
   applicationLogsSchema,
   applicationStateSchema,
@@ -43,6 +44,7 @@ export const viewDataSchemas = {
   'application.locals': appLocalStatesSchema,
   'application.logs': applicationLogsSchema,
   'application.box': applicationBoxSchema,
+  'application.boxes': applicationBoxesSchema,
   'block.detail': blockDetailSchema,
   'block.list': blockListSchema,
   'network.status': networkStatusSchema,

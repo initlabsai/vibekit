@@ -11,6 +11,7 @@ export {
 } from './account.js'
 export {
   ApplicationBoxCard,
+  ApplicationBoxesCard,
   ApplicationCard,
   ApplicationListCard,
   ApplicationLocalsCard,

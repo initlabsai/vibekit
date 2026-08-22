@@ -7,7 +7,12 @@ import { decodeAddress } from 'algosdk'
 
 import { bytesToBase64 } from '@initlabs/vibekit-core'
 
-import { readBoxState, readGlobalState, readLocalState } from '../src/contracts/handlers/state.js'
+import {
+  listApplicationBoxes,
+  readBoxState,
+  readGlobalState,
+  readLocalState,
+} from '../src/contracts/handlers/state.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const utf8 = (s: string) => new TextEncoder().encode(s)
@@ -33,7 +38,7 @@ const fakeIndexerApp = {
 }
 
 describe('registry', () => {
-  test('exports 8 read-only tools with output schemas and view or display hints', () => {
+  test('exports 9 read-only tools with output schemas and view or display hints', () => {
     expect(contractTools.map((t) => t.name)).toEqual([
       'lookup_application',
       'search_applications',
@@ -41,6 +46,7 @@ describe('registry', () => {
       'read_global_state',
       'read_local_state',
       'read_box_state',
+      'list_application_boxes',
       'app_get_info',
       'app_list_methods',
     ])
@@ -406,5 +412,33 @@ describe('app_list_methods', () => {
       methods: Array<{ signature: string }>
     }
     expect(result.methods[0]?.signature).toBe('go()void')
+  })
+})
+
+describe('listApplicationBoxes', () => {
+  test('lists box names from algod, decoding printable and binary names', async () => {
+    const ctx = fakeContext({
+      algod: {
+        getApplicationBoxes: () =>
+          chainable({
+            boxes: [{ name: utf8('config') }, { name: new Uint8Array([0x00, 0xff, 0x10]) }],
+          }),
+      },
+    })
+    const result = await listApplicationBoxes(ctx, { appId: 42 })
+    expect(result.appId).toBe(42)
+    expect(result.boxes).toEqual([
+      { name: 'config', nameBase64: btoa('config') },
+      { name: bytesToBase64(new Uint8Array([0x00, 0xff, 0x10])), nameBase64: bytesToBase64(new Uint8Array([0x00, 0xff, 0x10])) },
+    ])
+    expect(result.truncated).toBeUndefined()
+  })
+
+  test('flags truncation when a full page of `limit` boxes comes back', async () => {
+    const boxes = Array.from({ length: 2 }, (_, i) => ({ name: utf8(`b${i}`) }))
+    const ctx = fakeContext({ algod: { getApplicationBoxes: () => chainable({ boxes }) } })
+    const result = await listApplicationBoxes(ctx, { appId: 42, limit: 2 })
+    expect(result.boxes).toHaveLength(2)
+    expect(result.truncated).toBe(true)
   })
 })

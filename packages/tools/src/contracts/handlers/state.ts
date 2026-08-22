@@ -36,7 +36,7 @@ function toBytes(bytes: Uint8Array | string): Uint8Array {
  * spec: exactly 32 bytes reads as an Algorand address, all-printable bytes as
  * text, anything else as base64. Raw base64 always stays in `valueBase64`.
  */
-function bytesToDisplay(bytes: Uint8Array | string): string {
+export function bytesToDisplay(bytes: Uint8Array | string): string {
   const arr = toBytes(bytes)
   if (arr.length === 32) return encodeAddress(arr)
   const text = new TextDecoder().decode(arr)
@@ -287,5 +287,36 @@ export async function readBoxState(
       return { appId, boxName: boxNameDisplay, exists: false }
     }
     throw error
+  }
+}
+
+// ============================================================================
+// List Application Boxes
+// ============================================================================
+
+export interface ListApplicationBoxesArgs {
+  appId: number
+  limit?: number
+}
+
+/**
+ * Lists the boxes an application holds — names only, no values (a box value
+ * needs its own read). Reads from algod so it reflects current boxes even
+ * where the indexer has box indexing disabled; names decode the explorer way
+ * (printable as text, else base64). Follow up with read_box_state for a value.
+ */
+export async function listApplicationBoxes(ctx: ToolContext, args: ListApplicationBoxesArgs) {
+  const limit = Math.min(args.limit ?? 100, 1000)
+  const response = await ctx.algod.getApplicationBoxes(args.appId).max(limit).do()
+  const boxes = (response.boxes ?? []).map((box) => ({
+    name: bytesToDisplay(box.name),
+    nameBase64: bytesToBase64(box.name),
+  }))
+
+  return {
+    appId: args.appId,
+    boxes,
+    // algod returns up to `max` with no page token; flag a likely-truncated page.
+    truncated: boxes.length >= limit || undefined,
   }
 }

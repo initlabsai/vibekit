@@ -306,3 +306,38 @@ export function ApplicationBoxCard({
     </Frame>
   )
 }
+
+export function ApplicationBoxesCard({
+  applicationId,
+  boxes,
+  truncated,
+  width,
+}: {
+  applicationId: number | string
+  boxes: ReadonlyArray<{ name: string; nameBase64: string }>
+  truncated?: boolean
+  width: number
+}) {
+  const body = innerWidth(width)
+  const rows = boxes.slice(0, 12)
+  return (
+    <Frame width={width}>
+      <Header kicker="APP BOXES" pill={String(boxes.length)} tone="idle" />
+      <Hero value={`#${applicationId}`} copy={String(applicationId)} />
+      <box marginTop={1} flexDirection="column">
+        <Rule width={body} />
+        {boxes.length === 0 ? (
+          <text fg={COLORS.muted} content="no boxes" />
+        ) : (
+          rows.map((box, index) => (
+            <Fact key={box.nameBase64} label={`box ${index + 1}`} value={box.name} copy={box.nameBase64} width={body} />
+          ))
+        )}
+        {boxes.length > rows.length ? (
+          <FooterNote text={`${boxes.length - rows.length} more`} width={body} />
+        ) : null}
+        {truncated ? <FooterNote text="more boxes beyond this page" width={body} /> : null}
+      </box>
+    </Frame>
+  )
+}

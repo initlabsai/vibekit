@@ -3,13 +3,19 @@ import algosdk from 'algosdk'
 import { z } from 'zod'
 import { lookupApplication, lookupApplicationLogs } from './handlers/lookup.js'
 import { searchApplications } from './handlers/search.js'
-import { readBoxState, readGlobalState, readLocalState } from './handlers/state.js'
+import {
+  listApplicationBoxes,
+  readBoxState,
+  readGlobalState,
+  readLocalState,
+} from './handlers/state.js'
 import { parseAppSpec, substituteTemplateParams } from './lib/app-spec.js'
 
 import {
   appInfoSchema,
   appMethodsSchema,
   applicationBoxSchema,
+  applicationBoxesSchema,
   applicationListSchema,
   applicationLogsSchema,
   applicationStateSchema,
@@ -18,7 +24,7 @@ import {
 
 export * from './schemas.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
-export { readBoxState, readGlobalState, readLocalState }
+export { listApplicationBoxes, readBoxState, readGlobalState, readLocalState }
 export { parseAppSpec, substituteTemplateParams }
 export {
   detectAppSpecFormat,
@@ -135,6 +141,18 @@ Examples:
     output: applicationBoxSchema,
     view: 'application.box',
     handler: async (ctx, args) => readBoxState(ctx, args),
+  }),
+  defineTool({
+    name: 'list_application_boxes',
+    description:
+      "List the boxes a deployed application holds — names only. Follow up with read_box_state to fetch a value.",
+    parameters: z.object({
+      appId: z.number().describe('The application ID'),
+      limit: z.number().optional().describe('Max boxes to return (default 100, max 1000)'),
+    }),
+    output: applicationBoxesSchema,
+    view: 'application.boxes',
+    handler: async (ctx, args) => listApplicationBoxes(ctx, args),
   }),
   defineTool({
     name: 'app_get_info',

@@ -19,6 +19,7 @@ import {
 } from './views/account.js'
 import {
   buildApplicationBoxRecord,
+  buildApplicationBoxesRecord,
   buildApplicationDetailRecord,
   buildApplicationListRecord,
   buildApplicationLocalsRecord,
@@ -74,6 +75,7 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'application.locals': buildApplicationLocalsRecord,
   'application.logs': buildApplicationLogsRecord,
   'application.box': buildApplicationBoxRecord,
+  'application.boxes': buildApplicationBoxesRecord,
   'block.detail': buildBlockDetailRecord,
   'block.list': buildBlockListRecord,
   'network.status': buildNetworkStatusRecord,

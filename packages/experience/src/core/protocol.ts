@@ -21,6 +21,7 @@ export const TRUSTED_VIEW_IDS = [
   'application.locals',
   'application.logs',
   'application.box',
+  'application.boxes',
   'block.detail',
   'block.list',
   'network.status',

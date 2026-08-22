@@ -3,6 +3,7 @@ import {
   createAccountPortfolioViewModel,
   createAccountSummaryViewModel,
   createApplicationBoxViewModel,
+  createApplicationBoxesViewModel,
   createApplicationDetailViewModel,
   createApplicationListViewModel,
   createApplicationLocalsViewModel,
@@ -27,6 +28,7 @@ import {
   buildGroupGraph,
   AccountSummaryCard,
   ApplicationBoxCard,
+  ApplicationBoxesCard,
   ApplicationCard,
   ApplicationListCard,
   ApplicationLocalsCard,
@@ -276,6 +278,18 @@ export function ResultView({
           exists={model.exists}
           value={model.value}
           size={model.size}
+          width={width}
+        />
+      )
+    }
+    case 'application.boxes': {
+      const derived = createApplicationBoxesViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="APP BOXES" width={width} />
+      return (
+        <ApplicationBoxesCard
+          applicationId={derived.model.applicationId}
+          boxes={derived.model.boxes}
+          truncated={derived.model.truncated}
           width={width}
         />
       )
