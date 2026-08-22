@@ -114,6 +114,21 @@ export const applicationBoxDataSchema = z.object({
 export const applicationProgramDataSchema = viewDataSchemas['application.program']
 export type ApplicationProgramData = z.infer<typeof applicationProgramDataSchema>
 
+/** An application's call surface: entrypoints from the program, spec detail when known. */
+export const applicationMethodsDataSchema = z.object({
+  applicationId: uint64JsonSchema,
+  analysis: z.object({ entrypoints: z.array(z.string()) }),
+  methods: applicationProgramDataSchema.shape.methods,
+})
+export type ApplicationMethodsData = z.infer<typeof applicationMethodsDataSchema>
+
+/** The agent's own write-up of a contract, rendered as markdown. Not chain data. */
+export const applicationExplanationDataSchema = z.object({
+  applicationId: uint64JsonSchema,
+  markdown: z.string().min(1),
+})
+export type ApplicationExplanationData = z.infer<typeof applicationExplanationDataSchema>
+
 export type ApplicationListData = z.infer<typeof applicationListDataSchema>
 export type ApplicationStateData = z.infer<typeof applicationStateDataSchema>
 export type ApplicationLocalsData = z.infer<typeof applicationLocalsDataSchema>
@@ -260,6 +275,24 @@ export function buildApplicationProgramRecord(
   return record(identity, toolName, applicationProgramDataSchema.parse(wire))
 }
 
+/** The methods view over a get_application_program record (or any wire with the same keys). */
+export function buildApplicationMethodsRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'get_application_program',
+): StructuredResult {
+  return record(identity, toolName, applicationMethodsDataSchema.parse(wire))
+}
+
+/** Wraps explain_application — the model's markdown, kept verbatim. */
+export function buildApplicationExplanationRecord(
+  identity: ResultIdentity,
+  wire: unknown,
+  toolName = 'explain_application',
+): StructuredResult {
+  return record(identity, toolName, applicationExplanationDataSchema.parse(wire))
+}
+
 /** Wraps read_box_state. */
 export function buildApplicationBoxRecord(
   identity: ResultIdentity,
@@ -323,6 +356,16 @@ export const createApplicationProgramViewModel = viewModelFor(
   'application.program' as const,
   'Application program',
 )
+export const createApplicationMethodsViewModel = viewModelFor(
+  applicationMethodsDataSchema,
+  'application.methods' as const,
+  'Application methods',
+)
+export const createApplicationExplanationViewModel = viewModelFor(
+  applicationExplanationDataSchema,
+  'application.explanation' as const,
+  'Application explanation',
+)
 export const createApplicationBoxViewModel = viewModelFor(
   applicationBoxDataSchema,
   'application.box' as const,
@@ -353,6 +396,14 @@ export type ApplicationLocalsViewModel = Extract<
 >['model']
 export type ApplicationProgramViewModel = Extract<
   ReturnType<typeof createApplicationProgramViewModel>,
+  { ok: true }
+>['model']
+export type ApplicationMethodsViewModel = Extract<
+  ReturnType<typeof createApplicationMethodsViewModel>,
+  { ok: true }
+>['model']
+export type ApplicationExplanationViewModel = Extract<
+  ReturnType<typeof createApplicationExplanationViewModel>,
   { ok: true }
 >['model']
 export type ApplicationLogsViewModel = Extract<

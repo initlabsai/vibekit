@@ -286,6 +286,11 @@ export function useAgentLane({
                 kind: 'view',
                 view: viewFor(record, view),
               })
+              // The program's first page also carries its call surface.
+              const page = record.state === 'success' ? (record.data as { fromLine?: number }).fromLine : undefined
+              if (view === 'application.program' && page === 1) {
+                appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
+              }
             } catch (error: unknown) {
               // Say so: a silently dropped result looks like the agent said nothing.
               appendNote(

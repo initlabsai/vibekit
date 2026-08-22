@@ -139,6 +139,10 @@ export const applicationProgramSchema = z.object({
       selector: z.string(),
       name: z.string().optional().describe('Known only when an app spec is available'),
       signature: z.string().optional(),
+      args: z.array(z.object({ name: z.string().optional(), type: z.string() })).optional(),
+      returns: z.string().optional(),
+      readonly: z.boolean().optional(),
+      description: z.string().optional(),
     }),
   ),
 })

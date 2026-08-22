@@ -11,6 +11,8 @@ import {
   createApplicationLocalsViewModel,
   createApplicationLogsViewModel,
   createApplicationProgramViewModel,
+  createApplicationMethodsViewModel,
+  createApplicationExplanationViewModel,
   createApplicationStateViewModel,
   createAssetDetailViewModel,
   createAssetHoldersViewModel,
@@ -38,6 +40,8 @@ import {
   ApplicationLocalsCard,
   ApplicationLogsCard,
   ApplicationProgramCard,
+  ApplicationMethodsCard,
+  ApplicationExplanationCard,
   ApplicationStateCard,
   AssetCard,
   AssetHoldersCard,
@@ -340,6 +344,14 @@ export function ResultView({
     case 'application.program': {
       const derived = createApplicationProgramViewModel(store, view)
       return <ApplicationProgramCard model={derived.ok ? derived.model : undefined} width={width} />
+    }
+    case 'application.methods': {
+      const derived = createApplicationMethodsViewModel(store, view)
+      return <ApplicationMethodsCard model={derived.ok ? derived.model : undefined} width={width} />
+    }
+    case 'application.explanation': {
+      const derived = createApplicationExplanationViewModel(store, view)
+      return <ApplicationExplanationCard model={derived.ok ? derived.model : undefined} width={width} />
     }
     case 'application.logs': {
       const derived = createApplicationLogsViewModel(store, view)

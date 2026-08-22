@@ -27,7 +27,7 @@ import {
 
 export * from './schemas.js'
 export { analyzeTeal, labelSelectors, estimateProgramTokens, getApplicationProgram, PROGRAM_PAGE_LINES }
-export type { TealAnalysis, OnCompletionAction } from './lib/teal.js'
+export type { TealAnalysis, OnCompletionAction, LabelledMethod } from './lib/teal.js'
 export type { ApplicationProgram } from './handlers/program.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { listApplicationBoxes, readBoxState, readGlobalState, readLocalState }

@@ -23,6 +23,8 @@ export const TRUSTED_VIEW_IDS = [
   'application.box',
   'application.boxes',
   'application.program',
+  'application.methods',
+  'application.explanation',
   'block.detail',
   'block.list',
   'network.status',

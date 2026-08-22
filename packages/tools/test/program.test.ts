@@ -59,7 +59,11 @@ return`
     const labelled = labelSelectors(facts.selectors, [
       { name: 'hello', args: [{ type: 'string' }], returns: { type: 'string' } },
     ])
-    expect(labelled.find((m) => m.name === 'hello')?.signature).toBe('hello(string)string')
+    expect(labelled.find((m) => m.name === 'hello')).toMatchObject({
+      signature: 'hello(string)string',
+      args: [{ type: 'string' }],
+      returns: 'string',
+    })
     expect(labelled.find((m) => m.selector === "deadbeef")?.name).toBeUndefined()
   })
 })

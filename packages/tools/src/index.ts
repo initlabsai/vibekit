@@ -58,6 +58,7 @@ export type {
   ToolsFromArc56Options,
   TealAnalysis,
   OnCompletionAction,
+  LabelledMethod,
   ApplicationProgram,
 } from './contracts/index.js'
 

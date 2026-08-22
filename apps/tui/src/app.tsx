@@ -7,12 +7,13 @@ import {
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { ApprovalModal, ConfirmModal } from './approval-modal.js'
 import { AppsScreen, BlocksScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
+import { explainApplicationTool } from './explain-tool.js'
 import { ContentPane, NavPane } from './sections.js'
 import type { OpenTarget } from './views.js'
 import { useAccounts } from './slices/accounts.js'
@@ -92,6 +93,7 @@ export function App() {
   } = accounts
 
   const apps = useApps({ screen, network, sender: activeSender, live, host })
+  const agentExtraTools = useMemo(() => [...apps.extraTools, explainApplicationTool], [apps.extraTools])
 
   const lookup = useLookups({
     feed,
@@ -209,7 +211,7 @@ export function App() {
     agentBusy,
     setAgentBusy,
     setStatus,
-    extraTools: apps.extraTools,
+    extraTools: agentExtraTools,
     specCatalog: apps.catalog,
     onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
     askConfirm,

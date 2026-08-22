@@ -6,6 +6,7 @@ import { defineTool } from '@initlabs/vibekit-core'
 import {
   createFixturePaymentHost,
   createFixtureResultStore,
+  createApplicationMethodsViewModel,
   bridgeToolResult,
   unsignedGroupFromToolResult,
   FIXTURE_TRANSACTION_ID,
@@ -17,6 +18,7 @@ import {
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
+import { viewFor } from '../src/slices/lookup.js'
 import {
   addResult,
   createAccountListViewModel,
@@ -307,4 +309,58 @@ describe('TUI agent lane', () => {
     expect(toolResults).toHaveLength(1)
     expect(toolResults[0]?.toolName).toBe('resolve_nfd')
   })
+})
+
+describe('explain_application', () => {
+  test('the agent’s markdown becomes a trusted explanation record', async () => {
+    const { explainApplicationTool } = await import('../src/explain-tool.js')
+    const output = await explainApplicationTool.handler(
+      {} as never,
+      { applicationId: 42, markdown: '## Pool\n- swap' },
+    )
+    const bridged = bridgeToolResult(
+      { id: 'call-x', toolName: 'explain_application', output, view: 'application.explanation', isError: false },
+      { resultId: newId('result-explain'), toolCallId: 'call-x', network: 'mainnet' },
+    )
+    expect(bridged.view).toBe('application.explanation')
+    expect(bridged.record).toMatchObject({ state: 'success', data: { applicationId: 42, markdown: '## Pool\n- swap' } })
+  })
+
+  test('the explorer prompt routes explanations through the card', () => {
+    const prompt = explorerSystemPrompt([], 'mainnet', [])
+    expect(prompt).toContain('explain_application')
+    expect(prompt).toContain('never audit')
+  })
+})
+
+test('the methods view derives from a program record', () => {
+  const program = {
+    applicationId: 7,
+    program: 'approval',
+    bytes: 10,
+    totalLines: 2,
+    fromLine: 1,
+    toLine: 2,
+    teal: '#pragma version 10\nint 1',
+    analysis: {
+      version: 10,
+      instructions: 1,
+      entrypoints: ['0x02bece11', 'bootstrap'],
+      selectors: ['02bece11'],
+      strings: ['bootstrap'],
+      stateKeys: { global: [], local: [], box: [] },
+      guards: { rekey: false, closeRemainder: false, assetClose: false },
+      innerTransactions: 0,
+      onCompletion: [],
+    },
+    methods: [{ selector: '02bece11', name: 'hello', signature: 'hello(string)string' }],
+  }
+  const bridged = bridgeToolResult(
+    { id: 'call-p', toolName: 'get_application_program', output: program, view: 'application.program', isError: false },
+    { resultId: newId('result-program'), toolCallId: 'call-p', network: 'mainnet' },
+  )
+  const store = addResult(createFixtureResultStore(), bridged.record)
+  const methods = createApplicationMethodsViewModel(store, viewFor(bridged.record, 'application.methods'))
+  expect(methods.ok).toBe(true)
+  if (methods.ok) expect(methods.model.analysis.entrypoints).toEqual(['0x02bece11', 'bootstrap'])
 })

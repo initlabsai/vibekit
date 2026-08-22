@@ -289,16 +289,39 @@ export function analyzeTeal(teal: string): TealAnalysis {
   }
 }
 
-/** Selector hex → method name and signature, for the spec methods that compile to one. */
+export interface LabelledMethod {
+  selector: string
+  name?: string
+  signature?: string
+  args?: Array<{ name?: string; type: string }>
+  returns?: string
+  readonly?: boolean
+  description?: string
+}
+
+/** Selector hex → the spec method that compiles to it, with its signature and args. */
 export function labelSelectors(
   selectors: readonly string[],
-  methods: ReadonlyArray<{ name: string; args: ReadonlyArray<{ type: string }>; returns?: { type: string } }>,
-): Array<{ selector: string; name?: string; signature?: string }> {
-  const byHex = new Map<string, { name: string; signature: string }>()
+  methods: ReadonlyArray<{
+    name: string
+    args: ReadonlyArray<{ type: string; name?: string }>
+    returns?: { type: string }
+    readonly?: boolean
+    description?: string
+  }>,
+): LabelledMethod[] {
+  const byHex = new Map<string, Omit<LabelledMethod, 'selector'>>()
   for (const method of methods) {
     const signature = `${method.name}(${method.args.map((a) => a.type).join(',')})${method.returns?.type ?? 'void'}`
     try {
-      byHex.set(toHex(ABIMethod.fromSignature(signature).getSelector()), { name: method.name, signature })
+      byHex.set(toHex(ABIMethod.fromSignature(signature).getSelector()), {
+        name: method.name,
+        signature,
+        args: method.args.map((a) => ({ ...(a.name ? { name: a.name } : {}), type: a.type })),
+        returns: method.returns?.type ?? 'void',
+        ...(method.readonly ? { readonly: true } : {}),
+        ...(method.description ? { description: method.description } : {}),
+      })
     } catch {
       // Not an ABI signature (bare call spec entry); nothing to label.
     }

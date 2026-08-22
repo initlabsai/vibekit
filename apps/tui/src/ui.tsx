@@ -1,10 +1,29 @@
-import { createTextAttributes, type MouseEvent } from '@opentui/core'
+import { createTextAttributes, SyntaxStyle, type MouseEvent } from '@opentui/core'
 import type { ReactNode } from 'react'
 
 import { copyableIdent, useCopyIdent } from './copy-selection.js'
 import { COLORS, shorten } from './theme.js'
 
 const IDENT_ATTR = createTextAttributes({ underline: true })
+
+let markdownStyleCache: SyntaxStyle | undefined
+/** The palette for <markdown>: brass structure, amber emphasis, signal for code. */
+export function markdownStyle(): SyntaxStyle {
+  markdownStyleCache ??= SyntaxStyle.fromStyles({
+    default: { fg: COLORS.text },
+    'markup.heading': { fg: COLORS.brassBright, bold: true },
+    'markup.strong': { fg: COLORS.brassBright, bold: true },
+    'markup.italic': { fg: COLORS.muted, italic: true },
+    'markup.raw': { fg: COLORS.signal },
+    'markup.list': { fg: COLORS.brass },
+    'markup.quote': { fg: COLORS.muted },
+    'markup.link': { fg: COLORS.signal, underline: true },
+    'markup.link.label': { fg: COLORS.signal },
+    'markup.link.url': { fg: COLORS.signalDim },
+    'markup.strikethrough': { fg: COLORS.faint },
+  })
+  return markdownStyleCache
+}
 
 /** Horizontal padding inside a framed card (border + paddingX). */
 export const FRAME_GUTTER = 6

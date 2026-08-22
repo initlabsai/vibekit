@@ -16,7 +16,9 @@ export {
   ApplicationCard,
   ApplicationListCard,
   ApplicationLocalsCard,
+  ApplicationExplanationCard,
   ApplicationLogsCard,
+  ApplicationMethodsCard,
   ApplicationProgramCard,
   ApplicationStateCard,
 } from './application.js'
