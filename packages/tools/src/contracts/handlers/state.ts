@@ -3,8 +3,8 @@
  *
  * Domain logic for reading global state, local state, and box storage.
  */
-import { bytesToBase64, ToolError, type ToolContext } from '@initlabs/vibekit-core'
-import { ABIUintType, decodeAddress } from 'algosdk'
+import { base64ToBytes, bytesToBase64, ToolError, type ToolContext } from '@initlabs/vibekit-core'
+import { ABIUintType, decodeAddress, encodeAddress } from 'algosdk'
 
 // ============================================================================
 // Shared types and helpers
@@ -15,11 +15,32 @@ export interface StateValue {
   key: string
   /** base64 of the exact key bytes. */
   keyBase64: string
-  /** bytes state as UTF-8 text; uint64 state as bigint (jsonSafe emits number | decimal string). */
+  /**
+   * Display value: uint64 state as bigint (jsonSafe emits number | decimal
+   * string); bytes state decoded the way explorers do without a spec — a
+   * 32-byte value as an Algorand address, printable bytes as text, else base64.
+   */
   value: string | number | bigint
   /** base64 of the exact value bytes (bytes-typed state only). */
   valueBase64?: string
   type: 'uint' | 'bytes'
+}
+
+/** Raw bytes from a Uint8Array or a base64 string. */
+function toBytes(bytes: Uint8Array | string): Uint8Array {
+  return typeof bytes === 'string' ? base64ToBytes(bytes) : bytes
+}
+
+/**
+ * A bytes state/box value for display, matching explorer convention with no
+ * spec: exactly 32 bytes reads as an Algorand address, all-printable bytes as
+ * text, anything else as base64. Raw base64 always stays in `valueBase64`.
+ */
+function bytesToDisplay(bytes: Uint8Array | string): string {
+  const arr = toBytes(bytes)
+  if (arr.length === 32) return encodeAddress(arr)
+  const text = new TextDecoder().decode(arr)
+  return /^[^\p{C}]*$/u.test(text) ? text : bytesToBase64(arr)
 }
 
 /** Decode bytes to a UTF-8 string. If input is a string, treats it as base64. */
@@ -82,7 +103,7 @@ function decodeStateItems(
       state.push({
         key: displayKey,
         keyBase64,
-        value: bytesToString(item.value.bytes),
+        value: bytesToDisplay(item.value.bytes),
         valueBase64: toBase64(item.value.bytes),
         type: 'bytes',
       })
@@ -251,14 +272,13 @@ export async function readBoxState(
     const boxResponse = await ctx.algod.getApplicationBoxByName(appId, boxNameBytes).do()
 
     const valueArray = new Uint8Array(boxResponse.value)
-    const valueString = new TextDecoder().decode(valueArray)
     const valueBase64 = bytesToBase64(valueArray)
 
     return {
       appId,
       boxName: boxNameDisplay,
       exists: true,
-      value: valueString,
+      value: bytesToDisplay(valueArray),
       valueBase64,
       size: valueArray.length,
     }

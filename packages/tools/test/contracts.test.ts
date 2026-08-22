@@ -3,6 +3,10 @@ import { ToolError } from '@initlabs/vibekit-core'
 import { contractTools } from '../src/contracts/index.js'
 import { lookupApplication, lookupApplicationLogs } from '../src/contracts/handlers/lookup.js'
 import { searchApplications } from '../src/contracts/handlers/search.js'
+import { decodeAddress } from 'algosdk'
+
+import { bytesToBase64 } from '@initlabs/vibekit-core'
+
 import { readBoxState, readGlobalState, readLocalState } from '../src/contracts/handlers/state.js'
 import { chainable, fakeContext } from './fake-context.js'
 
@@ -180,6 +184,33 @@ describe('readGlobalState', () => {
       },
       { key: 'total', keyBase64: btoa('total'), value: BigInt(9000), type: 'uint' },
     ])
+  })
+
+  test('decodes a 32-byte bytes value as an address, binary as base64', async () => {
+    const addressBytes = decodeAddress(
+      'YFN66NKXPMN5YM36H7ZOOBEGZBY7FFNOJ2JKJI6MNUYDXGKJPOQQPZ6Q3E',
+    ).publicKey
+    const binary = new Uint8Array([0xff, 0x00, 0x1b, 0x80])
+    const ctx = fakeContext({
+      algod: {
+        getApplicationByID: () =>
+          chainable({
+            params: {
+              globalState: [
+                { key: utf8('ca'), value: { type: 1, bytes: addressBytes, uint: BigInt(0) } },
+                { key: utf8('blob'), value: { type: 1, bytes: binary, uint: BigInt(0) } },
+              ],
+            },
+          }),
+      },
+    })
+    const result = await readGlobalState(ctx, { appId: 5 })
+    // Address decode, not a control-char utf-8 string.
+    expect(result.state[0]!.value).toBe('YFN66NKXPMN5YM36H7ZOOBEGZBY7FFNOJ2JKJI6MNUYDXGKJPOQQPZ6Q3E')
+    // Non-printable binary falls back to base64 (never a mangled string).
+    expect(result.state[1]!.value).toBe(bytesToBase64(binary))
+    // Raw base64 is always preserved alongside.
+    expect(result.state[0]!.valueBase64).toBe(bytesToBase64(addressBytes))
   })
 
   test('maps keys to human-readable names via appSpec', async () => {
