@@ -87,6 +87,7 @@ export function ResultView({
   // Presentation toggles are this card's own: the header buttons flip them.
   const [sort, setSort] = useState<AssetSort>('none')
   const [flow, setFlow] = useState<'graph' | 'table'>('graph')
+  const [layout, setLayout] = useState<'stack' | 'table'>('stack')
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
@@ -247,6 +248,8 @@ export function ResultView({
           onOpen={onOpen ? (txid) => onOpen({ kind: 'transaction', txid }) : undefined}
           onMore={view.view === 'transaction.list' && derived.model.nextToken ? onMore : undefined}
           loadingMore={loadingMore}
+          layout={layout}
+          onToggleLayout={() => setLayout(layout === 'table' ? 'stack' : 'table')}
           onShowGraph={view.view === 'transaction.group' ? () => setFlow('graph') : undefined}
         />
       )

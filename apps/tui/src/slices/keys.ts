@@ -29,6 +29,7 @@ export function useExplorerKeys({
   selectAppsMethod,
   submitAppsCall,
   toggleBlocksTail,
+  openListRow,
 }: {
   feed: Feed
   modalOpen: boolean
@@ -48,6 +49,8 @@ export function useExplorerKeys({
   selectAppsMethod: (index: number) => void
   submitAppsCall: () => void
   toggleBlocksTail: () => void
+  /** Opens row n (1-9) of the newest transaction list in the selected section. */
+  openListRow: (index: number) => void
 }) {
   const {
     focus,
@@ -191,8 +194,11 @@ export function useExplorerKeys({
             case 'x':
               closeSelectedSection()
               return
-            default:
+            default: {
+              const index = Number.parseInt(key.name, 10)
+              if (Number.isInteger(index) && index >= 1 && index <= 9) openListRow(index)
               return
+            }
           }
         }
         if (key.name === 'tab' && sectionsRef.current.length > 0) setFocus('content')
@@ -222,6 +228,7 @@ export function useExplorerKeys({
         setScreen,
         switchNetwork,
         toggleBlocksTail,
+        openListRow,
       ],
     ),
   )

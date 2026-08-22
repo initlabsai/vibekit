@@ -1,4 +1,5 @@
 import { base64ToBytes } from '@initlabs/vibekit-core'
+import type { MouseEvent } from '@opentui/core'
 import {
   formatBaseUnits,
   formatBlockTxnType,
@@ -8,7 +9,7 @@ import {
   type TransactionDetailViewModel,
 } from '@initlabs/vibekit-experience'
 
-import { COLORS } from '../theme.js'
+import { COLORS, shorten } from '../theme.js'
 import {
   Button,
   Chip,
@@ -242,6 +243,117 @@ function queryLabel(
   return parts.length > 0 ? parts.join(' · ') : undefined
 }
 
+function compactTime(roundTime: number): string {
+  return new Date(roundTime * 1000).toISOString().slice(11, 16)
+}
+
+function pad(text: string, width: number, align: 'left' | 'right' = 'left'): string {
+  const cut = shorten(text, width)
+  return align === 'right' ? cut.padStart(width) : cut.padEnd(width)
+}
+
+type ListRow = {
+  id?: string
+  type?: string
+  sender: string
+  receiver?: string
+  paymentAmountMicroAlgos?: number | string
+  feeMicroAlgos?: number | string
+  assetId?: number | string
+  assetAmount?: number | string
+  assetUnitName?: string
+  assetDecimals?: number
+  applicationId?: number | string
+  confirmedRound?: number
+  roundTime?: number
+  innerCount?: number
+}
+
+function rowAmount(row: ListRow): string | undefined {
+  const payment = algo(row.paymentAmountMicroAlgos)
+  if (payment) return payment
+  if (row.assetAmount === undefined) return undefined
+  const units = assetUnits(row.assetAmount, row.assetDecimals, row.assetUnitName)
+  if (!units) return undefined
+  return units.unit
+    ? `${units.value} ${units.unit}`
+    : `${units.value}${row.assetId === undefined ? '' : ` #${row.assetId}`}`
+}
+
+function rowCounterparty(row: ListRow): string | undefined {
+  return row.receiver ?? (row.applicationId === undefined ? undefined : `app ${row.applicationId}`)
+}
+
+/**
+ * One line per transaction: number · type · amount · from → to · round · time.
+ * The number is the keyboard path (1-9 opens that row in the selected
+ * section); the whole line is the mouse path.
+ */
+function TransactionTable({
+  rows,
+  innerType,
+  body,
+  onOpen,
+}: {
+  rows: ReadonlyArray<ListRow>
+  innerType?: string
+  body: number
+  onOpen?: (txid: string) => void
+}) {
+  const numW = 3
+  const typeW = 14
+  const amountW = 14
+  const roundW = 9
+  const timeW = 5
+  const partyW = Math.max(12, body - (numW + typeW + amountW + roundW + timeW + 5))
+  const each = Math.max(4, Math.floor((partyW - 3) / 2))
+  const header = [
+    pad('#', numW),
+    pad('type', typeW),
+    pad('amount', amountW, 'right'),
+    pad('from → to', partyW),
+    pad('round', roundW, 'right'),
+    pad('UTC', timeW),
+  ].join(' ')
+  return (
+    <box flexDirection="column" marginTop={1}>
+      <text fg={COLORS.faint} content={header} />
+      {rows.map((row, index) => {
+        const matchedViaInner = innerType !== undefined && row.type !== undefined && row.type !== innerType
+        const type = `${formatBlockTxnType(row.type ?? 'txn')}${matchedViaInner ? '*' : ''}`
+        const to = rowCounterparty(row)
+        const party = to ? `${shorten(row.sender, each)} → ${shorten(to, each)}` : shorten(row.sender, partyW)
+        const line = [
+          pad(index < 9 ? `[${index + 1}]` : '', numW),
+          pad(type, typeW),
+          pad(rowAmount(row) ?? '', amountW, 'right'),
+          pad(party, partyW),
+          pad(row.confirmedRound === undefined ? '' : String(row.confirmedRound), roundW, 'right'),
+          pad(row.roundTime === undefined ? '' : compactTime(row.roundTime), timeW),
+        ].join(' ')
+        return (
+          <text
+            key={row.id ?? `${row.sender}-${index}`}
+            fg={onOpen && row.id ? COLORS.text : COLORS.muted}
+            content={line}
+            onMouseDown={
+              onOpen && row.id
+                ? (event: MouseEvent) => {
+                    event.stopPropagation()
+                    onOpen(row.id!)
+                  }
+                : undefined
+            }
+          />
+        )
+      })}
+      {innerType && rows.some((row) => row.type !== undefined && row.type !== innerType) ? (
+        <text fg={COLORS.faint} content={`* matched through inner ${formatBlockTxnType(innerType)} txns`} />
+      ) : null}
+    </box>
+  )
+}
+
 export function TransactionListCard({
   title,
   groupId,
@@ -253,6 +365,8 @@ export function TransactionListCard({
   onShowGraph,
   onMore,
   loadingMore = false,
+  layout = 'stack',
+  onToggleLayout,
 }: {
   title: string
   groupId?: string
@@ -282,6 +396,9 @@ export function TransactionListCard({
   /** Fetches the next page into this card; present only when there is one. */
   onMore?: () => void
   loadingMore?: boolean
+  /** stack: a fact block per row (default); table: one line per row. */
+  layout?: 'stack' | 'table'
+  onToggleLayout?: () => void
 }) {
   const body = innerWidth(width)
   // Every row the record holds: pages merge into this card, so no display cap.
@@ -302,11 +419,21 @@ export function TransactionListCard({
         chip={filter}
         pill={String(transactions.length)}
         tone="idle"
-        action={onShowGraph ? <Button label="graph" onPress={onShowGraph} /> : undefined}
+        action={
+          <>
+            {onToggleLayout ? (
+              <Button label={layout === 'table' ? 'expand' : 'compact'} onPress={onToggleLayout} />
+            ) : null}
+            {onShowGraph ? <Button label="graph" onPress={onShowGraph} /> : null}
+          </>
+        }
       />
       {groupId ? <Fact label="group" value={groupId} copy={groupId} width={body} /> : null}
+      {layout === 'table' ? (
+        <TransactionTable rows={rows} innerType={innerType} body={body} onOpen={onOpen} />
+      ) : null}
       <box flexDirection="column">
-        {rows.map((row, index) => {
+        {(layout === 'table' ? [] : rows).map((row, index) => {
           const payment = algo(row.paymentAmountMicroAlgos)
           const units =
             row.assetAmount === undefined

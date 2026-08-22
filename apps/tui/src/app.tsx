@@ -1,5 +1,6 @@
 import {
   createFixtureResultStore,
+  createTransactionCollectionViewModel,
   type ResultStore,
   type ViewSpec,
 } from '@initlabs/vibekit-experience'
@@ -251,6 +252,25 @@ export function App() {
     [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, setScreen],
   )
 
+  // Keyboard path for table rows: the newest transaction list in the selected section.
+  const openListRow = useCallback(
+    (index: number) => {
+      const section = sections.find((candidate) => candidate.id === selectedId)
+      if (!section) return
+      for (let i = section.items.length - 1; i >= 0; i -= 1) {
+        const item = section.items[i]!
+        if (item.kind !== 'block' || item.block.kind !== 'view') continue
+        const { view } = item.block
+        if (view.view !== 'transaction.list' && view.view !== 'transaction.group') continue
+        const derived = createTransactionCollectionViewModel(storeRef.current, view)
+        const txid = derived.ok ? derived.model.transactions[index - 1]?.id : undefined
+        if (txid) openTarget({ kind: 'transaction', txid })
+        return
+      }
+    },
+    [openTarget, sections, selectedId, storeRef],
+  )
+
   const [loadingMoreItemId, setLoadingMoreItemId] = useState<number | null>(null)
   const loadMore = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
@@ -385,6 +405,7 @@ export function App() {
     selectAppsMethod,
     submitAppsCall: apps.submitCall,
     toggleBlocksTail: tail.togglePause,
+    openListRow,
   })
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
@@ -420,7 +441,7 @@ export function App() {
       : screen === 'assets' || screen === 'txns'
         ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
         : focus === 'content'
-          ? '↑/↓ scroll · ←/→ sections · x close · tab/esc chat'
+          ? '↑/↓ scroll · ←/→ sections · 1-9 open row · x close · tab/esc chat'
           : sections.length > 0
             ? `enter send · tab feed (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
