@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { Section, SectionBlock, SectionItem } from '../sections.js'
 
 /** Which pane owns the keyboard on the chat screen. */
-export type Focus = 'composer' | 'nav' | 'content'
+export type Focus = 'composer' | 'content'
 
 /**
  * Owns the results feed: one section per user request, plus the selection,

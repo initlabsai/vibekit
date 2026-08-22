@@ -22,7 +22,6 @@ export function useExplorerKeys({
   setActiveSender,
   cycleAccount,
   closeSelectedSection,
-  isNarrow,
   appsDetailOpen,
   closeAppsDetail,
   activateAppsEntry,
@@ -42,7 +41,6 @@ export function useExplorerKeys({
   setActiveSender: (address: string) => void
   cycleAccount: (delta: number) => void
   closeSelectedSection: () => void
-  isNarrow: boolean
   appsDetailOpen: boolean
   closeAppsDetail: () => void
   activateAppsEntry: (index: number) => void
@@ -161,34 +159,6 @@ export function useExplorerKeys({
           }
           return
         }
-        if (focus === 'nav') {
-          switch (key.name) {
-            case 'escape':
-            case 'c':
-              setFocus('composer')
-              return
-            case 'tab':
-              setFocus('content')
-              return
-            case 'up':
-            case 'k':
-              moveSelection(-1)
-              return
-            case 'down':
-            case 'j':
-              moveSelection(1)
-              return
-            case 'return':
-            case 'enter':
-              if (selectedRef.current !== null) scrollToSection(selectedRef.current)
-              return
-            case 'x':
-              closeSelectedSection()
-              return
-            default:
-              return
-          }
-        }
         if (focus === 'content') {
           switch (key.name) {
             case 'tab':
@@ -225,9 +195,7 @@ export function useExplorerKeys({
               return
           }
         }
-        if (key.name === 'tab' && sectionsRef.current.length > 0) {
-          setFocus(isNarrow ? 'content' : 'nav')
-        }
+        if (key.name === 'tab' && sectionsRef.current.length > 0) setFocus('content')
       },
       [
         accountList,
@@ -242,7 +210,6 @@ export function useExplorerKeys({
         cycleAccount,
         decide,
         focus,
-        isNarrow,
         modalOpen,
         moveSelection,
         openWorkspace,

@@ -330,7 +330,6 @@ export function App() {
     setActiveSender,
     cycleAccount,
     closeSelectedSection,
-    isNarrow,
     appsDetailOpen: apps.selected !== null,
     closeAppsDetail,
     activateAppsEntry,
@@ -372,12 +371,10 @@ export function App() {
           : 'space start · esc chat · ^w wallet · ^1 assets · ^2 apps · ^3 txns'
       : screen === 'assets' || screen === 'txns'
         ? 'esc chat · ^w wallet · [ ] cycle account · ^1 assets · ^2 apps · ^3 txns · ^4 blocks'
-        : focus === 'nav'
-        ? '↑/↓ select · enter view · x close · tab content · esc chat'
         : focus === 'content'
           ? '↑/↓ scroll · ←/→ sections · x close · tab/esc chat'
           : sections.length > 0
-            ? `enter send · tab session (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
+            ? `enter send · tab feed (${sections.length}) · ^w wallet · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^w wallet · ^1 assets · ^n network'
 
   return (
@@ -462,7 +459,6 @@ export function App() {
             <NavPane
               sections={sections}
               selectedId={selectedId}
-              focused={focus === 'nav'}
               width={navWidth}
               onSelect={feed.selectSection}
             />
@@ -472,7 +468,6 @@ export function App() {
             selectedId={selectedId}
             store={store}
             focused={focus === 'content'}
-            navFocused={focus === 'nav'}
             busyPayment={busy && flow !== null}
             liveThinkingSectionId={agentBusy ? agentSectionRef.current : null}
             hasAgent={Boolean(agentConfig)}

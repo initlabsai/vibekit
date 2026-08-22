@@ -163,13 +163,11 @@ export function WelcomePanel({ hasAgent, width }: { hasAgent: boolean; width: nu
 export function NavPane({
   sections,
   selectedId,
-  focused,
   width,
   onSelect,
 }: {
   sections: Section[]
   selectedId: number | null
-  focused: boolean
   width: number
   onSelect: (id: number) => void
 }) {
@@ -178,10 +176,10 @@ export function NavPane({
       width={width}
       flexDirection="column"
       border
-      borderStyle={focused ? 'heavy' : 'single'}
-      borderColor={focused ? COLORS.brass : COLORS.border}
+      borderStyle="single"
+      borderColor={COLORS.border}
       title=" SESSION "
-      titleColor={focused ? COLORS.brassBright : COLORS.faint}
+      titleColor={COLORS.faint}
       backgroundColor={COLORS.background}
     >
       <scrollbox flexGrow={1} stickyScroll stickyStart="bottom">
@@ -220,7 +218,6 @@ export function ContentPane({
   selectedId,
   store,
   focused,
-  navFocused,
   busyPayment,
   liveThinkingSectionId,
   hasAgent,
@@ -237,7 +234,6 @@ export function ContentPane({
   selectedId: number | null
   store: ResultStore
   focused: boolean
-  navFocused: boolean
   busyPayment: boolean
   /** Section currently streaming reasoning, if any. */
   liveThinkingSectionId?: number | null
@@ -298,9 +294,17 @@ export function ContentPane({
                   else sectionRegistry.current.delete(section.id)
                 }}
               >
-                {/* Full-height gutter: the selection stays visible however far you scroll. */}
-                <box width={1} backgroundColor={selected ? COLORS.brass : COLORS.borderSoft} />
-                <box flexDirection="column" flexGrow={1} paddingLeft={1}>
+                {/* Hairline + one-step tint: the selection stays visible however far
+                    you scroll without shouting. A left-only border is a true 1/8-cell rule. */}
+                <box
+                  flexDirection="column"
+                  flexGrow={1}
+                  paddingLeft={1}
+                  border={['left']}
+                  borderStyle={selected ? 'heavy' : 'single'}
+                  borderColor={selected ? COLORS.brass : COLORS.borderSoft}
+                  backgroundColor={selected ? COLORS.panel : undefined}
+                >
                 <box flexDirection="row" justifyContent="space-between" height={1}>
                   <text
                     fg={selected ? COLORS.brassBright : COLORS.faint}
