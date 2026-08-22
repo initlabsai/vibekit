@@ -39,6 +39,11 @@ export {
   decodeAppCall,
   decodeAppCallForApp,
   enrichTransactionsWithAbi,
+  analyzeTeal,
+  labelSelectors,
+  estimateProgramTokens,
+  getApplicationProgram,
+  PROGRAM_PAGE_LINES,
 } from './contracts/index.js'
 export type {
   FormattedApplication,
@@ -51,6 +56,9 @@ export type {
   DecodedAbiValue,
   GeneratedAppTool,
   ToolsFromArc56Options,
+  TealAnalysis,
+  OnCompletionAction,
+  ApplicationProgram,
 } from './contracts/index.js'
 
 export { networkTools, lookupBlock, getNetworkStatus, searchBlockHeaders } from './network/index.js'

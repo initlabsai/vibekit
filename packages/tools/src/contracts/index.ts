@@ -2,6 +2,8 @@ import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { z } from 'zod'
 import { lookupApplication, lookupApplicationLogs } from './handlers/lookup.js'
+import { estimateProgramTokens, getApplicationProgram, PROGRAM_PAGE_LINES } from './handlers/program.js'
+import { analyzeTeal, labelSelectors } from './lib/teal.js'
 import { searchApplications } from './handlers/search.js'
 import {
   listApplicationBoxes,
@@ -20,9 +22,13 @@ import {
   applicationLogsSchema,
   applicationStateSchema,
   formattedApplicationSchema,
+  applicationProgramSchema,
 } from './schemas.js'
 
 export * from './schemas.js'
+export { analyzeTeal, labelSelectors, estimateProgramTokens, getApplicationProgram, PROGRAM_PAGE_LINES }
+export type { TealAnalysis, OnCompletionAction } from './lib/teal.js'
+export type { ApplicationProgram } from './handlers/program.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { listApplicationBoxes, readBoxState, readGlobalState, readLocalState }
 export { parseAppSpec, substituteTemplateParams }
@@ -185,6 +191,21 @@ Examples:
         clearProgramSize: params.clearStateProgram?.length ?? 0,
       }
     },
+  }),
+  defineTool({
+    name: 'get_application_program',
+    description:
+      "Fetch and disassemble an application's on-chain program into TEAL, with deterministic facts: version, ABI method selectors, state keys, rekey/close guards, inner transactions, OnCompletion handling. Use when asked to analyze, audit, explain, or review a smart contract. Large result — call it once; page with fromLine/toLine only when the facts and first page are not enough.",
+    parameters: z.object({
+      applicationId: z.number().describe('The application ID'),
+      program: z.enum(['approval', 'clear']).optional().describe('Which program (default approval)'),
+      fromLine: z.number().int().positive().optional().describe(`First TEAL line to return (default 1; ${PROGRAM_PAGE_LINES} lines a page)`),
+      toLine: z.number().int().positive().optional().describe('Last TEAL line to return'),
+    }),
+    output: applicationProgramSchema,
+    view: 'application.program',
+    expensive: true,
+    handler: async (ctx, args) => getApplicationProgram(ctx, args),
   }),
   defineTool({
     name: 'app_list_methods',

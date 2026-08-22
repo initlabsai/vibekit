@@ -1,0 +1,2684 @@
+#pragma version 7
+txn ApplicationID
+pushint 0
+==
+bz label1
+pushbytes 0x6665655f736574746572 // "fee_setter"
+txn Sender
+app_global_put
+pushbytes 0x6665655f636f6c6c6563746f72 // "fee_collector"
+txn Sender
+app_global_put
+pushbytes 0x6665655f6d616e61676572 // "fee_manager"
+txn Sender
+app_global_put
+pushint 1
+return
+label1:
+txn OnCompletion
+pushint 0
+==
+bnz label2
+txn OnCompletion
+pushint 1
+==
+bnz label3
+txn OnCompletion
+pushint 2
+==
+bnz label4
+txn OnCompletion
+pushint 4
+==
+bnz label4
+txn OnCompletion
+pushint 5
+==
+bnz label4
+err
+label4:
+pushint 0
+return
+label3:
+txna ApplicationArgs 0
+pushbytes 0x626f6f747374726170 // "bootstrap"
+==
+assert
+txn RekeyTo
+global CurrentApplicationAddress
+==
+assert
+txna Assets 0
+store 0
+txna Assets 1
+store 1
+load 0
+load 1
+>
+assert
+txn Sender
+store 2
+load 0
+asset_params_get AssetUnitName
+store 3
+store 4
+load 3
+assert
+load 0
+asset_params_get AssetTotal
+pop
+store 6
+load 6
+pushint 1000000
+>=
+assert
+load 1
+pushint 0
+==
+bz label5
+pushbytes 0x414c474f // "ALGO"
+store 5
+b label6
+label5:
+load 1
+asset_params_get AssetUnitName
+store 3
+store 5
+load 3
+assert
+load 1
+asset_params_get AssetTotal
+pop
+store 6
+load 6
+pushint 1000000
+>=
+assert
+label6:
+pushbytes 0x54696e796d616e506f6f6c322e3020 // "TinymanPool2.0 "
+load 4
+pushbytes 0x2d // "-"
+concat
+load 5
+concat
+concat
+store 7
+pushbytes 0x06801800000000000000000000000000000000000000000000000081005b3500340031181244311981011244810143 // 0x06801800000000000000000000000000000000000000000000000081005b3500340031181244311981011244810143
+global CurrentApplicationID
+itob
+replace2 3
+store 8
+load 8
+load 0
+itob
+replace2 11
+store 8
+load 8
+load 1
+itob
+replace2 19
+store 8
+load 2
+pushbytes 0x50726f6772616d // "Program"
+load 8
+concat
+sha512_256
+==
+assert
+load 0
+itob
+load 1
+itob
+pushint 16
+bzero
+concat
+concat
+store 9
+itxn_begin
+pushint 1
+itxn_field TypeEnum
+load 2
+itxn_field Sender
+global CurrentApplicationAddress
+itxn_field Receiver
+pushint 100000
+itxn_field Amount
+pushint 0
+itxn_field Fee
+itxn_submit
+itxn_begin
+pushint 3
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field Sender
+pushbytes 0x544d504f4f4c32 // "TMPOOL2"
+itxn_field ConfigAssetUnitName
+load 7
+itxn_field ConfigAssetName
+pushint 18446744073709551615
+itxn_field ConfigAssetTotal
+pushint 6
+itxn_field ConfigAssetDecimals
+pushbytes 0x68747470733a2f2f74696e796d616e2e6f7267 // "https://tinyman.org"
+itxn_field ConfigAssetURL
+load 2
+itxn_field ConfigAssetReserve
+load 9
+itxn_field ConfigAssetMetadataHash
+pushint 0
+itxn_field Fee
+itxn_submit
+itxn CreatedAssetID
+store 10
+itxn_begin
+pushint 4
+itxn_field TypeEnum
+load 2
+itxn_field Sender
+load 2
+itxn_field AssetReceiver
+load 0
+itxn_field XferAsset
+pushint 0
+itxn_field Amount
+pushint 0
+itxn_field Fee
+itxn_submit
+load 1
+pushint 0
+>
+bz label7
+itxn_begin
+pushint 4
+itxn_field TypeEnum
+load 2
+itxn_field Sender
+load 2
+itxn_field AssetReceiver
+load 1
+itxn_field XferAsset
+pushint 0
+itxn_field Amount
+pushint 0
+itxn_field Fee
+itxn_submit
+label7:
+itxn_begin
+pushint 4
+itxn_field TypeEnum
+load 2
+itxn_field Sender
+load 2
+itxn_field AssetReceiver
+load 10
+itxn_field XferAsset
+pushint 0
+itxn_field Amount
+pushint 0
+itxn_field Fee
+itxn_submit
+itxn_begin
+pushint 4
+itxn_field TypeEnum
+global CurrentApplicationAddress
+itxn_field Sender
+load 2
+itxn_field AssetReceiver
+load 10
+itxn_field XferAsset
+pushint 18446744073709551615
+itxn_field AssetAmount
+pushint 0
+itxn_field Fee
+itxn_submit
+pushint 0
+pushbytes 0x61737365745f315f6964 // "asset_1_id"
+load 0
+app_local_put
+pushint 0
+pushbytes 0x61737365745f325f6964 // "asset_2_id"
+load 1
+app_local_put
+pushint 0
+pushbytes 0x706f6f6c5f746f6b656e5f61737365745f6964 // "pool_token_asset_id"
+load 10
+app_local_put
+pushint 0
+pushbytes 0x746f74616c5f6665655f7368617265 // "total_fee_share"
+pushint 30
+app_local_put
+pushint 0
+pushbytes 0x70726f746f636f6c5f6665655f726174696f // "protocol_fee_ratio"
+pushint 6
+app_local_put
+pushint 0
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x6c6f636b // "lock"
+pushint 0
+app_local_put
+pushint 0
+pushbytes 0x61737365745f315f63756d756c61746976655f7072696365 // "asset_1_cumulative_price"
+pushbytes 0x0000000000000000 // 0x0000000000000000
+app_local_put
+pushint 0
+pushbytes 0x61737365745f325f63756d756c61746976655f7072696365 // "asset_2_cumulative_price"
+pushbytes 0x0000000000000000 // 0x0000000000000000
+app_local_put
+pushint 0
+pushbytes 0x63756d756c61746976655f70726963655f7570646174655f74696d657374616d70 // "cumulative_price_update_timestamp"
+global LatestTimestamp
+app_local_put
+pushint 1
+return
+label2:
+txn Sender
+store 0
+txna ApplicationArgs 0
+pushbytes 0x7365745f6665655f636f6c6c6563746f72 // "set_fee_collector"
+==
+bnz label8
+txna ApplicationArgs 0
+pushbytes 0x7365745f6665655f736574746572 // "set_fee_setter"
+==
+bnz label9
+txna ApplicationArgs 0
+pushbytes 0x7365745f6665655f6d616e61676572 // "set_fee_manager"
+==
+bnz label10
+txna ApplicationArgs 0
+pushbytes 0x636c61696d5f66656573 // "claim_fees"
+==
+bnz label11
+txna ApplicationArgs 0
+pushbytes 0x636c61696d5f6578747261 // "claim_extra"
+==
+bnz label12
+txna ApplicationArgs 0
+pushbytes 0x7365745f666565 // "set_fee"
+==
+bnz label13
+b label14
+label8:
+load 0
+pushbytes 0x6665655f6d616e61676572 // "fee_manager"
+app_global_get
+==
+assert
+pushbytes 0x6665655f636f6c6c6563746f72 // "fee_collector"
+txna Accounts 1
+app_global_put
+pushint 1
+return
+label9:
+load 0
+pushbytes 0x6665655f6d616e61676572 // "fee_manager"
+app_global_get
+==
+assert
+pushbytes 0x6665655f736574746572 // "fee_setter"
+txna Accounts 1
+app_global_put
+pushint 1
+return
+label10:
+load 0
+pushbytes 0x6665655f6d616e61676572 // "fee_manager"
+app_global_get
+==
+assert
+pushbytes 0x6665655f6d616e61676572 // "fee_manager"
+txna Accounts 1
+app_global_put
+pushint 1
+return
+label11:
+txna Accounts 1
+store 1
+pushint 1
+pushbytes 0x61737365745f315f6964 // "asset_1_id"
+app_local_get
+store 2
+pushint 1
+pushbytes 0x61737365745f325f6964 // "asset_2_id"
+app_local_get
+store 3
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+app_local_get
+store 4
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+app_local_get
+store 5
+load 4
+load 5
+||
+assert
+load 2
+load 4
+load 1
+pushbytes 0x6665655f636f6c6c6563746f72 // "fee_collector"
+app_global_get
+callsub label15
+load 3
+load 5
+load 1
+pushbytes 0x6665655f636f6c6c6563746f72 // "fee_collector"
+app_global_get
+callsub label15
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+pushint 0
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+pushint 0
+app_local_put
+pushint 1
+return
+label12:
+txna Assets 0
+store 2
+txna Accounts 1
+global CurrentApplicationAddress
+==
+bz label16
+load 2
+bz label17
+pushint 1
+load 2
+callsub label18
+store 1
+b label19
+label17:
+pushint 1
+load 2
+callsub label18
+pushint 100000
+-
+store 1
+label19:
+b label20
+label16:
+txna Accounts 1
+store 3
+pushint 1
+pushbytes 0x61737365745f315f6964 // "asset_1_id"
+app_local_get
+store 4
+pushint 1
+pushbytes 0x61737365745f325f6964 // "asset_2_id"
+app_local_get
+store 5
+pushint 1
+pushbytes 0x706f6f6c5f746f6b656e5f61737365745f6964 // "pool_token_asset_id"
+app_local_get
+store 6
+load 2
+load 4
+==
+bz label21
+pushint 1
+load 4
+callsub label18
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+app_local_get
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+app_local_get
++
+-
+store 1
+b label20
+label21:
+load 2
+load 5
+==
+bz label22
+pushint 1
+load 5
+callsub label18
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+app_local_get
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+app_local_get
++
+-
+store 1
+b label20
+label22:
+load 2
+load 6
+==
+bz label23
+pushint 1
+load 6
+callsub label18
+pushint 1000
+-
+pushint 18446744073709551615
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+app_local_get
+-
+-
+store 1
+b label20
+label23:
+pushint 1
+load 2
+callsub label18
+store 1
+label20:
+load 1
+assert
+load 2
+load 1
+txna Accounts 1
+pushbytes 0x6665655f636f6c6c6563746f72 // "fee_collector"
+app_global_get
+callsub label15
+pushint 1
+return
+label13:
+load 0
+pushbytes 0x6665655f736574746572 // "fee_setter"
+app_global_get
+==
+assert
+txna ApplicationArgs 1
+btoi
+store 1
+txna ApplicationArgs 2
+btoi
+store 2
+load 1
+pushint 100
+<=
+assert
+load 1
+pushint 1
+>=
+assert
+load 2
+pushint 10
+<=
+assert
+load 2
+pushint 3
+>=
+assert
+pushint 1
+pushbytes 0x746f74616c5f6665655f7368617265 // "total_fee_share"
+load 1
+app_local_put
+pushint 1
+pushbytes 0x70726f746f636f6c5f6665655f726174696f // "protocol_fee_ratio"
+load 2
+app_local_put
+pushint 1
+return
+label14:
+txna Accounts 1
+store 1
+pushint 1
+pushbytes 0x61737365745f315f6964 // "asset_1_id"
+app_local_get
+store 2
+pushint 1
+pushbytes 0x61737365745f325f6964 // "asset_2_id"
+app_local_get
+store 3
+pushint 1
+pushbytes 0x706f6f6c5f746f6b656e5f61737365745f6964 // "pool_token_asset_id"
+app_local_get
+store 4
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+app_local_get
+store 5
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+app_local_get
+store 6
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+app_local_get
+store 7
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+app_local_get
+store 8
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+app_local_get
+store 9
+pushint 1
+pushbytes 0x6c6f636b // "lock"
+app_local_get
+txna ApplicationArgs 0
+pushbytes 0x7665726966795f666c6173685f73776170 // "verify_flash_swap"
+==
+==
+assert
+txna ApplicationArgs 0
+pushbytes 0x6164645f696e697469616c5f6c6971756964697479 // "add_initial_liquidity"
+==
+bnz label24
+txna ApplicationArgs 0
+pushbytes 0x6164645f6c6971756964697479 // "add_liquidity"
+==
+bnz label25
+txna ApplicationArgs 0
+pushbytes 0x72656d6f76655f6c6971756964697479 // "remove_liquidity"
+==
+bnz label26
+txna ApplicationArgs 0
+pushbytes 0x73776170 // "swap"
+==
+bnz label27
+txna ApplicationArgs 0
+pushbytes 0x666c6173685f6c6f616e // "flash_loan"
+==
+bnz label28
+txna ApplicationArgs 0
+pushbytes 0x7665726966795f666c6173685f6c6f616e // "verify_flash_loan"
+==
+bnz label29
+txna ApplicationArgs 0
+pushbytes 0x666c6173685f73776170 // "flash_swap"
+==
+bnz label30
+txna ApplicationArgs 0
+pushbytes 0x7665726966795f666c6173685f73776170 // "verify_flash_swap"
+==
+bnz label31
+err
+label27:
+callsub label32
+txn GroupIndex
+pushint 1
+-
+store 10
+txna ApplicationArgs 1
+store 11
+txna ApplicationArgs 2
+btoi
+store 12
+load 10
+gtxns TypeEnum
+pushint 1
+==
+bz label33
+load 10
+gtxns Receiver
+load 1
+==
+assert
+pushint 0
+store 13
+load 10
+gtxns Amount
+store 15
+b label34
+label33:
+load 10
+gtxns TypeEnum
+pushint 4
+==
+bz label35
+load 10
+gtxns AssetReceiver
+load 1
+==
+assert
+load 10
+gtxns XferAsset
+store 13
+load 10
+gtxns AssetAmount
+store 15
+b label34
+label35:
+err
+label34:
+load 10
+gtxns Sender
+load 0
+==
+assert
+load 15
+assert
+load 13
+load 2
+==
+bz label36
+load 3
+store 14
+load 5
+store 16
+load 6
+store 17
+b label37
+label36:
+load 13
+load 3
+==
+bz label38
+load 2
+store 14
+load 6
+store 16
+load 5
+store 17
+b label37
+label38:
+err
+label37:
+pushint 0
+store 23
+load 11
+pushbytes 0x66697865642d696e707574 // "fixed-input"
+==
+bz label39
+load 15
+callsub label40
+store 18
+store 19
+store 20
+load 15
+load 18
+-
+store 21
+load 16
+load 17
+load 21
+callsub label41
+store 22
+load 22
+assert
+load 18
+assert
+load 22
+load 12
+>=
+assert
+b label42
+label39:
+load 11
+pushbytes 0x66697865642d6f7574707574 // "fixed-output"
+==
+bz label43
+load 12
+store 22
+load 16
+load 17
+load 22
+callsub label44
+store 21
+load 21
+callsub label45
+store 18
+store 19
+store 20
+load 21
+load 18
++
+store 24
+load 22
+assert
+load 18
+assert
+load 15
+load 24
+>=
+assert
+load 15
+load 24
+-
+store 23
+load 23
+bz label46
+load 13
+load 23
+callsub label47
+label46:
+b label42
+label43:
+err
+label42:
+load 13
+load 2
+==
+bz label48
+load 8
+load 20
++
+store 8
+load 5
+load 21
+load 19
++
++
+store 5
+load 6
+load 22
+-
+store 6
+load 19
+pushint 0
+callsub label49
+b label50
+label48:
+load 9
+load 20
++
+store 9
+load 6
+load 21
+load 19
++
++
+store 6
+load 5
+load 22
+-
+store 5
+pushint 0
+load 19
+callsub label49
+label50:
+load 14
+load 22
+callsub label47
+pushbytes 0x696e7075745f61737365745f6964202569 // "input_asset_id %i"
+load 13
+itob
+concat
+log
+pushbytes 0x696e7075745f616d6f756e74202569 // "input_amount %i"
+load 15
+itob
+concat
+log
+pushbytes 0x737761705f616d6f756e74202569 // "swap_amount %i"
+load 21
+itob
+concat
+log
+pushbytes 0x6368616e6765202569 // "change %i"
+load 23
+itob
+concat
+log
+pushbytes 0x6f75747075745f61737365745f6964202569 // "output_asset_id %i"
+load 14
+itob
+concat
+log
+pushbytes 0x6f75747075745f616d6f756e74202569 // "output_amount %i"
+load 22
+itob
+concat
+log
+pushbytes 0x706f6f6c6572735f6665655f616d6f756e74202569 // "poolers_fee_amount %i"
+load 19
+itob
+concat
+log
+pushbytes 0x70726f746f636f6c5f6665655f616d6f756e74202569 // "protocol_fee_amount %i"
+load 20
+itob
+concat
+log
+pushbytes 0x746f74616c5f6665655f616d6f756e74202569 // "total_fee_amount %i"
+load 18
+itob
+concat
+log
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 5
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 6
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+load 8
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+load 9
+app_local_put
+pushint 1
+return
+label28:
+callsub label32
+txna ApplicationArgs 1
+btoi
+store 10
+txn GroupIndex
+load 10
++
+store 11
+txna ApplicationArgs 2
+btoi
+store 12
+txna ApplicationArgs 3
+btoi
+store 13
+load 12
+load 13
+&&
+bz label51
+load 10
+pushint 2
+>
+assert
+b label52
+label51:
+load 10
+pushint 1
+>
+assert
+load 12
+load 13
+||
+assert
+label52:
+load 11
+gtxns TypeEnum
+pushint 6
+==
+assert
+load 11
+gtxns OnCompletion
+pushint 0
+==
+assert
+load 11
+gtxns ApplicationID
+global CurrentApplicationID
+==
+assert
+load 11
+gtxnsa ApplicationArgs 0
+pushbytes 0x7665726966795f666c6173685f6c6f616e // "verify_flash_loan"
+==
+assert
+load 11
+gtxnsa ApplicationArgs 1
+txna ApplicationArgs 1
+==
+assert
+load 11
+gtxnsa Accounts 1
+txna Accounts 1
+==
+assert
+load 11
+gtxns Sender
+load 0
+==
+assert
+load 12
+bz label53
+load 12
+load 5
+<=
+assert
+load 2
+load 12
+callsub label47
+label53:
+load 13
+bz label54
+load 13
+load 6
+<=
+assert
+load 3
+load 13
+callsub label47
+label54:
+pushint 1
+return
+label29:
+txna ApplicationArgs 1
+btoi
+store 10
+txn GroupIndex
+load 10
+-
+store 11
+load 11
+gtxns TypeEnum
+pushint 6
+==
+assert
+load 11
+gtxns OnCompletion
+pushint 0
+==
+assert
+load 11
+gtxns ApplicationID
+global CurrentApplicationID
+==
+assert
+load 11
+gtxnsa ApplicationArgs 0
+pushbytes 0x666c6173685f6c6f616e // "flash_loan"
+==
+assert
+load 11
+gtxnsa ApplicationArgs 1
+txna ApplicationArgs 1
+==
+assert
+load 11
+gtxnsa Accounts 1
+txna Accounts 1
+==
+assert
+load 11
+gtxns Sender
+load 0
+==
+assert
+load 11
+gtxnsa ApplicationArgs 2
+btoi
+store 12
+load 11
+gtxnsa ApplicationArgs 3
+btoi
+store 13
+load 12
+bz label55
+load 12
+callsub label40
+store 14
+store 15
+store 16
+load 14
+assert
+load 12
+load 14
++
+store 17
+load 13
+bz label56
+txn GroupIndex
+pushint 2
+-
+store 18
+b label57
+label56:
+txn GroupIndex
+pushint 1
+-
+store 18
+label57:
+load 18
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 18
+gtxns XferAsset
+load 2
+==
+assert
+load 18
+gtxns AssetReceiver
+load 1
+==
+assert
+load 18
+gtxns AssetAmount
+load 17
+>=
+assert
+load 18
+gtxns Sender
+load 0
+==
+assert
+load 18
+gtxns AssetAmount
+store 19
+load 19
+load 17
+-
+store 20
+load 8
+load 16
++
+store 8
+load 5
+load 15
++
+store 5
+pushbytes 0x61737365745f315f6f75747075745f616d6f756e74202569 // "asset_1_output_amount %i"
+load 12
+itob
+concat
+log
+pushbytes 0x61737365745f315f696e7075745f616d6f756e74202569 // "asset_1_input_amount %i"
+load 19
+itob
+concat
+log
+pushbytes 0x61737365745f315f646f6e6174696f6e5f616d6f756e74202569 // "asset_1_donation_amount %i"
+load 20
+itob
+concat
+log
+pushbytes 0x61737365745f315f706f6f6c6572735f6665655f616d6f756e74202569 // "asset_1_poolers_fee_amount %i"
+load 15
+itob
+concat
+log
+pushbytes 0x61737365745f315f70726f746f636f6c5f6665655f616d6f756e74202569 // "asset_1_protocol_fee_amount %i"
+load 16
+itob
+concat
+log
+pushbytes 0x61737365745f315f746f74616c5f6665655f616d6f756e74202569 // "asset_1_total_fee_amount %i"
+load 14
+itob
+concat
+log
+label55:
+load 13
+bz label58
+load 13
+callsub label40
+store 21
+store 22
+store 23
+load 21
+assert
+load 13
+load 21
++
+store 24
+txn GroupIndex
+pushint 1
+-
+store 25
+load 3
+pushint 0
+==
+bz label59
+load 25
+gtxns TypeEnum
+pushint 1
+==
+assert
+load 25
+gtxns Receiver
+load 1
+==
+assert
+load 25
+gtxns Amount
+load 24
+>=
+assert
+load 25
+gtxns Sender
+load 0
+==
+assert
+load 25
+gtxns Amount
+store 26
+b label60
+label59:
+load 25
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 25
+gtxns XferAsset
+load 3
+==
+assert
+load 25
+gtxns AssetReceiver
+load 1
+==
+assert
+load 25
+gtxns AssetAmount
+load 24
+>=
+assert
+load 25
+gtxns Sender
+load 0
+==
+assert
+load 25
+gtxns AssetAmount
+store 26
+label60:
+load 26
+load 24
+-
+store 27
+load 9
+load 23
++
+store 9
+load 6
+load 22
++
+store 6
+pushbytes 0x61737365745f325f6f75747075745f616d6f756e74202569 // "asset_2_output_amount %i"
+load 13
+itob
+concat
+log
+pushbytes 0x61737365745f325f696e7075745f616d6f756e74202569 // "asset_2_input_amount %i"
+load 26
+itob
+concat
+log
+pushbytes 0x61737365745f325f646f6e6174696f6e5f616d6f756e74202569 // "asset_2_donation_amount %i"
+load 27
+itob
+concat
+log
+pushbytes 0x61737365745f325f706f6f6c6572735f6665655f616d6f756e74202569 // "asset_2_poolers_fee_amount %i"
+load 22
+itob
+concat
+log
+pushbytes 0x61737365745f325f70726f746f636f6c5f6665655f616d6f756e74202569 // "asset_2_protocol_fee_amount %i"
+load 23
+itob
+concat
+log
+pushbytes 0x61737365745f325f746f74616c5f6665655f616d6f756e74202569 // "asset_2_total_fee_amount %i"
+load 21
+itob
+concat
+log
+label58:
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 5
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 6
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+load 8
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+load 9
+app_local_put
+pushint 1
+return
+label30:
+callsub label32
+txna ApplicationArgs 1
+btoi
+store 10
+load 10
+pushint 1
+>
+assert
+txn GroupIndex
+load 10
++
+store 11
+load 11
+gtxns TypeEnum
+pushint 6
+==
+assert
+load 11
+gtxns OnCompletion
+pushint 0
+==
+assert
+load 11
+gtxns ApplicationID
+global CurrentApplicationID
+==
+assert
+load 11
+gtxnsa ApplicationArgs 0
+pushbytes 0x7665726966795f666c6173685f73776170 // "verify_flash_swap"
+==
+assert
+load 11
+gtxnsa ApplicationArgs 1
+txna ApplicationArgs 1
+==
+assert
+load 11
+gtxnsa Accounts 1
+txna Accounts 1
+==
+assert
+load 11
+gtxns Sender
+load 0
+==
+assert
+txna ApplicationArgs 2
+btoi
+store 12
+txna ApplicationArgs 3
+btoi
+store 13
+load 12
+load 13
+||
+assert
+load 12
+bz label61
+load 12
+load 5
+<=
+assert
+load 2
+load 12
+callsub label47
+label61:
+load 13
+bz label62
+load 13
+load 6
+<=
+assert
+load 3
+load 13
+callsub label47
+label62:
+pushint 1
+load 2
+callsub label18
+itob
+log
+pushint 1
+load 3
+callsub label18
+itob
+log
+pushint 1
+pushbytes 0x6c6f636b // "lock"
+pushint 1
+app_local_put
+pushint 1
+return
+label31:
+txna ApplicationArgs 1
+btoi
+store 10
+txn GroupIndex
+load 10
+-
+store 11
+load 11
+gtxns TypeEnum
+pushint 6
+==
+assert
+load 11
+gtxns OnCompletion
+pushint 0
+==
+assert
+load 11
+gtxns ApplicationID
+global CurrentApplicationID
+==
+assert
+load 11
+gtxnsa ApplicationArgs 0
+pushbytes 0x666c6173685f73776170 // "flash_swap"
+==
+assert
+load 11
+gtxnsa ApplicationArgs 1
+txna ApplicationArgs 1
+==
+assert
+load 11
+gtxnsa Accounts 1
+txna Accounts 1
+==
+assert
+load 11
+gtxnsa ApplicationArgs 2
+btoi
+store 12
+load 11
+gtxnsa ApplicationArgs 3
+btoi
+store 13
+load 11
+gtxnsa Logs 0
+btoi
+store 14
+load 11
+gtxnsa Logs 1
+btoi
+store 15
+pushint 1
+load 2
+callsub label18
+store 16
+pushint 1
+load 3
+callsub label18
+store 17
+load 16
+load 14
+-
+store 18
+load 17
+load 15
+-
+store 19
+pushint 0
+store 20
+pushint 0
+store 21
+pushint 0
+store 22
+load 18
+bz label63
+load 18
+callsub label40
+store 20
+store 21
+store 22
+load 8
+load 22
++
+store 8
+load 5
+load 12
+-
+load 18
+load 22
+-
++
+store 5
+b label64
+label63:
+load 5
+load 12
+-
+store 5
+label64:
+pushint 0
+store 23
+pushint 0
+store 24
+pushint 0
+store 25
+load 19
+bz label65
+load 19
+callsub label40
+store 23
+store 24
+store 25
+load 9
+load 25
++
+store 9
+load 6
+load 13
+-
+load 19
+load 25
+-
++
+store 6
+b label66
+label65:
+load 6
+load 13
+-
+store 6
+label66:
+load 20
+load 23
+||
+assert
+load 21
+load 24
+callsub label49
+pushbytes 0x61737365745f315f6f75747075745f616d6f756e74202569 // "asset_1_output_amount %i"
+load 12
+itob
+concat
+log
+pushbytes 0x61737365745f315f696e7075745f616d6f756e74202569 // "asset_1_input_amount %i"
+load 18
+itob
+concat
+log
+pushbytes 0x61737365745f315f706f6f6c6572735f6665655f616d6f756e74202569 // "asset_1_poolers_fee_amount %i"
+load 21
+itob
+concat
+log
+pushbytes 0x61737365745f315f70726f746f636f6c5f6665655f616d6f756e74202569 // "asset_1_protocol_fee_amount %i"
+load 22
+itob
+concat
+log
+pushbytes 0x61737365745f315f746f74616c5f6665655f616d6f756e74202569 // "asset_1_total_fee_amount %i"
+load 20
+itob
+concat
+log
+pushbytes 0x61737365745f325f6f75747075745f616d6f756e74202569 // "asset_2_output_amount %i"
+load 13
+itob
+concat
+log
+pushbytes 0x61737365745f325f696e7075745f616d6f756e74202569 // "asset_2_input_amount %i"
+load 19
+itob
+concat
+log
+pushbytes 0x61737365745f325f706f6f6c6572735f6665655f616d6f756e74202569 // "asset_2_poolers_fee_amount %i"
+load 24
+itob
+concat
+log
+pushbytes 0x61737365745f325f70726f746f636f6c5f6665655f616d6f756e74202569 // "asset_2_protocol_fee_amount %i"
+load 25
+itob
+concat
+log
+pushbytes 0x61737365745f325f746f74616c5f6665655f616d6f756e74202569 // "asset_2_total_fee_amount %i"
+load 23
+itob
+concat
+log
+pushint 1
+pushbytes 0x6c6f636b // "lock"
+pushint 0
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 5
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 6
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+load 8
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+load 9
+app_local_put
+pushint 1
+return
+label25:
+txna ApplicationArgs 1
+store 10
+txna ApplicationArgs 2
+btoi
+store 11
+load 7
+assert
+pushint 0
+store 12
+pushint 0
+store 13
+pushint 0
+store 16
+pushint 0
+store 17
+pushint 0
+store 18
+callsub label67
+callsub label32
+load 10
+pushbytes 0x666c657869626c65 // "flexible"
+==
+bz label68
+txn GroupIndex
+pushint 2
+-
+store 14
+txn GroupIndex
+pushint 1
+-
+store 15
+pushint 1
+store 12
+pushint 1
+store 13
+b label69
+label68:
+load 10
+pushbytes 0x73696e676c65 // "single"
+==
+bz label70
+txn GroupIndex
+pushint 1
+-
+store 19
+load 19
+gtxns XferAsset
+load 2
+==
+bz label71
+load 19
+store 14
+pushint 1
+store 12
+b label72
+label71:
+load 19
+gtxns XferAsset
+load 3
+==
+bz label73
+load 19
+store 15
+pushint 1
+store 13
+b label72
+label73:
+err
+label72:
+b label69
+label70:
+err
+label69:
+load 12
+bz label74
+load 14
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 14
+gtxns AssetReceiver
+load 1
+==
+assert
+load 14
+gtxns XferAsset
+load 2
+==
+assert
+load 14
+gtxns Sender
+load 0
+==
+assert
+load 14
+gtxns AssetAmount
+store 16
+label74:
+load 13
+bz label75
+load 3
+pushint 0
+==
+bz label76
+load 15
+gtxns TypeEnum
+pushint 1
+==
+assert
+load 15
+gtxns Receiver
+load 1
+==
+assert
+load 15
+gtxns Amount
+store 17
+b label77
+label76:
+load 15
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 15
+gtxns AssetReceiver
+load 1
+==
+assert
+load 15
+gtxns XferAsset
+load 3
+==
+assert
+load 15
+gtxns AssetAmount
+store 17
+label77:
+load 15
+gtxns Sender
+load 0
+==
+assert
+label75:
+load 5
+load 16
++
+itob
+load 6
+load 17
++
+itob
+b*
+store 20
+load 5
+itob
+load 6
+itob
+b*
+store 21
+load 20
+load 7
+itob
+b*
+load 7
+itob
+b*
+load 21
+b/
+bsqrt
+btoi
+store 22
+load 22
+load 7
+-
+store 18
+load 5
+load 16
++
+store 5
+load 6
+load 17
++
+store 6
+load 22
+store 7
+load 18
+itob
+load 5
+itob
+b*
+load 7
+itob
+b/
+btoi
+store 23
+load 18
+itob
+load 6
+itob
+b*
+load 7
+itob
+b/
+btoi
+store 24
+pushint 0
+store 25
+pushint 1
+store 26
+load 16
+load 23
+>
+bz label78
+load 16
+load 23
+-
+store 25
+label78:
+load 17
+load 24
+>
+bz label79
+load 25
+load 17
+load 24
+-
+<=
+bz label79
+load 17
+load 24
+-
+store 25
+pushint 0
+store 26
+label79:
+load 25
+callsub label45
+store 27
+store 28
+store 29
+load 26
+bz label80
+load 8
+load 29
++
+store 8
+load 27
+itob
+load 7
+itob
+b*
+load 5
+itob
+pushint 2
+itob
+b*
+b/
+btoi
+store 30
+load 5
+load 29
+-
+store 5
+pushbytes 0x696e7075745f61737365745f6964202569 // "input_asset_id %i"
+load 2
+itob
+concat
+log
+pushbytes 0x6f75747075745f61737365745f6964202569 // "output_asset_id %i"
+load 3
+itob
+concat
+log
+b label81
+label80:
+load 9
+load 29
++
+store 9
+load 27
+itob
+load 7
+itob
+b*
+load 6
+itob
+pushint 2
+itob
+b*
+b/
+btoi
+store 30
+load 6
+load 29
+-
+store 6
+pushbytes 0x696e7075745f61737365745f6964202569 // "input_asset_id %i"
+load 3
+itob
+concat
+log
+pushbytes 0x6f75747075745f61737365745f6964202569 // "output_asset_id %i"
+load 2
+itob
+concat
+log
+label81:
+load 18
+load 30
+-
+store 18
+load 7
+load 30
+-
+store 7
+load 18
+assert
+load 18
+load 11
+>=
+assert
+load 4
+load 18
+callsub label47
+callsub label82
+pushbytes 0x737761705f616d6f756e74202569 // "swap_amount %i"
+load 25
+itob
+concat
+log
+pushbytes 0x706f6f6c6572735f6665655f616d6f756e74202569 // "poolers_fee_amount %i"
+load 28
+itob
+concat
+log
+pushbytes 0x70726f746f636f6c5f6665655f616d6f756e74202569 // "protocol_fee_amount %i"
+load 29
+itob
+concat
+log
+pushbytes 0x746f74616c5f6665655f616d6f756e74202569 // "total_fee_amount %i"
+load 27
+itob
+concat
+log
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 5
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 6
+app_local_put
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+load 7
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+load 8
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+load 9
+app_local_put
+pushint 1
+return
+label24:
+pushint 0
+store 12
+pushint 0
+store 13
+pushint 0
+store 14
+load 7
+pushint 0
+==
+assert
+txn GroupIndex
+pushint 2
+-
+store 10
+txn GroupIndex
+pushint 1
+-
+store 11
+load 10
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 10
+gtxns AssetReceiver
+load 1
+==
+assert
+load 10
+gtxns XferAsset
+load 2
+==
+assert
+load 10
+gtxns Sender
+load 0
+==
+assert
+load 10
+gtxns AssetAmount
+store 12
+load 12
+assert
+load 3
+pushint 0
+==
+bz label83
+load 11
+gtxns TypeEnum
+pushint 1
+==
+assert
+load 11
+gtxns Receiver
+load 1
+==
+assert
+load 11
+gtxns Amount
+store 13
+b label84
+label83:
+load 11
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 11
+gtxns AssetReceiver
+load 1
+==
+assert
+load 11
+gtxns XferAsset
+load 3
+==
+assert
+load 11
+gtxns AssetAmount
+store 13
+label84:
+load 13
+assert
+load 11
+gtxns Sender
+load 0
+==
+assert
+load 12
+itob
+load 13
+itob
+b*
+bsqrt
+btoi
+store 7
+load 7
+pushint 1000
+>
+assert
+load 7
+pushint 1000
+-
+store 14
+load 4
+load 14
+callsub label47
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 12
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 13
+app_local_put
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+load 7
+app_local_put
+pushint 1
+return
+label26:
+callsub label32
+txna ApplicationArgs 1
+btoi
+store 10
+txna ApplicationArgs 2
+btoi
+store 11
+txn GroupIndex
+pushint 1
+-
+store 12
+load 12
+gtxns TypeEnum
+pushint 4
+==
+assert
+load 12
+gtxns AssetReceiver
+load 1
+==
+assert
+load 12
+gtxns XferAsset
+load 4
+==
+assert
+load 12
+gtxns Sender
+load 0
+==
+assert
+load 12
+gtxns AssetAmount
+store 13
+load 13
+assert
+load 13
+pushint 1000
++
+load 7
+==
+bz label85
+load 5
+store 14
+load 6
+store 15
+pushint 0
+store 7
+b label86
+label85:
+load 13
+itob
+load 5
+itob
+b*
+load 7
+itob
+b/
+btoi
+store 14
+load 13
+itob
+load 6
+itob
+b*
+load 7
+itob
+b/
+btoi
+store 15
+load 7
+load 13
+-
+store 7
+label86:
+load 14
+load 15
+&&
+assert
+load 5
+load 14
+-
+store 5
+load 6
+load 15
+-
+store 6
+txn NumAssets
+pushint 2
+==
+bz label87
+txna Assets 0
+load 2
+==
+assert
+txna Assets 1
+load 3
+==
+assert
+load 14
+load 10
+>=
+assert
+load 15
+load 11
+>=
+assert
+load 2
+load 14
+callsub label47
+load 3
+load 15
+callsub label47
+b label88
+label87:
+txn NumAssets
+pushint 1
+==
+bz label89
+callsub label67
+load 7
+pushint 0
+>
+assert
+pushint 0
+store 21
+txna Assets 0
+load 2
+==
+bz label90
+load 15
+callsub label40
+store 16
+store 17
+store 18
+load 15
+load 16
+-
+store 19
+load 6
+load 5
+load 19
+callsub label41
+store 20
+load 5
+load 20
+-
+store 5
+load 6
+load 19
+load 17
++
++
+store 6
+load 9
+load 18
++
+store 9
+load 14
+load 20
++
+store 21
+load 21
+load 10
+>=
+assert
+load 2
+load 21
+callsub label47
+pushbytes 0x696e7075745f61737365745f6964202569 // "input_asset_id %i"
+load 3
+itob
+concat
+log
+pushbytes 0x696e7075745f616d6f756e74202569 // "input_amount %i"
+load 15
+itob
+concat
+log
+pushbytes 0x737761705f616d6f756e74202569 // "swap_amount %i"
+load 19
+itob
+concat
+log
+pushbytes 0x6f75747075745f61737365745f6964202569 // "output_asset_id %i"
+load 2
+itob
+concat
+log
+pushbytes 0x6f75747075745f616d6f756e74202569 // "output_amount %i"
+load 20
+itob
+concat
+log
+b label91
+label90:
+txna Assets 0
+load 3
+==
+bz label92
+load 14
+callsub label40
+store 16
+store 17
+store 18
+load 14
+load 16
+-
+store 19
+load 5
+load 6
+load 19
+callsub label41
+store 20
+load 6
+load 20
+-
+store 6
+load 5
+load 19
+load 17
++
++
+store 5
+load 8
+load 18
++
+store 8
+load 15
+load 20
++
+store 21
+load 21
+load 11
+>=
+assert
+load 3
+load 21
+callsub label47
+pushbytes 0x696e7075745f61737365745f6964202569 // "input_asset_id %i"
+load 2
+itob
+concat
+log
+pushbytes 0x696e7075745f616d6f756e74202569 // "input_amount %i"
+load 14
+itob
+concat
+log
+pushbytes 0x737761705f616d6f756e74202569 // "swap_amount %i"
+load 19
+itob
+concat
+log
+pushbytes 0x6f75747075745f61737365745f6964202569 // "output_asset_id %i"
+load 3
+itob
+concat
+log
+pushbytes 0x6f75747075745f616d6f756e74202569 // "output_amount %i"
+load 20
+itob
+concat
+log
+b label91
+label92:
+err
+label91:
+pushbytes 0x706f6f6c6572735f6665655f616d6f756e74202569 // "poolers_fee_amount %i"
+load 17
+itob
+concat
+log
+pushbytes 0x70726f746f636f6c5f6665655f616d6f756e74202569 // "protocol_fee_amount %i"
+load 18
+itob
+concat
+log
+pushbytes 0x746f74616c5f6665655f616d6f756e74202569 // "total_fee_amount %i"
+load 16
+itob
+concat
+log
+b label88
+label89:
+err
+label88:
+load 7
+bz label93
+callsub label82
+label93:
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+load 5
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+load 6
+app_local_put
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+load 7
+app_local_put
+pushint 1
+pushbytes 0x61737365745f315f70726f746f636f6c5f66656573 // "asset_1_protocol_fees"
+load 8
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f70726f746f636f6c5f66656573 // "asset_2_protocol_fees"
+load 9
+app_local_put
+pushint 1
+return
+label47:
+store 31
+store 32
+load 32
+load 31
+load 1
+load 0
+callsub label15
+retsub
+label49:
+store 33
+store 34
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+app_local_get
+itob
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+app_local_get
+itob
+b*
+load 5
+load 34
+-
+itob
+load 6
+load 33
+-
+itob
+b*
+b<=
+assert
+retsub
+label82:
+pushint 1
+pushbytes 0x61737365745f315f7265736572766573 // "asset_1_reserves"
+app_local_get
+itob
+pushint 1
+pushbytes 0x61737365745f325f7265736572766573 // "asset_2_reserves"
+app_local_get
+itob
+b*
+load 7
+itob
+load 7
+itob
+b*
+b*
+store 35
+load 5
+itob
+load 6
+itob
+b*
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+app_local_get
+itob
+pushint 1
+pushbytes 0x6973737565645f706f6f6c5f746f6b656e73 // "issued_pool_tokens"
+app_local_get
+itob
+b*
+b*
+store 36
+load 35
+load 36
+b<=
+assert
+retsub
+label32:
+pushint 1
+pushbytes 0x61737365745f315f63756d756c61746976655f7072696365 // "asset_1_cumulative_price"
+app_local_get
+store 37
+pushint 1
+pushbytes 0x61737365745f325f63756d756c61746976655f7072696365 // "asset_2_cumulative_price"
+app_local_get
+store 38
+global LatestTimestamp
+pushint 1
+pushbytes 0x63756d756c61746976655f70726963655f7570646174655f74696d657374616d70 // "cumulative_price_update_timestamp"
+app_local_get
+-
+store 39
+load 7
+load 39
+&&
+bz label94
+load 37
+load 6
+itob
+pushbytes 0x010000000000000000 // 0x010000000000000000
+b*
+load 39
+itob
+b*
+load 5
+itob
+b/
+b+
+store 37
+load 38
+load 5
+itob
+pushbytes 0x010000000000000000 // 0x010000000000000000
+b*
+load 39
+itob
+b*
+load 6
+itob
+b/
+b+
+store 38
+pushint 1
+pushbytes 0x61737365745f315f63756d756c61746976655f7072696365 // "asset_1_cumulative_price"
+load 37
+app_local_put
+pushint 1
+pushbytes 0x61737365745f325f63756d756c61746976655f7072696365 // "asset_2_cumulative_price"
+load 38
+app_local_put
+pushint 1
+pushbytes 0x63756d756c61746976655f70726963655f7570646174655f74696d657374616d70 // "cumulative_price_update_timestamp"
+global LatestTimestamp
+app_local_put
+label94:
+retsub
+label40:
+store 40
+pushint 1
+pushbytes 0x746f74616c5f6665655f7368617265 // "total_fee_share"
+app_local_get
+store 41
+pushint 1
+pushbytes 0x70726f746f636f6c5f6665655f726174696f // "protocol_fee_ratio"
+app_local_get
+store 42
+load 40
+load 41
+*
+pushint 10000
+/
+store 43
+load 43
+load 42
+/
+store 44
+load 43
+load 44
+-
+store 45
+load 44
+load 45
+load 43
+retsub
+label45:
+store 46
+pushint 1
+pushbytes 0x746f74616c5f6665655f7368617265 // "total_fee_share"
+app_local_get
+store 47
+pushint 1
+pushbytes 0x70726f746f636f6c5f6665655f726174696f // "protocol_fee_ratio"
+app_local_get
+store 48
+load 46
+pushint 10000
+*
+pushint 10000
+load 47
+-
+/
+store 49
+load 49
+load 46
+-
+store 50
+load 50
+load 48
+/
+store 51
+load 50
+load 51
+-
+store 52
+load 51
+load 52
+load 50
+retsub
+label41:
+store 53
+store 54
+store 55
+load 55
+itob
+load 54
+itob
+b*
+store 56
+load 54
+load 56
+load 55
+load 53
++
+itob
+b/
+btoi
+pushint 1
++
+-
+store 57
+load 57
+retsub
+label44:
+store 58
+store 59
+store 60
+load 60
+itob
+load 59
+itob
+b*
+store 61
+load 61
+load 59
+load 58
+-
+itob
+b/
+btoi
+pushint 1
++
+load 60
+-
+store 62
+load 62
+retsub
+label18:
+store 63
+store 64
+pushint 0
+store 65
+load 63
+pushint 0
+==
+bz label95
+load 64
+balance
+load 64
+min_balance
+-
+store 65
+b label96
+label95:
+load 64
+load 63
+asset_holding_get AssetBalance
+pop
+store 65
+label96:
+load 65
+retsub
+label15:
+store 66
+store 67
+store 68
+store 69
+load 69
+pushint 0
+==
+bz label97
+itxn_begin
+pushint 1
+itxn_field TypeEnum
+load 67
+itxn_field Sender
+load 66
+itxn_field Receiver
+load 68
+itxn_field Amount
+pushint 0
+itxn_field Fee
+itxn_submit
+b label98
+label97:
+itxn_begin
+pushint 4
+itxn_field TypeEnum
+load 67
+itxn_field Sender
+load 66
+itxn_field AssetReceiver
+load 68
+itxn_field AssetAmount
+load 69
+itxn_field XferAsset
+pushint 0
+itxn_field Fee
+itxn_submit
+label98:
+retsub
+label67:
+itxn_begin
+pushint 6
+itxn_field TypeEnum
+pushint 5
+itxn_field OnCompletion
+pushbytes 0x068101 // 0x068101
+itxn_field ApprovalProgram
+pushbytes 0x068101 // 0x068101
+itxn_field ClearStateProgram
+pushint 0
+itxn_field Fee
+itxn_submit
+retsub

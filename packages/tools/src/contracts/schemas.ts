@@ -105,6 +105,44 @@ export const appInfoSchema = z.object({
   clearProgramSize: z.number(),
 })
 
+const onCompletionActionSchema = z.enum([
+  'NoOp',
+  'OptIn',
+  'CloseOut',
+  'ClearState',
+  'UpdateApplication',
+  'DeleteApplication',
+])
+
+/** Wire shape of get_application_program ('application.program' view). */
+export const applicationProgramSchema = z.object({
+  applicationId: z.number(),
+  program: z.enum(['approval', 'clear']),
+  bytes: z.number(),
+  totalLines: z.number(),
+  fromLine: z.number(),
+  toLine: z.number(),
+  teal: z.string().describe('Disassembled TEAL, lines fromLine..toLine'),
+  analysis: z.object({
+    version: z.number().optional(),
+    instructions: z.number(),
+    entrypoints: z.array(z.string()).describe('Constants compared against ApplicationArgs 0: ARC-4 selectors as 0x-hex, string method names as text'),
+    selectors: z.array(z.string()).describe('The ARC-4 subset of entrypoints, bare hex'),
+    strings: z.array(z.string()),
+    stateKeys: z.object({ global: z.array(z.string()), local: z.array(z.string()), box: z.array(z.string()) }),
+    guards: z.object({ rekey: z.boolean(), closeRemainder: z.boolean(), assetClose: z.boolean() }),
+    innerTransactions: z.number(),
+    onCompletion: z.array(z.object({ action: onCompletionActionSchema, outcome: z.enum(['handled', 'rejected']) })),
+  }),
+  methods: z.array(
+    z.object({
+      selector: z.string(),
+      name: z.string().optional().describe('Known only when an app spec is available'),
+      signature: z.string().optional(),
+    }),
+  ),
+})
+
 /** Wire shape of app_list_methods ('table' view). */
 export const appMethodsSchema = z.object({
   name: z.string().optional(),

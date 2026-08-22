@@ -38,7 +38,7 @@ const fakeIndexerApp = {
 }
 
 describe('registry', () => {
-  test('exports 9 read-only tools with output schemas and view or display hints', () => {
+  test('exports 10 read-only tools with output schemas and view or display hints', () => {
     expect(contractTools.map((t) => t.name)).toEqual([
       'lookup_application',
       'search_applications',
@@ -48,6 +48,7 @@ describe('registry', () => {
       'read_box_state',
       'list_application_boxes',
       'app_get_info',
+      'get_application_program',
       'app_list_methods',
     ])
     for (const tool of contractTools) {

@@ -19,6 +19,7 @@ import {
   applicationBoxesSchema,
   applicationListSchema,
   applicationLogsSchema,
+  applicationProgramSchema,
   applicationStateSchema,
   formattedApplicationSchema,
 } from './contracts/schemas.js'
@@ -45,6 +46,7 @@ export const viewDataSchemas = {
   'application.logs': applicationLogsSchema,
   'application.box': applicationBoxSchema,
   'application.boxes': applicationBoxesSchema,
+  'application.program': applicationProgramSchema,
   'block.detail': blockDetailSchema,
   'block.list': blockListSchema,
   'network.status': networkStatusSchema,
