@@ -549,6 +549,7 @@ export function ShelfScreen({
   store,
   view,
   width,
+  onOpenTransaction,
 }: {
   title: string
   accountName?: string
@@ -559,6 +560,7 @@ export function ShelfScreen({
   store: ResultStore
   view?: ViewSpec
   width: number
+  onOpenTransaction: (txid: string) => void
 }) {
   const inner = Math.max(24, width - 6)
   const owner = address ? (accountName ?? shorten(address, 16)) : 'no wallet'
@@ -583,7 +585,12 @@ export function ShelfScreen({
         <text fg={COLORS.muted} marginTop={1} content="Pick a wallet with ^w, then come back." />
       ) : view ? (
         <scrollbox flexGrow={1} marginTop={1} stickyScroll={false}>
-          <ResultView store={store} view={view} width={Math.max(30, width - 6)} />
+          <ResultView
+            store={store}
+            view={view}
+            width={Math.max(30, width - 6)}
+            onOpenTransaction={onOpenTransaction}
+          />
         </scrollbox>
       ) : (
         <text fg={COLORS.faint} marginTop={1} content={empty} />

@@ -205,6 +205,15 @@ export function App() {
     [appendNote, flowRef, networkRef, resetAgent, setNetwork],
   )
 
+  // A list row's open button: its own section, same lane as a pasted id.
+  const openTransactionDetail = useCallback(
+    (txid: string) => {
+      setScreen('chat')
+      openTransaction(createSection(txid), txid)
+    },
+    [createSection, openTransaction, setScreen],
+  )
+
   const closeSelectedSection = useCallback(() => {
     feed.closeSelectedSection(
       (sectionId) => !isFlowSection(sectionId),
@@ -422,6 +431,7 @@ export function App() {
           store={store}
           view={accounts.shelfView}
           width={width}
+          onOpenTransaction={openTransactionDetail}
         />
       ) : (
         <box flexGrow={1} flexDirection="row">
@@ -449,6 +459,7 @@ export function App() {
             sectionRegistry={feed.sectionRegistry}
             onSelect={feed.markSection}
             onToggleThinking={feed.toggleThinking}
+            onOpenTransaction={openTransactionDetail}
           />
         </box>
       )}

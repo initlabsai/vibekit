@@ -1,6 +1,7 @@
 import { DEFAULT_LIMIT, ToolError, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
+import { transactionQueryOf, type TransactionQuery } from '../../shared/schemas.js'
 import { formatAccount, type FormattedAccount } from './format.js'
 
 export interface SearchAccountsArgs {
@@ -52,7 +53,7 @@ export interface SearchAccountTransactionsArgs {
 export async function searchAccountTransactions(
   ctx: ToolContext,
   args: SearchAccountTransactionsArgs,
-): Promise<{ transactions: FormattedTransaction[]; nextToken?: string }> {
+): Promise<{ transactions: FormattedTransaction[]; nextToken?: string; query?: TransactionQuery }> {
   if (!algosdk.isValidAddress(args.address)) {
     throw new ToolError('INVALID_ADDRESS', `Invalid Algorand address: ${args.address}`)
   }
@@ -75,5 +76,6 @@ export async function searchAccountTransactions(
   return {
     transactions,
     nextToken: stripFinalToken(transactions.length, limit, response.nextToken),
+    query: transactionQueryOf(args),
   }
 }

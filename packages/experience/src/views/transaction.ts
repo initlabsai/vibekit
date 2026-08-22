@@ -193,6 +193,16 @@ export const transactionCollectionDataSchema = z.object({
   address: optionalAddress,
   transactions: z.array(transactionRowSchema),
   nextToken: z.string().min(1).optional(),
+  /** The filter the search ran with, when it had one. */
+  query: z
+    .object({
+      txType: z.string().optional(),
+      assetId: z.number().optional(),
+      minRound: z.number().optional(),
+      maxRound: z.number().optional(),
+      notePrefix: z.string().optional(),
+    })
+    .optional(),
 })
 
 export type TransactionCollectionData = z.infer<

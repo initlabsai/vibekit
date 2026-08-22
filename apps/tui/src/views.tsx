@@ -59,6 +59,7 @@ export function ResultView({
   sort = 'none',
   maxAssets = 20,
   flow = 'graph',
+  onOpenTransaction,
 }: {
   store: ResultStore
   view: ViewSpec
@@ -67,6 +68,8 @@ export function ResultView({
   maxAssets?: number
   /** transaction.group presentation: flow graph (primary) or the row table. */
   flow?: 'graph' | 'table'
+  /** Opens a transaction's detail card from a list row. */
+  onOpenTransaction?: (txid: string) => void
 }) {
   switch (view.view) {
     case 'transaction.detail': {
@@ -181,7 +184,9 @@ export function ResultView({
           groupId={derived.model.groupId}
           transactions={derived.model.transactions}
           nextToken={derived.model.nextToken}
+          query={derived.model.query}
           width={width}
+          onOpen={onOpenTransaction}
         />
       )
     }

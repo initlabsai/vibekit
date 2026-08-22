@@ -181,7 +181,27 @@ export const formattedTransactionSchema = z.object({
 })
 
 /** Wire shape of every transaction-list tool result ('transaction.list' view). */
+/** The filter a transaction search ran with, echoed so the card can show it. */
+export const transactionQuerySchema = z.object({
+  txType: z.string().optional(),
+  assetId: z.number().optional(),
+  minRound: z.number().optional(),
+  maxRound: z.number().optional(),
+  notePrefix: z.string().optional(),
+})
+export type TransactionQuery = z.infer<typeof transactionQuerySchema>
+
+export function transactionQueryOf(args: TransactionQuery): TransactionQuery | undefined {
+  const query = Object.fromEntries(
+    (['txType', 'assetId', 'minRound', 'maxRound', 'notePrefix'] as const)
+      .filter((key) => args[key] !== undefined)
+      .map((key) => [key, args[key]]),
+  ) as TransactionQuery
+  return Object.keys(query).length > 0 ? query : undefined
+}
+
 export const transactionListSchema = z.object({
   transactions: z.array(formattedTransactionSchema),
   nextToken: z.string().optional(),
+  query: transactionQuerySchema.optional(),
 })

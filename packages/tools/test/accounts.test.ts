@@ -3,6 +3,7 @@ import { ToolError, jsonSafe } from '@initlabs/vibekit-core'
 import algosdk from 'algosdk'
 import { getAccountAppLocalStates, getAccountAssets } from '../src/accounts/handlers/assets.js'
 import { batchLookupAccounts, lookupAccount } from '../src/accounts/handlers/lookup.js'
+import { transactionQueryOf } from '../src/shared/schemas.js'
 import { getAccountPortfolio } from '../src/accounts/handlers/portfolio.js'
 import { searchAccounts, searchAccountTransactions } from '../src/accounts/handlers/search.js'
 import { accountTools } from '../src/accounts/index.js'
@@ -81,6 +82,13 @@ describe('lookupAccount', () => {
   test('throws ToolError on invalid address', async () => {
     const ctx = fakeContext({})
     expect(lookupAccount(ctx, { address: 'not-an-address' })).rejects.toThrow(ToolError)
+  })
+})
+
+describe('transactionQueryOf', () => {
+  test('echoes only the filter keys that were set', () => {
+    expect(transactionQueryOf({ txType: 'axfer', minRound: 5 })).toEqual({ txType: 'axfer', minRound: 5 })
+    expect(transactionQueryOf({})).toBeUndefined()
   })
 })
 

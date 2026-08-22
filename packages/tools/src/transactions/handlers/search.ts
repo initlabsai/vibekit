@@ -1,5 +1,6 @@
 import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
 import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
+import { transactionQueryOf, type TransactionQuery } from '../../shared/schemas.js'
 
 export interface SearchTransactionsArgs {
   limit?: number
@@ -19,7 +20,7 @@ export interface SearchTransactionsArgs {
 export async function searchTransactions(
   ctx: ToolContext,
   args: SearchTransactionsArgs,
-): Promise<{ transactions: FormattedTransaction[]; nextToken?: string }> {
+): Promise<{ transactions: FormattedTransaction[]; nextToken?: string; query?: TransactionQuery }> {
   const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
   let query = ctx.indexer.searchForTransactions().limit(limit)
 
@@ -40,5 +41,6 @@ export async function searchTransactions(
   return {
     transactions,
     nextToken: stripFinalToken(transactions.length, limit, response.nextToken),
+    query: transactionQueryOf(args),
   }
 }

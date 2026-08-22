@@ -1,4 +1,5 @@
 import { base64ToBytes } from '@initlabs/vibekit-core'
+import type { MouseEvent } from '@opentui/core'
 import {
   formatBaseUnits,
   formatBlockTxnType,
@@ -213,12 +214,37 @@ export function TransactionCard({
   )
 }
 
+function queryLabel(query: {
+  txType?: string
+  assetId?: number
+  minRound?: number
+  maxRound?: number
+  notePrefix?: string
+}): string | undefined {
+  const parts = [
+    query.txType ? formatBlockTxnType(query.txType) : undefined,
+    query.assetId === undefined ? undefined : `asset ${query.assetId}`,
+    query.minRound !== undefined && query.maxRound !== undefined && query.minRound === query.maxRound
+      ? `round ${query.minRound}`
+      : [
+          query.minRound === undefined ? undefined : `≥ ${query.minRound}`,
+          query.maxRound === undefined ? undefined : `≤ ${query.maxRound}`,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined,
+    query.notePrefix ? `note "${query.notePrefix}"` : undefined,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : undefined
+}
+
 export function TransactionListCard({
   title,
   groupId,
   transactions,
   nextToken,
+  query,
   width,
+  onOpen,
 }: {
   title: string
   groupId?: string
@@ -237,13 +263,17 @@ export function TransactionListCard({
     innerCount?: number
   }>
   nextToken?: string
+  query?: Parameters<typeof queryLabel>[0]
   width: number
+  /** Opens one row's detail card; rows grow an open button when provided. */
+  onOpen?: (txid: string) => void
 }) {
   const body = innerWidth(width)
   const rows = transactions.slice(0, 10)
+  const filter = query ? queryLabel(query) : undefined
   return (
     <Frame width={width}>
-      <Header kicker={title} pill={String(transactions.length)} tone="idle" />
+      <Header kicker={title} chip={filter} pill={String(transactions.length)} tone="idle" />
       {groupId ? <Fact label="group" value={groupId} copy={groupId} width={body} /> : null}
       <box flexDirection="column">
         {rows.map((row, index) => {
@@ -258,9 +288,22 @@ export function TransactionListCard({
             (row.applicationId === undefined ? undefined : `app ${row.applicationId}`)
           return (
             <box key={row.id ?? `${row.sender}-${index}`} flexDirection="column" marginTop={1}>
-              <box flexDirection="row" height={1}>
-                <Chip label={formatBlockTxnType(row.type ?? 'txn')} />
-                {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
+              <box flexDirection="row" height={1} justifyContent="space-between">
+                <box flexDirection="row">
+                  <Chip label={formatBlockTxnType(row.type ?? 'txn')} />
+                  {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
+                </box>
+                {onOpen && row.id ? (
+                  <text
+                    fg={COLORS.signal}
+                    onMouseDown={(event: MouseEvent) => {
+                      event.stopPropagation()
+                      onOpen(row.id!)
+                    }}
+                  >
+                    {'open ▸'}
+                  </text>
+                ) : null}
               </box>
               <Fact label="from" value={row.sender} copy={row.sender} width={body} />
               {to ? (

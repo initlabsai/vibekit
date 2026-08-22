@@ -232,6 +232,7 @@ export function ContentPane({
   sectionRegistry,
   onSelect,
   onToggleThinking,
+  onOpenTransaction,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -250,6 +251,7 @@ export function ContentPane({
   sectionRegistry: RefObject<Map<number, BoxRenderable>>
   onSelect: (id: number) => void
   onToggleThinking: (id: number) => void
+  onOpenTransaction: (txid: string) => void
 }) {
   const innerWidth = Math.max(24, width - 4)
   const cardWidth = Math.max(30, innerWidth - 2)
@@ -323,6 +325,7 @@ export function ContentPane({
                         sort={section.sort}
                         maxAssets={20}
                         flow={section.flow}
+                        onOpenTransaction={onOpenTransaction}
                       />
                     )
                   }
