@@ -28,6 +28,7 @@ import type { ResultStore } from "@initlabs/vibekit-experience";
 import type { ProviderConfig } from "@initlabs/vibekit-agent";
 import type { LiveNetworkId } from "@initlabs/vibekit-experience/live";
 import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
+import type { ProgramData } from "./abi-catalog.js";
 
 /**
  * What a get_application_program call will cost, for the confirm modal: one
@@ -178,7 +179,7 @@ export interface ExplorerAgentOptions {
   /** Gate for expensive tool calls (a whole program); writes are not gated here — they are compose-only. */
   approveToolCall?: Parameters<typeof createAgent>[0]["approveToolCall"];
   /** Names a program's selectors from a known spec, inside the tool call, so the model reads them. */
-  labelProgram?: (program: { methods?: unknown }) => unknown;
+  labelProgram?: (program: ProgramData) => ProgramData["methods"];
 }
 
 /** get_application_program with its methods labelled before the result leaves the tool. */
@@ -189,7 +190,7 @@ function withProgramLabels(tools: AnyTool[], label: ExplorerAgentOptions["labelP
       ? {
           ...tool,
           handler: async (ctx, args) => {
-            const program = (await tool.handler(ctx, args)) as { methods?: unknown };
+            const program = (await tool.handler(ctx, args)) as ProgramData;
             return { ...program, methods: label(program) ?? program.methods };
           },
         }

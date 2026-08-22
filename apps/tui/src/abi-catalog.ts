@@ -50,7 +50,7 @@ export function specsByProgramHash(
   return byHash
 }
 
-type ProgramData = {
+export type ProgramData = {
   applicationId?: number
   programHash?: string
   analysis?: { selectors: string[] }
