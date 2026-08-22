@@ -394,6 +394,10 @@ export function App() {
         accountName={senderAccount?.name}
         address={activeSender}
         width={width}
+        onOpenChat={() => {
+          setScreen('chat')
+          setFocus('composer')
+        }}
         onOpenWallet={() => openWorkspace('wallet')}
         onOpenScreen={openWorkspace}
         onSwitchNetwork={() => switchNetwork()}

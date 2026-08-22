@@ -45,6 +45,7 @@ export function TopBar({
   accountName,
   address,
   width,
+  onOpenChat,
   onOpenWallet,
   onOpenScreen,
   onSwitchNetwork,
@@ -56,6 +57,7 @@ export function TopBar({
   accountName?: string
   address?: string
   width: number
+  onOpenChat: () => void
   onOpenWallet: () => void
   onOpenScreen: (screen: Exclude<WorkspaceScreen, 'chat'>) => void
   onSwitchNetwork: () => void
@@ -89,6 +91,7 @@ export function TopBar({
       </box>
       <box flexDirection="row" justifyContent="space-between" height={1}>
         <box flexDirection="row" gap={1}>
+          <Button label="explore esc" active={screen === 'chat'} onPress={onOpenChat} />
           {SHELF.map((item) => (
             <Button
               key={item.id}
