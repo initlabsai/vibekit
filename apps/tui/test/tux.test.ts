@@ -3,6 +3,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
+import { FIXTURE_RECEIVER } from '@initlabs/vibekit-experience'
+
 const TUI_DIR = join(import.meta.dir, '..')
 const HAS_TMUX = Bun.spawnSync(['tmux', '-V']).success
 
@@ -112,7 +114,6 @@ describe('TUI tmux journeys', () => {
       expect(pane).toMatch(/LOCALNET/)
       expect(pane).toMatch(/live|sample data|probing/)
       expect(pane).toContain('pay 0.5')
-      expect(pane).toContain('sample')
       expect(pane).toMatch(/\^w/)
       expect(pane).toMatch(/\^1/)
       expect(pane).toMatch(/enter send/)
@@ -120,25 +121,13 @@ describe('TUI tmux journeys', () => {
     { timeout: 20_000 },
   )
 
-  test.skipIf(!HAS_TMUX)(
-    'sample opens a transaction card in the feed',
-    async () => {
-      session = new TuiSession()
-      await session.waitFor('set VIBEKIT_AGENT_MODEL to chat')
-      session.type('sample')
-      session.send('Enter')
-      const pane = await session.waitFor('TRANSACTION')
-      expect(pane).toContain('TRANSACTION')
-    },
-    { timeout: 20_000 },
-  )
 
   test.skipIf(!HAS_TMUX)(
     'pay opens the approval modal over the feed',
     async () => {
       session = new TuiSession()
       await session.waitFor('set VIBEKIT_AGENT_MODEL to chat')
-      session.type('pay')
+      session.type(`pay 0.5 to ${FIXTURE_RECEIVER}`)
       session.send('Enter')
       const pane = await session.waitFor(/APPROVE THIS/)
       expect(pane).toMatch(/APPROVE THIS (PAYMENT|GROUP)\?/)

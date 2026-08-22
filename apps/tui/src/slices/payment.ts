@@ -10,7 +10,7 @@ import {
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { paymentParties } from '../commands.js'
+import { resolvePaymentParties } from '../commands.js'
 import type { Feed } from './feed.js'
 import type { ExplorerHost } from './network.js'
 
@@ -112,9 +112,14 @@ export function usePaymentFlow({
   )
 
   const startPayment = useCallback(
-    (sectionId: number, amountMicroAlgos?: number) => {
+    (sectionId: number, amountMicroAlgos?: number, to?: string) => {
       if (busy || flowRef.current !== null) {
         appendNote(sectionId, 'A payment is already in progress.', 'error')
+        return
+      }
+      const parties = resolvePaymentParties(accountList, activeSender, to)
+      if ('error' in parties) {
+        appendNote(sectionId, parties.error, 'error')
         return
       }
       const useLive = live === true
@@ -129,7 +134,7 @@ export function usePaymentFlow({
         host: host(),
         store: storeRef.current,
         draftParams: {
-          ...paymentParties(accountList, activeSender),
+          ...parties,
           amountMicroAlgos: amountMicroAlgos ?? PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
           note: 'Explorer live payment',
         },

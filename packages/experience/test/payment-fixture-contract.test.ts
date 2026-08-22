@@ -198,8 +198,16 @@ describe('fixture-backed payment write flow', () => {
       amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
     })
     expect(parsePaymentComposerCommand('pay 1.5')).toEqual({ amountMicroAlgos: 1500000 })
+    expect(parsePaymentComposerCommand('pay 1.5 to alice')).toEqual({
+      amountMicroAlgos: 1500000,
+      to: 'alice',
+    })
     expect(parsePaymentComposerCommand('pay 0')).toBeUndefined()
-    expect(parsePaymentComposerCommand('pay 5 to someone')).toBeUndefined()
+    // The receiver token is carried through; the host resolves it (or refuses).
+    expect(parsePaymentComposerCommand('pay 5 to someone')).toEqual({
+      amountMicroAlgos: 5000000,
+      to: 'someone',
+    })
     expect(parsePaymentComposerCommand(FIXTURE_TRANSACTION_ID)).toBeUndefined()
   })
 })

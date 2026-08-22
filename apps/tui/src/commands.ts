@@ -1,6 +1,6 @@
+import algosdk from 'algosdk'
 import {
   classifyExplorerInput,
-  FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   parseEntityComposerCommand,
   parsePaymentComposerCommand,
@@ -11,7 +11,7 @@ import {
  * commands, then recognized identifiers; everything else is conversation.
  */
 export type ComposerRoute =
-  | { status: 'payment'; amountMicroAlgos: number }
+  | { status: 'payment'; amountMicroAlgos: number; to?: string }
   | { status: 'transaction'; txid: string }
   | { status: 'group'; groupId: string }
   | { status: 'account'; address: string }
@@ -22,21 +22,28 @@ export type ComposerRoute =
   | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: 'localnet' | 'testnet' | 'mainnet' }
-  | { status: 'sample' }
   | { status: 'help' }
   | { status: 'ambiguous'; value: string }
   | { status: 'text'; text: string }
 
-/** Sender and receiver filled in by the host before a typed `pay`. */
-export function paymentParties(
-  accounts: ReadonlyArray<{ address: string }>,
+/**
+ * Parties for a typed `pay`: the sender is the wallet's active account (the
+ * one thing the host fills in); the receiver must be named — a keystore
+ * label or an address. Nothing is invented.
+ */
+export function resolvePaymentParties(
+  accounts: ReadonlyArray<{ address: string; name?: string }>,
   activeSender: string | undefined,
-): { sender: string; receiver: string } {
+  to: string | undefined,
+): { sender: string; receiver: string } | { error: string } {
   const known = accounts.some((account) => account.address === activeSender)
   const sender = known && activeSender ? activeSender : (accounts[0]?.address ?? FIXTURE_SENDER)
-  const receiver =
-    accounts.find((account) => account.address !== sender)?.address ?? FIXTURE_RECEIVER
-  return { sender, receiver }
+  if (!to) return { error: 'Name the receiver: pay <amount> to <keystore label | address>' }
+  if (algosdk.isValidAddress(to)) return { sender, receiver: to }
+  const matches = accounts.filter((account) => account.name?.toLowerCase() === to.toLowerCase())
+  if (matches.length === 1) return { sender, receiver: matches[0]!.address }
+  if (matches.length > 1) return { error: `"${to}" matches ${matches.length} accounts — use an address` }
+  return { error: `No keystore account named "${to}" — use a label from the wallet or an address` }
 }
 
 function isMineQuery(word: string, noun: string): boolean {
@@ -75,7 +82,6 @@ export function routeComposerInput(input: string): ComposerRoute {
   if (networkMatch) {
     return { status: 'network', network: networkMatch[1] as 'localnet' | 'testnet' | 'mainnet' }
   }
-  if (word === 'sample') return { status: 'sample' }
   if (word === 'help' || word === '?') return { status: 'help' }
   const classified = classifyExplorerInput(trimmed)
   if (classified.kind === 'entity' && classified.entity === 'transaction') {

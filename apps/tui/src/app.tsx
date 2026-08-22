@@ -1,6 +1,5 @@
 import {
   createFixtureResultStore,
-  FIXTURE_TRANSACTION_ID,
   type ResultStore,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
@@ -23,7 +22,7 @@ import { usePaymentFlow } from './slices/payment.js'
 import { useBlockTail } from './slices/tail.js'
 import { COLORS, shorten } from './theme.js'
 
-const HELP = 'pay 0.5 · blocks · list my accounts · alice.algo · sample · paste an id'
+const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.algo · paste an id'
 
 /**
  * The Explorer as a chat-first transcript plus results feed: a session index
@@ -59,7 +58,7 @@ export function App() {
   )
 
   const net = useNetwork()
-  const { network, networkRef, keystoreHost, host, sampleHost, live, setNetwork } = net
+  const { network, networkRef, keystoreHost, host, live, setNetwork } = net
 
   const feed = useFeed()
   const { focus, setFocus, sections, selectedId, appendNote, createSection, cycleSort, toggleFlowView } = feed
@@ -227,7 +226,7 @@ export function App() {
       const sectionId = createSection(trimmed)
       switch (outcome.status) {
         case 'payment':
-          startPayment(sectionId, outcome.amountMicroAlgos)
+          startPayment(sectionId, outcome.amountMicroAlgos, outcome.to)
           return
         case 'transaction':
           openTransaction(sectionId, outcome.txid)
@@ -262,11 +261,6 @@ export function App() {
             )
           }
           return
-        case 'sample':
-          // Always the recorded card. Looking the fixture txid up through the
-          // live host 404s on a real network that never confirmed that payment.
-          openTransaction(sectionId, FIXTURE_TRANSACTION_ID, sampleHost)
-          return
         case 'help':
           appendNote(sectionId, HELP)
           return
@@ -292,7 +286,6 @@ export function App() {
       openGroup,
       openTransaction,
       runAgent,
-      sampleHost,
       startPayment,
       switchNetwork,
     ],
@@ -335,8 +328,8 @@ export function App() {
     agentBusy || busy
       ? 'working…'
       : agentConfig
-        ? 'Ask anything, or: ^w wallet · pay 0.5 · paste an ID or name.algo'
-        : '^w wallet · ^1 assets · pay 0.5 · paste an ID or name.algo'
+        ? 'Ask anything, or: ^w wallet · pay 0.5 to <label> · paste an ID or name.algo'
+        : '^w wallet · ^1 assets · pay 0.5 to <label> · paste an ID or name.algo'
 
   const keybar = modalOpen
     ? 'enter approve · esc deny'

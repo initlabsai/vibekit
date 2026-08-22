@@ -349,13 +349,17 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
  * `draft payment`, or `pay <algos>` with up to six decimal places. The
  * default amount matches the fixture payment.
  */
-export function parsePaymentComposerCommand(raw: string): { amountMicroAlgos: number } | undefined {
+export function parsePaymentComposerCommand(
+  raw: string,
+): { amountMicroAlgos: number; to?: string } | undefined {
   const input = raw.trim()
   if (/^(pay|draft payment)$/i.test(input)) {
     return { amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS }
   }
-  const withAmount = /^pay\s+(\S+)$/i.exec(input)
+  // `pay 0.5 to alice` — the receiver is a keystore label or an address; hosts resolve it.
+  const withAmount = /^pay\s+(\S+)(?:\s+to\s+(\S+))?$/i.exec(input)
   if (!withAmount) return undefined
   const amountMicroAlgos = parseAlgosToMicroAlgos(withAmount[1]!)
-  return amountMicroAlgos === undefined || amountMicroAlgos <= 0 ? undefined : { amountMicroAlgos }
+  if (amountMicroAlgos === undefined || amountMicroAlgos <= 0) return undefined
+  return withAmount[2] ? { amountMicroAlgos, to: withAmount[2] } : { amountMicroAlgos }
 }

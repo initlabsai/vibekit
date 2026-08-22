@@ -102,11 +102,10 @@ export function ThinkingFold({
 
 const WELCOME_COMMANDS: ReadonlyArray<[string, string]> = [
   ['paste an id', 'address, txn, group, asset/app/block number, name.algo'],
-  ['pay 0.5', 'compose, simulate, inspect, approve — then it signs'],
+  ['pay 0.5 to alice', 'from the active sender: compose, simulate, inspect, approve, sign'],
   ['list my accounts', 'keystore accounts, live balances; ^w switches sender'],
   ['^1 ^2 ^3 ^4', 'assets · apps (simulate read methods) · txns · live blocks'],
   ['^n', 'localnet · testnet · mainnet'],
-  ['sample', 'a recorded transaction, no network needed'],
 ]
 
 const WELCOME_QUESTIONS = [

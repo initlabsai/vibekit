@@ -7,7 +7,7 @@ import {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
 } from '@initlabs/vibekit-experience'
 
-import { paymentParties, routeComposerInput } from '../src/commands.js'
+import { resolvePaymentParties, routeComposerInput } from '../src/commands.js'
 
 describe('transcript command routing', () => {
   test('exact commands come first', () => {
@@ -20,7 +20,6 @@ describe('transcript command routing', () => {
     expect(routeComposerInput('list my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('show me my accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('my accounts')).toEqual({ status: 'account-list' })
-    expect(routeComposerInput(' SAMPLE ')).toEqual({ status: 'sample' })
     expect(routeComposerInput('blocks')).toEqual({ status: 'nav', screen: 'blocks' })
     expect(routeComposerInput('live')).toEqual({ status: 'nav', screen: 'blocks' })
     expect(routeComposerInput('help')).toEqual({ status: 'help' })
@@ -73,14 +72,30 @@ describe('transcript command routing', () => {
     expect(routeComposerInput('alice.algos')).toEqual({ status: 'text', text: 'alice.algos' })
   })
 
-  test('typed pay uses the active keystore account as sender', () => {
-    expect(paymentParties([], undefined)).toEqual({
+  test('typed pay names its receiver; the host only fills the sender', () => {
+    const book = [
+      { address: FIXTURE_SENDER, name: 'alice' },
+      { address: FIXTURE_RECEIVER, name: 'bob' },
+    ]
+    expect(resolvePaymentParties(book, FIXTURE_SENDER, undefined)).toMatchObject({
+      error: expect.stringContaining('Name the receiver'),
+    })
+    expect(resolvePaymentParties(book, FIXTURE_SENDER, 'Bob')).toEqual({
       sender: FIXTURE_SENDER,
       receiver: FIXTURE_RECEIVER,
     })
-    expect(
-      paymentParties([{ address: FIXTURE_SENDER }, { address: FIXTURE_RECEIVER }], FIXTURE_RECEIVER),
-    ).toEqual({ sender: FIXTURE_RECEIVER, receiver: FIXTURE_SENDER })
+    expect(resolvePaymentParties(book, FIXTURE_SENDER, FIXTURE_RECEIVER)).toEqual({
+      sender: FIXTURE_SENDER,
+      receiver: FIXTURE_RECEIVER,
+    })
+    expect(resolvePaymentParties(book, FIXTURE_SENDER, 'carol')).toMatchObject({
+      error: expect.stringContaining('No keystore account named'),
+    })
+    expect(routeComposerInput('pay 1.5 to bob')).toEqual({
+      status: 'payment',
+      amountMicroAlgos: 1500000,
+      to: 'bob',
+    })
   })
 
   test('everything else is conversation', () => {
