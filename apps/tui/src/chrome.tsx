@@ -28,32 +28,15 @@ function RoundTick({ round }: { round: number }) {
     const id = setTimeout(() => setHot(false), 350)
     return () => clearTimeout(id)
   }, [round])
-  return <text fg={hot ? COLORS.brassBright : COLORS.signal}>{`  ${round}`}</text>
+  return <text fg={hot ? COLORS.brassBright : COLORS.signal}>{String(round)}</text>
 }
 
-function NavButton({
-  label,
-  shortcut,
-  active,
-  onPress,
-}: {
-  label: string
-  shortcut: string
-  active: boolean
-  onPress: () => void
-}) {
-  return (
-    <box
-      onMouseDown={onPress}
-      paddingX={1}
-      backgroundColor={active ? COLORS.brass : COLORS.panel}
-    >
-      <text fg={active ? COLORS.ink : COLORS.muted}>{`${label} ${shortcut}`}</text>
-    </box>
-  )
-}
-
-/** Two-row masthead: brand/network, then wallet chip and shelf buttons. */
+/**
+ * Two-row masthead. Row one: brand, then network state (mode · network chip
+ * with its key · round). Row two: the workspace pages on the left, the
+ * active wallet on the right. Every clickable is a Button, the same
+ * primitive the cards use, so "filled chip" always means "press me".
+ */
 export function TopBar({
   screen,
   modeLabel,
@@ -80,7 +63,7 @@ export function TopBar({
   const compact = width < 88
   const walletLabel = address
     ? compact
-      ? accountName ?? shorten(address, 10)
+      ? (accountName ?? shorten(address, 10))
       : `${accountName ?? 'wallet'}  ${shorten(address, 12)}`
     : 'no wallet'
   const networkColors: Record<LiveNetworkId, string> = {
@@ -96,37 +79,30 @@ export function TopBar({
           <text fg={COLORS.faint}>VIBEKIT </text>
           <text fg={COLORS.brassBright}>EXPLORER</text>
         </box>
-        <box flexDirection="row" onMouseDown={onSwitchNetwork}>
-          <text fg={COLORS.faint}>{`${modeLabel}   `}</text>
-          <text fg={COLORS.ink} bg={networkColors[network]}>
-            {` ${network.toUpperCase()} `}
-          </text>
+        <box flexDirection="row" gap={1}>
+          <text fg={COLORS.faint}>{modeLabel}</text>
+          <box paddingX={1} backgroundColor={networkColors[network]} onMouseDown={onSwitchNetwork}>
+            <text fg={COLORS.ink}>{`${network.toUpperCase()} ^n`}</text>
+          </box>
           {latestRound === undefined ? null : <RoundTick round={latestRound} />}
-          <text fg={COLORS.faint}> ^n</text>
         </box>
       </box>
       <box flexDirection="row" justifyContent="space-between" height={1}>
-        <box
-          flexDirection="row"
-          onMouseDown={onOpenWallet}
-          paddingX={1}
-          backgroundColor={screen === 'wallet' ? COLORS.brass : COLORS.panel}
-        >
-          <text fg={screen === 'wallet' ? COLORS.ink : COLORS.brassBright}>
-            {`▸ ${shorten(walletLabel, compact ? 16 : 28)} ^w`}
-          </text>
-        </box>
         <box flexDirection="row" gap={1}>
           {SHELF.map((item) => (
-            <NavButton
+            <Button
               key={item.id}
-              label={item.label}
-              shortcut={item.shortcut}
+              label={`${item.label} ${item.shortcut}`}
               active={screen === item.id}
               onPress={() => onOpenScreen(item.id)}
             />
           ))}
         </box>
+        <Button
+          label={`▸ ${shorten(walletLabel, compact ? 16 : 28)} ^w`}
+          active={screen === 'wallet'}
+          onPress={onOpenWallet}
+        />
       </box>
     </box>
   )
