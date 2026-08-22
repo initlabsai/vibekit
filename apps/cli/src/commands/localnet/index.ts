@@ -14,7 +14,9 @@ import {
   fetchIndexerStatus,
   waitForAlgod,
   waitForIndexer,
+  ownerOfPort,
 } from './sandbox.js'
+import { LOCALNET_PROJECT } from './compose.js'
 import { DEFAULT_FUND_MICROALGOS, fundFromKmd } from './fund.js'
 
 function localnetHelp(): void {
@@ -79,8 +81,26 @@ async function waitHealthy(s: ReturnType<typeof p.spinner>): Promise<void> {
   }
 }
 
+/**
+ * The sandbox that currently owns the localnet ports: ours by default, or a
+ * foreign compose project (AlgoKit's) adopted so stop/status/logs act on the
+ * localnet that is actually serving — there is only ever one at 4001.
+ */
+async function currentSandbox(): Promise<Sandbox> {
+  const owner = await ownerOfPort()
+  return new Sandbox(undefined, owner ? { project: owner.project } : {})
+}
+
 async function commandStart(): Promise<void> {
   await ensureDocker()
+  const owner = await ownerOfPort()
+  if (owner && owner.project !== LOCALNET_PROJECT) {
+    // Someone else's localnet is already up: use it rather than fight for the ports.
+    const s = p.spinner()
+    s.start(`LocalNet already running as ${pc.cyan(owner.project)} — adopting it...`)
+    await waitHealthy(s)
+    return
+  }
   const sandbox = new Sandbox()
   await prepareComposeFiles(sandbox)
 
@@ -101,16 +121,20 @@ async function commandStart(): Promise<void> {
 
 async function commandStop(): Promise<void> {
   await ensureDocker()
-  const sandbox = new Sandbox()
+  const sandbox = await currentSandbox()
   if (!sandbox.composeFilesExist()) {
     p.log.info('LocalNet has not been initialized; run `vibekit localnet start` first.')
     return
   }
   const s = p.spinner()
-  s.start('Stopping LocalNet...')
+  s.start(sandbox.adopted ? `Stopping LocalNet (${sandbox.project})...` : 'Stopping LocalNet...')
   try {
     await sandbox.stop()
-    s.stop('LocalNet stopped — `vibekit localnet start` to start it again')
+    s.stop(
+      sandbox.adopted
+        ? `LocalNet (${sandbox.project}) stopped — \`vibekit localnet start\` to start it again`
+        : 'LocalNet stopped — `vibekit localnet start` to start it again',
+    )
   } catch (error) {
     s.stop('Failed to stop LocalNet')
     p.log.error(error instanceof Error ? error.message : String(error))
@@ -121,6 +145,15 @@ async function commandStop(): Promise<void> {
 async function commandReset(args: string[]): Promise<void> {
   await ensureDocker()
   const update = args.includes('--update')
+  const owner = await ownerOfPort()
+  if (owner && owner.project !== LOCALNET_PROJECT) {
+    // Recreating it means driving another tool's compose files; leave that to the tool.
+    p.log.error(
+      `The running LocalNet belongs to ${pc.cyan(owner.project)}. Reset it with that tool ` +
+        `(e.g. ${pc.cyan('algokit localnet reset')}), or stop it and run ${pc.cyan('vibekit localnet start')}.`,
+    )
+    process.exit(1)
+  }
   const sandbox = new Sandbox()
 
   const s = p.spinner()
@@ -146,18 +179,22 @@ async function commandReset(args: string[]): Promise<void> {
 
 async function commandStatus(): Promise<void> {
   await ensureDocker()
-  const sandbox = new Sandbox()
+  const sandbox = await currentSandbox()
 
   const ps = await sandbox.ps()
   const byService = new Map(ps.map((record) => [String(record.Service), record]))
 
-  if (SERVICE_NAMES.some((name) => !byService.has(name))) {
+  if (sandbox.adopted) {
+    console.log(pc.dim(`LocalNet adopted from compose project ${pc.cyan(sandbox.project!)}\n`))
+  } else if (SERVICE_NAMES.some((name) => !byService.has(name))) {
     p.log.error('LocalNet has not been initialized yet; run `vibekit localnet start`.')
     process.exit(1)
   }
 
+  // Ours has a fixed service set; an adopted project is reported as it is.
+  const services = sandbox.adopted ? [...byService.keys()].sort() : [...SERVICE_NAMES]
   let allRunning = true
-  for (const name of SERVICE_NAMES) {
+  for (const name of services) {
     const record = byService.get(name)!
     const running = record.State === 'running'
     allRunning &&= running
@@ -228,7 +265,7 @@ async function commandFund(args: string[]): Promise<void> {
 
 async function commandLogs(args: string[]): Promise<void> {
   await ensureDocker()
-  const sandbox = new Sandbox()
+  const sandbox = await currentSandbox()
   if (!sandbox.composeFilesExist()) {
     p.log.info('LocalNet has not been initialized; run `vibekit localnet start` first.')
     return

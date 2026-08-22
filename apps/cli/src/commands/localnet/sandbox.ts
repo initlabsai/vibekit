@@ -11,6 +11,7 @@ import { mkdir, readFile, writeFile } from 'fs/promises'
 import {
   ALGOD_PORT,
   INDEXER_PORT,
+  LOCALNET_PROJECT,
   LOCALNET_TOKEN,
   composeFileStatus,
   getAlgodConfigJson,
@@ -93,13 +94,56 @@ export async function checkDocker(): Promise<DockerCheck> {
   return { ok: true }
 }
 
+// --- Port ownership ---
+
+/** The compose project whose container publishes a host port. */
+export interface PortOwner {
+  container: string
+  project: string
+  workingDir?: string
+}
+
+/** Parses `docker ps --format '{{.Names}}\t{{project label}}\t{{working_dir label}}'`. */
+export function parsePortOwner(stdout: string): PortOwner | undefined {
+  const line = stdout.split('\n').find((candidate) => candidate.trim() !== '')
+  if (!line) return undefined
+  const [container = '', project = '', workingDir = ''] = line.split('\t')
+  if (!container || !project) return undefined
+  return { container, project, ...(workingDir ? { workingDir } : {}) }
+}
+
+/**
+ * Who is serving the algod port right now — ours, AlgoKit's sandbox, or
+ * nobody. Read from Docker labels each time; nothing is persisted.
+ */
+export async function ownerOfPort(port: number = ALGOD_PORT): Promise<PortOwner | undefined> {
+  const result = await run([
+    'docker',
+    'ps',
+    '--filter',
+    `publish=${port}`,
+    '--format',
+    '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.Label "com.docker.compose.project.working_dir"}}',
+  ])
+  if (result.exitCode !== 0) return undefined
+  return parsePortOwner(result.stdout)
+}
+
 // --- Sandbox ---
 
 export class Sandbox {
   readonly directory: string
+  /** A foreign compose project adopted because it already owns the ports. */
+  readonly project?: string
 
-  constructor(directory: string = localnetConfigDir()) {
+  constructor(directory: string = localnetConfigDir(), options: { project?: string } = {}) {
     this.directory = directory
+    if (options.project && options.project !== LOCALNET_PROJECT) this.project = options.project
+  }
+
+  /** True when lifecycle commands drive someone else's localnet (e.g. AlgoKit's). */
+  get adopted(): boolean {
+    return this.project !== undefined
   }
 
   private async readOrNull(file: string): Promise<string | null> {
@@ -133,11 +177,15 @@ export class Sandbox {
   }
 
   composeFilesExist(): boolean {
-    return existsSync(join(this.directory, 'docker-compose.yml'))
+    return this.adopted || existsSync(join(this.directory, 'docker-compose.yml'))
   }
 
+  // An adopted project is driven by name: stop/ps/logs/down work from the
+  // containers' labels alone, so its compose files never need to be ours.
   private compose(args: string[]): Promise<RunResult> {
-    return run(['docker', 'compose', ...args], this.directory)
+    return this.project
+      ? run(['docker', 'compose', '-p', this.project, ...args])
+      : run(['docker', 'compose', ...args], this.directory)
   }
 
   async up(): Promise<void> {
@@ -163,10 +211,10 @@ export class Sandbox {
   }
 
   async logs(options: { follow?: boolean; tail?: string } = {}): Promise<number> {
-    const args = ['docker', 'compose', 'logs']
+    const args = this.project ? ['docker', 'compose', '-p', this.project, 'logs'] : ['docker', 'compose', 'logs']
     if (options.follow) args.push('--follow')
     if (options.tail) args.push('--tail', options.tail)
-    return runInteractive(args, this.directory)
+    return runInteractive(args, this.project ? undefined : this.directory)
   }
 
   /** `docker compose ps` parsed into service records. */

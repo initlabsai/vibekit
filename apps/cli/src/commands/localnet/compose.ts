@@ -11,6 +11,9 @@ export const CONDUIT_IMAGE = 'algorandfoundation/conduit-localnet:latest'
 
 export const LOCALNET_TOKEN = 'a'.repeat(64)
 
+/** Compose project name of the localnet vibekit manages itself. */
+export const LOCALNET_PROJECT = 'vibekit_localnet'
+
 export const ALGOD_PORT = 4001
 export const KMD_PORT = 4002
 export const TEALDBG_PORT = 9392
