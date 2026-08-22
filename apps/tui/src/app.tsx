@@ -514,6 +514,7 @@ export function App() {
           views={tail.views}
           width={width}
           onToggle={tail.togglePause}
+          onOpen={openTarget}
         />
       ) : screen === 'assets' || screen === 'txns' ? (
         <ShelfScreen

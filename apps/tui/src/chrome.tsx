@@ -623,6 +623,7 @@ export function BlocksScreen({
   views,
   width,
   onToggle,
+  onOpen,
 }: {
   network: string
   live: 'probing' | boolean
@@ -634,6 +635,7 @@ export function BlocksScreen({
   views: readonly ViewSpec[]
   width: number
   onToggle: () => void
+  onOpen: (target: OpenTarget) => void
 }) {
   const inner = Math.max(30, width - 6)
   const pill =
@@ -682,7 +684,13 @@ export function BlocksScreen({
           {/* Newest block on top: the tail reads like a ticker, not a log. */}
           {views
             .map((view, index) => (
-              <ResultView key={`${view.source.id}-${index}`} store={store} view={view} width={inner} />
+              <ResultView
+                key={`${view.source.id}-${index}`}
+                store={store}
+                view={view}
+                width={inner}
+                onOpen={onOpen}
+              />
             ))
             .reverse()}
         </scrollbox>
