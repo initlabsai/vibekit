@@ -16,7 +16,7 @@ import {
 } from '@initlabs/vibekit-experience'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
 
-import { resolveAgentConfig } from '@initlabs/vibekit-agent'
+import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
 import {
   addResult,
   createAccountListViewModel,
@@ -171,7 +171,7 @@ describe('TUI agent lane', () => {
     expect(prompt).toContain('search_transactions with minRound and maxRound')
     expect(prompt).toContain('MUST call search_transactions')
     expect(prompt).toContain('Never write a transaction table')
-    expect(prompt).toContain('ONE short sentence')
+    expect(prompt).toContain('never open two replies the same way')
     expect(prompt).toContain('NEVER list, enumerate, restate')
     expect(prompt).toContain('search_account_transactions with txType')
     expect(prompt).toContain('lookup_transaction_group')
@@ -248,7 +248,8 @@ describe('TUI agent lane', () => {
       model: new MockLanguageModelV4({
         doStream: toolCallThenText(
           'send_payment',
-          { sender: TXN_WIRE.sender, receiver: TXN_WIRE.receiver, amountMicroAlgos: 250000 },
+          // Every network is served, so a write must name its network.
+          { sender: TXN_WIRE.sender, receiver: TXN_WIRE.receiver, amountMicroAlgos: 250000, network: 'localnet' },
           'Review the payment in the panel.',
         ),
       }),
@@ -256,7 +257,7 @@ describe('TUI agent lane', () => {
       tools: [stubLookup, stubSendPayment],
     })
 
-    const toolResults: ToolResultEventLike[] = []
+    const toolResults: Extract<AgentEvent, { type: 'tool-result' }>[] = []
     await runAgentTurn(session, 'pay 0.25 to the receiver', {
       onText: () => {},
       onToolCall: () => {},
@@ -266,6 +267,7 @@ describe('TUI agent lane', () => {
       },
     })
 
+    expect((toolResults[0]!.input as { network?: string }).network).toBe('localnet')
     const compose = unsignedGroupFromToolResult(toolResults[0]!)
     expect(compose?.unsignedGroup).toEqual([PAYMENT_FIXTURE_UNSIGNED_TRANSACTION])
 

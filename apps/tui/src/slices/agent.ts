@@ -17,8 +17,15 @@ import {
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { enrichResultWithAbi } from '../abi-catalog.js'
-import { activeSenderLine, createExplorerAgent, explorerContext, runAgentTurn } from '../agent-lane.js'
+import {
+  activeSenderLine,
+  createExplorerAgent,
+  explorerContext,
+  networkOfCall,
+  runAgentTurn,
+} from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
+import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
@@ -45,6 +52,7 @@ export function useAgentLane({
   setStatus,
   extraTools,
   specCatalog,
+  onNetworkUsed,
 }: {
   feed: Feed
   payment: PaymentLane
@@ -60,6 +68,8 @@ export function useAgentLane({
   setStatus: (status: string) => void
   extraTools: readonly AnyTool[]
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
+  /** The agent queried a network other than the active one. */
+  onNetworkUsed: (network: LiveNetworkId, sectionId: number) => void
 }) {
   const {
     appendBlock,
@@ -76,6 +86,8 @@ export function useAgentLane({
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
   const agentHasCardsRef = useRef(false)
   const agentRef = useRef<AgentSession | null>(null)
+  /** The session's default network, fixed at creation. */
+  const sessionNetworkRef = useRef<LiveNetworkId>(networkRef.current)
 
   const agentConfig = useMemo(() => resolveAgentConfig(process.env), [])
   const extraToolNames = extraTools.map((tool) => tool.name).join(',')
@@ -159,6 +171,7 @@ export function useAgentLane({
             ? await keystoreHost.listSigningAccounts().catch(() => [...FIXTURE_ADDRESS_BOOK])
             : [...FIXTURE_ADDRESS_BOOK]
           addressBookRef.current = addressBook
+          sessionNetworkRef.current = networkRef.current
           agentRef.current = createExplorerAgent({
             model: agentConfig,
             addressBook,
@@ -187,13 +200,15 @@ export function useAgentLane({
           onToolResult: (event) => {
             spoke = true
             agentNoteItem.current = null
+            const usedNetwork = networkOfCall(event.input, sessionNetworkRef.current)
+            if (usedNetwork !== networkRef.current) onNetworkUsed(usedNetwork, sectionId)
             const compose = unsignedGroupFromToolResult(event)
             if (compose && flowRef.current === null) {
               const draftRecord = draftRecordFromComposeWire(
                 {
                   resultId: newId('result-agent-payment-draft'),
                   toolCallId: event.id,
-                  network: networkRef.current,
+                  network: usedNetwork,
                 },
                 compose,
                 event.toolName,
@@ -219,7 +234,7 @@ export function useAgentLane({
               const { record, view } = bridgeToolResult(event, {
                 resultId: newId('result-agent'),
                 toolCallId: event.id,
-                network: networkRef.current,
+                network: usedNetwork,
               })
               const enriched = withAccountNames(
                 enrichResultWithAbi(record, specCatalog),
@@ -227,6 +242,15 @@ export function useAgentLane({
               )
               commitStore(addResult(storeRef.current, enriched))
               agentHasCardsRef.current = true
+              if (view === undefined && event.toolName === 'resolve_nfd' && record.state === 'success') {
+                appendBlock(sectionId, {
+                  id: 0,
+                  kind: 'nfd',
+                  data: record.data as unknown as NfdRecord,
+                  network: usedNetwork,
+                })
+                return
+              }
               if (view === undefined) {
                 const text =
                   record.state === 'success'

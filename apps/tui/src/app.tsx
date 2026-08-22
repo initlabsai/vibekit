@@ -175,6 +175,8 @@ export function App() {
     storeRef,
   })
 
+  // switchNetwork needs the agent lane's reset; the lane reaches it through this ref.
+  const switchNetworkRef = useRef<(target: LiveNetworkId, sectionId: number) => void>(() => {})
   const agent = useAgentLane({
     feed,
     payment,
@@ -190,6 +192,7 @@ export function App() {
     setStatus,
     extraTools: apps.extraTools,
     specCatalog: apps.catalog,
+    onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
   })
   const { agentConfig, runAgent, agentSectionRef, reset: resetAgent } = agent
 
@@ -215,6 +218,7 @@ export function App() {
     },
     [appendNote, flowRef, networkRef, resetAgent, setNetwork],
   )
+  switchNetworkRef.current = switchNetwork
 
   // Drill-in from any card: its own section, same lanes as typed input.
   const openTarget = useCallback(
@@ -562,6 +566,10 @@ export function App() {
             onOpen={openTarget}
             onClose={closeSection}
             onMore={loadMore}
+            onSuggest={(text) => {
+              if (composerRef.current) composerRef.current.value = text
+              setFocus('composer')
+            }}
             loadingMoreItemId={loadingMoreItemId}
           />
         </box>

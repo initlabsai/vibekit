@@ -20,7 +20,7 @@ import {
   type ViewSpec,
 } from '@initlabs/vibekit-experience'
 import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
-import { nfdPlugin, type NfdService } from '@initlabs/vibekit-plugin-nfd'
+import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit-plugin-nfd'
 import { useCallback, useRef } from 'react'
 
 import type { WorkspaceScreen } from '../chrome.js'
@@ -189,16 +189,16 @@ export function useLookups({
       void Promise.resolve()
         .then(() => {
           nfdRef.current ??= nfdPlugin().service as NfdService
-          return nfdRef.current.clientFor(network).resolve(name)
+          return nfdRef.current.clientFor(network).resolve(name, { view: 'full' })
         })
         .then((nfd) => {
-          const address = nfd.depositAccount ?? nfd.owner
-          if (!address) throw new Error('the name has no deposit address')
+          const data = nfdRecord(nfd, name)
+          if (!data.address) throw new Error('the name has no deposit address')
           setBusy(false)
           setStatus('')
-          appendNote(sectionId, `${name} → ${shorten(address, 20)}`)
+          appendBlock(sectionId, { id: 0, kind: 'nfd', data, network })
           // From here the name behaves exactly like a pasted address.
-          openResolved(sectionId, address)
+          openResolved(sectionId, data.address)
         })
         .catch((error: unknown) => {
           setBusy(false)

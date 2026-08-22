@@ -4,10 +4,12 @@ import {
   type ViewSpec,
   type WriteFlowState,
 } from '@initlabs/vibekit-experience'
-import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
+import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollBoxRenderable } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 
-import { PaymentCard } from './cards/index.js'
+import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+
+import { NfdCard, PaymentCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button } from './ui.js'
 import { RawCard, ResultView, type OpenTarget } from './views.js'
@@ -16,6 +18,7 @@ import { RawCard, ResultView, type OpenTarget } from './views.js'
 export type SectionBlock =
   | { id: number; kind: 'view'; view: ViewSpec }
   | { id: number; kind: 'raw'; title: string; text: string }
+  | { id: number; kind: 'nfd'; data: NfdRecord; network: string }
   | { id: number; kind: 'payment'; flow: WriteFlowState }
 
 /** One entry in a section's body, in arrival order. */
@@ -106,14 +109,20 @@ const WELCOME_COMMANDS: ReadonlyArray<[string, string]> = [
   ['^n', 'localnet · testnet · mainnet'],
 ]
 
-const WELCOME_QUESTIONS = [
-  'who holds asset 31566704',
-  'what happened in round 64291911',
-  'what does nf.algo hold',
-] as const
+const WELCOME_QUESTIONS = ["look up vibekit.algo on mainnet"] as const
+const LINK_ATTR = createTextAttributes({ underline: true })
 
 /** Empty-feed invite: what works, and what this is (tool calls, not magic). */
-export function WelcomePanel({ hasAgent, width }: { hasAgent: boolean; width: number }) {
+export function WelcomePanel({
+  hasAgent,
+  width,
+  onSuggest,
+}: {
+  hasAgent: boolean
+  width: number
+  /** Puts an example question in the composer, ready to edit or send. */
+  onSuggest: (text: string) => void
+}) {
   return (
     <box flexGrow={1} padding={2} flexDirection="column">
       {width >= 60 ? (
@@ -139,7 +148,17 @@ export function WelcomePanel({ hasAgent, width }: { hasAgent: boolean; width: nu
         <box flexDirection="column" marginTop={2}>
           {WELCOME_QUESTIONS.map((question) => (
             <box key={question} flexDirection="row" height={1}>
-              <text fg={COLORS.text}>{`  ${question}`}</text>
+              <text fg={COLORS.muted}>{'  "'}</text>
+              <text
+                fg={COLORS.brassBright}
+                attributes={LINK_ATTR}
+                content={question}
+                onMouseDown={(event: MouseEvent) => {
+                  event.stopPropagation()
+                  onSuggest(question)
+                }}
+              />
+              <text fg={COLORS.muted}>"</text>
             </box>
           ))}
           <text
@@ -230,6 +249,7 @@ export function ContentPane({
   onOpen,
   onClose,
   onMore,
+  onSuggest,
   loadingMoreItemId,
 }: {
   sections: Section[]
@@ -251,6 +271,7 @@ export function ContentPane({
   onOpen: (target: OpenTarget) => void
   onClose: (id: number) => void
   onMore: (sectionId: number, itemId: number, view: ViewSpec) => void
+  onSuggest: (text: string) => void
   /** Item id of the list currently fetching its next page. */
   loadingMoreItemId: number | null
 }) {
@@ -279,7 +300,7 @@ export function ContentPane({
       backgroundColor={COLORS.background}
     >
       {sections.length === 0 ? (
-        <WelcomePanel hasAgent={hasAgent} width={innerWidth} />
+        <WelcomePanel hasAgent={hasAgent} width={innerWidth} onSuggest={onSuggest} />
       ) : (
         <scrollbox ref={scrollRef} flexGrow={1} paddingX={1} stickyScroll stickyStart="bottom">
           {sections.map((section) => {
@@ -356,6 +377,18 @@ export function ContentPane({
                   if (block.kind === 'raw') {
                     return (
                       <RawCard key={item.id} title={block.title} text={block.text} width={cardWidth} />
+                    )
+                  }
+                  if (block.kind === 'nfd') {
+                    const address = block.data.address
+                    return (
+                      <NfdCard
+                        key={item.id}
+                        data={block.data}
+                        network={block.network}
+                        width={cardWidth}
+                        onOpenAccount={address ? () => onOpen({ kind: 'account', address }) : undefined}
+                      />
                     )
                   }
                   const derived = createPaymentFlowViewModel(store, block.flow)
