@@ -101,11 +101,19 @@ export function ThinkingFold({
 }
 
 const WELCOME_COMMANDS: ReadonlyArray<[string, string]> = [
-  ['pay 0.5', 'compose a payment — you approve before anything signs'],
-  ['list my accounts', 'keystore accounts with live balances'],
+  ['paste an id', 'address, txn, group, asset/app/block number, name.algo'],
+  ['pay 0.5', 'compose, simulate, inspect, approve — then it signs'],
+  ['list my accounts', 'keystore accounts, live balances; ^w switches sender'],
+  ['^1 ^2 ^3 ^4', 'assets · apps (simulate read methods) · txns · live blocks'],
+  ['^n', 'localnet · testnet · mainnet'],
   ['sample', 'a recorded transaction, no network needed'],
-  ['paste an id', 'address, txn, group, asset/app/block number, or name.algo'],
 ]
+
+const WELCOME_QUESTIONS = [
+  'who holds asset 31566704',
+  'what happened in round 64291911',
+  'what does nf.algo hold',
+] as const
 
 /** Empty-feed invite: what works, and what this is (tool calls, not magic). */
 export function WelcomePanel({ hasAgent }: { hasAgent: boolean }) {
@@ -128,9 +136,11 @@ export function WelcomePanel({ hasAgent }: { hasAgent: boolean }) {
       </box>
       {hasAgent ? (
         <box flexDirection="column" marginTop={2}>
-          <text fg={COLORS.text} content="  who holds asset 31566704" />
-          <text fg={COLORS.text} content="  what happened in round 64291911" />
-          <text fg={COLORS.text} content="  what does nf.algo hold" />
+          {WELCOME_QUESTIONS.map((question) => (
+            <box key={question} flexDirection="row" height={1}>
+              <text fg={COLORS.text}>{`  ${question}`}</text>
+            </box>
+          ))}
           <text
             fg={COLORS.faint}
             marginTop={1}
