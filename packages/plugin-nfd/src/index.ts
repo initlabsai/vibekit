@@ -39,6 +39,20 @@ export function getNfdClient(ctx: ToolContext): NfdApiClient {
   return service.clientFor(ctx.network.id)
 }
 
+/**
+ * The NFD SDK rejects with plain objects ({ name, message, … }), not Errors;
+ * hosts that stringify unknown throws would show "[object Object]".
+ */
+async function nfdCall<T>(call: Promise<T>): Promise<T> {
+  try {
+    return await call
+  } catch (error: unknown) {
+    if (error instanceof Error) throw error
+    const { name, message } = (error ?? {}) as { name?: string; message?: string }
+    throw new ToolError('NFD_ERROR', message ? `NFD: ${message}` : `NFD request failed (${name ?? 'unknown'})`)
+  }
+}
+
 /** ipfs:// → HTTPS gateway URL; non-IPFS input passes through. */
 function ipfsToHttps(url: string): string | undefined {
   if (url.startsWith('ipfs://')) return url.replace('ipfs://', 'https://images.nf.domains/ipfs/')
@@ -72,6 +86,40 @@ function extractProperties(properties?: {
 
 const propertiesSchema = z.record(z.string(), z.string()).optional()
 
+/** resolve_nfd's wire shape; hosts that resolve names directly build the same record. */
+export interface NfdRecord {
+  name: string
+  address?: string
+  owner?: string
+  appId?: number
+  state?: string
+  properties?: Record<string, string>
+}
+
+/** Shapes an SDK NFD (any view) into the resolve_nfd record. */
+export function nfdRecord(
+  nfd: {
+    name?: string
+    depositAccount?: string
+    owner?: string
+    appID?: number
+    state?: string
+    properties?: Parameters<typeof extractProperties>[0]
+  },
+  requestedName: string,
+): NfdRecord {
+  return {
+    // The SDK types name as required but does no runtime validation of the
+    // API body — fall back to the requested name rather than dropping the key.
+    name: nfd.name ?? requestedName.toLowerCase(),
+    address: nfd.depositAccount ?? nfd.owner,
+    owner: nfd.owner,
+    appId: nfd.appID,
+    state: nfd.state,
+    properties: extractProperties(nfd.properties),
+  }
+}
+
 export const nfdTools: AnyTool[] = [
   defineTool({
     name: 'resolve_nfd',
@@ -90,17 +138,11 @@ export const nfdTools: AnyTool[] = [
     }),
     view: 'account',
     handler: async (ctx, args) => {
-      const nfd = await getNfdClient(ctx).resolve(args.name.toLowerCase(), { view: 'full' })
-      return {
-        // The SDK types name as required but does no runtime validation of the
-        // API body — fall back to the requested name rather than dropping the key.
-        name: nfd.name ?? args.name.toLowerCase(),
-        address: nfd.depositAccount ?? nfd.owner,
-        owner: nfd.owner,
-        appId: nfd.appID,
-        state: nfd.state,
-        properties: extractProperties(nfd.properties),
-      }
+      // A bare label ("vibekit") means the .algo name; models drop the suffix often.
+      const name = args.name.toLowerCase().trim()
+      const full = name.includes('.') ? name : `${name}.algo`
+      const nfd = await nfdCall(getNfdClient(ctx).resolve(full, { view: 'full' }))
+      return nfdRecord(nfd, full)
     },
   }),
   defineTool({
@@ -118,7 +160,7 @@ export const nfdTools: AnyTool[] = [
     }),
     view: 'account',
     handler: async (ctx, args) => {
-      const result = await getNfdClient(ctx).reverseLookup([args.address], { view: 'full' })
+      const result = await nfdCall(getNfdClient(ctx).reverseLookup([args.address], { view: 'full' }))
       const nfd = result[args.address]
       // The API returns an empty object (not a missing key) for unnamed
       // addresses — an absent `name` would be dropped by jsonSafe and violate
@@ -150,7 +192,7 @@ export const nfdTools: AnyTool[] = [
     }),
     view: 'table',
     handler: async (ctx, args) => {
-      const result = await getNfdClient(ctx).reverseLookup(args.addresses, { view: 'thumbnail' })
+      const result = await nfdCall(getNfdClient(ctx).reverseLookup(args.addresses, { view: 'thumbnail' }))
       return {
         results: args.addresses.map((address) => {
           const nfd = result[address]
