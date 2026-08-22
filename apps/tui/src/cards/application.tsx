@@ -1,3 +1,4 @@
+import { base64ToBytes } from '@initlabs/vibekit-core'
 import type { ApplicationDetailViewModel } from '@initlabs/vibekit-experience'
 
 import { COLORS, shorten } from '../theme.js'
@@ -48,9 +49,32 @@ export function ApplicationCard({
         {global ? <Fact label="g-uint" value={String(global.numUint)} width={body} /> : null}
         {local ? <Fact label="l-bytes" value={String(local.numByteSlice)} width={body} /> : null}
         {local ? <Fact label="l-uint" value={String(local.numUint)} width={body} /> : null}
+        {model.globalState && model.globalState.length > 0 ? (
+          <>
+            <Rule width={body} />
+            {model.globalState.map((entry, index) => (
+              <Fact
+                key={`${entry.key}-${index}`}
+                label={entry.key}
+                value={entry.type === 'uint' ? String(entry.uint ?? 0) : bytesDisplay(entry.bytes ?? '')}
+                width={body}
+              />
+            ))}
+          </>
+        ) : null}
       </box>
     </Frame>
   )
+}
+
+/** base64 bytes as printable text when they are, else the base64 itself. */
+function bytesDisplay(base64: string): string {
+  try {
+    const text = new TextDecoder().decode(base64ToBytes(base64))
+    return /^[^\p{C}]+$/u.test(text) ? text : base64
+  } catch {
+    return base64
+  }
 }
 
 export function ApplicationListCard({

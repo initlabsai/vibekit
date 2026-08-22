@@ -14,12 +14,21 @@ const stateSchema = z.object({
   numUint: z.number().int().nonnegative(),
 })
 
+/** One decoded global-state entry: key (utf-8 or base64), typed value. */
+export const applicationGlobalEntrySchema = z.object({
+  key: z.string(),
+  type: z.enum(['uint', 'bytes']),
+  uint: uint64JsonSchema.optional(),
+  bytes: z.string().optional(),
+})
+
 /** Authoritative application data required by the trusted application detail view. */
 export const applicationDetailDataSchema = z.object({
   applicationId: uint64JsonSchema,
   creator: algorandAddressCandidateSchema.optional(),
   account: algorandAddressCandidateSchema.optional(),
   globalStateCount: z.number().int().nonnegative(),
+  globalState: z.array(applicationGlobalEntrySchema).optional(),
   localStateSchema: stateSchema.optional(),
   globalStateSchema: stateSchema.optional(),
 })
@@ -105,6 +114,26 @@ export interface ApplicationLookupHost {
   lookupApplication(applicationId: number): Promise<StructuredResult>
 }
 
+/** base64 key -> utf-8 when all printable, else the base64 itself. */
+function decodeStateKey(base64: string): string {
+  try {
+    const text = new TextDecoder().decode(Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)))
+    return /^[\x20-\x7e]+$/.test(text) ? text : base64
+  } catch {
+    return base64
+  }
+}
+
+function decodeGlobalEntry(entry: {
+  key: string
+  value: { type: number; bytes?: string; uint?: number | string }
+}): { key: string; type: 'uint' | 'bytes'; uint?: number | string; bytes?: string } {
+  const key = decodeStateKey(entry.key)
+  return entry.value.type === 1
+    ? { key, type: 'bytes', bytes: entry.value.bytes ?? '' }
+    : { key, type: 'uint', uint: entry.value.uint ?? 0 }
+}
+
 /** Wraps a lookup_application result: escrow account and state count derive from the wire. */
 export function buildApplicationDetailRecord(
   identity: ResultIdentity,
@@ -119,6 +148,7 @@ export function buildApplicationDetailRecord(
       algosdk.getApplicationAddress(BigInt(application.applicationId)),
     ),
     globalStateCount: globalState?.length ?? 0,
+    ...(globalState?.length ? { globalState: globalState.map(decodeGlobalEntry) } : {}),
   }
   return record(identity, toolName, data)
 }
