@@ -2,6 +2,7 @@ import type { ApplicationDetailViewModel } from '@initlabs/vibekit-experience'
 
 import { COLORS, shorten } from '../theme.js'
 import {
+  Button,
   Fact,
   FooterNote,
   Frame,
@@ -16,9 +17,11 @@ import { bytesDisplay, pageNotes } from './shared.js'
 export function ApplicationCard({
   model,
   width,
+  onTransactions,
 }: {
   model: ApplicationDetailViewModel | undefined
   width: number
+  onTransactions?: () => void
 }) {
   if (!model) return <Unavailable title="APPLICATION" width={width} />
   const body = innerWidth(width)
@@ -26,7 +29,12 @@ export function ApplicationCard({
   const local = model.localStateSchema
   return (
     <Frame width={width}>
-      <Header kicker="APPLICATION" pill={model.network.toUpperCase()} tone="idle" />
+      <Header
+        kicker="APPLICATION"
+        pill={model.network.toUpperCase()}
+        tone="idle"
+        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
+      />
       <Hero value={`#${model.applicationId}`} copy={String(model.applicationId)} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
@@ -70,6 +78,7 @@ export function ApplicationListCard({
   applications,
   nextToken,
   width,
+  onOpen,
 }: {
   applications: ReadonlyArray<{
     applicationId: number | string
@@ -78,6 +87,7 @@ export function ApplicationListCard({
   }>
   nextToken?: string
   width: number
+  onOpen?: (applicationId: number) => void
 }) {
   const body = innerWidth(width)
   const rows = applications.slice(0, 10)
@@ -87,12 +97,17 @@ export function ApplicationListCard({
       <box flexDirection="column">
         {rows.map((application, index) => (
           <box key={String(application.applicationId)} flexDirection="column" marginTop={1}>
-            <Fact
-              label="id"
-              value={String(application.applicationId)}
-              copy={String(application.applicationId)}
-              width={body}
-            />
+            <box flexDirection="row" justifyContent="space-between" height={1}>
+              <Fact
+                label="id"
+                value={String(application.applicationId)}
+                copy={String(application.applicationId)}
+                width={body - 12}
+              />
+              {onOpen ? (
+                <Button label="open ▸" onPress={() => onOpen(Number(application.applicationId))} />
+              ) : null}
+            </box>
             {application.creator ? (
               <Fact
                 label="creator"

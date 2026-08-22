@@ -22,6 +22,7 @@ import {
   createTransactionDetailViewModel,
   type ResultStore,
   type ViewSpec,
+  type TransactionSearchFilter,
 } from '@initlabs/vibekit-experience'
 
 import {
@@ -55,19 +56,28 @@ import {
 export { RawCard }
 
 /** Renders one trusted view as a TUI card. */
+/** A thing a card can ask the app to open. */
+export type OpenTarget =
+  | { kind: 'transaction'; txid: string }
+  | { kind: 'account'; address: string }
+  | { kind: 'asset'; assetId: number }
+  | { kind: 'application'; applicationId: number }
+  | { kind: 'block'; round: number }
+  | { kind: 'transactions'; filter: TransactionSearchFilter }
+
 export function ResultView({
   store,
   view,
   width,
   maxAssets = 20,
-  onOpenTransaction,
+  onOpen,
 }: {
   store: ResultStore
   view: ViewSpec
   width: number
   maxAssets?: number
-  /** Opens a transaction's detail card from a list row. */
-  onOpenTransaction?: (txid: string) => void
+  /** Drill-in from a row or a card action; the app routes it to a lane. */
+  onOpen?: (target: OpenTarget) => void
 }) {
   // Presentation toggles are this card's own: the header buttons flip them.
   const [sort, setSort] = useState<AssetSort>('none')
@@ -102,20 +112,59 @@ export function ResultView({
           sort={sort}
           maxAssets={maxAssets}
           onCycleSort={() => setSort(nextAssetSort(sort))}
+          onTransactions={
+            onOpen && derived.ok
+              ? () => onOpen({ kind: 'transactions', filter: { address: derived.model.address } })
+              : undefined
+          }
         />
       )
     }
     case 'asset.detail': {
       const derived = createAssetDetailViewModel(store, view)
-      return <AssetCard model={derived.ok ? derived.model : undefined} width={width} />
+      return (
+        <AssetCard
+          model={derived.ok ? derived.model : undefined}
+          width={width}
+          onTransactions={
+            onOpen && derived.ok
+              ? () => onOpen({ kind: 'transactions', filter: { assetId: Number(derived.model.assetId) } })
+              : undefined
+          }
+        />
+      )
     }
     case 'application.detail': {
       const derived = createApplicationDetailViewModel(store, view)
-      return <ApplicationCard model={derived.ok ? derived.model : undefined} width={width} />
+      return (
+        <ApplicationCard
+          model={derived.ok ? derived.model : undefined}
+          width={width}
+          onTransactions={
+            onOpen && derived.ok
+              ? () =>
+                  onOpen({
+                    kind: 'transactions',
+                    filter: { applicationId: Number(derived.model.applicationId) },
+                  })
+              : undefined
+          }
+        />
+      )
     }
     case 'block.detail': {
       const derived = createBlockDetailViewModel(store, view)
-      return <BlockCard model={derived.ok ? derived.model : undefined} width={width} />
+      return (
+        <BlockCard
+          model={derived.ok ? derived.model : undefined}
+          width={width}
+          onTransactions={
+            onOpen && derived.ok
+              ? () => onOpen({ kind: 'transactions', filter: { round: derived.model.round } })
+              : undefined
+          }
+        />
+      )
     }
     case 'network.status': {
       const derived = createNetworkStatusViewModel(store, view)
@@ -152,6 +201,7 @@ export function ResultView({
           nextToken={derived.model.nextToken}
           missing={derived.model.missing}
           width={width}
+          onOpen={onOpen ? (address) => onOpen({ kind: 'account', address }) : undefined}
         />
       )
     }
@@ -189,7 +239,7 @@ export function ResultView({
           nextToken={derived.model.nextToken}
           query={derived.model.query}
           width={width}
-          onOpen={onOpenTransaction}
+          onOpen={onOpen ? (txid) => onOpen({ kind: 'transaction', txid }) : undefined}
           onShowGraph={view.view === 'transaction.group' ? () => setFlow('graph') : undefined}
         />
       )
@@ -202,6 +252,7 @@ export function ResultView({
           assets={derived.model.assets}
           nextToken={derived.model.nextToken}
           width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
       )
     }
@@ -213,6 +264,7 @@ export function ResultView({
           assets={derived.model.assets}
           nextToken={derived.model.nextToken}
           width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
       )
     }
@@ -236,6 +288,7 @@ export function ResultView({
           applications={derived.model.applications}
           nextToken={derived.model.nextToken}
           width={width}
+          onOpen={onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined}
         />
       )
     }
@@ -312,6 +365,7 @@ export function ResultView({
           blocks={derived.model.blocks}
           nextToken={derived.model.nextToken}
           width={width}
+          onOpen={onOpen ? (round) => onOpen({ kind: 'block', round }) : undefined}
         />
       )
     }

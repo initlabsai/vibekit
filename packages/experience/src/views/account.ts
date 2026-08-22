@@ -1,3 +1,4 @@
+import type { TransactionSearchFilter } from './transaction.js'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
@@ -69,6 +70,8 @@ export interface AccountLookupHost {
   lookupAccountAppStates(address: string): Promise<StructuredResult>
   /** Lists transactions involving an account. */
   lookupAccountTransactions(address: string): Promise<StructuredResult>
+  /** One page of transactions scoped by account, asset, application, or round. */
+  searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
 }
 
 /** Wraps a get_account_portfolio result as a portfolio record. */

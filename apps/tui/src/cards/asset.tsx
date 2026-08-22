@@ -4,6 +4,7 @@ import {
 } from '@initlabs/vibekit-experience'
 
 import {
+  Button,
   Fact,
   FooterNote,
   Frame,
@@ -22,9 +23,11 @@ function yesNo(value: boolean): string {
 export function AssetCard({
   model,
   width,
+  onTransactions,
 }: {
   model: AssetDetailViewModel | undefined
   width: number
+  onTransactions?: () => void
 }) {
   if (!model) return <Unavailable title="ASSET" width={width} />
   const body = innerWidth(width)
@@ -36,6 +39,7 @@ export function AssetCard({
         chip={model.unitName}
         pill={model.network.toUpperCase()}
         tone="idle"
+        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
       />
       <Hero value={title} />
       <box marginTop={1} flexDirection="column">
@@ -83,6 +87,7 @@ export function AssetListCard({
   assets,
   nextToken,
   width,
+  onOpen,
 }: {
   assets: ReadonlyArray<{
     assetId: number | string
@@ -94,6 +99,7 @@ export function AssetListCard({
   }>
   nextToken?: string
   width: number
+  onOpen?: (assetId: number) => void
 }) {
   const body = innerWidth(width)
   const rows = assets.slice(0, 10)
@@ -103,12 +109,15 @@ export function AssetListCard({
       <box flexDirection="column">
         {rows.map((asset, index) => (
           <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
-            <Fact
-              label="id"
-              value={String(asset.assetId)}
-              copy={String(asset.assetId)}
-              width={body}
-            />
+            <box flexDirection="row" justifyContent="space-between" height={1}>
+              <Fact
+                label="id"
+                value={String(asset.assetId)}
+                copy={String(asset.assetId)}
+                width={body - 12}
+              />
+              {onOpen ? <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} /> : null}
+            </box>
             {asset.name || asset.unitName ? (
               <Fact
                 label="name"
@@ -144,6 +153,7 @@ export function AssetHoldingsCard({
   assets,
   nextToken,
   width,
+  onOpen,
 }: {
   assets: ReadonlyArray<{
     assetId: number | string
@@ -155,6 +165,7 @@ export function AssetHoldingsCard({
   }>
   nextToken?: string
   width: number
+  onOpen?: (assetId: number) => void
 }) {
   const body = innerWidth(width)
   const rows = assets.slice(0, 10)
@@ -164,12 +175,15 @@ export function AssetHoldingsCard({
       <box flexDirection="column">
         {rows.map((asset, index) => (
           <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
-            <Fact
-              label="id"
-              value={String(asset.assetId)}
-              copy={String(asset.assetId)}
-              width={body}
-            />
+            <box flexDirection="row" justifyContent="space-between" height={1}>
+              <Fact
+                label="id"
+                value={String(asset.assetId)}
+                copy={String(asset.assetId)}
+                width={body - 12}
+              />
+              {onOpen ? <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} /> : null}
+            </box>
             {asset.name || asset.unitName ? (
               <Fact
                 label="name"

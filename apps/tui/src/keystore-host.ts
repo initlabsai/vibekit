@@ -10,6 +10,7 @@ import type {
   EntityLookupHost,
   PaymentFlowHost,
   StructuredResult,
+  TransactionSearchFilter,
 } from '@initlabs/vibekit-experience'
 import {
   createPaymentComposeHost,
@@ -35,6 +36,7 @@ export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
   lookupAccountAssets(address: string): Promise<StructuredResult>
   lookupAccountAppStates(address: string): Promise<StructuredResult>
   lookupAccountTransactions(address: string): Promise<StructuredResult>
+  searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
   statusRound(): Promise<{ lastRound: number }>
   waitAfterBlock(round: number): Promise<{ lastRound: number }>
   readBlockTick(round: number): Promise<BlockTailTick>

@@ -198,12 +198,22 @@ export const transactionCollectionDataSchema = z.object({
     .object({
       txType: z.string().optional(),
       assetId: z.number().optional(),
+      applicationId: z.number().optional(),
       minRound: z.number().optional(),
       maxRound: z.number().optional(),
       notePrefix: z.string().optional(),
     })
     .optional(),
 })
+
+/** What a host transaction search is scoped to; `address` routes to the account search. */
+export interface TransactionSearchFilter {
+  address?: string
+  assetId?: number
+  applicationId?: number
+  round?: number
+  nextToken?: string
+}
 
 export type TransactionCollectionData = z.infer<
   typeof transactionCollectionDataSchema

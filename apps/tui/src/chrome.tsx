@@ -5,7 +5,7 @@ import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentu
 import { useEffect, useState, type RefObject } from 'react'
 
 import { Button, Ident } from './ui.js'
-import { ResultView } from './views.js'
+import { ResultView, type OpenTarget } from './views.js'
 import type { AppsEntry, SpecSelection } from './slices/apps.js'
 import type { ParsedMethod } from '@initlabs/vibekit-tools'
 import { COLORS, shorten } from './theme.js'
@@ -554,7 +554,7 @@ export function ShelfScreen({
   store,
   view,
   width,
-  onOpenTransaction,
+  onOpen,
 }: {
   title: string
   accountName?: string
@@ -565,7 +565,7 @@ export function ShelfScreen({
   store: ResultStore
   view?: ViewSpec
   width: number
-  onOpenTransaction: (txid: string) => void
+  onOpen: (target: OpenTarget) => void
 }) {
   const inner = Math.max(24, width - 6)
   const owner = address ? (accountName ?? shorten(address, 16)) : 'no wallet'
@@ -594,7 +594,7 @@ export function ShelfScreen({
             store={store}
             view={view}
             width={Math.max(30, width - 6)}
-            onOpenTransaction={onOpenTransaction}
+            onOpen={onOpen}
           />
         </scrollbox>
       ) : (

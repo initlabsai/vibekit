@@ -12,6 +12,7 @@ import { AppsScreen, BlocksScreen, Composer, ShelfScreen, TopBar, WalletScreen }
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { ContentPane, NavPane } from './sections.js'
+import type { OpenTarget } from './views.js'
 import { useAccounts } from './slices/accounts.js'
 import { useApps } from './slices/apps.js'
 import { useAgentLane } from './slices/agent.js'
@@ -106,6 +107,7 @@ export function App() {
     openApplication,
     openGroup,
     openBlock,
+    openTransactions,
     openAmbiguous,
   } = lookup
   const activateAppsEntry = useCallback(
@@ -211,13 +213,40 @@ export function App() {
     [appendNote, flowRef, networkRef, resetAgent, setNetwork],
   )
 
-  // A list row's open button: its own section, same lane as a pasted id.
-  const openTransactionDetail = useCallback(
-    (txid: string) => {
+  // Drill-in from any card: its own section, same lanes as typed input.
+  const openTarget = useCallback(
+    (target: OpenTarget) => {
       setScreen('chat')
-      openTransaction(createSection(txid), txid)
+      switch (target.kind) {
+        case 'transaction':
+          openTransaction(createSection(target.txid), target.txid)
+          return
+        case 'account':
+          openAccount(createSection(target.address), target.address)
+          return
+        case 'asset':
+          openAsset(createSection(`asset ${target.assetId}`), target.assetId)
+          return
+        case 'application':
+          openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
+          return
+        case 'block':
+          openBlock(createSection(`block ${target.round}`), target.round)
+          return
+        case 'transactions': {
+          const f = target.filter
+          const prompt = f.address
+            ? `txns of ${shorten(f.address, 12)}`
+            : f.assetId !== undefined
+              ? `txns of asset ${f.assetId}`
+              : f.applicationId !== undefined
+                ? `txns of app ${f.applicationId}`
+                : `txns in round ${f.round}`
+          openTransactions(createSection(prompt), f)
+        }
+      }
     },
-    [createSection, openTransaction, setScreen],
+    [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, setScreen],
   )
 
   const closeSelectedSection = useCallback(() => {
@@ -457,7 +486,7 @@ export function App() {
           store={store}
           view={accounts.shelfView}
           width={width}
-          onOpenTransaction={openTransactionDetail}
+          onOpen={openTarget}
         />
       ) : (
         <box flexGrow={1} flexDirection="row">
@@ -483,7 +512,7 @@ export function App() {
             sectionRegistry={feed.sectionRegistry}
             onSelect={feed.markSection}
             onToggleThinking={feed.toggleThinking}
-            onOpenTransaction={openTransactionDetail}
+            onOpen={openTarget}
             onClose={closeSection}
           />
         </box>

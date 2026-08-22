@@ -185,6 +185,7 @@ export const formattedTransactionSchema = z.object({
 export const transactionQuerySchema = z.object({
   txType: z.string().optional(),
   assetId: z.number().optional(),
+  applicationId: z.number().optional(),
   minRound: z.number().optional(),
   maxRound: z.number().optional(),
   notePrefix: z.string().optional(),
@@ -193,7 +194,7 @@ export type TransactionQuery = z.infer<typeof transactionQuerySchema>
 
 export function transactionQueryOf(args: TransactionQuery): TransactionQuery | undefined {
   const query = Object.fromEntries(
-    (['txType', 'assetId', 'minRound', 'maxRound', 'notePrefix'] as const)
+    (['txType', 'assetId', 'applicationId', 'minRound', 'maxRound', 'notePrefix'] as const)
       .filter((key) => args[key] !== undefined)
       .map((key) => [key, args[key]]),
   ) as TransactionQuery

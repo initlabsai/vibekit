@@ -6,7 +6,7 @@ import {
 } from '../views/account.js'
 import { buildApplicationLocalsRecord } from '../views/application.js'
 import { buildAssetHoldingsRecord } from '../views/asset.js'
-import { buildTransactionListRecord } from '../views/transaction.js'
+import { buildTransactionListRecord, type TransactionSearchFilter } from '../views/transaction.js'
 import { FIXTURE_APPLICATION_ID } from './entities.js'
 import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from './transaction.js'
 
@@ -109,6 +109,27 @@ export function createFixtureAccountLookup(): AccountLookupHost {
         },
         { appLocalStates, address },
         'get_account_app_local_states',
+      )
+    },
+    async searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult> {
+      counter += 1
+      const query = {
+        ...(filter.assetId === undefined ? {} : { assetId: filter.assetId }),
+        ...(filter.applicationId === undefined ? {} : { applicationId: filter.applicationId }),
+        ...(filter.round === undefined ? {} : { minRound: filter.round, maxRound: filter.round }),
+      }
+      return buildTransactionListRecord(
+        {
+          resultId: `result-fixture-txn-search-${counter}`,
+          toolCallId: `tool-call-fixture-txn-search-${counter}`,
+          network: 'localnet',
+        },
+        {
+          transactions: [],
+          ...(filter.address ? { address: filter.address } : {}),
+          ...(Object.keys(query).length > 0 ? { query } : {}),
+        },
+        filter.address ? 'search_account_transactions' : 'search_transactions',
       )
     },
     async lookupAccountTransactions(address: string): Promise<StructuredResult> {

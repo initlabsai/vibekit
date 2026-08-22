@@ -10,7 +10,7 @@ import { useEffect, useState, type RefObject } from 'react'
 import { PaymentCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button } from './ui.js'
-import { RawCard, ResultView } from './views.js'
+import { RawCard, ResultView, type OpenTarget } from './views.js'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =
@@ -227,7 +227,7 @@ export function ContentPane({
   sectionRegistry,
   onSelect,
   onToggleThinking,
-  onOpenTransaction,
+  onOpen,
   onClose,
 }: {
   sections: Section[]
@@ -246,7 +246,7 @@ export function ContentPane({
   sectionRegistry: RefObject<Map<number, BoxRenderable>>
   onSelect: (id: number) => void
   onToggleThinking: (id: number) => void
-  onOpenTransaction: (txid: string) => void
+  onOpen: (target: OpenTarget) => void
   onClose: (id: number) => void
 }) {
   // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
@@ -342,7 +342,7 @@ export function ContentPane({
                         view={block.view}
                         width={cardWidth}
                         maxAssets={20}
-                        onOpenTransaction={onOpenTransaction}
+                        onOpen={onOpen}
                       />
                     )
                   }

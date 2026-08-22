@@ -218,6 +218,7 @@ function queryLabel(
   query: {
     txType?: string
     assetId?: number
+    applicationId?: number
     minRound?: number
     maxRound?: number
     notePrefix?: string
@@ -227,6 +228,7 @@ function queryLabel(
   const parts = [
     query.txType ? formatBlockTxnType(query.txType) : undefined,
     query.assetId === undefined ? undefined : (unitFor(query.assetId) ?? `asset ${query.assetId}`),
+    query.applicationId === undefined ? undefined : `app ${query.applicationId}`,
     query.minRound !== undefined && query.maxRound !== undefined && query.minRound === query.maxRound
       ? `round ${query.minRound}`
       : [

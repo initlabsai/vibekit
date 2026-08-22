@@ -33,6 +33,7 @@ import {
   buildTransactionDetailRecord,
   buildTransactionGroupRecord,
   buildTransactionListRecord,
+  type TransactionSearchFilter,
 } from '../views/transaction.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
@@ -218,6 +219,8 @@ export interface PaymentComposeHost {
   lookupAccountAppStates(address: string): Promise<StructuredResult>
   /** Lists transactions involving an account. */
   lookupAccountTransactions(address: string): Promise<StructuredResult>
+  /** One page of transactions scoped by account, asset, application, or round. */
+  searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
   /** Current algod lastRound. */
   statusRound(): Promise<{ lastRound: number }>
   /** Resolves when lastRound is greater than `round` (algod wait-for-block). */
@@ -250,8 +253,8 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     mode: 'compose',
     tools: [
       ...transactionWriteTools,
-      ...transactionTools.filter(
-        (tool) => tool.name === 'lookup_transaction' || tool.name === 'lookup_transaction_group',
+      ...transactionTools.filter((tool) =>
+        ['lookup_transaction', 'lookup_transaction_group', 'search_transactions'].includes(tool.name),
       ),
       ...accountTools.filter((tool) =>
         [
@@ -278,6 +281,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
   const accountAssetsTool = requireTool(deployment, 'get_account_assets')
   const accountAppStatesTool = requireTool(deployment, 'get_account_app_local_states')
   const accountTransactionsTool = requireTool(deployment, 'search_account_transactions')
+  const searchTransactionsTool = requireTool(deployment, 'search_transactions')
   const context = deployment.contexts.get(network)
   if (!context) throw new Error(`Deployment is missing network ${network}`)
 
@@ -449,6 +453,31 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         },
         { ...(wire as object), address },
         'get_account_app_local_states',
+      )
+    },
+    async searchTransactions(filter) {
+      const { address, assetId, applicationId, round, nextToken } = filter
+      const page = { limit: 20, ...(nextToken ? { nextToken } : {}) }
+      const wire = address
+        ? await executeToolCall(deployment, accountTransactionsTool, {
+            ...page,
+            address,
+            ...(assetId === undefined ? {} : { assetId }),
+          })
+        : await executeToolCall(deployment, searchTransactionsTool, {
+            ...page,
+            ...(assetId === undefined ? {} : { assetId }),
+            ...(applicationId === undefined ? {} : { applicationId }),
+            ...(round === undefined ? {} : { minRound: round, maxRound: round }),
+          })
+      return buildTransactionListRecord(
+        {
+          resultId: newId('result-live-txn-search'),
+          toolCallId: newId('tool-call-live-txn-search'),
+          network,
+        },
+        { ...(wire as object), ...(address ? { address } : {}) },
+        address ? 'search_account_transactions' : 'search_transactions',
       )
     },
     async lookupAccountTransactions(address) {

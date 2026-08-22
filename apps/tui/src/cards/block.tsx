@@ -6,6 +6,7 @@ import {
 
 import { COLORS } from '../theme.js'
 import {
+  Button,
   Chip,
   Fact,
   FooterNote,
@@ -21,15 +22,22 @@ import { algo, pageNotes } from './shared.js'
 export function BlockCard({
   model,
   width,
+  onTransactions,
 }: {
   model: BlockDetailViewModel | undefined
   width: number
+  onTransactions?: () => void
 }) {
   if (!model) return <Unavailable title="BLOCK" width={width} />
   const body = innerWidth(width)
   return (
     <Frame width={width}>
-      <Header kicker="BLOCK" pill={model.network.toUpperCase()} tone="idle" />
+      <Header
+        kicker="BLOCK"
+        pill={model.network.toUpperCase()}
+        tone="idle"
+        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
+      />
       <Hero value={String(model.round)} unit="round" copy={String(model.round)} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
@@ -99,6 +107,7 @@ export function BlockListCard({
   blocks,
   nextToken,
   width,
+  onOpen,
 }: {
   blocks: ReadonlyArray<{
     round: number
@@ -108,6 +117,7 @@ export function BlockListCard({
   }>
   nextToken?: string
   width: number
+  onOpen?: (round: number) => void
 }) {
   const body = innerWidth(width)
   const rows = blocks.slice(0, 10)
@@ -117,12 +127,15 @@ export function BlockListCard({
       <box flexDirection="column">
         {rows.map((block, index) => (
           <box key={block.round} flexDirection="column" marginTop={1}>
-            <Fact
-              label="round"
-              value={String(block.round)}
-              copy={String(block.round)}
-              width={body}
-            />
+            <box flexDirection="row" justifyContent="space-between" height={1}>
+              <Fact
+                label="round"
+                value={String(block.round)}
+                copy={String(block.round)}
+                width={body - 12}
+              />
+              {onOpen ? <Button label="open ▸" onPress={() => onOpen(block.round)} /> : null}
+            </box>
             <Fact label="time" value={formatExplorerTime(block.timestamp)} width={body} />
             <Fact
               label="txns"

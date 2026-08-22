@@ -1,4 +1,5 @@
 import {
+  type TransactionSearchFilter,
   addResult,
   createAccountListViewModel,
   createAccountPortfolioViewModel,
@@ -342,6 +343,29 @@ export function useLookups({
     [host, lookupById, storeRef],
   )
 
+  /** Transactions scoped to one entity (a card's "transactions ▸"). */
+  const openTransactions = useCallback(
+    (sectionId: number, filter: TransactionSearchFilter) => {
+      const label = filter.address
+        ? `transactions of ${filter.address.slice(0, 8)}…`
+        : filter.assetId !== undefined
+          ? `transactions of asset ${filter.assetId}`
+          : filter.applicationId !== undefined
+            ? `transactions of app ${filter.applicationId}`
+            : `transactions in round ${filter.round}`
+      lookupById(sectionId, label, 'transaction.list', () => host().searchTransactions(filter), (record) => {
+        const derived = createTransactionCollectionViewModel(
+          storeRef.current,
+          viewFor(record, 'transaction.list'),
+        )
+        return derived.ok
+          ? `${derived.model.transactions.length} transaction${derived.model.transactions.length === 1 ? '' : 's'}${derived.model.nextToken ? ', more available' : ''}.`
+          : undefined
+      })
+    },
+    [host, lookupById, storeRef],
+  )
+
   const openAmbiguous = useCallback(
     (sectionId: number, raw: string) => {
       const id = Number(raw)
@@ -398,6 +422,7 @@ export function useLookups({
     openApplication,
     openGroup,
     openBlock,
+    openTransactions,
     openAmbiguous,
   }
 }

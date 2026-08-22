@@ -59,6 +59,7 @@ export function AccountCard({
   sort = 'none',
   maxAssets = 4,
   onCycleSort,
+  onTransactions,
 }: {
   model: AccountPortfolioViewModel | undefined
   width: number
@@ -66,6 +67,8 @@ export function AccountCard({
   maxAssets?: number
   /** Cycles the holdings order; the button shows the current one. */
   onCycleSort?: () => void
+  /** Opens this account's transaction list. */
+  onTransactions?: () => void
 }) {
   if (!model) return <Unavailable title="ACCOUNT" width={width} />
   const body = innerWidth(width)
@@ -77,7 +80,17 @@ export function AccountCard({
     ) : undefined
   return (
     <Frame width={width}>
-      <Header kicker="ACCOUNT" pill={model.network.toUpperCase()} tone="idle" action={sortButton} />
+      <Header
+        kicker="ACCOUNT"
+        pill={model.network.toUpperCase()}
+        tone="idle"
+        action={
+          <>
+            {onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : null}
+            {sortButton}
+          </>
+        }
+      />
       <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit="ALGO" />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
@@ -193,6 +206,7 @@ export function AccountListCard({
   nextToken,
   missing,
   width,
+  onOpen,
 }: {
   accounts: ReadonlyArray<{
     address: string
@@ -205,6 +219,7 @@ export function AccountListCard({
   nextToken?: string
   missing?: ReadonlyArray<string>
   width: number
+  onOpen?: (address: string) => void
 }) {
   const body = innerWidth(width)
   const rows = accounts.slice(0, 10)
@@ -218,7 +233,10 @@ export function AccountListCard({
       <box flexDirection="column">
         {rows.map((account, index) => (
           <box key={account.address} flexDirection="column" marginTop={1}>
-            {account.name ? <Fact label="name" value={account.name} width={body} /> : null}
+            <box flexDirection="row" justifyContent="space-between" height={1}>
+              <Fact label="name" value={account.name ?? '—'} width={body - 12} />
+              {onOpen ? <Button label="open ▸" onPress={() => onOpen(account.address)} /> : null}
+            </box>
             <Fact label="address" value={account.address} copy={account.address} width={body} />
             <Fact label="balance" value={algo(account.balanceMicroAlgos) ?? '—'} width={body} />
             {account.status ? <Fact label="status" value={account.status} width={body} /> : null}

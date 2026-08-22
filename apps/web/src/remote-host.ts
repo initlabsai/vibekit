@@ -43,6 +43,9 @@ export function createRemoteFlowHost(network = 'localnet'): PaymentFlowHost & Ac
     lookupAccountTransactions: async () => {
       throw new Error('Account shelves are TUI-only in this slice')
     },
+    searchTransactions: async () => {
+      throw new Error('Transaction search is TUI-only in this slice')
+    },
   }
 }
 
