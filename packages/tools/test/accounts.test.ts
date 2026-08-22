@@ -85,6 +85,35 @@ describe('lookupAccount', () => {
   })
 })
 
+describe('searchAccountTransactions asset params', () => {
+  test('fills unit name and decimals on rows, one lookup per asset', async () => {
+    let lookups = 0
+    const axfer = (id: string, amount: bigint) => ({
+      id,
+      txType: 'axfer',
+      sender: ADDR,
+      fee: 1000n,
+      assetTransferTransaction: { assetId: 31566704n, amount, receiver: ADDR2 },
+    })
+    const ctx = fakeContext({
+      indexer: {
+        searchForTransactions: () =>
+          chainable({ transactions: [axfer('A', 193380n), axfer('B', 201196n)] }),
+      },
+      algod: {
+        getAssetByID: () => {
+          lookups += 1
+          return chainable({ index: 31566704n, params: { name: 'USDC', unitName: 'USDC', decimals: 6 } })
+        },
+      },
+    })
+    const result = await searchAccountTransactions(ctx, { address: ADDR })
+    expect(result.transactions.map((t) => t.assetUnitName)).toEqual(['USDC', 'USDC'])
+    expect(result.transactions[0].assetDecimals).toBe(6)
+    expect(lookups).toBe(1)
+  })
+})
+
 describe('transactionQueryOf', () => {
   test('echoes only the filter keys that were set', () => {
     expect(transactionQueryOf({ txType: 'axfer', minRound: 5 })).toEqual({ txType: 'axfer', minRound: 5 })

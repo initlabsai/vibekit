@@ -1,4 +1,5 @@
 import { stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
+import { enrichAssetParams } from '../../shared/asset-params.js'
 import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
 
 export async function lookupTransaction(
@@ -7,18 +8,7 @@ export async function lookupTransaction(
 ): Promise<FormattedTransaction> {
   const response = await ctx.indexer.lookupTransactionByID(args.txid).do()
   const formatted = formatTransaction(response.transaction)
-  // Zero is an acfg create — the asset does not exist to look up.
-  if (formatted.assetId === undefined || formatted.assetId === 0) return formatted
-  try {
-    const asset = await ctx.algod.getAssetByID(BigInt(formatted.assetId)).do()
-    const params = asset.params
-    if (!params) return formatted
-    if (params.name) formatted.assetName = params.name
-    if (params.unitName) formatted.assetUnitName = params.unitName
-    if (params.decimals != null) formatted.assetDecimals = Number(params.decimals)
-  } catch {
-    // Asset params are presentation enrichment; the transfer still renders.
-  }
+  await enrichAssetParams(ctx, [formatted])
   return formatted
 }
 
@@ -28,6 +18,7 @@ export async function lookupTransactionGroup(
 ): Promise<{ groupId: string; transactions: FormattedTransaction[]; nextToken?: string }> {
   const response = await ctx.indexer.searchForTransactions().groupid(args.groupId).limit(100).do()
   const transactions = (response.transactions ?? []).map(formatTransaction)
+  await enrichAssetParams(ctx, transactions)
   return {
     groupId: args.groupId,
     transactions,

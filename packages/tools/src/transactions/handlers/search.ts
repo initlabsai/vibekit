@@ -1,4 +1,5 @@
 import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '@initlabs/vibekit-core'
+import { enrichAssetParams } from '../../shared/asset-params.js'
 import { formatTransaction, type FormattedTransaction } from '../../shared/format.js'
 import { transactionQueryOf, type TransactionQuery } from '../../shared/schemas.js'
 
@@ -38,6 +39,7 @@ export async function searchTransactions(
 
   const response = await query.do()
   const transactions = (response.transactions ?? []).map(formatTransaction)
+  await enrichAssetParams(ctx, transactions)
   return {
     transactions,
     nextToken: stripFinalToken(transactions.length, limit, response.nextToken),

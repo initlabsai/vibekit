@@ -214,16 +214,19 @@ export function TransactionCard({
   )
 }
 
-function queryLabel(query: {
-  txType?: string
-  assetId?: number
-  minRound?: number
-  maxRound?: number
-  notePrefix?: string
-}): string | undefined {
+function queryLabel(
+  query: {
+    txType?: string
+    assetId?: number
+    minRound?: number
+    maxRound?: number
+    notePrefix?: string
+  },
+  unitFor: (assetId: number) => string | undefined = () => undefined,
+): string | undefined {
   const parts = [
     query.txType ? formatBlockTxnType(query.txType) : undefined,
-    query.assetId === undefined ? undefined : `asset ${query.assetId}`,
+    query.assetId === undefined ? undefined : (unitFor(query.assetId) ?? `asset ${query.assetId}`),
     query.minRound !== undefined && query.maxRound !== undefined && query.minRound === query.maxRound
       ? `round ${query.minRound}`
       : [
@@ -258,6 +261,8 @@ export function TransactionListCard({
     feeMicroAlgos?: number | string
     assetId?: number | string
     assetAmount?: number | string
+    assetUnitName?: string
+    assetDecimals?: number
     applicationId?: number | string
     confirmedRound?: number
     roundTime?: number
@@ -273,7 +278,9 @@ export function TransactionListCard({
 }) {
   const body = innerWidth(width)
   const rows = transactions.slice(0, 10)
-  const filter = query ? queryLabel(query) : undefined
+  const unitFor = (assetId: number) =>
+    transactions.find((row) => Number(row.assetId) === assetId && row.assetUnitName)?.assetUnitName
+  const filter = query ? queryLabel(query, unitFor) : undefined
   // The indexer's type filter also matches inner txns and returns the root,
   // so a row of another type is an app call that matched through its inners.
   const innerType = query?.txType
@@ -293,10 +300,15 @@ export function TransactionListCard({
       <box flexDirection="column">
         {rows.map((row, index) => {
           const payment = algo(row.paymentAmountMicroAlgos)
-          const asset =
+          const units =
             row.assetAmount === undefined
               ? undefined
-              : `${row.assetAmount}${row.assetId === undefined ? '' : ` #${row.assetId}`}`
+              : assetUnits(row.assetAmount, row.assetDecimals, row.assetUnitName)
+          const asset = units
+            ? units.unit
+              ? `${units.value} ${units.unit}`
+              : `${units.value}${row.assetId === undefined ? '' : ` #${row.assetId}`}`
+            : undefined
           const amount = payment ?? asset
           const to =
             row.receiver ??
