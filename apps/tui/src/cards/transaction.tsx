@@ -267,6 +267,7 @@ type ListRow = {
   roundTime?: number
   innerCount?: number
   innerTxns?: ListRow[]
+  rekeyTo?: string
 }
 
 /** Rows with their inner transactions flattened beneath them, depth-first, as the graph draws them. */
@@ -281,6 +282,8 @@ function assetFact(row: ListRow): string | undefined {
 }
 
 function rowAmount(row: ListRow): string | undefined {
+  // A zero payment carrying rekeyTo is the rekey itself — the graph says so, so does the row.
+  if (row.rekeyTo && BigInt(row.paymentAmountMicroAlgos ?? 0) === BigInt(0)) return 'rekey'
   const payment = algo(row.paymentAmountMicroAlgos)
   if (payment) return payment
   if (row.assetAmount === undefined) return undefined
