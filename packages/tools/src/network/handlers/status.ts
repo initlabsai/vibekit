@@ -42,7 +42,9 @@ export async function getNetworkStatus(ctx: ToolContext) {
   const tpsPerBlock: number[] = []
   for (let i = 1; i < blockData.length; i++) {
     const dt = blockData[i]!.timestamp - blockData[i - 1]!.timestamp
-    if (dt > 0) {
+    // A fresh localnet's genesis block carries timestamp 0; the interval to
+    // it is decades, not a block time. Anything over an hour is that, not chain pace.
+    if (dt > 0 && dt <= 3600) {
       blockTimes.push(dt)
       tpsPerBlock.push(blockData[i]!.txnCount / dt)
     }

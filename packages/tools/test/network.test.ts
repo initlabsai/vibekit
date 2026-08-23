@@ -153,6 +153,28 @@ describe('getNetworkStatus', () => {
     expect(status.blockDetails).toHaveLength(9)
   })
 
+  test('a genesis block at timestamp 0 does not poison the block-time average', async () => {
+    const ctx = fakeContext({
+      algod: {
+        status: () =>
+          chainable({ lastRound: BigInt(2), timeSinceLastRound: BigInt(0), lastVersion: 'v40', catchupTime: BigInt(0) }),
+        supply: () => chainable({ totalMoney: BigInt(1), onlineMoney: BigInt(1) }),
+      },
+      indexer: {
+        lookupBlock: (round: number) => {
+          if (round < 0) throw new Error('no such round')
+          return chainable({
+            round: BigInt(round),
+            timestamp: BigInt(round === 0 ? 0 : 1_700_000_000 + round * 3),
+            transactions: [],
+          })
+        },
+      },
+    })
+    const status = await getNetworkStatus(ctx)
+    expect(status.avgBlockTime).toBe(3)
+  })
+
   test('zero total supply (fresh localnet) yields participation 0, not NaN', async () => {
     const ctx = fakeContext({
       algod: {

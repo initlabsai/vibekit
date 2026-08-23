@@ -10,7 +10,7 @@ import algosdk from 'algosdk'
 import pc from 'picocolors'
 import { homedir } from 'os'
 import { join } from 'path'
-import { closeSync, existsSync, openSync, readFileSync } from 'fs'
+import { closeSync, existsSync, openSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
 import { mkdir } from 'fs/promises'
 import { spawn } from 'node:child_process'
 
@@ -83,11 +83,25 @@ async function connectSigner(): Promise<
   }
 }
 
-const DAEMON_HINT = `The keystore daemon is not running. Start it first: ${pc.cyan('vibekit keystore serve')}`
+const DAEMON_HINT = `The keystore daemon is not running. Start it first: ${pc.cyan('vibekit keystore start')}`
 
 /** Where a daemon started by vibekit writes its output. */
 export function keystoreLogPath(): string {
   return join(keystoreDataDir(), '..', 'keystore.log')
+}
+
+/** The pid of the daemon vibekit itself started; absent when it was started by hand. */
+function keystorePidPath(): string {
+  return join(keystoreDataDir(), '..', 'keystore.pid')
+}
+
+function readDaemonPid(): number | undefined {
+  try {
+    const pid = Number(readFileSync(keystorePidPath(), 'utf-8').trim())
+    return Number.isInteger(pid) && pid > 0 ? pid : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /** True when the daemon answers on its socket. */
@@ -125,6 +139,7 @@ export async function ensureKeystoreDaemon(
       const child = spawn(bin, ['serve'], { detached: true, stdio: ['ignore', fd, fd] })
       child.unref()
       closeSync(fd)
+      if (child.pid) writeFileSync(keystorePidPath(), String(child.pid))
       return child.pid
     })
   let pid: number | undefined
@@ -148,6 +163,66 @@ export async function ensureKeystoreDaemon(
   }
   if (!options.quiet) console.error(pc.yellow(`keystore daemon did not answer in time — see ${keystoreLogPath()}`))
   return false
+}
+
+/** `vibekit keystore start` — the daemon in the background, same as `vibekit explore` does. */
+async function keystoreStart(): Promise<void> {
+  if (await keystoreDaemonUp()) {
+    console.log('keystore daemon is already running')
+    return
+  }
+  if (!(await ensureKeystoreDaemon())) process.exit(1)
+}
+
+/** `vibekit keystore stop` — stops a daemon that vibekit started (pid file); a hand-run `serve` is yours to stop. */
+async function keystoreStop(): Promise<void> {
+  const pid = readDaemonPid()
+  if (pid !== undefined) {
+    try {
+      process.kill(pid, 'SIGTERM')
+      console.log(`stopped keystore daemon (pid ${pid})`)
+    } catch {
+      // Stale pid file: the process is already gone.
+    }
+    try {
+      unlinkSync(keystorePidPath())
+    } catch {
+      // Already removed.
+    }
+    return
+  }
+  if (await keystoreDaemonUp()) {
+    console.error(pc.yellow('The daemon was not started by vibekit (a `keystore serve` in a terminal?) — stop it there.'))
+    process.exit(1)
+  }
+  console.log('keystore daemon is not running')
+}
+
+/** `vibekit keystore status` — up or down, and the pid when vibekit owns it. */
+async function keystoreStatus(): Promise<void> {
+  const up = await keystoreDaemonUp()
+  const pid = readDaemonPid()
+  console.log(up ? `keystore daemon is running${pid ? ` (pid ${pid})` : ''}` : 'keystore daemon is not running')
+  if (!up) process.exitCode = 1
+}
+
+/**
+ * `vibekit keystore generate ed25519 [--name <label>]` — through the daemon
+ * when it is up. The raw CLI writes the key store directly, and a running
+ * daemon does not see keys added that way until it restarts; the daemon's
+ * own RPC generate is visible at once. Other generate forms (seed) pass through.
+ */
+async function keystoreGenerate(args: string[]): Promise<void> {
+  const nameAt = args.findIndex((arg) => arg === '--name' || arg.startsWith('--name='))
+  const name = nameAt < 0 ? undefined : (args[nameAt]!.split('=')[1] ?? args[nameAt + 1])
+  const signer = args[0] === 'ed25519' && (await keystoreDaemonUp()) ? await connectSigner() : undefined
+  if (!signer) return passthrough(['generate', ...args])
+  try {
+    const { address, keyId } = await signer.createAccount(name)
+    console.log(`${address}${name ? `  ${pc.cyan(name)}` : ''}  ${pc.dim(keyId)}`)
+  } finally {
+    await signer.close()
+  }
 }
 
 /** `vibekit keystore accounts [--json]` — addresses with names and key ids, via the daemon. */
@@ -248,6 +323,10 @@ async function passthrough(args: string[]): Promise<void> {
 
 export async function commandKeystore(args: string[]): Promise<void> {
   const [sub = '', ...rest] = args
+  if (sub === 'start') return keystoreStart()
+  if (sub === 'stop') return keystoreStop()
+  if (sub === 'status') return keystoreStatus()
+  if (sub === 'generate') return keystoreGenerate(rest)
   if (sub === 'accounts') return keystoreAccounts(rest)
   if (sub === 'remove') return keystoreRemove(rest)
   await passthrough(args)
