@@ -15,7 +15,7 @@ import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { explainApplicationTool } from './explain-tool.js'
 import { ContentPane, NavPane } from './sections.js'
-import type { OpenTarget } from './views.js'
+import { transactionsFilterFor, type OpenTarget } from './views.js'
 import { useAccounts } from './slices/accounts.js'
 import { useApps } from './slices/apps.js'
 import { useAgentLane } from './slices/agent.js'
@@ -319,6 +319,36 @@ export function App() {
     [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
   )
 
+  // Card actions by key, on the rule 1-9 already uses: the newest card in the
+  // selected section that offers the action. Presence doubles as the keybar's hint.
+  const cardActions = useMemo(() => {
+    const section = sections.find((candidate) => candidate.id === selectedId)
+    const views = (section?.items ?? [])
+      .flatMap((item) => (item.kind === 'block' && item.block.kind === 'view' ? [{ itemId: item.id, view: item.block.view }] : []))
+      .reverse()
+    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void } = {}
+    for (const { itemId, view } of views) {
+      if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group')) actions.rows = true
+      if (!actions.t) {
+        const filter = transactionsFilterFor(storeRef.current, view)
+        if (filter) actions.t = () => openTarget({ kind: 'transactions', filter })
+      }
+      if (!actions.e && view.view === 'application.detail') {
+        const filter = transactionsFilterFor(storeRef.current, view)
+        if (filter?.applicationId !== undefined) {
+          const { applicationId } = filter
+          actions.e = () => openTarget({ kind: 'program', applicationId })
+        }
+      }
+      if (!actions.m && view.view === 'transaction.list' && section) {
+        const derived = createTransactionCollectionViewModel(storeRef.current, view)
+        if (derived.ok && derived.model.nextToken) actions.m = () => loadMore(section.id, itemId, view)
+      }
+    }
+    return actions
+  }, [loadMore, openTarget, sections, selectedId, storeRef])
+  const runCardAction = useCallback((key: 't' | 'e' | 'm') => cardActions[key]?.(), [cardActions])
+
   const closeSelectedSection = useCallback(() => {
     feed.closeSelectedSection(
       (sectionId) => !isFlowSection(sectionId),
@@ -436,6 +466,7 @@ export function App() {
     submitAppsCall: apps.submitCall,
     toggleBlocksTail: tail.togglePause,
     openListRow,
+    runCardAction,
   })
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
@@ -471,7 +502,18 @@ export function App() {
       : screen === 'assets' || screen === 'txns'
         ? '←/→ account · esc explore'
         : focus === 'content'
-          ? '↑/↓ scroll · ←/→ sections · 1-9 open row · x close · tab/esc composer'
+          ? [
+              '↑/↓ scroll',
+              '←/→ sections',
+              cardActions.rows ? '1-9 open row' : null,
+              cardActions.t ? 't txns' : null,
+              cardActions.e ? 'e explain' : null,
+              cardActions.m ? 'm more' : null,
+              'x close',
+              'tab/esc composer',
+            ]
+              .filter(Boolean)
+              .join(' · ')
           : sections.length > 0
             ? `enter send · tab feed (${sections.length}) · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^n network · ctrl+c quit'

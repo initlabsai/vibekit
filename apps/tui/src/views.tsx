@@ -72,6 +72,30 @@ export type OpenTarget =
   | { kind: 'block'; round: number }
   | { kind: 'transactions'; filter: TransactionSearchFilter }
 
+/** The filter a detail card's "transactions ▸" opens, when the view has one. */
+export function transactionsFilterFor(store: ResultStore, view: ViewSpec): TransactionSearchFilter | undefined {
+  switch (view.view) {
+    case 'account.portfolio': {
+      const derived = createAccountPortfolioViewModel(store, view)
+      return derived.ok ? { address: derived.model.address } : undefined
+    }
+    case 'asset.detail': {
+      const derived = createAssetDetailViewModel(store, view)
+      return derived.ok ? { assetId: Number(derived.model.assetId) } : undefined
+    }
+    case 'application.detail': {
+      const derived = createApplicationDetailViewModel(store, view)
+      return derived.ok ? { applicationId: Number(derived.model.applicationId) } : undefined
+    }
+    case 'block.detail': {
+      const derived = createBlockDetailViewModel(store, view)
+      return derived.ok ? { round: derived.model.round } : undefined
+    }
+    default:
+      return undefined
+  }
+}
+
 /** Renders one trusted view as a TUI card. */
 export function ResultView({
   store,
@@ -96,6 +120,8 @@ export function ResultView({
   const [sort, setSort] = useState<AssetSort>('none')
   const [flow, setFlow] = useState<'graph' | 'table'>('graph')
   const [layout, setLayout] = useState<'stack' | 'table'>('stack')
+  const filter = onOpen ? transactionsFilterFor(store, view) : undefined
+  const onTransactions = onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
@@ -126,26 +152,14 @@ export function ResultView({
           sort={sort}
           maxAssets={maxAssets}
           onCycleSort={() => setSort(nextAssetSort(sort))}
-          onTransactions={
-            onOpen && derived.ok
-              ? () => onOpen({ kind: 'transactions', filter: { address: derived.model.address } })
-              : undefined
-          }
+          onTransactions={onTransactions}
         />
       )
     }
     case 'asset.detail': {
       const derived = createAssetDetailViewModel(store, view)
       return (
-        <AssetCard
-          model={derived.ok ? derived.model : undefined}
-          width={width}
-          onTransactions={
-            onOpen && derived.ok
-              ? () => onOpen({ kind: 'transactions', filter: { assetId: Number(derived.model.assetId) } })
-              : undefined
-          }
-        />
+        <AssetCard model={derived.ok ? derived.model : undefined} width={width} onTransactions={onTransactions} />
       )
     }
     case 'application.detail': {
@@ -154,15 +168,7 @@ export function ResultView({
         <ApplicationCard
           model={derived.ok ? derived.model : undefined}
           width={width}
-          onTransactions={
-            onOpen && derived.ok
-              ? () =>
-                  onOpen({
-                    kind: 'transactions',
-                    filter: { applicationId: Number(derived.model.applicationId) },
-                  })
-              : undefined
-          }
+          onTransactions={onTransactions}
           onExplain={
             onOpen && derived.ok
               ? () => onOpen({ kind: 'program', applicationId: Number(derived.model.applicationId) })
@@ -174,15 +180,7 @@ export function ResultView({
     case 'block.detail': {
       const derived = createBlockDetailViewModel(store, view)
       return (
-        <BlockCard
-          model={derived.ok ? derived.model : undefined}
-          width={width}
-          onTransactions={
-            onOpen && derived.ok
-              ? () => onOpen({ kind: 'transactions', filter: { round: derived.model.round } })
-              : undefined
-          }
-        />
+        <BlockCard model={derived.ok ? derived.model : undefined} width={width} onTransactions={onTransactions} />
       )
     }
     case 'network.status': {

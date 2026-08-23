@@ -38,6 +38,7 @@ export function useExplorerKeys({
   submitAppsCall,
   toggleBlocksTail,
   openListRow,
+  runCardAction,
 }: {
   feed: Feed
   modalOpen: boolean
@@ -59,6 +60,8 @@ export function useExplorerKeys({
   toggleBlocksTail: () => void
   /** Opens row n (1-9) of the newest transaction list in the selected section. */
   openListRow: (index: number) => void
+  /** t transactions · e explain · m more, on the newest card in the selected section that offers it. */
+  runCardAction: (key: 't' | 'e' | 'm') => void
 }) {
   const { focus, setFocus, moveSelection, contentScrollRef, sectionsRef } = feed
 
@@ -180,6 +183,11 @@ export function useExplorerKeys({
             case 'x':
               closeSelectedSection()
               return
+            case 't':
+            case 'e':
+            case 'm':
+              runCardAction(key.name)
+              return
             default: {
               const index = Number.parseInt(key.name, 10)
               if (Number.isInteger(index) && index >= 1 && index <= 9) openListRow(index)
@@ -213,6 +221,7 @@ export function useExplorerKeys({
         switchNetwork,
         toggleBlocksTail,
         openListRow,
+        runCardAction,
       ],
     ),
   )
