@@ -33,7 +33,9 @@ export function useAccounts({
   storeRef: { current: ResultStore }
   setFocus: (focus: Focus) => void
 }) {
-  const [signerReady, setSignerReady] = useState(false)
+  /** down: no daemon on the socket; empty: daemon up, no keys; ready: keys to sign with. */
+  const [signer, setSigner] = useState<'down' | 'empty' | 'ready'>('down')
+  const signerReady = signer === 'ready'
   const [activeSender, setActiveSender] = useState<string | undefined>(FIXTURE_SENDER)
   const [screen, setScreen] = useState<WorkspaceScreen>('chat')
   const [shelfView, setShelfView] = useState<ViewSpec | undefined>()
@@ -82,7 +84,7 @@ export function useAccounts({
       .listSigningAccounts()
       .then((accounts) => {
         if (cancelled) return
-        setSignerReady(accounts.length > 0)
+        setSigner(accounts.length > 0 ? 'ready' : 'empty')
         setAccountList(accounts)
         setActiveSender((current) =>
           current && accounts.some((account) => account.address === current)
@@ -92,7 +94,7 @@ export function useAccounts({
       })
       .catch(() => {
         if (cancelled) return
-        setSignerReady(false)
+        setSigner('down')
         setAccountList([...FIXTURE_ADDRESS_BOOK])
         setActiveSender(FIXTURE_SENDER)
       })
@@ -177,6 +179,7 @@ export function useAccounts({
   }, [activeSender, loadShelf, screen])
 
   return {
+    signer,
     signerReady,
     activeSender,
     setActiveSender,

@@ -117,7 +117,7 @@ export function TopBar({
 export function WalletScreen({
   accounts,
   loading,
-  signerReady,
+  signer,
   network,
   balances,
   activeSender,
@@ -129,7 +129,8 @@ export function WalletScreen({
   keys: string
   accounts: ReadonlyArray<{ address: string; name?: string }>
   loading: boolean
-  signerReady: boolean
+  /** down: no daemon; empty: daemon up, no keys; ready: keystore accounts. */
+  signer: 'down' | 'empty' | 'ready'
   network: string
   /** address → microALGO on `network`; missing means not funded there (or still loading). */
   balances: Record<string, number | string>
@@ -146,7 +147,7 @@ export function WalletScreen({
       border
       borderStyle="heavy"
       borderColor={COLORS.brass}
-      title={` WALLET · ${signerReady ? 'keystore' : 'sample'} `}
+      title={` WALLET · ${signer === 'ready' ? 'keystore' : signer === 'empty' ? 'keystore (empty)' : 'sample'} `}
       titleColor={COLORS.brassBright}
       bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
       bottomTitleAlignment="right"
@@ -156,6 +157,19 @@ export function WalletScreen({
         fg={COLORS.muted}
         content={`Active account is used for pay, assets, apps, and txns. Balances on ${network}.`}
       />
+      {signer === 'down' ? (
+        <text
+          fg={COLORS.brass}
+          marginTop={1}
+          content="Keystore daemon isn't running — vibekit keystore start, then reopen the Explorer. Showing sample accounts."
+        />
+      ) : signer === 'empty' ? (
+        <text
+          fg={COLORS.brass}
+          marginTop={1}
+          content="No keystore accounts yet — vibekit keystore generate ed25519 --name alice, then ^w."
+        />
+      ) : null}
       {loading ? (
         <text fg={COLORS.muted} marginTop={1} content="Loading accounts…" />
       ) : accounts.length === 0 ? (

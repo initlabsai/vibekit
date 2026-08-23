@@ -11,6 +11,6 @@ test('errorMessage drops algosdk transport prefixes and keeps the message', () =
 })
 
 test('shorten keeps both ends', () => {
-  expect(shorten('ABCDEFGHIJ', 7)).toBe('ABC…GHI')
+  expect(shorten('ABCDEFGHIJ', 7)).toBe('ABC…HIJ')
   expect(shorten('short', 10)).toBe('short')
 })

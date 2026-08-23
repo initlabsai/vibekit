@@ -172,7 +172,10 @@ export function App() {
   })
   const { flow, flowRef, startPayment, decide: decidePayment, isFlowSection, modalOpen: paymentModalOpen, modalModel } = payment
   // One modal at a time: the payment approval or an expensive-call confirm.
-  const modalOpen = paymentModalOpen || confirm !== null
+  // An agent-composed payment waits for the turn to end, so its one-line
+  // narration lands before the modal takes the keyboard, not after the verdict.
+  const approvalOpen = paymentModalOpen && !agentBusy
+  const modalOpen = approvalOpen || confirm !== null
   const decide = useCallback(
     (decision: 'approve' | 'deny') => {
       if (confirm) {
@@ -502,7 +505,7 @@ export function App() {
         <WalletScreen
           accounts={accountList}
           loading={accounts.accountsLoading}
-          signerReady={signerReady}
+          signer={accounts.signer}
           network={network}
           balances={accounts.balances}
           activeSender={activeSender}
@@ -612,7 +615,7 @@ export function App() {
           onSubmit={submit}
         />
       ) : null}
-      {paymentModalOpen ? (
+      {approvalOpen ? (
         <ApprovalModal model={modalModel} network={network} screenWidth={width} screenHeight={height} />
       ) : null}
       {confirm ? (
