@@ -86,7 +86,13 @@ export function RawCard({
   width: number
 }) {
   // Wrap rather than shorten: the tail of an error message is the useful part.
-  const lines = text.split('\n').flatMap((line) => wrapLines(line, innerWidth(width)))
+  // Leading whitespace survives so pretty-printed JSON stays indented.
+  const lines = text.split('\n').flatMap((line) => {
+    const indent = /^\s*/.exec(line)![0]
+    return wrapLines(line.slice(indent.length), Math.max(innerWidth(width) - indent.length, 20)).map(
+      (wrapped) => indent + wrapped,
+    )
+  })
   const shown = lines.slice(0, 14)
   if (lines.length > 14) shown.push(`… ${lines.length - 14} more lines`)
   return (

@@ -140,6 +140,11 @@ export function ApprovalModal({
       {failed ? (
         <text fg={COLORS.red} marginTop={1} content="This group WOULD FAIL if submitted." />
       ) : null}
+      <text
+        fg={COLORS.faint}
+        marginTop={1}
+        content="AI-composed — check every field yourself. Smaller models hallucinate; prefer a large frontier model."
+      />
     </box>
   )
 }
