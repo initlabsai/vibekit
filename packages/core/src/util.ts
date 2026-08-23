@@ -59,11 +59,10 @@ export function validateMetadataHash(hash: string | undefined): Uint8Array | und
 
   let bytes: Uint8Array
   if (hash.length === 64) {
-    const matches = hash.match(/.{2}/g)
-    if (!matches || matches.some((b) => !/^[0-9a-fA-F]{2}$/.test(b))) {
+    if (!/^[0-9a-fA-F]{64}$/.test(hash)) {
       throw new Error('metadataHash must be 64 hex characters or 44 base64 characters (32 bytes)')
     }
-    bytes = new Uint8Array(matches.map((byte) => parseInt(byte, 16)))
+    bytes = new Uint8Array(hash.match(/../g)!.map((byte) => parseInt(byte, 16)))
   } else if (hash.length === 44) {
     bytes = Uint8Array.from(atob(hash), (c) => c.charCodeAt(0))
   } else {

@@ -275,6 +275,14 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
   const context = deployment.contexts.get(network)
   if (!context) throw new Error(`Deployment is missing network ${network}`)
 
+  /** Fresh paired ids for one live call's record. */
+  const identity = (slug: string, extra?: { input?: JsonValue; network?: string }) => ({
+    resultId: newId(`result-live-${slug}`),
+    toolCallId: newId(`tool-call-live-${slug}`),
+    network: extra?.network ?? network,
+    ...(extra?.input === undefined ? {} : { input: extra.input }),
+  })
+
   return {
     network,
     async probe(timeoutMs = 1500) {
@@ -297,14 +305,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         amountMicroAlgos: params.amountMicroAlgos,
         ...(params.note === undefined ? {} : { note: params.note }),
       })
-      return draftRecordFromComposeWire(
-        {
-          resultId: newId('result-live-payment-draft'),
-          toolCallId: newId('tool-call-live-payment-draft'),
-          network,
-        },
-        wire,
-      )
+      return draftRecordFromComposeWire(identity('payment-draft'), wire)
     },
     async simulateDraft(draftRecord) {
       if (draftRecord.state !== 'success') {
@@ -315,11 +316,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
       const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions)
       const wire = await simulateUnsignedGroup(context.algod, draft.unsignedGroup.transactions)
       return buildPaymentSimulationRecord(
-        {
-          resultId: newId('result-live-payment-simulation'),
-          toolCallId: newId('tool-call-live-payment-simulation'),
-          network: draftRecord.network,
-        },
+        identity('payment-simulation', { network: draftRecord.network }),
         wire,
         decoded,
       )
@@ -333,103 +330,44 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
       const { txid } = await context.algod.sendRawTransaction(bytes).do()
       const confirmation = await algosdk.waitForConfirmation(context.algod, txid, 4)
       return buildPaymentConfirmationRecord(
-        {
-          resultId: newId('result-live-payment-confirmation'),
-          toolCallId: newId('tool-call-live-payment-confirmation'),
-          network: signedRecord.network,
-        },
+        identity('payment-confirmation', { network: signedRecord.network }),
         { transactionId: txid, confirmedRound: Number(confirmation.confirmedRound) },
       )
     },
     async lookupAccount(address) {
       const wire = await executeToolCall(deployment, accountPortfolio, { address })
-      return buildAccountPortfolioRecord(
-        {
-          resultId: newId('result-live-account'),
-          toolCallId: newId('tool-call-live-account'),
-          network,
-        },
-        wire,
-      )
+      return buildAccountPortfolioRecord(identity('account'), wire)
     },
     async lookupAccounts(addresses) {
       const wire = await executeToolCall(deployment, batchLookupAccounts, {
         addresses: [...addresses],
       })
-      return buildAccountListRecord(
-        {
-          resultId: newId('result-live-accounts'),
-          toolCallId: newId('tool-call-live-accounts'),
-          network,
-        },
-        wire,
-        'batch_lookup_accounts',
-      )
+      return buildAccountListRecord(identity('accounts'), wire, 'batch_lookup_accounts')
     },
     async lookupTransaction(txid) {
       const wire = await executeToolCall(deployment, lookupTransactionTool, { txid })
-      return buildTransactionDetailRecord(
-        {
-          resultId: newId('result-live-transaction'),
-          toolCallId: newId('tool-call-live-transaction'),
-          network,
-        },
-        wire,
-      )
+      return buildTransactionDetailRecord(identity('transaction'), wire)
     },
     async lookupTransactionGroup(groupId) {
       const wire = await executeToolCall(deployment, lookupTransactionGroupTool, { groupId })
-      return buildTransactionGroupRecord(
-        {
-          resultId: newId('result-live-transaction-group'),
-          toolCallId: newId('tool-call-live-transaction-group'),
-          network,
-        },
-        wire,
-      )
+      return buildTransactionGroupRecord(identity('transaction-group'), wire)
     },
     async lookupAsset(assetId) {
       const wire = await executeToolCall(deployment, lookupAssetTool, { assetId })
-      return buildAssetDetailRecord(
-        {
-          resultId: newId('result-live-asset'),
-          toolCallId: newId('tool-call-live-asset'),
-          network,
-        },
-        wire,
-      )
+      return buildAssetDetailRecord(identity('asset'), wire)
     },
     async lookupApplication(applicationId) {
       const wire = await executeToolCall(deployment, lookupApplicationTool, { applicationId })
-      return buildApplicationDetailRecord(
-        {
-          resultId: newId('result-live-application'),
-          toolCallId: newId('tool-call-live-application'),
-          network,
-        },
-        wire,
-      )
+      return buildApplicationDetailRecord(identity('application'), wire)
     },
     async lookupBlock(round) {
       const wire = await executeToolCall(deployment, lookupBlockTool, { round })
-      return buildBlockDetailRecord(
-        {
-          resultId: newId('result-live-block'),
-          toolCallId: newId('tool-call-live-block'),
-          network,
-        },
-        wire,
-      )
+      return buildBlockDetailRecord(identity('block'), wire)
     },
     async lookupAccountAssets(address) {
       const wire = await executeToolCall(deployment, accountAssetsTool, { address })
       return buildAssetHoldingsRecord(
-        {
-          resultId: newId('result-live-account-assets'),
-          toolCallId: newId('tool-call-live-account-assets'),
-          network,
-          input: { address },
-        },
+        identity('account-assets', { input: { address } }),
         wire,
         'get_account_assets',
       )
@@ -437,12 +375,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     async lookupAccountAppStates(address) {
       const wire = await executeToolCall(deployment, accountAppStatesTool, { address })
       return buildApplicationLocalsRecord(
-        {
-          resultId: newId('result-live-account-apps'),
-          toolCallId: newId('tool-call-live-account-apps'),
-          network,
-          input: { address },
-        },
+        identity('account-apps', { input: { address } }),
         { ...(wire as object), address },
         'get_account_app_local_states',
       )
@@ -465,12 +398,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
           }
       const wire = await executeToolCall(deployment, tool, args)
       return buildTransactionListRecord(
-        {
-          resultId: newId('result-live-txn-search'),
-          toolCallId: newId('tool-call-live-txn-search'),
-          network,
-          input: args,
-        },
+        identity('txn-search', { input: args }),
         { ...(wire as object), ...(address ? { address } : {}) },
         tool.name,
       )

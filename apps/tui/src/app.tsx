@@ -354,8 +354,6 @@ export function App() {
     [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
   )
 
-  // Card actions by key, on the rule 1-9 already uses: the newest card in the
-  // selected section that offers the action. Presence doubles as the keybar's hint.
   // Card actions by key act on the highlighted card; with no cursor yet, on
   // the newest card in the selected section. Presence doubles as the keybar's hint.
   const cardActions = useMemo(() => {

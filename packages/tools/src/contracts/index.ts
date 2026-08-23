@@ -55,7 +55,6 @@ export {
   decodeAppCall,
   decodeAppCallForApp,
   enrichTransactionsWithAbi,
-  methodFromParsed,
 } from './lib/abi.js'
 export type { DecodedAppCall, DecodedAbiValue } from './lib/abi.js'
 export type { FormattedApplication } from './lib/format.js'

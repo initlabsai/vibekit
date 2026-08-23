@@ -165,8 +165,6 @@ export type { ProviderConfig } from './provider.js'
 export {
   listZeroSignalModels,
   probeZeroSignal,
-  ZEROSIGNAL_DEFAULT_BASE_URL,
-  ZEROSIGNAL_SETUP_HINT,
   zeroSignalBaseUrl,
   zeroSignalSetupHint,
   readZeroSignalCatalog,

@@ -52,7 +52,6 @@ import {
   BlockCard,
   BlockListCard,
   NetworkCard,
-  RawCard,
   TransactionCard,
   TransactionGraphCard,
   TransactionListCard,
@@ -60,8 +59,6 @@ import {
   nextAssetSort,
   type AssetSort,
 } from './cards/index.js'
-
-export { RawCard }
 
 /** A thing a card can ask the app to open. */
 export type OpenTarget =
@@ -105,7 +102,6 @@ export function ResultView({
   store,
   view,
   width,
-  maxAssets = 20,
   onOpen,
   onMore,
   loadingMore,
@@ -113,7 +109,6 @@ export function ResultView({
   store: ResultStore
   view: ViewSpec
   width: number
-  maxAssets?: number
   /** Drill-in from a row or a card action; the app routes it to a lane. */
   onOpen?: (target: OpenTarget) => void
   /** Fetches the next page of a transaction list into this card. */
@@ -156,7 +151,7 @@ export function ResultView({
           model={derived.ok ? derived.model : undefined}
           width={width}
           sort={sort}
-          maxAssets={maxAssets}
+          maxAssets={20}
           onCycleSort={() => setSort(nextAssetSort(sort))}
           onTransactions={onTransactions}
           onAssets={onOpen && filter?.address ? () => onOpen({ kind: 'holdings', address: filter.address! }) : undefined}
@@ -197,24 +192,7 @@ export function ResultView({
     case 'account.summary': {
       const derived = createAccountSummaryViewModel(store, view)
       if (!derived.ok) return <Unavailable title="ACCOUNT" width={width} />
-      const model = derived.model
-      return (
-        <AccountSummaryCard
-          address={model.address}
-          name={model.name}
-          network={model.network}
-          status={model.status}
-          balanceMicroAlgos={model.balanceMicroAlgos}
-          totalAssetsOptedIn={model.totalAssetsOptedIn}
-          totalAppsOptedIn={model.totalAppsOptedIn}
-          totalCreatedAssets={model.totalCreatedAssets}
-          totalCreatedApps={model.totalCreatedApps}
-          createdAtRound={model.createdAtRound}
-          minBalanceMicroAlgos={model.minBalanceMicroAlgos}
-          rekeyedTo={model.rekeyedTo}
-          width={width}
-        />
-      )
+      return <AccountSummaryCard {...derived.model} width={width} />
     }
     case 'account.list': {
       const derived = createAccountListViewModel(store, view)
@@ -333,16 +311,7 @@ export function ResultView({
     case 'application.state': {
       const derived = createApplicationStateViewModel(store, view)
       if (!derived.ok) return <Unavailable title="APP STATE" width={width} />
-      return (
-        <ApplicationStateCard
-          applicationId={derived.model.applicationId}
-          scope={derived.model.scope}
-          address={derived.model.address}
-          optedIn={derived.model.optedIn}
-          entries={derived.model.entries}
-          width={width}
-        />
-      )
+      return <ApplicationStateCard {...derived.model} width={width} />
     }
     case 'application.locals': {
       const derived = createApplicationLocalsViewModel(store, view)
@@ -387,29 +356,12 @@ export function ResultView({
     case 'application.box': {
       const derived = createApplicationBoxViewModel(store, view)
       if (!derived.ok) return <Unavailable title="APP BOX" width={width} />
-      const model = derived.model
-      return (
-        <ApplicationBoxCard
-          applicationId={model.applicationId}
-          boxName={model.boxName}
-          exists={model.exists}
-          value={model.value}
-          size={model.size}
-          width={width}
-        />
-      )
+      return <ApplicationBoxCard {...derived.model} width={width} />
     }
     case 'application.boxes': {
       const derived = createApplicationBoxesViewModel(store, view)
       if (!derived.ok) return <Unavailable title="APP BOXES" width={width} />
-      return (
-        <ApplicationBoxesCard
-          applicationId={derived.model.applicationId}
-          boxes={derived.model.boxes}
-          truncated={derived.model.truncated}
-          width={width}
-        />
-      )
+      return <ApplicationBoxesCard {...derived.model} width={width} />
     }
     case 'block.list': {
       const derived = createBlockListViewModel(store, view)

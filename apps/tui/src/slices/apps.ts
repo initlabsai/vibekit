@@ -322,7 +322,6 @@ export function useApps({
   return {
     deployed,
     localSpecs,
-    optedIn,
     optedInLoading,
     entries,
     catalog,
@@ -333,7 +332,6 @@ export function useApps({
     selectSpec,
     selectMethod,
     closeDetail,
-    callInput,
     setCallInput,
     callEpoch,
     callBusy,

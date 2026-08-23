@@ -8,7 +8,7 @@ import {
   approvalRequestSchema,
   createTransactionFixtureViewSpec,
   transactionFixtureResult,
-  transactionDetailViewSpecSchema,
+  viewSpecSchema,
   writeStageEventSchema,
 } from '../src/index.js'
 
@@ -38,19 +38,19 @@ describe('provisional explorer protocol', () => {
   test('rejects an unknown view, inline authoritative fields, and wrong protocol version', () => {
     const view = createTransactionFixtureViewSpec()
     expect(
-      transactionDetailViewSpecSchema.safeParse({
+      viewSpecSchema.safeParse({
         ...view,
         view: 'model.generated',
       }).success,
     ).toBeFalse()
     expect(
-      transactionDetailViewSpecSchema.safeParse({
+      viewSpecSchema.safeParse({
         ...view,
         transactionId: 'copied-by-model',
       }).success,
     ).toBeFalse()
     expect(
-      transactionDetailViewSpecSchema.safeParse({
+      viewSpecSchema.safeParse({
         ...view,
         protocolVersion: '1.0.0',
       }).success,

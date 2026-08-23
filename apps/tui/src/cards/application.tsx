@@ -264,12 +264,11 @@ export function ApplicationListCard({
   onOpen?: (applicationId: number) => void
 }) {
   const body = innerWidth(width)
-  const rows = applications
   return (
     <Frame width={width}>
       <Header kicker="APPLICATIONS" pill={String(applications.length)} tone="idle" />
       <box flexDirection="column">
-        {rows.map((application, index) => (
+        {applications.map((application, index) => (
           <box key={String(application.applicationId)} flexDirection="column" marginTop={1}>
             <box flexDirection="row" justifyContent="space-between" height={1}>
               <Fact
@@ -291,10 +290,10 @@ export function ApplicationListCard({
               />
             ) : null}
             <Fact label="keys" value={String(application.globalStateCount ?? 0)} width={body} />
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
+            {index < applications.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={applications.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter shown={applications.length} total={applications.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -373,7 +372,6 @@ export function ApplicationLocalsCard({
   loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const shown = apps
   return (
     <Frame width={width}>
       <Header kicker="APP LOCALS" pill={String(apps.length)} tone="idle" />
@@ -381,7 +379,7 @@ export function ApplicationLocalsCard({
         <Fact label="address" value={address} copy={address} width={body} />
       ) : null}
       <box marginTop={1} flexDirection="column">
-        {shown.map((app) => (
+        {apps.map((app) => (
           <box key={String(app.applicationId)} flexDirection="column" marginTop={1}>
             <Fact
               label="app"
@@ -407,7 +405,7 @@ export function ApplicationLocalsCard({
             ) : null}
           </box>
         ))}
-        <MoreFooter shown={shown.length} total={apps.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter shown={apps.length} total={apps.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -430,12 +428,11 @@ export function ApplicationLogsCard({
   loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const rows = logData
   return (
     <Frame width={width}>
       <Header kicker="APP LOGS" pill={String(applicationId)} tone="idle" />
       <box flexDirection="column">
-        {rows.map((row, index) => (
+        {logData.map((row, index) => (
           <box key={row.txid} flexDirection="column" marginTop={1}>
             <Fact label="id" value={row.txid} copy={row.txid} width={body} />
             <Fact
@@ -449,10 +446,10 @@ export function ApplicationLogsCard({
             {row.logs.length > 3 ? (
               <FooterNote text={`${row.logs.length - 3} more logs`} width={body} />
             ) : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
+            {index < logData.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={logData.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter shown={logData.length} total={logData.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

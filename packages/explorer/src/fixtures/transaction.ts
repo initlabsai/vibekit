@@ -1,6 +1,6 @@
 import { classifyExplorerInput, type ClassifiedExplorerInput } from '../core/classifier.js'
 import {
-  transactionDetailViewSpecSchema,
+  viewSpecSchema,
   type ExplorerArtifact,
   type ViewSpec,
 } from '../core/protocol.js'
@@ -55,7 +55,7 @@ export function createFixtureResultStore(): ResultStore {
 
 /** Creates the trusted view specification for the fixture's authoritative result. */
 export function createTransactionFixtureViewSpec(): ViewSpec {
-  return transactionDetailViewSpecSchema.parse({
+  return viewSpecSchema.parse({
     protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
     view: 'transaction.detail',

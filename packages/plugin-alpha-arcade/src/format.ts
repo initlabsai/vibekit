@@ -11,10 +11,8 @@ export function microToUsd(micro: number): number {
   return micro / MICROUNIT
 }
 
-/** Convert microunits to a share quantity. */
-export function microToShares(micro: number): number {
-  return micro / MICROUNIT
-}
+/** Convert microunits to a share quantity — same scale as USD. */
+export const microToShares = microToUsd
 
 export function formatMarket(m: Market) {
   return {

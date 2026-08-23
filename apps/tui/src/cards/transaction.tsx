@@ -10,6 +10,7 @@ import {
 } from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten } from '../theme.js'
+import type { GraphSourceRow } from './transaction-graph-layout.js'
 import {
   Button,
   Chip,
@@ -250,27 +251,8 @@ function compactTime(roundTime: number): string {
   return new Date(roundTime * 1000).toISOString().slice(11, 16)
 }
 
-type ListRow = {
-  id?: string
-  type?: string
-  sender: string
-  receiver?: string
-  paymentAmountMicroAlgos?: number | string
-  feeMicroAlgos?: number | string
-  assetId?: number | string
-  assetAmount?: number | string
-  assetUnitName?: string
-  assetName?: string
-  assetDecimals?: number
-  applicationId?: number | string
-  confirmedRound?: number
-  roundTime?: number
-  innerCount?: number
-  innerTxns?: ListRow[]
-  rekeyTo?: string
-  createdAssetId?: number | string
-  createdApplicationId?: number | string
-}
+/** A list row is the graph's source row plus the list-only presentation fields. */
+type ListRow = GraphSourceRow & { innerCount?: number; confirmedRound?: number; roundTime?: number }
 
 /** The row's kind as the graph names it: creates and opt-ins say so, not "Application Call" / "0 USDC". */
 function rowType(row: ListRow): string {
@@ -459,8 +441,7 @@ export function TransactionListCard({
   onToggleLayout?: () => void
 }) {
   const body = innerWidth(width)
-  // Every row the record holds: pages merge into this card, so no display cap.
-  const rows = transactions
+  // Every row the record holds renders: pages merge into this card, so no display cap.
   const unitFor = (assetId: number) =>
     transactions.find((row) => Number(row.assetId) === assetId && row.assetUnitName)?.assetUnitName
   const filter = query ? queryLabel(query, unitFor) : undefined
@@ -488,10 +469,10 @@ export function TransactionListCard({
       />
       {groupId ? <Fact label="group" value={groupId} copy={groupId} width={body} /> : null}
       {layout === 'table' ? (
-        <TransactionTable rows={rows} innerType={innerType} body={body} onOpen={onOpen} />
+        <TransactionTable rows={transactions} innerType={innerType} body={body} onOpen={onOpen} />
       ) : null}
       <box flexDirection="column">
-        {(layout === 'table' ? [] : rows).map((row, index) => {
+        {(layout === 'table' ? [] : transactions).map((row, index) => {
           const amount = rowAmount(row)
           const to = rowCounterparty(row)
           return (
@@ -537,7 +518,7 @@ export function TransactionListCard({
                 <Fact label="asset" value={assetFact(row)!} copy={String(row.assetId)} width={body} />
               ) : null}
               <InnerRows rows={row.innerTxns ?? []} depth={1} body={body} />
-              {index < rows.length - 1 ? <Rule width={body} /> : null}
+              {index < transactions.length - 1 ? <Rule width={body} /> : null}
             </box>
           )
         })}
@@ -547,7 +528,7 @@ export function TransactionListCard({
             width={body}
           />
         ) : null}
-        <MoreFooter shown={rows.length} total={transactions.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter shown={transactions.length} total={transactions.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

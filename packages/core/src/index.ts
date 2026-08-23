@@ -13,7 +13,6 @@ export {
   indexerSemaphore,
   Semaphore,
   stripFinalToken,
-  validateMetadataHash,
 } from './util.js'
 export * from './compose/index.js'
 export {

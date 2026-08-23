@@ -33,16 +33,6 @@ export const TRUSTED_VIEW_IDS = [
 /** Trusted view identifiers proven by the current vertical slices. */
 export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]
 
-/** A transaction detail view backed only by an authoritative result reference. */
-export const transactionDetailViewSpecSchema = z
-  .object({
-    protocolVersion: explorerProtocolVersionSchema,
-    type: z.literal('view'),
-    view: z.literal('transaction.detail'),
-    source: resultReferenceSchema,
-  })
-  .strict()
-
 /** A trusted presentation specification selected by the model or direct lane. */
 export const viewSpecSchema = z
   .object({

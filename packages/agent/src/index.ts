@@ -1,6 +1,6 @@
 export { createAgent, type AgentSession, type VibekitAgentOptions } from './agent.js'
-export { isToolErrorOutput, type AgentEvent, type ToolErrorOutput } from './events.js'
-export { createModel, isProviderConfig, type ProviderConfig } from './provider.js'
+export { type AgentEvent, type ToolErrorOutput } from './events.js'
+export { createModel, type ProviderConfig } from './provider.js'
 export {
   loadStoredAgentConfig,
   loadStoredPlugins,
@@ -14,8 +14,6 @@ export {
 export {
   listZeroSignalModels,
   probeZeroSignal,
-  ZEROSIGNAL_DEFAULT_BASE_URL,
-  ZEROSIGNAL_SETUP_HINT,
   zeroSignalBaseUrl,
   zeroSignalSetupHint,
   readZeroSignalCatalog,

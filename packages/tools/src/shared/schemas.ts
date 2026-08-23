@@ -183,6 +183,12 @@ export const formattedTransactionSchema = z.object({
   logs: z.array(z.string()).optional(),
 })
 
+// Drift guards: the documented interfaces above and the wire schemas must
+// describe the same shape; a divergence fails the build.
+type Mutual<A, B> = [A, B] extends [B, A] ? true : never
+true satisfies Mutual<FormattedAssetConfig, z.infer<typeof formattedAssetConfigSchema>>
+true satisfies Mutual<FormattedTransaction, z.infer<typeof formattedTransactionSchema>>
+
 /** Wire shape of every transaction-list tool result ('transaction.list' view). */
 /** The filter a transaction search ran with, echoed so the card can show it. */
 export const transactionQuerySchema = z.object({

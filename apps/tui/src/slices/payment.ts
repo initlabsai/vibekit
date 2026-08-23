@@ -256,7 +256,6 @@ export function usePaymentFlow({
   return {
     flow,
     flowRef,
-    flowMode,
     setFlowMode,
     startPayment,
     decide,

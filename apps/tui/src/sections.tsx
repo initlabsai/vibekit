@@ -11,10 +11,10 @@ import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
 import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
 
-import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard, PeraAssetCard, TableCard } from './cards/index.js'
+import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard, PeraAssetCard, RawCard, TableCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button, HighlightContext, usePulse } from './ui.js'
-import { RawCard, ResultView, type OpenTarget } from './views.js'
+import { ResultView, type OpenTarget } from './views.js'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =
@@ -441,7 +441,6 @@ export function ContentPane({
                         store={store}
                         view={block.view}
                         width={cardWidth}
-                        maxAssets={20}
                         onOpen={onOpen}
                         onMore={() => onMore(section.id, item.id, block.view)}
                         loadingMore={loadingMoreItemId === item.id}

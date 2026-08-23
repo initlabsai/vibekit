@@ -18,7 +18,6 @@ import {
   resultReferenceSchema,
   sameResultReference,
   type ResultStore,
-  type StructuredResult,
   type ViewModelError,
 } from '../core/results.js'
 import { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from '../core/version.js'

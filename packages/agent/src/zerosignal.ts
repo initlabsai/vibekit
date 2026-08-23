@@ -104,9 +104,6 @@ export function zeroSignalSetupHint(baseUrl: string = zeroSignalBaseUrl()): stri
   )
 }
 
-/** @deprecated Use zeroSignalSetupHint(); kept for the ./config subpath. */
-export const ZEROSIGNAL_SETUP_HINT = zeroSignalSetupHint(ZEROSIGNAL_DEFAULT_BASE_URL)
-
 function serverRoot(baseUrl: string): string {
   return baseUrl.replace(/\/v1\/?$/, '')
 }
