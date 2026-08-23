@@ -266,3 +266,17 @@ describe('buildGroupGraph adapter', () => {
     expect(buildGroupGraph([{ type: 'wat', sender }])).toBeUndefined()
   })
 })
+
+test('a zero self-payment carrying rekeyTo reaches the graph as a rekey row', () => {
+  const user = 'URKF45CZ5Q6QW6VQKQWGQJ3FQKXGDQ2Q2CCFJ2XM7UNQ3OQYZ3PSNDHZ6Y'
+  const graph = buildGroupGraph([
+    {
+      type: 'pay',
+      sender: user,
+      receiver: user,
+      paymentAmountMicroAlgos: 0,
+      rekeyTo: 'X5HRVWKG5ZFOCAFXQHH2JPEQJZ3WQGBSSTKZRWCEFZHOUZRWXNM2H3VEXM',
+    },
+  ])
+  expect(graph?.horizontals[0]?.label.type).toBe('rekey')
+})

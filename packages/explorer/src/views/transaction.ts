@@ -72,6 +72,9 @@ export interface TransactionRowData {
   closeAmountMicroAlgos?: string | number
   closeAssetAmount?: string | number
   clawbackFrom?: string
+  rekeyTo?: string
+  /** The auth address that signed, when not the sender. */
+  signer?: string
   freezeTarget?: string
   frozen?: boolean
   assetConfig?: z.infer<typeof transactionAssetConfigDataSchema>
@@ -106,6 +109,9 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
   closeAmountMicroAlgos: uint64JsonSchema.optional(),
   closeAssetAmount: uint64JsonSchema.optional(),
   clawbackFrom: optionalAddress,
+  // Graph rows need these: a zero rekey payment and a rekeyed outer signer.
+  rekeyTo: optionalAddress,
+  signer: optionalAddress,
   freezeTarget: optionalAddress,
   frozen: z.boolean().optional(),
   assetConfig: transactionAssetConfigDataSchema.optional(),

@@ -417,6 +417,7 @@ export interface GraphSourceRow {
   closeAmountMicroAlgos?: number | string
   closeAssetAmount?: number | string
   clawbackFrom?: string
+  rekeyTo?: string
   globalStateDelta?: unknown
   localStateDelta?: unknown
   logs?: string[]
@@ -450,6 +451,7 @@ function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
       : { closeAmountMicroAlgos: row.closeAmountMicroAlgos }),
     ...(row.closeAssetAmount === undefined ? {} : { closeAssetAmount: row.closeAssetAmount }),
     ...(row.clawbackFrom === undefined ? {} : { clawbackFrom: row.clawbackFrom }),
+    ...(row.rekeyTo === undefined ? {} : { rekeyTo: row.rekeyTo }),
     ...(row.globalStateDelta === undefined ? {} : { globalStateDelta: row.globalStateDelta }),
     ...(row.localStateDelta === undefined ? {} : { localStateDelta: row.localStateDelta }),
     ...(row.logs === undefined ? {} : { logs: row.logs }),
