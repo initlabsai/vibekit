@@ -14,7 +14,6 @@ export interface NetworkLane {
   setNetwork: (net: LiveNetworkId) => void
   networkRef: { current: LiveNetworkId }
   keystoreHost: KeystorePaymentHost
-  sampleHost: ExplorerHost
   host: () => ExplorerHost
   live: 'probing' | boolean
 }
@@ -56,5 +55,5 @@ export function useNetwork(): NetworkLane {
     [keystoreHost, live, sampleHost],
   )
 
-  return { network, setNetwork, networkRef, keystoreHost, sampleHost, host, live }
+  return { network, setNetwork, networkRef, keystoreHost, host, live }
 }

@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { WorkspaceScreen } from '../chrome.js'
 import type { KeystorePaymentHost } from '../keystore-host.js'
+import { errorMessage } from '../theme.js'
 import type { Focus } from './feed.js'
 import { loadNextPage, viewFor } from './lookup.js'
 import type { ExplorerHost } from './network.js'
@@ -47,7 +48,7 @@ export function useAccounts({
       .then((next) => {
         if (next) setShelfView(next)
       })
-      .catch((error: unknown) => setShelfError(error instanceof Error ? error.message : String(error)))
+      .catch((error: unknown) => setShelfError(errorMessage(error)))
       .finally(() => setShelfLoadingMore(false))
   }, [commitStore, host, network, shelfLoadingMore, shelfView, storeRef])
   const [accountList, setAccountList] = useState<ReadonlyArray<{ address: string; name?: string }>>(
@@ -143,7 +144,7 @@ export function useAccounts({
         })
         .catch((error: unknown) => {
           setShelfLoading(false)
-          setShelfError(error instanceof Error ? error.message : String(error))
+          setShelfError(errorMessage(error))
         })
     },
     [commitStore, host, storeRef],
@@ -191,8 +192,5 @@ export function useAccounts({
     balances,
     openWorkspace,
     cycleAccount,
-    refreshTxnsShelf: () => {
-      if (screen === 'txns') loadShelf('txns', activeSender)
-    },
   }
 }

@@ -26,7 +26,7 @@ import { loadNextPage } from './slices/lookup.js'
 import { NETWORKS, useNetwork } from './slices/network.js'
 import { usePaymentFlow } from './slices/payment.js'
 import { useBlockTail } from './slices/tail.js'
-import { COLORS, shorten } from './theme.js'
+import { COLORS, errorMessage, shorten } from './theme.js'
 
 const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.algo · paste an id'
 
@@ -56,8 +56,6 @@ export function App() {
       new Promise<boolean>((resolve) => setConfirm({ title, lines, resolve })),
     [],
   )
-  const [, setInput] = useState('')
-
   // The renderer blurs the focused input on any click; these let the app
   // hand focus back to whichever input it still considers focused.
   const composerRef = useRef<InputRenderable | null>(null)
@@ -106,7 +104,6 @@ export function App() {
     busy,
     setBusy,
     setStatus,
-    setScreen,
     specCatalog: apps.catalog,
   })
   const {
@@ -130,21 +127,15 @@ export function App() {
         apps.selectSpec({ spec: entry.spec, appId: match?.appId })
         return
       }
-      if (entry.kind === 'optedIn') {
-        setScreen('chat')
-        const sectionId = createSection(`app ${entry.appId}`)
-        openApplication(sectionId, entry.appId)
+      const local =
+        entry.kind === 'deployed' ? apps.localSpecs.find((spec) => spec.spec.name === entry.name) : undefined
+      if (local) {
+        apps.selectSpec({ spec: local, appId: entry.appId })
         return
       }
-      const match = apps.localSpecs.find((local) => local.spec.name === entry.name)
-      if (match) {
-        apps.selectSpec({ spec: match, appId: entry.appId })
-        return
-      }
-      // A deployed app without a local spec opens through the same lane as `app <id>`.
+      // Opted-in, or deployed without a local spec: the same lane as `app <id>`.
       setScreen('chat')
-      const sectionId = createSection(`app ${entry.appId}`)
-      openApplication(sectionId, entry.appId)
+      openApplication(createSection(`app ${entry.appId}`), entry.appId)
     },
     [apps, createSection, openApplication, setScreen],
   )
@@ -312,9 +303,7 @@ export function App() {
         .then((next) => {
           if (next) feed.replaceBlockView(sectionId, itemId, next)
         })
-        .catch((error: unknown) =>
-          appendNote(sectionId, `Couldn't load more — ${error instanceof Error ? error.message : String(error)}`, 'error'),
-        )
+        .catch((error: unknown) => appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'))
         .finally(() => setLoadingMoreItemId(null))
     },
     [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
@@ -336,7 +325,6 @@ export function App() {
 
   const submit = useCallback(
     (raw: string) => {
-      setInput('')
       setInputEpoch((epoch) => epoch + 1)
       const trimmed = raw.trim()
       if (trimmed === '') return
@@ -526,7 +514,6 @@ export function App() {
           width={width}
           onActivate={activateAppsEntry}
           onSelectMethod={apps.selectMethod}
-          callInput={apps.callInput}
           callEpoch={apps.callEpoch}
           callBusy={apps.callBusy}
           callError={apps.callError}
@@ -615,7 +602,6 @@ export function App() {
           hint={hint}
           inputRef={composerRef}
           onFocus={() => setFocus('composer')}
-          onChange={setInput}
           onSubmit={submit}
         />
       ) : null}

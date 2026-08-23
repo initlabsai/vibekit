@@ -5,6 +5,14 @@ import { useCallback } from 'react'
 import type { WorkspaceScreen } from '../chrome.js'
 import type { Feed } from './feed.js'
 
+/** ^1–^4 as the masthead labels them. */
+const PAGE_KEYS: Record<string, Exclude<WorkspaceScreen, 'chat' | 'wallet'> | undefined> = {
+  '1': 'assets',
+  '2': 'apps',
+  '3': 'txns',
+  '4': 'blocks',
+}
+
 /**
  * Global keyboard dispatch: modal decisions first, then workspace shortcuts,
  * then per-screen and per-focus handling. Pure wiring — every action is
@@ -52,15 +60,7 @@ export function useExplorerKeys({
   /** Opens row n (1-9) of the newest transaction list in the selected section. */
   openListRow: (index: number) => void
 }) {
-  const {
-    focus,
-    setFocus,
-    moveSelection,
-    scrollToSection,
-    selectedRef,
-    contentScrollRef,
-    sectionsRef,
-  } = feed
+  const { focus, setFocus, moveSelection, contentScrollRef, sectionsRef } = feed
 
   useKeyboard(
     useCallback(
@@ -84,24 +84,10 @@ export function useExplorerKeys({
         // Ctrl+digit is dropped by most terminals (including tmux); Alt/option
         // still arrives as meta/option plus the digit, which is what ^1/^2/^3
         // have to mean outside Kitty's keyboard protocol.
-        if ((key.ctrl || key.meta || key.option) && key.name === '1') {
+        const page = key.ctrl || key.meta || key.option ? PAGE_KEYS[key.name] : undefined
+        if (page) {
           key.preventDefault()
-          openWorkspace('assets')
-          return
-        }
-        if ((key.ctrl || key.meta || key.option) && key.name === '2') {
-          key.preventDefault()
-          openWorkspace('apps')
-          return
-        }
-        if ((key.ctrl || key.meta || key.option) && key.name === '3') {
-          key.preventDefault()
-          openWorkspace('txns')
-          return
-        }
-        if ((key.ctrl || key.meta || key.option) && key.name === '4') {
-          key.preventDefault()
-          openWorkspace('blocks')
+          openWorkspace(page)
           return
         }
         if (screen !== 'chat') {
@@ -220,9 +206,7 @@ export function useExplorerKeys({
         moveSelection,
         openWorkspace,
         screen,
-        scrollToSection,
         sectionsRef,
-        selectedRef,
         setActiveSender,
         setFocus,
         setScreen,

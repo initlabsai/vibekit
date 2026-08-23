@@ -26,6 +26,11 @@ export const COLORS = {
   ink: '#0a0b0e',
 }
 
+/** A caught value as one line for a note or status. */
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 export function shorten(value: string, width: number): string {
   if (value.length <= width) return value
   const left = Math.ceil((width - 1) / 2)

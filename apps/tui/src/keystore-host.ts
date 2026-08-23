@@ -23,8 +23,6 @@ import {
 /** The TUI payment host: compose, simulate, submit, and keystore signing. */
 export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
   probe(timeoutMs?: number): Promise<boolean>
-  /** True when the daemon is reachable and holds a key for the address. */
-  canSign(address: string): Promise<boolean>
   /** Looks an account's portfolio up as an authoritative record. */
   lookupAccount(address: string): Promise<StructuredResult>
   /** Looks several accounts up as one account.list record. */
@@ -79,13 +77,6 @@ export function createKeystorePaymentHost(
 
   return {
     ...compose,
-    async canSign(address) {
-      try {
-        return (await (await signer()).listAddresses()).includes(address)
-      } catch {
-        return false
-      }
-    },
     async listSigningAccounts() {
       const accounts = await (await signer()).listAccounts()
       return accounts.map(({ address, name }) => ({

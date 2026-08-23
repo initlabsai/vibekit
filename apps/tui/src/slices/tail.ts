@@ -7,6 +7,7 @@ import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit-ex
 import { runBlockTail, type LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import { useCallback, useEffect, useState } from 'react'
 
+import { errorMessage } from '../theme.js'
 import { viewFor } from './lookup.js'
 import type { WorkspaceScreen } from '../chrome.js'
 import type { ExplorerHost } from './network.js'
@@ -73,7 +74,7 @@ export function useBlockTail({
         },
         onError: (caught) => {
           if (abort.signal.aborted) return
-          setError(caught instanceof Error ? caught.message : String(caught))
+          setError(errorMessage(caught))
         },
       },
     )

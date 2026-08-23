@@ -234,7 +234,6 @@ function MethodCallPane({
   selected: SpecSelection
   method: ParsedMethod
   width: number
-  callInput: string
   inputRef?: RefObject<InputRenderable | null>
   callEpoch: number
   callBusy: boolean
@@ -304,7 +303,6 @@ function SpecDetailPane({
   selected,
   selectedMethod,
   width,
-  callInput,
   callEpoch,
   callBusy,
   callError,
@@ -317,7 +315,6 @@ function SpecDetailPane({
   selected: SpecSelection
   selectedMethod: ParsedMethod | null
   width: number
-  callInput: string
   inputRef?: RefObject<InputRenderable | null>
   callEpoch: number
   callBusy: boolean
@@ -334,7 +331,6 @@ function SpecDetailPane({
         selected={selected}
         method={selectedMethod}
         width={width}
-        callInput={callInput}
         callEpoch={callEpoch}
         callBusy={callBusy}
         callError={callError}
@@ -416,7 +412,6 @@ export function AppsScreen({
   width,
   onActivate,
   onSelectMethod,
-  callInput,
   callEpoch,
   callBusy,
   callError,
@@ -437,7 +432,6 @@ export function AppsScreen({
   width: number
   onActivate: (index: number) => void
   onSelectMethod: (method: ParsedMethod) => void
-  callInput: string
   callEpoch: number
   callBusy: boolean
   callError: string | null
@@ -470,7 +464,6 @@ export function AppsScreen({
           selected={selected}
           selectedMethod={selectedMethod}
           width={width}
-          callInput={callInput}
           callEpoch={callEpoch}
           callBusy={callBusy}
           callError={callError}
@@ -708,7 +701,6 @@ export function Composer({
   hint,
   inputRef,
   onFocus,
-  onChange,
   onSubmit,
 }: {
   epoch: number
@@ -717,7 +709,6 @@ export function Composer({
   inputRef: RefObject<InputRenderable | null>
   /** A click on the composer claims app focus, like esc does from the feed. */
   onFocus: () => void
-  onChange: (value: string) => void
   onSubmit: (value: string) => void
 }) {
   // OpenTUI's intrinsic type currently intersects its core SubmitEvent prop
@@ -746,7 +737,6 @@ export function Composer({
         flexGrow={1}
         focused={focused}
         placeholder={hint}
-        onInput={onChange}
         onSubmit={submitHandler}
       />
     </box>

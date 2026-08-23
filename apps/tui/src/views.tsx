@@ -61,7 +61,6 @@ import {
 
 export { RawCard }
 
-/** Renders one trusted view as a TUI card. */
 /** A thing a card can ask the app to open. */
 export type OpenTarget =
   | { kind: 'transaction'; txid: string }
@@ -73,6 +72,7 @@ export type OpenTarget =
   | { kind: 'block'; round: number }
   | { kind: 'transactions'; filter: TransactionSearchFilter }
 
+/** Renders one trusted view as a TUI card. */
 export function ResultView({
   store,
   view,

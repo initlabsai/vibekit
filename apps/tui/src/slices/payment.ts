@@ -47,7 +47,7 @@ export function usePaymentFlow({
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
 }) {
-  const { appendBlock, appendNote, commitSections, sectionsRef } = feed
+  const { appendBlock, appendNote, updateItem } = feed
 
   const [flow, setFlow] = useState<WriteFlowState | null>(null)
   const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
@@ -63,22 +63,13 @@ export function usePaymentFlow({
       const targetSection = flowSectionRef.current
       const targetItem = flowItemRef.current
       if (targetSection === null || targetItem === null) return
-      commitSections(
-        sectionsRef.current.map((section) =>
-          section.id === targetSection
-            ? {
-                ...section,
-                items: section.items.map((item) =>
-                  item.id === targetItem && item.kind === 'block' && item.block.kind === 'payment'
-                    ? { ...item, block: { ...item.block, flow: nextFlow } }
-                    : item,
-                ),
-              }
-            : section,
-        ),
+      updateItem(targetSection, targetItem, (item) =>
+        item.kind === 'block' && item.block.kind === 'payment'
+          ? { ...item, block: { ...item.block, flow: nextFlow } }
+          : item,
       )
     },
-    [commitSections, sectionsRef],
+    [updateItem],
   )
 
   const finishPayment = useCallback(

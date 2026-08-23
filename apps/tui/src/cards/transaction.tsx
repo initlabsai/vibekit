@@ -370,22 +370,7 @@ export function TransactionListCard({
 }: {
   title: string
   groupId?: string
-  transactions: ReadonlyArray<{
-    id?: string
-    type?: string
-    sender: string
-    receiver?: string
-    paymentAmountMicroAlgos?: number | string
-    feeMicroAlgos?: number | string
-    assetId?: number | string
-    assetAmount?: number | string
-    assetUnitName?: string
-    assetDecimals?: number
-    applicationId?: number | string
-    confirmedRound?: number
-    roundTime?: number
-    innerCount?: number
-  }>
+  transactions: ReadonlyArray<ListRow>
   nextToken?: string
   query?: Parameters<typeof queryLabel>[0]
   width: number
@@ -434,20 +419,8 @@ export function TransactionListCard({
       ) : null}
       <box flexDirection="column">
         {(layout === 'table' ? [] : rows).map((row, index) => {
-          const payment = algo(row.paymentAmountMicroAlgos)
-          const units =
-            row.assetAmount === undefined
-              ? undefined
-              : assetUnits(row.assetAmount, row.assetDecimals, row.assetUnitName)
-          const asset = units
-            ? units.unit
-              ? `${units.value} ${units.unit}`
-              : `${units.value}${row.assetId === undefined ? '' : ` #${row.assetId}`}`
-            : undefined
-          const amount = payment ?? asset
-          const to =
-            row.receiver ??
-            (row.applicationId === undefined ? undefined : `app ${row.applicationId}`)
+          const amount = rowAmount(row)
+          const to = rowCounterparty(row)
           return (
             <box key={row.id ?? `${row.sender}-${index}`} flexDirection="column" marginTop={1}>
               <box flexDirection="row" height={1} justifyContent="space-between">

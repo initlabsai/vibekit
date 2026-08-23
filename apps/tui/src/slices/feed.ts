@@ -86,60 +86,60 @@ export function useFeed() {
     [commitSections, scrollToBottom],
   )
 
+  /** Rewrites one section; the others keep their identity. */
+  const updateSection = useCallback(
+    (sectionId: number, update: (section: Section) => Section) => {
+      commitSections(
+        sectionsRef.current.map((section) => (section.id === sectionId ? update(section) : section)),
+      )
+    },
+    [commitSections],
+  )
+
+  /** Rewrites one item inside a section. */
+  const updateItem = useCallback(
+    (sectionId: number, itemId: number, update: (item: SectionItem) => SectionItem) => {
+      updateSection(sectionId, (section) => ({
+        ...section,
+        items: section.items.map((item) => (item.id === itemId ? update(item) : item)),
+      }))
+    },
+    [updateSection],
+  )
+
   const appendItem = useCallback(
     (sectionId: number, item: SectionItem) => {
-      commitSections(
-        sectionsRef.current.map((section) =>
-          section.id === sectionId ? { ...section, items: [...section.items, item] } : section,
-        ),
-      )
+      updateSection(sectionId, (section) => ({ ...section, items: [...section.items, item] }))
       // A new card or note always comes from the user's own request: show it.
       scrollToBottom()
     },
-    [commitSections, scrollToBottom],
+    [scrollToBottom, updateSection],
   )
 
   /** Swaps one rendered block's view (a merged page replaces its first page). */
   const replaceBlockView = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
-      commitSections(
-        sectionsRef.current.map((section) =>
-          section.id === sectionId
-            ? {
-                ...section,
-                items: section.items.map((item) =>
-                  item.id === itemId && item.kind === 'block' && item.block.kind === 'view'
-                    ? { ...item, block: { ...item.block, view } }
-                    : item,
-                ),
-              }
-            : section,
-        ),
+      updateItem(sectionId, itemId, (item) =>
+        item.kind === 'block' && item.block.kind === 'view'
+          ? { ...item, block: { ...item.block, view } }
+          : item,
       )
     },
-    [commitSections],
+    [updateItem],
   )
 
   const patchSection = useCallback(
     (sectionId: number, patch: Partial<Section>) => {
-      commitSections(
-        sectionsRef.current.map((section) =>
-          section.id === sectionId ? { ...section, ...patch } : section,
-        ),
-      )
+      updateSection(sectionId, (section) => ({ ...section, ...patch }))
     },
-    [commitSections],
+    [updateSection],
   )
 
   const toggleThinking = useCallback(
     (sectionId: number) => {
-      commitSections(
-        sectionsRef.current.map((section) =>
-          section.id === sectionId ? { ...section, thinkingOpen: !section.thinkingOpen } : section,
-        ),
-      )
+      updateSection(sectionId, (section) => ({ ...section, thinkingOpen: !section.thinkingOpen }))
     },
-    [commitSections],
+    [updateSection],
   )
 
   const appendNote = useCallback(
@@ -203,7 +203,8 @@ export function useFeed() {
     contentScrollRef,
     scrollToBottom,
     sectionRegistry,
-    commitSections,
+    updateSection,
+    updateItem,
     newItemId,
     scrollToSection,
     markSection,

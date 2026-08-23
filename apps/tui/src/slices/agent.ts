@@ -78,15 +78,7 @@ export function useAgentLane({
   /** Modal yes/no before an expensive tool call runs. */
   askConfirm: (title: string, lines: string[]) => Promise<boolean>
 }) {
-  const {
-    appendBlock,
-    appendItem,
-    appendNote,
-    commitSections,
-    newItemId,
-    patchSection,
-    sectionsRef,
-  } = feed
+  const { appendBlock, appendItem, appendNote, newItemId, patchSection, sectionsRef, updateItem } = feed
   const { flowRef, setFlowMode, trackFlowStep, updateFlowBlock, finishPayment } = payment
 
   const agentSectionRef = useRef<number | null>(null)
@@ -155,20 +147,8 @@ export function useAgentLane({
           appendItem(sectionId, { id, kind: 'note', text: delta, tone: 'agent' })
           return
         }
-        const target = agentNoteItem.current
-        commitSections(
-          sectionsRef.current.map((section) =>
-            section.id === sectionId
-              ? {
-                  ...section,
-                  items: section.items.map((item) =>
-                    item.id === target && item.kind === 'note'
-                      ? { ...item, text: item.text + delta }
-                      : item,
-                  ),
-                }
-              : section,
-          ),
+        updateItem(sectionId, agentNoteItem.current, (item) =>
+          item.kind === 'note' ? { ...item, text: item.text + delta } : item,
         )
       }
       void (async () => {
@@ -348,7 +328,6 @@ export function useAgentLane({
       appendBlock,
       appendItem,
       appendNote,
-      commitSections,
       commitStore,
       finishPayment,
       flowRef,
@@ -365,6 +344,7 @@ export function useAgentLane({
       storeRef,
       trackFlowStep,
       updateFlowBlock,
+      updateItem,
     ],
   )
 
