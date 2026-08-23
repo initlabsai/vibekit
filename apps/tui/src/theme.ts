@@ -28,6 +28,33 @@ export const COLORS = {
   faint: '#605c56',
 }
 
+/** Motion is on unless the terminal (or its owner) says otherwise. */
+export const MOTION = process.env.VIBEKIT_MOTION !== 'off'
+
+function hex(color: string): [number, number, number] {
+  const n = Number.parseInt(color.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+/** Linear blend of two hex colors; t in [0, 1]. */
+export function lerpColor(from: string, to: string, t: number): string {
+  const a = hex(from)
+  const b = hex(to)
+  const mix = a.map((channel, i) => Math.round(channel + (b[i]! - channel) * t))
+  return `#${mix.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
+/** `steps` colors from `from` to `to`, inclusive. */
+export function gradient(from: string, to: string, steps: number): string[] {
+  return Array.from({ length: steps }, (_, i) => lerpColor(from, to, steps === 1 ? 0 : i / (steps - 1)))
+}
+
+/** A slow breath between two colors: up, then back down, in `steps` frames. */
+export function breath(from: string, to: string, steps: number): string[] {
+  const up = gradient(from, to, steps)
+  return [...up, ...up.slice(1, -1).reverse()]
+}
+
 /** A caught value as one line for a note or status. */
 export function errorMessage(error: unknown): string {
   const text = error instanceof Error ? error.message : String(error)

@@ -10,8 +10,8 @@ import { useEffect, useState, type RefObject } from 'react'
 import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 
 import { NfdCard, PaymentCard } from './cards/index.js'
-import { COLORS, shorten, wrapLines } from './theme.js'
-import { Button } from './ui.js'
+import { COLORS, gradient, shorten, wrapLines } from './theme.js'
+import { Button, usePulse } from './ui.js'
 import { RawCard, ResultView, type OpenTarget } from './views.js'
 
 /** One rendered result inside a section — a request may compose several. */
@@ -44,8 +44,20 @@ function promptKicker(prompt: string, width: number, selected: boolean): string 
   return shorten(`${selected ? '▸' : '›'} ${prompt}`, Math.max(8, width))
 }
 
-function promptRule(width: number, selected: boolean): string {
-  return (selected ? '━' : '─').repeat(Math.max(4, width))
+const RULE_GRADIENT = gradient(COLORS.brass, COLORS.signal, 8)
+
+/** The section divider: a plain hairline, or — selected — a heavy rule fading amber into teal. */
+function PromptRule({ width, selected }: { width: number; selected: boolean }) {
+  const span = Math.max(4, width)
+  if (!selected) return <text fg={COLORS.borderSoft} content={'─'.repeat(span)} />
+  const step = Math.ceil(span / RULE_GRADIENT.length)
+  return (
+    <box flexDirection="row" height={1}>
+      {RULE_GRADIENT.map((fg, i) => (
+        <text key={i} fg={fg} content={'━'.repeat(Math.max(0, Math.min(step, span - i * step)))} />
+      ))}
+    </box>
+  )
 }
 
 const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
@@ -278,6 +290,8 @@ export function ContentPane({
 }) {
   // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
   const innerWidth = Math.max(24, width - 6)
+  // The cursor at the end of streaming narration blinks at terminal pace.
+  const cursorOn = usePulse(1000, 2) === 0
   const cardWidth = Math.max(30, innerWidth - 2)
   // Entering chat (this pane mounts) lands on the newest content.
   useEffect(() => {
@@ -339,11 +353,8 @@ export function ContentPane({
                   />
                   <Button label="✕" onPress={() => onClose(section.id)} />
                 </box>
-                <text
-                  fg={selected ? COLORS.brass : COLORS.borderSoft}
-                  content={promptRule(innerWidth, selected)}
-                />
-                {section.items.map((item) => {
+                <PromptRule width={innerWidth} selected={selected} />
+                {section.items.map((item, index) => {
                   if (item.kind === 'note') {
                     const color =
                       item.tone === 'error'
@@ -351,12 +362,17 @@ export function ContentPane({
                         : item.tone === 'agent'
                           ? COLORS.text
                           : COLORS.muted
+                    const streaming =
+                      item.tone === 'agent' &&
+                      liveThinkingSectionId === section.id &&
+                      index === section.items.length - 1
+                    const cursor = streaming && cursorOn ? '▌' : streaming ? ' ' : ''
                     return (
                       <text
                         key={item.id}
                         marginTop={1}
                         fg={color}
-                        content={wrapLines(item.text, innerWidth).join('\n')}
+                        content={wrapLines(item.text + cursor, innerWidth).join('\n')}
                       />
                     )
                   }

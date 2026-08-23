@@ -1,8 +1,30 @@
 import { createTextAttributes, SyntaxStyle, type MouseEvent } from '@opentui/core'
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { copyableIdent, useCopyIdent } from './copy-selection.js'
-import { COLORS, shorten } from './theme.js'
+import { COLORS, MOTION, shorten } from './theme.js'
+
+/** Cycles 0..frames-1 every `periodMs`; frozen at 0 when motion is off. */
+export function usePulse(periodMs: number, frames: number): number {
+  const [frame, setFrame] = useState(0)
+  useEffect(() => {
+    if (!MOTION) return
+    const id = setInterval(() => setFrame((n) => (n + 1) % frames), periodMs / frames)
+    return () => clearInterval(id)
+  }, [frames, periodMs])
+  return frame
+}
+
+/** Counts 0 → steps once after mount, `stepMs` apart; already `steps` when motion is off. */
+export function useReveal(steps = 2, stepMs = 70): number {
+  const [step, setStep] = useState(MOTION ? 0 : steps)
+  useEffect(() => {
+    if (!MOTION) return
+    const ids = Array.from({ length: steps }, (_, i) => setTimeout(() => setStep(i + 1), stepMs * (i + 1)))
+    return () => ids.forEach(clearTimeout)
+  }, [stepMs, steps])
+  return step
+}
 
 const IDENT_ATTR = createTextAttributes({ underline: true })
 
@@ -55,13 +77,16 @@ export function Frame({
   accent?: string
   children: ReactNode
 }) {
+  // The card switches on: its frame comes up dim → lit over two frames.
+  const ramp = [COLORS.borderSoft, COLORS.border, accent ?? COLORS.border]
+  const lit = ramp[useReveal(2)]!
   return (
     <box
       width={width}
       flexDirection="column"
       border
       borderStyle="single"
-      borderColor={accent ?? COLORS.border}
+      borderColor={lit}
       paddingX={2}
       marginTop={1}
     >

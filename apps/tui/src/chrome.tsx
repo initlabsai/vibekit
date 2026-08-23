@@ -4,11 +4,11 @@ import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentu
 
 import { useEffect, useState, type RefObject } from 'react'
 
-import { Button, Ident } from './ui.js'
+import { Button, Ident, usePulse } from './ui.js'
 import { ResultView, type OpenTarget } from './views.js'
 import type { AppsEntry, SpecSelection } from './slices/apps.js'
 import type { ParsedMethod } from '@initlabs/vibekit-tools'
-import { COLORS, shorten } from './theme.js'
+import { breath, COLORS, shorten } from './theme.js'
 
 /** Workspace pages that sit beside the chat transcript. */
 export type WorkspaceScreen = 'chat' | 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks'
@@ -19,6 +19,15 @@ const SHELF: ReadonlyArray<{ id: Exclude<WorkspaceScreen, 'chat' | 'wallet'>; la
   { id: 'txns', label: 'txns', shortcut: '^3' },
   { id: 'blocks', label: 'blocks', shortcut: '^4' },
 ]
+
+const TEAL_BREATH = breath(COLORS.signalDim, COLORS.signal, 4)
+
+/** A slow teal breath beside the mode label while the network is live; still otherwise. */
+function LiveDot({ live }: { live: 'probing' | boolean }) {
+  const phase = usePulse(1800, TEAL_BREATH.length)
+  if (live !== true) return <text fg={COLORS.faint}>○ </text>
+  return <text fg={TEAL_BREATH[phase]}>● </text>
+}
 
 /** The chain's heartbeat: signal-colored, flashes amber for a beat on each new round. */
 function RoundTick({ round }: { round: number }) {
@@ -40,6 +49,7 @@ function RoundTick({ round }: { round: number }) {
 export function TopBar({
   screen,
   modeLabel,
+  live,
   network,
   latestRound,
   accountName,
@@ -52,6 +62,7 @@ export function TopBar({
 }: {
   screen: WorkspaceScreen
   modeLabel: string
+  live: 'probing' | boolean
   network: LiveNetworkId
   latestRound?: number
   accountName?: string
@@ -84,7 +95,10 @@ export function TopBar({
         </box>
         <box flexDirection="row" gap={3}>
           <box flexDirection="row" gap={1}>
-            <text fg={COLORS.faint}>{modeLabel}</text>
+            <box flexDirection="row">
+              <LiveDot live={live} />
+              <text fg={COLORS.faint}>{modeLabel}</text>
+            </box>
             {latestRound === undefined ? null : <RoundTick round={latestRound} />}
           </box>
           <box paddingX={1} backgroundColor={networkColors[network]} onMouseDown={onSwitchNetwork}>

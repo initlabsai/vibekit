@@ -3,8 +3,11 @@ import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 
 import { PaymentBody } from './cards/index.js'
 import { computeGraphLayout } from './cards/transaction-graph-layout.js'
-import { COLORS } from './theme.js'
-import { Header } from './ui.js'
+import { breath, COLORS } from './theme.js'
+import { Header, usePulse } from './ui.js'
+
+const AMBER_BREATH = breath(COLORS.brass, COLORS.brassBright, 5)
+const RED_BREATH = breath(COLORS.redDim, COLORS.red, 5)
 
 /** A yes/no gate with a few lines of context — the cost of an expensive tool call. */
 export function ConfirmModal({
@@ -87,6 +90,10 @@ export function ApprovalModal({
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
   const payment = model?.amountMicroAlgos !== undefined
+  // The one moment the UI waits on a human: the frame breathes until you answer.
+  const danger = failed || network === 'mainnet'
+  const phase = usePulse(2400, AMBER_BREATH.length)
+  const borderColor = (danger ? RED_BREATH : AMBER_BREATH)[phase]!
   return (
     <box
       position="absolute"
@@ -97,7 +104,7 @@ export function ApprovalModal({
       flexDirection="column"
       border
       borderStyle="double"
-      borderColor={failed || network === 'mainnet' ? COLORS.red : COLORS.brass}
+      borderColor={borderColor}
       title={` SIGN ▸ ${network.toUpperCase()} `}
       titleColor={network === 'mainnet' ? COLORS.red : COLORS.brassBright}
       bottomTitle={` ${keys} `}

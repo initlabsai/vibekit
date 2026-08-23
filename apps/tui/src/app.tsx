@@ -530,6 +530,7 @@ export function App() {
       <TopBar
         screen={screen}
         modeLabel={modeLabel}
+        live={live}
         network={network}
         latestRound={tail.latestRound}
         accountName={senderAccount?.name}
