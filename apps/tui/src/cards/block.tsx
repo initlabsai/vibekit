@@ -50,7 +50,7 @@ export function BlockCard({
             <box flexDirection="row">
               {model.transactionTypes.map((entry, index) => (
                 <box key={entry.type} flexDirection="row">
-                  {index > 0 ? <text fg={COLORS.panel}> </text> : null}
+                  {index > 0 ? <text> </text> : null}
                   <Chip
                     label={
                       entry.count === 1

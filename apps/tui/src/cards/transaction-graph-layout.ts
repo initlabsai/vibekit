@@ -121,9 +121,9 @@ export function markerText(tag: GraphMarkerTag | undefined): string {
 /** Color family for a row label, from existing palette members only. */
 export function labelColor(type: string): string {
   if (type.startsWith('payment')) return COLORS.brass
-  if (type === 'clawback') return COLORS.red
+  if (type === 'clawback') return COLORS.brassBright
   if (type.startsWith('app')) return COLORS.brassBright
-  if (type.startsWith('asset')) return COLORS.green
+  if (type.startsWith('asset')) return COLORS.signal
   return COLORS.text
 }
 

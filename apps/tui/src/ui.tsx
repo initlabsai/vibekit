@@ -29,13 +29,16 @@ export function markdownStyle(): SyntaxStyle {
 export const FRAME_GUTTER = 6
 
 /** Status color for pills and accents. */
-export type Tone = 'ok' | 'warn' | 'bad' | 'idle'
+export type Tone = 'ok' | 'warn' | 'bad' | 'danger' | 'idle'
 
+// ok is alive (teal); bad is a fact that went wrong (bright amber); danger is
+// the only red — money on the line right now.
 const PILL: Record<Tone, { fg: string; bg: string }> = {
-  ok: { fg: COLORS.ink, bg: COLORS.green },
+  ok: { fg: COLORS.ink, bg: COLORS.signal },
   warn: { fg: COLORS.ink, bg: COLORS.brass },
-  bad: { fg: COLORS.text, bg: COLORS.red },
-  idle: { fg: COLORS.muted, bg: COLORS.panelRaised },
+  bad: { fg: COLORS.ink, bg: COLORS.brassBright },
+  danger: { fg: COLORS.text, bg: COLORS.red },
+  idle: { fg: COLORS.muted, bg: COLORS.surface },
 }
 
 export function innerWidth(width: number): number {
@@ -60,7 +63,6 @@ export function Frame({
       borderStyle="single"
       borderColor={accent ?? COLORS.border}
       paddingX={2}
-      backgroundColor={COLORS.card}
       marginTop={1}
     >
       {children}
@@ -71,7 +73,7 @@ export function Frame({
 /** Tiny raised label, used for transaction type and similar tags. */
 export function Chip({ label }: { label: string }) {
   return (
-    <text fg={COLORS.muted} bg={COLORS.panelRaised}>
+    <text fg={COLORS.muted} bg={COLORS.surface}>
       {` ${label} `}
     </text>
   )
@@ -133,7 +135,7 @@ export function Header({
     <box flexDirection="row" justifyContent="space-between" height={1}>
       <box flexDirection="row">
         <text fg={COLORS.brassBright}>{kicker}</text>
-        {chip ? <text fg={COLORS.panel}> </text> : null}
+        {chip ? <text> </text> : null}
         {chip ? <Chip label={chip} /> : null}
       </box>
       <box flexDirection="row" gap={1}>
@@ -288,7 +290,7 @@ export function StatGrid({
               key={item.label}
               width={cellW}
               flexDirection="column"
-              backgroundColor={COLORS.panelRaised}
+              backgroundColor={COLORS.surface}
               paddingX={1}
             >
               <text fg={COLORS.faint} content={shorten(item.label, cellW - 2)} />
@@ -311,7 +313,7 @@ export function FooterNote({ text, width }: { text: string; width: number }) {
 
 export function Unavailable({ title, width }: { title: string; width: number }) {
   return (
-    <Frame width={width} accent={COLORS.red}>
+    <Frame width={width} accent={COLORS.brass}>
       <Header kicker={title} pill="UNAVAILABLE" tone="bad" />
       <text fg={COLORS.muted} marginTop={1} content="The record could not be derived." />
     </Frame>

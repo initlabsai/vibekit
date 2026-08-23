@@ -1,29 +1,31 @@
 /**
- * Init Labs palette for the TUI Explorer, amber-phosphor edition: cold
- * near-black, antique brass for structure, hot amber for figures, and one
- * cold signal color reserved for live data you can act on (identifiers,
- * the round counter). Brass says "frame"; signal says "touch this".
+ * Init Labs palette for the TUI Explorer, amber-phosphor edition. Two hues
+ * and a ground: amber is structure and figures (what the data says), teal
+ * is alive and touchable (live round, identifiers, confirmed, selection).
+ * Red is danger only — mainnet, and a group that would fail — so that when
+ * it appears, you stop. One lifted surface; cards are frames on the ground.
  */
 export const COLORS = {
   background: '#0a0b0e',
-  /** Section tint: one step off the ground. */
-  panel: '#111318',
-  /** Card surface: clearly lifted off the section, so its padding reads as padding. */
-  card: '#191d26',
-  /** Chips, stat cells, masthead, composer: lifted off a card. */
-  panelRaised: '#262b36',
+  /** The one lifted surface: masthead, composer, chips, stat cells, modals, the selected row. */
+  surface: '#1a1c22',
+  // Amber, dim → bright: rules and frames, kickers, hero figures.
+  borderSoft: '#2a2723',
+  border: '#4a4236',
   brass: '#c4a06a',
   brassBright: '#ffb454',
-  signal: '#6fd3d3',
+  /** Text on an amber or teal fill. */
+  ink: '#0a0b0e',
+  // Teal: alive and touchable.
   signalDim: '#2e5c5e',
+  signal: '#6fd3d3',
+  // Danger only.
+  redDim: '#6b2f2f',
+  red: '#e07c7c',
+  // Warm neutrals for prose and labels.
   text: '#e9e1d4',
   muted: '#8e8476',
   faint: '#605c56',
-  green: '#9aaa6e',
-  red: '#e07c7c',
-  border: '#4a4236',
-  borderSoft: '#2a2723',
-  ink: '#0a0b0e',
 }
 
 /** A caught value as one line for a note or status. */

@@ -69,12 +69,13 @@ export function TopBar({
       : `${accountName ?? 'wallet'}  ${shorten(address, 12)}`
     : 'no wallet'
   const networkColors: Record<LiveNetworkId, string> = {
-    localnet: COLORS.green,
+    localnet: COLORS.signal,
     testnet: COLORS.brass,
+    // The one standing red: real money.
     mainnet: COLORS.red,
   }
   return (
-    <box flexDirection="column" height={4} backgroundColor={COLORS.panelRaised} paddingX={2} paddingY={1}>
+    <box flexDirection="column" height={4} backgroundColor={COLORS.surface} paddingX={2} paddingY={1}>
       <box flexDirection="row" justifyContent="space-between" height={1}>
         <box flexDirection="row">
           <text fg={COLORS.brass}>◆ </text>
@@ -183,7 +184,7 @@ export function WalletScreen({
               flexDirection="column"
               marginTop={1}
               paddingX={1}
-              backgroundColor={selected ? COLORS.panelRaised : undefined}
+              backgroundColor={selected ? COLORS.surface : undefined}
               onMouseDown={() => onSelect(account.address)}
             >
               <box flexDirection="row" justifyContent="space-between" height={1}>
@@ -299,7 +300,7 @@ function MethodCallPane({
             />
           </box>
           {callBusy ? <text fg={COLORS.muted} marginTop={1} content="Simulating…" /> : null}
-          {callError ? <text fg={COLORS.red} marginTop={1} content={callError} /> : null}
+          {callError ? <text fg={COLORS.brassBright} marginTop={1} content={callError} /> : null}
           {callResult !== null ? (
             <text fg={COLORS.text} marginTop={1} content={formatCallResult(callResult)} />
           ) : null}
@@ -594,7 +595,7 @@ export function ShelfScreen({
       {loading ? (
         <text fg={COLORS.muted} marginTop={1} content="Looking up…" />
       ) : error ? (
-        <text fg={COLORS.red} marginTop={1} content={error} />
+        <text fg={COLORS.brassBright} marginTop={1} content={error} />
       ) : !address ? (
         <text fg={COLORS.muted} marginTop={1} content="Pick a wallet with ^w, then come back." />
       ) : view ? (
@@ -664,7 +665,7 @@ export function BlocksScreen({
       borderStyle={running ? 'heavy' : 'single'}
       borderColor={running ? COLORS.brass : COLORS.border}
       title={` BLOCKS · ${pill} · ${network}${latestRound === undefined ? '' : ` · ${latestRound}`} `}
-      titleColor={running ? COLORS.green : COLORS.brassBright}
+      titleColor={running ? COLORS.signal : COLORS.brassBright}
       bottomTitle={` ${shorten(keys, Math.max(8, width - 6))} `}
       bottomTitleAlignment="right"
       backgroundColor={COLORS.background}
@@ -681,7 +682,7 @@ export function BlocksScreen({
           content="Need a live network for the tail. ^n to switch, then open this page again."
         />
       ) : error ? (
-        <text fg={COLORS.red} marginTop={1} content={error} />
+        <text fg={COLORS.brassBright} marginTop={1} content={error} />
       ) : views.length === 0 ? (
         <text
           fg={COLORS.faint}
@@ -739,7 +740,7 @@ export function Composer({
       border
       borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
-      backgroundColor={COLORS.panelRaised}
+      backgroundColor={COLORS.surface}
       onMouseDown={onFocus}
     >
       <text fg={focused ? COLORS.brassBright : COLORS.faint}>❯ </text>

@@ -202,8 +202,8 @@ describe('labels, markers, and names', () => {
   test('label families reuse existing palette members', () => {
     expect(labelColor('payment')).toBe(COLORS.brass)
     expect(labelColor('paymentRemainder')).toBe(COLORS.brass)
-    expect(labelColor('assetTransfer')).toBe(COLORS.green)
-    expect(labelColor('clawback')).toBe(COLORS.red)
+    expect(labelColor('assetTransfer')).toBe(COLORS.signal)
+    expect(labelColor('clawback')).toBe(COLORS.brassBright)
     expect(labelColor('appCall')).toBe(COLORS.brassBright)
     expect(labelColor('keyReg')).toBe(COLORS.text)
   })

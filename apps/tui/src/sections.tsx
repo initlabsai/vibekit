@@ -210,7 +210,7 @@ export function NavPane({
               key={section.id}
               height={1}
               paddingX={1}
-              backgroundColor={selected ? COLORS.panelRaised : undefined}
+              backgroundColor={selected ? COLORS.surface : undefined}
               onMouseDown={() => onSelect(section.id)}
             >
               <text
@@ -330,7 +330,7 @@ export function ContentPane({
                   border={['left']}
                   borderStyle={selected ? 'heavy' : 'single'}
                   borderColor={selected ? COLORS.brass : COLORS.borderSoft}
-                  backgroundColor={selected ? COLORS.panel : undefined}
+                  backgroundColor={undefined}
                 >
                 <box flexDirection="row" justifyContent="space-between" height={1}>
                   <text
@@ -347,7 +347,7 @@ export function ContentPane({
                   if (item.kind === 'note') {
                     const color =
                       item.tone === 'error'
-                        ? COLORS.red
+                        ? COLORS.brassBright
                         : item.tone === 'agent'
                           ? COLORS.text
                           : COLORS.muted

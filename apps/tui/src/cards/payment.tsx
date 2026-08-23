@@ -91,7 +91,7 @@ export function PaymentBody({
             label="sim"
             value={model.simulation.wouldSucceed ? 'would succeed' : 'WOULD FAIL'}
             width={width}
-            valueColor={failed ? COLORS.red : COLORS.green}
+            valueColor={failed ? COLORS.red : COLORS.signal}
           />
         ) : null}
         {model.simulation ? (
@@ -120,9 +120,7 @@ export function PaymentBody({
                 label={effect.role}
                 value={`${signedDelta(effect.deltaMicroAlgos)} ALGO`}
                 width={width}
-                valueColor={
-                  String(effect.deltaMicroAlgos).startsWith('-') ? COLORS.red : COLORS.green
-                }
+                valueColor={String(effect.deltaMicroAlgos).startsWith('-') ? COLORS.brass : COLORS.signal}
               />
             ))
           : null}
@@ -147,7 +145,7 @@ export function PaymentBody({
             value={String(model.confirmation.confirmedRound)}
             copy={String(model.confirmation.confirmedRound)}
             width={width}
-            valueColor={COLORS.green}
+            valueColor={COLORS.signal}
           />
         ) : null}
         {model.confirmation ? (
@@ -156,7 +154,7 @@ export function PaymentBody({
             value={model.confirmation.transactionId}
             copy={model.confirmation.transactionId}
             width={width}
-            valueColor={COLORS.green}
+            valueColor={COLORS.signal}
           />
         ) : null}
       </box>
@@ -191,7 +189,7 @@ export function PaymentCard({
   const tone: Tone =
     stage === 'denied' || failed ? 'bad' : stage === 'confirmed' ? 'ok' : 'warn'
   return (
-    <Frame width={width} accent={tone === 'bad' ? COLORS.red : tone === 'ok' ? COLORS.green : COLORS.brass}>
+    <Frame width={width} accent={failed ? COLORS.red : tone === 'bad' ? COLORS.border : tone === 'ok' ? COLORS.signal : COLORS.brass}>
       <Header
         kicker={model.amountMicroAlgos === undefined ? 'WRITE' : 'PAYMENT'}
         pill={badge}

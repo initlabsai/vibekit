@@ -40,7 +40,7 @@ export function ConfirmModal({
       bottomTitle=" [enter] run · [esc] skip "
       bottomTitleAlignment="right"
       titleAlignment="left"
-      backgroundColor={COLORS.panelRaised}
+      backgroundColor={COLORS.surface}
       paddingX={2}
       paddingY={0}
     >
@@ -103,14 +103,14 @@ export function ApprovalModal({
       bottomTitle={` ${keys} `}
       bottomTitleAlignment="right"
       titleAlignment="left"
-      backgroundColor={COLORS.panelRaised}
+      backgroundColor={COLORS.surface}
       paddingX={2}
       paddingY={0}
     >
       <Header
         kicker={payment ? 'APPROVE THIS PAYMENT?' : 'APPROVE THIS GROUP?'}
         pill={failed ? 'WOULD FAIL' : 'SIMULATED OK'}
-        tone={failed ? 'bad' : 'ok'}
+        tone={failed ? 'danger' : 'ok'}
       />
       {model ? (
         <>
