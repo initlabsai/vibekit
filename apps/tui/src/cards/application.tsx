@@ -234,7 +234,7 @@ export function ApplicationExplanationCard({
 }) {
   if (!model) return <Unavailable title="EXPLANATION" width={width} />
   return (
-    <Frame width={width} accent={COLORS.brass}>
+    <Frame width={width}>
       <Header kicker="EXPLANATION" chip={`app ${model.applicationId}`} pill="AGENT" tone="warn" />
       <box marginTop={1} flexDirection="column">
         <markdown content={model.markdown} syntaxStyle={markdownStyle()} />
@@ -475,7 +475,7 @@ export function ApplicationBoxCard({
 }) {
   const body = innerWidth(width)
   return (
-    <Frame width={width} accent={exists ? COLORS.border : COLORS.muted}>
+    <Frame width={width}>
       <Header kicker="APP BOX" pill={exists ? 'EXISTS' : 'MISSING'} tone={exists ? 'ok' : 'idle'} />
       <box marginTop={1} flexDirection="column">
         <Fact

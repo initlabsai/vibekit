@@ -37,7 +37,7 @@ export function NfdCard({
   const byline = props.name && props.name !== data.name ? props.name : undefined
   const bio = props.bio ? wrapLines(props.bio, body).slice(0, 3) : []
   return (
-    <Frame width={width} accent={COLORS.brass}>
+    <Frame width={width}>
       <Header
         kicker="NFD"
         chip={data.state}

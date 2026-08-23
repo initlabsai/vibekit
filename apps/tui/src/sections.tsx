@@ -44,11 +44,6 @@ function promptKicker(prompt: string, width: number, selected: boolean): string 
   return shorten(`${selected ? '▸' : '›'} ${prompt}`, Math.max(8, width))
 }
 
-/** The section divider: one hairline; selection lives on the card, not the group. */
-function PromptRule({ width }: { width: number }) {
-  return <text fg={COLORS.borderSoft} content={'─'.repeat(Math.max(4, width))} />
-}
-
 const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
 
 function ThinkingSpinner() {
@@ -340,14 +335,13 @@ export function ContentPane({
                   />
                   <text
                     fg={COLORS.faint}
-                    content="×"
+                    content="close ×"
                     onMouseDown={(event: MouseEvent) => {
                       event.stopPropagation()
                       onClose(section.id)
                     }}
                   />
                 </box>
-                <PromptRule width={innerWidth} />
                 {section.items.map((item, index) => {
                   if (item.kind === 'note') {
                     const color =

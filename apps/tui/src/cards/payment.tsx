@@ -189,7 +189,7 @@ export function PaymentCard({
   const tone: Tone =
     stage === 'denied' || failed ? 'bad' : stage === 'confirmed' ? 'ok' : 'warn'
   return (
-    <Frame width={width} accent={failed ? COLORS.red : tone === 'bad' ? COLORS.border : tone === 'ok' ? COLORS.signal : COLORS.brass}>
+    <Frame width={width}>
       <Header
         kicker={model.amountMicroAlgos === undefined ? 'WRITE' : 'PAYMENT'}
         pill={badge}

@@ -50,8 +50,8 @@ export function markdownStyle(): SyntaxStyle {
 /** True inside the card the feed cursor is on; its frame turns amber. */
 export const HighlightContext = createContext(false)
 
-/** Horizontal padding inside a framed card (border + paddingX). */
-export const FRAME_GUTTER = 6
+/** Horizontal padding inside a card (paddingX both sides). */
+export const FRAME_GUTTER = 4
 
 /** Status color for pills and accents. */
 export type Tone = 'ok' | 'warn' | 'bad' | 'danger' | 'idle'
@@ -70,30 +70,14 @@ export function innerWidth(width: number): number {
   return Math.max(8, width - FRAME_GUTTER)
 }
 
-/** Framed surface used by every result card. */
-export function Frame({
-  width,
-  accent,
-  children,
-}: {
-  width: number
-  accent?: string
-  children: ReactNode
-}) {
-  // The card switches on: its frame comes up dim → lit over two frames.
-  const ramp = [COLORS.borderSoft, COLORS.border, accent ?? COLORS.border]
+/** The surface every result card sits on: a tinted slab, no border; the cursor lifts it a step. */
+export function Frame({ width, children }: { width: number; children: ReactNode }) {
+  // The card switches on: its tint comes up from the ground over two frames.
+  const ramp = [COLORS.background, COLORS.card, COLORS.card]
   const reveal = useReveal(2)
-  const lit = useContext(HighlightContext) ? COLORS.brass : ramp[reveal]!
+  const fill = useContext(HighlightContext) ? COLORS.cardLit : ramp[reveal]!
   return (
-    <box
-      width={width}
-      flexDirection="column"
-      border
-      borderStyle="single"
-      borderColor={lit}
-      paddingX={2}
-      marginTop={1}
-    >
+    <box width={width} flexDirection="column" backgroundColor={fill} paddingX={2} paddingY={1} marginTop={1}>
       {children}
     </box>
   )
@@ -157,10 +141,12 @@ export function Header({
   /** Card-local control (sort, graph/table), drawn beside the pill. */
   action?: ReactNode
 }) {
+  // On the highlighted card the kicker lights up with the tint.
+  const highlighted = useContext(HighlightContext)
   return (
     <box flexDirection="row" justifyContent="space-between" height={1}>
       <box flexDirection="row">
-        <text fg={COLORS.brassBright}>{kicker}</text>
+        <text fg={highlighted ? COLORS.brassBright : COLORS.brass}>{kicker}</text>
         {chip ? <text> </text> : null}
         {chip ? <Chip label={chip} /> : null}
       </box>
@@ -333,7 +319,7 @@ export function FooterNote({ text, width }: { text: string; width: number }) {
 
 export function Unavailable({ title, width }: { title: string; width: number }) {
   return (
-    <Frame width={width} accent={COLORS.brass}>
+    <Frame width={width}>
       <Header kicker={title} pill="UNAVAILABLE" tone="bad" />
       <text fg={COLORS.muted} marginTop={1} content="The record could not be derived." />
     </Frame>

@@ -7,7 +7,10 @@
  */
 export const COLORS = {
   background: '#0a0b0e',
-  /** The one lifted surface: masthead, composer, chips, stat cells, modals, the selected row. */
+  /** A card: one step off the ground, no border. The cursor lifts it one more. */
+  card: '#111318',
+  cardLit: '#181c24',
+  /** Modals and pills. */
   surface: '#1a1c22',
   // Amber, dim → bright: rules and frames, kickers, hero figures.
   borderSoft: '#2a2723',
