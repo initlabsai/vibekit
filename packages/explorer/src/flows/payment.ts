@@ -21,7 +21,7 @@ import {
   type StructuredResult,
   type ViewModelError,
 } from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION, experienceProtocolVersionSchema } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from '../core/version.js'
 
 /** One simulated balance movement in signed microALGOs. */
 export const paymentEffectSchema = z
@@ -163,7 +163,7 @@ const STAGE_RANK: Record<WriteFlowStage, number> = {
  */
 export const writeFlowStateSchema = z
   .object({
-    protocolVersion: experienceProtocolVersionSchema,
+    protocolVersion: explorerProtocolVersionSchema,
     flowId: z.string().min(1),
     toolCallId: z.string().min(1),
     stage: writeFlowStageSchema,
@@ -269,7 +269,7 @@ export function writeFlowReducer(
   if (state === null) {
     if (event.type === 'write.stage' && event.stage === 'draft') {
       return accept({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         flowId: event.flowId,
         toolCallId: event.toolCallId,
         stage: 'drafted',

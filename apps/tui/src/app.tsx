@@ -3,8 +3,8 @@ import {
   createTransactionCollectionViewModel,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'

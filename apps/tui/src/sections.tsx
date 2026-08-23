@@ -3,7 +3,7 @@ import {
   type ResultStore,
   type ViewSpec,
   type WriteFlowState,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollBoxRenderable } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 

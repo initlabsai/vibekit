@@ -5,10 +5,10 @@ import { z } from 'zod'
  * label is deliberate: the contract remains provisional until both renderers
  * exercise it.
  */
-export const EXPERIENCE_PROTOCOL_VERSION = '0.1.0-provisional' as const
+export const EXPLORER_PROTOCOL_VERSION = '0.1.0-provisional' as const
 
 /** Zod schema for the current provisional Explorer protocol version. */
-export const experienceProtocolVersionSchema = z.literal(EXPERIENCE_PROTOCOL_VERSION)
+export const explorerProtocolVersionSchema = z.literal(EXPLORER_PROTOCOL_VERSION)
 
 /** The current provisional Explorer protocol version. */
-export type ExperienceProtocolVersion = z.infer<typeof experienceProtocolVersionSchema>
+export type ExplorerProtocolVersion = z.infer<typeof explorerProtocolVersionSchema>

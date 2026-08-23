@@ -4,7 +4,7 @@ import {
   type PaymentDraftParams,
   type PaymentFlowHost,
   type StructuredResult,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 async function postFlowAction(body: unknown): Promise<StructuredResult> {
   const response = await fetch('/api/flow', {

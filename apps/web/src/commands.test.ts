@@ -4,7 +4,7 @@ import {
   FIXTURE_RESULT_ID,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { routeComposerInput } from './commands.js'
 

@@ -3,8 +3,8 @@ import {
   FIXTURE_ADDRESS_BOOK,
   startPaymentFlowFromDraftRecord,
   type ResultStore,
-} from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
   listZeroSignalModels,
   probeZeroSignal,

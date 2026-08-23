@@ -2,7 +2,7 @@ import {
   formatBaseUnits,
   formatMicroAlgos,
   type AccountPortfolioViewModel,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten } from '../theme.js'
 import {

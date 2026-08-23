@@ -1,4 +1,4 @@
-import type { NetworkStatusViewModel } from '@initlabs/vibekit-experience'
+import type { NetworkStatusViewModel } from '@initlabs/vibekit-explorer'
 
 import { Frame, Header, Hero, innerWidth, StatGrid, Unavailable } from '../ui.js'
 

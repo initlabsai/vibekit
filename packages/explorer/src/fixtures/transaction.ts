@@ -6,7 +6,7 @@ import {
 } from '../core/protocol.js'
 import { createResultStore, type ResultStore, type StructuredResult } from '../core/results.js'
 import { transactionDetailDataSchema } from '../views/transaction.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 
 /** Transaction id from the verified 2026-08-16 localnet payment field run. */
 export const FIXTURE_TRANSACTION_ID = 'Y5OGL6BRVN32OAL54AB32C4SXSYAZOMOT3YPIG4N454RRR566YBA'
@@ -37,7 +37,7 @@ const fixtureData = transactionDetailDataSchema.parse({
 /** A realistic, deeply immutable, JSON-safe structured transaction result. */
 export const transactionFixtureResult: StructuredResult = createResultStore([
   {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: FIXTURE_RESULT_ID,
@@ -56,7 +56,7 @@ export function createFixtureResultStore(): ResultStore {
 /** Creates the trusted view specification for the fixture's authoritative result. */
 export function createTransactionFixtureViewSpec(): ViewSpec {
   return transactionDetailViewSpecSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
     view: 'transaction.detail',
     source: { source: 'result', id: FIXTURE_RESULT_ID },

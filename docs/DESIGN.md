@@ -1,7 +1,7 @@
 # VibeKit v2 — Design Doc
 
 Status: **executing.** Phases 0–6 are complete. The first provisional
-`packages/experience` slice, its fixture-backed OpenTUI and web renderers, the
+`packages/explorer` slice, its fixture-backed OpenTUI and web renderers, the
 write/approval flow, live compose/simulate wiring, and keystore signing with
 on-chain confirmation in the TUI (the full draft → simulate → inspect →
 approve → sign → confirm write path, live-verified on localnet) are
@@ -16,8 +16,8 @@ updated: 2026-08-22.
 > the immediate findings of the 2026-08-16 adversarial review. The next
 > workstreams are the 1.0 package/binary release, the separate
 > contribution-safety gate, and the hosted API/SDK. The first
-> fixture-backed browser-safe experience spine now lives in
-> `packages/experience`; `apps/tui` and `apps/web` now render the same
+> fixture-backed browser-safe explorer spine now lives in
+> `packages/explorer`; `apps/tui` and `apps/web` now render the same
 > fixture-backed vertical slice. Internal app
 > development does not wait for npm publication; the public
 > package boundary
@@ -146,14 +146,14 @@ id = one wire shape — `application.locals` splits from a unified
 `asset.holdings` splits from `asset.list`, and `get_network` demotes to
 the coarse `table` hint. (3) One schema family: monetary wire fields
 are integer `*MicroAlgos` (done — tools emit microALGOs directly; the
-float-to-micro conversion shims in experience are gone), tools has
+float-to-micro conversion shims in explorer are gone), tools has
 a dependency-clean `./views` subpath (done — schema-only `schemas.ts`
 modules per domain, zod-only import graph pinned by test), and
-`packages/experience` parses wires with `viewDataSchemas` instead of
+`packages/explorer` parses wires with `viewDataSchemas` instead of
 maintaining shadow wire schemas (done — the shadow wire schemas are
 deleted; host-added envelope keys like `address` parse beside the tools
 schema).
-(4) Experience reorganizes into vertical slices (done — `src/views/` has
+(4) `packages/explorer` reorganizes into vertical slices (done — `src/views/` has
 one module per entity family colocating data schemas, builders, and view
 models; `src/flows/` holds the payment machine; `src/core/` the spine).
 (5) The TUI app reorganizes into vertical slices (done — app.tsx is a
@@ -176,7 +176,7 @@ embeddable browser client exists beyond their chat app.
 
 **Explorer parity workstreams (2026-08-20, owner-approved; Lora is the
 reference bar — meet or exceed, TUI first, every feature lands
-renderer-independent in `packages/experience` before its first
+renderer-independent in `packages/explorer` before its first
 renderer).** (L1) Transaction group flow graph: a pure graph model
 mirroring Lora's proven shape — entity columns (account / application /
 asset / op-up, with app-escrow merging, rekey/clawback associated
@@ -210,7 +210,7 @@ registers `nfdPlugin()` so `resolve_nfd` is a tool, not only a TUI-lane
 classifier; `sample` always serves the fixture host so a live algod cannot
 404 the recorded card; shelf shortcuts accept alt/option as well as ctrl
 because most terminals, including tmux, never deliver ctrl+digit). (L6) Live data (done — an
-algod `statusAfterBlock` tail in `packages/experience/live` emits the same
+algod `statusAfterBlock` tail in `packages/explorer/live` emits the same
 `block.detail` records as the lookup tools. The TUI shows them on a Blocks
 page (`^4` / `blocks`), fetches only while that page is open and not paused,
 and `s` starts or stops the tail). Skipped deliberately: the transaction wizard
@@ -267,7 +267,7 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── signer-keystore/           # @initlabs/vibekit-signer-keystore — keystore-node adapter (the only signer pkg)
 │   ├── agent/                     # @initlabs/vibekit-agent — the orchestrator: LLM + tool loop + streaming over
 │   │                              #   ToolDefinition[]; BYOM provider config. Used by the TUI and the API
-│   ├── experience/                # provisional browser-safe routing, protocol, reducer, fixtures, and view models
+│   ├── explorer/                  # provisional browser-safe routing, protocol, reducer, fixtures, and view models
 │   ├── views-react/               # planned selected semantic React view composition
 │   └── sdk/                       # planned @initlabs/vibekit-sdk hosted API client
 ├── skills/                        # canonical agent skills bundled into the CLI (see §7)
@@ -287,7 +287,7 @@ allows engine, protocol, and first-party consumers to change atomically without
 hiding an npm-only dependency. Before release, packed tarballs are installed
 and built in a fixture outside the workspace to prove the real consumer edge.
 
-`packages/experience` is browser-safe and owns the shared protocol and
+`packages/explorer` is browser-safe and owns the shared protocol and
 semantic state. `packages/views-react` contains only composition that both
 React renderers actually share. OpenTUI and HTML primitives begin inside their
 respective apps; create renderer-specific packages only when another real
@@ -318,7 +318,7 @@ Conventions (one tier, no exceptions):
   `mcp` + `tools` (they evolve together). Plugins and sdk version
   independently.
 - Apps are private and packages are publishable by default. The provisional
-  `packages/experience` package is currently private until its protocol is
+  `packages/explorer` package is currently private until its protocol is
   frozen; apps are leaves in the dependency graph and remain separate
   release/deployment artifacts.
 - Turbo `test` task from day one. CI builds and tests **every** workspace, plus
@@ -410,20 +410,20 @@ on the domain read arrays, not on the write exports.
 ### 4.1 Presentation contract (provisional implementation, not frozen)
 
 A tool declares one `view` cue. Dotted ids (`transaction.detail`) are
-semantic Explorer views; the experience registry decides which are
+semantic Explorer views; the explorer registry decides which are
 trusted. Plain words (`table`, `txn`, `json`, `markdown`, `account`) are
 coarse rendering hints for tools without a trusted view (writes, plugins,
 generic JSON). Tools own capabilities and structured data. They do not
 own layouts. `@initlabs/vibekit-tools` exports `viewDataSchemas` and
 `ViewData<'…'>` — the wire shape per view id, pinned by test to the tool
 declarations — so a downstream consumer can build custom components
-against typed tool output without the experience package.
+against typed tool output without the explorer package.
 `@initlabs/vibekit-tools/views` is the dependency-clean import for
 browsers: the same `viewDataSchemas` object through a subpath whose
 transitive module graph is zod-only.
 
 The first `0.1.0-provisional` implementation now lives in
-`@initlabs/vibekit-experience`. It validates structured result records and
+`@initlabs/vibekit-explorer`. It validates structured result records and
 references by result or tool-call id with optional data paths; trusts
 `transaction.detail`/`list`/`group`, `account.portfolio`/`summary`/`list`,
 `asset.detail`/`list`/`holdings`/`holders`,
@@ -447,7 +447,7 @@ drive the same machine from the same fixture events. Amounts travel as
 microALGO integers (never floats) with exact digit-math formatting, and the
 draft record carries the actual base64 unsigned group as its ground truth.
 The flow now also runs on live data: a shared signerless compose-only host
-(`@initlabs/vibekit-experience/live`) composes real payments and simulations
+(`@initlabs/vibekit-explorer/live`) composes real payments and simulations
 on localnet through `executeToolCall`, decodes the authoritative facts from
 the group bytes themselves, and a shared controller advances the same machine
 in both renderers — the TUI in-process and the browser through a thin
@@ -721,7 +721,7 @@ deployment:
 - **`apps/web`** is the Next.js VibeKit Agent. It uses the hosted API,
   browser wallet adapters, web-native charts/media, and selected
   Beautiful UI parts.
-- **Shared experience packages** own input classification, state
+- **Shared explorer packages** own input classification, state
   transitions, view models, and semantic React
   composition. TUI primitives (`<box>`, `<text>`, focus/key handling) and
   web primitives (HTML, CSS, responsive layout, wallet UX) stay in their apps.
@@ -853,7 +853,7 @@ context. Wallet pairing stays client-side.
 ## 11. Open questions
 
 1. ~~Where do the API and Explorer heads live?~~ **Resolved (updated
-   2026-08-19): API, TUI, web, SDK, and their shared experience packages live
+   2026-08-19): API, TUI, web, SDK, and their shared explorer packages live
    in `initlabsai/vibekit` beside the engine.** Apps are private terminal
    workspaces and independent deployment artifacts. They consume only public
    package exports. An out-of-workspace packed-package fixture, not a second
@@ -1163,7 +1163,7 @@ Implementation facts learned:
   proven orchestrator (BYOM + per-request tool selection). Build the new SDK with
   registry-derived types. Establish the minimal browser-safe agent, result,
   presentation, and approval event spine in
-  `packages/experience`, driven by the first fixture-backed slice. Keep
+  `packages/explorer`, driven by the first fixture-backed slice. Keep
   presentation details provisional until both renderers prove
   them. Deprecate `@getvibekit/sdk`. **Experience checkpoint 2026-08-19:** the
   fixture-backed result/presentation/approval subset, the
@@ -1177,12 +1177,12 @@ Implementation facts learned:
 - **Phase 8 — Shared TUI/web Explorer.** The first fixture-backed vertical
   slice is complete: direct transaction lookup → trusted detail view → related
   navigation → payment draft/simulation/approval. Both renderers use the
-  shared experience package, with renderer-native primitives and a TUI-local
+  shared explorer package, with renderer-native primitives and a TUI-local
   feed controller. Expand toward broader domain coverage, browser wallet
   custody, xArc, and CLI terminal packaging afterward. **Checkpoint
   2026-08-19:** both renderers open the fixture
   transaction, dispatch related focus commands, and drive the payment
-  draft/simulation/inspection/approval flow from the shared experience
+  draft/simulation/inspection/approval flow from the shared explorer
   package — against fixtures and against a live localnet, with the actual
   unsigned group bytes on the approval view. The TUI completes the write
   path: keystore-daemon signing after the recorded approved decision, then

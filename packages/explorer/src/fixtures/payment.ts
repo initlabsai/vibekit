@@ -27,7 +27,7 @@ import {
   type ResultStore,
   type StructuredResult,
 } from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 import type { BlockTailTick } from '../live/block-tail.js'
 import {
   FIXTURE_RECEIVER,
@@ -143,7 +143,7 @@ const confirmationData = paymentConfirmationDataSchema.parse({
  */
 export const paymentFixtureResults: readonly StructuredResult[] = createResultStore([
   {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_DRAFT_RESULT_ID,
@@ -153,7 +153,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: draftData,
   },
   {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_SIMULATION_RESULT_ID,
@@ -163,7 +163,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: simulationData,
   },
   {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_SIGNED_RESULT_ID,
@@ -173,7 +173,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: signedGroupData,
   },
   {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_CONFIRMATION_RESULT_ID,
@@ -276,7 +276,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
   switch (kind) {
     case 'draft':
       return writeDraftEventSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'draft',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -285,7 +285,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       })
     case 'simulate':
       return writeSimulateEventSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'simulate',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -295,7 +295,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       // Inspection presents the simulation record: the one authoritative
       // source of the reviewed sender, amount, fee, and effects.
       return writeInspectEventSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'inspect',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -303,7 +303,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       })
     case 'request-approval':
       return approvalRequestSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'approval.request',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'pending',
@@ -312,14 +312,14 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       })
     case 'approve':
       return approvalDecisionSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'approval.decision',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'approved',
       })
     case 'deny':
       return approvalDecisionSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'approval.decision',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'denied',
@@ -327,7 +327,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       })
     case 'sign':
       return writeSignEventSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'sign',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -335,7 +335,7 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
       })
     case 'confirm':
       return writeConfirmEventSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'confirm',
         flowId: PAYMENT_FIXTURE_FLOW_ID,

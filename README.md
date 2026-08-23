@@ -35,7 +35,7 @@ and trusted result cards; direct identifiers route deterministically before any
 model call, and writes pause at an explicit approval modal.
 
 The fixture-backed TUI uses React with OpenTUI; the web renderer uses React
-with Next.js. They share the provisional `@initlabs/vibekit-experience`
+with Next.js. They share the provisional `@initlabs/vibekit-explorer`
 protocol, result store, write-flow machine, fixtures, and semantic view models
 while keeping terminal and browser primitives native to each platform. The
 private apps are independently built deployment units and consume the public
@@ -44,7 +44,7 @@ package surface. The hosted API and SDK remain planned.
 ## Status
 
 The core engine, tools, plugins, signer, MCP adapters, agent loop, CLI, the
-provisional experience package, and the fixture-backed TUI/web renderers are
+provisional explorer package, and the fixture-backed TUI/web renderers are
 implemented and tested. The next work is the hosted API/SDK and the 1.0
 publish gate. The `vibekit explore` CLI entry point and browser wallet custody
 are still pending. The current skill bundle covers VibeKit use and project

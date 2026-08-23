@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  EXPERIENCE_PROTOCOL_VERSION,
+  EXPLORER_PROTOCOL_VERSION,
   FIXTURE_APPLICATION_ID,
   FIXTURE_ASSET_ID,
   FIXTURE_BLOCK_ROUND,
@@ -36,7 +36,7 @@ function viewFor(
   view: 'asset.detail' | 'application.detail' | 'block.detail' | 'network.status' | 'transaction.detail',
 ) {
   return viewSpecSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  EXPERIENCE_PROTOCOL_VERSION,
+  EXPLORER_PROTOCOL_VERSION,
   FIXTURE_SENDER,
   addResult,
   bridgeToolResult,
@@ -40,7 +40,7 @@ function viewFor(
     | 'block.list',
 ) {
   return viewSpecSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },
@@ -335,7 +335,7 @@ describe('first-party catalog views', () => {
     const derived = createBlockDetailViewModel(
       addResult(createResultStore(), bridged.record),
       viewSpecSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'view',
         view: 'block.detail',
         source: { source: 'result', id: bridged.record.resultId },

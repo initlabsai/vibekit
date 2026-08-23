@@ -1,7 +1,7 @@
 import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit-core'
 import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit-agent/config'
-import type { StructuredResult } from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { StructuredResult } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
   toolArgsFor,
   toolsFromArc56,

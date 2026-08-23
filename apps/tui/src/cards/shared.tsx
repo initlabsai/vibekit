@@ -1,7 +1,7 @@
 import algosdk from 'algosdk'
 
 import { base64ToBytes } from '@initlabs/vibekit-core'
-import { formatMicroAlgos } from '@initlabs/vibekit-experience'
+import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
 import { wrapLines } from '../theme.js'
 import { Card, innerWidth } from '../ui.js'

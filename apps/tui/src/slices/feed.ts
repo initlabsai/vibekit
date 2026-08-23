@@ -1,7 +1,7 @@
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useCallback, useRef, useState } from 'react'
 
-import type { ViewSpec } from '@initlabs/vibekit-experience'
+import type { ViewSpec } from '@initlabs/vibekit-explorer'
 import type { Section, SectionBlock, SectionItem } from '../sections.js'
 
 /** Which pane owns the keyboard on the chat screen. */

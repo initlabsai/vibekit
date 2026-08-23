@@ -12,7 +12,7 @@ import {
   performLivePaymentStep,
   startPaymentFlow,
   type PaymentFlowHost,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { routeComposerInput } from './commands.js'
 

@@ -4,7 +4,7 @@ import {
   FIXTURE_SENDER,
   parseEntityComposerCommand,
   parsePaymentComposerCommand,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 /**
  * The transcript's deterministic lane, checked before any model call: exact

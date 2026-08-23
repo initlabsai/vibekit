@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/vibekit-experience",
+  "name": "@initlabs/vibekit-explorer",
   "version": "0.1.0",
   "private": true,
   "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds provisional signerless compose-only host wiring.",

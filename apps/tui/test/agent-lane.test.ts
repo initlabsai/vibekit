@@ -14,8 +14,8 @@ import {
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   startPaymentFlowFromDraftRecord,
   type ToolResultEventLike,
-} from '@initlabs/vibekit-experience'
-import { draftRecordFromComposeWire } from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer'
+import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
 import { viewFor } from '../src/slices/lookup.js'
@@ -26,7 +26,7 @@ import {
   addResult,
   createAccountListViewModel,
   createResultStore,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import { withAccountNames } from '../src/keystore-host.js'
 
 import {

@@ -10,7 +10,7 @@ import {
   type StructuredResult,
   type ViewModelError,
 } from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 
 export function record(
   identity: ResultIdentity,
@@ -18,7 +18,7 @@ export function record(
   data: unknown,
 ): StructuredResult {
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,

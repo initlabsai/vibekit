@@ -11,14 +11,14 @@ import type {
   PaymentFlowHost,
   StructuredResult,
   TransactionSearchFilter,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import {
   createPaymentComposeHost,
   signedGroupRecordFor,
   unsignedTransactionsForDraft,
   type BlockTailTick,
   type LiveNetworkId,
-} from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer/live'
 
 /** The TUI payment host: compose, simulate, submit, and keystore signing. */
 export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {

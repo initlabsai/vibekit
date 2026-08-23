@@ -3,8 +3,8 @@
  * on that page only. Leaving the page (or pausing) aborts the wait so the
  * host stops spending algod/indexer budget.
  */
-import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit-experience'
-import { runBlockTail, type LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit-explorer'
+import { runBlockTail, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useCallback, useEffect, useState } from 'react'
 
 import { errorMessage } from '../theme.js'

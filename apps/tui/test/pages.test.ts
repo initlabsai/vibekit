@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { buildTransactionListRecord, createResultStore, type ResultStore } from '@initlabs/vibekit-experience'
+import { buildTransactionListRecord, createResultStore, type ResultStore } from '@initlabs/vibekit-explorer'
 
 import { loadNextPage, viewFor } from '../src/slices/lookup.js'
 import type { ExplorerHost } from '../src/slices/network.js'

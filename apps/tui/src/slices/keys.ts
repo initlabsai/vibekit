@@ -1,4 +1,4 @@
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useKeyboard } from '@opentui/react'
 import { useCallback } from 'react'
 

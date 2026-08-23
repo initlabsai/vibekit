@@ -55,7 +55,7 @@
       "dependencies": {
         "@initlabs/vibekit-agent": "workspace:*",
         "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-experience": "workspace:*",
+        "@initlabs/vibekit-explorer": "workspace:*",
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
         "@initlabs/vibekit-tools": "workspace:*",
@@ -76,7 +76,7 @@
       "name": "@initlabs/vibekit-web",
       "version": "0.1.0",
       "dependencies": {
-        "@initlabs/vibekit-experience": "workspace:*",
+        "@initlabs/vibekit-explorer": "workspace:*",
         "next": "16.3.2",
         "react": "19.2.8",
         "react-dom": "19.2.8",
@@ -125,8 +125,8 @@
         "zod": "^4.0.0",
       },
     },
-    "packages/experience": {
-      "name": "@initlabs/vibekit-experience",
+    "packages/explorer": {
+      "name": "@initlabs/vibekit-explorer",
       "version": "0.1.0",
       "dependencies": {
         "@initlabs/vibekit-core": "workspace:*",
@@ -362,7 +362,7 @@
 
     "@initlabs/vibekit-core": ["@initlabs/vibekit-core@workspace:packages/core"],
 
-    "@initlabs/vibekit-experience": ["@initlabs/vibekit-experience@workspace:packages/experience"],
+    "@initlabs/vibekit-explorer": ["@initlabs/vibekit-explorer@workspace:packages/explorer"],
 
     "@initlabs/vibekit-mcp": ["@initlabs/vibekit-mcp@workspace:packages/mcp"],
 

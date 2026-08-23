@@ -1,5 +1,5 @@
-import { formatMicroAlgos, type ResultStore, type ViewSpec } from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import { formatMicroAlgos, type ResultStore, type ViewSpec } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentui/core'
 
 import { useEffect, useState, type RefObject } from 'react'

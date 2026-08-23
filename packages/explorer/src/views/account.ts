@@ -5,7 +5,7 @@ import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
 import type { ExplorerArtifact } from '../core/protocol.js'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 import { record, viewModelFor } from './derive.js'
 
 /** One asset holding on an account. */
@@ -94,7 +94,7 @@ export function createAccountArtifact(
   return {
     title: `Account ${address.slice(0, 6)}…${address.slice(-4)}`,
     view: {
-      protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+      protocolVersion: EXPLORER_PROTOCOL_VERSION,
       type: 'view',
       view: 'account.portfolio',
       source: { source: 'result', id: record.resultId },

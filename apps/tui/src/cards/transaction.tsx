@@ -7,7 +7,7 @@ import {
   formatMicroAlgos,
   formatOnCompletion,
   type TransactionDetailViewModel,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten } from '../theme.js'
 import {

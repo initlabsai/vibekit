@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { FIXTURE_RECEIVER } from '@initlabs/vibekit-experience'
+import { FIXTURE_RECEIVER } from '@initlabs/vibekit-explorer'
 
 const TUI_DIR = join(import.meta.dir, '..')
 const HAS_TMUX = Bun.spawnSync(['tmux', '-V']).success

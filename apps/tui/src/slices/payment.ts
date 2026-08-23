@@ -6,8 +6,8 @@ import {
   startPaymentFlow,
   type ResultStore,
   type WriteFlowState,
-} from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { resolvePaymentParties } from '../commands.js'

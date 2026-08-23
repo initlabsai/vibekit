@@ -14,7 +14,7 @@ units.
 
 Every tool is a `ToolDefinition`. A `ToolDefinition` has Zod parameters, an
 output schema, and a handler. It may declare a semantic Explorer `view` id;
-the experience registry decides which ids are trusted.
+the explorer registry decides which ids are trusted.
 
 A deployment is a configured set of tools. It selects networks, execute or
 compose mode, and an optional signer.
@@ -30,7 +30,7 @@ execute mode the host signs and sends the group. In compose mode the host
 returns the group unsigned.
 
 Explorer presentation is a separate, versioned protocol under
-`packages/experience`. Tools return structured data. Tools never return JSX,
+`packages/explorer`. Tools return structured data. Tools never return JSX,
 HTML, or terminal markup.
 
 ## Layout
@@ -42,7 +42,7 @@ HTML, or terminal markup.
 - `packages/signer-keystore` — keystore daemon signing, testnet dispenser
 - `packages/mcp` — ToolDefinition-to-MCP adapter for stdio and HTTP
 - `packages/agent` — LLM tool loop
-- `packages/experience` — provisional browser-safe Explorer protocol, fixtures,
+- `packages/explorer` — provisional browser-safe Explorer protocol, fixtures,
   workspace state, and semantic view models
 - Planned packages: `views-react` for selected semantic React composition and
   `sdk`
@@ -86,7 +86,7 @@ HTML, or terminal markup.
   independent deployment artifacts. They import `@initlabs/*` through public
   exports using `workspace:*`; no relative or private cross-package imports.
   Packages never depend on apps.
-- Put shared Explorer state/protocol in `packages/experience` and selected
+- Put shared Explorer state/protocol in `packages/explorer` and selected
   React composition in `packages/views-react`. Keep renderer primitives in
   their apps. `bun run verify:packed` builds the out-of-workspace consumer
   from packed tarballs; run it after any change to package exports,

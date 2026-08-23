@@ -8,7 +8,7 @@ import {
   type GraphTransaction,
   type GraphVertical,
   type TransactionsGraph,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import { getApplicationAddress } from 'algosdk'
 
 import { COLORS, shorten } from '../theme.js'

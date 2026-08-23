@@ -1,6 +1,6 @@
 /**
  * Provisional live host wiring for the Explorer payment flow: one shared
- * factory both renderers import (`@initlabs/vibekit-experience/live`) so the
+ * factory both renderers import (`@initlabs/vibekit-explorer/live`) so the
  * compose-only deployment and group decoding are never copied per app. It is
  * not part of the browser-safe root export; Phase 7's hosted API absorbs it.
  */

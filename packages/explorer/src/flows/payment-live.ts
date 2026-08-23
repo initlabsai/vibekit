@@ -12,7 +12,7 @@ import {
   type ResultStore,
   type StructuredResult,
 } from '../core/results.js'
-import { EXPERIENCE_PROTOCOL_VERSION } from '../core/version.js'
+import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 import {
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
@@ -118,7 +118,7 @@ export function buildPaymentDraftRecord(
     ...(facts.graphTransactions === undefined ? {} : { graphTransactions: facts.graphTransactions }),
   })
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,
@@ -160,7 +160,7 @@ export function buildPaymentSimulationRecord(
     simulatedRound: simulation.simulatedRound,
   })
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,
@@ -177,7 +177,7 @@ export function buildPaymentSignedGroupRecord(
   data: { transactions: string[]; txIds: string[]; signer: string },
 ): StructuredResult {
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,
@@ -194,7 +194,7 @@ export function buildPaymentConfirmationRecord(
   data: { transactionId: string; confirmedRound: number },
 ): StructuredResult {
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,
@@ -231,7 +231,7 @@ export function structuredResultFromToolEvent(
   if (event.isError) {
     const parsed = toolErrorOutputSchema.safeParse(event.output)
     return structuredResultSchema.parse({
-      protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+      protocolVersion: EXPLORER_PROTOCOL_VERSION,
       type: 'result',
       state: 'error',
       resultId: identity.resultId,
@@ -244,7 +244,7 @@ export function structuredResultFromToolEvent(
     })
   }
   return structuredResultSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: identity.resultId,

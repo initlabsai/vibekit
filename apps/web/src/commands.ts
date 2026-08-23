@@ -2,7 +2,7 @@ import {
   lookupFixture,
   parsePaymentComposerCommand,
   type FixtureLookupOutcome,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 /** Composer routing outcome: a lookup, a payment, or an account to open. */
 export type ComposerRoute =

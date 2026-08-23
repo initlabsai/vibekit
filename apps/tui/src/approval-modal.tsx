@@ -1,5 +1,5 @@
-import type { PaymentFlowViewModel } from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { PaymentFlowViewModel } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 
 import { PaymentBody } from './cards/index.js'
 import { computeGraphLayout } from './cards/transaction-graph-layout.js'

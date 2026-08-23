@@ -1,7 +1,7 @@
 import {
   formatMicroAlgos,
   type PaymentFlowViewModel,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { COLORS } from '../theme.js'
 import {

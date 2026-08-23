@@ -25,7 +25,7 @@ import {
   type ResultStore,
   type TransactionDetailViewModel,
   type WriteFlowState,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { routeComposerInput } from '../src/commands'

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { resultReferenceSchema, type ResultReference } from './results.js'
-import { EXPERIENCE_PROTOCOL_VERSION, experienceProtocolVersionSchema } from './version.js'
+import { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from './version.js'
 
 /** Trusted view identifiers proven by the current vertical slices. */
 export const TRUSTED_VIEW_IDS = [
@@ -36,7 +36,7 @@ export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]
 /** A transaction detail view backed only by an authoritative result reference. */
 export const transactionDetailViewSpecSchema = z
   .object({
-    protocolVersion: experienceProtocolVersionSchema,
+    protocolVersion: explorerProtocolVersionSchema,
     type: z.literal('view'),
     view: z.literal('transaction.detail'),
     source: resultReferenceSchema,
@@ -46,7 +46,7 @@ export const transactionDetailViewSpecSchema = z
 /** A trusted presentation specification selected by the model or direct lane. */
 export const viewSpecSchema = z
   .object({
-    protocolVersion: experienceProtocolVersionSchema,
+    protocolVersion: explorerProtocolVersionSchema,
     type: z.literal('view'),
     view: z.enum(TRUSTED_VIEW_IDS),
     source: resultReferenceSchema,
@@ -63,7 +63,7 @@ export interface ExplorerArtifact {
 }
 
 const writeStageEventBase = {
-  protocolVersion: experienceProtocolVersionSchema,
+  protocolVersion: explorerProtocolVersionSchema,
   type: z.literal('write.stage'),
   flowId: z.string().min(1),
 }
@@ -133,7 +133,7 @@ export type WriteStageEvent = z.infer<typeof writeStageEventSchema>
 /** A pending human approval that references authoritative inspection data. */
 export const approvalRequestSchema = z
   .object({
-    protocolVersion: experienceProtocolVersionSchema,
+    protocolVersion: explorerProtocolVersionSchema,
     type: z.literal('approval.request'),
     requestId: z.string().min(1),
     state: z.literal('pending'),
@@ -145,7 +145,7 @@ export const approvalRequestSchema = z
 /** A terminal human decision correlated to a prior approval request. */
 export const approvalDecisionSchema = z
   .object({
-    protocolVersion: experienceProtocolVersionSchema,
+    protocolVersion: explorerProtocolVersionSchema,
     type: z.literal('approval.decision'),
     requestId: z.string().min(1),
     state: z.enum(['approved', 'denied']),
@@ -170,7 +170,7 @@ type WriteStageInput =
 /** Builds one versioned, validated write.stage event from ids and references. */
 export function createWriteStageEvent(input: WriteStageInput): WriteStageEvent {
   return writeStageEventSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'write.stage',
     ...input,
   })
@@ -183,7 +183,7 @@ export function createApprovalRequestEvent(input: {
   inspection: ResultReference
 }): ApprovalRequest {
   return approvalRequestSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'approval.request',
     state: 'pending',
     ...input,
@@ -197,7 +197,7 @@ export function createApprovalDecisionEvent(input: {
   reason?: string
 }): ApprovalDecision {
   return approvalDecisionSchema.parse({
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'approval.decision',
     ...input,
   })

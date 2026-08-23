@@ -1,5 +1,5 @@
-import { createFixturePaymentHost } from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import { createFixturePaymentHost } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { createKeystorePaymentHost, type KeystorePaymentHost } from '../keystore-host.js'

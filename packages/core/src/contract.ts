@@ -45,7 +45,7 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   /**
    * The tool's one view cue. Either a semantic Explorer view id the success
    * payload binds to (dotted, for example `transaction.detail` — the
-   * experience registry decides which ids are trusted) or a coarse rendering
+   * explorer registry decides which ids are trusted) or a coarse rendering
    * hint for everything else (`table`, `txn`, `json`, `markdown`, `account`).
    * Hosts that do not render views ignore it.
    */

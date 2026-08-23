@@ -3,7 +3,7 @@ import type {
   ApplicationExplanationViewModel,
   ApplicationMethodsViewModel,
   ApplicationProgramViewModel,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten } from '../theme.js'
 import {

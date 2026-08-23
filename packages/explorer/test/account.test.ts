@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   addResult,
   buildAccountPortfolioRecord,
-  EXPERIENCE_PROTOCOL_VERSION,
+  EXPLORER_PROTOCOL_VERSION,
   createAccountArtifact,
   createAccountPortfolioViewModel,
   createFixtureAccountLookup,
@@ -95,7 +95,7 @@ describe('account portfolio slice', () => {
     const derived = createTransactionCollectionViewModel(
       addResult(createResultStore(), txns),
       viewSpecSchema.parse({
-        protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+        protocolVersion: EXPLORER_PROTOCOL_VERSION,
         type: 'view',
         view: 'transaction.list',
         source: { source: 'result', id: txns.resultId },

@@ -3,7 +3,7 @@
  * session over a compose-only localnet deployment. The model reads via tools
  * and composes writes as unsigned groups; it never signs (there is no
  * signer in its deployment) and never emits UI — its tool results become
- * records and trusted views through the experience bridge, and any composed
+ * records and trusted views through the explorer bridge, and any composed
  * unsigned group lands on the same approval card as a typed `pay`.
  */
 import { createAgent, type AgentEvent, type AgentSession } from '@initlabs/vibekit-agent'
@@ -25,9 +25,9 @@ import {
   unsignedGroupFromToolResult,
   type ResultStore,
   type StructuredResult,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import type { ProviderConfig } from '@initlabs/vibekit-agent'
-import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { nfdPlugin, type NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 import { enrichResultWithAbi, type ProgramData } from './abi-catalog.js'

@@ -4,7 +4,7 @@ import {
   FIXTURE_SENDER,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 import { useCallback, useEffect, useState } from 'react'
 
 import type { WorkspaceScreen } from '../chrome.js'

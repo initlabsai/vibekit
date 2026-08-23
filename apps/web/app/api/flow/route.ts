@@ -3,8 +3,8 @@
  * Compose-only by construction — the deployment has no signer, so nothing
  * here can sign or submit. Phase 7's hosted API replaces this route.
  */
-import { structuredResultSchema } from '@initlabs/vibekit-experience'
-import { createPaymentComposeHost } from '@initlabs/vibekit-experience/live'
+import { structuredResultSchema } from '@initlabs/vibekit-explorer'
+import { createPaymentComposeHost } from '@initlabs/vibekit-explorer/live'
 import { z } from 'zod'
 
 const host = createPaymentComposeHost()

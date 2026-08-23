@@ -26,7 +26,7 @@ import {
   type ResultStore,
   type ViewSpec,
   type TransactionSearchFilter,
-} from '@initlabs/vibekit-experience'
+} from '@initlabs/vibekit-explorer'
 
 import {
   AccountCard,

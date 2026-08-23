@@ -1,4 +1,4 @@
-import type { TransactionsGraph } from '@initlabs/vibekit-experience'
+import type { TransactionsGraph } from '@initlabs/vibekit-explorer'
 
 import { Button, Fact, Frame, Header, innerWidth } from '../ui.js'
 import { computeGraphLayout } from './transaction-graph-layout.js'

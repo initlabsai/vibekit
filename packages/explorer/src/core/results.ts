@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { experienceProtocolVersionSchema } from './version.js'
+import { explorerProtocolVersionSchema } from './version.js'
 
 /** A recursively JSON-safe value suitable for browser and terminal consumers. */
 export type JsonValue =
@@ -51,7 +51,7 @@ export function sameResultReference(left: ResultReference, right: ResultReferenc
 }
 
 const structuredResultBase = {
-  protocolVersion: experienceProtocolVersionSchema,
+  protocolVersion: explorerProtocolVersionSchema,
   type: z.literal('result'),
   resultId: z.string().min(1),
   toolCallId: z.string().min(1),

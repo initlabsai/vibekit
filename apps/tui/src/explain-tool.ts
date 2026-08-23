@@ -4,7 +4,7 @@
  * labelled as the model's words, not chain data.
  */
 import { defineTool } from '@initlabs/vibekit-core'
-import { applicationExplanationDataSchema } from '@initlabs/vibekit-experience'
+import { applicationExplanationDataSchema } from '@initlabs/vibekit-explorer'
 import { z } from 'zod'
 
 export const explainApplicationTool = defineTool({

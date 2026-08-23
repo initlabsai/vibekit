@@ -13,13 +13,13 @@ import {
   formatMicroAlgos,
   FIXTURE_ADDRESS_BOOK,
   lookupAmbiguousEntity,
-  EXPERIENCE_PROTOCOL_VERSION,
+  EXPLORER_PROTOCOL_VERSION,
   type ResultStore,
   type StructuredResult,
   type TrustedViewId,
   type ViewSpec,
-} from '@initlabs/vibekit-experience'
-import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
+} from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit-plugin-nfd'
 import { useCallback, useRef } from 'react'
 
@@ -58,7 +58,7 @@ export async function loadNextPage(args: {
 /** Wraps a stored record in a trusted view spec. */
 export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
   return {
-    protocolVersion: EXPERIENCE_PROTOCOL_VERSION,
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },

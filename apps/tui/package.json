@@ -14,7 +14,7 @@
   "dependencies": {
     "@initlabs/vibekit-agent": "workspace:*",
     "@initlabs/vibekit-core": "workspace:*",
-    "@initlabs/vibekit-experience": "workspace:*",
+    "@initlabs/vibekit-explorer": "workspace:*",
     "@initlabs/vibekit-plugin-nfd": "workspace:*",
     "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@initlabs/vibekit-tools": "workspace:*",
