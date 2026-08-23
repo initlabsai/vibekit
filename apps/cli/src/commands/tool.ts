@@ -33,6 +33,8 @@ import {
 } from '@initlabs/vibekit-signer-keystore'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
+import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
 import {
   accountTools,
   assetTools,
@@ -77,7 +79,7 @@ async function buildDeployment(): Promise<{
     ],
     mode: signer ? 'execute' : 'compose',
     tools: await withKeystoreTools(baseTools, signer),
-    plugins: [nfdPlugin(), alphaArcadePlugin()],
+    plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
 

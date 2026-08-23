@@ -2,6 +2,8 @@
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
+import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
 import { createFundTestnetTool, createKeystoreSigner, createSigningAccountTool, createSigningAddressesTool, hasDispenserToken } from '@initlabs/vibekit-signer-keystore'
 import type { NetworkId } from '@initlabs/vibekit-core'
 import { tools } from './tools.js'
@@ -28,7 +30,7 @@ const handle = serveVibekitStdio({
           : []),
       ]
     : tools,
-  plugins: [nfdPlugin(), alphaArcadePlugin()],
+  plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })
 

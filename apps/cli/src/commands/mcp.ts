@@ -19,6 +19,8 @@ import {
 } from '@initlabs/vibekit-signer-keystore'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
+import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
 import type { AnyTool, NetworkId } from '@initlabs/vibekit-core'
 import {
   accountTools,
@@ -73,7 +75,7 @@ export async function commandMcp(): Promise<void> {
     // With a signer, agents can also discover/create local accounts;
     // with a dispenser token, they can fund testnet too.
     tools: await withKeystoreTools(tools, signer),
-    plugins: [nfdPlugin(), alphaArcadePlugin()],
+    plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
 

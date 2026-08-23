@@ -2,7 +2,7 @@
   "name": "@initlabs/vibekit-mcp-reference",
   "private": true,
   "version": "0.0.0",
-  "description": "Reference deployment of @initlabs/vibekit-mcp — copy this app to self-host your own VibeKit MCP.",
+  "description": "Reference deployment of @initlabs/vibekit-mcp \u2014 copy this app to self-host your own VibeKit MCP.",
   "type": "module",
   "scripts": {
     "dev": "bun run src/stdio.ts",
@@ -12,12 +12,14 @@
   "dependencies": {
     "@initlabs/vibekit-core": "workspace:*",
     "@initlabs/vibekit-mcp": "workspace:*",
+    "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
+    "@initlabs/vibekit-plugin-nfd": "workspace:*",
+    "@initlabs/vibekit-plugin-pera": "workspace:*",
+    "@initlabs/vibekit-plugin-vestige": "workspace:*",
+    "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@initlabs/vibekit-tools": "workspace:*",
     "algosdk": "3.7.0",
-    "zod": "^4.4.3",
-    "@initlabs/vibekit-signer-keystore": "workspace:*",
-    "@initlabs/vibekit-plugin-nfd": "workspace:*",
-    "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0"

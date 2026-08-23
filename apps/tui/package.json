@@ -16,6 +16,8 @@
     "@initlabs/vibekit-core": "workspace:*",
     "@initlabs/vibekit-explorer": "workspace:*",
     "@initlabs/vibekit-plugin-nfd": "workspace:*",
+    "@initlabs/vibekit-plugin-pera": "workspace:*",
+    "@initlabs/vibekit-plugin-vestige": "workspace:*",
     "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@initlabs/vibekit-tools": "workspace:*",
     "@opentui/core": "0.5.6",
