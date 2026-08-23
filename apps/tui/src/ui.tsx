@@ -60,7 +60,6 @@ export function Frame({
       borderStyle="single"
       borderColor={accent ?? COLORS.border}
       paddingX={2}
-      paddingY={1}
       backgroundColor={COLORS.card}
       marginTop={1}
     >
@@ -274,7 +273,8 @@ export function StatGrid({
   if (items.length === 0) return null
   const columns =
     width >= 56 && items.length >= 3 ? Math.min(4, items.length) : Math.min(2, items.length)
-  const cellW = Math.max(10, Math.floor(width / columns))
+  // Cells cluster left like stat tiles; spreading three numbers across a wide terminal reads as unrelated.
+  const cellW = Math.min(24, Math.max(10, Math.floor(width / columns)))
   const rows: Array<typeof items> = []
   for (let i = 0; i < items.length; i += columns) {
     rows.push(items.slice(i, i + columns))

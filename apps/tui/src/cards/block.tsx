@@ -38,7 +38,7 @@ export function BlockCard({
         tone="idle"
         action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
       />
-      <Hero value={String(model.round)} unit="round" copy={String(model.round)} />
+      <Hero value={`round ${model.round}`} copy={String(model.round)} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
         <Fact label="time" value={formatExplorerTime(model.timestamp)} width={body} />
