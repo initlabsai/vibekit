@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@initlabs/vibekit-mcp/stdio": ["../src/stdio.ts"],
+      "@initlabs/vibekit-mcp/http": ["../src/http.ts"]
+    }
+  },
+  "include": ["."]
+}

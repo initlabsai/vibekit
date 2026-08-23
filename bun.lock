@@ -35,26 +35,6 @@
         "typescript": "^5.9.3",
       },
     },
-    "apps/mcp": {
-      "name": "@initlabs/vibekit-mcp-reference",
-      "version": "0.0.0",
-      "dependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-mcp": "workspace:*",
-        "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
-        "@initlabs/vibekit-plugin-nfd": "workspace:*",
-        "@initlabs/vibekit-plugin-pera": "workspace:*",
-        "@initlabs/vibekit-plugin-vestige": "workspace:*",
-        "@initlabs/vibekit-preset": "workspace:*",
-        "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools": "workspace:*",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@types/bun": "^1.4.0",
-      },
-    },
     "apps/tui": {
       "name": "@initlabs/vibekit-tui",
       "version": "0.1.0",
@@ -155,6 +135,8 @@
       },
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
+        "@initlabs/vibekit-preset": "workspace:*",
+        "@initlabs/vibekit-signer-keystore": "workspace:*",
         "@modelcontextprotocol/client": "^2.0.0",
         "@types/bun": "^1.4.0",
         "algosdk": "3.7.0",
@@ -426,8 +408,6 @@
     "@initlabs/vibekit-explorer": ["@initlabs/vibekit-explorer@workspace:packages/explorer"],
 
     "@initlabs/vibekit-mcp": ["@initlabs/vibekit-mcp@workspace:packages/mcp"],
-
-    "@initlabs/vibekit-mcp-reference": ["@initlabs/vibekit-mcp-reference@workspace:apps/mcp"],
 
     "@initlabs/vibekit-plugin-alpha-arcade": ["@initlabs/vibekit-plugin-alpha-arcade@workspace:packages/plugin-alpha-arcade"],
 

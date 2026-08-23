@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit-mcp",
   "version": "0.1.0",
-  "description": "createVibekitMcp(): the VibeKit MCP server as a library — stateless (2026-07-28 spec), composed from @initlabs tool packages and plugins.",
+  "description": "createVibekitMcp(): the VibeKit MCP server as a library \u2014 stateless (2026-07-28 spec), composed from @initlabs tool packages and plugins.",
   "license": "Apache-2.0",
   "author": "Init Labs LLC",
   "type": "module",
@@ -27,7 +27,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p examples/tsconfig.json --noEmit",
     "test": "bun test",
     "clean": "rm -rf dist"
   },
@@ -41,6 +41,8 @@
   },
   "devDependencies": {
     "@initlabs/vibekit-core": "workspace:*",
+    "@initlabs/vibekit-preset": "workspace:*",
+    "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@modelcontextprotocol/client": "^2.0.0",
     "@types/bun": "^1.4.0",
     "algosdk": "3.7.0",

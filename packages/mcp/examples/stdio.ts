@@ -1,8 +1,11 @@
-/** The reference stdio deployment — this file IS the self-hosting documentation. */
+/**
+ * The reference stdio deployment — copy this file to start your own server.
+ * Typechecked by this package's `typecheck` script so it cannot rot; run it
+ * with `bun packages/mcp/examples/stdio.ts` from the repo root.
+ */
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
-import { defaultPlugins, networksFromEnv, withKeystoreTools } from '@initlabs/vibekit-preset'
+import { defaultPlugins, defaultTools, networksFromEnv, withKeystoreTools } from '@initlabs/vibekit-preset'
 import { createKeystoreSigner } from '@initlabs/vibekit-signer-keystore'
-import { tools } from './tools.js'
 
 // SIGNING=execute signs via the local keystore daemon (`keystore serve`).
 // Default is compose: write tools return unsigned txns for external signing.
@@ -15,7 +18,7 @@ const handle = serveVibekitStdio({
   ...networksFromEnv({ network: 'testnet', networks: [] }),
   mode,
   // signer present → keystore account tools; dispenser token → testnet funding
-  tools: await withKeystoreTools(tools, signer),
+  tools: await withKeystoreTools(defaultTools, signer),
   plugins: defaultPlugins(),
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })
