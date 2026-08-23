@@ -1,6 +1,7 @@
 /** Card modules by entity family; this barrel is what views/app consume. */
 export { Card, Unavailable } from '../ui.js'
 export { NfdCard } from './nfd.js'
+export { compactUsd, MarketPricesCard, MarketRankedCard } from './market.js'
 
 export {
   AccountCard,

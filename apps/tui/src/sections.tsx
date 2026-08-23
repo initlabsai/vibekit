@@ -8,8 +8,9 @@ import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollB
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
 import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
 
-import { NfdCard, PaymentCard } from './cards/index.js'
+import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button, HighlightContext, usePulse } from './ui.js'
 import { RawCard, ResultView, type OpenTarget } from './views.js'
@@ -43,6 +44,22 @@ const PLUGIN_CARDS: Record<string, (props: PluginCardProps) => ReactNode> = {
       />
     )
   },
+  'vestige.prices': ({ data, network, width, onOpen }) => (
+    <MarketPricesCard
+      data={data as AssetPrices}
+      network={network}
+      width={width}
+      onOpen={(assetId) => onOpen({ kind: 'asset', assetId })}
+    />
+  ),
+  'vestige.markets': ({ data, network, width, onOpen }) => (
+    <MarketRankedCard
+      data={data as RankedAssets}
+      network={network}
+      width={width}
+      onOpen={(assetId) => onOpen({ kind: 'asset', assetId })}
+    />
+  ),
 }
 
 /** One entry in a section's body, in arrival order. */

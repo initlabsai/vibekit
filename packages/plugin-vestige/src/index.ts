@@ -65,6 +65,27 @@ const priceRowSchema = z.object({
   confidence: z.number().describe('0..1 — Vestige’s trust in the price; treat < 0.5 as unreliable'),
 })
 
+/** get_asset_prices' wire shape (the `vestige.prices` view). */
+export const assetPricesSchema = z.object({ prices: z.array(priceRowSchema) })
+export type AssetPrices = z.infer<typeof assetPricesSchema>
+
+/** search_assets_ranked's wire shape (the `vestige.markets` view). */
+export const rankedAssetsSchema = z.object({
+  assets: z.array(
+    z.object({
+      assetId: z.number(),
+      rank: z.number().nullable().describe('Vestige activity rank; lower is bigger'),
+      name: z.string().nullable(),
+      ticker: z.string().nullable(),
+      priceUsd: z.string().nullable().describe('USD price as a plain decimal string'),
+      marketCapUsd: z.number().nullable(),
+      tvlUsd: z.number().nullable(),
+      volume1dUsd: z.number().nullable(),
+    }),
+  ),
+})
+export type RankedAssets = z.infer<typeof rankedAssetsSchema>
+
 interface WirePrice {
   asset_id: number
   price: number
@@ -93,8 +114,8 @@ export const vestigeTools: AnyTool[] = [
     parameters: z.object({
       assetIds: z.array(z.number()).min(1).max(50).describe('Asset IDs (0 = ALGO)'),
     }),
-    output: z.object({ prices: z.array(priceRowSchema) }),
-    view: 'table',
+    output: assetPricesSchema,
+    view: 'vestige.prices',
     handler: async (ctx: ToolContext, args: { assetIds: number[] }) => {
       const rows = (await getVestige(ctx).get('/assets/price', {
         asset_ids: args.assetIds.join(','),
@@ -118,21 +139,8 @@ export const vestigeTools: AnyTool[] = [
       query: z.string().min(1).describe('Name or ticker fragment'),
       limit: z.number().optional().describe('Max results (default 10, max 50)'),
     }),
-    output: z.object({
-      assets: z.array(
-        z.object({
-          assetId: z.number(),
-          rank: z.number().nullable().describe('Vestige activity rank; lower is bigger'),
-          name: z.string().nullable(),
-          ticker: z.string().nullable(),
-          priceUsd: z.string().nullable().describe('USD price as a plain decimal string'),
-          marketCapUsd: z.number().nullable(),
-          tvlUsd: z.number().nullable(),
-          volume1dUsd: z.number().nullable(),
-        }),
-      ),
-    }),
-    view: 'table',
+    output: rankedAssetsSchema,
+    view: 'vestige.markets',
     handler: async (ctx: ToolContext, args: { query: string; limit?: number }) => {
       const result = (await getVestige(ctx).get('/assets/search', {
         query: args.query,
@@ -160,5 +168,10 @@ export const vestigeTools: AnyTool[] = [
 
 /** The plugin factory — `plugins: [vestigePlugin()]` in deployment options. */
 export function vestigePlugin(baseUrl?: string): ToolPlugin {
-  return { name: PLUGIN_NAME, tools: vestigeTools, service: createVestigeService(baseUrl) }
+  return {
+    name: PLUGIN_NAME,
+    tools: vestigeTools,
+    service: createVestigeService(baseUrl),
+    views: { 'vestige.prices': assetPricesSchema, 'vestige.markets': rankedAssetsSchema },
+  }
 }

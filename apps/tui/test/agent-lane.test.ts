@@ -514,6 +514,31 @@ describe('planToolResult', () => {
     expect(bad.note).toContain('nfd.profile')
   })
 
+  test('vestige registers its price and market views', () => {
+    const prices = { prices: [{ assetId: 0, priceUsd: '0.19', confidence: 0.99 }] }
+    const plan = planToolResult(result('get_asset_prices', prices, { view: 'vestige.prices' }), ctx)
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.prices' })
+
+    const markets = {
+      assets: [
+        {
+          assetId: 7,
+          rank: 1,
+          name: 'Seven',
+          ticker: 'SVN',
+          priceUsd: '1.5',
+          marketCapUsd: 1_500_000,
+          tvlUsd: null,
+          volume1dUsd: 12_000,
+        },
+      ],
+    }
+    const ranked = planToolResult(result('search_assets_ranked', markets, { view: 'vestige.markets' }), ctx)
+    if (ranked.kind !== 'cards') throw new Error(ranked.kind)
+    expect(ranked.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.markets' })
+  })
+
   test('a view cue whose wire does not parse shows raw and says so', () => {
     const { programHash: _dropped, ...incomplete } = {
       applicationId: 7,
