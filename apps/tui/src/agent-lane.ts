@@ -29,7 +29,7 @@ import {
 } from '@initlabs/vibekit-explorer'
 import type { ProviderConfig } from '@initlabs/vibekit-agent'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
-import { nfdPlugin, type NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
 import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
 import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
@@ -224,6 +224,13 @@ function withProgramLabels(tools: AnyTool[], label: ExplorerAgentOptions['labelP
   )
 }
 
+/**
+ * Trusted plugin views, merged from the same plugins the session registers:
+ * dotted plugin-namespaced view id → wire schema. A tool result declaring one
+ * of these ids gets its card only after the wire parses.
+ */
+const PLUGIN_VIEWS = { ...nfdPlugin().views, ...vestigePlugin().views, ...peraPlugin().views }
+
 /** Creates the Explorer's agent session (compose-only, signerless). */
 export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession {
   const network = options.network ?? 'localnet'
@@ -294,8 +301,11 @@ export function planToolResult(
     })
     const record = withAccountNames(enrichResultWithAbi(bridged, ctx.specCatalog), ctx.addressBook)
     const blocks: SectionBlock[] = []
-    if (view === undefined && event.toolName === 'resolve_nfd' && record.state === 'success') {
-      blocks.push({ id: 0, kind: 'nfd', data: record.data as unknown as NfdRecord, network: usedNetwork })
+    const pluginSchema = view === undefined && event.view ? PLUGIN_VIEWS[event.view] : undefined
+    const pluginParse =
+      pluginSchema && record.state === 'success' ? pluginSchema.safeParse(record.data) : undefined
+    if (pluginParse?.success) {
+      blocks.push({ id: 0, kind: 'plugin', view: event.view!, data: pluginParse.data, network: usedNetwork })
     } else if (view === undefined) {
       const text = JSON.stringify(record.state === 'success' ? record.data : record.error, null, 2)
       blocks.push({ id: 0, kind: 'raw', title: event.toolName, text })
@@ -316,9 +326,12 @@ export function planToolResult(
       }
     }
     // A raw card where a real one was promised is a bug somewhere; name it.
+    const pluginIssue = pluginParse && !pluginParse.success ? pluginParse.error.issues[0] : undefined
     const note = degraded
       ? `${event.toolName} declared ${degraded.view} but its result didn't parse (${degraded.reason}) — shown raw.`
-      : undefined
+      : pluginIssue
+        ? `${event.toolName} declared ${event.view} but its result didn't parse (${pluginIssue.path.map(String).join('.') || '(root)'}: ${pluginIssue.message}) — shown raw.`
+        : undefined
     return { usedNetwork, kind: 'cards', record, blocks, ...(note ? { note } : {}) }
   } catch (error: unknown) {
     // Say so: a silently dropped result looks like the agent said nothing.

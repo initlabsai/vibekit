@@ -87,14 +87,16 @@ function extractProperties(properties?: {
 const propertiesSchema = z.record(z.string(), z.string()).optional()
 
 /** resolve_nfd's wire shape; hosts that resolve names directly build the same record. */
-export interface NfdRecord {
-  name: string
-  address?: string
-  owner?: string
-  appId?: number
-  state?: string
-  properties?: Record<string, string>
-}
+export const nfdRecordSchema = z.object({
+  name: z.string(),
+  address: z.string().optional(),
+  owner: z.string().optional(),
+  appId: z.number().optional(),
+  state: z.string().optional(),
+  properties: propertiesSchema,
+})
+
+export type NfdRecord = z.infer<typeof nfdRecordSchema>
 
 /** Shapes an SDK NFD (any view) into the resolve_nfd record. */
 export function nfdRecord(
@@ -128,15 +130,8 @@ export const nfdTools: AnyTool[] = [
     parameters: z.object({
       name: z.string().describe('The NFD name to resolve (e.g. "vibekit.algo")'),
     }),
-    output: z.object({
-      name: z.string(),
-      address: z.string().optional(),
-      owner: z.string().optional(),
-      appId: z.number().optional(),
-      state: z.string().optional(),
-      properties: propertiesSchema,
-    }),
-    view: 'account',
+    output: nfdRecordSchema,
+    view: 'nfd.profile',
     handler: async (ctx, args) => {
       // A bare label ("vibekit") means the .algo name; models drop the suffix often.
       const name = args.name.toLowerCase().trim()
@@ -217,5 +212,6 @@ export function nfdPlugin(): ToolPlugin {
     name: PLUGIN_NAME,
     tools: nfdTools,
     service: createNfdService(),
+    views: { 'nfd.profile': nfdRecordSchema },
   }
 }

@@ -500,6 +500,20 @@ describe('planToolResult', () => {
     expect(later.blocks).toHaveLength(1)
   })
 
+  test('a plugin-declared view renders its card only when the wire parses', () => {
+    const nfd = { name: 'alice.algo', address: TXN_WIRE.sender, state: 'owned' }
+    const plan = planToolResult(result('resolve_nfd', nfd, { view: 'nfd.profile', input: { network: 'mainnet' } }), ctx)
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'nfd.profile', network: 'mainnet' })
+    expect(plan.note).toBeUndefined()
+
+    // A wire that misses the plugin's schema degrades to raw, and says so.
+    const bad = planToolResult(result('resolve_nfd', { appId: 'seven' }, { view: 'nfd.profile' }), ctx)
+    if (bad.kind !== 'cards') throw new Error(bad.kind)
+    expect(bad.blocks[0]?.kind).toBe('raw')
+    expect(bad.note).toContain('nfd.profile')
+  })
+
   test('a view cue whose wire does not parse shows raw and says so', () => {
     const { programHash: _dropped, ...incomplete } = {
       applicationId: 7,

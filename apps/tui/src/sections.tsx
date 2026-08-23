@@ -5,7 +5,7 @@ import {
   type WriteFlowState,
 } from '@initlabs/vibekit-explorer'
 import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollBoxRenderable } from '@opentui/core'
-import { useEffect, useState, type RefObject } from 'react'
+import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
 import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 
@@ -18,8 +18,32 @@ import { RawCard, ResultView, type OpenTarget } from './views.js'
 export type SectionBlock =
   | { id: number; kind: 'view'; view: ViewSpec }
   | { id: number; kind: 'raw'; title: string; text: string }
-  | { id: number; kind: 'nfd'; data: NfdRecord; network: string }
+  /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
+  | { id: number; kind: 'plugin'; view: string; data: unknown; network: string }
   | { id: number; kind: 'payment'; flow: WriteFlowState }
+
+/** What a plugin card renders with; `data` is the schema-parsed wire. */
+interface PluginCardProps {
+  data: unknown
+  network: string
+  width: number
+  onOpen: (target: OpenTarget) => void
+}
+
+/** Card per plugin view id. An id with no entry here renders raw — never crashes. */
+const PLUGIN_CARDS: Record<string, (props: PluginCardProps) => ReactNode> = {
+  'nfd.profile': ({ data, network, width, onOpen }) => {
+    const nfd = data as NfdRecord
+    return (
+      <NfdCard
+        data={nfd}
+        network={network}
+        width={width}
+        onOpenAccount={nfd.address ? () => onOpen({ kind: 'account', address: nfd.address! }) : undefined}
+      />
+    )
+  },
+}
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =
@@ -396,15 +420,10 @@ export function ContentPane({
                       />
                     ) : block.kind === 'raw' ? (
                       <RawCard title={block.title} text={block.text} width={cardWidth} />
-                    ) : block.kind === 'nfd' ? (
-                      <NfdCard
-                        data={block.data}
-                        network={block.network}
-                        width={cardWidth}
-                        onOpenAccount={
-                          block.data.address ? () => onOpen({ kind: 'account', address: block.data.address! }) : undefined
-                        }
-                      />
+                    ) : block.kind === 'plugin' ? (
+                      (PLUGIN_CARDS[block.view]?.({ data: block.data, network: block.network, width: cardWidth, onOpen }) ?? (
+                        <RawCard title={block.view} text={JSON.stringify(block.data, null, 2)} width={cardWidth} />
+                      ))
                     ) : (
                       <PaymentCard
                         key={block.flow.stage}

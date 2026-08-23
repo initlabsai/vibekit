@@ -201,7 +201,7 @@ export function useLookups({
         const nfd = await nfdRef.current.clientFor(network).resolve(name, { view: 'full' })
         const data = nfdRecord(nfd, name)
         if (!data.address) throw new Error('the name has no deposit address')
-        appendBlock(sectionId, { id: 0, kind: 'nfd', data, network })
+        appendBlock(sectionId, { id: 0, kind: 'plugin', view: 'nfd.profile', data, network })
         address = data.address
       }).then(() => {
         // Its own lookup, after the resolve has released busy: from here the

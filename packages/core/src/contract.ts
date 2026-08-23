@@ -65,4 +65,12 @@ export interface ToolPlugin {
   name: string
   tools: AnyTool[]
   service?: unknown
+  /**
+   * Trusted views this plugin's tools declare, keyed by plugin-namespaced
+   * dotted id (`nfd.profile`) — the same `view` cue the tool carries — each
+   * mapped to the zod schema of its success wire (post-jsonSafe). Rendering
+   * hosts parse the wire with this schema before showing a card; headless
+   * hosts ignore it. Unregistered ids fall back to a raw record.
+   */
+  views?: Record<string, z.ZodType>
 }
