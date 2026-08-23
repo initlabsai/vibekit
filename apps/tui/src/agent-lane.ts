@@ -28,6 +28,7 @@ import {
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
 import type { ProviderConfig } from '@initlabs/vibekit-agent'
+import type { z } from 'zod'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
 import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
@@ -206,6 +207,8 @@ export interface ExplorerAgentOptions {
   approveToolCall?: Parameters<typeof createAgent>[0]['approveToolCall']
   /** Names a program's selectors from a known spec, inside the tool call, so the model reads them. */
   labelProgram?: (program: ProgramData) => ProgramData['methods']
+  /** Plugins the user turned off (plugins screen / config); their tools never register. */
+  disabledPlugins?: ReadonlySet<string>
 }
 
 /** get_application_program with its methods labelled before the result leaves the tool. */
@@ -224,34 +227,65 @@ function withProgramLabels(tools: AnyTool[], label: ExplorerAgentOptions['labelP
   )
 }
 
+/** One throwaway instance of each built-in plugin, for metadata and view schemas. */
+const BUILTIN_PLUGINS = [nfdPlugin(), vestigePlugin(), peraPlugin()]
+
 /**
  * Trusted plugin views, merged from the same plugins the session registers:
  * dotted plugin-namespaced view id → wire schema. A tool result declaring one
  * of these ids gets its card only after the wire parses.
  */
-const PLUGIN_VIEWS = { ...nfdPlugin().views, ...vestigePlugin().views, ...peraPlugin().views }
+const PLUGIN_VIEWS = Object.assign({}, ...BUILTIN_PLUGINS.map((plugin) => plugin.views ?? {})) as Record<
+  string,
+  z.ZodType
+>
+
+/** Name and blurb per built-in plugin, in display order — the plugins screen's rows. */
+export const EXPLORER_PLUGIN_INFO = BUILTIN_PLUGINS.map(({ name, description }) => ({ name, description }))
 
 /** Creates the Explorer's agent session (compose-only, signerless). */
 export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession {
   const network = options.network ?? 'localnet'
-  const nfd = nfdPlugin()
-  const vestige = vestigePlugin()
-  const pera = peraPlugin()
+  const plugins = [nfdPlugin(), vestigePlugin(), peraPlugin()].filter(
+    (plugin) => !options.disabledPlugins?.has(plugin.name),
+  )
   const tools = withProgramLabels(options.tools ?? explorerTools(options.extraTools), options.labelProgram)
   // Plugin tools are merged by resolveDeployment; listing them here keeps the prompt honest.
-  const promptTools = options.tools ? tools : [...tools, ...nfd.tools, ...vestige.tools, ...pera.tools]
+  const promptTools = options.tools ? tools : [...tools, ...plugins.flatMap((plugin) => plugin.tools)]
   return createAgent({
     network,
     // Every network is served: the model passes `network` to leave the active one.
     networks: ['localnet', 'testnet', 'mainnet'],
     mode: 'compose',
     tools,
-    plugins: options.tools ? undefined : [nfd, vestige, pera],
+    plugins: options.tools ? undefined : plugins,
     model: options.model,
     approveToolCall: options.approveToolCall,
     maxSteps: 8,
     systemPrompt: explorerSystemPrompt(promptTools, network, options.addressBook),
   })
+}
+
+/**
+ * What a coarse `table` cue renders: top-level scalars as facts, plus the
+ * first array-of-objects as rows. Any other shape stays raw.
+ */
+export function tableModel(
+  data: unknown,
+): { facts: Array<[string, string]>; rows: Array<Record<string, unknown>> } | undefined {
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) return undefined
+  const record = data as Record<string, unknown>
+  const rowsEntry = Object.entries(record).find(
+    ([, value]) =>
+      Array.isArray(value) &&
+      value.length > 0 &&
+      value.every((item) => item !== null && typeof item === 'object' && !Array.isArray(item)),
+  )
+  if (!rowsEntry) return undefined
+  const facts = Object.entries(record)
+    .filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value))
+    .map(([key, value]) => [key, String(value)] as [string, string])
+  return { facts, rows: rowsEntry[1] as Array<Record<string, unknown>> }
 }
 
 /** What the feed does with one tool result. */
@@ -304,8 +338,12 @@ export function planToolResult(
     const pluginSchema = view === undefined && event.view ? PLUGIN_VIEWS[event.view] : undefined
     const pluginParse =
       pluginSchema && record.state === 'success' ? pluginSchema.safeParse(record.data) : undefined
+    const table =
+      event.view === 'table' && record.state === 'success' ? tableModel(record.data) : undefined
     if (pluginParse?.success) {
       blocks.push({ id: 0, kind: 'plugin', view: event.view!, data: pluginParse.data, network: usedNetwork })
+    } else if (table) {
+      blocks.push({ id: 0, kind: 'table', title: event.toolName, ...table })
     } else if (view === undefined) {
       const text = JSON.stringify(record.state === 'success' ? record.data : record.error, null, 2)
       blocks.push({ id: 0, kind: 'raw', title: event.toolName, text })

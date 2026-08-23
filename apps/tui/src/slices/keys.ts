@@ -11,6 +11,7 @@ const PAGE_KEYS: Record<string, Exclude<WorkspaceScreen, 'chat' | 'wallet'> | un
   '2': 'apps',
   '3': 'txns',
   '4': 'blocks',
+  '5': 'plugins',
 }
 
 /**
@@ -37,6 +38,7 @@ export function useExplorerKeys({
   selectAppsMethod,
   submitAppsCall,
   toggleBlocksTail,
+  togglePlugin,
   openListRow,
   runCardAction,
   toggleNav,
@@ -59,6 +61,8 @@ export function useExplorerKeys({
   selectAppsMethod: (index: number) => void
   submitAppsCall: () => void
   toggleBlocksTail: () => void
+  /** Flips plugin row n (1-9) on the plugins screen. */
+  togglePlugin: (index: number) => void
   /** Opens row n (1-9) of the newest transaction list in the selected section. */
   openListRow: (index: number) => void
   /** t transactions · e explain · m more, on the newest card in the selected section that offers it. */
@@ -157,6 +161,10 @@ export function useExplorerKeys({
               setActiveSender(accountList[index - 1]!.address)
             }
           }
+          if (screen === 'plugins') {
+            const index = Number.parseInt(key.name, 10)
+            if (Number.isInteger(index)) togglePlugin(index)
+          }
           return
         }
         if (focus === 'content') {
@@ -229,6 +237,7 @@ export function useExplorerKeys({
         setScreen,
         switchNetwork,
         toggleBlocksTail,
+        togglePlugin,
         openListRow,
         runCardAction,
         toggleNav,

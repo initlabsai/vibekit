@@ -8,9 +8,10 @@ import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollB
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
 import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
 import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
 
-import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard } from './cards/index.js'
+import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard, PeraAssetCard, TableCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button, HighlightContext, usePulse } from './ui.js'
 import { RawCard, ResultView, type OpenTarget } from './views.js'
@@ -21,6 +22,8 @@ export type SectionBlock =
   | { id: number; kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
   | { id: number; kind: 'plugin'; view: string; data: unknown; network: string }
+  /** A coarse `table` cue's result, pre-shaped by tableModel — formatted raw, not trusted. */
+  | { id: number; kind: 'table'; title: string; facts: Array<[string, string]>; rows: Array<Record<string, unknown>> }
   | { id: number; kind: 'payment'; flow: WriteFlowState }
 
 /** What a plugin card renders with; `data` is the schema-parsed wire. */
@@ -55,6 +58,14 @@ const PLUGIN_CARDS: Record<string, (props: PluginCardProps) => ReactNode> = {
   'vestige.markets': ({ data, network, width, onOpen }) => (
     <MarketRankedCard
       data={data as RankedAssets}
+      network={network}
+      width={width}
+      onOpen={(assetId) => onOpen({ kind: 'asset', assetId })}
+    />
+  ),
+  'pera.asset': ({ data, network, width, onOpen }) => (
+    <PeraAssetCard
+      data={data as AssetProfile}
       network={network}
       width={width}
       onOpen={(assetId) => onOpen({ kind: 'asset', assetId })}
@@ -437,6 +448,8 @@ export function ContentPane({
                       />
                     ) : block.kind === 'raw' ? (
                       <RawCard title={block.title} text={block.text} width={cardWidth} />
+                    ) : block.kind === 'table' ? (
+                      <TableCard title={block.title} facts={block.facts} rows={block.rows} width={cardWidth} />
                     ) : block.kind === 'plugin' ? (
                       (PLUGIN_CARDS[block.view]?.({ data: block.data, network: block.network, width: cardWidth, onOpen }) ?? (
                         <RawCard title={block.view} text={JSON.stringify(block.data, null, 2)} width={cardWidth} />

@@ -104,6 +104,45 @@ export function saveStoredApps(
   return path
 }
 
+const pluginsSectionSchema = z.record(z.string(), z.boolean())
+
+/** Plugin enablement by plugin name; a name absent from the map reads as enabled. */
+export type StoredPlugins = z.infer<typeof pluginsSectionSchema>
+
+/** The stored plugins section; absent or malformed reads as empty (all enabled). */
+export function loadStoredPlugins(
+  env: Record<string, string | undefined> = process.env,
+): StoredPlugins {
+  try {
+    const raw = JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as { plugins?: unknown }
+    const parsed = pluginsSectionSchema.safeParse(raw.plugins)
+    return parsed.success ? parsed.data : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Writes the plugins section, preserving any other keys in config.json. */
+export function saveStoredPlugins(
+  plugins: StoredPlugins,
+  env: Record<string, string | undefined> = process.env,
+): string {
+  const path = vibekitConfigPath(env)
+  let existing: Record<string, unknown> = {}
+  try {
+    existing = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
+  } catch {
+    // First write, or unreadable JSON — start fresh rather than fail.
+  }
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(
+    path,
+    `${JSON.stringify({ ...existing, plugins: pluginsSectionSchema.parse(plugins) }, null, 2)}\n`,
+    { mode: 0o600 },
+  )
+  return path
+}
+
 /**
  * Effective agent config: env vars win over the stored file, so power
  * users and CI can override without touching setup.

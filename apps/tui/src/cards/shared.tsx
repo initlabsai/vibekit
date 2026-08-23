@@ -4,7 +4,7 @@ import { base64ToBytes } from '@initlabs/vibekit-core'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten, wrapLines } from '../theme.js'
-import { Button, Card, FooterNote, innerWidth } from '../ui.js'
+import { Button, Card, Fact, FooterNote, Frame, Header, innerWidth, Rule } from '../ui.js'
 
 /**
  * Chain bytes for display, the way Lora reads them without a spec: a 32-byte
@@ -73,6 +73,56 @@ export function MoreFooter({
         <FooterNote key={note} text={note} width={width} />
       ))}
     </>
+  )
+}
+
+const TABLE_MAX_ROWS = 10
+
+/** One field of a table row, stringified for display; Fact shortens long tails. */
+function cell(value: unknown): string {
+  if (value === null || value === undefined) return '—'
+  if (['string', 'number', 'boolean'].includes(typeof value)) return String(value)
+  return JSON.stringify(value)
+}
+
+/**
+ * Generic card for any tool declaring the coarse `table` cue: top-level
+ * scalars as facts, the result's array as fact-rows. No schema — this is
+ * RawCard with manners, not a trusted view.
+ */
+export function TableCard({
+  title,
+  facts,
+  rows,
+  width,
+}: {
+  title: string
+  facts: Array<[string, string]>
+  rows: Array<Record<string, unknown>>
+  width: number
+}) {
+  const body = innerWidth(width)
+  const shown = rows.slice(0, TABLE_MAX_ROWS)
+  return (
+    <Frame width={width}>
+      <Header kicker={title.toUpperCase().replaceAll('_', ' ')} pill={String(rows.length)} tone="idle" />
+      {facts.map(([key, value]) => (
+        <Fact key={key} label={key} value={value} width={body} />
+      ))}
+      <box flexDirection="column">
+        {shown.map((row, index) => (
+          <box key={index} flexDirection="column" marginTop={1}>
+            {Object.entries(row).map(([key, value]) => (
+              <Fact key={key} label={key} value={cell(value)} width={body} />
+            ))}
+            {index < shown.length - 1 ? <Rule width={body} /> : null}
+          </box>
+        ))}
+        {rows.length > shown.length ? (
+          <FooterNote text={`${rows.length - shown.length} more rows — the model sees them all`} width={body} />
+        ) : null}
+      </box>
+    </Frame>
   )
 }
 

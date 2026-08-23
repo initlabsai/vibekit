@@ -210,6 +210,7 @@ export const nfdTools: AnyTool[] = [
 export function nfdPlugin(): ToolPlugin {
   return {
     name: PLUGIN_NAME,
+    description: 'NFD name resolution — name.algo ↔ address, profiles (mainnet/testnet)',
     tools: nfdTools,
     service: createNfdService(),
     views: { 'nfd.profile': nfdRecordSchema },

@@ -51,6 +51,7 @@ export function useAgentLane({
   extraTools,
   specCatalog,
   specHashCatalog,
+  disabledPlugins,
   onNetworkUsed,
   askConfirm,
 }: {
@@ -70,6 +71,8 @@ export function useAgentLane({
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
   /** Local specs by compiled-program hash: proves a spec is an app's without a deploy record. */
   specHashCatalog: ReadonlyMap<string, NormalizedAppSpec>
+  /** Plugins the user turned off; the session rebuilds without their tools. */
+  disabledPlugins: ReadonlySet<string>
   /** The agent queried a network other than the active one. */
   onNetworkUsed: (network: LiveNetworkId, sectionId: number) => void
   /** Modal yes/no before an expensive tool call runs. */
@@ -88,16 +91,18 @@ export function useAgentLane({
 
   const agentConfig = useMemo(() => resolveAgentConfig(process.env), [])
   const extraToolNames = extraTools.map((tool) => tool.name).join(',')
+  const disabledPluginNames = [...disabledPlugins].sort().join(',')
 
   /** Drops the live session, e.g. when the network changes under it. */
   const reset = useCallback(() => {
     agentRef.current = null
   }, [])
 
-  // Spec scan / deployed associations can land after the first turn.
+  // Spec scan / deployed associations can land after the first turn; plugin
+  // toggles drop the session the same way.
   useEffect(() => {
     agentRef.current = null
-  }, [extraToolNames])
+  }, [extraToolNames, disabledPluginNames])
 
   const runAgent = useCallback(
     (sectionId: number, input: string) => {
@@ -163,6 +168,7 @@ export function useAgentLane({
             addressBook,
             network: networkRef.current,
             extraTools,
+            disabledPlugins,
             labelProgram: (program) => labelProgramMethods(program, specCatalog, specHashCatalog),
             approveToolCall: async ({ toolName, input }) => {
               if (toolName !== 'get_application_program') return true
@@ -261,6 +267,7 @@ export function useAgentLane({
       agentBusy,
       activeSender,
       agentConfig,
+      disabledPlugins,
       extraTools,
       specCatalog,
       appendBlock,

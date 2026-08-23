@@ -539,6 +539,29 @@ describe('planToolResult', () => {
     expect(ranked.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.markets' })
   })
 
+  test('pera registers its asset profile view', () => {
+    const profile = { assetId: 31566704, verificationTier: 'trusted', name: 'USDC', isCollectible: false }
+    const plan = planToolResult(result('get_asset_profile', profile, { view: 'pera.asset' }), ctx)
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'pera.asset' })
+  })
+
+  test("a coarse 'table' cue renders rows; other shapes stay raw", () => {
+    const wire = { query: 'x', results: [{ address: 'AAA', name: 'a.algo' }, { address: 'BBB', name: null }] }
+    const plan = planToolResult(result('batch_reverse_resolve_nfd', wire, { view: 'table' }), ctx)
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.blocks[0]).toMatchObject({
+      kind: 'table',
+      title: 'batch_reverse_resolve_nfd',
+      facts: [['query', 'x']],
+    })
+
+    // No array of objects anywhere → raw, as before.
+    const scalarOnly = planToolResult(result('some_tool', { count: 3 }, { view: 'table' }), ctx)
+    if (scalarOnly.kind !== 'cards') throw new Error(scalarOnly.kind)
+    expect(scalarOnly.blocks[0]?.kind).toBe('raw')
+  })
+
   test('a view cue whose wire does not parse shows raw and says so', () => {
     const { programHash: _dropped, ...incomplete } = {
       applicationId: 7,

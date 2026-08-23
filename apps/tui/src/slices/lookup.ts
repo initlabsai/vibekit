@@ -82,6 +82,7 @@ export function useLookups({
   setBusy,
   setStatus,
   specCatalog,
+  disabledPlugins,
 }: {
   feed: Feed
   host: () => ExplorerHost
@@ -94,6 +95,8 @@ export function useLookups({
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
+  /** Plugins the user turned off; name.algo lookups need nfd. */
+  disabledPlugins: ReadonlySet<string>
 }) {
   const { appendBlock, appendNote } = feed
 
@@ -187,6 +190,14 @@ export function useLookups({
   const openAccountName = useCallback(
     (sectionId: number, name: string) => {
       const network = networkRef.current
+      if (disabledPlugins.has('nfd')) {
+        appendNote(
+          sectionId,
+          'The nfd plugin is off — turn it on (plugins ^5) to resolve names, or paste an address.',
+          'error',
+        )
+        return
+      }
       if (network !== 'mainnet' && network !== 'testnet') {
         appendNote(
           sectionId,
@@ -209,7 +220,7 @@ export function useLookups({
         if (address) void openAccount(sectionId, address)
       })
     },
-    [appendBlock, appendNote, networkRef, openAccount, withBusy],
+    [appendBlock, appendNote, disabledPlugins, networkRef, openAccount, withBusy],
   )
 
   const openMyAccounts = useCallback(

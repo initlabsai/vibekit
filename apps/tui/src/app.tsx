@@ -11,8 +11,11 @@ import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
+import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit-agent'
+
+import { EXPLORER_PLUGIN_INFO } from './agent-lane.js'
 import { ApprovalModal, ConfirmModal } from './approval-modal.js'
-import { AppsScreen, BlocksScreen, Composer, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
+import { AppsScreen, BlocksScreen, Composer, PluginsScreen, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { explainApplicationTool } from './explain-tool.js'
@@ -59,6 +62,15 @@ export function App() {
   const [status, setStatus] = useState('')
   const [inputEpoch, setInputEpoch] = useState(0)
   const [confirm, setConfirm] = useState<{ title: string; lines: string[]; resolve: (ok: boolean) => void } | null>(null)
+  // Plugin enablement: config is truth at startup, state mirrors it for the session.
+  const [disabledPlugins, setDisabledPlugins] = useState<ReadonlySet<string>>(
+    () =>
+      new Set(
+        Object.entries(loadStoredPlugins())
+          .filter(([, enabled]) => !enabled)
+          .map(([name]) => name),
+      ),
+  )
   const askConfirm = useCallback(
     (title: string, lines: string[]) =>
       new Promise<boolean>((resolve) => setConfirm({ title, lines, resolve })),
@@ -113,6 +125,7 @@ export function App() {
     setBusy,
     setStatus,
     specCatalog: apps.catalog,
+    disabledPlugins,
   })
   const {
     openTransaction,
@@ -218,10 +231,23 @@ export function App() {
     extraTools: agentExtraTools,
     specCatalog: apps.catalog,
     specHashCatalog: apps.hashCatalog,
+    disabledPlugins,
     onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
     askConfirm,
   })
   const { agentConfig, runAgent, agentSectionRef, reset: resetAgent } = agent
+
+  /** Flips one plugin, persists the map, and drops the session so the next turn rebuilds. */
+  const togglePlugin = useCallback(
+    (name: string) => {
+      const next = new Set(disabledPlugins)
+      if (!next.delete(name)) next.add(name)
+      setDisabledPlugins(next)
+      saveStoredPlugins(Object.fromEntries([...next].map((disabled) => [disabled, false])))
+      resetAgent()
+    },
+    [disabledPlugins, resetAgent],
+  )
 
   const switchNetwork = useCallback(
     (target?: LiveNetworkId, sectionId?: number) => {
@@ -483,6 +509,10 @@ export function App() {
     selectAppsMethod,
     submitAppsCall: apps.submitCall,
     toggleBlocksTail: tail.togglePause,
+    togglePlugin: (index) => {
+      const info = EXPLORER_PLUGIN_INFO[index - 1]
+      if (info) togglePlugin(info.name)
+    },
     openListRow,
     runCardAction,
     toggleNav,
@@ -518,6 +548,8 @@ export function App() {
             : '1-9 open · ←/→ account · esc explore'
       : screen === 'blocks'
         ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
+      : screen === 'plugins'
+        ? '1-9 toggle · esc explore'
       : screen === 'assets' || screen === 'txns'
         ? '←/→ account · esc explore'
         : focus === 'content'
@@ -609,6 +641,16 @@ export function App() {
           width={width}
           onToggle={tail.togglePause}
           onOpen={openTarget}
+          keys={keybar}
+        />
+      ) : screen === 'plugins' ? (
+        <PluginsScreen
+          plugins={EXPLORER_PLUGIN_INFO.map((info) => ({
+            ...info,
+            enabled: !disabledPlugins.has(info.name),
+          }))}
+          width={width}
+          onToggle={togglePlugin}
           keys={keybar}
         />
       ) : screen === 'assets' || screen === 'txns' ? (

@@ -2,6 +2,7 @@
 export { Card, Unavailable } from '../ui.js'
 export { NfdCard } from './nfd.js'
 export { compactUsd, MarketPricesCard, MarketRankedCard } from './market.js'
+export { PeraAssetCard } from './pera.js'
 
 export {
   AccountCard,
@@ -27,7 +28,7 @@ export { AssetCard, AssetHoldersCard, AssetHoldingsCard, AssetListCard } from '.
 export { BlockCard, BlockListCard } from './block.js'
 export { NetworkCard } from './network.js'
 export { PaymentBody, PaymentCard, paymentLines } from './payment.js'
-export { RawCard } from './shared.js'
+export { RawCard, TableCard } from './shared.js'
 export { TransactionCard, TransactionListCard } from './transaction.js'
 export { TransactionGraphCard } from './transaction-graph.js'
 export { buildGroupGraph } from './transaction-graph-layout.js'

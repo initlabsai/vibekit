@@ -63,6 +63,8 @@ export type AnyTool = ToolDefinition<z.ZodType>
 /** Returned by a plugin factory. The host puts `service` at ctx.services[name]. */
 export interface ToolPlugin {
   name: string
+  /** One line for settings screens: what the plugin adds and where it reaches. */
+  description?: string
   tools: AnyTool[]
   service?: unknown
   /**

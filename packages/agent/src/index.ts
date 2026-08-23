@@ -3,10 +3,13 @@ export { isToolErrorOutput, type AgentEvent, type ToolErrorOutput } from './even
 export { createModel, isProviderConfig, type ProviderConfig } from './provider.js'
 export {
   loadStoredAgentConfig,
+  loadStoredPlugins,
   resolveAgentConfig,
   saveStoredAgentConfig,
+  saveStoredPlugins,
   vibekitConfigPath,
   type StoredAgentConfig,
+  type StoredPlugins,
 } from './config.js'
 export {
   listZeroSignalModels,

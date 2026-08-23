@@ -170,6 +170,7 @@ export const vestigeTools: AnyTool[] = [
 export function vestigePlugin(baseUrl?: string): ToolPlugin {
   return {
     name: PLUGIN_NAME,
+    description: 'Vestige market data — USD prices, ranked asset search (mainnet)',
     tools: vestigeTools,
     service: createVestigeService(baseUrl),
     views: { 'vestige.prices': assetPricesSchema, 'vestige.markets': rankedAssetsSchema },

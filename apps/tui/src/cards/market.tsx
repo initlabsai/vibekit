@@ -8,10 +8,11 @@ import { Button, Fact, Frame, Header, innerWidth, Rule } from '../ui.js'
  * rather than rounds, so the card never overstates.
  */
 export function trimPrice(text: string): string {
-  const match = /^(\d+)\.(0*)([1-9]\d*)$/.exec(text)
-  if (!match) return text
+  const clean = text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text
+  const match = /^(\d+)\.(0*)([1-9]\d*)$/.exec(clean)
+  if (!match) return clean
   const [, whole, zeros, digits] = match
-  return digits!.length <= 6 ? text : `${whole}.${zeros}${digits!.slice(0, 6)}`
+  return digits!.length <= 6 ? clean : `${whole}.${zeros}${digits!.slice(0, 6)}`
 }
 
 /** Compact dollar figure for market-size fields; null renders as an em dash. */
