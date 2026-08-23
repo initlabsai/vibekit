@@ -23,6 +23,8 @@ import { COLORS, shorten } from '../theme.js'
 export interface GraphSpan {
   text: string
   fg: string
+  /** The full identifier this run stands for; the renderer underlines it and a click copies it. */
+  copy?: string
 }
 
 /** One rendered line of the graph card. */
@@ -60,24 +62,25 @@ const DASH = '─'
 interface Cell {
   ch: string
   fg: string
+  copy?: string
 }
 
 function newLine(width: number): Cell[] {
   return Array.from({ length: width }, () => ({ ch: ' ', fg: COLORS.text }))
 }
 
-function drawText(cells: Cell[], x: number, text: string, fg: string): void {
+function drawText(cells: Cell[], x: number, text: string, fg: string, copy?: string): void {
   for (let i = 0; i < text.length; i += 1) {
     const at = x + i
     if (at < 0 || at >= cells.length) continue
-    cells[at] = { ch: text[i]!, fg }
+    cells[at] = { ch: text[i]!, fg, ...(copy === undefined ? {} : { copy }) }
   }
 }
 
 function drawSpans(cells: Cell[], x: number, spans: GraphSpan[]): void {
   let at = x
   for (const span of spans) {
-    drawText(cells, at, span.text, span.fg)
+    drawText(cells, at, span.text, span.fg, span.copy)
     at += span.text.length
   }
 }
@@ -89,9 +92,11 @@ function toSpans(cells: Cell[]): GraphLine {
   for (let i = 0; i < end; i += 1) {
     const cell = cells[i]!
     const last = line[line.length - 1]
-    // Spaces carry no visible color; fold them into the current run.
-    if (last && (cell.ch === ' ' || last.fg === cell.fg)) last.text += cell.ch
-    else line.push({ text: cell.ch, fg: cell.fg })
+    // Spaces carry no visible color; fold them into the current run — unless
+    // the run is an identifier, which ends where its text does.
+    const sameRun = last && last.copy === cell.copy && (cell.ch === ' ' || last.fg === cell.fg)
+    if (sameRun) last.text += cell.ch
+    else line.push({ text: cell.ch, fg: cell.fg, ...(cell.copy === undefined ? {} : { copy: cell.copy }) })
   }
   return line
 }
@@ -157,8 +162,14 @@ export function labelSegments(label: GraphLabel, isRemainder: boolean): GraphSpa
         : formatBaseUnits(label.assetAmount, label.assetDecimals)
     const unit =
       label.assetUnitName ?? (label.assetId === undefined ? undefined : `asa ${label.assetId}`)
-    // An opt-in moves nothing; the unit alone says which asset.
-    amount = label.type === 'assetOptIn' ? unit : unit === undefined ? value : `${value} ${unit}`
+    // An opt-in moves nothing; the unit alone says which asset. The unit
+    // copies the asset id, like any identifier on a card.
+    if (segments.length > 0) segments.push({ text: ' ', fg: color })
+    if (label.type !== 'assetOptIn') segments.push({ text: unit === undefined ? value : `${value} `, fg: color })
+    if (unit !== undefined) {
+      segments.push({ text: unit, fg: color, ...(label.assetId === undefined ? {} : { copy: String(label.assetId) }) })
+    }
+    return segments
   }
   if (amount !== undefined) {
     if (segments.length > 0) segments.push({ text: ' ', fg: color })
@@ -190,12 +201,12 @@ function headingSpans(vertical: GraphVertical, avail: number): GraphSpan[] {
       const badge = `(${vertical.accountNumber}) `
       return [
         { text: badge, fg: COLORS.brass },
-        { text: shorten(vertical.address, Math.max(4, avail - badge.length)), fg: COLORS.text },
+        { text: shorten(vertical.address, Math.max(4, avail - badge.length)), fg: COLORS.signal, copy: vertical.address },
       ]
     }
     case 'application': {
       const base = shorten(`app ${vertical.applicationId}`, avail)
-      const spans: GraphSpan[] = [{ text: base, fg: COLORS.text }]
+      const spans: GraphSpan[] = [{ text: base, fg: COLORS.signal, copy: String(vertical.applicationId) }]
       if (vertical.linkedAccount) {
         const tag = ` (${vertical.linkedAccount.accountNumber})`
         if (base.length + tag.length <= avail) spans.push({ text: tag, fg: COLORS.brass })
@@ -203,7 +214,7 @@ function headingSpans(vertical: GraphVertical, avail: number): GraphSpan[] {
       return spans
     }
     case 'asset':
-      return [{ text: shorten(`asa ${vertical.assetId}`, avail), fg: COLORS.text }]
+      return [{ text: shorten(`asa ${vertical.assetId}`, avail), fg: COLORS.signal, copy: String(vertical.assetId) }]
     case 'opUp':
       return [{ text: 'OpUp', fg: COLORS.muted }]
   }

@@ -4,7 +4,7 @@ import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { PaymentBody } from './cards/index.js'
 import { computeGraphLayout } from './cards/transaction-graph-layout.js'
 import { breath, COLORS } from './theme.js'
-import { Header, usePulse } from './ui.js'
+import { GraphSpanText, Header, usePulse } from './ui.js'
 
 const AMBER_BREATH = breath(COLORS.brass, COLORS.brassBright, 5)
 const RED_BREATH = breath(COLORS.redDim, COLORS.red, 5)
@@ -126,7 +126,7 @@ export function ApprovalModal({
               {layout.lines.map((line, index) => (
                 <box key={index} flexDirection="row" height={1}>
                   {line.map((span, spanIndex) => (
-                    <text key={spanIndex} fg={span.fg} content={span.text} />
+                    <GraphSpanText key={spanIndex} text={span.text} fg={span.fg} copy={span.copy} />
                   ))}
                 </box>
               ))}

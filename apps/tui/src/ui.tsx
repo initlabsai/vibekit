@@ -213,6 +213,23 @@ export function Ident({
   )
 }
 
+/** One run of a rendered graph line; a run with `copy` is an identifier: underlined, click copies. */
+export function GraphSpanText({ text, fg, copy }: { text: string; fg: string; copy?: string }) {
+  const copyIdent = useCopyIdent()
+  if (copy === undefined) return <text fg={fg} content={text} />
+  return (
+    <text
+      fg={fg}
+      attributes={IDENT_ATTR}
+      content={text}
+      onMouseDown={(event: MouseEvent) => {
+        event.stopPropagation()
+        copyIdent(copy)
+      }}
+    />
+  )
+}
+
 /** Sender → receiver path. */
 export function PartyPath({
   from,

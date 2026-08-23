@@ -1,6 +1,6 @@
 import type { TransactionsGraph } from '@initlabs/vibekit-explorer'
 
-import { Button, Fact, FooterNote, Frame, Header, innerWidth } from '../ui.js'
+import { Button, Fact, FooterNote, Frame, GraphSpanText, Header, innerWidth } from '../ui.js'
 import { computeGraphLayout, LOOP } from './transaction-graph-layout.js'
 
 /**
@@ -35,13 +35,7 @@ export function TransactionGraphCard({
     graph.horizontals.some((row) => row.representation.kind === 'selfLoop') ? `${LOOP} to itself` : null,
     tags.includes('rekey') ? '(rk) rekeyed — the app acts as that account' : null,
   ].filter(Boolean)
-  // A unit name on a row is a label, not an identity: say which asset it is.
-  const assets = new Map<number, string>()
-  for (const { label } of graph.horizontals) {
-    if (label.assetId === undefined || assets.has(label.assetId)) continue
-    const unit = label.assetUnitName ?? `asa ${label.assetId}`
-    assets.set(label.assetId, `${unit} = ${label.assetId}${label.assetName ? ` ${label.assetName}` : ''}`)
-  }
+
   return (
     <Frame width={width}>
       <Header
@@ -56,13 +50,12 @@ export function TransactionGraphCard({
         {layout.lines.map((line, index) => (
           <box key={index} flexDirection="row" height={1}>
             {line.map((span, spanIndex) => (
-              <text key={spanIndex} fg={span.fg} content={span.text} />
+              <GraphSpanText key={spanIndex} text={span.text} fg={span.fg} copy={span.copy} />
             ))}
           </box>
         ))}
       </box>
       {legend.length > 0 ? <FooterNote text={legend.join(' · ')} width={body} /> : null}
-      {assets.size > 0 ? <FooterNote text={[...assets.values()].join(' · ')} width={body} /> : null}
     </Frame>
   )
 }
