@@ -78,7 +78,7 @@ export function useLookups({
   commitStore,
   storeRef,
   networkRef,
-  busy,
+  busyRef,
   setBusy,
   setStatus,
   specCatalog,
@@ -90,7 +90,7 @@ export function useLookups({
   commitStore: (next: ResultStore) => void
   storeRef: { current: ResultStore }
   networkRef: { current: LiveNetworkId }
-  busy: boolean
+  busyRef: { current: boolean }
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
   specCatalog: ReadonlyMap<number, NormalizedAppSpec>
@@ -100,7 +100,7 @@ export function useLookups({
   /** The busy/status/error dance around one request; a request while busy is dropped. */
   const withBusy = useCallback(
     (sectionId: number, status: string, failure: string, task: () => Promise<void>): Promise<void> => {
-      if (busy) return Promise.resolve()
+      if (busyRef.current) return Promise.resolve()
       setBusy(true)
       setStatus(status)
       return task()
@@ -110,7 +110,7 @@ export function useLookups({
           setStatus('')
         })
     },
-    [appendNote, busy, setBusy, setStatus],
+    [appendNote, busyRef, setBusy, setStatus],
   )
 
   /** Stores a record and appends its card; returns the view spec the card renders. */
@@ -195,14 +195,18 @@ export function useLookups({
         )
         return
       }
+      let address: string | undefined
       void withBusy(sectionId, `resolving ${name}…`, `Couldn't resolve ${name}`, async () => {
         nfdRef.current ??= nfdPlugin().service as NfdService
         const nfd = await nfdRef.current.clientFor(network).resolve(name, { view: 'full' })
         const data = nfdRecord(nfd, name)
         if (!data.address) throw new Error('the name has no deposit address')
         appendBlock(sectionId, { id: 0, kind: 'nfd', data, network })
-        // From here the name behaves exactly like a pasted address.
-        await openAccount(sectionId, data.address)
+        address = data.address
+      }).then(() => {
+        // Its own lookup, after the resolve has released busy: from here the
+        // name behaves exactly like a pasted address.
+        if (address) void openAccount(sectionId, address)
       })
     },
     [appendBlock, appendNote, networkRef, openAccount, withBusy],

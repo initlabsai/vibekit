@@ -30,6 +30,7 @@ export function usePaymentFlow({
   accountList,
   activeSender,
   busy,
+  busyRef,
   setBusy,
   setStatus,
 }: {
@@ -43,7 +44,9 @@ export function usePaymentFlow({
   networkRef: { current: LiveNetworkId }
   accountList: ReadonlyArray<{ address: string; name?: string }>
   activeSender: string | undefined
+  /** Render-time busy, for the modal; guards read `busyRef`. */
   busy: boolean
+  busyRef: { current: boolean }
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
 }) {
@@ -104,7 +107,7 @@ export function usePaymentFlow({
 
   const startPayment = useCallback(
     (sectionId: number, amountMicroAlgos?: number, to?: string) => {
-      if (busy || flowRef.current !== null) {
+      if (busyRef.current || flowRef.current !== null) {
         appendNote(sectionId, 'A payment is already in progress.', 'error')
         return
       }
@@ -146,7 +149,7 @@ export function usePaymentFlow({
       accountList,
       activeSender,
       appendNote,
-      busy,
+      busyRef,
       commitStore,
       finishPayment,
       host,
@@ -165,7 +168,7 @@ export function usePaymentFlow({
     (decision: 'approve' | 'deny') => {
       const current = flowRef.current
       const sectionId = flowSectionRef.current
-      if (busy || !current || current.stage !== 'awaiting-approval' || sectionId === null) return
+      if (busyRef.current || !current || current.stage !== 'awaiting-approval' || sectionId === null) return
       setBusy(true)
       void performLivePaymentStep({
         host: host(),
@@ -223,7 +226,7 @@ export function usePaymentFlow({
     },
     [
       appendNote,
-      busy,
+      busyRef,
       commitStore,
       finishPayment,
       flowMode,

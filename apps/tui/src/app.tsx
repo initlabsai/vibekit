@@ -46,7 +46,13 @@ export function App() {
 
   // Shared state: the trusted result store plus the cross-lane busy flags.
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusyState] = useState(false)
+  // Guards read the ref: a callback created before setBusy(true) must still see it.
+  const busyRef = useRef(false)
+  const setBusy = useCallback((next: boolean) => {
+    busyRef.current = next
+    setBusyState(next)
+  }, [])
   const [agentBusy, setAgentBusy] = useState(false)
   const [status, setStatus] = useState('')
   const [inputEpoch, setInputEpoch] = useState(0)
@@ -101,7 +107,7 @@ export function App() {
     commitStore,
     storeRef,
     networkRef,
-    busy,
+    busyRef,
     setBusy,
     setStatus,
     specCatalog: apps.catalog,
@@ -160,6 +166,7 @@ export function App() {
     accountList,
     activeSender,
     busy,
+    busyRef,
     setBusy,
     setStatus,
   })
