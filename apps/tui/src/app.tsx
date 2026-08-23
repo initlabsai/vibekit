@@ -1,6 +1,8 @@
 import {
   createFixtureResultStore,
   createTransactionCollectionViewModel,
+  findResultRecord,
+  nextPageArgs,
   type ResultStore,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
@@ -117,6 +119,7 @@ export function App() {
     openAccount,
     openAccountName,
     openMyAccounts,
+    openHoldings,
     openAsset,
     openApplication,
     openGroup,
@@ -269,6 +272,9 @@ export function App() {
         case 'block':
           openBlock(createSection(`block ${target.round}`), target.round)
           return
+        case 'holdings':
+          openHoldings(createSection(`assets of ${shorten(target.address, 12)}`), target.address)
+          return
         case 'transactions': {
           const f = target.filter
           const prompt = f.address
@@ -282,7 +288,7 @@ export function App() {
         }
       }
     },
-    [createSection, openAccount, openApplication, openAsset, openBlock, openTransaction, openTransactions, runAgent, setScreen],
+    [createSection, openAccount, openApplication, openAsset, openBlock, openHoldings, openTransaction, openTransactions, runAgent, setScreen],
   )
 
   // Keyboard path for table rows: the newest transaction list in the selected section.
@@ -326,7 +332,7 @@ export function App() {
     const views = (section?.items ?? [])
       .flatMap((item) => (item.kind === 'block' && item.block.kind === 'view' ? [{ itemId: item.id, view: item.block.view }] : []))
       .reverse()
-    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void } = {}
+    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void; a?: () => void } = {}
     for (const { itemId, view } of views) {
       if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group')) actions.rows = true
       if (!actions.t) {
@@ -340,14 +346,20 @@ export function App() {
           actions.e = () => openTarget({ kind: 'program', applicationId })
         }
       }
-      if (!actions.m && view.view === 'transaction.list' && section) {
-        const derived = createTransactionCollectionViewModel(storeRef.current, view)
-        if (derived.ok && derived.model.nextToken) actions.m = () => loadMore(section.id, itemId, view)
+      if (!actions.m && section && nextPageArgs(findResultRecord(storeRef.current, view.source))) {
+        actions.m = () => loadMore(section.id, itemId, view)
+      }
+      if (!actions.a && view.view === 'account.portfolio') {
+        const filter = transactionsFilterFor(storeRef.current, view)
+        if (filter?.address) {
+          const { address } = filter
+          actions.a = () => openTarget({ kind: 'holdings', address })
+        }
       }
     }
     return actions
   }, [loadMore, openTarget, sections, selectedId, storeRef])
-  const runCardAction = useCallback((key: 't' | 'e' | 'm') => cardActions[key]?.(), [cardActions])
+  const runCardAction = useCallback((key: 't' | 'e' | 'm' | 'a') => cardActions[key]?.(), [cardActions])
 
   const closeSelectedSection = useCallback(() => {
     feed.closeSelectedSection(
@@ -507,6 +519,7 @@ export function App() {
               '←/→ sections',
               cardActions.rows ? '1-9 open row' : null,
               cardActions.t ? 't txns' : null,
+              cardActions.a ? 'a assets' : null,
               cardActions.e ? 'e explain' : null,
               cardActions.m ? 'm more' : null,
               'x close',

@@ -23,7 +23,7 @@ import {
   Unavailable,
   type Tone,
 } from '../ui.js'
-import { algo, bytesDisplay, pad, pageNotes } from './shared.js'
+import { algo, bytesDisplay, MoreFooter, pad } from './shared.js'
 
 const MAX_DELTAS = 6
 
@@ -471,16 +471,7 @@ export function TransactionListCard({
             width={body}
           />
         ) : null}
-        {onMore ? (
-          <box flexDirection="row" marginTop={1} height={1} gap={2}>
-            <Button label={loadingMore ? 'loading…' : 'more ▸'} onPress={loadingMore ? () => {} : onMore} />
-            <text fg={COLORS.faint}>{`${transactions.length} so far`}</text>
-          </box>
-        ) : (
-          pageNotes(transactions.length, rows.length, nextToken).map((note) => (
-            <FooterNote key={note} text={note} width={body} />
-          ))
-        )}
+        <MoreFooter shown={rows.length} total={transactions.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

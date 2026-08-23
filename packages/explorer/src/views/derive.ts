@@ -25,6 +25,7 @@ export function record(
     toolCallId: identity.toolCallId,
     toolName,
     network: identity.network,
+    ...(identity.input === undefined ? {} : { input: identity.input }),
     // Builders construct data with plain optional fields; undefined entries
     // are not JSON and must not reach the stored record.
     data: jsonSafe(data),

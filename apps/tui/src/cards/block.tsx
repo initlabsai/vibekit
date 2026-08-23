@@ -17,7 +17,7 @@ import {
   Rule,
   Unavailable,
 } from '../ui.js'
-import { algo, pageNotes } from './shared.js'
+import { algo, MoreFooter } from './shared.js'
 
 export function BlockCard({
   model,
@@ -107,6 +107,8 @@ export function BlockListCard({
   blocks,
   nextToken,
   width,
+  onMore,
+  loadingMore,
   onOpen,
 }: {
   blocks: ReadonlyArray<{
@@ -117,10 +119,13 @@ export function BlockListCard({
   }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
   onOpen?: (round: number) => void
 }) {
   const body = innerWidth(width)
-  const rows = blocks.slice(0, 10)
+  const rows = blocks
   return (
     <Frame width={width}>
       <Header kicker="BLOCKS" pill={String(blocks.length)} tone="idle" />
@@ -148,9 +153,7 @@ export function BlockListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(blocks.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={blocks.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
 import {
+  findResultRecord,
+  nextPageArgs,
   createAccountListViewModel,
   createAccountPortfolioViewModel,
   createAccountSummaryViewModel,
@@ -71,6 +73,8 @@ export type OpenTarget =
   | { kind: 'program'; applicationId: number }
   | { kind: 'block'; round: number }
   | { kind: 'transactions'; filter: TransactionSearchFilter }
+  /** Every asset an account holds, as a paged list. */
+  | { kind: 'holdings'; address: string }
 
 /** The filter a detail card's "transactions ▸" opens, when the view has one. */
 export function transactionsFilterFor(store: ResultStore, view: ViewSpec): TransactionSearchFilter | undefined {
@@ -122,6 +126,8 @@ export function ResultView({
   const [layout, setLayout] = useState<'stack' | 'table'>('stack')
   const filter = onOpen ? transactionsFilterFor(store, view) : undefined
   const onTransactions = onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
+  // A list pages when its record remembers its own call and has a token.
+  const more = onMore && nextPageArgs(findResultRecord(store, view.source)) ? onMore : undefined
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
@@ -153,6 +159,7 @@ export function ResultView({
           maxAssets={maxAssets}
           onCycleSort={() => setSort(nextAssetSort(sort))}
           onTransactions={onTransactions}
+          onAssets={onOpen && filter?.address ? () => onOpen({ kind: 'holdings', address: filter.address! }) : undefined}
         />
       )
     }
@@ -216,6 +223,8 @@ export function ResultView({
         <AccountListCard
           accounts={derived.model.accounts}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           missing={derived.model.missing}
           width={width}
           onOpen={onOpen ? (address) => onOpen({ kind: 'account', address }) : undefined}
@@ -257,7 +266,7 @@ export function ResultView({
           query={derived.model.query}
           width={width}
           onOpen={onOpen ? (txid) => onOpen({ kind: 'transaction', txid }) : undefined}
-          onMore={view.view === 'transaction.list' && derived.model.nextToken ? onMore : undefined}
+          onMore={more}
           loadingMore={loadingMore}
           layout={layout}
           onToggleLayout={() => setLayout(layout === 'table' ? 'stack' : 'table')}
@@ -272,6 +281,8 @@ export function ResultView({
         <AssetListCard
           assets={derived.model.assets}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
           onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
@@ -284,6 +295,8 @@ export function ResultView({
         <AssetHoldingsCard
           assets={derived.model.assets}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
           onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
@@ -297,6 +310,8 @@ export function ResultView({
           balances={derived.model.balances}
           decimals={derived.model.decimals}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
         />
       )
@@ -308,6 +323,8 @@ export function ResultView({
         <ApplicationListCard
           applications={derived.model.applications}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
           onOpen={onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined}
         />
@@ -335,6 +352,8 @@ export function ResultView({
           address={derived.model.address}
           apps={derived.model.apps}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
         />
       )
@@ -359,6 +378,8 @@ export function ResultView({
           applicationId={derived.model.applicationId}
           logData={derived.model.logData}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
         />
       )
@@ -397,6 +418,8 @@ export function ResultView({
         <BlockListCard
           blocks={derived.model.blocks}
           nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
           width={width}
           onOpen={onOpen ? (round) => onOpen({ kind: 'block', round }) : undefined}
         />

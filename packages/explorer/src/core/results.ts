@@ -57,6 +57,8 @@ const structuredResultBase = {
   toolCallId: z.string().min(1),
   toolName: z.string().min(1),
   network: z.string().min(1),
+  /** The arguments that produced this record, so a host can run the same call again (next page). */
+  input: jsonValueSchema.optional(),
 }
 
 /** A successfully completed, JSON-safe tool result. */
@@ -117,6 +119,8 @@ export interface ResultIdentity {
   resultId: string
   toolCallId: string
   network: string
+  /** The tool arguments behind the record; present when the call can be repeated. */
+  input?: JsonValue
 }
 
 function deepFreeze<T>(value: T): T {

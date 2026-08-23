@@ -135,7 +135,7 @@ export function useAccounts({
       const run =
         target === 'assets'
           ? () => host().lookupAccountAssets(address)
-          : () => host().lookupAccountTransactions(address)
+          : () => host().searchTransactions({ address })
       const viewId = target === 'assets' ? ('asset.holdings' as const) : ('transaction.list' as const)
       void run()
         .then((record) => {

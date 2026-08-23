@@ -17,7 +17,7 @@ import {
   Rule,
   Unavailable,
 } from '../ui.js'
-import { algo, pad, pageNotes } from './shared.js'
+import { algo, MoreFooter, pad } from './shared.js'
 
 function holdingAmount(amount: number | string, decimals?: number, unitName?: string): string {
   const display = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
@@ -61,6 +61,7 @@ export function AccountCard({
   maxAssets = 4,
   onCycleSort,
   onTransactions,
+  onAssets,
 }: {
   model: AccountPortfolioViewModel | undefined
   width: number
@@ -70,6 +71,8 @@ export function AccountCard({
   onCycleSort?: () => void
   /** Opens this account's transaction list. */
   onTransactions?: () => void
+  /** Opens every holding as its own paged list; the card shows the first few. */
+  onAssets?: () => void
 }) {
   if (!model) return <Unavailable title="ACCOUNT" width={width} />
   const body = innerWidth(width)
@@ -91,6 +94,7 @@ export function AccountCard({
         action={
           <>
             {onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : null}
+            {onAssets && model.assets.length > 0 ? <Button label="assets ▸" onPress={onAssets} /> : null}
             {sortButton}
           </>
         }
@@ -122,7 +126,7 @@ export function AccountCard({
           </box>
         )}
         {ordered.length > maxAssets ? (
-          <FooterNote text={`${ordered.length - maxAssets} more assets`} width={body} />
+          <FooterNote text={`${ordered.length - maxAssets} more${onAssets ? ' — assets ▸ lists them all' : ''}`} width={body} />
         ) : null}
         {sort === 'none' ? null : (
           <FooterNote text={`sorted by ${ASSET_SORT_LABEL[sort]}`} width={body} />
@@ -209,6 +213,8 @@ export function AccountListCard({
   nextToken,
   missing,
   width,
+  onMore,
+  loadingMore,
   onOpen,
 }: {
   accounts: ReadonlyArray<{
@@ -222,10 +228,12 @@ export function AccountListCard({
   nextToken?: string
   missing?: ReadonlyArray<string>
   width: number
+  onMore?: () => void
+  loadingMore?: boolean
   onOpen?: (address: string) => void
 }) {
   const body = innerWidth(width)
-  const rows = accounts.slice(0, 10)
+  const rows = accounts
   const missingNote =
     missing && missing.length > 0
       ? `${missing.length} not found on this network: ${missing.map((address) => shorten(address, 12)).join(', ')}`
@@ -256,9 +264,7 @@ export function AccountListCard({
           <FooterNote text="No accounts found on this network." width={body} />
         ) : null}
         {missingNote ? <FooterNote text={missingNote} width={body} /> : null}
-        {pageNotes(accounts.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={accounts.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

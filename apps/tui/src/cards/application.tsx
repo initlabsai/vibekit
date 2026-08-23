@@ -18,7 +18,7 @@ import {
   Rule,
   Unavailable,
 } from '../ui.js'
-import { bytesDisplay, pageNotes } from './shared.js'
+import { bytesDisplay, MoreFooter } from './shared.js'
 
 export function ApplicationCard({
   model,
@@ -247,6 +247,8 @@ export function ApplicationListCard({
   applications,
   nextToken,
   width,
+  onMore,
+  loadingMore,
   onOpen,
 }: {
   applications: ReadonlyArray<{
@@ -256,10 +258,13 @@ export function ApplicationListCard({
   }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
   onOpen?: (applicationId: number) => void
 }) {
   const body = innerWidth(width)
-  const rows = applications.slice(0, 10)
+  const rows = applications
   return (
     <Frame width={width}>
       <Header kicker="APPLICATIONS" pill={String(applications.length)} tone="idle" />
@@ -289,9 +294,7 @@ export function ApplicationListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(applications.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={applications.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -355,6 +358,8 @@ export function ApplicationLocalsCard({
   apps,
   nextToken,
   width,
+  onMore,
+  loadingMore,
 }: {
   address?: string
   apps: ReadonlyArray<{
@@ -363,9 +368,12 @@ export function ApplicationLocalsCard({
   }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const shown = apps.slice(0, 6)
+  const shown = apps
   return (
     <Frame width={width}>
       <Header kicker="APP LOCALS" pill={String(apps.length)} tone="idle" />
@@ -399,8 +407,7 @@ export function ApplicationLocalsCard({
             ) : null}
           </box>
         ))}
-        {apps.length > 6 ? <FooterNote text={`${apps.length - 6} more apps`} width={body} /> : null}
-        {nextToken ? <FooterNote text="more pages available" width={body} /> : null}
+        <MoreFooter shown={shown.length} total={apps.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -411,14 +418,19 @@ export function ApplicationLogsCard({
   logData,
   nextToken,
   width,
+  onMore,
+  loadingMore,
 }: {
   applicationId: number | string
   logData: ReadonlyArray<{ txid: string; logs: string[] }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const rows = logData.slice(0, 10)
+  const rows = logData
   return (
     <Frame width={width}>
       <Header kicker="APP LOGS" pill={String(applicationId)} tone="idle" />
@@ -440,9 +452,7 @@ export function ApplicationLogsCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(logData.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={logData.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

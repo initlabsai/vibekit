@@ -68,10 +68,10 @@ export interface AccountLookupHost {
   lookupAccountAssets(address: string): Promise<StructuredResult>
   /** Lists application local state for apps an account has opted into. */
   lookupAccountAppStates(address: string): Promise<StructuredResult>
-  /** Lists transactions involving an account. */
-  lookupAccountTransactions(address: string): Promise<StructuredResult>
   /** One page of transactions scoped by account, asset, application, or round. */
   searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
+  /** Runs one of the host's tools by name; paging re-runs a record's own call with its nextToken. */
+  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
 }
 
 /** Wraps a get_account_portfolio result as a portfolio record. */

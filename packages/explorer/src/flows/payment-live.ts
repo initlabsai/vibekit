@@ -5,6 +5,7 @@ import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
 import {
+  type JsonValue,
   addResult,
   findResultRecord,
   structuredResultSchema,
@@ -121,6 +122,7 @@ export function buildPaymentDraftRecord(
     protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
+    ...(identity.input === undefined ? {} : { input: identity.input }),
     resultId: identity.resultId,
     toolCallId: identity.toolCallId,
     toolName,
@@ -226,7 +228,7 @@ const toolErrorOutputSchema = z.object({
  */
 export function structuredResultFromToolEvent(
   event: ToolResultEventLike,
-  identity: { resultId: string; network: string },
+  identity: { resultId: string; network: string; input?: JsonValue },
 ): StructuredResult {
   if (event.isError) {
     const parsed = toolErrorOutputSchema.safeParse(event.output)

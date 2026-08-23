@@ -33,8 +33,9 @@ export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
   lookupTransactionGroup(groupId: string): Promise<StructuredResult>
   lookupAccountAssets(address: string): Promise<StructuredResult>
   lookupAccountAppStates(address: string): Promise<StructuredResult>
-  lookupAccountTransactions(address: string): Promise<StructuredResult>
   searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
+  /** Any of the host's tools by name; paging re-runs a record's own call with its nextToken. */
+  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   statusRound(): Promise<{ lastRound: number }>
   waitAfterBlock(round: number): Promise<{ lastRound: number }>
   readBlockTick(round: number): Promise<BlockTailTick>

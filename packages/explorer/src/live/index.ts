@@ -22,6 +22,7 @@ import {
   transactionWriteTools,
 } from '@initlabs/vibekit-tools'
 
+import { bridgeToolResult } from '../agent-lane.js'
 import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'
 import {
   buildApplicationDetailRecord,
@@ -46,7 +47,7 @@ import {
   type DecodedPaymentFacts,
 } from '../flows/payment-live.js'
 import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../flows/payment.js'
-import type { StructuredResult } from '../core/results.js'
+import type { JsonValue, StructuredResult } from '../core/results.js'
 
 
 
@@ -218,9 +219,9 @@ export interface PaymentComposeHost {
   /** Lists application local state for apps an account has opted into. */
   lookupAccountAppStates(address: string): Promise<StructuredResult>
   /** Lists transactions involving an account. */
-  lookupAccountTransactions(address: string): Promise<StructuredResult>
   /** One page of transactions scoped by account, asset, application, or round. */
   searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
+  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   /** Current algod lastRound. */
   statusRound(): Promise<{ lastRound: number }>
   /** Resolves when lastRound is greater than `round` (algod wait-for-block). */
@@ -251,23 +252,12 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
   const deployment = resolveDeployment({
     network,
     mode: 'compose',
+    // Every read tool, so callTool can page any list an agent or a lane fetched.
     tools: [
       ...transactionWriteTools,
-      ...transactionTools.filter((tool) =>
-        ['lookup_transaction', 'lookup_transaction_group', 'search_transactions'].includes(tool.name),
+      ...[...transactionTools, ...accountTools, ...assetTools, ...contractTools, ...networkTools].filter(
+        (tool) => !tool.mutatesState && !tool.requiresSigner,
       ),
-      ...accountTools.filter((tool) =>
-        [
-          'get_account_portfolio',
-          'batch_lookup_accounts',
-          'get_account_assets',
-          'get_account_app_local_states',
-          'search_account_transactions',
-        ].includes(tool.name),
-      ),
-      ...assetTools.filter((tool) => tool.name === 'lookup_asset'),
-      ...contractTools.filter((tool) => tool.name === 'lookup_application'),
-      ...networkTools.filter((tool) => tool.name === 'lookup_block'),
     ],
   })
   const sendPayment = requireTool(deployment, 'send_payment')
@@ -438,6 +428,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
           resultId: newId('result-live-account-assets'),
           toolCallId: newId('tool-call-live-account-assets'),
           network,
+          input: { address },
         },
         wire,
         'get_account_assets',
@@ -450,6 +441,7 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
           resultId: newId('result-live-account-apps'),
           toolCallId: newId('tool-call-live-account-apps'),
           network,
+          input: { address },
         },
         { ...(wire as object), address },
         'get_account_app_local_states',
@@ -462,42 +454,41 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
         ...(nextToken ? { nextToken } : {}),
         ...(txType ? { txType } : {}),
       }
-      const wire = address
-        ? await executeToolCall(deployment, accountTransactionsTool, {
-            ...page,
-            address,
-            ...(assetId === undefined ? {} : { assetId }),
-          })
-        : await executeToolCall(deployment, searchTransactionsTool, {
+      const tool = address ? accountTransactionsTool : searchTransactionsTool
+      const args = address
+        ? { ...page, address, ...(assetId === undefined ? {} : { assetId }) }
+        : {
             ...page,
             ...(assetId === undefined ? {} : { assetId }),
             ...(applicationId === undefined ? {} : { applicationId }),
             ...(round === undefined ? {} : { minRound: round, maxRound: round }),
-          })
+          }
+      const wire = await executeToolCall(deployment, tool, args)
       return buildTransactionListRecord(
         {
           resultId: newId('result-live-txn-search'),
           toolCallId: newId('tool-call-live-txn-search'),
           network,
+          input: args,
         },
         { ...(wire as object), ...(address ? { address } : {}) },
-        address ? 'search_account_transactions' : 'search_transactions',
+        tool.name,
       )
     },
-    async lookupAccountTransactions(address) {
-      const wire = await executeToolCall(deployment, accountTransactionsTool, {
-        address,
-        limit: 20,
-      })
-      return buildTransactionListRecord(
-        {
-          resultId: newId('result-live-account-txns'),
-          toolCallId: newId('tool-call-live-account-txns'),
-          network,
-        },
-        { ...(wire as object), address },
-        'search_account_transactions',
-      )
+    async callTool(toolName, args) {
+      const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+      if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+      const id = newId('tool-call-live')
+      const output = await executeToolCall(deployment, tool, args)
+      // Hosts scope account lists by merging the address in; the tool's own wire lacks it.
+      const wire =
+        typeof args.address === 'string' && output !== null && typeof output === 'object' && !Array.isArray(output)
+          ? { ...(output as object), address: args.address }
+          : output
+      return bridgeToolResult(
+        { id, toolName, output: wire, isError: false, ...(tool.view ? { view: tool.view } : {}) },
+        { resultId: newId('result-live'), toolCallId: id, network, input: args as JsonValue },
+      ).record
     },
     async statusRound() {
       const status = await context.algod.status().do()

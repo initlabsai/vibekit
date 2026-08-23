@@ -20,7 +20,7 @@ export async function getAccountPortfolio(
   if (!algosdk.isValidAddress(args.address)) {
     throw new ToolError('INVALID_ADDRESS', `Invalid Algorand address: ${args.address}`)
   }
-  const response = await ctx.indexer.lookupAccountByID(args.address).do()
+  const response = await ctx.indexer.lookupAccountByID(args.address).exclude('all').do()
   const balanceMicroAlgos = uint64(response.account?.amount ?? BigInt(0))
 
   // Paginate up to 200 assets

@@ -14,7 +14,7 @@ import {
   Rule,
   Unavailable,
 } from '../ui.js'
-import { pageNotes } from './shared.js'
+import { MoreFooter } from './shared.js'
 
 function yesNo(value: boolean): string {
   return value ? 'yes' : 'no'
@@ -87,6 +87,8 @@ export function AssetListCard({
   assets,
   nextToken,
   width,
+  onMore,
+  loadingMore,
   onOpen,
 }: {
   assets: ReadonlyArray<{
@@ -99,10 +101,13 @@ export function AssetListCard({
   }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
   onOpen?: (assetId: number) => void
 }) {
   const body = innerWidth(width)
-  const rows = assets.slice(0, 10)
+  const rows = assets
   return (
     <Frame width={width}>
       <Header kicker="ASSETS" pill={String(assets.length)} tone="idle" />
@@ -136,9 +141,7 @@ export function AssetListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(assets.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={assets.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -153,6 +156,8 @@ export function AssetHoldingsCard({
   assets,
   nextToken,
   width,
+  onMore,
+  loadingMore,
   onOpen,
 }: {
   assets: ReadonlyArray<{
@@ -165,10 +170,13 @@ export function AssetHoldingsCard({
   }>
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
   onOpen?: (assetId: number) => void
 }) {
   const body = innerWidth(width)
-  const rows = assets.slice(0, 10)
+  const rows = assets
   return (
     <Frame width={width}>
       <Header kicker="ASSET HOLDINGS" pill={String(assets.length)} tone="idle" />
@@ -199,9 +207,7 @@ export function AssetHoldingsCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(assets.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={assets.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )
@@ -212,14 +218,19 @@ export function AssetHoldersCard({
   decimals,
   nextToken,
   width,
+  onMore,
+  loadingMore,
 }: {
   balances: ReadonlyArray<{ address: string; amount: string; isFrozen: boolean }>
   decimals?: number
   nextToken?: string
   width: number
+  /** Fetches the next page into this card; present only when the record can. */
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   const body = innerWidth(width)
-  const rows = balances.slice(0, 10)
+  const rows = balances
   return (
     <Frame width={width}>
       <Header kicker="HOLDERS" pill={String(balances.length)} tone="idle" />
@@ -232,9 +243,7 @@ export function AssetHoldersCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        {pageNotes(balances.length, rows.length, nextToken).map((note) => (
-          <FooterNote key={note} text={note} width={body} />
-        ))}
+        <MoreFooter shown={rows.length} total={balances.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
       </box>
     </Frame>
   )

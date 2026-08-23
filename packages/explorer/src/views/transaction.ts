@@ -73,8 +73,6 @@ export interface TransactionRowData {
   closeAssetAmount?: string | number
   clawbackFrom?: string
   rekeyTo?: string
-  /** The auth address that signed, when not the sender. */
-  signer?: string
   freezeTarget?: string
   frozen?: boolean
   assetConfig?: z.infer<typeof transactionAssetConfigDataSchema>
@@ -109,9 +107,8 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
   closeAmountMicroAlgos: uint64JsonSchema.optional(),
   closeAssetAmount: uint64JsonSchema.optional(),
   clawbackFrom: optionalAddress,
-  // Graph rows need these: a zero rekey payment and a rekeyed outer signer.
+  // Graph rows need this: a zero payment carrying rekeyTo is the rekey itself.
   rekeyTo: optionalAddress,
-  signer: optionalAddress,
   freezeTarget: optionalAddress,
   frozen: z.boolean().optional(),
   assetConfig: transactionAssetConfigDataSchema.optional(),
@@ -221,44 +218,6 @@ export interface TransactionSearchFilter {
   round?: number
   txType?: string
   nextToken?: string
-}
-
-/** The filter that fetches the page after `result`; undefined on the last page. */
-export function nextPageFilter(result: StructuredResult): TransactionSearchFilter | undefined {
-  if (result.state !== 'success') return undefined
-  const parsed = transactionCollectionDataSchema.safeParse(result.data)
-  if (!parsed.success || !parsed.data.nextToken) return undefined
-  const { address, query, nextToken } = parsed.data
-  const scope = query?.address ?? address
-  return {
-    nextToken,
-    ...(scope ? { address: scope } : {}),
-    ...(query?.txType ? { txType: query.txType } : {}),
-    ...(query?.assetId === undefined ? {} : { assetId: query.assetId }),
-    ...(query?.applicationId === undefined ? {} : { applicationId: query.applicationId }),
-    ...(query?.minRound !== undefined && query.minRound === query.maxRound
-      ? { round: query.minRound }
-      : {}),
-  }
-}
-
-/** One record holding both pages: rows concatenated, the newer page's token kept. */
-export function mergeTransactionPages(
-  first: StructuredResult,
-  next: StructuredResult,
-  identity: ResultIdentity,
-): StructuredResult {
-  if (first.state !== 'success' || next.state !== 'success') {
-    throw new Error('Cannot merge a failed transaction page')
-  }
-  const a = transactionCollectionDataSchema.parse(first.data)
-  const b = transactionCollectionDataSchema.parse(next.data)
-  const { nextToken: _first, ...rest } = a
-  return record(identity, first.toolName, {
-    ...rest,
-    transactions: [...a.transactions, ...b.transactions],
-    ...(b.nextToken ? { nextToken: b.nextToken } : {}),
-  })
 }
 
 export type TransactionCollectionData = z.infer<

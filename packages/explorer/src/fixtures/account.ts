@@ -112,31 +112,10 @@ export function createFixtureAccountLookup(): AccountLookupHost {
       )
     },
     async searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult> {
-      counter += 1
-      const query = {
-        ...(filter.assetId === undefined ? {} : { assetId: filter.assetId }),
-        ...(filter.applicationId === undefined ? {} : { applicationId: filter.applicationId }),
-        ...(filter.round === undefined ? {} : { minRound: filter.round, maxRound: filter.round }),
-      }
-      return buildTransactionListRecord(
-        {
-          resultId: `result-fixture-txn-search-${counter}`,
-          toolCallId: `tool-call-fixture-txn-search-${counter}`,
-          network: 'localnet',
-        },
-        {
-          transactions: [],
-          ...(filter.address ? { address: filter.address } : {}),
-          ...(Object.keys(query).length > 0 ? { query } : {}),
-        },
-        filter.address ? 'search_account_transactions' : 'search_transactions',
-      )
-    },
-    async lookupAccountTransactions(address: string): Promise<StructuredResult> {
-      recordedWire(address)
+      if (filter.address) recordedWire(filter.address)
       counter += 1
       const transactions =
-        address === FIXTURE_SENDER
+        filter.address === FIXTURE_SENDER
           ? [
               {
                 id: FIXTURE_TRANSACTION_ID,
@@ -149,15 +128,27 @@ export function createFixtureAccountLookup(): AccountLookupHost {
               },
             ]
           : []
+      const query = {
+        ...(filter.assetId === undefined ? {} : { assetId: filter.assetId }),
+        ...(filter.applicationId === undefined ? {} : { applicationId: filter.applicationId }),
+        ...(filter.round === undefined ? {} : { minRound: filter.round, maxRound: filter.round }),
+      }
       return buildTransactionListRecord(
         {
-          resultId: `result-fixture-txns-${counter}`,
-          toolCallId: `tool-call-fixture-txns-${counter}`,
+          resultId: `result-fixture-txn-search-${counter}`,
+          toolCallId: `tool-call-fixture-txn-search-${counter}`,
           network: 'localnet',
         },
-        { address, transactions },
-        'search_account_transactions',
+        {
+          transactions,
+          ...(filter.address ? { address: filter.address } : {}),
+          ...(Object.keys(query).length > 0 ? { query } : {}),
+        },
+        filter.address ? 'search_account_transactions' : 'search_transactions',
       )
+    },
+    async callTool(toolName: string): Promise<StructuredResult> {
+      throw new Error(`Sample data has a single page (${toolName})`)
     },
   }
 }

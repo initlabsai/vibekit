@@ -91,7 +91,7 @@ describe('account portfolio slice', () => {
         apps: [{ applicationId: FIXTURE_APPLICATION_ID }],
       },
     })
-    const txns = await host.lookupAccountTransactions(FIXTURE_SENDER)
+    const txns = await host.searchTransactions({ address: FIXTURE_SENDER })
     const derived = createTransactionCollectionViewModel(
       addResult(createResultStore(), txns),
       viewSpecSchema.parse({
@@ -103,7 +103,7 @@ describe('account portfolio slice', () => {
     )
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.transactions[0]?.id).toBe(FIXTURE_TRANSACTION_ID)
-    const empty = await host.lookupAccountTransactions(FIXTURE_RECEIVER)
+    const empty = await host.searchTransactions({ address: FIXTURE_RECEIVER })
     expect(empty.data).toMatchObject({ transactions: [] })
   })
 

@@ -1,6 +1,6 @@
 import {
-  mergeTransactionPages,
-  nextPageFilter,
+  mergePages,
+  nextPageArgs,
   type TransactionSearchFilter,
   addResult,
   createAccountListViewModel,
@@ -31,8 +31,9 @@ import type { ExplorerHost } from './network.js'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
 
 /**
- * Fetches the page after `view`'s record and returns a view over the merged
- * record (first page + next), or undefined when there is no next page.
+ * Fetches the page after `view`'s record — the record's own call with its
+ * nextToken, through the host — and returns a view over the merged record,
+ * or undefined when the record is final. Any paged list, any tool.
  */
 export async function loadNextPage(args: {
   host: ExplorerHost
@@ -42,11 +43,10 @@ export async function loadNextPage(args: {
   view: ViewSpec
 }): Promise<ViewSpec | undefined> {
   const current = args.storeRef.current.find((record) => record.resultId === args.view.source.id)
-  if (!current) return undefined
-  const filter = nextPageFilter(current)
-  if (!filter) return undefined
-  const page = await args.host.searchTransactions(filter)
-  const merged = mergeTransactionPages(current, page, {
+  const next = nextPageArgs(current)
+  if (!current || !next) return undefined
+  const page = await args.host.callTool(current.toolName, next)
+  const merged = mergePages(args.view.view, current, page, {
     resultId: `result-page-${crypto.randomUUID()}`,
     toolCallId: `tool-call-page-${crypto.randomUUID()}`,
     network: args.network,
@@ -257,6 +257,17 @@ export function useLookups({
     [host, lookupById, storeRef],
   )
 
+  /** An account's asset holdings as their own paged list (the portfolio card shows the first few). */
+  const openHoldings = useCallback(
+    (sectionId: number, address: string) =>
+      lookupById(sectionId, {
+        label: `assets of ${address.slice(0, 8)}…`,
+        view: 'asset.holdings',
+        run: () => host().lookupAccountAssets(address),
+      }),
+    [host, lookupById],
+  )
+
   const openApplication = useCallback(
     (sectionId: number, applicationId: number) =>
       lookupById(sectionId, {
@@ -370,6 +381,7 @@ export function useLookups({
     openAccount,
     openAccountName,
     openMyAccounts,
+    openHoldings,
     openAsset,
     openApplication,
     openGroup,

@@ -120,6 +120,7 @@ export function bridgeToolResult(
     record: structuredResultFromToolEvent(event, {
       resultId: identity.resultId,
       network: identity.network,
+      ...(identity.input === undefined ? {} : { input: identity.input }),
     }),
     ...(degraded ? { degraded } : {}),
   }

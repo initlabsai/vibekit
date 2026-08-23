@@ -23,6 +23,7 @@ import { readZeroSignalCatalog } from '@initlabs/vibekit-agent'
 import {
   bridgeToolResult,
   unsignedGroupFromToolResult,
+  type JsonValue,
   type ResultStore,
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
@@ -258,10 +259,16 @@ export function planToolResult(
     return { usedNetwork, kind: 'payment', draftRecord }
   }
   try {
+    const { network: _network, ...input } =
+      event.input !== null && typeof event.input === 'object' && !Array.isArray(event.input)
+        ? (event.input as Record<string, unknown>)
+        : {}
     const { record: bridged, view, degraded } = bridgeToolResult(event, {
       resultId: ctx.newId('result-agent'),
       toolCallId: event.id,
       network: usedNetwork,
+      // The call behind the card, so its next page is the same call with a token.
+      input: input as JsonValue,
     })
     const record = withAccountNames(enrichResultWithAbi(bridged, ctx.specCatalog), ctx.addressBook)
     const blocks: SectionBlock[] = []

@@ -9,7 +9,7 @@ export async function lookupAccount(
   if (!algosdk.isValidAddress(args.address)) {
     throw new ToolError('INVALID_ADDRESS', `Invalid Algorand address: ${args.address}`)
   }
-  const response = await ctx.indexer.lookupAccountByID(args.address).do()
+  const response = await ctx.indexer.lookupAccountByID(args.address).exclude('all').do()
   return formatAccount(response.account)
 }
 
@@ -26,6 +26,7 @@ export async function batchLookupAccounts(
       indexerSem.run(() =>
         ctx.indexer
           .lookupAccountByID(address)
+          .exclude('all')
           .do()
           .then((r) => formatAccount(r.account)),
       ),

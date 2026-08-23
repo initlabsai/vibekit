@@ -61,7 +61,7 @@ export function useExplorerKeys({
   /** Opens row n (1-9) of the newest transaction list in the selected section. */
   openListRow: (index: number) => void
   /** t transactions · e explain · m more, on the newest card in the selected section that offers it. */
-  runCardAction: (key: 't' | 'e' | 'm') => void
+  runCardAction: (key: 't' | 'e' | 'm' | 'a') => void
 }) {
   const { focus, setFocus, moveSelection, contentScrollRef, sectionsRef } = feed
 
@@ -186,6 +186,7 @@ export function useExplorerKeys({
             case 't':
             case 'e':
             case 'm':
+            case 'a':
               runCardAction(key.name)
               return
             default: {

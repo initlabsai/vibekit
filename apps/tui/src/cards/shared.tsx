@@ -3,8 +3,8 @@ import algosdk from 'algosdk'
 import { base64ToBytes } from '@initlabs/vibekit-core'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
-import { shorten, wrapLines } from '../theme.js'
-import { Card, innerWidth } from '../ui.js'
+import { COLORS, shorten, wrapLines } from '../theme.js'
+import { Button, Card, FooterNote, innerWidth } from '../ui.js'
 
 /**
  * Chain bytes for display, the way Lora reads them without a spec: a 32-byte
@@ -38,6 +38,42 @@ export function pageNotes(total: number, shown: number, nextToken?: string): str
   if (total > shown) notes.push(`${total - shown} more`)
   if (nextToken) notes.push('more pages available')
   return notes
+}
+
+/**
+ * The bottom of a list card: a more ▸ button with the running count when the
+ * record can fetch its next page, else the plain notes (rows hidden, pages left).
+ */
+export function MoreFooter({
+  shown,
+  total,
+  nextToken,
+  onMore,
+  loadingMore = false,
+  width,
+}: {
+  shown: number
+  total: number
+  nextToken?: string
+  onMore?: () => void
+  loadingMore?: boolean
+  width: number
+}) {
+  if (onMore && nextToken) {
+    return (
+      <box flexDirection="row" marginTop={1} height={1} gap={2}>
+        <Button label={loadingMore ? 'loading…' : 'more ▸'} onPress={loadingMore ? () => {} : onMore} />
+        <text fg={COLORS.faint}>{`${total} so far`}</text>
+      </box>
+    )
+  }
+  return (
+    <>
+      {pageNotes(total, shown, nextToken).map((note) => (
+        <FooterNote key={note} text={note} width={width} />
+      ))}
+    </>
+  )
 }
 
 export function RawCard({
