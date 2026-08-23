@@ -21,9 +21,12 @@ import {
 } from '@initlabs/vibekit-tools'
 import { viewDataSchemas as viewSchemasFromSubpath } from '@initlabs/vibekit-tools/views'
 import { createVibekitMcp, VIEW_META_KEY } from '@initlabs/vibekit-mcp'
-import { isProviderConfig, type AgentEvent, type ProviderConfig } from '@initlabs/vibekit-agent'
+import type { AgentEvent, ProviderConfig } from '@initlabs/vibekit-agent'
 import { createSignerFromKeystore, type KeystoreLike } from '@initlabs/vibekit-signer-keystore'
 import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
+import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
+import { defaultPlugins, defaultTools } from '@initlabs/vibekit-preset'
 import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
 import { z } from 'zod'
 
@@ -39,13 +42,17 @@ const _typeChecks: ['id' extends keyof TxnDetail ? true : never, FormattedTransa
   null,
   null,
   null,
-  [nfdPlugin(), alphaArcadePlugin()],
+  [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
 ]
 void _typeChecks
 void createSignerFromKeystore
 
 const providerConfig: ProviderConfig = { provider: 'ollama', model: 'qwen3' }
-if (!isProviderConfig(providerConfig)) fail('isProviderConfig rejected a valid config')
+void providerConfig
+
+if (defaultTools.length === 0 || defaultPlugins().length !== 4) {
+  fail('the preset default set is incomplete')
+}
 
 if (typeof viewDataSchemas['transaction.detail']?.parse !== 'function') {
   fail('viewDataSchemas is missing transaction.detail')

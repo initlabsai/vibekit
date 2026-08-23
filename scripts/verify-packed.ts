@@ -20,6 +20,9 @@ const PACKABLE = [
   'signer-keystore',
   'plugin-nfd',
   'plugin-alpha-arcade',
+  'plugin-vestige',
+  'plugin-pera',
+  'preset',
 ]
 
 await $`bunx turbo run build`.cwd(ROOT).quiet()
