@@ -28,7 +28,9 @@ export const COLORS = {
 
 /** A caught value as one line for a note or status. */
 export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
+  const text = error instanceof Error ? error.message : String(error)
+  // algosdk prefixes every HTTP failure with its transport story; the tail is the message.
+  return text.replace(/^Network request error\. Received status \d+ \([^)]*\): /, '')
 }
 
 export function shorten(value: string, width: number): string {

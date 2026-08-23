@@ -216,7 +216,7 @@ export function NavPane({
               <text
                 fg={selected ? COLORS.brassBright : COLORS.text}
                 content={shorten(
-                  `${selected ? '▸' : ' '}${index + 1} ${section.prompt}`,
+                  `${selected ? '▸' : ' '}${String(index + 1).padStart(String(sections.length).length)} ${section.prompt}`,
                   Math.max(8, width - 4),
                 )}
               />

@@ -17,7 +17,7 @@ describe('exact microALGO math', () => {
     expect(formatMicroAlgos(-251000)).toBe('-0.251')
     expect(formatMicroAlgos(1000000)).toBe('1')
     expect(formatMicroAlgos(123456789)).toBe('123.456789')
-    expect(formatMicroAlgos('18446744073709551615')).toBe('18446744073709.551615')
+    expect(formatMicroAlgos('18446744073709551615')).toBe('18,446,744,073,709.551615')
     expect(formatMicroAlgos('-0')).toBe('0')
     expect(() => formatMicroAlgos('1.5')).toThrow()
   })
@@ -42,8 +42,8 @@ describe('exact microALGO math', () => {
 
   test('formats ASA base units with exact decimal places', () => {
     expect(formatBaseUnits(52000, 2)).toBe('520')
-    expect(formatBaseUnits(52000, 0)).toBe('52000')
-    expect(formatBaseUnits(1_000_000_000, 6)).toBe('1000')
+    expect(formatBaseUnits(52000, 0)).toBe('52,000')
+    expect(formatBaseUnits(1_000_000_000, 6)).toBe('1,000')
     expect(formatBaseUnits('1000000', 6)).toBe('1')
     expect(formatBaseUnits(1, 2)).toBe('0.01')
     expect(() => formatBaseUnits(1, -1)).toThrow()

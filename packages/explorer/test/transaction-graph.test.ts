@@ -151,7 +151,7 @@ describe('hand-verified against algokit-lora snapshots', () => {
     expect(graph.horizontals).toEqual([
       {
         representation: { kind: 'selfLoop', vertical: 0, fromTag: 1, toTag: 1 },
-        label: { type: 'assetTransfer', assetAmount: 0, assetId: 312769, assetDecimals: 6, assetUnitName: 'USDt' },
+        label: { type: 'assetOptIn', assetAmount: 0, assetId: 312769, assetDecimals: 6, assetUnitName: 'USDt' },
         depth: 0,
         ancestors: [],
         isRemainder: false,
@@ -448,7 +448,7 @@ describe('single transaction with nested inners', () => {
       'appCreate',
       'payment',
       'payment',
-      'assetTransfer',
+      'assetOptIn',
     ])
     // The funding payment lands on the outer app's escrow column.
     expect(graph.horizontals[0]!.representation).toEqual({

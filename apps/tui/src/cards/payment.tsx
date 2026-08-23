@@ -99,7 +99,7 @@ export function PaymentBody({
         ) : null}
         {model.simulation?.simulatedRound === undefined ? null : (
           <Fact
-            label="round"
+            label="sim round"
             value={String(model.simulation.simulatedRound)}
             copy={String(model.simulation.simulatedRound)}
             width={width}
@@ -133,7 +133,7 @@ export function PaymentBody({
             width={width}
           />
         ) : null}
-        {model.signed ? (
+        {model.signed && !model.confirmation ? (
           <Fact
             label="signed"
             value={model.signed.txIds[0] ?? ''}

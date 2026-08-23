@@ -34,6 +34,11 @@ export function formatMicroAlgos(value: Uint64Json | SignedMicroAlgosJson): stri
   return negative && magnitude !== '0' ? `-${magnitude}` : magnitude
 }
 
+/** Thousands separators on the whole part: 2522 → 2,522. Display only; nothing parses these back. */
+function group(whole: string): string {
+  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
 /**
  * Formats an unsigned integer in base units as a decimal string with `decimals`
  * places, using digit math so ASA amounts survive display unchanged.
@@ -44,9 +49,9 @@ export function formatBaseUnits(value: Uint64Json, decimals: number): string {
   }
   const raw = typeof value === 'number' ? value.toString() : value
   if (!/^\d+$/.test(raw)) throw new Error(`Not a uint64: ${raw}`)
-  if (decimals === 0) return raw.replace(/^0+(?=\d)/, '')
+  if (decimals === 0) return group(raw.replace(/^0+(?=\d)/, ''))
   const digits = raw.padStart(decimals + 1, '0')
-  const whole = digits.slice(0, -decimals).replace(/^0+(?=\d)/, '')
+  const whole = group(digits.slice(0, -decimals).replace(/^0+(?=\d)/, ''))
   const fraction = digits.slice(-decimals).replace(/0+$/, '')
   return fraction ? `${whole}.${fraction}` : whole
 }

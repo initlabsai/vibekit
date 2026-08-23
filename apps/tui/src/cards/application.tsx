@@ -61,11 +61,7 @@ export function ApplicationCard({
         {model.account ? (
           <Fact label="account" value={model.account} copy={model.account} width={body} />
         ) : null}
-        <Fact
-          label="keys"
-          value={`${model.globalStateCount} key${model.globalStateCount === 1 ? '' : 's'}`}
-          width={body}
-        />
+        <Fact label="keys" value={String(model.globalStateCount)} width={body} />
         {global ? <Fact label="g-bytes" value={String(global.numByteSlice)} width={body} /> : null}
         {global ? <Fact label="g-uint" value={String(global.numUint)} width={body} /> : null}
         {local ? <Fact label="l-bytes" value={String(local.numByteSlice)} width={body} /> : null}
@@ -289,11 +285,7 @@ export function ApplicationListCard({
                 width={body}
               />
             ) : null}
-            <Fact
-              label="keys"
-              value={`${application.globalStateCount ?? 0} key${(application.globalStateCount ?? 0) === 1 ? '' : 's'}`}
-              width={body}
-            />
+            <Fact label="keys" value={String(application.globalStateCount ?? 0)} width={body} />
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}

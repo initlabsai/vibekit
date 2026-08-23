@@ -137,6 +137,8 @@ export function labelSegments(label: GraphLabel, isRemainder: boolean): GraphSpa
   const remainder = isRemainder || label.type.endsWith('Remainder')
   if (remainder) {
     segments.push({ text: 'remainder', fg: COLORS.faint })
+  } else if (label.type === 'assetOptIn') {
+    segments.push({ text: 'opt-in', fg: color })
   } else if (label.type !== 'payment' && label.type !== 'assetTransfer') {
     const method = label.methodName === undefined ? '' : ` ${label.methodName}`
     segments.push({ text: `${label.type}${method}`, fg: color })
@@ -151,7 +153,8 @@ export function labelSegments(label: GraphLabel, isRemainder: boolean): GraphSpa
         : formatBaseUnits(label.assetAmount, label.assetDecimals)
     const unit =
       label.assetUnitName ?? (label.assetId === undefined ? undefined : `asa ${label.assetId}`)
-    amount = unit === undefined ? value : `${value} ${unit}`
+    // An opt-in moves nothing; the unit alone says which asset.
+    amount = label.type === 'assetOptIn' ? unit : unit === undefined ? value : `${value} ${unit}`
   }
   if (amount !== undefined) {
     if (segments.length > 0) segments.push({ text: ' ', fg: color })

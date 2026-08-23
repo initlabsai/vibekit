@@ -191,10 +191,10 @@ export function TransactionCard({
         {model.closeTo ? (
           <Fact label="close" value={model.closeTo} copy={model.closeTo} width={body} />
         ) : null}
-        {model.closeAmountMicroAlgos === undefined ? null : (
+        {model.closeTo === undefined || model.closeAmountMicroAlgos === undefined ? null : (
           <Fact label="closed" value={algo(model.closeAmountMicroAlgos) ?? '—'} width={body} />
         )}
-        {model.closeAssetAmount === undefined ? null : (
+        {model.closeTo === undefined || model.closeAssetAmount === undefined ? null : (
           <Fact
             label="closed"
             value={

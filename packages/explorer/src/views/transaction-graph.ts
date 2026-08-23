@@ -68,6 +68,7 @@ export const graphLabelTypeSchema = z.enum([
   'paymentRemainder',
   'assetTransfer',
   'assetTransferRemainder',
+  'assetOptIn',
   'clawback',
   'appCall',
   'appCreate',
@@ -544,6 +545,12 @@ function representationsFor(
     }
     case 'axfer': {
       const clawback = isClawback(txn)
+      // A zero self-transfer is the opt-in idiom (Lora's OptIn subtype); say so instead of "0 UNIT".
+      const optIn =
+        !clawback &&
+        txn.closeTo === undefined &&
+        (txn.receiver ?? txn.sender) === txn.sender &&
+        BigInt(txn.assetAmount ?? 0) === BigInt(0)
       const rows: RowSeed[] = [
         {
           representation: asRepresentation(
@@ -551,7 +558,7 @@ function representationsFor(
             toAccountOrApplication(verticals, txn.receiver ?? txn.sender),
           ),
           label: {
-            type: clawback ? 'clawback' : 'assetTransfer',
+            type: clawback ? 'clawback' : optIn ? 'assetOptIn' : 'assetTransfer',
             assetAmount: txn.assetAmount ?? 0,
             ...assetLabelFields(txn),
           },
