@@ -1,3 +1,0 @@
-Vendored from https://github.com/AminBlg/SimpleEnglish (MIT).
-Skill: simple-english 1.2.0
-Commit: 63f5d57f0c56e24108f63655d40f1a2680bd4e6f

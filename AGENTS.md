@@ -50,8 +50,10 @@ HTML, or terminal markup.
 - `apps/mcp` — reference MCP deployment
 - Private apps: `tui` (OpenTUI) and `web` (Next.js) are fixture-backed
   renderers; `api` remains planned
-- `skills/` — canonical skills bundled into the CLI; currently
-  `use-vibekit` and `vibekit-project-setup`
+- `skills/` — canonical vendored skills, compiled into the CLI at build time
+  by `bun run --cwd apps/cli bundle-skills`
+- `.agents/skills`, `.claude/skills`, and `.grok/skills` — Git-tracked relative
+  symlinks into `skills/` for local agent discovery
 - `test-prompts/` — agent-run acceptance tests
 - `docs/` — exactly the two canonical design documents listed below
 
@@ -93,9 +95,21 @@ HTML, or terminal markup.
   manifests, or public types.
 - If a skill tells an agent to skip a gate, treat that as a bug. Update the
   skill, generated AGENTS.md templates, and system prompts with the gate.
-- Treat `skills/` as a product surface, not ancillary documentation. Keep
-  contract, client, frontend, and workflow guidance aligned with the current
-  CLI and tool surface; do not restore AlgoKit-coupled guidance unchanged.
+- Skills ship in two tiers. Vendored skills live in `skills/` and compile
+  into the CLI. Remote catalogs (third-party skill repos) are declared in
+  `apps/cli/src/skills/catalogs.ts`, each pinned to a reviewed commit SHA and
+  fetched as a codeload tarball at init time — codeload has no unauthenticated
+  rate limit, so no GitHub token is required for public catalogs. Never point
+  a catalog `ref` at a branch. To bump a pin: review the new upstream content,
+  then update `ref` and the `skills` list together in one commit.
+- Treat `skills/` as a product surface, not ancillary documentation. When a
+  VibeKit feature, contract, client, or workflow changes, update every affected
+  vendored skill in the same change. Skills are normative: describe shipped
+  behavior only, not plans or in-flight implementation. Do not restore
+  AlgoKit-coupled guidance unchanged.
+- Keep `skills/` as the only content source. When its inventory changes, update
+  the relative discovery symlinks and their tests; do not duplicate canonical
+  files under an agent-specific directory.
 - Comment why, constraints, and edges that look like bugs. Do not narrate.
   Do not delete those comments.
 - Put JSDoc only on the public/exported `@initlabs/*` surface. Put tool

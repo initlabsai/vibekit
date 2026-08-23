@@ -1,6 +1,14 @@
+# Attribution
+
+This skill adapts material from
+[`algorand-devrel/algorand-agent-skills`](https://github.com/algorand-devrel/algorand-agent-skills),
+reviewed at commit
+[`35d7e65be978b14e1777fb37c4a70fa92fe8022e`](https://github.com/algorand-devrel/algorand-agent-skills/commit/35d7e65be978b14e1777fb37c4a70fa92fe8022e),
+and used under the MIT License:
+
 MIT License
 
-Copyright (c) 2026 AminBlg
+Copyright (c) 2026 Algorand Developer Relations
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

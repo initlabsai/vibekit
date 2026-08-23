@@ -8,10 +8,11 @@
 import * as p from "@clack/prompts";
 import pc from "picocolors";
 import { existsSync } from "fs";
-import { mkdir, readdir } from "fs/promises";
+import { readdir } from "fs/promises";
 import { basename } from "path";
 
 import { expandPath } from "../utils/paths.js";
+import { extractTarball } from "../utils/tarball.js";
 import { confirm, select, text } from "../utils/prompts.js";
 import { parseInitArgs, runInitAt, type InitFlags } from "./init.js";
 
@@ -57,32 +58,6 @@ async function isDirAvailable(dir: string): Promise<boolean> {
   if (!existsSync(dir)) return true;
   const entries = await readdir(dir);
   return entries.length === 0;
-}
-
-async function extractTarball(url: string, targetDir: string): Promise<void> {
-  const response = await fetch(url);
-  if (!response.ok || !response.body) {
-    throw new Error(
-      `Failed to fetch template (${response.status}). Check your network connection.`,
-    );
-  }
-
-  await mkdir(targetDir, { recursive: true });
-
-  // --strip-components=1 drops the "<repo>-<ref>/" wrapper directory
-  const proc = Bun.spawn(
-    ["tar", "-xzf", "-", "--strip-components=1", "-C", targetDir],
-    {
-      stdin: response.body,
-      stderr: "pipe",
-    },
-  );
-
-  const exitCode = await proc.exited;
-  if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text();
-    throw new Error(`tar failed (exit ${exitCode}): ${stderr.trim()}`);
-  }
 }
 
 async function countFiles(dir: string): Promise<number> {

@@ -1,24 +1,24 @@
 export const agentsMdContent = `# AGENTS.md
 
 <role>
-You are an expert Algorand smart contract developer using Algorand TypeScript (PuyaTs) or Algorand Python (PuyaPy). Generate accurate, secure, efficient code with ZERO hallucinations. Always use official documentation and canonical examples.
+You are an expert Algorand developer using TypeScript and PuyaTs. Generate accurate, secure, efficient code grounded in the project and current documentation.
 </role>
 
 <core_principles>
 
 ### What You're Building
 - Modern Algorand smart contracts compiled to TEAL bytecode by the Puya compiler
-- Algorand TypeScript/Python are AVM-constrained subsets, NOT full TypeScript/Python
+- Algorand TypeScript contract code is an AVM-constrained subset of TypeScript
 
 ### What You Must NEVER Do
 - Use PyTEAL or Beaker (legacy, superseded)
-- Write raw TEAL (always use Algorand TypeScript/Python)
+- Write raw TEAL (use Algorand TypeScript)
 - Import external/third-party libraries into contract code
 
 ### What You Must ALWAYS Do
-- Follow the mandatory workflow below before writing code
-- Use canonical examples from priority repositories
-- Default to TypeScript unless user explicitly requests Python
+- Load the relevant skill before writing code
+- Use the canonical documentation and examples linked by that skill
+- Use the project's direct npm toolchain; do not introduce the AlgoKit CLI
 
 </core_principles>
 
@@ -26,32 +26,22 @@ You are an expert Algorand smart contract developer using Algorand TypeScript (P
 
 ## Required Workflow
 
-**ALWAYS follow this exact order before writing ANY Algorand code:**
+Follow this order before writing Algorand code:
 
-### Step 1: Search Documentation
-Use the documentation MCP configured for this project:
+### Step 1: Read the Project
+Read this file, the relevant package manifest, compiler configuration, and
+existing contract, client, and test patterns.
 
-**If Kappa MCP is installed:**
-- Use \`kappa_search_algorand_knowledge_sources\` for conceptual guidance and official documentation
+### Step 2: Load the Relevant Skill
+- Load \`build-on-algorand\` for AVM/PuyaTs contracts, generated clients,
+  testing, frontend wallets, security, standards, and migrations.
+- Load \`use-vibekit\` before project lifecycle or on-chain operations.
+- Load \`build-on-vibekit\` before plugin or custom MCP work.
+- Load \`update-skill\` before changing canonical VibeKit skill content.
 
-**If Context7 MCP is installed:**
-- Use \`get-library-docs\` with library ID \`/websites/dev_algorand_co\`
-- Do NOT use \`resolve-library-id\` for Algorand - use the library ID directly
-
-### Step 2: Retrieve Canonical Examples
-Search GitHub for working code before writing your own:
-
-**Priority repositories:**
-1. \`algorandfoundation/devportal-code-examples\` — Beginner patterns
-   - TypeScript: \`projects/typescript-examples/contracts/\`
-   - Python: \`projects/python-examples/\`
-2. \`algorandfoundation/puya-ts\` — Advanced TypeScript examples
-   - \`examples/hello-world/\`, \`examples/hello-world-abi/\`
-   - \`examples/calculator/\`, \`examples/auction/\`, \`examples/voting/\`
-3. \`algorandfoundation/puya\` — Advanced Python examples
-
-### Step 3: Load Relevant Skill
-Check the skills table below and load the appropriate skill for detailed workflow guidance. Skills contain critical syntax rules, patterns, and edge cases.
+### Step 3: Consult Current Sources
+Follow the direct canonical documentation and GitHub example links in the
+loaded skill. Documentation MCPs may supplement those sources when available.
 
 </mandatory_workflow>
 
@@ -63,12 +53,13 @@ Skills are markdown docs with detailed workflows and syntax rules. **Always load
 
 | Task | Skill | When to Load |
 |------|-------|--------------|
-| Any on-chain action via VibeKit | \`use-vibekit\` | Accounts, tool access paths, networks, signing — load first |
-| Project/env setup, localnet | \`vibekit-project-setup\` | \`vibekit new\`, init, localnet lifecycle, doctor |
+| VibeKit project lifecycle or on-chain action | \`use-vibekit\` | Project scripts, LocalNet, accounts, tool access, networks, signing — load first |
+| Algorand contract, client, test, frontend, security, standard, or migration | \`build-on-algorand\` | TypeScript application implementation or review — load first |
+| VibeKit plugin or custom MCP deployment | \`build-on-vibekit\` | Extending ToolDefinition, ToolPlugin, deployment, or MCP host wiring — load first |
+| Canonical VibeKit skill maintenance | \`update-skill\` | Skill content, source maps, generated bundle, or catalog review — load first |
 
-For contract syntax and client-code questions, use the documentation MCP
-(kappa/context7) and the canonical repositories listed above — do not follow
-AlgoKit CLI workflows from other sources for environment or account tasks.
+Follow this project's npm scripts and do not import AlgoKit CLI workflows from
+other sources.
 
 </skills>
 
@@ -109,8 +100,9 @@ keystore CLI. Fund localnet accounts with \`vibekit localnet fund <address>\`.
 <tool_access_note>
 
 If your harness exposes MCP servers through a single meta-tool (e.g. pi's \`mcp\`
-tool), use it to search for and invoke the vibekit tools by name — do not guess
-other tool names and do not fall back to shell commands for on-chain actions.
+tool), use it to search for and invoke the vibekit tools by name. Do not guess
+other tool names. The generic \`vibekit tool\` shell adapter is a fallback for
+reads only; writes must retain the MCP harness approval gate.
 
 </tool_access_note>
 
@@ -118,8 +110,8 @@ other tool names and do not fall back to shell commands for on-chain actions.
 
 ## Command Precedence — vibekit supersedes algokit here
 
-Some installed skills reference AlgoKit CLI commands. In vibekit projects,
-prefer the vibekit equivalents:
+Material outside this project may reference AlgoKit CLI commands. In VibeKit
+projects, use the direct project scripts and VibeKit equivalents:
 
 | Skill says | Use instead |
 |---|---|
@@ -127,9 +119,12 @@ prefer the vibekit equivalents:
 | \`algokit init\` | \`vibekit new\` |
 | account listing/creation via algokit or goal | \`list_signing_addresses\` / \`create_signing_account\` (MCP), or \`vibekit keystore list\` / \`vibekit keystore generate ed25519 --name <label>\` |
 | funding via dispenser | \`vibekit localnet fund <address>\` |
+| \`algokit project run build\` or \`algokit compile\` | the project's \`npm run build\` |
+| AlgoKit project test/deploy commands | the existing \`npm test\` / \`npm run deploy\` scripts |
 
-\`algokit project run build\`, \`algokit compile\`, and typed-client generation
-remain AlgoKit's job — use them as the skills describe.
+VibeKit starters invoke PuyaTs and \`algokit-client-generator\` directly from
+lockfile-pinned npm dependencies. The package name does not imply a dependency
+on the AlgoKit CLI.
 
 </command_precedence>
 

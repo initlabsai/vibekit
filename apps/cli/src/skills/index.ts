@@ -3,6 +3,7 @@
  */
 
 import { BUNDLED_SKILLS } from './bundled.js'
+import { qualifiedCatalogNames } from './catalogs.js'
 
 export interface SkillFile {
   path: string
@@ -23,4 +24,9 @@ export function getSkillNames(): string[] {
 
 export function getSkillsByNames(names: SkillSelection): SkillDirectory[] {
   return BUNDLED_SKILLS.filter((skill) => names.includes(skill.name))
+}
+
+/** Everything selectable: bundled names plus `<catalog>/<skill>` catalog names. */
+export function getAllSkillNames(): string[] {
+  return [...getSkillNames(), ...qualifiedCatalogNames()]
 }

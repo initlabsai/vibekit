@@ -29,7 +29,14 @@ import {
 } from '../config/mcps.js'
 import { agentsMdContent } from '../config/agents-md.js'
 import { LEGACY_SERVER_KEY } from './doctor.js'
-import { getSkillNames, getSkillsByNames, type SkillSelection } from '../skills/index.js'
+import {
+  getAllSkillNames,
+  getSkillNames,
+  getSkillsByNames,
+  type SkillDirectory,
+  type SkillSelection,
+} from '../skills/index.js'
+import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/catalogs.js'
 import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
 import { expandPath } from '../utils/paths.js'
@@ -92,11 +99,11 @@ export function parseInitArgs(args: string[]): InitFlags {
       flags.agents = values as AgentSelection
     } else if (arg === '--skills') {
       const value = args[++i]
-      if (value === 'all') flags.skills = getSkillNames()
+      if (value === 'all') flags.skills = getAllSkillNames()
       else if (value === 'none') flags.skills = []
       else {
         const values = parseCsv(value, '--skills')
-        assertKnown(values, getSkillNames(), '--skills')
+        assertKnown(values, getAllSkillNames(), '--skills')
         flags.skills = values
       }
     } else if (arg === '--mcps') {
@@ -153,7 +160,7 @@ function formatSkillName(name: string): string {
 }
 
 async function selectSkillsStep(): Promise<SkillSelection> {
-  const allSkillNames = getSkillNames()
+  const allSkillNames = getAllSkillNames()
 
   const selectionType = await select({
     message: 'Which skills would you like to install?',
@@ -169,7 +176,16 @@ async function selectSkillsStep(): Promise<SkillSelection> {
 
   return multiselect({
     message: 'Select skills to install:',
-    options: allSkillNames.map((name) => ({ value: name, label: formatSkillName(name) })),
+    options: [
+      ...getSkillNames().map((name) => ({ value: name, label: formatSkillName(name) })),
+      ...CATALOGS.flatMap((catalog) =>
+        catalog.skills.map((name) => ({
+          value: `${catalog.id}/${name}`,
+          label: formatSkillName(name),
+          hint: catalog.label,
+        })),
+      ),
+    ],
     required: true,
   })
 }
@@ -297,8 +313,30 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
   }
 }
 
-async function installSkills(context: SetupContext): Promise<number> {
-  const skills = getSkillsByNames(context.selectedSkills)
+/**
+ * Fetch the selected catalog skills. A failed catalog degrades to a warning —
+ * init never hard-blocks on the network; bundled skills still install.
+ */
+async function fetchRemoteSkills(selected: SkillSelection): Promise<SkillDirectory[]> {
+  const remoteSkills: SkillDirectory[] = []
+  for (const { catalog, names } of splitCatalogSelection(selected)) {
+    const s = p.spinner()
+    s.start(`Fetching ${catalog.label} skills (${catalog.repo})...`)
+    try {
+      remoteSkills.push(...(await fetchCatalogSkills(catalog, names)))
+      s.stop(`Fetched ${names.length} ${catalog.label} skill${names.length === 1 ? '' : 's'}`)
+    } catch (error) {
+      s.stop(`Skipped ${catalog.label} skills`)
+      p.log.warn(
+        `Could not fetch ${catalog.repo}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+  return remoteSkills
+}
+
+async function installSkills(context: SetupContext, remoteSkills: SkillDirectory[]): Promise<number> {
+  const skills = [...getSkillsByNames(context.selectedSkills), ...remoteSkills]
 
   for (const targetDir of getAgentSkillsDirs(context.installPath, context.agents)) {
     for (const skill of skills) {
@@ -432,7 +470,7 @@ function showSummary(context: SetupContext): void {
 export async function runInitAt(installPath: string, flags?: InitFlags): Promise<void> {
   // Headless (--yes) guarantees agents is set — parseInitArgs enforces it.
   const agents = flags?.agents ?? (await selectAgentsStep())
-  const selectedSkills = flags?.skills ?? (flags?.yes ? getSkillNames() : await selectSkillsStep())
+  const selectedSkills = flags?.skills ?? (flags?.yes ? getAllSkillNames() : await selectSkillsStep())
   const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULT_MCPS : await selectMCPsStep())
 
   const context: SetupContext = { agents, mcps, installPath, selectedSkills }
@@ -443,11 +481,13 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
     process.exit(0)
   }
 
+  const remoteSkills = await fetchRemoteSkills(context.selectedSkills)
+
   const s = p.spinner()
   s.start('Creating project files...')
   try {
     await generateConfigs(context)
-    const skillsCount = await installSkills(context)
+    const skillsCount = await installSkills(context, remoteSkills)
     s.stop(`Created ${skillsCount} skills`)
     // may prompt about existing files, so runs outside the spinner
     await installAgentFiles(context, flags)

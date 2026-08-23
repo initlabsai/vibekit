@@ -22,7 +22,7 @@ Docker available, shell access. No project exists yet.
    - Verify: fails fast with a message requiring `--agents` and listing the valid ids. Exit code non-zero. No files written.
 3. Run `vibekit init . --yes --agents claude`.
    - Verify: exit 0, no prompts (run it with stdin closed if your harness allows: `< /dev/null`).
-   - Verify files: `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/skills/` containing the canonical skills (`use-vibekit`, `vibekit-project-setup`).
+   - Verify files: `.mcp.json`, `AGENTS.md`, `CLAUDE.md`, `.claude/skills/` containing the canonical `use-vibekit` skill and its references.
 4. Inspect `.mcp.json`.
    - Verify: the `vibekit` server entry's command is an absolute path to a real on-disk binary — **never** a `/$bunfs/...` virtual path (the compiled-binary regression `vibekit doctor` exists to catch).
    - Verify: env carries `NETWORK=localnet`, `NETWORKS=localnet,testnet,mainnet`, `SIGNING=execute`.

@@ -47,9 +47,10 @@ The core engine, tools, plugins, signer, MCP adapters, agent loop, CLI, the
 provisional explorer package, and the fixture-backed TUI/web renderers are
 implemented and tested. The next work is the hosted API/SDK and the 1.0
 publish gate. The `vibekit explore` CLI entry point and browser wallet custody
-are still pending. The current skill bundle covers VibeKit use and project
-setup; contract and frontend domain skills are being refactored against the
-current stack before they return.
+are still pending. The current skill bundle covers VibeKit operation and
+extension plus TypeScript Algorand contracts, clients, testing, frontend
+wallets, security, standards, migrations, and maintenance of the skill set
+itself.
 
 ## Development
 

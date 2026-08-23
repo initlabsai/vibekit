@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test'
+import { lstatSync, readlinkSync } from 'fs'
+import { resolve } from 'path'
 
 import { AGENTS, AGENT_IDS } from '../src/config/agents.js'
 import { MCPS, MCP_IDS, getMCPsByCategory } from '../src/config/mcps.js'
@@ -63,8 +65,27 @@ describe('canonical skills', () => {
   test('the vibekit-authored skills are bundled', () => {
     const names = getSkillNames()
     expect(names).toContain('use-vibekit')
-    expect(names).toContain('vibekit-project-setup')
+    expect(names).toContain('build-on-algorand')
+    expect(names).toContain('build-on-vibekit')
+    expect(names).toContain('update-skill')
+    expect(names).not.toContain('vibekit-project-setup')
     expect(names).not.toContain('algorand-project-setup') // replaced upstream skill
+  })
+})
+
+describe('repository skill discovery', () => {
+  const repoRoot = resolve(import.meta.dir, '../../..')
+
+  test('agent discovery roots link to the canonical skill tree', () => {
+    for (const [path, target] of [
+      ['.agents/skills', '../skills'],
+      ['.claude/skills', '../skills'],
+      ['.grok/skills', '../skills'],
+    ]) {
+      const fullPath = resolve(repoRoot, path)
+      expect(lstatSync(fullPath).isSymbolicLink(), path).toBe(true)
+      expect(readlinkSync(fullPath), path).toBe(target)
+    }
   })
 })
 

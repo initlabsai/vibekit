@@ -4,7 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 
 import { generateConfigs, parseInitArgs, resolveVibekitPath, runInitAt } from '../src/commands/init.js'
-import { getSkillNames } from '../src/skills/index.js'
+import { getAllSkillNames, getSkillNames } from '../src/skills/index.js'
 
 function makeDir(): string {
   return mkdtempSync(join(tmpdir(), 'vibekit-init-test-'))
@@ -27,10 +27,18 @@ describe('parseInitArgs', () => {
     })
   })
 
-  test('--skills all expands to the full bundle; none empties', () => {
-    expect(parseInitArgs(['--skills', 'all']).skills).toEqual(getSkillNames())
+  test('--skills all expands to bundled plus catalog skills; none empties', () => {
+    expect(parseInitArgs(['--skills', 'all']).skills).toEqual(getAllSkillNames())
     expect(parseInitArgs(['--skills', 'none']).skills).toEqual([])
     expect(parseInitArgs(['--mcps', 'none']).mcps).toEqual([])
+  })
+
+  test('accepts catalog-qualified skill names, rejects unknown ones', () => {
+    expect(parseInitArgs(['--skills', 'use-vibekit,txnlab/nfd']).skills).toEqual([
+      'use-vibekit',
+      'txnlab/nfd',
+    ])
+    expect(() => parseInitArgs(['--skills', 'txnlab/bogus'])).toThrow(/unknown value/)
   })
 
   test('rejects unknown values and unknown flags', () => {
@@ -48,7 +56,11 @@ describe('parseInitArgs', () => {
 describe('headless runInitAt', () => {
   test('--yes writes configs, skills, and AGENTS.md without prompting', async () => {
     const dir = makeDir()
-    await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'all']))
+    // bundled names only — catalog skills would fetch from GitHub in tests
+    await runInitAt(
+      dir,
+      parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', getSkillNames().join(',')]),
+    )
 
     const mcpConfig = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8'))
     expect(Object.keys(mcpConfig.mcpServers)).toEqual(expect.arrayContaining(['vibekit', 'kappa']))
