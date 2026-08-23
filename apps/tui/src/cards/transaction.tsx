@@ -268,6 +268,25 @@ type ListRow = {
   innerCount?: number
   innerTxns?: ListRow[]
   rekeyTo?: string
+  createdAssetId?: number | string
+  createdApplicationId?: number | string
+}
+
+/** The row's kind as the graph names it: creates and opt-ins say so, not "Application Call" / "0 USDC". */
+function rowType(row: ListRow): string {
+  if (row.type === 'appl' && (row.createdApplicationId !== undefined || Number(row.applicationId ?? 0) === 0)) {
+    return 'Application Create'
+  }
+  if (row.type === 'acfg' && row.createdAssetId !== undefined) return 'Asset Create'
+  return formatBlockTxnType(row.type ?? 'txn')
+}
+
+function isOptIn(row: ListRow): boolean {
+  return (
+    row.type === 'axfer' &&
+    row.receiver === row.sender &&
+    BigInt(row.assetAmount ?? 0) === BigInt(0)
+  )
 }
 
 /** Rows with their inner transactions flattened beneath them, depth-first, as the graph draws them. */
@@ -284,6 +303,7 @@ function assetFact(row: ListRow): string | undefined {
 function rowAmount(row: ListRow): string | undefined {
   // A zero payment carrying rekeyTo is the rekey itself — the graph says so, so does the row.
   if (row.rekeyTo && BigInt(row.paymentAmountMicroAlgos ?? 0) === BigInt(0)) return 'rekey'
+  if (isOptIn(row)) return `opt-in ${row.assetUnitName ?? (row.assetId === undefined ? '' : `#${row.assetId}`)}`.trim()
   const payment = algo(row.paymentAmountMicroAlgos)
   if (payment) return payment
   if (row.assetAmount === undefined) return undefined
@@ -336,7 +356,7 @@ function TransactionTable({
       {withInners(rows).map(({ row, depth, index }, at) => {
         const matchedViaInner = innerType !== undefined && row.type !== undefined && row.type !== innerType
         const nest = depth === 0 ? '' : `${'  '.repeat(depth - 1)}└ `
-        const type = `${nest}${formatBlockTxnType(row.type ?? 'txn')}${matchedViaInner ? '*' : ''}`
+        const type = `${nest}${rowType(row)}${matchedViaInner ? '*' : ''}`
         const to = rowCounterparty(row)
         const party = to ? `${shorten(row.sender, each)} → ${shorten(to, each)}` : shorten(row.sender, partyW)
         const line = [
@@ -384,7 +404,7 @@ function InnerRows({ rows, depth, body }: { rows: ReadonlyArray<ListRow>; depth:
           <box key={`${row.sender}-${index}`} flexDirection="column" marginTop={1}>
             <box flexDirection="row" height={1}>
               <text fg={COLORS.faint}>{'└ '}</text>
-              <Chip label={formatBlockTxnType(row.type ?? 'txn')} />
+              <Chip label={rowType(row)} />
               {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
             </box>
             <Fact label="from" value={row.sender} copy={row.sender} width={width} />
@@ -481,8 +501,8 @@ export function TransactionListCard({
                   <Chip
                     label={
                       innerType && row.type !== undefined && row.type !== innerType
-                        ? `${formatBlockTxnType(row.type)} · inner ${formatBlockTxnType(innerType)}`
-                        : formatBlockTxnType(row.type ?? 'txn')
+                        ? `${rowType(row)} · inner ${formatBlockTxnType(innerType)}`
+                        : rowType(row)
                     }
                   />
                   {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
