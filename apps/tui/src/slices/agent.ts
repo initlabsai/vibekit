@@ -1,12 +1,10 @@
 import {
   addResult,
-  bridgeToolResult,
   FIXTURE_ADDRESS_BOOK,
-  unsignedGroupFromToolResult,
   startPaymentFlowFromDraftRecord,
   type ResultStore,
 } from '@initlabs/vibekit-experience'
-import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-experience/live'
+import type { LiveNetworkId } from '@initlabs/vibekit-experience/live'
 import {
   listZeroSignalModels,
   probeZeroSignal,
@@ -16,22 +14,21 @@ import {
 } from '@initlabs/vibekit-agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { enrichResultWithAbi, labelProgramMethods } from '../abi-catalog.js'
+import { labelProgramMethods } from '../abi-catalog.js'
 import {
   activeSenderLine,
   createExplorerAgent,
   explorerContext,
   networkOfCall,
+  planToolResult,
   programCostLines,
   runAgentTurn,
 } from '../agent-lane.js'
 import type { AnyTool } from '@initlabs/vibekit-core'
-import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
-import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
+import type { KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
-import { viewFor } from './lookup.js'
 import type { PaymentLane } from './payment.js'
 
 /**
@@ -83,7 +80,6 @@ export function useAgentLane({
 
   const agentSectionRef = useRef<number | null>(null)
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
-  const agentHasCardsRef = useRef(false)
   const agentRef = useRef<AgentSession | null>(null)
   /** Programs the user already agreed to pay for; further pages don't ask again. */
   const approvedProgramsRef = useRef(new Set<string>())
@@ -133,7 +129,6 @@ export function useAgentLane({
       setAgentBusy(true)
       setStatus('')
       agentSectionRef.current = sectionId
-      agentHasCardsRef.current = false
       patchSection(sectionId, { thinking: '', thinkingOpen: false })
       const agentNoteItem = { current: null as number | null }
       let spoke = false
@@ -205,94 +200,36 @@ export function useAgentLane({
             spoke = true
             thoughtBreak = true
             agentNoteItem.current = null
-            const usedNetwork = networkOfCall(event.input, sessionNetworkRef.current)
-            if (usedNetwork !== networkRef.current) onNetworkUsed(usedNetwork, sectionId)
-            const compose = unsignedGroupFromToolResult(event)
-            if (compose && flowRef.current === null) {
-              const draftRecord = draftRecordFromComposeWire(
-                {
-                  resultId: newId('result-agent-payment-draft'),
-                  toolCallId: event.id,
-                  network: usedNetwork,
-                },
-                compose,
-                event.toolName,
-              )
-              setFlowMode('live')
-              agentHasCardsRef.current = true
-              void startPaymentFlowFromDraftRecord({
-                host: keystoreHost,
-                store: storeRef.current,
-                draftRecord,
-                newId,
-                onStep: trackFlowStep(sectionId),
-              }).then((run) => {
-                commitStore(run.store)
-                if (!run.ok)
-                  finishPayment(run.flow, `The agent's payment failed — ${run.message}`, 'error')
-                else if (run.flow) updateFlowBlock(run.flow)
-              })
-              return
-            }
-            try {
-              // The tool's declared view cue selects the trusted view.
-              const { record, view } = bridgeToolResult(event, {
-                resultId: newId('result-agent'),
-                toolCallId: event.id,
-                network: usedNetwork,
-              })
-              const enriched = withAccountNames(
-                enrichResultWithAbi(record, specCatalog),
-                addressBookRef.current,
-              )
-              commitStore(addResult(storeRef.current, enriched))
-              agentHasCardsRef.current = true
-              if (view === undefined && event.toolName === 'resolve_nfd' && record.state === 'success') {
-                appendBlock(sectionId, {
-                  id: 0,
-                  kind: 'nfd',
-                  data: record.data as unknown as NfdRecord,
-                  network: usedNetwork,
+            const plan = planToolResult(event, {
+              sessionNetwork: sessionNetworkRef.current,
+              paymentInFlight: flowRef.current !== null,
+              newId,
+              specCatalog,
+              addressBook: addressBookRef.current,
+            })
+            if (plan.usedNetwork !== networkRef.current) onNetworkUsed(plan.usedNetwork, sectionId)
+            switch (plan.kind) {
+              case 'payment':
+                setFlowMode('live')
+                void startPaymentFlowFromDraftRecord({
+                  host: keystoreHost,
+                  store: storeRef.current,
+                  draftRecord: plan.draftRecord,
+                  newId,
+                  onStep: trackFlowStep(sectionId),
+                }).then((run) => {
+                  commitStore(run.store)
+                  if (!run.ok)
+                    finishPayment(run.flow, `The agent's payment failed — ${run.message}`, 'error')
+                  else if (run.flow) updateFlowBlock(run.flow)
                 })
                 return
-              }
-              if (view === undefined) {
-                const text =
-                  record.state === 'success'
-                    ? JSON.stringify(record.data, null, 2)
-                    : JSON.stringify(record.error, null, 2)
-                appendBlock(sectionId, {
-                  id: 0,
-                  kind: 'raw',
-                  title: event.toolName,
-                  text,
-                })
+              case 'cards':
+                commitStore(addResult(storeRef.current, plan.record))
+                for (const block of plan.blocks) appendBlock(sectionId, block)
                 return
-              }
-              appendBlock(sectionId, {
-                id: 0,
-                kind: 'view',
-                view: viewFor(record, view),
-              })
-              // The program's first page also carries its call surface.
-              const program = record.state === 'success'
-                ? (record.data as { fromLine?: number; program?: string; analysis?: { entrypoints?: string[] } })
-                : undefined
-              if (
-                view === 'application.program' &&
-                program?.fromLine === 1 &&
-                program.program === 'approval' &&
-                program.analysis?.entrypoints?.length
-              ) {
-                appendBlock(sectionId, { id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
-              }
-            } catch (error: unknown) {
-              // Say so: a silently dropped result looks like the agent said nothing.
-              appendNote(
-                sectionId,
-                `Dropped a malformed result from ${event.toolName} — ${error instanceof Error ? shorten(error.message, 100) : 'unknown error'}`,
-                'error',
-              )
+              case 'dropped':
+                appendNote(sectionId, plan.message, 'error')
             }
           },
           onError: (message) => {

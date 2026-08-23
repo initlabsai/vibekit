@@ -24,11 +24,21 @@ import {
 import { createNetworkClients, resolveNetwork, type AnyTool } from "@initlabs/vibekit-core";
 import { estimateProgramTokens } from "@initlabs/vibekit-tools";
 import { readZeroSignalCatalog } from "@initlabs/vibekit-agent";
-import type { ResultStore } from "@initlabs/vibekit-experience";
+import {
+  bridgeToolResult,
+  unsignedGroupFromToolResult,
+  type ResultStore,
+  type StructuredResult,
+} from "@initlabs/vibekit-experience";
 import type { ProviderConfig } from "@initlabs/vibekit-agent";
-import type { LiveNetworkId } from "@initlabs/vibekit-experience/live";
-import { nfdPlugin } from "@initlabs/vibekit-plugin-nfd";
-import type { ProgramData } from "./abi-catalog.js";
+import { draftRecordFromComposeWire, type LiveNetworkId } from "@initlabs/vibekit-experience/live";
+import { nfdPlugin, type NfdRecord } from "@initlabs/vibekit-plugin-nfd";
+import type { NormalizedAppSpec } from "@initlabs/vibekit-tools";
+import { enrichResultWithAbi, type ProgramData } from "./abi-catalog.js";
+import { withAccountNames } from "./keystore-host.js";
+import type { SectionBlock } from "./sections.js";
+import { viewFor } from "./slices/lookup.js";
+import { shorten } from "./theme.js";
 
 /**
  * What a get_application_program call will cost, for the confirm modal: one
@@ -219,6 +229,79 @@ export function createExplorerAgent(
     maxSteps: 8,
     systemPrompt: explorerSystemPrompt(promptTools, network, options.addressBook),
   });
+}
+
+/** What the feed does with one tool result. */
+export type ToolResultPlan = { usedNetwork: LiveNetworkId } & (
+  | { kind: "payment"; draftRecord: StructuredResult }
+  | { kind: "cards"; record: StructuredResult; blocks: SectionBlock[] }
+  | { kind: "dropped"; message: string }
+);
+
+/**
+ * Decides what one tool result becomes — an approval flow, a record plus its
+ * cards, or an error note — without touching any state. The tool's declared
+ * view cue selects the trusted view; a composed unsigned group outranks it.
+ */
+export function planToolResult(
+  event: Extract<AgentEvent, { type: "tool-result" }>,
+  ctx: {
+    sessionNetwork: LiveNetworkId;
+    /** A second composed group while one awaits approval renders raw instead. */
+    paymentInFlight: boolean;
+    newId: (prefix: string) => string;
+    specCatalog: ReadonlyMap<number, NormalizedAppSpec>;
+    addressBook: ReadonlyArray<{ address: string; name?: string }>;
+  },
+): ToolResultPlan {
+  const usedNetwork = networkOfCall(event.input, ctx.sessionNetwork);
+  const compose = unsignedGroupFromToolResult(event);
+  if (compose && !ctx.paymentInFlight) {
+    const draftRecord = draftRecordFromComposeWire(
+      { resultId: ctx.newId("result-agent-payment-draft"), toolCallId: event.id, network: usedNetwork },
+      compose,
+      event.toolName,
+    );
+    return { usedNetwork, kind: "payment", draftRecord };
+  }
+  try {
+    const { record: bridged, view } = bridgeToolResult(event, {
+      resultId: ctx.newId("result-agent"),
+      toolCallId: event.id,
+      network: usedNetwork,
+    });
+    const record = withAccountNames(enrichResultWithAbi(bridged, ctx.specCatalog), ctx.addressBook);
+    const blocks: SectionBlock[] = [];
+    if (view === undefined && event.toolName === "resolve_nfd" && record.state === "success") {
+      blocks.push({ id: 0, kind: "nfd", data: record.data as unknown as NfdRecord, network: usedNetwork });
+    } else if (view === undefined) {
+      const text = JSON.stringify(record.state === "success" ? record.data : record.error, null, 2);
+      blocks.push({ id: 0, kind: "raw", title: event.toolName, text });
+    } else {
+      blocks.push({ id: 0, kind: "view", view: viewFor(record, view) });
+      // The program's first page also carries its call surface.
+      const program =
+        record.state === "success"
+          ? (record.data as { fromLine?: number; program?: string; analysis?: { entrypoints?: string[] } })
+          : undefined;
+      if (
+        view === "application.program" &&
+        program?.fromLine === 1 &&
+        program.program === "approval" &&
+        program.analysis?.entrypoints?.length
+      ) {
+        blocks.push({ id: 0, kind: "view", view: viewFor(record, "application.methods") });
+      }
+    }
+    return { usedNetwork, kind: "cards", record, blocks };
+  } catch (error: unknown) {
+    // Say so: a silently dropped result looks like the agent said nothing.
+    return {
+      usedNetwork,
+      kind: "dropped",
+      message: `Dropped a malformed result from ${event.toolName} — ${error instanceof Error ? shorten(error.message, 100) : "unknown error"}`,
+    };
+  }
 }
 
 /** Renderer callbacks for one agent turn. */

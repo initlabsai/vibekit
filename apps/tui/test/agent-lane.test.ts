@@ -34,6 +34,7 @@ import {
   createExplorerAgent,
   explorerContext,
   explorerSystemPrompt,
+  planToolResult,
   runAgentTurn,
 } from '../src/agent-lane.js'
 
@@ -424,4 +425,78 @@ test('a known spec labels program selectors with names and args — inside the t
     },
   })
   expect((outputs[0] as { methods: Array<{ name?: string }> }).methods.map((m) => m.name)).toEqual(['hello', 'getMessage'])
+})
+
+describe('planToolResult', () => {
+  const ctx = {
+    sessionNetwork: 'localnet' as const,
+    paymentInFlight: false,
+    newId,
+    specCatalog: new Map(),
+    addressBook: [{ address: TXN_WIRE.sender, name: 'SMOKE1' }],
+  }
+  const result = (toolName: string, output: unknown, extra: Record<string, unknown> = {}) =>
+    ({ type: 'tool-result' as const, id: 'call-1', toolName, output, isError: false, ...extra })
+
+  test('a viewed result is one card on the network the call named', () => {
+    const plan = planToolResult(
+      result('lookup_transaction', TXN_WIRE, { view: 'transaction.detail', input: { network: 'mainnet' } }),
+      ctx,
+    )
+    expect(plan.usedNetwork).toBe('mainnet')
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.record.network).toBe('mainnet')
+    expect(plan.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind))).toEqual([
+      'transaction.detail',
+    ])
+  })
+
+  test('a composed group is a payment — unless one is already awaiting approval', () => {
+    const compose = result('send_payment', {
+      unsignedGroup: [PAYMENT_FIXTURE_UNSIGNED_TRANSACTION],
+      summary: 'pay 0.25 ALGO',
+      network: 'localnet',
+    })
+    expect(planToolResult(compose, ctx).kind).toBe('payment')
+    const second = planToolResult(compose, { ...ctx, paymentInFlight: true })
+    if (second.kind !== 'cards') throw new Error(second.kind)
+    expect(second.blocks[0]?.kind).toBe('raw')
+  })
+
+  test('the first approval page brings its methods card along', () => {
+    const program = {
+      applicationId: 7,
+      program: 'approval',
+      programHash: 'deadbeef',
+      bytes: 10,
+      totalLines: 2,
+      fromLine: 1,
+      toLine: 2,
+      teal: '#pragma version 10\nint 1',
+      analysis: {
+        version: 10,
+        entrypoints: ['0x02bece11'],
+        selectors: ['02bece11'],
+        arc4Returns: true,
+        strings: [],
+        stateKeys: { global: [], local: [], box: [] },
+        guards: { rekey: false, closeRemainder: false, assetClose: false },
+        innerTransactions: 0,
+        onCompletion: [],
+      },
+      methods: [{ selector: '02bece11' }],
+    }
+    const first = planToolResult(result('get_application_program', program, { view: 'application.program' }), ctx)
+    if (first.kind !== 'cards') throw new Error(first.kind)
+    expect(first.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind))).toEqual([
+      'application.program',
+      'application.methods',
+    ])
+    const later = planToolResult(
+      result('get_application_program', { ...program, fromLine: 3, toLine: 4 }, { view: 'application.program' }),
+      ctx,
+    )
+    if (later.kind !== 'cards') throw new Error(later.kind)
+    expect(later.blocks).toHaveLength(1)
+  })
 })
