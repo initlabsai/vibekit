@@ -236,9 +236,12 @@ function laneLayout(
   graph: TransactionsGraph,
   gutter: number,
   laneWidth: number,
+  bodyWidth: number,
 ): GraphLayout {
   const n = graph.verticals.length
-  const width = gutter + n * laneWidth
+  // Lines run the full body, not just the lanes: a self-loop on the last
+  // column writes its label to the right, where Lora keeps a spare column.
+  const width = Math.max(gutter + n * laneWidth, bodyWidth)
   const centers = graph.verticals.map((_, i) => gutter + i * laneWidth + (laneWidth >> 1))
   const lines: GraphLine[] = []
   const rowLines: number[] = []
@@ -307,8 +310,10 @@ function laneLayout(
     } else {
       const c = centers[rep.vertical]!
       const glyph = rep.kind === 'selfLoop' ? `${NODE}${LOOP}` : NODE
+      // A loop from (3) to (3) says (3) once; a rekey loop keeps both ends.
       const tags =
-        markerText(rep.fromTag) + (rep.kind === 'selfLoop' ? markerText(rep.toTag) : '')
+        markerText(rep.fromTag) +
+        (rep.kind === 'selfLoop' && rep.toTag !== rep.fromTag ? markerText(rep.toTag) : '')
       const spans: GraphSpan[] = [{ text: glyph, fg: color }]
       if (tags) spans.push({ text: tags, fg: COLORS.brass })
       spans.push({ text: ' ', fg: color }, ...label)
@@ -391,7 +396,7 @@ export function computeGraphLayout(graph: TransactionsGraph, bodyWidth: number):
     Math.floor((bodyWidth - gutter) / graph.verticals.length),
   )
   if (laneWidth < MIN_LANE_WIDTH) return compactLayout(graph, bodyWidth)
-  return laneLayout(graph, gutter, laneWidth)
+  return laneLayout(graph, gutter, laneWidth, bodyWidth)
 }
 
 /**
