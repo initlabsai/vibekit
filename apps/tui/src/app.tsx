@@ -662,15 +662,10 @@ export function App() {
             cursorItemId={feed.cursorItemId}
             cardRegistry={feed.cardRegistry}
             onSelectItem={feed.setCursor}
+            status={status}
           />
         </box>
       )}
-      <text
-        height={1}
-        paddingX={1}
-        fg={COLORS.muted}
-        content={status === '' ? ' ' : shorten(status, width - 4)}
-      />
       {screen === 'chat' ? (
         <Composer
           epoch={inputEpoch}

@@ -57,6 +57,21 @@ function ThinkingSpinner() {
   )
 }
 
+/** An arc that turns: the direct lane at work, in the live color. Thinking keeps the braille dots. */
+const ARC = '◜◠◝◞◡◟'
+
+function FetchLine({ text, width }: { text: string; width: number }) {
+  const frame = usePulse(540, ARC.length)
+  // Work in progress ends with an ellipsis; plain feedback (copied …) just sits.
+  const working = text.endsWith('…')
+  return (
+    <box flexDirection="row" height={1} marginTop={1}>
+      {working ? <text fg={COLORS.signal}>{`${ARC[frame]} `}</text> : null}
+      <text fg={working ? COLORS.signal : COLORS.muted} content={shorten(text, Math.max(8, width - 2))} />
+    </box>
+  )
+}
+
 function thinkingSize(text: string): string {
   if (text.length < 1000) return String(text.length)
   return `${(text.length / 1000).toFixed(1).replace(/\.0$/, '')}k`
@@ -250,6 +265,7 @@ export function ContentPane({
   cursorItemId,
   cardRegistry,
   onSelectItem,
+  status,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -279,6 +295,8 @@ export function ContentPane({
   cardRegistry: RefObject<Map<number, BoxRenderable>>
   /** A click on a card highlights it. */
   onSelectItem: (sectionId: number, itemId: number) => void
+  /** What the app is doing right now (a lookup, a tool call, a copy); empty when idle. */
+  status: string
 }) {
   // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
   const innerWidth = Math.max(24, width - 6)
@@ -431,6 +449,7 @@ export function ContentPane({
               </box>
             )
           })}
+          {status ? <FetchLine text={status} width={innerWidth} /> : null}
         </scrollbox>
       )}
     </box>

@@ -14,7 +14,7 @@ export type Focus = 'composer' | 'content'
 export function useFeed() {
   const [sections, setSections] = useState<Section[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [focus, setFocus] = useState<Focus>('composer')
+  const [focus, setFocusState] = useState<Focus>('composer')
 
   const sectionSeq = useRef(0)
   const itemSeq = useRef(0)
@@ -72,6 +72,15 @@ export function useFeed() {
     selectedRef.current = sectionId
     setCursorItemId(itemId)
     cursorRef.current = itemId
+  }, [])
+
+  /** Handing the keyboard back to the composer drops the card highlight; the selection stays. */
+  const setFocus = useCallback((next: Focus) => {
+    if (next === 'composer') {
+      setCursorItemId(null)
+      cursorRef.current = null
+    }
+    setFocusState(next)
   }, [])
 
   /** Pins the viewport to the newest content once layout has caught up with the commit. */
