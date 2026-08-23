@@ -151,7 +151,7 @@ describe('hand-verified against algokit-lora snapshots', () => {
     expect(graph.horizontals).toEqual([
       {
         representation: { kind: 'selfLoop', vertical: 0, fromTag: 1, toTag: 1 },
-        label: { type: 'assetOptIn', assetAmount: 0, assetId: 312769, assetDecimals: 6, assetUnitName: 'USDt' },
+        label: { type: 'assetOptIn', assetAmount: 0, assetId: 312769, assetDecimals: 6, assetUnitName: 'USDt', assetName: 'Tether USDt' },
         depth: 0,
         ancestors: [],
         isRemainder: false,
@@ -187,6 +187,7 @@ describe('hand-verified against algokit-lora snapshots', () => {
       assetId: 523683256,
       assetDecimals: 6,
       assetUnitName: 'AKTA',
+      assetName: 'AKITA INU',
     })
   })
 

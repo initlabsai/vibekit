@@ -260,11 +260,24 @@ type ListRow = {
   assetId?: number | string
   assetAmount?: number | string
   assetUnitName?: string
+  assetName?: string
   assetDecimals?: number
   applicationId?: number | string
   confirmedRound?: number
   roundTime?: number
   innerCount?: number
+  innerTxns?: ListRow[]
+}
+
+/** Rows with their inner transactions flattened beneath them, depth-first, as the graph draws them. */
+function withInners(rows: ReadonlyArray<ListRow>, depth = 0): Array<{ row: ListRow; depth: number; index: number }> {
+  return rows.flatMap((row, index) => [{ row, depth, index }, ...withInners(row.innerTxns ?? [], depth + 1)])
+}
+
+/** The asset behind an amount, the way the detail card says it: id · name. */
+function assetFact(row: ListRow): string | undefined {
+  if (row.assetId === undefined) return undefined
+  return row.assetName ? `${row.assetId} · ${row.assetName}` : String(row.assetId)
 }
 
 function rowAmount(row: ListRow): string | undefined {
@@ -299,8 +312,9 @@ function TransactionTable({
   onOpen?: (txid: string) => void
 }) {
   const numW = 3
-  const typeW = 14
-  const amountW = 14
+  // Wide enough for "Application Call" and a nested "└ Asset Transfer".
+  const typeW = 18
+  const amountW = 18
   const roundW = 9
   const timeW = 5
   const partyW = Math.max(12, body - (numW + typeW + amountW + roundW + timeW + 5))
@@ -316,13 +330,14 @@ function TransactionTable({
   return (
     <box flexDirection="column" marginTop={1}>
       <text fg={COLORS.faint} content={header} />
-      {rows.map((row, index) => {
+      {withInners(rows).map(({ row, depth, index }, at) => {
         const matchedViaInner = innerType !== undefined && row.type !== undefined && row.type !== innerType
-        const type = `${formatBlockTxnType(row.type ?? 'txn')}${matchedViaInner ? '*' : ''}`
+        const nest = depth === 0 ? '' : `${'  '.repeat(depth - 1)}└ `
+        const type = `${nest}${formatBlockTxnType(row.type ?? 'txn')}${matchedViaInner ? '*' : ''}`
         const to = rowCounterparty(row)
         const party = to ? `${shorten(row.sender, each)} → ${shorten(to, each)}` : shorten(row.sender, partyW)
         const line = [
-          pad(index < 9 ? `[${index + 1}]` : '', numW),
+          pad(depth === 0 && index < 9 ? `[${index + 1}]` : '', numW),
           pad(type, typeW),
           pad(rowAmount(row) ?? '', amountW, 'right'),
           pad(party, partyW),
@@ -331,7 +346,7 @@ function TransactionTable({
         ].join(' ')
         return (
           <text
-            key={row.id ?? `${row.sender}-${index}`}
+            key={row.id ?? `${row.sender}-${at}`}
             fg={onOpen && row.id ? COLORS.text : COLORS.muted}
             content={line}
             onMouseDown={
@@ -348,6 +363,43 @@ function TransactionTable({
       {innerType && rows.some((row) => row.type !== undefined && row.type !== innerType) ? (
         <text fg={COLORS.faint} content={`* matched through inner ${formatBlockTxnType(innerType)} txns`} />
       ) : null}
+    </box>
+  )
+}
+
+/** Inner transactions under their parent: indented, the few facts an inner has, recursive. */
+function InnerRows({ rows, depth, body }: { rows: ReadonlyArray<ListRow>; depth: number; body: number }) {
+  if (rows.length === 0) return null
+  const indent = depth * 2
+  const width = Math.max(8, body - indent)
+  return (
+    <box flexDirection="column" marginLeft={indent}>
+      {rows.map((row, index) => {
+        const amount = rowAmount(row)
+        const to = rowCounterparty(row)
+        return (
+          <box key={`${row.sender}-${index}`} flexDirection="column" marginTop={1}>
+            <box flexDirection="row" height={1}>
+              <text fg={COLORS.faint}>{'└ '}</text>
+              <Chip label={formatBlockTxnType(row.type ?? 'txn')} />
+              {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
+            </box>
+            <Fact label="from" value={row.sender} copy={row.sender} width={width} />
+            {to ? (
+              <Fact
+                label="to"
+                value={to}
+                copy={row.receiver ?? (row.applicationId === undefined ? undefined : String(row.applicationId))}
+                width={width}
+              />
+            ) : null}
+            {assetFact(row) ? (
+              <Fact label="asset" value={assetFact(row)!} copy={String(row.assetId)} width={width} />
+            ) : null}
+            <InnerRows rows={row.innerTxns ?? []} depth={depth + 1} body={body} />
+          </box>
+        )
+      })}
     </box>
   )
 }
@@ -458,9 +510,10 @@ export function TransactionListCard({
               {row.feeMicroAlgos === undefined ? null : (
                 <Fact label="fee" value={algo(row.feeMicroAlgos) ?? '—'} width={body} />
               )}
-              {row.innerCount ? (
-                <Fact label="inner" value={`+${row.innerCount}`} width={body} />
+              {assetFact(row) ? (
+                <Fact label="asset" value={assetFact(row)!} copy={String(row.assetId)} width={body} />
               ) : null}
+              <InnerRows rows={row.innerTxns ?? []} depth={1} body={body} />
               {index < rows.length - 1 ? <Rule width={body} /> : null}
             </box>
           )

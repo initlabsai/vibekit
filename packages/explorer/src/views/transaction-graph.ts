@@ -92,6 +92,7 @@ export const graphLabelSchema = z
     assetId: z.number().int().nonnegative().optional(),
     assetDecimals: z.number().int().nonnegative().optional(),
     assetUnitName: z.string().min(1).optional(),
+    assetName: z.string().min(1).optional(),
     // Filled from the transaction's methodName or methodNameFor (My Apps spec).
     methodName: z.string().min(1).optional(),
   })
@@ -505,6 +506,7 @@ function assetLabelFields(txn: GraphTransaction): Partial<GraphLabel> {
     ...(txn.assetId === undefined ? {} : { assetId: txn.assetId }),
     ...(txn.assetDecimals === undefined ? {} : { assetDecimals: txn.assetDecimals }),
     ...(txn.assetUnitName === undefined ? {} : { assetUnitName: txn.assetUnitName }),
+    ...(txn.assetName === undefined ? {} : { assetName: txn.assetName }),
   }
 }
 

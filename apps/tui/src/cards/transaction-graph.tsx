@@ -34,6 +34,13 @@ export function TransactionGraphCard({
     tags.some((tag) => typeof tag === 'number') ? '(n) account n' : null,
     tags.includes('rekey') ? '(rk) rekeyed — the app acts as that account' : null,
   ].filter(Boolean)
+  // A unit name on a row is a label, not an identity: say which asset it is.
+  const assets = new Map<number, string>()
+  for (const { label } of graph.horizontals) {
+    if (label.assetId === undefined || assets.has(label.assetId)) continue
+    const unit = label.assetUnitName ?? `asa ${label.assetId}`
+    assets.set(label.assetId, `${unit} = ${label.assetId}${label.assetName ? ` ${label.assetName}` : ''}`)
+  }
   return (
     <Frame width={width}>
       <Header
@@ -54,6 +61,7 @@ export function TransactionGraphCard({
         ))}
       </box>
       {legend.length > 0 ? <FooterNote text={legend.join(' · ')} width={body} /> : null}
+      {assets.size > 0 ? <FooterNote text={[...assets.values()].join(' · ')} width={body} /> : null}
     </Frame>
   )
 }
