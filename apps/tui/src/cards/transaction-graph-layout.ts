@@ -274,8 +274,12 @@ function laneLayout(
       const b = centers[rep.toVertical]!
       const interior = b - a - 1
       for (let x = a; x <= b; x += 1) drawText(main, x, DASH, color)
-      const leftTag = markerText(rep.direction === 'leftToRight' ? rep.fromTag : rep.toTag)
-      const rightTag = markerText(rep.direction === 'leftToRight' ? rep.toTag : rep.fromTag)
+      // An end tag that repeats its column's own number says nothing; (rk) and
+      // a clawback account do, and stay. Same rule the compact layout uses.
+      const leftVertical = graph.verticals[rep.fromVertical]!
+      const rightVertical = graph.verticals[rep.toVertical]!
+      const leftTag = compactMarker(leftVertical, rep.direction === 'leftToRight' ? rep.fromTag : rep.toTag)
+      const rightTag = compactMarker(rightVertical, rep.direction === 'leftToRight' ? rep.toTag : rep.fromTag)
       const tagsFit = leftTag.length + rightTag.length <= interior
       if (tagsFit) {
         drawText(main, a + 1, leftTag, COLORS.brass)
@@ -311,10 +315,9 @@ function laneLayout(
     } else {
       const c = centers[rep.vertical]!
       const glyph = rep.kind === 'selfLoop' ? `${NODE}${LOOP}` : NODE
-      // A loop from (3) to (3) says (3) once; a rekey loop keeps both ends.
+      const own = graph.verticals[rep.vertical]!
       const tags =
-        markerText(rep.fromTag) +
-        (rep.kind === 'selfLoop' && rep.toTag !== rep.fromTag ? markerText(rep.toTag) : '')
+        compactMarker(own, rep.fromTag) + (rep.kind === 'selfLoop' ? compactMarker(own, rep.toTag) : '')
       const spans: GraphSpan[] = [{ text: glyph, fg: color }]
       if (tags) spans.push({ text: tags, fg: COLORS.brass })
       spans.push({ text: ' ', fg: color }, ...label)
