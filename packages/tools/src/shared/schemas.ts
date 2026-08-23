@@ -36,6 +36,8 @@ export interface FormattedTransaction {
   assetUnitName?: string
   assetDecimals?: number
   applicationId?: number
+  /** Known protocol contract; absent means unknown app. */
+  applicationLabel?: string
   onCompletion?: string
   /** Base64 application-args, selector first. Present on ABI method calls. */
   applicationArgs?: string[]
@@ -117,6 +119,7 @@ export const formattedTransactionSchema = z.object({
     .optional()
     .describe('Asset amount in base units; decimal string when above 2^53'),
   applicationId: z.number().optional(),
+  applicationLabel: z.string().optional().describe('Known protocol contract; absent means unknown app — say so, never guess'),
   onCompletion: z.string().optional(),
   applicationArgs: z.array(z.string()).optional().describe('Base64 application-args, selector first'),
   applicationAccounts: z
@@ -187,6 +190,7 @@ export const transactionQuerySchema = z.object({
   txType: z.string().optional(),
   assetId: z.number().optional(),
   applicationId: z.number().optional(),
+  applicationLabel: z.string().optional().describe('Known protocol contract; absent means unknown app — say so, never guess'),
   minRound: z.number().optional(),
   maxRound: z.number().optional(),
   notePrefix: z.string().optional(),

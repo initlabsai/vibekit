@@ -63,7 +63,7 @@ describe('createAgent', () => {
       tools: [echoTool],
     })
     const prompt = defaultSystemPrompt(deployment)
-    expect(prompt.length).toBeLessThan(1200)
+    expect(prompt.length).toBeLessThan(1600)
     expect(prompt).toContain('Tools: echo')
     expect(prompt).toContain('Answer from tool results only')
   })

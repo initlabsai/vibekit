@@ -1,4 +1,5 @@
 /** Shared application formatting (ported from v1 contracts handlers). */
+import { knownAppLabel } from '../../shared/known-apps.js'
 import type algosdk from 'algosdk'
 import { bytesToBase64 } from '@initlabs/vibekit-core'
 
@@ -7,6 +8,7 @@ type IndexerApplication = InstanceType<typeof import('algosdk').indexerModels.Ap
 /** Formatted application returned by handlers. */
 export interface FormattedApplication {
   applicationId: number
+  applicationLabel?: string
   creator?: string
   globalState?: Array<{
     /** base64-encoded state key. */
@@ -27,6 +29,7 @@ export function formatApplication(app: IndexerApplication): FormattedApplication
   const params = app.params
   return {
     applicationId: Number(app.id),
+    applicationLabel: knownAppLabel(Number(app.id)),
     creator: params.creator ? String(params.creator) : undefined,
     globalState: params.globalState?.map((kv: algosdk.indexerModels.TealKeyValue) => ({
       key: bytesToBase64(kv.key),

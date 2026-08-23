@@ -8,6 +8,7 @@ const stateSchema = z.object({
 /** Wire shape of lookup_application ('application.detail' view). */
 export const formattedApplicationSchema = z.object({
   applicationId: z.number(),
+  applicationLabel: z.string().optional().describe('Known protocol contract; absent means unknown — say so, never guess'),
   creator: z.string().optional(),
   globalState: z
     .array(

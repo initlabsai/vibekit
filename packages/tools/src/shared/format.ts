@@ -1,4 +1,5 @@
 import { bytesToBase64 } from '@initlabs/vibekit-core'
+import { knownAppLabel } from './known-apps.js'
 import type { FormattedAssetConfig, FormattedTransaction } from './schemas.js'
 
 export { formattedAssetConfigSchema, formattedTransactionSchema, transactionListSchema } from './schemas.js'
@@ -50,6 +51,7 @@ export function formatTransaction(tx: IndexerTransaction): FormattedTransaction 
   }
   if (tx.applicationTransaction) {
     formatted.applicationId = Number(tx.applicationTransaction.applicationId)
+    formatted.applicationLabel = knownAppLabel(formatted.applicationId)
     if (tx.applicationTransaction.onCompletion) {
       formatted.onCompletion = tx.applicationTransaction.onCompletion
     }

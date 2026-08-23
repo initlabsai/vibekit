@@ -19,4 +19,4 @@ export {
   formatZeroSignalPrice,
   type ZeroSignalModelInfo,
 } from './zerosignal.js'
-export { defaultSystemPrompt } from './system-prompt.js'
+export { defaultSystemPrompt, WELL_KNOWN_ASSETS } from './system-prompt.js'

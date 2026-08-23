@@ -2,6 +2,8 @@ import { defineTool, ToolError, type AnyTool } from '@initlabs/vibekit-core'
 import { z } from 'zod'
 import { transactionListSchema } from '../shared/schemas.js'
 import { lookupAsset } from './handlers/lookup.js'
+import { topAssetHolders } from './handlers/holders.js'
+import { approxWords, scaleBaseUnits } from './handlers/format.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from './handlers/search.js'
 import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './schemas.js'
 
@@ -23,6 +25,20 @@ export const assetTools: AnyTool[] = [
     output: assetDetailSchema,
     view: 'asset.detail',
     handler: async (ctx, args) => lookupAsset(ctx, args),
+  }),
+  defineTool({
+    name: 'top_asset_holders',
+    description:
+      'The largest holders of an asset, sorted by balance — scans every holder via the indexer, so it is authoritative. Use for "top holders", "biggest bags", "whale watch", or concentration questions. Not paginated; ask for a bigger limit instead.',
+    parameters: z.object({
+      assetId: z.number().describe('The asset ID'),
+      limit: z.number().optional().describe('How many top holders to return (default 10, max 100)'),
+    }),
+    // Superset of the shared 'asset.holders' shape; extra per-row fields
+    // (amountScaled, percentOfSupply) ride through validation to the agent.
+    output: assetHoldersSchema,
+    view: 'asset.holders',
+    handler: async (ctx, args) => topAssetHolders(ctx, args),
   }),
   defineTool({
     name: 'search_asset_balances',
@@ -97,6 +113,8 @@ export const assetTools: AnyTool[] = [
         name: params.name,
         unitName: params.unitName,
         totalSupply: String(params.total),
+        totalSupplyScaled: scaleBaseUnits(params.total, Number(params.decimals)),
+        totalSupplyApprox: approxWords(scaleBaseUnits(params.total, Number(params.decimals))),
         decimals: Number(params.decimals),
         defaultFrozen: params.defaultFrozen,
         url: params.url,

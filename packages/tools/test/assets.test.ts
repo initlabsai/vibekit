@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '@initlabs/vibekit-core'
 import { assetTools } from '../src/assets/index.js'
 import { lookupAsset } from '../src/assets/handlers/lookup.js'
+import { topAssetHolders } from '../src/assets/handlers/holders.js'
 import { searchAssetBalances, searchAssetTransactions, searchAssets } from '../src/assets/handlers/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
@@ -21,6 +22,7 @@ describe('registry', () => {
   test('exports 5 read-only tools with output schemas and view or display hints', () => {
     expect(assetTools.map((t) => t.name)).toEqual([
       'lookup_asset',
+      'top_asset_holders',
       'search_asset_balances',
       'search_asset_transactions',
       'search_assets',
@@ -31,6 +33,37 @@ describe('registry', () => {
       expect(tool.output).toBeDefined()
       expect(tool.view ?? tool.display).toBeDefined()
     }
+  })
+})
+
+describe('topAssetHolders', () => {
+  test('pages to exhaustion, sorts by amount, computes percentages', async () => {
+    const filler = Array.from({ length: 997 }, (_, i) => ({
+      address: `FILLER${i}`, amount: BigInt(1), isFrozen: false,
+    }))
+    const pages = [
+      { balances: [
+          { address: 'SMALL', amount: BigInt(100), isFrozen: false },
+          { address: 'ZERO', amount: BigInt(0), isFrozen: false },
+          { address: 'BIG', amount: BigInt(400_000_000), isFrozen: false },
+          ...filler,
+        ], nextToken: 't1' },
+      { balances: [{ address: 'MID', amount: BigInt(600_000_000), isFrozen: true }] },
+    ]
+    let call = 0
+    const ctx = fakeContext({
+      indexer: {
+        lookupAssetBalances: () => chainable(pages[Math.min(call++, 1)]),
+        lookupAssetByID: () => chainable({ asset: { index: BigInt(7), params: { total: BigInt(1_000_000_000), decimals: 6 } } }),
+      },
+    })
+    const result = await topAssetHolders(ctx, { assetId: 7, limit: 2 })
+    expect(result.holderCount).toBe(1000)
+    expect(result.complete).toBe(true)
+    expect(result.decimals).toBe(6)
+    expect(result.balances.map((b) => b.address)).toEqual(['MID', 'BIG'])
+    expect(result.balances[0]).toMatchObject({ amount: '600000000', amountScaled: '600', percentOfSupply: 60, isFrozen: true })
+    expect(result.balances[0]!.amountApprox).toBeUndefined()
   })
 })
 
@@ -47,6 +80,8 @@ describe('lookupAsset', () => {
     expect(asset.name).toBe('USDC')
     expect(asset.totalSupply).toBe('18446744073709551615')
     expect(asset.decimals).toBe(6)
+    expect(asset.totalSupplyScaled).toBe('18,446,744,073,709.551615')
+    expect(asset.totalSupplyApprox).toBe('≈18.4 trillion')
     expect(asset.creator).toBe('CREATORADDR')
     expect(asset.manager).toBe('MANAGERADDR')
     expect(asset.freeze).toBeUndefined()

@@ -140,7 +140,7 @@ describe('lookupTransaction', () => {
               sender: 'CALLER',
               fee: BigInt(2_000),
               applicationTransaction: {
-                applicationId: BigInt(123),
+                applicationId: BigInt(1002541853),
                 applicationArgs: [new Uint8Array([1, 2, 3, 4]), new Uint8Array([0, 0, 0, 0, 0, 0, 0, 7])],
                 accounts: ['REFACCOUNT'],
               },
@@ -163,7 +163,8 @@ describe('lookupTransaction', () => {
       },
     })
     const tx = await lookupTransaction(ctx, { txid: 'APPTX' })
-    expect(tx.applicationId).toBe(123)
+    expect(tx.applicationId).toBe(1002541853)
+    expect(tx.applicationLabel).toBe('Tinyman V2 AMM validator')
     expect(tx.applicationArgs).toEqual(['AQIDBA==', 'AAAAAAAAAAc='])
     expect(tx.applicationAccounts).toEqual(['REFACCOUNT'])
     expect(tx.globalStateDelta).toEqual([{ key: 'aw==' }])
