@@ -1,5 +1,5 @@
 import { createTextAttributes, SyntaxStyle, type MouseEvent } from '@opentui/core'
-import { useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import { copyableIdent, useCopyIdent } from './copy-selection.js'
 import { COLORS, MOTION, shorten } from './theme.js'
@@ -47,6 +47,9 @@ export function markdownStyle(): SyntaxStyle {
   return markdownStyleCache
 }
 
+/** True inside the card the feed cursor is on; its frame turns amber. */
+export const HighlightContext = createContext(false)
+
 /** Horizontal padding inside a framed card (border + paddingX). */
 export const FRAME_GUTTER = 6
 
@@ -79,7 +82,8 @@ export function Frame({
 }) {
   // The card switches on: its frame comes up dim → lit over two frames.
   const ramp = [COLORS.borderSoft, COLORS.border, accent ?? COLORS.border]
-  const lit = ramp[useReveal(2)]!
+  const reveal = useReveal(2)
+  const lit = useContext(HighlightContext) ? COLORS.brass : ramp[reveal]!
   return (
     <box
       width={width}
@@ -95,16 +99,12 @@ export function Frame({
   )
 }
 
-/** Tiny raised label, used for transaction type and similar tags. */
+/** A type tag beside a kicker: bare muted text, no slab. */
 export function Chip({ label }: { label: string }) {
-  return (
-    <text fg={COLORS.muted} bg={COLORS.surface}>
-      {` ${label} `}
-    </text>
-  )
+  return <text fg={COLORS.muted}>{label}</text>
 }
 
-/** Clickable chip: padded and filled so it reads, and hits, as a button. */
+/** A button is a word in the touchable color; the active one is lit and underlined. */
 export function Button({
   label,
   onPress,
@@ -117,13 +117,14 @@ export function Button({
   return (
     <box
       paddingX={1}
-      backgroundColor={active ? COLORS.brass : COLORS.signalDim}
       onMouseDown={(event: MouseEvent) => {
         event.stopPropagation()
         onPress()
       }}
     >
-      <text fg={active ? COLORS.ink : COLORS.text}>{label}</text>
+      <text fg={active ? COLORS.brassBright : COLORS.signal} attributes={active ? IDENT_ATTR : undefined}>
+        {label}
+      </text>
     </box>
   )
 }
@@ -311,13 +312,7 @@ export function StatGrid({
       {rows.map((row, rowIndex) => (
         <box key={rowIndex} flexDirection="row">
           {row.map((item) => (
-            <box
-              key={item.label}
-              width={cellW}
-              flexDirection="column"
-              backgroundColor={COLORS.surface}
-              paddingX={1}
-            >
+            <box key={item.label} width={cellW} flexDirection="column" paddingX={1}>
               <text fg={COLORS.faint} content={shorten(item.label, cellW - 2)} />
               {copyableIdent(item.copy) ? (
                 <Ident value={item.copy!} display={item.value} width={cellW - 2} />

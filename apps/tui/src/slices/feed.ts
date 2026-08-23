@@ -22,8 +22,13 @@ export function useFeed() {
   const selectedRef = useRef<number | null>(selectedId)
   const contentScrollRef = useRef<ScrollBoxRenderable | null>(null)
   const sectionRegistry = useRef(new Map<number, BoxRenderable>())
+  /** The highlighted card (a block item id); ←/→ and clicks move it, keys act on it. */
+  const [cursorItemId, setCursorItemId] = useState<number | null>(null)
+  const cursorRef = useRef<number | null>(null)
+  const cardRegistry = useRef(new Map<number, BoxRenderable>())
   sectionsRef.current = sections
   selectedRef.current = selectedId
+  cursorRef.current = cursorItemId
 
   const commitSections = useCallback((next: Section[]) => {
     sectionsRef.current = next
@@ -46,6 +51,27 @@ export function useFeed() {
       return true
     }
     if (!attempt()) setTimeout(attempt, 50)
+  }, [])
+
+  /** Scrolls one card's top into view, like scrollToSection but for a block item. */
+  const scrollToCard = useCallback((itemId: number) => {
+    const attempt = () => {
+      const target = cardRegistry.current.get(itemId)
+      const scroll = contentScrollRef.current
+      if (!target || !scroll) return false
+      const offset = scroll.scrollTop + (target.y - scroll.viewport.y)
+      scroll.scrollTo({ x: 0, y: Math.max(0, offset - 1) })
+      return true
+    }
+    if (!attempt()) setTimeout(attempt, 50)
+  }, [])
+
+  /** Highlights one card and its section without moving the viewport (a click). */
+  const setCursor = useCallback((sectionId: number, itemId: number | null) => {
+    setSelectedId(sectionId)
+    selectedRef.current = sectionId
+    setCursorItemId(itemId)
+    cursorRef.current = itemId
   }, [])
 
   /** Pins the viewport to the newest content once layout has caught up with the commit. */
@@ -73,12 +99,14 @@ export function useFeed() {
     selectedRef.current = id
   }, [])
 
+  /** Nav jump: the section's first card takes the cursor and the section scrolls into view. */
   const selectSection = useCallback(
     (id: number) => {
-      markSection(id)
+      const first = sectionsRef.current.find((section) => section.id === id)?.items.find((item) => item.kind === 'block')
+      setCursor(id, first?.id ?? null)
       scrollToSection(id)
     },
-    [markSection, scrollToSection],
+    [scrollToSection, setCursor],
   )
 
   /** Creates the section for one user request and returns its id. */
@@ -87,12 +115,12 @@ export function useFeed() {
       sectionSeq.current += 1
       const id = sectionSeq.current
       commitSections([...sectionsRef.current, { id, prompt, items: [] }])
-      setSelectedId(id)
-      selectedRef.current = id
+      // A new request takes the selection; the highlight leaves the old card.
+      setCursor(id, null)
       scrollToBottom()
       return id
     },
-    [commitSections, scrollToBottom],
+    [commitSections, scrollToBottom, setCursor],
   )
 
   /** Rewrites one section; the others keep their identity. */
@@ -172,16 +200,20 @@ export function useFeed() {
     [appendItem, newItemId],
   )
 
+  /** ←/→: the cursor walks every card in the feed in order; with no cursor yet it starts at the newest. */
   const moveSelection = useCallback(
     (delta: number) => {
-      const list = sectionsRef.current
-      if (list.length === 0) return
-      const current = list.findIndex((section) => section.id === selectedRef.current)
-      const index =
-        current < 0 ? list.length - 1 : Math.min(list.length - 1, Math.max(0, current + delta))
-      selectSection(list[index]!.id)
+      const cards = sectionsRef.current.flatMap((section) =>
+        section.items.flatMap((item) => (item.kind === 'block' ? [{ sectionId: section.id, itemId: item.id }] : [])),
+      )
+      if (cards.length === 0) return
+      const current = cards.findIndex((card) => card.itemId === cursorRef.current)
+      const index = current < 0 ? cards.length - 1 : Math.min(cards.length - 1, Math.max(0, current + delta))
+      const card = cards[index]!
+      setCursor(card.sectionId, card.itemId)
+      scrollToCard(card.itemId)
     },
-    [selectSection],
+    [scrollToCard, setCursor],
   )
 
   /** Closes the selected section unless `canClose` vetoes it (then `onBlocked` runs instead). */
@@ -199,6 +231,8 @@ export function useFeed() {
       if (next.length === 0) {
         setSelectedId(null)
         selectedRef.current = null
+        setCursorItemId(null)
+        cursorRef.current = null
         setFocus('composer')
       } else {
         selectSection(next[Math.min(index, next.length - 1)]!.id)
@@ -217,6 +251,10 @@ export function useFeed() {
     contentScrollRef,
     scrollToBottom,
     sectionRegistry,
+    cursorItemId,
+    cursorRef,
+    cardRegistry,
+    setCursor,
     updateSection,
     updateItem,
     newItemId,

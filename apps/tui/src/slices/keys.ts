@@ -39,6 +39,7 @@ export function useExplorerKeys({
   toggleBlocksTail,
   openListRow,
   runCardAction,
+  toggleNav,
 }: {
   feed: Feed
   modalOpen: boolean
@@ -62,6 +63,8 @@ export function useExplorerKeys({
   openListRow: (index: number) => void
   /** t transactions · e explain · m more, on the newest card in the selected section that offers it. */
   runCardAction: (key: 't' | 'e' | 'm' | 'a') => void
+  /** ^s shows or hides the session index. */
+  toggleNav: () => void
 }) {
   const { focus, setFocus, moveSelection, contentScrollRef, sectionsRef } = feed
 
@@ -82,6 +85,11 @@ export function useExplorerKeys({
         if (key.ctrl && key.name === 'w') {
           key.preventDefault()
           openWorkspace('wallet')
+          return
+        }
+        if (key.ctrl && key.name === 's') {
+          key.preventDefault()
+          toggleNav()
           return
         }
         // Ctrl+digit is dropped by most terminals (including tmux); Alt/option
@@ -223,6 +231,7 @@ export function useExplorerKeys({
         toggleBlocksTail,
         openListRow,
         runCardAction,
+        toggleNav,
       ],
     ),
   )

@@ -86,7 +86,7 @@ export function TopBar({
     mainnet: COLORS.red,
   }
   return (
-    <box flexDirection="column" height={4} backgroundColor={COLORS.surface} paddingX={2} paddingY={1}>
+    <box flexDirection="column" height={3} paddingX={2}>
       <box flexDirection="row" justifyContent="space-between" height={1}>
         <box flexDirection="row">
           <text fg={COLORS.brass}>◆ </text>
@@ -101,8 +101,8 @@ export function TopBar({
             </box>
             {latestRound === undefined ? null : <RoundTick round={latestRound} />}
           </box>
-          <box paddingX={1} backgroundColor={networkColors[network]} onMouseDown={onSwitchNetwork}>
-            <text fg={COLORS.ink}>{`${network.toUpperCase()} ^n`}</text>
+          <box paddingX={1} onMouseDown={onSwitchNetwork}>
+            <text fg={networkColors[network]}>{`${network.toUpperCase()} ^n`}</text>
           </box>
         </box>
       </box>
@@ -124,6 +124,7 @@ export function TopBar({
           onPress={onOpenWallet}
         />
       </box>
+      <text fg={COLORS.borderSoft} content={'─'.repeat(Math.max(0, width - 4))} />
     </box>
   )
 }
@@ -198,7 +199,6 @@ export function WalletScreen({
               flexDirection="column"
               marginTop={1}
               paddingX={1}
-              backgroundColor={selected ? COLORS.surface : undefined}
               onMouseDown={() => onSelect(account.address)}
             >
               <box flexDirection="row" justifyContent="space-between" height={1}>
@@ -754,7 +754,6 @@ export function Composer({
       border
       borderStyle={focused ? 'heavy' : 'single'}
       borderColor={focused ? COLORS.brass : COLORS.border}
-      backgroundColor={COLORS.surface}
       onMouseDown={onFocus}
     >
       <text fg={focused ? COLORS.brassBright : COLORS.faint}>❯ </text>

@@ -10,8 +10,8 @@ import { useEffect, useState, type RefObject } from 'react'
 import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
 
 import { NfdCard, PaymentCard } from './cards/index.js'
-import { COLORS, gradient, shorten, wrapLines } from './theme.js'
-import { Button, usePulse } from './ui.js'
+import { COLORS, shorten, wrapLines } from './theme.js'
+import { Button, HighlightContext, usePulse } from './ui.js'
 import { RawCard, ResultView, type OpenTarget } from './views.js'
 
 /** One rendered result inside a section — a request may compose several. */
@@ -44,20 +44,9 @@ function promptKicker(prompt: string, width: number, selected: boolean): string 
   return shorten(`${selected ? '▸' : '›'} ${prompt}`, Math.max(8, width))
 }
 
-const RULE_GRADIENT = gradient(COLORS.brass, COLORS.signal, 8)
-
-/** The section divider: a plain hairline, or — selected — a heavy rule fading amber into teal. */
-function PromptRule({ width, selected }: { width: number; selected: boolean }) {
-  const span = Math.max(4, width)
-  if (!selected) return <text fg={COLORS.borderSoft} content={'─'.repeat(span)} />
-  const step = Math.ceil(span / RULE_GRADIENT.length)
-  return (
-    <box flexDirection="row" height={1}>
-      {RULE_GRADIENT.map((fg, i) => (
-        <text key={i} fg={fg} content={'━'.repeat(Math.max(0, Math.min(step, span - i * step)))} />
-      ))}
-    </box>
-  )
+/** The section divider: one hairline; selection lives on the card, not the group. */
+function PromptRule({ width }: { width: number }) {
+  return <text fg={COLORS.borderSoft} content={'─'.repeat(Math.max(4, width))} />
 }
 
 const SPINNER = '⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
@@ -210,7 +199,7 @@ export function NavPane({
       border
       borderStyle="single"
       borderColor={COLORS.border}
-      title=" SESSION "
+      title=" SESSION ^s "
       titleColor={COLORS.faint}
       backgroundColor={COLORS.background}
     >
@@ -222,11 +211,10 @@ export function NavPane({
               key={section.id}
               height={1}
               paddingX={1}
-              backgroundColor={selected ? COLORS.surface : undefined}
               onMouseDown={() => onSelect(section.id)}
             >
               <text
-                fg={selected ? COLORS.brassBright : COLORS.text}
+                fg={selected ? COLORS.brassBright : COLORS.muted}
                 content={shorten(
                   `${selected ? '▸' : ' '}${String(index + 1).padStart(String(sections.length).length)} ${section.prompt}`,
                   Math.max(8, width - 4),
@@ -264,6 +252,9 @@ export function ContentPane({
   onMore,
   onSuggest,
   loadingMoreItemId,
+  cursorItemId,
+  cardRegistry,
+  onSelectItem,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -287,6 +278,12 @@ export function ContentPane({
   onSuggest: (text: string) => void
   /** Item id of the list currently fetching its next page. */
   loadingMoreItemId: number | null
+  /** The highlighted card; its frame turns amber and keys act on it. */
+  cursorItemId: number | null
+  /** Card renderables by item id, for ←/→ scrolling. */
+  cardRegistry: RefObject<Map<number, BoxRenderable>>
+  /** A click on a card highlights it. */
+  onSelectItem: (sectionId: number, itemId: number) => void
 }) {
   // border 2 + scrollbox padding 2 + gutter 1 + its gap 1
   const innerWidth = Math.max(24, width - 6)
@@ -335,25 +332,22 @@ export function ContentPane({
                   else sectionRegistry.current.delete(section.id)
                 }}
               >
-                {/* Hairline + one-step tint: the selection stays visible however far
-                    you scroll without shouting. A left-only border is a true 1/8-cell rule. */}
-                <box
-                  flexDirection="column"
-                  flexGrow={1}
-                  paddingLeft={1}
-                  border={['left']}
-                  borderStyle={selected ? 'heavy' : 'single'}
-                  borderColor={selected ? COLORS.brass : COLORS.borderSoft}
-                  backgroundColor={undefined}
-                >
+                <box flexDirection="column" flexGrow={1}>
                 <box flexDirection="row" justifyContent="space-between" height={1}>
                   <text
-                    fg={selected ? COLORS.brassBright : COLORS.faint}
+                    fg={selected ? COLORS.brass : COLORS.faint}
                     content={promptKicker(section.prompt, innerWidth - 4, selected)}
                   />
-                  <Button label="✕" onPress={() => onClose(section.id)} />
+                  <text
+                    fg={COLORS.faint}
+                    content="×"
+                    onMouseDown={(event: MouseEvent) => {
+                      event.stopPropagation()
+                      onClose(section.id)
+                    }}
+                  />
                 </box>
-                <PromptRule width={innerWidth} selected={selected} />
+                <PromptRule width={innerWidth} />
                 {section.items.map((item, index) => {
                   if (item.kind === 'note') {
                     const color =
@@ -377,10 +371,9 @@ export function ContentPane({
                     )
                   }
                   const block = item.block
-                  if (block.kind === 'view') {
-                    return (
+                  const card =
+                    block.kind === 'view' ? (
                       <ResultView
-                        key={item.id}
                         store={store}
                         view={block.view}
                         width={cardWidth}
@@ -389,34 +382,45 @@ export function ContentPane({
                         onMore={() => onMore(section.id, item.id, block.view)}
                         loadingMore={loadingMoreItemId === item.id}
                       />
-                    )
-                  }
-                  if (block.kind === 'raw') {
-                    return (
-                      <RawCard key={item.id} title={block.title} text={block.text} width={cardWidth} />
-                    )
-                  }
-                  if (block.kind === 'nfd') {
-                    const address = block.data.address
-                    return (
+                    ) : block.kind === 'raw' ? (
+                      <RawCard title={block.title} text={block.text} width={cardWidth} />
+                    ) : block.kind === 'nfd' ? (
                       <NfdCard
-                        key={item.id}
                         data={block.data}
                         network={block.network}
                         width={cardWidth}
-                        onOpenAccount={address ? () => onOpen({ kind: 'account', address }) : undefined}
+                        onOpenAccount={
+                          block.data.address ? () => onOpen({ kind: 'account', address: block.data.address! }) : undefined
+                        }
+                      />
+                    ) : (
+                      <PaymentCard
+                        key={block.flow.stage}
+                        model={(() => {
+                          const derived = createPaymentFlowViewModel(store, block.flow)
+                          return derived.ok ? derived.model : undefined
+                        })()}
+                        stage={block.flow.stage}
+                        busy={busyPayment}
+                        width={cardWidth}
                       />
                     )
-                  }
-                  const derived = createPaymentFlowViewModel(store, block.flow)
                   return (
-                    <PaymentCard
-                      key={`${item.id}-${block.flow.stage}`}
-                      model={derived.ok ? derived.model : undefined}
-                      stage={block.flow.stage}
-                      busy={busyPayment}
-                      width={cardWidth}
-                    />
+                    <box
+                      key={item.id}
+                      flexDirection="column"
+                      ref={(renderable: BoxRenderable | null) => {
+                        if (renderable) cardRegistry.current.set(item.id, renderable)
+                        else cardRegistry.current.delete(item.id)
+                      }}
+                      onMouseDown={(event: MouseEvent) => {
+                        // The click highlights the card; a drag still selects text.
+                        event.stopPropagation()
+                        onSelectItem(section.id, item.id)
+                      }}
+                    >
+                      <HighlightContext.Provider value={cursorItemId === item.id}>{card}</HighlightContext.Provider>
+                    </box>
                   )
                 })}
                 {(section.thinking && section.thinking.length > 0) ||

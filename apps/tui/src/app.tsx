@@ -291,7 +291,7 @@ export function App() {
     [createSection, openAccount, openApplication, openAsset, openBlock, openHoldings, openTransaction, openTransactions, runAgent, setScreen],
   )
 
-  // Keyboard path for table rows: the newest transaction list in the selected section.
+  // Keyboard path for table rows: the highlighted list, else the newest one in the selected section.
   const openListRow = useCallback(
     (index: number) => {
       const section = sections.find((candidate) => candidate.id === selectedId)
@@ -299,6 +299,7 @@ export function App() {
       for (let i = section.items.length - 1; i >= 0; i -= 1) {
         const item = section.items[i]!
         if (item.kind !== 'block' || item.block.kind !== 'view') continue
+        if (feed.cursorItemId !== null && item.id !== feed.cursorItemId) continue
         const { view } = item.block
         if (view.view !== 'transaction.list' && view.view !== 'transaction.group') continue
         const derived = createTransactionCollectionViewModel(storeRef.current, view)
@@ -307,10 +308,12 @@ export function App() {
         return
       }
     },
-    [openTarget, sections, selectedId, storeRef],
+    [feed.cursorItemId, openTarget, sections, selectedId, storeRef],
   )
 
   const [loadingMoreItemId, setLoadingMoreItemId] = useState<number | null>(null)
+  const [navOpen, setNavOpen] = useState(true)
+  const toggleNav = useCallback(() => setNavOpen((open) => !open), [])
   const loadMore = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
       if (loadingMoreItemId !== null) return
@@ -327,10 +330,13 @@ export function App() {
 
   // Card actions by key, on the rule 1-9 already uses: the newest card in the
   // selected section that offers the action. Presence doubles as the keybar's hint.
+  // Card actions by key act on the highlighted card; with no cursor yet, on
+  // the newest card in the selected section. Presence doubles as the keybar's hint.
   const cardActions = useMemo(() => {
     const section = sections.find((candidate) => candidate.id === selectedId)
     const views = (section?.items ?? [])
       .flatMap((item) => (item.kind === 'block' && item.block.kind === 'view' ? [{ itemId: item.id, view: item.block.view }] : []))
+      .filter((card) => feed.cursorItemId === null || card.itemId === feed.cursorItemId)
       .reverse()
     const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void; a?: () => void } = {}
     for (const { itemId, view } of views) {
@@ -358,7 +364,7 @@ export function App() {
       }
     }
     return actions
-  }, [loadMore, openTarget, sections, selectedId, storeRef])
+  }, [feed.cursorItemId, loadMore, openTarget, sections, selectedId, storeRef])
   const runCardAction = useCallback((key: 't' | 'e' | 'm' | 'a') => cardActions[key]?.(), [cardActions])
 
   const closeSelectedSection = useCallback(() => {
@@ -479,6 +485,7 @@ export function App() {
     toggleBlocksTail: tail.togglePause,
     openListRow,
     runCardAction,
+    toggleNav,
   })
 
   const navWidth = Math.min(34, Math.max(24, Math.floor(width * 0.24)))
@@ -489,7 +496,7 @@ export function App() {
     if (composerFocused) composerRef.current?.focus()
     else if (screen === 'apps' && apps.selectedMethod) methodInputRef.current?.focus()
   }, [apps.selectedMethod, composerFocused, screen])
-  const showNav = !isNarrow && screen === 'chat'
+  const showNav = navOpen && !isNarrow && screen === 'chat'
   const hint =
     agentBusy || busy
       ? 'working…'
@@ -516,7 +523,7 @@ export function App() {
         : focus === 'content'
           ? [
               '↑/↓ scroll',
-              '←/→ sections',
+              '←/→ cards',
               cardActions.rows ? '1-9 open row' : null,
               cardActions.t ? 't txns' : null,
               cardActions.a ? 'a assets' : null,
@@ -528,7 +535,7 @@ export function App() {
               .filter(Boolean)
               .join(' · ')
           : sections.length > 0
-            ? `enter send · tab feed (${sections.length}) · ^n network · ctrl+c quit`
+            ? `enter send · tab feed (${sections.length}) · ^s session · ^n network · ctrl+c quit`
             : 'enter send · drag copies · ^n network · ctrl+c quit'
 
   return (
@@ -652,6 +659,9 @@ export function App() {
               setFocus('composer')
             }}
             loadingMoreItemId={loadingMoreItemId}
+            cursorItemId={feed.cursorItemId}
+            cardRegistry={feed.cardRegistry}
+            onSelectItem={feed.setCursor}
           />
         </box>
       )}
