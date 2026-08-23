@@ -280,3 +280,16 @@ test('a zero self-payment carrying rekeyTo reaches the graph as a rekey row', ()
   ])
   expect(graph?.horizontals[0]?.label.type).toBe('rekey')
 })
+
+test('an inner app create resolves to its created id on the way into the graph', () => {
+  const user = 'URKF45CZ5Q6QW6VQKQWGQJ3FQKXGDQ2Q2CCFJ2XM7UNQ3OQYZ3PSNDHZ6Y'
+  const graph = buildGroupGraph([
+    {
+      type: 'appl',
+      sender: user,
+      applicationId: 10,
+      innerTxns: [{ type: 'appl', sender: user, applicationId: 0, createdApplicationId: '77' }],
+    },
+  ])
+  expect(graph?.verticals.map((v) => (v.type === 'application' ? v.applicationId : v.type))).toEqual(['account', 10, 77])
+})

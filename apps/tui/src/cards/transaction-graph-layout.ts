@@ -418,6 +418,8 @@ export interface GraphSourceRow {
   closeAssetAmount?: number | string
   clawbackFrom?: string
   rekeyTo?: string
+  createdAssetId?: number | string
+  createdApplicationId?: number | string
   globalStateDelta?: unknown
   localStateDelta?: unknown
   logs?: string[]
@@ -429,37 +431,17 @@ export interface GraphSourceRow {
 }
 
 function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
+  // Spread, then coerce: a hand-copied field list here dropped rekeyTo and
+  // createdApplicationId once each. Ids arrive as number | string on the wire.
+  const { assetId, applicationId, createdAssetId, createdApplicationId, innerTxns, ...rest } = row
   return {
-    sender: row.sender,
+    ...rest,
     feeMicroAlgos: row.feeMicroAlgos ?? 0,
-    ...(row.id === undefined ? {} : { id: row.id }),
-    ...(row.type === undefined ? {} : { type: row.type }),
-    ...(row.receiver === undefined ? {} : { receiver: row.receiver }),
-    ...(row.paymentAmountMicroAlgos === undefined
-      ? {}
-      : { paymentAmountMicroAlgos: row.paymentAmountMicroAlgos }),
-    ...(row.assetId === undefined ? {} : { assetId: Number(row.assetId) }),
-    ...(row.assetAmount === undefined ? {} : { assetAmount: row.assetAmount }),
-    ...(row.assetName === undefined ? {} : { assetName: row.assetName }),
-    ...(row.assetUnitName === undefined ? {} : { assetUnitName: row.assetUnitName }),
-    ...(row.assetDecimals === undefined ? {} : { assetDecimals: row.assetDecimals }),
-    ...(row.applicationId === undefined ? {} : { applicationId: Number(row.applicationId) }),
-    ...(row.onCompletion === undefined ? {} : { onCompletion: row.onCompletion }),
-    ...(row.closeTo === undefined ? {} : { closeTo: row.closeTo }),
-    ...(row.closeAmountMicroAlgos === undefined
-      ? {}
-      : { closeAmountMicroAlgos: row.closeAmountMicroAlgos }),
-    ...(row.closeAssetAmount === undefined ? {} : { closeAssetAmount: row.closeAssetAmount }),
-    ...(row.clawbackFrom === undefined ? {} : { clawbackFrom: row.clawbackFrom }),
-    ...(row.rekeyTo === undefined ? {} : { rekeyTo: row.rekeyTo }),
-    ...(row.globalStateDelta === undefined ? {} : { globalStateDelta: row.globalStateDelta }),
-    ...(row.localStateDelta === undefined ? {} : { localStateDelta: row.localStateDelta }),
-    ...(row.logs === undefined ? {} : { logs: row.logs }),
-    ...(row.applicationArgs === undefined ? {} : { applicationArgs: row.applicationArgs }),
-    ...(row.methodName === undefined ? {} : { methodName: row.methodName }),
-    ...(row.methodArgs === undefined ? {} : { methodArgs: row.methodArgs }),
-    ...(row.methodReturn === undefined ? {} : { methodReturn: row.methodReturn }),
-    ...(row.innerTxns === undefined ? {} : { innerTxns: row.innerTxns.map(toGraphTransaction) }),
+    ...(assetId === undefined ? {} : { assetId: Number(assetId) }),
+    ...(applicationId === undefined ? {} : { applicationId: Number(applicationId) }),
+    ...(createdAssetId === undefined ? {} : { createdAssetId: Number(createdAssetId) }),
+    ...(createdApplicationId === undefined ? {} : { createdApplicationId: Number(createdApplicationId) }),
+    ...(innerTxns === undefined ? {} : { innerTxns: innerTxns.map(toGraphTransaction) }),
   }
 }
 
