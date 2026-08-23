@@ -23,6 +23,7 @@
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
         "@initlabs/vibekit-plugin-pera": "workspace:*",
         "@initlabs/vibekit-plugin-vestige": "workspace:*",
+        "@initlabs/vibekit-preset": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
         "@initlabs/vibekit-tools": "workspace:*",
         "algosdk": "3.7.0",
@@ -44,6 +45,7 @@
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
         "@initlabs/vibekit-plugin-pera": "workspace:*",
         "@initlabs/vibekit-plugin-vestige": "workspace:*",
+        "@initlabs/vibekit-preset": "workspace:*",
         "@initlabs/vibekit-signer-keystore": "workspace:*",
         "@initlabs/vibekit-tools": "workspace:*",
         "algosdk": "3.7.0",
@@ -218,6 +220,29 @@
     "packages/plugin-vestige": {
       "name": "@initlabs/vibekit-plugin-vestige",
       "version": "0.1.0",
+      "devDependencies": {
+        "@initlabs/vibekit-core": "workspace:*",
+        "@types/bun": "^1.4.0",
+        "algosdk": "3.7.0",
+        "zod": "^4.4.3",
+      },
+      "peerDependencies": {
+        "@initlabs/vibekit-core": "^0.1.0",
+        "algosdk": ">=3.7.0 <4",
+        "zod": "^4.0.0",
+      },
+    },
+    "packages/preset": {
+      "name": "@initlabs/vibekit-preset",
+      "version": "0.1.0",
+      "dependencies": {
+        "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
+        "@initlabs/vibekit-plugin-nfd": "workspace:*",
+        "@initlabs/vibekit-plugin-pera": "workspace:*",
+        "@initlabs/vibekit-plugin-vestige": "workspace:*",
+        "@initlabs/vibekit-signer-keystore": "workspace:*",
+        "@initlabs/vibekit-tools": "workspace:*",
+      },
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.4.0",
@@ -411,6 +436,8 @@
     "@initlabs/vibekit-plugin-pera": ["@initlabs/vibekit-plugin-pera@workspace:packages/plugin-pera"],
 
     "@initlabs/vibekit-plugin-vestige": ["@initlabs/vibekit-plugin-vestige@workspace:packages/plugin-vestige"],
+
+    "@initlabs/vibekit-preset": ["@initlabs/vibekit-preset@workspace:packages/preset"],
 
     "@initlabs/vibekit-signer-keystore": ["@initlabs/vibekit-signer-keystore@workspace:packages/signer-keystore"],
 

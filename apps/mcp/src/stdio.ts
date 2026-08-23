@@ -1,11 +1,7 @@
 /** The reference stdio deployment — this file IS the self-hosting documentation. */
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
-import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import { createFundTestnetTool, createKeystoreSigner, createSigningAccountTool, createSigningAddressesTool, hasDispenserToken } from '@initlabs/vibekit-signer-keystore'
-import type { NetworkId } from '@initlabs/vibekit-core'
+import { defaultPlugins, networksFromEnv, withKeystoreTools } from '@initlabs/vibekit-preset'
+import { createKeystoreSigner } from '@initlabs/vibekit-signer-keystore'
 import { tools } from './tools.js'
 
 // SIGNING=execute signs via the local keystore daemon (`keystore serve`).
@@ -15,22 +11,12 @@ const signer = mode === 'execute' ? await createKeystoreSigner() : undefined
 
 const handle = serveVibekitStdio({
   name: 'vibekit-reference',
-  network: (process.env.NETWORK as NetworkId) ?? 'testnet',
   // e.g. NETWORKS=testnet,localnet for per-request network selection
-  networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [],
+  ...networksFromEnv({ network: 'testnet', networks: [] }),
   mode,
   // signer present → keystore account tools; dispenser token → testnet funding
-  tools: signer
-    ? [
-        ...tools,
-        createSigningAddressesTool(signer),
-        createSigningAccountTool(signer),
-        ...(signer.secrets && (await hasDispenserToken(signer.secrets))
-          ? [createFundTestnetTool(signer.secrets)]
-          : []),
-      ]
-    : tools,
-  plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
+  tools: await withKeystoreTools(tools, signer),
+  plugins: defaultPlugins(),
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })
 

@@ -19,43 +19,15 @@ import {
   injectNetworkParam,
   resolveDeployment,
   ToolError,
-  type AnyTool,
-  type NetworkId,
   type ResolvedDeployment,
 } from '@initlabs/vibekit-core'
 import {
-  createFundTestnetTool,
-  createKeystoreSigner,
-  createSigningAccountTool,
-  createSigningAddressesTool,
-  hasDispenserToken,
-  type KeystoreSigner,
-} from '@initlabs/vibekit-signer-keystore'
-import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import {
-  accountTools,
-  assetTools,
-  assetWriteTools,
-  contractTools,
-  contractWriteTools,
-  networkTools,
-  transactionTools,
-  transactionWriteTools,
-} from '@initlabs/vibekit-tools'
-
-const baseTools: AnyTool[] = [
-  ...networkTools,
-  ...accountTools,
-  ...assetTools,
-  ...transactionTools,
-  ...contractTools,
-  ...transactionWriteTools,
-  ...assetWriteTools,
-  ...contractWriteTools,
-]
+  defaultPlugins,
+  defaultTools,
+  networksFromEnv,
+  withKeystoreTools,
+} from '@initlabs/vibekit-preset'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
 
 async function buildDeployment(): Promise<{
   deployment: ResolvedDeployment
@@ -71,15 +43,10 @@ async function buildDeployment(): Promise<{
   }
 
   const deployment = resolveDeployment({
-    network: (process.env.NETWORK as NetworkId) ?? 'localnet',
-    networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [
-      'localnet',
-      'testnet',
-      'mainnet',
-    ],
+    ...networksFromEnv({ network: 'localnet', networks: ['localnet', 'testnet', 'mainnet'] }),
     mode: signer ? 'execute' : 'compose',
-    tools: await withKeystoreTools(baseTools, signer),
-    plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
+    tools: await withKeystoreTools(defaultTools, signer),
+    plugins: defaultPlugins(),
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
 
@@ -149,16 +116,4 @@ export async function commandTool(args: string[]): Promise<void> {
   } finally {
     await signer?.close()
   }
-}
-
-async function withKeystoreTools(
-  base: AnyTool[],
-  signer: KeystoreSigner | undefined,
-): Promise<AnyTool[]> {
-  if (!signer) return base
-  const tools = [...base, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
-  if (signer.secrets && (await hasDispenserToken(signer.secrets))) {
-    tools.push(createFundTestnetTool(signer.secrets))
-  }
-  return tools
 }

@@ -10,39 +10,12 @@
 
 import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
 import {
-  createFundTestnetTool,
-  createKeystoreSigner,
-  createSigningAccountTool,
-  createSigningAddressesTool,
-  hasDispenserToken,
-  type KeystoreSigner,
-} from '@initlabs/vibekit-signer-keystore'
-import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import type { AnyTool, NetworkId } from '@initlabs/vibekit-core'
-import {
-  accountTools,
-  assetTools,
-  assetWriteTools,
-  contractTools,
-  contractWriteTools,
-  networkTools,
-  transactionTools,
-  transactionWriteTools,
-} from '@initlabs/vibekit-tools'
-
-const tools: AnyTool[] = [
-  ...networkTools,
-  ...accountTools,
-  ...assetTools,
-  ...transactionTools,
-  ...contractTools,
-  ...transactionWriteTools,
-  ...assetWriteTools,
-  ...contractWriteTools,
-]
+  defaultPlugins,
+  defaultTools,
+  networksFromEnv,
+  withKeystoreTools,
+} from '@initlabs/vibekit-preset'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
 
 export async function commandMcp(): Promise<void> {
   const requestedMode = process.env.SIGNING === 'compose' ? 'compose' : 'execute'
@@ -65,17 +38,12 @@ export async function commandMcp(): Promise<void> {
 
   const handle = serveVibekitStdio({
     name: 'vibekit',
-    network: (process.env.NETWORK as NetworkId) ?? 'localnet',
-    networks: (process.env.NETWORKS?.split(',').map((n) => n.trim()).filter(Boolean) as NetworkId[]) ?? [
-      'localnet',
-      'testnet',
-      'mainnet',
-    ],
+    ...networksFromEnv({ network: 'localnet', networks: ['localnet', 'testnet', 'mainnet'] }),
     mode,
     // With a signer, agents can also discover/create local accounts;
     // with a dispenser token, they can fund testnet too.
-    tools: await withKeystoreTools(tools, signer),
-    plugins: [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()],
+    tools: await withKeystoreTools(defaultTools, signer),
+    plugins: defaultPlugins(),
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
   })
 
@@ -86,14 +54,3 @@ export async function commandMcp(): Promise<void> {
   })
 }
 
-async function withKeystoreTools(
-  base: AnyTool[],
-  signer: KeystoreSigner | undefined,
-): Promise<AnyTool[]> {
-  if (!signer) return base
-  const tools = [...base, createSigningAddressesTool(signer), createSigningAccountTool(signer)]
-  if (signer.secrets && (await hasDispenserToken(signer.secrets))) {
-    tools.push(createFundTestnetTool(signer.secrets))
-  }
-  return tools
-}

@@ -16,6 +16,7 @@
     "@initlabs/vibekit-plugin-nfd": "workspace:*",
     "@initlabs/vibekit-plugin-pera": "workspace:*",
     "@initlabs/vibekit-plugin-vestige": "workspace:*",
+    "@initlabs/vibekit-preset": "workspace:*",
     "@initlabs/vibekit-signer-keystore": "workspace:*",
     "@initlabs/vibekit-tools": "workspace:*",
     "algosdk": "3.7.0",
