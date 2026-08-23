@@ -120,7 +120,7 @@ export function markerText(tag: GraphMarkerTag | undefined): string {
 
 /** Color family for a row label, from existing palette members only. */
 export function labelColor(type: string): string {
-  if (type.startsWith('payment')) return COLORS.brass
+  if (type.startsWith('payment') || type === 'rekey') return COLORS.brass
   if (type === 'clawback') return COLORS.brassBright
   if (type.startsWith('app')) return COLORS.brassBright
   if (type.startsWith('asset')) return COLORS.signal
@@ -139,6 +139,9 @@ export function labelSegments(label: GraphLabel, isRemainder: boolean): GraphSpa
     segments.push({ text: 'remainder', fg: COLORS.faint })
   } else if (label.type === 'assetOptIn') {
     segments.push({ text: 'opt-in', fg: color })
+  } else if (label.type === 'rekey') {
+    segments.push({ text: 'rekey', fg: color })
+    return segments
   } else if (label.type !== 'payment' && label.type !== 'assetTransfer') {
     const method = label.methodName === undefined ? '' : ` ${label.methodName}`
     segments.push({ text: `${label.type}${method}`, fg: color })

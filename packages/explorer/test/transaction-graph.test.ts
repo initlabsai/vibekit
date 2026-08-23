@@ -418,7 +418,7 @@ describe('single transaction with nested inners', () => {
 
     // inner/9: self-payment (rekey back) is a self loop on the sender column.
     expect(rows[13]!.representation).toEqual({ kind: 'selfLoop', vertical: 0, fromTag: 'rekey', toTag: 1 })
-    expect(rows[13]!.label).toEqual({ type: 'payment', amountMicroAlgos: 0 })
+    expect(rows[13]!.label).toEqual({ type: 'rekey', amountMicroAlgos: 0 })
   })
 
   // Verified against Lora's rendered snapshot
@@ -446,7 +446,7 @@ describe('single transaction with nested inners', () => {
       'payment',
       'appCall',
       'appCreate',
-      'payment',
+      'rekey',
       'payment',
       'assetOptIn',
     ])

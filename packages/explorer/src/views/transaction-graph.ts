@@ -66,6 +66,7 @@ export const graphVerticalSchema = z.discriminatedUnion('type', [
 export const graphLabelTypeSchema = z.enum([
   'payment',
   'paymentRemainder',
+  'rekey',
   'assetTransfer',
   'assetTransferRemainder',
   'assetOptIn',
@@ -523,13 +524,18 @@ function representationsFor(
 
   switch (txn.type) {
     case 'pay': {
+      // A zero payment that carries rekeyTo exists for the rekey (the
+      // "rekey to the app, act, rekey back" idiom); the amount says nothing.
+      const rekey = txn.rekeyTo !== undefined && BigInt(txn.paymentAmountMicroAlgos ?? 0) === BigInt(0)
       const rows: RowSeed[] = [
         {
           representation: asRepresentation(
             senderFrom(),
             toAccountOrApplication(verticals, txn.receiver ?? txn.sender),
           ),
-          label: { type: 'payment', amountMicroAlgos: txn.paymentAmountMicroAlgos ?? 0 },
+          label: rekey
+            ? { type: 'rekey', amountMicroAlgos: 0 }
+            : { type: 'payment', amountMicroAlgos: txn.paymentAmountMicroAlgos ?? 0 },
         },
       ]
       if (txn.closeTo !== undefined) {

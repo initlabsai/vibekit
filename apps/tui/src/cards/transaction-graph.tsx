@@ -1,6 +1,6 @@
 import type { TransactionsGraph } from '@initlabs/vibekit-explorer'
 
-import { Button, Fact, Frame, Header, innerWidth } from '../ui.js'
+import { Button, Fact, FooterNote, Frame, Header, innerWidth } from '../ui.js'
 import { computeGraphLayout } from './transaction-graph-layout.js'
 
 /**
@@ -26,6 +26,14 @@ export function TransactionGraphCard({
 }) {
   const body = innerWidth(width)
   const layout = computeGraphLayout(graph, body)
+  const tags = graph.horizontals.flatMap((row) => {
+    const { representation } = row
+    return [representation.fromTag, 'toTag' in representation ? representation.toTag : undefined]
+  })
+  const legend = [
+    tags.some((tag) => typeof tag === 'number') ? '(n) account n' : null,
+    tags.includes('rekey') ? '(rk) rekeyed — the app acts as that account' : null,
+  ].filter(Boolean)
   return (
     <Frame width={width}>
       <Header
@@ -45,6 +53,7 @@ export function TransactionGraphCard({
           </box>
         ))}
       </box>
+      {legend.length > 0 ? <FooterNote text={legend.join(' · ')} width={body} /> : null}
     </Frame>
   )
 }
