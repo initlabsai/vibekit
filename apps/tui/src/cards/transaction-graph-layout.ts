@@ -209,25 +209,6 @@ function headingSpans(vertical: GraphVertical, avail: number): GraphSpan[] {
   }
 }
 
-/** Tree-connector cells for one row's gutter; `main` is the arrow line. */
-function drawTreePrefix(
-  cells: Cell[],
-  row: GraphHorizontal,
-  horizontals: readonly GraphHorizontal[],
-  main: boolean,
-): void {
-  if (row.depth === 0) return
-  for (let level = 1; level < row.depth; level += 1) {
-    const ancestor = horizontals[row.ancestors[level]!]
-    if (ancestor?.hasNextSibling) drawText(cells, (level - 1) * 2, GUIDE, COLORS.faint)
-  }
-  const x = (row.depth - 1) * 2
-  if (!main || row.isRemainder) {
-    if (row.hasNextSibling) drawText(cells, x, GUIDE, COLORS.faint)
-    return
-  }
-  drawText(cells, x, row.hasNextSibling ? '├─' : '└─', COLORS.faint)
-}
 
 function drawGuides(cells: Cell[], centers: readonly number[]): void {
   for (const center of centers) drawText(cells, center, GUIDE, COLORS.borderSoft)
@@ -243,15 +224,15 @@ function laneLayout(
   // Lines run the full body, not just the lanes: a self-loop on the last
   // column writes its label to the right, where Lora keeps a spare column.
   const width = Math.max(gutter + n * laneWidth, bodyWidth)
-  const centers = graph.verticals.map((_, i) => gutter + i * laneWidth + (laneWidth >> 1))
+  // The guide runs under the first character of its heading; labels and
+  // self-loops grow rightward into the lane, so nothing fights for the middle.
+  const centers = graph.verticals.map((_, i) => gutter + i * laneWidth)
   const lines: GraphLine[] = []
   const rowLines: number[] = []
 
   const header = newLine(width)
   graph.verticals.forEach((vertical, i) => {
-    const spans = headingSpans(vertical, laneWidth - 1)
-    const start = gutter + i * laneWidth + Math.max(0, (laneWidth - 1 - spansLength(spans)) >> 1)
-    drawSpans(header, start, spans)
+    drawSpans(header, gutter + i * laneWidth, headingSpans(vertical, laneWidth - 2))
   })
   lines.push(toSpans(header))
 
@@ -267,7 +248,6 @@ function laneLayout(
 
     const main = newLine(width)
     drawGuides(main, centers)
-    drawTreePrefix(main, row, graph.horizontals, true)
 
     if (rep.kind === 'vector') {
       const a = centers[rep.fromVertical]!
@@ -304,7 +284,6 @@ function laneLayout(
       } else {
         const above = newLine(width)
         drawGuides(above, centers)
-        drawTreePrefix(above, row, graph.horizontals, false)
         const start = Math.max(
           0,
           Math.min(width - labelLen, ((a + b) >> 1) - (labelLen >> 1)),
@@ -393,8 +372,9 @@ export function computeGraphLayout(graph: TransactionsGraph, bodyWidth: number):
   if (graph.verticals.length === 0 || graph.horizontals.length === 0) {
     return { mode: 'compact', lines: [], centers: [], rowLines: [] }
   }
-  const maxDepth = graph.horizontals.reduce((max, row) => Math.max(max, row.depth), 0)
-  const gutter = maxDepth * 2
+  // Lanes carry no depth tree: an inner row follows its call, and the table
+  // layout shows the nesting. (The compact list keeps its connectors.)
+  const gutter = 0
   const laneWidth = Math.min(
     MAX_LANE_WIDTH,
     Math.floor((bodyWidth - gutter) / graph.verticals.length),

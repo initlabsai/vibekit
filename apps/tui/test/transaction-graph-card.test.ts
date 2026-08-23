@@ -110,13 +110,13 @@ describe('lane layout', () => {
     expect(directions).toEqual(new Set(['leftToRight', 'rightToLeft']))
   })
 
-  test('inner transactions get tree connectors indented by depth', () => {
+  test('lanes carry no depth tree; guides sit under the first character of each heading', () => {
     const layout = computeGraphLayout(swapGraph, WIDE)
+    const heading = lineText(layout.lines[0]!)
+    for (const x of layout.centers) expect(heading[x]).not.toBe(' ')
     swapGraph.horizontals.forEach((row, index) => {
-      if (row.depth === 0 || row.isRemainder) return
       const text = lineText(layout.lines[layout.rowLines[index]!]!)
-      const x = (row.depth - 1) * 2
-      expect(['├', '└']).toContain(text[x]!)
+      expect(text.slice(0, 2)).not.toMatch(/[├└]/)
     })
     const depths = new Set(swapGraph.horizontals.map((row) => row.depth))
     expect(Math.max(...depths)).toBeGreaterThanOrEqual(2)
@@ -166,7 +166,7 @@ describe('lane layout', () => {
 describe('compact fallback', () => {
   test('kicks in when lanes would fall under the minimum width', () => {
     const columns = swapGraph.verticals.length
-    const tooNarrow = columns * MIN_LANE_WIDTH + 3 // + gutter 4 pushes lanes under minimum
+    const tooNarrow = columns * MIN_LANE_WIDTH - 1 // one column short of the minimum lane
     const layout = computeGraphLayout(swapGraph, tooNarrow)
     expect(layout.mode).toBe('compact')
     expect(layout.centers).toHaveLength(0)
