@@ -12,11 +12,12 @@ import {
   Frame,
   Header,
   Hero,
+  Ident,
   innerWidth,
   Rule,
   Unavailable,
 } from '../ui.js'
-import { algo, pageNotes } from './shared.js'
+import { algo, pad, pageNotes } from './shared.js'
 
 function holdingAmount(amount: number | string, decimals?: number, unitName?: string): string {
   const display = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
@@ -74,6 +75,9 @@ export function AccountCard({
   const body = innerWidth(width)
   const ordered = sortedAssets(model.assets, sort)
   const shown = ordered.slice(0, maxAssets)
+  const idW = 12
+  const amountW = Math.min(24, Math.max(12, Math.floor(body / 3)))
+  const nameW = Math.max(8, body - amountW - idW - 3)
   const sortButton =
     onCycleSort && model.assets.length > 1 ? (
       <Button label={sort === 'none' ? 'sort ▾' : `sort ▾ ${ASSET_SORT_LABEL[sort]}`} onPress={onCycleSort} />
@@ -99,24 +103,23 @@ export function AccountCard({
         {shown.length === 0 ? (
           <text fg={COLORS.faint} marginTop={1} content="no assets" />
         ) : (
-          shown.map((asset, index) => (
-            <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
-              <Fact
-                label="id"
-                value={String(asset.assetId)}
-                copy={String(asset.assetId)}
-                width={body}
-              />
-              <Fact
-                label="name"
-                value={asset.name ?? asset.unitName ?? `asset ${asset.assetId}`}
-                width={body}
-              />
-              <Fact label="amount" value={holdingAmount(asset.amount, asset.decimals, asset.unitName)} width={body} />
-              {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
-              {index < shown.length - 1 ? <Rule width={body} /> : null}
-            </box>
-          ))
+          <box flexDirection="column" marginTop={1}>
+            {/* One line per holding, like Lora's table: name · amount · id. The id still copies on click. */}
+            <text fg={COLORS.faint} content={`${pad('name', nameW)} ${pad('amount', amountW, 'right')}  id`} />
+            {shown.map((asset) => (
+              <box key={String(asset.assetId)} flexDirection="row" height={1}>
+                <text
+                  fg={COLORS.text}
+                  content={`${pad(asset.name ?? asset.unitName ?? `asset ${asset.assetId}`, nameW)} ${pad(
+                    holdingAmount(asset.amount, asset.decimals, asset.unitName),
+                    amountW,
+                    'right',
+                  )}${asset.isFrozen ? ' ❄' : ' '} `}
+                />
+                <Ident value={String(asset.assetId)} width={idW} />
+              </box>
+            ))}
+          </box>
         )}
         {ordered.length > maxAssets ? (
           <FooterNote text={`${ordered.length - maxAssets} more assets`} width={body} />

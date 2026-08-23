@@ -3,7 +3,7 @@ import algosdk from 'algosdk'
 import { base64ToBytes } from '@initlabs/vibekit-core'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
-import { wrapLines } from '../theme.js'
+import { shorten, wrapLines } from '../theme.js'
 import { Card, innerWidth } from '../ui.js'
 
 /**
@@ -25,6 +25,12 @@ export function bytesDisplay(base64: string): string {
 export function algo(value: number | string | undefined): string | undefined {
   if (value === undefined) return undefined
   return `${formatMicroAlgos(value)} ALGO`
+}
+
+/** Fixed-width cell for one-line table rows; shortens, never wraps. */
+export function pad(text: string, width: number, align: 'left' | 'right' = 'left'): string {
+  const cut = shorten(text, width)
+  return align === 'right' ? cut.padStart(width) : cut.padEnd(width)
 }
 
 export function pageNotes(total: number, shown: number, nextToken?: string): string[] {

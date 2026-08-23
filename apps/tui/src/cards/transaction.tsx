@@ -23,7 +23,9 @@ import {
   Unavailable,
   type Tone,
 } from '../ui.js'
-import { algo, bytesDisplay, pageNotes } from './shared.js'
+import { algo, bytesDisplay, pad, pageNotes } from './shared.js'
+
+const MAX_DELTAS = 6
 
 /** ARC-4 return logs start with 0x151f7c75. */
 const ARC4_RETURN_PREFIX = 'FR98dQ'
@@ -90,6 +92,19 @@ export function TransactionCard({
   const transfer = assetUnits(model.assetAmount, model.assetDecimals, model.assetUnitName)
   const hero = payment ?? transfer
   const tone: Tone = model.status === 'confirmed' ? 'ok' : model.status === 'failed' ? 'bad' : 'warn'
+  // A pool bootstrap writes a dozen keys; the card shows the first few, the count says the rest.
+  const deltas = [
+    ...(model.globalStateDelta ?? []).map((entry) => ({
+      label: 'Δ global',
+      value: `${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`,
+    })),
+    ...(model.localStateDelta ?? []).flatMap((local) =>
+      local.delta.map((entry) => ({
+        label: 'Δ local',
+        value: `${local.address.slice(0, 8)}… ${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`,
+      })),
+    ),
+  ]
   const assetLabel =
     model.assetId === undefined
       ? undefined
@@ -164,24 +179,12 @@ export function TransactionCard({
                 <Fact key={`log-${index}`} label={`log ${index}`} value={bytesDisplay(log)} width={body} />
               ),
             )}
-        {(model.globalStateDelta ?? []).map((entry, index) => (
-          <Fact
-            key={`gd-${index}`}
-            label="Δ global"
-            value={`${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`}
-            width={body}
-          />
+        {deltas.slice(0, MAX_DELTAS).map((delta, index) => (
+          <Fact key={`delta-${index}`} label={delta.label} value={delta.value} width={body} />
         ))}
-        {(model.localStateDelta ?? []).flatMap((local) =>
-          local.delta.map((entry, index) => (
-            <Fact
-              key={`ld-${local.address}-${index}`}
-              label="Δ local"
-              value={`${local.address.slice(0, 8)}… ${bytesDisplay(entry.key)} = ${stateValue(entry.value)}`}
-              width={body}
-            />
-          )),
-        )}
+        {deltas.length > MAX_DELTAS ? (
+          <Fact label="Δ …" value={`${deltas.length - MAX_DELTAS} more state changes`} valueColor={COLORS.faint} width={body} />
+        ) : null}
         {model.onCompletion ? (
           <Fact label="on-comp" value={formatOnCompletion(model.onCompletion)} width={body} />
         ) : null}
@@ -245,11 +248,6 @@ function queryLabel(
 
 function compactTime(roundTime: number): string {
   return new Date(roundTime * 1000).toISOString().slice(11, 16)
-}
-
-function pad(text: string, width: number, align: 'left' | 'right' = 'left'): string {
-  const cut = shorten(text, width)
-  return align === 'right' ? cut.padStart(width) : cut.padEnd(width)
 }
 
 type ListRow = {

@@ -58,6 +58,15 @@ export function useFeed() {
     setTimeout(go, 50)
   }, [])
 
+  /** scrollToSection once layout has caught up with the commit (mirrors scrollToBottom). */
+  const scrollToSectionSoon = useCallback(
+    (id: number) => {
+      setTimeout(() => scrollToSection(id), 0)
+      setTimeout(() => scrollToSection(id), 50)
+    },
+    [scrollToSection],
+  )
+
   /** Highlights a feed group without moving the viewport. Used on content clicks so a drag-select does not jump. */
   const markSection = useCallback((id: number) => {
     setSelectedId(id)
@@ -109,11 +118,16 @@ export function useFeed() {
 
   const appendItem = useCallback(
     (sectionId: number, item: SectionItem) => {
+      const hadCard = sectionsRef.current
+        .find((section) => section.id === sectionId)
+        ?.items.some((entry) => entry.kind === 'block')
       updateSection(sectionId, (section) => ({ ...section, items: [...section.items, item] }))
-      // A new card or note always comes from the user's own request: show it.
-      scrollToBottom()
+      // A card lands with its header in view — a tall one would otherwise show
+      // only its tail. Notes stick to the bottom until a card is on screen.
+      if (item.kind === 'block') scrollToSectionSoon(sectionId)
+      else if (!hadCard) scrollToBottom()
     },
-    [scrollToBottom, updateSection],
+    [scrollToBottom, scrollToSectionSoon, updateSection],
   )
 
   /** Swaps one rendered block's view (a merged page replaces its first page). */
