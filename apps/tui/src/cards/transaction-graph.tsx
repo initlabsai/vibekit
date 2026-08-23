@@ -1,7 +1,7 @@
 import type { TransactionsGraph } from '@initlabs/vibekit-explorer'
 
 import { Button, Fact, FooterNote, Frame, Header, innerWidth } from '../ui.js'
-import { computeGraphLayout } from './transaction-graph-layout.js'
+import { computeGraphLayout, LOOP } from './transaction-graph-layout.js'
 
 /**
  * Swimlane flow graph for a transaction group: one column per entity, one
@@ -32,6 +32,7 @@ export function TransactionGraphCard({
   })
   const legend = [
     tags.some((tag) => typeof tag === 'number') ? '(n) account n' : null,
+    graph.horizontals.some((row) => row.representation.kind === 'selfLoop') ? `${LOOP} to itself` : null,
     tags.includes('rekey') ? '(rk) rekeyed — the app acts as that account' : null,
   ].filter(Boolean)
   // A unit name on a row is a label, not an identity: say which asset it is.

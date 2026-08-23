@@ -53,7 +53,8 @@ const GUIDE = '│'
 const NODE = '●'
 const HEAD_RIGHT = '▶'
 const HEAD_LEFT = '◀'
-const LOOP = '⟲'
+/** A self-loop: sender and receiver are the same account. ↺ survives more fonts than ⟲. */
+export const LOOP = '↺'
 const DASH = '─'
 
 interface Cell {
