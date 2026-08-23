@@ -47,6 +47,15 @@ import {
 export interface BridgedToolResult {
   record: StructuredResult
   view?: TrustedViewId
+  /** Set when the tool declared a trusted view but its wire didn't parse, so the raw record stands in. */
+  degraded?: { view: TrustedViewId; reason: string }
+}
+
+/** The first schema issue as `path: message`, else the error text. */
+function parseFailure(error: unknown): string {
+  const issue = (error as { issues?: Array<{ path: PropertyKey[]; message: string }> } | null)?.issues?.[0]
+  if (issue) return `${issue.path.map(String).join('.') || '(root)'}: ${issue.message}`
+  return error instanceof Error ? error.message : String(error)
 }
 
 function isTrustedViewId(value: string): value is TrustedViewId {
@@ -95,13 +104,15 @@ export function bridgeToolResult(
   event: ToolResultEventLike,
   identity: ResultIdentity,
 ): BridgedToolResult {
+  let degraded: BridgedToolResult['degraded']
   if (!event.isError) {
     const view = viewCueForToolResult(event)
     if (view) {
       try {
         return { record: RECORD_BUILDERS[view](identity, event.output, event.toolName), view }
-      } catch {
-        // Wire didn't match the trusted shape — keep the raw record instead.
+      } catch (error: unknown) {
+        // Wire didn't match the trusted shape — keep the raw record, and say why.
+        degraded = { view, reason: parseFailure(error) }
       }
     }
   }
@@ -110,6 +121,7 @@ export function bridgeToolResult(
       resultId: identity.resultId,
       network: identity.network,
     }),
+    ...(degraded ? { degraded } : {}),
   }
 }
 

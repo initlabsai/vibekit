@@ -132,6 +132,9 @@ describe('agent lane result bridge', () => {
     const bridged = bridgeToolResult(event, identity())
     expect(bridged.record).toMatchObject({ state: 'success', data: { unexpected: true } })
     expect(bridged.view).toBeUndefined()
+    // The promise that was broken, and the first reason why.
+    expect(bridged.degraded?.view).toBe('transaction.detail')
+    expect(bridged.degraded?.reason).toMatch(/^sender: /)
   })
 
   test('tool errors become failed records', () => {

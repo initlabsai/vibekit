@@ -227,7 +227,7 @@ export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession
 /** What the feed does with one tool result. */
 export type ToolResultPlan = { usedNetwork: LiveNetworkId } & (
   | { kind: 'payment'; draftRecord: StructuredResult }
-  | { kind: 'cards'; record: StructuredResult; blocks: SectionBlock[] }
+  | { kind: 'cards'; record: StructuredResult; blocks: SectionBlock[]; note?: string }
   | { kind: 'dropped'; message: string }
 )
 
@@ -258,7 +258,7 @@ export function planToolResult(
     return { usedNetwork, kind: 'payment', draftRecord }
   }
   try {
-    const { record: bridged, view } = bridgeToolResult(event, {
+    const { record: bridged, view, degraded } = bridgeToolResult(event, {
       resultId: ctx.newId('result-agent'),
       toolCallId: event.id,
       network: usedNetwork,
@@ -286,7 +286,11 @@ export function planToolResult(
         blocks.push({ id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
       }
     }
-    return { usedNetwork, kind: 'cards', record, blocks }
+    // A raw card where a real one was promised is a bug somewhere; name it.
+    const note = degraded
+      ? `${event.toolName} declared ${degraded.view} but its result didn't parse (${degraded.reason}) — shown raw.`
+      : undefined
+    return { usedNetwork, kind: 'cards', record, blocks, ...(note ? { note } : {}) }
   } catch (error: unknown) {
     // Say so: a silently dropped result looks like the agent said nothing.
     return {

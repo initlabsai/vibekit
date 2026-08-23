@@ -499,4 +499,22 @@ describe('planToolResult', () => {
     if (later.kind !== 'cards') throw new Error(later.kind)
     expect(later.blocks).toHaveLength(1)
   })
+
+  test('a view cue whose wire does not parse shows raw and says so', () => {
+    const { programHash: _dropped, ...incomplete } = {
+      applicationId: 7,
+      programHash: 'deadbeef',
+      program: 'approval',
+      bytes: 10,
+      totalLines: 1,
+      fromLine: 1,
+      toLine: 1,
+      teal: 'int 1',
+    }
+    const plan = planToolResult(result('get_application_program', incomplete, { view: 'application.program' }), ctx)
+    if (plan.kind !== 'cards') throw new Error(plan.kind)
+    expect(plan.blocks[0]?.kind).toBe('raw')
+    expect(plan.note).toContain('application.program')
+    expect(plan.note).toContain('programHash')
+  })
 })

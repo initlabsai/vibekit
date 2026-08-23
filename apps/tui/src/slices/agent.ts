@@ -227,6 +227,7 @@ export function useAgentLane({
               case 'cards':
                 commitStore(addResult(storeRef.current, plan.record))
                 for (const block of plan.blocks) appendBlock(sectionId, block)
+                if (plan.note) appendNote(sectionId, plan.note, 'error')
                 return
               case 'dropped':
                 appendNote(sectionId, plan.message, 'error')
