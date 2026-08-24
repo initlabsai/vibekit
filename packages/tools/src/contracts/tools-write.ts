@@ -62,6 +62,117 @@ Plain create only: no idempotent update semantics (deploy again = new app).
 Pass appSpecPath — the built artifact (artifacts/<Name>.arc56.json). Paste appSpec JSON only if no file is available.
 Returns the new application ID and address (execute mode), or the unsigned create transaction (compose mode).`
 
+/** Approval/clear bytecode from the spec: precompiled if present, else TEAL with TMPL_* substituted. */
+async function compilePrograms(
+  ctx: ToolContext,
+  spec: ReturnType<typeof parseAppSpec>,
+  deployTimeParams?: Record<string, string | number>,
+): Promise<{ approval: Uint8Array; clear: Uint8Array }> {
+  const compile = async (teal: string): Promise<Uint8Array> => {
+    const compiled = await ctx.algod.compile(new TextEncoder().encode(teal)).do()
+    return Uint8Array.from(atob(compiled.result), (c) => c.charCodeAt(0))
+  }
+  const program = async (kind: 'approval' | 'clear'): Promise<Uint8Array> => {
+    const bytes = kind === 'approval' ? spec.approvalByteCode : spec.clearByteCode
+    if (bytes) return bytes
+    const teal = kind === 'approval' ? spec.approvalTeal : spec.clearTeal
+    if (!teal) throw new ToolError('INVALID_APP_SPEC', `App spec has no ${kind} program source or bytecode`)
+    return compile(substituteTemplateParams(teal, deployTimeParams))
+  }
+  return { approval: await program('approval'), clear: await program('clear') }
+}
+
+async function signerFor(ctx: ToolContext, sender: string): Promise<algosdk.TransactionSigner> {
+  if (ctx.mode !== 'execute') return algosdk.makeEmptyTransactionSigner()
+  if (!ctx.resolveSigner) {
+    throw new ToolError('NO_SIGNER', 'This deployment has no signer configured; use compose mode.')
+  }
+  return ctx.resolveSigner(sender)
+}
+
+async function updateApp(
+  ctx: ToolContext,
+  args: {
+    sender: string
+    appId: number
+    appSpec: string
+    method?: string
+    args?: unknown[]
+    deployTimeParams?: Record<string, string | number>
+    note?: string
+  },
+) {
+  if (!algosdk.isValidAddress(args.sender)) {
+    throw new ToolError('INVALID_ADDRESS', `Invalid sender address: ${args.sender}`)
+  }
+  const spec = parseAppSpec(args.appSpec)
+  const { approval, clear } = await compilePrograms(ctx, spec, args.deployTimeParams)
+  const suggestedParams = await ctx.algod.getTransactionParams().do()
+  const note = args.note ? new TextEncoder().encode(args.note) : undefined
+  const signer = await signerFor(ctx, args.sender)
+  const appID = BigInt(args.appId)
+
+  const atc = new AtomicTransactionComposer()
+  if (args.method) {
+    const abiMethod = resolveAbiMethod({ appSpec: args.appSpec, method: args.method }, 0)
+    atc.addMethodCall({
+      appID,
+      method: abiMethod!,
+      methodArgs: (args.args ?? []) as algosdk.ABIArgument[],
+      sender: args.sender,
+      signer,
+      onComplete: algosdk.OnApplicationComplete.UpdateApplicationOC,
+      approvalProgram: approval,
+      clearProgram: clear,
+      note,
+      suggestedParams,
+    })
+  } else {
+    const txn = algosdk.makeApplicationUpdateTxnFromObject({
+      sender: args.sender,
+      appIndex: appID,
+      approvalProgram: approval,
+      clearProgram: clear,
+      note,
+      suggestedParams,
+    })
+    atc.addTransaction({ txn, signer })
+  }
+
+  if (ctx.mode === 'compose') {
+    const group = atc.buildGroup()
+    return {
+      unsignedGroup: group.map((t) => bytesToBase64(algosdk.encodeUnsignedTransaction(t.txn))),
+      summary: `update app ${args.appId} to "${spec.name ?? 'unnamed'}"${args.method ? ` via ${args.method}` : ' (bare)'}`,
+    }
+  }
+
+  const result = await atc.execute(ctx.algod, 4)
+  return {
+    appId: args.appId,
+    txid: result.txIDs[0]!,
+    confirmedRound: Number(result.confirmedRound),
+    return: result.methodResults[0]?.returnValue ?? undefined,
+  }
+}
+
+/** Wire shape of app_update results: executed update, or unsigned group in compose mode. */
+export const appUpdateResultSchema = z.union([
+  z.object({
+    appId: z.number(),
+    txid: z.string(),
+    confirmedRound: z.number(),
+    return: z.unknown().optional(),
+  }),
+  z.object({ unsignedGroup: z.array(z.string()), summary: z.string() }),
+])
+
+const UPDATE_DESCRIPTION = `Replace an existing application's approval and clear programs from a rebuilt ARC-56/ARC-32 app spec. The app ID, address, state, and boxes stay; only the code changes.
+The contract must allow UpdateApplication: a bare update (omit method) when it declares a bare update handler, or an ABI update method (method + args).
+Global/local state schema cannot change on update — a schema change needs app_deploy (a new app).
+Pass appSpecPath — the rebuilt artifact (artifacts/<Name>.arc56.json).
+Returns the txid (execute mode), or the unsigned update transaction (compose mode).`
+
 async function deployApp(
   ctx: ToolContext,
   args: {
@@ -77,27 +188,7 @@ async function deployApp(
     throw new ToolError('INVALID_ADDRESS', `Invalid sender address: ${args.sender}`)
   }
   const spec = parseAppSpec(args.appSpec)
-
-  const compile = async (teal: string): Promise<Uint8Array> => {
-    const compiled = await ctx.algod.compile(new TextEncoder().encode(teal)).do()
-    return base64ToBytesStrict(compiled.result)
-  }
-  const base64ToBytesStrict = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
-
-  let approval = spec.approvalByteCode
-  let clear = spec.clearByteCode
-  if (!approval) {
-    if (!spec.approvalTeal) {
-      throw new ToolError('INVALID_APP_SPEC', 'App spec has no approval program source or bytecode')
-    }
-    approval = await compile(substituteTemplateParams(spec.approvalTeal, args.deployTimeParams))
-  }
-  if (!clear) {
-    if (!spec.clearTeal) {
-      throw new ToolError('INVALID_APP_SPEC', 'App spec has no clear program source or bytecode')
-    }
-    clear = await compile(substituteTemplateParams(spec.clearTeal, args.deployTimeParams))
-  }
+  const { approval, clear } = await compilePrograms(ctx, spec, args.deployTimeParams)
 
   const suggestedParams = await ctx.algod.getTransactionParams().do()
   const note = args.note ? new TextEncoder().encode(args.note) : undefined
@@ -108,13 +199,7 @@ async function deployApp(
     numLocalInts: spec.schema.localInts,
     numLocalByteSlices: spec.schema.localBytes,
   }
-
-  const emptySigner = algosdk.makeEmptyTransactionSigner()
-  const signer =
-    ctx.mode === 'execute' && ctx.resolveSigner ? await ctx.resolveSigner(args.sender) : emptySigner
-  if (ctx.mode === 'execute' && !ctx.resolveSigner) {
-    throw new ToolError('NO_SIGNER', 'This deployment has no signer configured; use compose mode.')
-  }
+  const signer = await signerFor(ctx, args.sender)
 
   const atc = new AtomicTransactionComposer()
   if (args.method) {
@@ -200,6 +285,29 @@ export const contractWriteTools: AnyTool[] = [
     handler: async (ctx, args) => {
       const resolved = await withAppSpecFile(args)
       return deployApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
+    },
+  }) as AnyTool,
+  defineTool({
+    name: 'app_update',
+    description: UPDATE_DESCRIPTION,
+    parameters: z.object({
+      sender: z.string().describe('Sender address (must be authorized to update by the contract)'),
+      appId: z.number().describe('The application ID to update'),
+      ...appSpecParams,
+      method: z.string().optional().describe('ABI update method name (omit for a bare update)'),
+      args: z.array(z.any()).optional().describe('Arguments for the ABI update method'),
+      deployTimeParams: z
+        .record(z.string(), z.union([z.string(), z.number()]))
+        .optional()
+        .describe('TMPL_* template substitutions applied to TEAL source before compiling'),
+      note: z.string().optional().describe('Optional note'),
+    }),
+    output: appUpdateResultSchema,
+    requiresSigner: true,
+    view: 'txn',
+    handler: async (ctx, args) => {
+      const resolved = await withAppSpecFile(args)
+      return updateApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
     },
   }) as AnyTool,
   appTool('app_call', 'app_call', 'Call a smart contract method (or bare NoOp).'),

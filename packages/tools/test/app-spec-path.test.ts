@@ -30,7 +30,7 @@ describe('appSpecPath', () => {
   })
 
   test('every spec-taking tool offers the path form', () => {
-    for (const name of ['app_deploy', 'app_call', 'app_list_methods', 'read_global_state', 'read_local_state', 'read_box_state']) {
+    for (const name of ['app_deploy', 'app_update', 'app_call', 'app_list_methods', 'read_global_state', 'read_local_state', 'read_box_state']) {
       const shape = (tool(name).parameters as { shape: Record<string, unknown> }).shape
       expect(Object.keys(shape)).toContain('appSpecPath')
     }

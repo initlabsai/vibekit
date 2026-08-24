@@ -870,9 +870,9 @@ context. Wallet pairing stays client-side.
 4. ~~`app_deploy` semantics~~ **Resolved (2026-08-15): plain create on
    raw algosdk.** ARC-56/32 parsing, `TMPL_*` deploy-time substitution,
    algod compile, bare or ABI create. No idempotent AppFactory
-   semantics: deploying again makes a new app. Agents that want update
-   flows use `app_call` with the update OnComplete (future work if
-   demanded).
+   semantics: deploying again makes a new app. Updates landed 2026-08-23
+   as `app_update` on the same raw-algosdk path: bare or ABI update
+   carrying the recompiled programs; schema unchanged by definition.
 5. ~~MCP SDK choice~~ **Resolved by spike (2026-08-11): official v2
    SDK** (`@modelcontextprotocol/server` 2.x). Its per-request factory
    model matches our per-request `ToolContext` exactly.

@@ -61,6 +61,7 @@ describe('contract write tools', () => {
     const names = contractWriteTools.map((t) => t.name)
     expect(names).toEqual([
       'app_deploy',
+      'app_update',
       'app_call',
       'app_opt_in',
       'app_close_out',
@@ -96,6 +97,29 @@ describe('contract write tools', () => {
     expect(Number(txn.applicationCall?.numGlobalInts)).toBe(1)
     expect(Number(txn.applicationCall?.numGlobalByteSlices)).toBe(2)
     expect(result.summary).toContain('Spike')
+  })
+
+  test('app_update composes an UpdateApplication txn carrying the recompiled programs', async () => {
+    const ctx = fakeContext({
+      algod: {
+        getTransactionParams: () => chainable(suggestedParams),
+        compile: () => chainable({ result: bytesToBase64(new Uint8Array([9, 9, 9])) }),
+      },
+    })
+    const tool = contractWriteTools.find((t) => t.name === 'app_update')!
+    const result = (await tool.handler(ctx, {
+      sender: ADDR_A,
+      appId: 1017,
+      appSpec: arc56Spec,
+      deployTimeParams: { ANSWER: 1 },
+    } as never)) as { unsignedGroup: string[]; summary: string }
+
+    const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(result.unsignedGroup[0]!))
+    expect(txn.applicationCall?.appIndex).toBe(BigInt(1017))
+    expect(txn.applicationCall?.onComplete).toBe(algosdk.OnApplicationComplete.UpdateApplicationOC)
+    expect(Array.from(txn.applicationCall?.approvalProgram ?? [])).toEqual([9, 9, 9])
+    expect(Number(txn.applicationCall?.numGlobalInts)).toBe(0) // schema is not part of an update
+    expect(result.summary).toBe('update app 1017 to "Spike" (bare)')
   })
 
   test('app_call composes an ABI method call', async () => {
