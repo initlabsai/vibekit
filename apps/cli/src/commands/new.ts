@@ -7,6 +7,7 @@
 
 import * as p from "@clack/prompts";
 import pc from "picocolors";
+import { amber, teal } from "../brand.js";
 
 import { LOGO } from "../logo.js";
 import { existsSync } from "fs";
@@ -53,7 +54,7 @@ export function getTemplate(id: string): TemplateDefinition | undefined {
 
 function welcome(): void {
   console.clear();
-  console.log(pc.cyan(LOGO));
+  console.log(amber(LOGO));
   p.note(
     [
       "A new Algorand project from a starter template.",
@@ -115,7 +116,7 @@ export async function commandNew(args: string[]): Promise<void> {
   const headless = parsed.init.yes;
 
   if (!headless) welcome();
-  p.intro(pc.cyan("vibekit new"));
+  p.intro(teal("vibekit new"));
 
   if (parsed.template && !getTemplate(parsed.template)) {
     p.log.error(
@@ -154,7 +155,7 @@ export async function commandNew(args: string[]): Promise<void> {
 
   if (!(await isDirAvailable(targetDir))) {
     p.log.error(
-      `Directory ${pc.cyan(targetDir)} already exists and is not empty.`,
+      `Directory ${teal(targetDir)} already exists and is not empty.`,
     );
     process.exit(1);
   }
@@ -164,7 +165,7 @@ export async function commandNew(args: string[]): Promise<void> {
   try {
     await extractTarball(tarballUrl(template), targetDir);
     const fileCount = await countFiles(targetDir);
-    s.stop(`Created ${pc.cyan(basename(targetDir))} (${fileCount} files)`);
+    s.stop(`Created ${teal(basename(targetDir))} (${fileCount} files)`);
   } catch (error) {
     s.stop("Failed to create project");
     p.log.error(error instanceof Error ? error.message : String(error));
@@ -188,12 +189,12 @@ export async function commandNew(args: string[]): Promise<void> {
 
   p.note(
     [
-      `${pc.cyan("cd")} ${dirInput}`,
-      `${pc.cyan("npm install")}`,
-      `${pc.cyan("vibekit localnet start")}`,
-      `${pc.cyan("npm run build")}`,
+      `${teal("cd")} ${dirInput}`,
+      `${teal("npm install")}`,
+      `${teal("vibekit localnet start")}`,
+      `${teal("npm run build")}`,
     ].join("\n"),
     "Next steps",
   );
-  p.outro(pc.green("Project ready."));
+  p.outro(teal("Project ready."));
 }

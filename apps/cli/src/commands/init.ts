@@ -8,6 +8,7 @@
 
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
+import { amber, teal } from '../brand.js'
 import { basename, dirname, extname, join } from 'path'
 import { existsSync, readFileSync } from 'fs'
 
@@ -130,7 +131,7 @@ export function parseInitArgs(args: string[]): InitFlags {
 
 function welcome(): void {
   console.clear()
-  console.log(pc.cyan(LOGO))
+  console.log(amber(LOGO))
   p.note(
     [
       'Deploy contracts. Manage assets. Query the chain. All through your favorite AI agent.',
@@ -376,7 +377,7 @@ async function installAgentFiles(context: SetupContext, flags?: InitFlags): Prom
 
   let action: 'skip' | 'overwrite' = 'overwrite'
   if (existingFiles.length > 0) {
-    p.log.warn(`Found existing files: ${existingFiles.map((f) => pc.cyan(f)).join(', ')}`)
+    p.log.warn(`Found existing files: ${existingFiles.map((f) => teal(f)).join(', ')}`)
     if (flags?.yes) {
       // Headless: never destroy customizations unless --overwrite says so.
       action = flags.overwrite ? 'overwrite' : 'skip'
@@ -410,7 +411,7 @@ function buildFilePreview(context: SetupContext): string[] {
     lines.push(`  ${pc.dim(join(context.installPath, agent.configFile))}`)
     if (agent.skillsDir) {
       lines.push(
-        `  ${pc.dim(join(context.installPath, agent.skillsDir))} ${pc.cyan(`(${context.selectedSkills.length} skills)`)}`,
+        `  ${pc.dim(join(context.installPath, agent.skillsDir))} ${teal(`(${context.selectedSkills.length} skills)`)}`,
       )
     }
     if (agent.templateFile) {
@@ -427,17 +428,17 @@ function showSummary(context: SetupContext): void {
 
   const lines = [
     `${pc.bold('Configured:')}`,
-    `  Agents:  ${pc.green(enabledAgents.map((a) => a.displayName).join(', '))}`,
-    `  MCPs:    ${mcpNames.length > 0 ? pc.green(mcpNames.join(', ')) : pc.yellow('none')}`,
-    `  Skills:  ${pc.green(String(context.selectedSkills.length))}`,
+    `  Agents:  ${teal(enabledAgents.map((a) => a.displayName).join(', '))}`,
+    `  MCPs:    ${mcpNames.length > 0 ? teal(mcpNames.join(', ')) : amber('none')}`,
+    `  Skills:  ${teal(String(context.selectedSkills.length))}`,
   ]
 
-  lines.push('', `${pc.bold('Next Steps:')}`, `  ${pc.cyan('cd')} ${context.installPath}`)
+  lines.push('', `${pc.bold('Next Steps:')}`, `  ${teal('cd')} ${context.installPath}`)
 
   const commands = enabledAgents.map((a) => a.cliCommand).filter((cmd): cmd is string => !!cmd)
   if (commands.length > 0) {
     lines.push(
-      `  ${pc.cyan(commands[0]!)}${commands.length > 1 ? ` (or ${commands.slice(1).join(', ')})` : ''}`,
+      `  ${teal(commands[0]!)}${commands.length > 1 ? ` (or ${commands.slice(1).join(', ')})` : ''}`,
     )
   }
 
@@ -445,8 +446,8 @@ function showSummary(context: SetupContext): void {
     lines.push(
       '',
       `${pc.bold('For on-chain development:')}`,
-      `  ${pc.cyan('vibekit localnet start')}   requires Docker`,
-      `  ${pc.cyan('vibekit keystore start')}   signing daemon in the background (explore and mcp start it too)`,
+      `  ${teal('vibekit localnet start')}   requires Docker`,
+      `  ${teal('vibekit keystore start')}   signing daemon in the background (explore and mcp start it too)`,
     )
   }
 
@@ -524,7 +525,7 @@ export async function runSetupWizard(flags: InitFlags): Promise<void> {
       ? process.cwd()
       : await selectInstallPathStep()
   await runInitAt(installPath, flags)
-  p.outro(pc.green('The vibes are immaculate 😎'))
+  p.outro(teal('The vibes are immaculate 😎'))
 }
 
 export async function commandInit(args: string[] = []): Promise<void> {

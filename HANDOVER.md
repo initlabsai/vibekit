@@ -92,7 +92,7 @@ Public (`private: false`): `@initlabs/vibekit-core`, `-tools`, `-agent`,
 - `d` deploys a spec from its card (template variables on the line).
 - Multi-transaction groups now simulate correctly at review.
 - Responsive top bar; explain flow no longer duplicates its write-up.
-- CLI: `vibekit new` welcome; the CLI and TUI share one wordmark.
+- CLI: `vibekit new` welcome; the CLI and TUI share one wordmark and palette (amber wordmark, teal commands — `apps/cli/src/brand.ts`).
 
 ## Do not touch
 

@@ -3,6 +3,7 @@
  */
 
 import pc from 'picocolors'
+import { amber, teal } from './brand.js'
 
 import { LOGO } from './logo.js'
 import { VERSION } from './version.js'
@@ -52,7 +53,7 @@ ${pc.bold('Accounts:')}
     Agents can create accounts too (create_signing_account); mnemonic/seed flows: vibekit keystore generate seed
 
 ${pc.bold('Links:')}
-  Documentation:  ${pc.cyan('https://github.com/initlabsai/vibekit')}
+  Documentation:  ${teal('https://github.com/initlabsai/vibekit')}
 `)
 }
 
@@ -117,11 +118,11 @@ Config via env: NETWORK (default localnet), NETWORKS (comma-separated), SIGNING=
     case '--help':
     case '-h':
     case undefined:
-      if (subcommand === undefined) console.log(pc.cyan(LOGO))
+      if (subcommand === undefined) console.log(amber(LOGO))
       showHelp()
       return true
     default:
-      console.log(pc.cyan(LOGO))
+      console.log(amber(LOGO))
       showHelp()
       console.error(pc.red(`Unknown command: ${subcommand}`))
       process.exitCode = 1
