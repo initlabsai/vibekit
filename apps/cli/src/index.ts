@@ -43,7 +43,7 @@ ${pc.bold('Headless setup (no prompts — agents/CI):')}
 
 ${pc.bold('Accounts:')}
   Keys live in the OS keystore behind the keystore daemon (managed install, no global needed):
-    vibekit keystore start|stop|status   The signing daemon, in the background (explore starts it too)
+    vibekit keystore start|stop|status   The signing daemon, in the background (explore and mcp start it too)
     vibekit keystore serve      The daemon in this terminal (foreground)
     vibekit keystore accounts   List signing accounts: address, name, key id (daemon required)
     vibekit keystore generate ed25519 --name <label>   Create an account (via the daemon when it is up)

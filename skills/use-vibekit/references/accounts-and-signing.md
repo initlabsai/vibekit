@@ -20,6 +20,9 @@ Labels are fixed at creation; do not promise a rename operation.
 
 ## Daemon lifecycle
 
+The MCP server and `vibekit explore` start the daemon in the background when it
+is not running; `vibekit keystore stop` stops one they (or `start`) started.
+
 ```bash
 vibekit keystore start       # managed background daemon
 vibekit keystore stop
