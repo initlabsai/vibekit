@@ -11,7 +11,7 @@ describe('serializeToml', () => {
           args: ['mcp'],
           env: { NETWORK: 'localnet' },
         },
-        kappa: { url: 'https://algorand-docs.mcp.kapa.ai/' },
+        kapa: { url: 'https://algorand-docs.mcp.kapa.ai/' },
       },
     })
 
@@ -20,7 +20,7 @@ describe('serializeToml', () => {
     expect(toml).toContain('args = ["mcp"]')
     expect(toml).toContain('[mcp_servers.vibekit.env]')
     expect(toml).toContain('NETWORK = "localnet"')
-    expect(toml).toContain('[mcp_servers.kappa]')
+    expect(toml).toContain('[mcp_servers.kapa]')
     expect(toml).toContain('url = "https://algorand-docs.mcp.kapa.ai/"')
   })
 

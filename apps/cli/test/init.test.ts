@@ -63,7 +63,7 @@ describe('headless runInitAt', () => {
     )
 
     const mcpConfig = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8'))
-    expect(Object.keys(mcpConfig.mcpServers)).toEqual(expect.arrayContaining(['vibekit', 'kappa']))
+    expect(Object.keys(mcpConfig.mcpServers)).toEqual(expect.arrayContaining(['vibekit', 'kapa']))
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('VibeKit')
     // Default agent set is claude → skills land in .claude/skills.
     const firstSkill = getSkillNames()[0]!
@@ -87,11 +87,11 @@ describe('headless runInitAt', () => {
 })
 
 describe('generateConfigs', () => {
-  test('writes .mcp.json for claude with vibekit + kappa servers', async () => {
+  test('writes .mcp.json for claude with vibekit + kapa servers', async () => {
     const dir = makeDir()
     await generateConfigs({
       agents: ['claude'],
-      mcps: ['vibekit', 'kappa'],
+      mcps: ['vibekit', 'kapa'],
       installPath: dir,
       selectedSkills: [],
     })
@@ -99,7 +99,7 @@ describe('generateConfigs', () => {
     const config = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, Record<string, unknown>>
     }
-    expect(Object.keys(config.mcpServers).sort()).toEqual(['kappa', 'vibekit'])
+    expect(Object.keys(config.mcpServers).sort()).toEqual(['kapa', 'vibekit'])
 
     const vibekit = config.mcpServers.vibekit!
     expect(vibekit.args).toEqual(['mcp'])
@@ -112,7 +112,7 @@ describe('generateConfigs', () => {
       SIGNING: 'execute',
     })
 
-    expect(config.mcpServers.kappa!.url).toBe('https://algorand-docs.mcp.kapa.ai/')
+    expect(config.mcpServers.kapa!.url).toBe('https://algorand-docs.mcp.kapa.ai/')
   })
 
   test('writes toml for codex', async () => {

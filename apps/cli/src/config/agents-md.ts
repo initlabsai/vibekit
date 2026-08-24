@@ -32,7 +32,9 @@ all of these, plus others from third-party catalogs — check what is installed.
 
 - **vibekit** (MCP) — on-chain reads and writes. Use the tools it registers
   and read their descriptions instead of guessing names.
-- **kappa** or **context7** (MCP) — Algorand documentation search.
+- **Kapa** (MCP, \`kapa\`) — Algorand documentation search over the official
+  docs. Prefer it over a web search for Algorand concepts, costs, and protocol
+  rules. (A project may use **context7** for the same role.)
 
 ## CRITICAL: never write Algorand TypeScript from memory
 
@@ -43,7 +45,7 @@ in this project, and on every compile error, look it up — in this order:
 1. the installed \`node_modules/@algorandfoundation/algorand-typescript/*.d.ts\`
    (exact for the pinned version; a compile error names the type to read);
 2. the example the skill links for that feature;
-3. the documentation MCP (kappa/context7) for concepts, costs, and rules.
+3. the Kapa MCP (or context7) for concepts, costs, and rules — before a web search.
 
 Do not change the code again until one of these has answered.
 

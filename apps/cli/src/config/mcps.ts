@@ -70,11 +70,11 @@ const vibekit: MCPDefinition = {
   },
 }
 
-const KAPPA_URL = 'https://algorand-docs.mcp.kapa.ai/'
+const KAPA_URL = 'https://algorand-docs.mcp.kapa.ai/'
 
-const kappa: MCPDefinition = {
-  id: 'kappa',
-  displayName: 'Kappa MCP',
+const kapa: MCPDefinition = {
+  id: 'kapa',
+  displayName: 'Kapa MCP',
   description: 'Algorand documentation search via Kapa.ai',
   category: 'documentation',
   hint: 'docs, search, knowledge base',
@@ -84,12 +84,12 @@ const kappa: MCPDefinition = {
       case 'cursor':
       case 'copilot':
       case 'pi':
-        return { serverKey: 'kappa', config: { type: 'http', url: KAPPA_URL } }
+        return { serverKey: 'kapa', config: { type: 'http', url: KAPA_URL } }
       case 'codex':
       case 'grok':
-        return { serverKey: 'kappa', config: { url: KAPPA_URL } }
+        return { serverKey: 'kapa', config: { url: KAPA_URL } }
       case 'opencode':
-        return { serverKey: 'kappa', config: { type: 'remote', url: KAPPA_URL, enabled: true } }
+        return { serverKey: 'kapa', config: { type: 'remote', url: KAPA_URL, enabled: true } }
     }
   },
 }
@@ -122,7 +122,7 @@ const context7: MCPDefinition = {
   },
 }
 
-export const MCPS = { vibekit, kappa, context7 } as const
+export const MCPS = { vibekit, kapa, context7 } as const
 
 export type MCPId = keyof typeof MCPS
 export const MCP_IDS = Object.keys(MCPS) as MCPId[]

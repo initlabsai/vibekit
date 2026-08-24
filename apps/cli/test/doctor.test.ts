@@ -54,14 +54,14 @@ describe('fixMcpConfig', () => {
       {
         mcpServers: {
           'vibekit-mcp': { command: '/$bunfs/root/vibekit', env: { ALGORAND_NETWORK: 'x' } },
-          kappa: { type: 'http', url: 'https://algorand-docs.mcp.kapa.ai/' },
+          kapa: { type: 'http', url: 'https://algorand-docs.mcp.kapa.ai/' },
           'my-custom': { command: 'my-server' },
         },
       },
       '/home/dev/.local/bin/vibekit',
     )
     const servers = fixed.mcpServers!
-    expect(Object.keys(servers).sort()).toEqual(['kappa', 'my-custom', 'vibekit'])
+    expect(Object.keys(servers).sort()).toEqual(['kapa', 'my-custom', 'vibekit'])
     expect(servers['vibekit']!.command).toBe('/home/dev/.local/bin/vibekit')
     expect(servers['vibekit']!.env).toMatchObject({ NETWORK: 'localnet', SIGNING: 'execute' })
     expect(servers['my-custom']!.command).toBe('my-server')

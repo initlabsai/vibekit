@@ -1066,7 +1066,7 @@ Implementation facts learned:
   v1). Four command areas, all live-verified:
   (1) **`init`** ported from v1 and slimmed. Agent registry
   (claude/codex/copilot/cursor/opencode). MCP registry (vibekit local +
-  kappa/context7 docs. GoPlausible dropped). Skills bundled at build
+  kapa/context7 docs. GoPlausible dropped). Skills bundled at build
   time from `algorand-devrel/algorand-agent-skills` (10 skills).
   AGENTS.md rewritten for the v2 tool surface. Deleted relative to v1:
   Vault/keyring/WalletConnect provider phases, GitHub PAT, dispenser

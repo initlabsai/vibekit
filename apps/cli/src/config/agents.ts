@@ -20,7 +20,7 @@ export interface AgentDefinition {
   /** Agent-specific pointer file (e.g. 'CLAUDE.md') and its content. */
   templateFile?: string
   templateContent?: string
-  /** Instructions for authenticating the Kappa MCP in this agent. */
+  /** Instructions for authenticating the Kapa MCP in this agent. */
   authInstructions?: string
   /** One-time setup the user must do for this agent (shown in the summary). */
   setupNote?: string
@@ -47,7 +47,7 @@ export const AGENTS = {
     skillsDir: '.claude/skills',
     templateFile: 'CLAUDE.md',
     templateContent: `# CLAUDE.md\n\n${pointerContent()}`,
-    authInstructions: 'In Claude Code: /mcp → kappa → Authenticate',
+    authInstructions: 'In Claude Code: /mcp → kapa → Authenticate',
     cliCommand: 'claude',
   },
   codex: {
@@ -59,7 +59,7 @@ export const AGENTS = {
     mcpServersKey: 'mcp_servers',
     skillsDir: '.agents/skills',
     // Codex natively reads AGENTS.md — no separate pointer file needed
-    authInstructions: 'In Codex: /mcp → kappa → Authenticate',
+    authInstructions: 'In Codex: /mcp → kapa → Authenticate',
     cliCommand: 'codex',
   },
   copilot: {
@@ -71,7 +71,7 @@ export const AGENTS = {
     skillsDir: '.github/skills',
     templateFile: '.github/copilot-instructions.md',
     templateContent: `# copilot-instructions.md\n\n${pointerContent('../AGENTS.md')}`,
-    authInstructions: 'In VS Code: Open .vscode/mcp.json → Click "Start" above kappa',
+    authInstructions: 'In VS Code: Open .vscode/mcp.json → Click "Start" above kapa',
   },
   cursor: {
     id: 'cursor',
@@ -82,7 +82,7 @@ export const AGENTS = {
     skillsDir: '.cursor/rules',
     templateFile: '.cursorrules',
     templateContent: `# .cursorrules\n\n${pointerContent()}`,
-    authInstructions: 'In Cursor Settings → MCP → kappa → Authenticate',
+    authInstructions: 'In Cursor Settings → MCP → kapa → Authenticate',
     cliCommand: 'cursor',
   },
   grok: {
@@ -97,7 +97,7 @@ export const AGENTS = {
     mcpServersKey: 'mcp_servers',
     skillsDir: '.grok/skills',
     // Grok reads AGENTS.md natively — no pointer file.
-    authInstructions: 'In Grok Build: /mcps → kappa (Grok handles the OAuth flow directly)',
+    authInstructions: 'In Grok Build: /mcps → kapa (Grok handles the OAuth flow directly)',
     cliCommand: 'grok',
   },
   pi: {
@@ -109,7 +109,7 @@ export const AGENTS = {
     baseConfigTemplate: { mcpServers: {} },
     mcpServersKey: 'mcpServers',
     skillsDir: '.pi/skills',
-    authInstructions: 'In pi: /mcp-auth kappa (first time; lazy servers show "not cached" until first use)',
+    authInstructions: 'In pi: /mcp-auth kapa (first time; lazy servers show "not cached" until first use)',
     setupNote: 'Pi needs the MCP adapter once: pi install npm:pi-mcp-adapter',
     cliCommand: 'pi',
   },
@@ -120,7 +120,7 @@ export const AGENTS = {
     baseConfigTemplate: { $schema: 'https://opencode.ai/config.json', mcp: {} },
     mcpServersKey: 'mcp',
     skillsDir: '.opencode/skill',
-    authInstructions: 'Run: opencode mcp auth kappa',
+    authInstructions: 'Run: opencode mcp auth kapa',
     cliCommand: 'opencode',
   },
 } as const satisfies Record<string, AgentDefinition>

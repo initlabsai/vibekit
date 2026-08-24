@@ -55,7 +55,7 @@ export interface SetupContext {
 /**
  * Flags that pre-answer wizard steps. Any provided flag skips its prompt;
  * `--yes` skips every remaining prompt and confirm, taking vibekit's own
- * defaults for skills (all) and MCPs (kappa,vibekit) — but `--agents` must be
+ * defaults for skills (all) and MCPs (kapa,vibekit) — but `--agents` must be
  * explicit: which coding tools you use is your fact, not our guess. Existing
  * files are kept unless --overwrite. This is the headless path agents/CI use.
  */
@@ -68,7 +68,7 @@ export interface InitFlags {
   overwrite: boolean
 }
 
-const HEADLESS_DEFAULT_MCPS: MCPSelection = ['kappa', 'vibekit']
+const HEADLESS_DEFAULT_MCPS: MCPSelection = ['kapa', 'vibekit']
 
 function parseCsv(value: string | undefined, flag: string): string[] {
   if (!value || value.startsWith('-')) {
@@ -211,7 +211,7 @@ async function selectMCPsStep(): Promise<MCPSelection> {
   const selected: MCPId[] = []
 
   for (const [category, label, initial] of [
-    ['documentation', 'Documentation MCP:', 'kappa'],
+    ['documentation', 'Documentation MCP:', 'kapa'],
     ['development', 'Development MCP:', 'vibekit'],
   ] as const) {
     const mcps = getMCPsByCategory(category)
@@ -504,10 +504,10 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
     throw error
   }
 
-  if (mcps.includes('kappa')) {
+  if (mcps.includes('kapa')) {
     for (const agent of getEnabledAgents(agents)) {
       if (agent.authInstructions) {
-        p.note(agent.authInstructions, `${agent.displayName} Kappa Auth`)
+        p.note(agent.authInstructions, `${agent.displayName} Kapa Auth`)
       }
     }
   }

@@ -45,7 +45,7 @@ describe('mcp registry', () => {
   test('categories split into documentation and development', () => {
     expect(getMCPsByCategory('documentation').map((m) => m.id).sort()).toEqual([
       'context7',
-      'kappa',
+      'kapa',
     ])
     expect(getMCPsByCategory('development').map((m) => m.id)).toEqual(['vibekit'])
   })
