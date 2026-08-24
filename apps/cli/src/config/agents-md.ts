@@ -9,8 +9,7 @@ and scripts are ordinary TypeScript run through this project's npm scripts.
 1. Read this file, \`package.json\`, and the existing contract, client, and
    test code before changing anything.
 2. Load the relevant skill (below) before writing code or touching the chain.
-3. Research before writing contract code: follow the skill's canonical
-   documentation and example links, and search the documentation MCP.
+3. Research before writing contract code (see CRITICAL below).
 
 ## Skills
 
@@ -30,6 +29,19 @@ all of these, plus others from third-party catalogs — check what is installed.
 - **vibekit** (MCP) — on-chain reads and writes. Use the tools it registers
   and read their descriptions instead of guessing names.
 - **kappa** or **context7** (MCP) — Algorand documentation search.
+
+## CRITICAL: never write Algorand TypeScript from memory
+
+PuyaTs is a constrained dialect with its own API shapes; guessed code costs a
+compile loop every time. Before writing an API call you have not already seen
+in this project, and on every compile error, look it up — in this order:
+
+1. the installed \`node_modules/@algorandfoundation/algorand-typescript/*.d.ts\`
+   (exact for the pinned version; a compile error names the type to read);
+2. the example the skill links for that feature;
+3. the documentation MCP (kappa/context7) for concepts, costs, and rules.
+
+Do not change the code again until one of these has answered.
 
 ## CRITICAL: sender and network
 
