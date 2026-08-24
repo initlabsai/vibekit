@@ -12,9 +12,11 @@ CONSTITUTION.md.
 - Rekey signing resolution.
 - License file.
 - Keystore canary pin (`1.0.0-canary.3` today) → a release.
-- Box references on app calls — undecided; calls that touch boxes may fail
-  simulate. Check whether algokit-utils `populateAppCallResources` covers it
-  before designing anything.
+- Box references on app calls — decided for writes: the compose engine
+  (`packages/core/src/compose/index.ts`) probe-simulates with
+  `allowUnnamedResources` and attaches what it reports; verified 2026-08-23 by
+  an agent writing a box through `app_call` with no refs. Still open: the
+  TUI's readonly simulate path for methods that read boxes.
 - First changeset.
 
 ## Notes
