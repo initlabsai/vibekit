@@ -23,6 +23,14 @@ Before calling a generated API:
    type requires otherwise. Do display-unit conversion only at an input/output
    boundary.
 
+The regenerated client is the authoritative API for this app. Lifecycle actions
+are calls through it too — opt-in, close-out, update, and delete — and their
+exact shape (e.g. `client.send.optIn`, often a nested `.bare()`) is
+generator-specific. Read the entrypoint in the generated file to confirm it;
+do not guess the call nesting or web-search the client API. A local-state write
+needs the caller opted in first, so the opt-in is part of the change, not a
+test detail.
+
 Use the [TypeScript client-generator guide](https://dev.algorand.co/algokit/client-generator/typescript/).
 For off-chain usage, prefer the runnable [application](https://github.com/algorandfoundation/algokit-utils-ts/blob/docs-staging/examples/concepts/applications.algo.ts)
 and [transaction](https://github.com/algorandfoundation/algokit-utils-ts/blob/docs-staging/examples/concepts/transactions.algo.ts)
