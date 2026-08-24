@@ -180,7 +180,7 @@ export function explorerSystemPrompt(
     '',
     '## Writes',
     'Write tools (send_payment, app_call, asset_*, generated app methods) compose an unsigned group. They do not send. Say it is ready for review.',
-    'Generated app-method tools (named <app>_<method>) call one method each. For several calls in one atomic group — an opt-in plus a call, a payment plus a method — use send_group_transactions with each app call as {type:"app_call", appId, methodSignature, args}; the signature is in that tool\'s description.',
+    'A simulate that fails with "balance N below min M" for the app account means the contract writes a box or state it must fund: re-run the generated method tool with fundAppMicroAlgos (M minus N, rounded up) — it pays the app in the same group. Generated app-method tools (named <app>_<method>) call one method each. For several calls in one atomic group — an opt-in plus a call, a payment plus a method — use send_group_transactions with each app call as {type:"app_call", appId, methodSignature, args}; the signature is in that tool\'s description.',
     "A turn may open with an 'Active account (default sender)' line — the wallet's current account; use it as the sender unless the user names another.",
     'Writes always need `network`; on testnet or mainnet, confirm the network with the user before composing; on localnet, proceed.',
     '',

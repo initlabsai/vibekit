@@ -6,7 +6,38 @@
 import algosdk from 'algosdk'
 import type { ParsedMethod } from '@initlabs/vibekit-tools'
 
-export type ParsedArgs = { ok: true; named: Record<string, unknown> } | { ok: false; error: string }
+export type ParsedArgs =
+  | {
+      ok: true
+      named: Record<string, unknown>
+      /** +fund: microALGO paid to the app account in the same group. */
+      fundMicroAlgos?: number
+      /** +fee: extra fee in microALGO for inner transactions. */
+      extraFeeMicroAlgos?: number
+    }
+  | { ok: false; error: string }
+
+/** `+fund 0.2` / `+fee 0.002` (ALGO) pulled off the token list. */
+function takeModifiers(tokens: string[]): { rest: string[]; fund?: number; fee?: number; error?: string } {
+  const rest: string[] = []
+  let fund: number | undefined
+  let fee: number | undefined
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]!
+    if (token === '+fund' || token === '+fee') {
+      const value = tokens[i + 1]
+      const algo = value === undefined ? Number.NaN : Number(value)
+      if (!Number.isFinite(algo) || algo <= 0) return { rest, error: `${token} needs an ALGO amount, e.g. ${token} ${token === '+fund' ? '0.2' : '0.002'}` }
+      const micro = Math.round(algo * 1_000_000)
+      if (token === '+fund') fund = micro
+      else fee = micro
+      i += 1
+      continue
+    }
+    rest.push(token)
+  }
+  return { rest, ...(fund === undefined ? {} : { fund }), ...(fee === undefined ? {} : { fee }) }
+}
 
 const TXN_TYPES = new Set(['pay', 'axfer', 'acfg', 'afrz', 'appl', 'keyreg', 'txn'])
 
@@ -79,15 +110,21 @@ function argKey(arg: ParsedMethod['args'][number], index: number): string {
 
 /** Parses the line for `method`; the result is keyed by ABI arg name, ready for toolArgsFor. */
 export function parseMethodArgs(method: ParsedMethod, raw: string): ParsedArgs {
-  const line = raw.trim()
+  const mods = takeModifiers(splitTokens(raw.trim()))
+  if (mods.error) return { ok: false, error: mods.error }
+  const extras = {
+    ...(mods.fund === undefined ? {} : { fundMicroAlgos: mods.fund }),
+    ...(mods.fee === undefined ? {} : { extraFeeMicroAlgos: mods.fee }),
+  }
+  const line = mods.rest.join(' ')
   const args = method.args
   if (line.length === 0) {
-    return args.length === 0 ? { ok: true, named: {} } : { ok: false, error: `${method.name} needs ${args.length} arg${args.length === 1 ? '' : 's'}: ${args.map((a, i) => argKey(a, i)).join(', ')}` }
+    return args.length === 0 ? { ok: true, named: {}, ...extras } : { ok: false, error: `${method.name} needs ${args.length} arg${args.length === 1 ? '' : 's'}: ${args.map((a, i) => argKey(a, i)).join(', ')}` }
   }
   if (line.startsWith('{')) {
     try {
       const parsed: unknown = JSON.parse(line)
-      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) return { ok: true, named: parsed as Record<string, unknown> }
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) return { ok: true, named: parsed as Record<string, unknown>, ...extras }
     } catch {
       // fall through to the token grammar
     }
@@ -120,7 +157,7 @@ export function parseMethodArgs(method: ParsedMethod, raw: string): ParsedArgs {
   }
   const missing = args.map((a, i) => argKey(a, i)).filter((k) => !(k in named))
   if (missing.length > 0) return { ok: false, error: `missing: ${missing.join(', ')}` }
-  return { ok: true, named }
+  return { ok: true, named, ...extras }
 }
 
 /** The prompt shown before the input: `hello(name: string)`. */

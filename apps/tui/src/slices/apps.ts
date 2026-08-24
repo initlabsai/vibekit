@@ -513,7 +513,12 @@ export function useApps({
     // Compose mode for both: reads simulate signerless; writes come back as an
     // unsigned group the approval flow reviews, simulates, and signs.
     const deployment = resolveDeployment({ network, mode: 'compose', tools: [tool] })
-    void executeToolCall(deployment, tool, { sender, ...toolArgsFor(method, parsed.named) })
+    void executeToolCall(deployment, tool, {
+      sender,
+      ...toolArgsFor(method, parsed.named),
+      ...(parsed.extraFeeMicroAlgos === undefined ? {} : { extraFee: parsed.extraFeeMicroAlgos }),
+      ...(parsed.fundMicroAlgos === undefined || readonly ? {} : { fundAppMicroAlgos: parsed.fundMicroAlgos }),
+    })
       .then((result) => {
         setCallBusy(false)
         if (readonly) {

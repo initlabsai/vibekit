@@ -58,3 +58,13 @@ describe('method line', () => {
     expect(methodPrompt(method)).toBe('swap(note: string, amount: uint64, who: account, asa: asset, fast: bool, deposit: pay, arg6: uint64[])')
   })
 })
+
+describe('line modifiers', () => {
+  test('+fund and +fee come off the line as microALGO; bad amounts are errors', () => {
+    const hello: ParsedMethod = { name: 'hello', signature: 'hello(string)string', args: [{ name: 'name', type: 'string' }], returns: { type: 'string' } }
+    expect(parseMethodArgs(hello, '"hi" +fund 0.2 +fee 0.002')).toEqual({ ok: true, named: { name: 'hi' }, fundMicroAlgos: 200000, extraFeeMicroAlgos: 2000 })
+    expect(parseMethodArgs(hello, '+fund 0.11 name=x')).toEqual({ ok: true, named: { name: 'x' }, fundMicroAlgos: 110000 })
+    expect(parseMethodArgs(hello, '"hi" +fund')).toMatchObject({ ok: false, error: expect.stringContaining('+fund needs') })
+    expect(parseMethodArgs(hello, '"hi" +fund -1')).toMatchObject({ ok: false })
+  })
+})

@@ -195,3 +195,20 @@ describe('spec-named args reach the generated handler', () => {
     expect(generated.filter((e) => e.tool.description.includes('add(uint64)uint64')).length).toBe(2)
   })
 })
+
+describe('fundAppMicroAlgos', () => {
+  test('a funded write composes a two-txn group: payment to the app account, then the call', async () => {
+    const { toolsWithMethods } = await import('../src/contracts/lib/from-arc56.js')
+    const { describeCall } = await import('../src/contracts/lib/from-arc56.js')
+    const spec = {
+      name: 'Boxy',
+      methods: [{ name: 'put', args: [{ name: 'v', type: 'string' }], returns: { type: 'void' } }],
+      state: { schema: { global: { ints: 0, bytes: 0 }, local: { ints: 0, bytes: 0 } } },
+    }
+    const [{ tool, method }] = toolsWithMethods(JSON.stringify(spec), { appId: 7 })
+    expect(tool.parameters.safeParse({ sender: 'x', v: 'a', fundAppMicroAlgos: 200000 }).success).toBe(true)
+    expect(describeCall({ ...spec, format: 'arc56', methods: [method], schema: { globalInts: 0, globalBytes: 0, localInts: 0, localBytes: 0 }, templateVariables: [] } as never, method, 7, { v: 'a' }, 200000)).toBe(
+      'Boxy.put(v: "a") → app 7 · funds app 200000 µALGO',
+    )
+  })
+})

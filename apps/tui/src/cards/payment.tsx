@@ -1,3 +1,4 @@
+import algosdk from 'algosdk'
 import {
   formatMicroAlgos,
   type PaymentFlowViewModel,
@@ -57,10 +58,10 @@ export function paymentLines(model: PaymentFlowViewModel): string[] {
 /** `HiWorld.hi(name: "gabe") → app 1018` (describeCall) pulled apart for display; undefined for any other summary. */
 export function parseCallSummary(
   summary: string,
-): { call: string; appId: string; args: Array<{ name: string; value: string }> } | undefined {
-  const match = /^([\w.]+)\((.*)\) → app (\d+)$/s.exec(summary)
+): { call: string; appId: string; args: Array<{ name: string; value: string }>; fundMicroAlgos?: number } | undefined {
+  const match = /^([\w.]+)\((.*)\) → app (\d+)(?: · funds app (\d+) µALGO)?$/s.exec(summary)
   if (!match) return undefined
-  const [, call, inner, appId] = match
+  const [, call, inner, appId, fund] = match
   const parts: string[] = []
   let current = ''
   let depth = 0
@@ -83,7 +84,24 @@ export function parseCallSummary(
     const colon = part.indexOf(': ')
     return colon > 0 ? { name: part.slice(0, colon), value: part.slice(colon + 2) } : { name: '', value: part }
   })
-  return { call: call!, appId: appId!, args }
+  return { call: call!, appId: appId!, args, ...(fund ? { fundMicroAlgos: Number(fund) } : {}) }
+}
+
+/**
+ * Turns algod's "account X balance N below min M" into the fix: fund the app
+ * account through the line's +fund, or fund the sender. Undefined otherwise.
+ */
+export function minBalanceHint(failureMessage: string, summary: string): string | undefined {
+  const match = /account ([A-Z2-7]{58}) balance (\d+) below min (\d+)/.exec(failureMessage)
+  if (!match) return undefined
+  const [, account, balance, min] = match
+  const short = Number(min) - Number(balance)
+  // Round up to the next 0.01 ALGO so one retry is enough.
+  const algo = (Math.ceil(short / 10_000) / 100).toFixed(2)
+  const parsed = parseCallSummary(summary)
+  const appAddress = parsed ? algosdk.getApplicationAddress(BigInt(parsed.appId)).toString() : undefined
+  if (account === appAddress) return `the app account is short by ${formatMicroAlgos(short)} ALGO — deny, then retry with +fund ${algo} on the line`
+  return `${account.slice(0, 8)}… is short by ${formatMicroAlgos(short)} ALGO — fund it first`
 }
 
 /** The call under review: what is called, then each argument on its own line where it cannot be missed. */
@@ -96,6 +114,9 @@ function CallSummary({ summary, width }: { summary: string; width: number }) {
         <text fg={COLORS.brassBright} content={parsed.call} />
         <text fg={COLORS.muted} content={`  → app ${parsed.appId}`} />
       </box>
+      {parsed.fundMicroAlgos ? (
+        <Fact label="funds app" value={`${formatMicroAlgos(parsed.fundMicroAlgos)} ALGO`} width={width} valueColor={COLORS.text} />
+      ) : null}
       {parsed.args.length === 0 ? (
         <text fg={COLORS.faint} content="no arguments" />
       ) : (
@@ -171,6 +192,12 @@ export function PaymentBody({
             width={width}
             valueColor={COLORS.red}
           />
+        ) : null}
+        {model.simulation?.failureMessage ? (
+          (() => {
+            const hint = minBalanceHint(model.simulation.failureMessage, model.unsignedGroup.summary)
+            return hint ? <Fact label="fix" value={hint} width={width} valueColor={COLORS.brassBright} /> : null
+          })()
         ) : null}
         {model.simulation
           ? model.simulation.effects.map((effect) => (

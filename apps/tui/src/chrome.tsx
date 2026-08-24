@@ -380,7 +380,9 @@ function MethodCall({
             ? 'name=value per template variable · numbers stay numbers'
             : method.args.length === 0
               ? 'no args'
-              : 'values in order, name=value, or JSON · txn args as JSON · resources are found for you',
+              : readonly
+                ? 'values in order, name=value, or JSON · txn args as JSON · resources are found for you'
+                : 'values in order, name=value, or JSON · +fund 0.2 pays the app account in the group · +fee 0.002 for inner txns',
           width - 4,
         )}
       />

@@ -100,21 +100,20 @@ export async function simulateUnsignedGroup(
   simulatedRound: number
   txids: string[]
 }> {
-  const emptySigner = algosdk.makeEmptyTransactionSigner()
-  const atc = new algosdk.AtomicTransactionComposer()
-  for (const encoded of transactions) {
-    atc.addTransaction({
-      txn: algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)),
-      signer: emptySigner,
-    })
-  }
+  // The bytes are already a group (group ids set), so no ATC: it refuses
+  // grouped transactions. Simulate the encoded group directly.
+  const decoded = transactions.map((encoded) => algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)))
   const request = new algosdk.modelsv2.SimulateRequest({
-    txnGroups: [],
+    txnGroups: [
+      new algosdk.modelsv2.SimulateRequestTransactionGroup({
+        txns: decoded.map((txn) => algosdk.decodeSignedTransaction(algosdk.encodeUnsignedSimulateTransaction(txn))),
+      }),
+    ],
     allowEmptySignatures: true,
   })
-  const { simulateResponse } = await atc.simulate(algod, request)
+  const simulateResponse = await algod.simulateTransactions(request).do()
   const group = simulateResponse.txnGroups[0]
-  const txids = atc.buildGroup().map((entry) => entry.txn.txID())
+  const txids = decoded.map((txn) => txn.txID())
   return {
     wouldSucceed: !group?.failureMessage,
     ...(group?.failureMessage ? { failureMessage: group.failureMessage } : {}),

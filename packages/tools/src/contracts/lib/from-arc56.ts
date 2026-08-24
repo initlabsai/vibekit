@@ -11,6 +11,7 @@ import {
   type AnyTool,
   type TxnSpec,
 } from '@initlabs/vibekit-core'
+import algosdk from 'algosdk'
 import { z } from 'zod'
 
 import { encodeMethodArgs, methodFromParsed, zodForAbiType } from './abi.js'
@@ -67,7 +68,7 @@ function argParamName(arg: ParsedMethod['args'][number], index: number, used: Se
   return unique
 }
 
-function methodParameters(method: ParsedMethod, bindAppId: number | undefined) {
+function methodParameters(method: ParsedMethod, bindAppId: number | undefined, readonly = false) {
   const used = new Set<string>()
   const shape: Record<string, z.ZodType> = {
     sender: z.string().describe('Sender address (required even for simulate)'),
@@ -82,6 +83,16 @@ function methodParameters(method: ParsedMethod, bindAppId: number | undefined) {
     shape[name] = arg.description ? schema.describe(arg.description) : schema
   }
   shape.extraFee = z.number().int().nonnegative().optional().describe('Extra fee in microALGO for inner transactions')
+  if (!readonly) {
+    shape.fundAppMicroAlgos = z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        'Pay this many microALGO from sender to the app account in the same group, before the call — for box or state writes the app must fund (a simulate saying "balance N below min M" for the app address).',
+      )
+  }
   shape.note = z.string().optional().describe('Optional note')
   return z.object(shape)
 }
@@ -119,7 +130,7 @@ function toolForMethod(
   const name = uniqueToolName(prefix, method, taken)
   const readonly = method.readonly === true
   const bindAppId = options.appId
-  const parameters = methodParameters(method, bindAppId)
+  const parameters = methodParameters(method, bindAppId, readonly)
   const signature = method.signature
   // Validate the signature up front so a bad spec fails at generation, not first call.
   methodFromParsed(method)
@@ -153,9 +164,23 @@ function toolForMethod(
         note: record.note as string | undefined,
       }
       if (readonly) return simulateGroup(ctx, [specTxn])
-      const result = await composeOrExecute(ctx, [specTxn])
+      const fund = record.fundAppMicroAlgos as number | undefined
+      const specs: TxnSpec[] = fund
+        ? [
+            {
+              type: 'payment',
+              sender: record.sender as string,
+              receiver: algosdk.getApplicationAddress(BigInt(appId)).toString(),
+              amountMicroAlgos: fund,
+            },
+            specTxn,
+          ]
+        : [specTxn]
+      const result = await composeOrExecute(ctx, specs)
       // The approval card reads this line: name the call and its args, not the txn shape.
-      return 'summary' in result ? { ...result, summary: describeCall(spec, method, appId, namedArgsFromTool(method, record)) } : result
+      return 'summary' in result
+        ? { ...result, summary: describeCall(spec, method, appId, namedArgsFromTool(method, record), fund) }
+        : result
     },
   }) as AnyTool
 }
@@ -166,6 +191,7 @@ export function describeCall(
   method: ParsedMethod,
   appId: number,
   named: Record<string, unknown>,
+  fundAppMicroAlgos?: number,
 ): string {
   const args = method.args
     .map((arg, index) => {
@@ -173,7 +199,8 @@ export function describeCall(
       return `${key}: ${JSON.stringify(named[key])}`
     })
     .join(', ')
-  return `${spec.name}.${method.name}(${args}) → app ${appId}`
+  const fund = fundAppMicroAlgos ? ` · funds app ${fundAppMicroAlgos} µALGO` : ''
+  return `${spec.name}.${method.name}(${args}) → app ${appId}${fund}`
 }
 
 /** A generated tool paired with the spec method it calls. */

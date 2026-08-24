@@ -198,3 +198,16 @@ describe('call summary on the approval card', () => {
     expect(parseCallSummary('[0] app call app 1018 (hi(string)string)')).toBeUndefined()
   })
 })
+
+describe('min-balance hint', () => {
+  test('names +fund with the rounded-up shortfall when the app account is short', async () => {
+    const { minBalanceHint } = await import('../src/cards/payment.js')
+    const algosdk = (await import('algosdk')).default
+    const app = algosdk.getApplicationAddress(BigInt(1003)).toString()
+    const message = `transaction X: account ${app} balance 0 below min 109700 (0 assets)`
+    expect(minBalanceHint(message, 'HelloWorld.hello(name: "hey") → app 1003')).toContain('+fund 0.11')
+    const other = `transaction X: account ${'A'.repeat(58)} balance 5 below min 100000 (0 assets)`
+    expect(minBalanceHint(other, 'HelloWorld.hello(name: "hey") → app 1003')).toContain('fund it first')
+    expect(minBalanceHint('logic eval error', 'x')).toBeUndefined()
+  })
+})
