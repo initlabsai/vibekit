@@ -1,0 +1,96 @@
+---
+import Mark from '../components/Mark.astro'
+import Landing from '../layouts/Landing.astro'
+---
+
+<Landing>
+  <header class="nav shell">
+    <a class="brand" href="/" aria-label="VibeKit home"><Mark /></a>
+    <nav aria-label="Main navigation">
+      <a href="/docs/">docs <span aria-hidden="true">↗</span></a>
+      <a href="https://github.com/initlabsai/vibekit">github <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><i class="live-dot" aria-hidden="true"></i> SYSTEMS ONLINE // ALGORAND</p>
+        <h1>talk to the chain.<br /><em>build the thing.</em></h1>
+        <p class="lede">
+          Give your coding agent real Algorand tools, current context, and a safe path from idea to transaction. You keep the keys.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
+          <a class="button quiet" href="/docs/tutorials/explore-with-vibekit">open Explorer</a>
+        </div>
+      </div>
+
+      <div class="tui" aria-label="A stylized VibeKit Explorer lookup">
+        <div class="tui-top">
+          <span>◆ VIBEKIT <b>EXPLORER</b></span>
+          <span class="tui-live"><i aria-hidden="true"></i> MAINNET</span>
+        </div>
+        <div class="tui-tabs" aria-hidden="true">
+          <span class="active">explore</span><span>assets</span><span>apps</span><span>txns</span><span>blocks</span>
+        </div>
+        <div class="tui-feed">
+          <div class="tui-query">
+            <span aria-hidden="true">›</span>
+            <p>look up vibekit.algo on mainnet</p>
+            <small>DIRECT ROUTE</small>
+          </div>
+          <div class="tui-cards">
+            <article class="identity-card">
+              <div class="card-kicker"><span>NFD</span><span class="verified">● VERIFIED</span></div>
+              <strong>vibekit.algo</strong>
+              <p>VIBEKIT</p>
+              <dl>
+                <div><dt>network</dt><dd>mainnet</dd></div>
+                <div><dt>owner</dt><dd>EZ6NRX…QZPXI</dd></div>
+              </dl>
+            </article>
+            <aside class="round-card" aria-label="Live round signal">
+              <span>ROUND STREAM</span>
+              <div class="round-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <strong>LIVE</strong>
+              <small>indexer caught up</small>
+            </aside>
+          </div>
+          <p class="tui-note"><span>↳</span> resolved from chain data · no model call</p>
+        </div>
+        <div class="tui-composer"><span>›</span><span>ask anything, or paste an id</span><b>^W wallet</b></div>
+      </div>
+    </section>
+
+    <section class="signal-band">
+      <div class="shell three-up">
+        <p>ONE TOOL SURFACE</p><span aria-hidden="true">◆</span><p>CLI · MCP · EXPLORER</p><span aria-hidden="true">◆</span><p>SEEDS STAY OFF-LIMITS</p><span class="status" aria-hidden="true">READY</span>
+      </div>
+    </section>
+
+    <section class="paths shell">
+      <p class="eyebrow">PICK A HATCH</p>
+      <h2>start where you are.</h2>
+      <div class="path-grid">
+        <a class="path" href="/docs/tutorials/first-project">
+          <span>01 // NEW PROJECT</span><h3>boot the whole stack</h3><p>Scaffold TypeScript, wire up your agent, and bring up LocalNet. One command and you’re moving.</p><b>start fresh →</b>
+        </a>
+        <a class="path" href="/docs/tutorials/explore-with-vibekit">
+          <span>02 // EXPLORER</span><h3>ask. inspect. decide.</h3><p>Look up real chain data in plain English. Writes stop for review before anything gets signed.</p><b>open the console →</b>
+        </a>
+        <a class="path" href="/docs/guides/create-a-vibekit-plugin">
+          <span>03 // YOUR TOOLS</span><h3>plug in your weird stuff</h3><p>Wrap your own capability in the same tool contract, then use it from every VibeKit host.</p><b>build a plugin →</b>
+        </a>
+      </div>
+    </section>
+
+    <section class="closing shell">
+      <p class="eyebrow">AGENTS CAN JUST BUILD THINGS</p>
+      <h2>give them tools.<br /><em>review the writes.</em></h2>
+      <a class="button primary" href="/docs/">read the field manual <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer class="shell"><Mark /><span>tools and context for agents building on Algorand.</span><a href="/docs/">docs</a><a href="https://github.com/initlabsai/vibekit">GitHub</a></footer>
+</Landing>

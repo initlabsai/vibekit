@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/getting-started/quick-start",
+      "destination": "/docs/tutorials/first-project",
+      "permanent": true
+    }
+  ]
+}

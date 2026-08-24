@@ -26,6 +26,7 @@ sign. The hosted stack is planned to keep the same custody boundary.
 - A local keystore signer and authenticated TestNet funding flow
 - A provider-agnostic agent loop, project-installable skills, and acceptance
   prompts
+- A public Astro/Starlight landing page and Markdown documentation site
 
 ## Explorer
 
@@ -46,8 +47,8 @@ package surface. The hosted API and SDK remain planned.
 The core engine, tools, plugins, signer, MCP adapters, agent loop, CLI, the
 provisional explorer package, and the fixture-backed TUI/web renderers are
 implemented and tested. The next work is the hosted API/SDK and the 1.0
-publish gate. The `vibekit explore` CLI entry point and browser wallet custody
-are still pending. The current skill bundle covers VibeKit operation and
+publish gate. The `vibekit explore` CLI entry point is implemented; browser
+wallet custody is still pending. The current skill bundle covers VibeKit operation and
 extension plus TypeScript Algorand contracts, clients, testing, frontend
 wallets, standards, migrations, structured security audits, and maintenance of
 the skill set itself.
@@ -66,6 +67,7 @@ To run only the Explorer apps during development:
 ```bash
 bun --cwd apps/tui run dev
 bun --cwd apps/web run dev
+bun run website
 ```
 
 ## Documentation
@@ -73,3 +75,4 @@ bun --cwd apps/web run dev
 - [Design](./docs/DESIGN.md) — architecture, current state, gaps, and roadmap
 - [Constitution](./docs/CONSTITUTION.md) — project principles and contribution
   standards
+- [Website source](./apps/website) — landing page and Markdown documentation

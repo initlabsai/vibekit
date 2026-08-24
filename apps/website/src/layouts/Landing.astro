@@ -1,0 +1,27 @@
+---
+import '../styles/site.css'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const { title = 'VibeKit — talk to the chain. build the thing.', description = 'Real Algorand tools and context for your coding agent. You keep the keys.' } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#0a0b0e" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

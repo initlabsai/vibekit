@@ -259,7 +259,8 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 │   ├── mcp/                       # thin reference deployment of @initlabs/vibekit-mcp (stdio + streamable HTTP)
 │   ├── api/                       # planned private hosted API (Hono/Bun)
 │   ├── tui/                       # private full-screen @opentui/react Explorer
-│   └── web/                       # private thin Next.js Explorer renderer
+│   ├── web/                       # private thin Next.js Explorer renderer
+│   └── website/                   # public Astro/Starlight landing page and Markdown documentation
 ├── packages/
 │   ├── core/                      # @initlabs/vibekit-core — tool contract, ToolContext, NetworkClients,
 │   │                              #   compose engine, shared validators/formatters/utils
@@ -283,7 +284,9 @@ initlabsai/vibekit                       # ~/Code/@initlabs/vibekit
 All official product surfaces live in this monorepo. This is a source and
 coordination boundary, not a deployment boundary: `apps/api`, `apps/tui`, and
 `apps/web` are private terminal nodes that build, ship, and deploy
-independently. No package may depend on an app.
+independently. `apps/website` is the public static documentation and landing
+site; it is its own Vercel deployment and its Markdown source lives under
+`apps/website/src/content/docs/`. No package may depend on an app.
 
 Workspace apps depend on `@initlabs/*` through `workspace:*`, but may import
 only exported package entry points. Relative imports across workspaces, deep
