@@ -144,6 +144,30 @@ describe('batchLookupAccounts', () => {
   })
 })
 
+describe('never-funded address (indexer 404)', () => {
+  const ctx = fakeContext({
+    indexer: {
+      lookupAccountByID: () =>
+        failing('Network request error. Received status 404 (Not Found): no accounts found for address: X'),
+    },
+  })
+
+  test('lookupAccount throws ACCOUNT_NOT_FOUND instead of the raw HTTP error', async () => {
+    const error = await lookupAccount(ctx, { address: ADDR }).catch((e) => e)
+    expect(error).toBeInstanceOf(ToolError)
+    expect(error.code).toBe('ACCOUNT_NOT_FOUND')
+  })
+
+  test('getAccountPortfolio returns an empty portfolio', async () => {
+    expect(await getAccountPortfolio(ctx, { address: ADDR })).toEqual({
+      address: ADDR,
+      balanceMicroAlgos: 0,
+      assets: [],
+      totalAssets: 0,
+    })
+  })
+})
+
 describe('searchAccounts', () => {
   test('caps limit at 100 and strips final page token', async () => {
     let requestedLimit = 0

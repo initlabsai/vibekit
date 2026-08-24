@@ -5,6 +5,7 @@
  */
 import { base64ToBytes, bytesToBase64, ToolError, type ToolContext } from '@initlabs/vibekit-core'
 import { ABIUintType, decodeAddress, encodeAddress } from 'algosdk'
+import { isNotFound } from '../../shared/errors.js'
 
 // ============================================================================
 // Shared types and helpers
@@ -172,7 +173,7 @@ export async function readLocalState(
   } catch (error) {
     // algod 404s for an account that NEVER opted in (a closed-out account
     // still returns info without appLocalState) — both mean "not opted in".
-    if (error instanceof Error && error.message.includes('404')) {
+    if (isNotFound(error)) {
       return { appId, scope: 'local' as const, address, optedIn: false, state: [] }
     }
     throw error
