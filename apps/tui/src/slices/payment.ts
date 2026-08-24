@@ -54,6 +54,8 @@ export function usePaymentFlow({
 
   const [flow, setFlow] = useState<WriteFlowState | null>(null)
   const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
+  /** Who composed the group under review: the agent, or the user's own typed command/method line. */
+  const [flowOrigin, setFlowOrigin] = useState<'agent' | 'typed'>('typed')
   const flowRef = useRef<WriteFlowState | null>(flow)
   const flowSectionRef = useRef<number | null>(null)
   const flowItemRef = useRef<number | null>(null)
@@ -118,6 +120,7 @@ export function usePaymentFlow({
       }
       const useLive = live === true
       setFlowMode(useLive ? 'live' : 'sample')
+      setFlowOrigin('typed')
       setBusy(true)
       setStatus(
         useLive
@@ -217,10 +220,10 @@ export function usePaymentFlow({
               : undefined
           const round =
             derived && derived.ok ? derived.model.confirmation?.confirmedRound : undefined
-          finishPayment(
-            run.flow,
-            `Payment confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`,
-          )
+          const types = derived && derived.ok ? derived.model.simulation?.transactionTypes : undefined
+          const create = derived && derived.ok && derived.model.unsignedGroup.summary.startsWith('create app')
+          const what = create ? 'Deploy' : types?.length === 1 ? (types[0] === 'pay' ? 'Payment' : types[0] === 'appl' ? 'Call' : 'Transaction') : 'Group'
+          finishPayment(run.flow, `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`)
         })
       })
     },
@@ -256,7 +259,9 @@ export function usePaymentFlow({
   return {
     flow,
     flowRef,
+    flowOrigin,
     setFlowMode,
+    setFlowOrigin,
     startPayment,
     decide,
     updateFlowBlock,

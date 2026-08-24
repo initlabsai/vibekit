@@ -37,6 +37,8 @@ export function useExplorerKeys({
   appsMethodOpen,
   selectAppsMethod,
   submitAppsCall,
+  openAppsApp,
+  deployAppsApp,
   toggleBlocksTail,
   togglePlugin,
   openListRow,
@@ -60,6 +62,10 @@ export function useExplorerKeys({
   appsMethodOpen: boolean
   selectAppsMethod: (index: number) => void
   submitAppsCall: () => void
+  /** o on an open app card: the application record lane, like opening an asset from the shelf. */
+  openAppsApp: () => void
+  /** d on an open app card: compose a create of its spec (the deploy line first when it has TMPL_* vars). */
+  deployAppsApp: () => void
   toggleBlocksTail: () => void
   /** Flips plugin row n (1-9) on the plugins screen. */
   togglePlugin: (index: number) => void
@@ -122,6 +128,14 @@ export function useExplorerKeys({
               // call fires twice and the two runs race on callBusy/callResult.
               key.preventDefault()
               submitAppsCall()
+              return
+            }
+            if (appsDetailOpen && !appsMethodOpen && key.name === 'o') {
+              openAppsApp()
+              return
+            }
+            if (appsDetailOpen && !appsMethodOpen && key.name === 'd') {
+              deployAppsApp()
               return
             }
             const index = Number.parseInt(key.name, 10)

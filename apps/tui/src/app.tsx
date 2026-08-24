@@ -23,6 +23,8 @@ import { ContentPane, NavPane } from './sections.js'
 import { transactionsFilterFor, type OpenTarget } from './views.js'
 import { useAccounts } from './slices/accounts.js'
 import { useApps } from './slices/apps.js'
+import { startPaymentFlowFromDraftRecord } from '@initlabs/vibekit-explorer'
+import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 import { useAgentLane } from './slices/agent.js'
 import { useFeed } from './slices/feed.js'
 import { useExplorerKeys } from './slices/keys.js'
@@ -110,7 +112,13 @@ export function App() {
     openWorkspace,
   } = accounts
 
-  const apps = useApps({ screen, network, sender: activeSender, live, host })
+  // The apps slice mounts before the payment lane; drafts route through a ref.
+  const appsDraftRef = useRef<(wire: unknown, toolName: string, label: string) => void>(() => {})
+  const onAppsDraft = useCallback(
+    (wire: unknown, toolName: string, label: string) => appsDraftRef.current(wire, toolName, label),
+    [],
+  )
+  const apps = useApps({ screen, network, sender: activeSender, live, host, onDraft: onAppsDraft })
   const agentExtraTools = useMemo(() => [...apps.extraTools, explainApplicationTool], [apps.extraTools])
 
   const lookup = useLookups({
@@ -142,22 +150,17 @@ export function App() {
   } = lookup
   const activateAppsEntry = useCallback(
     (index: number) => {
-      const entry = apps.entries[index - 1]
-      if (!entry) return
-      if (entry.kind === 'local') {
-        const match = apps.deployed.find((deployed) => deployed.name === entry.spec.spec.name)
-        apps.selectSpec({ spec: entry.spec, appId: match?.appId })
+      const group = apps.groups[index - 1]
+      if (!group) return
+      const appId = group.deployed[0]?.appId ?? group.optedIn[0]
+      if (group.spec) {
+        apps.selectSpec({ group, spec: group.spec, ...(appId === undefined ? {} : { appId }) })
         return
       }
-      const local =
-        entry.kind === 'deployed' ? apps.localSpecs.find((spec) => spec.spec.name === entry.name) : undefined
-      if (local) {
-        apps.selectSpec({ spec: local, appId: entry.appId })
-        return
-      }
-      // Opted-in, or deployed without a local spec: the same lane as `app <id>`.
+      // On-chain only, no spec to render: the same lane as `app <id>`.
+      if (appId === undefined) return
       setScreen('chat')
-      openApplication(createSection(`app ${entry.appId}`), entry.appId)
+      openApplication(createSection(`app ${appId}`), appId)
     },
     [apps, createSection, openApplication, setScreen],
   )
@@ -169,6 +172,12 @@ export function App() {
     [apps],
   )
   const closeAppsDetail = useCallback(() => apps.closeDetail(), [apps])
+  const openAppsApp = useCallback(() => {
+    const appId = apps.selected?.appId
+    if (appId === undefined) return
+    setScreen('chat')
+    openApplication(createSection(`app ${appId}`), appId)
+  }, [apps.selected, createSection, openApplication, setScreen])
 
   const payment = usePaymentFlow({
     feed,
@@ -187,6 +196,38 @@ export function App() {
     setStatus,
   })
   const { flow, flowRef, startPayment, decide: decidePayment, isFlowSection, modalOpen: paymentModalOpen, modalModel } = payment
+  appsDraftRef.current = (wire, toolName, label) => {
+    if (flowRef.current !== null) {
+      apps.setCallError('A write is already awaiting approval.')
+      return
+    }
+    // Ids come from the session counter: the store rejects a repeated tool-call id.
+    const draftRecord = draftRecordFromComposeWire(
+      { resultId: newId('result-apps-draft'), toolCallId: newId('tool-call-apps'), network },
+      wire,
+      toolName,
+    )
+    const sectionId = createSection(`call ${label}`)
+    payment.setFlowMode('live')
+    payment.setFlowOrigin('typed')
+    setScreen('chat')
+    void startPaymentFlowFromDraftRecord({
+      host: keystoreHost,
+      store: storeRef.current,
+      draftRecord,
+      newId,
+      onStep: payment.trackFlowStep(sectionId),
+    }).then((run) => {
+      commitStore(run.store)
+      if (!run.ok) {
+        const message = `Couldn't prepare the call — ${run.message}`
+        // finishPayment only notes into a section a flow step reached; a
+        // failure before the first step would otherwise vanish.
+        if (run.flow) payment.finishPayment(run.flow, message, 'error')
+        else appendNote(sectionId, message, 'error')
+      } else if (run.flow) payment.updateFlowBlock(run.flow)
+    })
+  }
   // One modal at a time: the payment approval or an expensive-call confirm.
   // An agent-composed payment waits for the turn to end, so its one-line
   // narration lands before the modal takes the keyboard, not after the verdict.
@@ -503,9 +544,11 @@ export function App() {
     appsDetailOpen: apps.selected !== null,
     closeAppsDetail,
     activateAppsEntry,
-    appsMethodOpen: apps.selectedMethod !== null,
+    appsMethodOpen: apps.selectedMethod !== null || apps.deployOpen,
     selectAppsMethod,
     submitAppsCall: apps.submitCall,
+    openAppsApp,
+    deployAppsApp: apps.startDeploy,
     toggleBlocksTail: tail.togglePause,
     togglePlugin: (index) => {
       const info = EXPLORER_PLUGIN_INFO[index - 1]
@@ -522,8 +565,8 @@ export function App() {
   const composerFocused = screen === 'chat' && !modalOpen && focus === 'composer'
   const reclaimFocus = useCallback(() => {
     if (composerFocused) composerRef.current?.focus()
-    else if (screen === 'apps' && apps.selectedMethod) methodInputRef.current?.focus()
-  }, [apps.selectedMethod, composerFocused, screen])
+    else if (screen === 'apps' && (apps.selectedMethod || apps.deployOpen)) methodInputRef.current?.focus()
+  }, [apps.deployOpen, apps.selectedMethod, composerFocused, screen])
   const showNav = navOpen && !isNarrow && screen === 'chat'
   const hint =
     agentBusy || busy
@@ -539,10 +582,16 @@ export function App() {
     : screen === 'wallet'
       ? '1-9 select · esc explore'
       : screen === 'apps'
-        ? apps.selectedMethod
-          ? 'enter simulate · esc methods'
-          : apps.selected
-            ? '1-9 method · esc apps'
+        ? apps.deployOpen
+          ? 'enter deploy · esc back'
+          : apps.selectedMethod
+            ? apps.selectedMethod.readonly
+              ? 'enter simulate · esc method'
+              : 'enter compose · esc method'
+            : apps.selected
+              ? apps.selected.appId === undefined
+                ? '1-9 method · d deploy · esc back'
+                : '1-9 method · o open · d redeploy · esc back'
             : '1-9 open · ←/→ account · esc explore'
       : screen === 'blocks'
         ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
@@ -609,13 +658,19 @@ export function App() {
       ) : screen === 'apps' ? (
         <AppsScreen
           network={network}
-          entries={apps.entries}
+          groups={apps.groups}
+          accountName={senderAccount?.name}
           selected={apps.selected}
           selectedMethod={apps.selectedMethod}
+          deployOpen={apps.deployOpen}
           sender={activeSender}
+          deployedLoading={apps.deployedLoading}
+          deployedError={apps.deployedError}
           optedInLoading={apps.optedInLoading}
+          globalState={apps.globalState}
           width={width}
           onActivate={activateAppsEntry}
+          onOpenApp={openAppsApp}
           onSelectMethod={apps.selectMethod}
           callEpoch={apps.callEpoch}
           callBusy={apps.callBusy}
@@ -717,7 +772,13 @@ export function App() {
         />
       ) : null}
       {approvalOpen ? (
-        <ApprovalModal model={modalModel} network={network} screenWidth={width} screenHeight={height} />
+        <ApprovalModal
+          model={modalModel}
+          network={network}
+          origin={payment.flowOrigin}
+          screenWidth={width}
+          screenHeight={height}
+        />
       ) : null}
       {confirm ? (
         <ConfirmModal

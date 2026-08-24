@@ -138,17 +138,15 @@ describe('TUI tmux journeys', () => {
   )
 
   test.skipIf(!HAS_TMUX)(
-    'My Apps lists deployed, opted-in, and local-spec sections',
+    'My Apps lists one card per app with its status',
     async () => {
       session = new TuiSession()
       await session.waitFor('set VIBEKIT_AGENT_MODEL to chat')
       session.type('apps')
       session.send('Enter')
       const pane = await session.waitFor('MY APPS')
-      expect(pane).toContain('Deployed')
-      expect(pane).toContain('Opted in')
-      expect(pane).toContain('Local specs')
-      expect(pane).toMatch(/app \d+|No opted-in apps/)
+      expect(pane).toMatch(/OPTED IN|NOT DEPLOYED|LOCALNET\s+┃|No apps yet/)
+      expect(pane).toMatch(/#\d+|No apps yet/)
       expect(pane).toMatch(/←\/→ account/)
     },
     { timeout: 20_000 },
@@ -180,7 +178,7 @@ describe('TUI tmux journeys', () => {
       await session.waitFor('set VIBEKIT_AGENT_MODEL to chat')
       session.send('M-2')
       const pane = await session.waitFor('MY APPS')
-      expect(pane).toContain('Opted in')
+      expect(pane).toMatch(/OPTED IN|NOT DEPLOYED|LOCALNET\s+┃|No apps yet/)
     },
     { timeout: 20_000 },
   )

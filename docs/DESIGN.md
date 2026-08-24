@@ -186,9 +186,14 @@ edge representations (vector / self-loop / point) with typed labels —
 validated against wires recorded from Lora's real-transaction snapshot
 corpus; then a TUI swimlane card for `transaction.group`. (L2) My Apps (done —
 normalizeAppSpec accepts all three formats via plain algosdk; the ^2
-screen shows deployed associations from the config apps section, the
-active account's opted-in apps, and scanned local specs; name.algo input
-resolves through the NFD plugin):
+screen shows deployed apps — the config apps section merged with
+deployments detected on-chain by the AlgoKit deployer note, which
+`app_deploy` stamps too (network-wide on localnet, the active account's
+elsewhere) — the active account's opted-in apps, and scanned local specs
+with ARC-56 state keys, bare actions, and live global state; each card's
+methods take calls on one line (positional, name=value, or JSON, checked by
+ABI type): reads simulate in place, writes compose and land on the L4
+approval card; name.algo input resolves through the NFD plugin):
 scan the launch directory for app specs (ARC-56, ARC-32, ARC-4 —
 normalized to ARC-56), a screen with deployed / opted-in / local-spec sections,
 NFD names accepted as direct-lane input. (L3) `toolsFromArc56(spec)` (done — each ABI method becomes a
@@ -748,9 +753,10 @@ composer docked at the bottom. `ctrl+4` (or `blocks`) opens a Blocks page
 that tails algod only while that page is highlighted; `s` pauses it.
 `ctrl+w` opens the wallet picker;
 `ctrl+1`/`ctrl+3` open that account's assets and transactions using the
-existing list cards; `ctrl+2` opens My Apps (deployed associations, the
-active account's opted-in apps, and local specs). `[`/`]` cycle the active
-account on those pages. The composer stays on the chat screen. Each request appends a feed group containing
+existing list cards; `ctrl+2` opens My Apps — one card per contract
+(deployments detected on-chain, the active account's opted-in apps, local
+specs) with a method line that simulates reads and composes writes into the
+approval modal. `[`/`]` cycle the active account on those pages. The composer stays on the chat screen. Each request appends a feed group containing
 its narration and cards. Below roughly 96 columns the split collapses to one
 pane. Both heads organize the experience without tabs or a canvas: the TUI
 as an accretive feed, the web head as one open `ExplorerArtifact` at a time.

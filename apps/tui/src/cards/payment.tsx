@@ -54,6 +54,65 @@ export function paymentLines(model: PaymentFlowViewModel): string[] {
   return lines
 }
 
+/** `HiWorld.hi(name: "gabe") → app 1018` (describeCall) pulled apart for display; undefined for any other summary. */
+export function parseCallSummary(
+  summary: string,
+): { call: string; appId: string; args: Array<{ name: string; value: string }> } | undefined {
+  const match = /^([\w.]+)\((.*)\) → app (\d+)$/s.exec(summary)
+  if (!match) return undefined
+  const [, call, inner, appId] = match
+  const parts: string[] = []
+  let current = ''
+  let depth = 0
+  let quote = false
+  for (const ch of inner!) {
+    if (ch === '"' ) quote = !quote
+    if (!quote) {
+      if ('[{('.includes(ch)) depth += 1
+      if (']})'.includes(ch)) depth -= 1
+      if (ch === ',' && depth === 0) {
+        parts.push(current.trim())
+        current = ''
+        continue
+      }
+    }
+    current += ch
+  }
+  if (current.trim()) parts.push(current.trim())
+  const args = parts.map((part) => {
+    const colon = part.indexOf(': ')
+    return colon > 0 ? { name: part.slice(0, colon), value: part.slice(colon + 2) } : { name: '', value: part }
+  })
+  return { call: call!, appId: appId!, args }
+}
+
+/** The call under review: what is called, then each argument on its own line where it cannot be missed. */
+function CallSummary({ summary, width }: { summary: string; width: number }) {
+  const parsed = parseCallSummary(summary)
+  if (!parsed) return <text fg={COLORS.brassBright} marginTop={1} content={summary} />
+  return (
+    <box flexDirection="column" marginTop={1}>
+      <box flexDirection="row" height={1}>
+        <text fg={COLORS.brassBright} content={parsed.call} />
+        <text fg={COLORS.muted} content={`  → app ${parsed.appId}`} />
+      </box>
+      {parsed.args.length === 0 ? (
+        <text fg={COLORS.faint} content="no arguments" />
+      ) : (
+        parsed.args.map((arg, index) => (
+          <Fact
+            key={`${arg.name}-${index}`}
+            label={arg.name || `arg${index}`}
+            value={arg.value}
+            width={width}
+            valueColor={COLORS.text}
+          />
+        ))
+      )}
+    </box>
+  )
+}
+
 export function PaymentBody({
   model,
   width,
@@ -68,7 +127,7 @@ export function PaymentBody({
   return (
     <box flexDirection="column">
       {model.amountMicroAlgos === undefined ? (
-        <text fg={COLORS.brassBright} marginTop={1} content={model.unsignedGroup.summary} />
+        <CallSummary summary={model.unsignedGroup.summary} width={width} />
       ) : big ? (
         <box flexDirection="row" alignItems="flex-end" marginTop={1} height={2}>
           <ascii-font

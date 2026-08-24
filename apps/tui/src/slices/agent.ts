@@ -79,7 +79,7 @@ export function useAgentLane({
   askConfirm: (title: string, lines: string[]) => Promise<boolean>
 }) {
   const { appendBlock, appendItem, appendNote, newItemId, patchSection, sectionsRef, updateItem } = feed
-  const { flowRef, setFlowMode, trackFlowStep, updateFlowBlock, finishPayment } = payment
+  const { flowRef, setFlowMode, setFlowOrigin, trackFlowStep, updateFlowBlock, finishPayment } = payment
 
   const agentSectionRef = useRef<number | null>(null)
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
@@ -217,6 +217,7 @@ export function useAgentLane({
             switch (plan.kind) {
               case 'payment':
                 setFlowMode('live')
+                setFlowOrigin('agent')
                 void startPaymentFlowFromDraftRecord({
                   host: keystoreHost,
                   store: storeRef.current,

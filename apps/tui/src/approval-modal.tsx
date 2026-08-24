@@ -66,11 +66,14 @@ export function ConfirmModal({
 export function ApprovalModal({
   model,
   network,
+  origin,
   screenWidth,
   screenHeight,
 }: {
   model: PaymentFlowViewModel | undefined
   network: LiveNetworkId
+  /** Agent-composed groups carry the hallucination warning; typed ones do not. */
+  origin: 'agent' | 'typed'
   screenWidth: number
   screenHeight: number
 }) {
@@ -90,6 +93,14 @@ export function ApprovalModal({
   const left = Math.max(0, Math.floor((screenWidth - width) / 2))
   const top = Math.max(0, Math.floor((screenHeight - height) / 2))
   const payment = model?.amountMicroAlgos !== undefined
+  const types = model?.simulation?.transactionTypes
+  const kicker = payment
+    ? 'APPROVE THIS PAYMENT?'
+    : model?.unsignedGroup.summary.startsWith('create app')
+      ? 'APPROVE THIS DEPLOY?'
+      : types?.length === 1 && types[0] === 'appl'
+        ? 'APPROVE THIS CALL?'
+        : 'APPROVE THIS GROUP?'
   // The one moment the UI waits on a human: the frame breathes until you answer.
   const danger = failed || network === 'mainnet'
   const phase = usePulse(2400, AMBER_BREATH.length)
@@ -115,7 +126,7 @@ export function ApprovalModal({
       paddingY={0}
     >
       <Header
-        kicker={payment ? 'APPROVE THIS PAYMENT?' : 'APPROVE THIS GROUP?'}
+        kicker={kicker}
         pill={failed ? 'WOULD FAIL' : 'SIMULATED OK'}
         tone={failed ? 'danger' : 'ok'}
       />
@@ -143,7 +154,11 @@ export function ApprovalModal({
       <text
         fg={COLORS.faint}
         marginTop={1}
-        content="AI-composed — check every field yourself. Smaller models hallucinate; prefer a large frontier model."
+        content={
+          origin === 'agent'
+            ? 'AI-composed — check every field yourself. Smaller models hallucinate; prefer a large frontier model.'
+            : 'Composed from what you typed — these decoded bytes are exactly what gets signed.'
+        }
       />
     </box>
   )

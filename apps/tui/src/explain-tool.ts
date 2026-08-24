@@ -10,7 +10,7 @@ import { z } from 'zod'
 export const explainApplicationTool = defineTool({
   name: 'explain_application',
   description:
-    'Render your explanation of a contract as the EXPLANATION card. Call once, after get_application_program, with the complete write-up in markdown — headings, lists, and tables render. Describe what the program does — no security section, no verdicts on safety.',
+    'Render your explanation of a contract as the EXPLANATION card. Call once, after get_application_program, with the complete write-up in markdown — headings, lists, and tables render. Describe what the program does — no security section, no verdicts on safety. The card is the whole explanation: do not repeat any of it in your reply afterwards.',
   parameters: z.object({
     applicationId: z.number().describe('The application explained'),
     markdown: z.string().min(1).describe('The full explanation, markdown'),

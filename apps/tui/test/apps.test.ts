@@ -1,12 +1,15 @@
 import { describe, expect, test } from 'bun:test'
+import type { StructuredResult } from '@initlabs/vibekit-explorer'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { specCatalog } from '../src/abi-catalog.js'
 import {
-  appsEntries,
+  appGroups,
+  deployedFromRecord,
   isAppSpecCandidate,
+  mergeDeployed,
   optedInFromRecord,
   scanAppSpecs,
 } from '../src/slices/apps.js'
@@ -37,6 +40,7 @@ function tree(): string {
   }
   write('counter.arc56.json', arc56)
   write('smart_contracts/artifacts/application.json', arc32)
+  write('artifacts/Counter.arc32.json', arc32.replace('Vault', 'Counter')) // same name as the ARC-56
   write('contracts/greeter.json', arc4) // any *.json counts inside an output dir
   write('contracts/tsconfig.json', '{"compilerOptions":{}}') // valid JSON, not a spec
   write('vault.arc32.json', 'not json at all') // candidate name, invalid JSON
@@ -61,9 +65,11 @@ describe('app spec discovery scan', () => {
 
   test('scan validates candidates, skips junk, respects depth and skip dirs', () => {
     const results = scanAppSpecs(tree())
+    // ARC-56 first so a name present in several formats resolves to the richest spec.
     expect(results.map((entry) => entry.path)).toEqual([
-      'contracts/greeter.json',
       'counter.arc56.json',
+      'artifacts/Counter.arc32.json',
+      'contracts/greeter.json',
       'smart_contracts/artifacts/application.json',
     ])
     const byPath = Object.fromEntries(results.map((entry) => [entry.path, entry.spec]))
@@ -80,16 +86,62 @@ describe('app spec discovery scan', () => {
 })
 
 describe('apps screen entries', () => {
-  test('deployed, then opted-in, then local so 1-9 favors on-chain apps', () => {
-    const local = scanAppSpecs(tree()).slice(0, 1)
-    const entries = appsEntries(
-      [{ name: 'Counter', appId: 1042 }],
-      [{ appId: 1071, name: 'Sample' }],
+  test('appGroups merges by name: deployed first (newest first), then opted-in, then spec-only', () => {
+    const local = scanAppSpecs(tree())
+    const counter = local.filter((entry) => entry.spec.name === 'Counter')
+    const groups = appGroups(
+      [
+        { name: 'Counter', appId: 1042 },
+        { name: 'Counter', appId: 1050 },
+      ],
+      [
+        { appId: 1071, name: 'Sample' },
+        { appId: 1042 },
+      ],
       local,
     )
-    expect(entries[0]).toEqual({ kind: 'deployed', name: 'Counter', appId: 1042 })
-    expect(entries[1]).toEqual({ kind: 'optedIn', appId: 1071, name: 'Sample' })
-    expect(entries[2]).toEqual({ kind: 'local', spec: local[0]! })
+    expect(groups.map((g) => g.name)).toEqual(['Counter', 'Sample', 'app 1042', 'Greeter', 'Vault'])
+    expect(groups[0]).toMatchObject({ deployed: [{ appId: 1050 }, { appId: 1042 }], optedIn: [], specs: counter })
+    expect(groups[0]?.spec?.spec.format).toBe('arc56') // richest spec first
+    expect(groups[1]).toMatchObject({ deployed: [], optedIn: [1071], specs: [] })
+    expect(groups[3]?.spec?.path).toBe('contracts/greeter.json')
+  })
+
+  test('deployedFromRecord reads AlgoKit deployer notes off app-create rows', () => {
+    const record = (transactions: unknown): StructuredResult =>
+      ({ protocolVersion: '0.1.0-provisional', type: 'result', resultId: 'r', state: 'success', data: { transactions } }) as never
+    expect(
+      deployedFromRecord(
+        record([
+          { note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}', createdApplicationId: 1007, sender: 'CREATOR' },
+          { note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}', createdApplicationId: '1003' },
+          { note: 'ALGOKIT_DEPLOYER:j{"name":"Other"}' }, // no created app: an update, not a create
+          { note: 'ALGOKIT_DEPLOYER:jnot json', createdApplicationId: 9 },
+          { note: 'hello', createdApplicationId: 10 },
+          null,
+        ]),
+      ),
+    ).toEqual([
+      { name: 'HelloWorld', appId: 1007, creator: 'CREATOR' },
+      { name: 'HelloWorld', appId: 1003 },
+    ])
+    expect(deployedFromRecord(record('junk'))).toEqual([])
+    expect(deployedFromRecord({ ...record([]), state: 'error' } as StructuredResult)).toEqual([])
+  })
+
+  test('mergeDeployed dedupes by app id and puts the newest deployment first', () => {
+    expect(
+      mergeDeployed(
+        [{ name: 'Stored', appId: 1003 }],
+        [
+          { name: 'HelloWorld', appId: 1003 },
+          { name: 'HelloWorld', appId: 1007 },
+        ],
+      ),
+    ).toEqual([
+      { name: 'HelloWorld', appId: 1007 },
+      { name: 'Stored', appId: 1003 },
+    ])
   })
 
   test('optedInFromRecord reads application.locals app ids and ignores junk', () => {
@@ -126,5 +178,23 @@ describe('spec catalog', () => {
     const catalog = specCatalog([{ name: 'Counter', appId: 1042 }], local)
     expect(catalog.get(1042)?.name).toBe('Counter')
     expect(catalog.get(99)).toBeUndefined()
+  })
+})
+
+describe('call summary on the approval card', () => {
+  test('splits describeCall output into call, app, and one row per argument', async () => {
+    const { parseCallSummary } = await import('../src/cards/payment.js')
+    expect(parseCallSummary('HiWorld.hi(name: "a, b", n: 5, list: [1,2], t: {"type":"pay","amount":1}) → app 1018')).toEqual({
+      call: 'HiWorld.hi',
+      appId: '1018',
+      args: [
+        { name: 'name', value: '"a, b"' },
+        { name: 'n', value: '5' },
+        { name: 'list', value: '[1,2]' },
+        { name: 't', value: '{"type":"pay","amount":1}' },
+      ],
+    })
+    expect(parseCallSummary('HiWorld.ping() → app 1')).toEqual({ call: 'HiWorld.ping', appId: '1', args: [] })
+    expect(parseCallSummary('[0] app call app 1018 (hi(string)string)')).toBeUndefined()
   })
 })
