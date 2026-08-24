@@ -15,6 +15,23 @@ resources, fees, and the client call shape.
 - **Logs** are outputs, not durable application storage. Use ARC-28 when logs
   are intended as typed events.
 
+State is declared with factory functions, not classes — `new` is a compile
+error — and the option names are `key` / `keyPrefix`:
+
+```ts
+import { Box, BoxMap, GlobalState, LocalState } from '@algorandfoundation/algorand-typescript'
+
+counter = GlobalState<uint64>({ key: 'c' })
+score = LocalState<uint64>({ key: 's' })
+config = Box<bytes>({ key: 'cfg' }) // one box, fixed key
+greetings = BoxMap<string, string>({ keyPrefix: 'g' }) // one box per key
+```
+
+`this.greetings(name).value` reads or writes the box for `name`; `.exists`
+checks first. The installed `@algorandfoundation/algorand-typescript/*.d.ts`
+files are the authoritative API: when the compiler names a type it does not
+recognize, read that type's declaration before guessing again.
+
 Keep keys and encodings stable once clients depend on them. Bound user-created
 state, decide who funds growth, and define deletion/refund behavior. A storage
 proxy is not an ordinary JavaScript object: use only its supported write-through

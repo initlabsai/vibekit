@@ -66,6 +66,10 @@ skill remains the owner of implementation and routine defensive review.
   resources, box I/O budget, and minimum-balance changes during design.
 - Make update, delete, opt-in, close-out, and clear-state behavior explicit.
   Default-deny lifecycle actions the application does not need.
+- On a compile error, read the installed
+  `@algorandfoundation/algorand-typescript/*.d.ts` declaration the error
+  names, or the linked example, before changing the code. Do not iterate from
+  memory.
 - Compile and test the generated TEAL behavior. Use `simulate` for execution
   traces and fee/resource diagnosis; do not use removed `dryrun` or `tealdbg`
   workflows.
