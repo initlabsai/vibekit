@@ -34,7 +34,10 @@ existing contract, client, and test patterns.
 
 ### Step 2: Load the Relevant Skill
 - Load \`build-on-algorand\` for AVM/PuyaTs contracts, generated clients,
-  testing, frontend wallets, security, standards, and migrations.
+  testing, frontend wallets, defensive implementation, standards, and
+  migrations.
+- Load \`audit-algorand\` for structured security audits, vulnerability
+  assessments, threat models, exploit analysis, or mainnet-readiness reviews.
 - Load \`use-vibekit\` before project lifecycle or on-chain operations.
 - Load \`build-on-vibekit\` before plugin or custom MCP work.
 - Load \`update-skill\` before changing canonical VibeKit skill content.
@@ -54,7 +57,8 @@ Skills are markdown docs with detailed workflows and syntax rules. **Always load
 | Task | Skill | When to Load |
 |------|-------|--------------|
 | VibeKit project lifecycle or on-chain action | \`use-vibekit\` | Project scripts, LocalNet, accounts, tool access, networks, signing — load first |
-| Algorand contract, client, test, frontend, security, standard, or migration | \`build-on-algorand\` | TypeScript application implementation or review — load first |
+| Algorand contract, client, test, frontend, standard, migration, or defensive implementation | \`build-on-algorand\` | TypeScript application implementation or routine review — load first |
+| Algorand security audit or vulnerability assessment | \`audit-algorand\` | Structured threat model, exploit analysis, findings, or mainnet-readiness review — load first |
 | VibeKit plugin or custom MCP deployment | \`build-on-vibekit\` | Extending ToolDefinition, ToolPlugin, deployment, or MCP host wiring — load first |
 | Canonical VibeKit skill maintenance | \`update-skill\` | Skill content, source maps, generated bundle, or catalog review — load first |
 

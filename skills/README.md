@@ -12,13 +12,16 @@ tracks relative discovery symlinks for local agents:
 
 Do not duplicate canonical skill content in those agent-specific directories.
 
-The current set has three product skills and one maintenance skill:
+The current set has four product skills and one maintenance skill:
 
 - `use-vibekit` — operating inside a VibeKit-configured project: CLI and MCP
   access, project lifecycle, LocalNet, accounts, signing, and on-chain flows.
 - `build-on-algorand` — building TypeScript applications with AVM/PuyaTs
   contracts, generated clients, tests, frontend wallets, and Algorand
   standards.
+- `audit-algorand` — performing structured security audits, threat models,
+  exploit analysis, mainnet-readiness reviews, and finding reports for PuyaTs
+  applications and LogicSigs.
 - `build-on-vibekit` — extending VibeKit through its public tool, plugin,
   deployment, and host surfaces.
 - `update-skill` — maintaining canonical skill content, source provenance,

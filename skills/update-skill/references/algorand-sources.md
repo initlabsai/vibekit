@@ -1,7 +1,8 @@
 # Algorand sources
 
-Use this map when maintaining `build-on-algorand`. Verify claims against the
-live source rather than copying large sections into the skill.
+Use this map when maintaining `build-on-algorand` or `audit-algorand`. Verify
+claims against the live source rather than copying large sections into the
+skill.
 
 ## Smart contracts and the AVM
 
@@ -49,6 +50,19 @@ Preserve the contract/off-chain TypeScript boundary. Re-check restricted
 language behavior, AVM-native types such as `uint64` and `bytes`, reference
 semantics, `clone(value)`, storage proxies, and generated ARC-56 output when
 PuyaTs changes.
+
+## Security audits
+
+Maintain `audit-algorand` against the current
+[Algorand Smart Contract Security Best Practices](https://github.com/algorand-devrel/Smart-Contract-Security-Best-Practices)
+guide and its runnable PuyaTs examples. The skill is self-contained and must
+not require that guide at runtime. Adapt decision rules, invariants, failure
+modes, and tested examples into focused references instead of copying its
+chapter structure.
+
+Corroborate protocol and compiler claims with the smart-contract, AVM, PuyaTs,
+client, and ARC primary sources in this map. Preserve the audit skill's
+TypeScript-only boundary and keep severity separate from confidence.
 
 ## Clients and tests
 

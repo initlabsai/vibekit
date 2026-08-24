@@ -1,6 +1,6 @@
 ---
 name: build-on-algorand
-description: Build and review TypeScript-only Algorand applications using the AVM, PuyaTs, generated clients, tests, browser wallets, and relevant ARCs. Use for contracts, assets and tokens, client or frontend integration, security, migrations, and x402 orientation. Excludes Python, project lifecycle, LocalNet, accounts, deployment operations, and VibeKit extension development.
+description: Build and review TypeScript-only Algorand applications using the AVM, PuyaTs, generated clients, tests, browser wallets, and relevant ARCs. Use for contracts, assets and tokens, client or frontend integration, defensive implementation, migrations, and x402 orientation. Excludes structured security audits and finding reports, Python, project lifecycle, LocalNet, accounts, deployment operations, and VibeKit extension development.
 ---
 
 # Build on Algorand
@@ -37,12 +37,16 @@ on-chain operations. This skill covers the application code and design.
 | Choose state, use boxes, inspect group transactions, or emit inner transactions | [State and transactions](references/state-and-transactions.md) |
 | Generate or consume typed clients, test contracts, simulate calls, or debug failures | [Clients and testing](references/clients-and-testing.md) |
 | Connect a browser wallet or pass a wallet signer to a generated client | [Frontend wallets](references/frontend-wallets.md) |
-| Threat-model or review contract and transaction safety | [Security](references/security.md) |
+| Harden an implementation or perform an ordinary contract-safety review | [Security](references/security.md) |
 | Move from TEALScript, Algorand TypeScript beta, ARC-32, or older client APIs | [Migrations](references/migrations.md) |
 | Select an application, ASA, token, NFT, event, or multisig ARC | [Standards](references/standards.md) |
 | Orient a TypeScript client or resource server to x402 on Algorand | [x402](references/x402.md) |
 
 Load only the references needed for the current task.
+
+Load `audit-algorand` for a structured vulnerability assessment, threat model,
+exploit analysis, mainnet-readiness review, or security finding report. This
+skill remains the owner of implementation and routine defensive review.
 
 ## Contract invariants
 

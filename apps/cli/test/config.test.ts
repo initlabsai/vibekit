@@ -66,6 +66,7 @@ describe('canonical skills', () => {
     const names = getSkillNames()
     expect(names).toContain('use-vibekit')
     expect(names).toContain('build-on-algorand')
+    expect(names).toContain('audit-algorand')
     expect(names).toContain('build-on-vibekit')
     expect(names).toContain('update-skill')
     expect(names).not.toContain('vibekit-project-setup')
@@ -101,6 +102,26 @@ describe('skill frontmatter', () => {
       const parsed = Bun.YAML.parse(lines.slice(1, end).join('\n')) as { name?: string; description?: string }
       expect(parsed.name).toBe(skill.name)
       expect(typeof parsed.description).toBe('string')
+    }
+  })
+
+  test('every direct bundled reference link resolves', async () => {
+    const { BUNDLED_SKILLS } = await import('../src/skills/bundled.js')
+    for (const skill of BUNDLED_SKILLS) {
+      const files = new Set(skill.files.map((file) => file.path))
+      const skillMd = skill.files.find((file) => file.path === 'SKILL.md')
+      expect(skillMd, `${skill.name} has SKILL.md`).toBeDefined()
+
+      for (const match of skillMd!.content.matchAll(
+        /\]\((references\/[^)#]+\.md)(?:#[^)]+)?\)/g,
+      )) {
+        const target = match[1]
+        expect(
+          target,
+          `${skill.name} contains a reference target`,
+        ).toBeDefined()
+        expect(files.has(target!), `${skill.name} links ${target}`).toBe(true)
+      }
     }
   })
 })

@@ -49,8 +49,8 @@ implemented and tested. The next work is the hosted API/SDK and the 1.0
 publish gate. The `vibekit explore` CLI entry point and browser wallet custody
 are still pending. The current skill bundle covers VibeKit operation and
 extension plus TypeScript Algorand contracts, clients, testing, frontend
-wallets, security, standards, migrations, and maintenance of the skill set
-itself.
+wallets, standards, migrations, structured security audits, and maintenance of
+the skill set itself.
 
 ## Development
 
