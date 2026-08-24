@@ -42,7 +42,10 @@ rendered frame — sample, don't assume), `0xd9a353` amber for the product name,
 
 **Font**: JetBrains Mono (on this machine:
 `/usr/share/fonts/TTF/JetBrainsMonoNerdFont-{Regular,Bold}.ttf`). Everything is
-monospace — title cards too, so they feel like part of the terminal.
+monospace — title cards too, so they feel like part of the terminal. For
+ffmpeg/libass, resolve the actual installed family with `fc-match`; use the
+reported family name (currently `JetBrainsMono Nerd Font`), not an assumed
+family name that silently falls back to a sans-serif font.
 
 ## Promo videos (VHS + ffmpeg)
 
@@ -79,9 +82,21 @@ Lessons that cost time — don't relearn them:
    between. Re-rolling one segment doesn't touch the others.
 8. **Verify frames, not vibes**: extract QA frames at several timestamps and
    actually look at them before calling it done.
-9. Cards: ~2s each, fade in/out 0.25s, one big line + one muted subtitle,
-   centered. Music: trim to video length, `afade` in 0.5s / out 3s, and add a
-   matching video `fade=t=out` at the end.
+9. **Title cards must look native to the terminal.** Use the same monospace
+   family and palette as the recording. A static card is usually ~2s: one
+   visual idea, one big line, and at most one muted subtitle.
+10. **Typewriter cards must remain readable at every frame.** Keep the copy
+    compact (normally 3–5 short lines), reveal it at a human-readable pace,
+    and render each completed line continuously while the next one types. Do
+    not clear text between events or simulate typing with brief, discontinuous
+    captions. After the final character, hold the complete card for at least
+    ~1s before cutting. Inspect one in-progress frame and one completed frame
+    in the encoded master.
+11. **Time state changes to their informational value.** Hold confirmations,
+    approvals, and results long enough to read the decisive status, then cut
+    forward. Do not leave a resolved screen on display merely because the
+    recording has spare runtime. Music: trim to video length, `afade` in 0.5s
+    / out 3s, and add a matching video `fade=t=out` at the end.
 
 Recording against live mainnet needs: keystore daemon
 (`bun run apps/cli/src/index.ts keystore status`), and for AI segments the
