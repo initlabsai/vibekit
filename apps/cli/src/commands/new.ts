@@ -7,6 +7,8 @@
 
 import * as p from "@clack/prompts";
 import pc from "picocolors";
+
+import { LOGO } from "../logo.js";
 import { existsSync } from "fs";
 import { readdir } from "fs/promises";
 import { basename } from "path";
@@ -47,6 +49,21 @@ export const TEMPLATES: TemplateDefinition[] = [
 
 export function getTemplate(id: string): TemplateDefinition | undefined {
   return TEMPLATES.find((t) => t.id === id);
+}
+
+function welcome(): void {
+  console.clear();
+  console.log(pc.cyan(LOGO));
+  p.note(
+    [
+      "A new Algorand project from a starter template.",
+      "",
+      `${pc.dim("•")} Fetches the template (no git or npm needed)`,
+      `${pc.dim("•")} Optionally sets up your AI coding agents inside it`,
+      `${pc.dim("•")} Leaves you one \`npm run build\` from a deployable contract`,
+    ].join("\n"),
+    "Welcome",
+  );
 }
 
 export function tarballUrl(template: TemplateDefinition, ref = "main"): string {
@@ -97,6 +114,7 @@ export async function commandNew(args: string[]): Promise<void> {
   }
   const headless = parsed.init.yes;
 
+  if (!headless) welcome();
   p.intro(pc.cyan("vibekit new"));
 
   if (parsed.template && !getTemplate(parsed.template)) {
