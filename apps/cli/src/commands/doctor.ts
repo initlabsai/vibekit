@@ -205,7 +205,7 @@ export async function commandDoctor(args: string[]): Promise<void> {
   if (existsSync(keystoreSocket)) {
     ok('keystore daemon socket present (signing available)')
   } else {
-    warn('keystore daemon not running — `vibekit keystore serve` enables signing')
+    warn('keystore daemon not running — `vibekit keystore start` enables signing')
   }
 
   console.log()

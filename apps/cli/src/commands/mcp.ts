@@ -25,13 +25,16 @@ export async function commandMcp(): Promise<void> {
   let signer: KeystoreSigner | undefined
   let mode: 'execute' | 'compose' = requestedMode
   if (requestedMode === 'execute') {
+    // Same background daemon `vibekit explore` starts; nobody keeps a terminal open for it.
+    const { ensureKeystoreDaemon } = await import('./keystore.js')
+    await ensureKeystoreDaemon()
     try {
       signer = await createKeystoreSigner()
     } catch {
       mode = 'compose'
       console.error(
         'vibekit mcp: keystore daemon not reachable — starting in compose mode ' +
-          '(write tools return unsigned transactions). Run `keystore serve` and restart for signing.',
+          '(write tools return unsigned transactions). Run `vibekit keystore start` and restart for signing.',
       )
     }
   }
