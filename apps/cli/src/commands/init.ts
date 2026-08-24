@@ -237,7 +237,8 @@ async function selectMCPsStep(): Promise<MCPSelection> {
 
 /**
  * Resolve the path agents should use to spawn `vibekit mcp`: the invoked
- * binary when running compiled, or this app's bin/vibekit in dev mode.
+ * binary when running compiled, or the from-source shim in dev mode (so
+ * agent sessions track the tree instead of a stale compiled bin/vibekit).
  * Exported for tests via the injectable variant below.
  */
 export function resolveVibekitPath(
@@ -260,7 +261,7 @@ function getVibekitPath(): string {
   return resolveVibekitPath(
     process.argv[1],
     process.execPath,
-    join(import.meta.dir, '..', '..', 'bin', 'vibekit'),
+    join(import.meta.dir, '..', '..', 'scripts', 'vibekit-dev'),
   )
 }
 

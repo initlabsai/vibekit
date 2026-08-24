@@ -171,9 +171,9 @@ describe('resolveVibekitPath', () => {
     )
   })
 
-  test('dev mode (bun run src/index.ts): falls back to the compiled binary path', () => {
-    expect(resolveVibekitPath('/repo/apps/cli/src/index.ts', '/usr/local/bin/bun', '/repo/apps/cli/bin/vibekit')).toBe(
-      '/repo/apps/cli/bin/vibekit',
+  test('dev mode (bun run src/index.ts): falls back to the from-source shim', () => {
+    expect(resolveVibekitPath('/repo/apps/cli/src/index.ts', '/usr/local/bin/bun', '/repo/apps/cli/scripts/vibekit-dev')).toBe(
+      '/repo/apps/cli/scripts/vibekit-dev',
     )
   })
 })

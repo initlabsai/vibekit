@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# The vibekit CLI from workspace source. Builds the CLI's workspace deps first
+# (turbo-cached, ~instant when nothing changed); only failures print, to
+# stderr, so stdout stays clean for `vibekit mcp` over stdio.
+ROOT=$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)
+out=$(cd "$ROOT" && bunx turbo run build --filter='@initlabs/vibekit-cli^...' 2>&1) || {
+  echo "$out" >&2
+  exit 1
+}
+exec bun "$ROOT/apps/cli/src/index.ts" "$@"
