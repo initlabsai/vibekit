@@ -53,11 +53,15 @@ async function main() {
       if (lines[0] !== '---' || end === -1) {
         throw new Error(`${entry.name}/SKILL.md: missing frontmatter`)
       }
+      let frontmatter: unknown
       try {
-        Bun.YAML.parse(lines.slice(1, end).join('\n'))
+        frontmatter = Bun.YAML.parse(lines.slice(1, end).join('\n'))
       } catch (err) {
         throw new Error(`${entry.name}/SKILL.md: frontmatter is not strict YAML — ${err}`)
       }
+      // `internal: true` skills serve agents working on this repo (via the
+      // .agents/.claude/.grok symlinks) and never ship to users.
+      if ((frontmatter as { internal?: boolean }).internal === true) continue
     }
     skills.push({ name: entry.name, files })
   }
