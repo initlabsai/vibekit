@@ -13,7 +13,10 @@ from `SKILL.md` to every write.
 3. Call `app_deploy` through MCP with `appSpecPath`, an explicit `sender`, and
    an explicit `network`.
 
-`app_deploy` always creates a new application. To change the code of an
+`app_deploy` always creates a new application. Unless you pass `note`, the
+create transaction carries the AlgoKit deployer note
+(`ALGOKIT_DEPLOYER:j{"name":…}`), so the Explorer's Apps page and AlgoKit
+tooling recognise the deployment by contract name. To change the code of an
 existing one, rebuild and call `app_update` with its `appId`: the ID, address,
 state, and boxes stay. It succeeds only if the contract allows
 `UpdateApplication` (a bare update handler, or an ABI method passed as
