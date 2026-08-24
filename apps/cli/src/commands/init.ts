@@ -40,7 +40,7 @@ import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/c
 import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
 import { expandPath } from '../utils/paths.js'
-import { confirm, multiselect, select, text } from '../utils/prompts.js'
+import { confirm, handleCancel, multiselect, select, text } from '../utils/prompts.js'
 import { LOGO } from '../logo.js'
 
 export interface SetupContext {
@@ -159,35 +159,42 @@ function formatSkillName(name: string): string {
     .join(' ')
 }
 
+/** Picker copy for bundled skills; a new skill without an entry falls back to its name. */
+const OFFICIAL_SKILLS: Record<string, [label: string, hint: string]> = {
+  'use-vibekit': ['Use VibeKit', 'CLI, MCP tools, LocalNet, accounts, deploys'],
+  'build-on-algorand': ['Build on Algorand', 'PuyaTs contracts, clients, tests, wallets'],
+  'audit-algorand': ['Audit Algorand', 'security reviews of contracts and LogicSigs'],
+  'build-on-vibekit': ['Build on VibeKit', 'custom tools, plugins, deployments'],
+  'update-skill': ['Update Skill', 'maintain these skills from the VibeKit repo'],
+}
+
+/** Official skills pre-checked; catalog skills opt-in. */
 async function selectSkillsStep(): Promise<SkillSelection> {
-  const allSkillNames = getAllSkillNames()
-
-  const selectionType = await select({
-    message: 'Which skills would you like to install?',
-    options: [
-      { value: 'all', label: `All skills (${allSkillNames.length})`, hint: 'recommended' },
-      { value: 'custom', label: 'Choose specific skills' },
-    ],
-  })
-
-  if (selectionType === 'all') {
-    return allSkillNames
-  }
-
-  return multiselect({
-    message: 'Select skills to install:',
-    options: [
-      ...getSkillNames().map((name) => ({ value: name, label: formatSkillName(name) })),
-      ...CATALOGS.flatMap((catalog) =>
-        catalog.skills.map((name) => ({
-          value: `${catalog.id}/${name}`,
-          label: formatSkillName(name),
-          hint: catalog.label,
+  const rank = (name: string) => Object.keys(OFFICIAL_SKILLS).indexOf(name) + 1 || Infinity
+  const official = getSkillNames().sort((a, b) => rank(a) - rank(b))
+  return handleCancel(
+    await p.groupMultiselect({
+      message: 'Select skills to install:',
+      options: {
+        'VibeKit (official)': official.map((name) => ({
+          value: name,
+          label: OFFICIAL_SKILLS[name]?.[0] ?? formatSkillName(name),
+          hint: OFFICIAL_SKILLS[name]?.[1],
         })),
-      ),
-    ],
-    required: true,
-  })
+        ...Object.fromEntries(
+          CATALOGS.map((catalog) => [
+            catalog.label,
+            catalog.skills.map((name) => ({
+              value: `${catalog.id}/${name}`,
+              label: formatSkillName(name),
+            })),
+          ]),
+        ),
+      },
+      initialValues: official,
+      required: true,
+    }),
+  )
 }
 
 async function selectInstallPathStep(): Promise<string> {
