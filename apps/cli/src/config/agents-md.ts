@@ -10,6 +10,10 @@ and scripts are ordinary TypeScript run through this project's npm scripts.
    test code before changing anything.
 2. Load the relevant skill (below) before writing code or touching the chain.
 3. Research before writing contract code (see CRITICAL below).
+4. Finish with this project's whole \`npm test\` — not one file — and report
+   what ran and what failed. A change is not done while its e2e tests are red
+   or unrun; an e2e failure is usually the change (e.g. a box write needs the
+   app account funded), not the harness.
 
 ## Skills
 

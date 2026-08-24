@@ -69,7 +69,9 @@ skill remains the owner of implementation and routine defensive review.
 - On a compile error, read the installed
   `@algorandfoundation/algorand-typescript/*.d.ts` declaration the error
   names, or the linked example, before changing the code. Do not iterate from
-  memory.
+  memory. The package is split by topic: `state.d.ts` (Global/Local state),
+  `box.d.ts`, `arc4/index.d.ts` (`abimethod`, `allowActions`, ARC-4 types),
+  `itxn.d.ts`, `gtxn.d.ts`, `op.d.ts` (AVM ops), `on-complete-action.d.ts`.
 - Compile and test the generated TEAL behavior. Use `simulate` for execution
   traces and fee/resource diagnosis; do not use removed `dryrun` or `tealdbg`
   workflows.
