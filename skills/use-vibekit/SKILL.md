@@ -52,6 +52,12 @@ Use the first path the current harness supports:
 it for reads, but writes must go through MCP. If MCP writes are unavailable,
 give the exact command to the user instead of executing it.
 
+Some harnesses run unapproved shell commands in a sandbox with no network and
+no Docker socket. From such a shell, "Unable to connect", "permission denied
+on /var/run/docker.sock", or a test suite that hangs on LocalNet is not
+evidence that LocalNet is down. Prefer the MCP tools, or re-run the command
+with approval, before diagnosing the network.
+
 ## Networks and approvals
 
 Deployments serve a fixed set of networks and a default. Call `get_network` to

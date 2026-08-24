@@ -63,7 +63,7 @@ async function runInteractive(cmd: string[], cwd?: string): Promise<number> {
 
 export type DockerCheck =
   | { ok: true }
-  | { ok: false; problem: 'not-installed' | 'no-compose' | 'not-running'; message: string }
+  | { ok: false; problem: 'not-installed' | 'no-compose' | 'no-access' | 'not-running'; message: string }
 
 export async function checkDocker(): Promise<DockerCheck> {
   try {
@@ -88,6 +88,17 @@ export async function checkDocker(): Promise<DockerCheck> {
 
   const info = await run(['docker', 'info'])
   if (info.exitCode !== 0) {
+    // A sandboxed agent shell (Codex, pi) or a user outside the docker group
+    // gets EACCES on the socket — Docker is fine, this shell just can't see it.
+    if (/permission denied/i.test(info.stderr)) {
+      return {
+        ok: false,
+        problem: 'no-access',
+        message:
+          "This shell can't access the Docker socket (permission denied). Docker may be running fine: " +
+          're-run outside the sandbox / with approval, or add your user to the docker group.',
+      }
+    }
     return { ok: false, problem: 'not-running', message: "Docker isn't running; please start it." }
   }
 
