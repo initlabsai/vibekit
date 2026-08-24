@@ -42,6 +42,8 @@ export {
   estimateProgramTokens,
   getApplicationProgram,
   programHash,
+  DEPLOYER_NOTE_PREFIX,
+  deployerNote,
 } from './contracts/index.js'
 export type {
   FormattedApplication,

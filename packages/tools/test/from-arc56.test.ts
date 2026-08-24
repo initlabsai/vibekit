@@ -96,6 +96,7 @@ describe('toolsFromArc56', () => {
     }
     expect((result as { unsignedGroup: string[] }).unsignedGroup).toHaveLength(1)
     expect((result as { summary: string }).summary).toMatch(/app/i)
+    expect((result as { summary: string }).summary).toMatch(/^\w+\.\w+\(.*\) → app \d+$/)
   })
 
   test('rejects a missing required ABI argument', async () => {

@@ -152,9 +152,28 @@ function toolForMethod(
         extraFee: record.extraFee as number | undefined,
         note: record.note as string | undefined,
       }
-      return readonly ? simulateGroup(ctx, [specTxn]) : composeOrExecute(ctx, [specTxn])
+      if (readonly) return simulateGroup(ctx, [specTxn])
+      const result = await composeOrExecute(ctx, [specTxn])
+      // The approval card reads this line: name the call and its args, not the txn shape.
+      return 'summary' in result ? { ...result, summary: describeCall(spec, method, appId, namedArgsFromTool(method, record)) } : result
     },
   }) as AnyTool
+}
+
+/** `HiWorld.hi(name: "gabe") → app 1018`, for the approval card. */
+export function describeCall(
+  spec: NormalizedAppSpec,
+  method: ParsedMethod,
+  appId: number,
+  named: Record<string, unknown>,
+): string {
+  const args = method.args
+    .map((arg, index) => {
+      const key = arg.name && arg.name.length > 0 ? arg.name : `arg${index}`
+      return `${key}: ${JSON.stringify(named[key])}`
+    })
+    .join(', ')
+  return `${spec.name}.${method.name}(${args}) → app ${appId}`
 }
 
 /** A generated tool paired with the spec method it calls. */

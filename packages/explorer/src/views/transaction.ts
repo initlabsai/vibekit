@@ -68,6 +68,8 @@ export interface TransactionRowData {
   confirmedRound?: number
   roundTime?: number
   innerCount?: number
+  /** Printable note text (base64 when the bytes are not printable). */
+  note?: string
   closeTo?: string
   closeAmountMicroAlgos?: string | number
   closeAssetAmount?: string | number
@@ -98,6 +100,7 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
   assetAmount: uint64JsonSchema.optional(),
   assetName: z.string().min(1).optional(),
   assetUnitName: z.string().min(1).optional(),
+  note: z.string().min(1).optional(),
   assetDecimals: z.number().int().nonnegative().optional(),
   applicationId: uint64JsonSchema.optional(),
   confirmedRound: z.number().int().nonnegative().optional(),

@@ -49,6 +49,7 @@ export {
   toolsWithMethods,
   toolArgsFor,
   arc56SimulateResultSchema,
+  describeCall,
 } from './lib/from-arc56.js'
 export type { GeneratedAppTool, ToolsFromArc56Options } from './lib/from-arc56.js'
 export {
@@ -60,7 +61,7 @@ export type { DecodedAppCall, DecodedAbiValue } from './lib/abi.js'
 export type { FormattedApplication } from './lib/format.js'
 export type { StateValue } from './handlers/state.js'
 
-export { contractWriteTools } from './tools-write.js'
+export { contractWriteTools, DEPLOYER_NOTE_PREFIX, deployerNote } from './tools-write.js'
 
 export const contractTools: AnyTool[] = [
   defineTool({

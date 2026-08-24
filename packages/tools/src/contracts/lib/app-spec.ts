@@ -71,6 +71,18 @@ export interface NormalizedAppSpec {
   byteCode?: { approval?: string; clear?: string }
   /** Deploy-time TMPL_ variable names (prefix stripped), declared or scanned. */
   templateVariables: string[]
+  /** ARC-56 named state keys by scope; absent for ARC-32/ARC-4 files. */
+  stateKeys?: Record<'global' | 'local' | 'box', Record<string, StateKeyInfo>>
+  /** ARC-56 OnCompletes accepted by bare (non-ABI) create and call transactions. */
+  bareActions?: { create: string[]; call: string[] }
+}
+
+export interface StateKeyInfo {
+  keyType: string
+  valueType: string
+  /** base64 key bytes. */
+  key: string
+  description?: string
 }
 
 export interface ParsedAppSpec {
@@ -111,6 +123,18 @@ const sourceSchema = z.object({ approval: z.string().optional(), clear: z.string
 
 const count = z.number().int().nonnegative()
 
+const stateKeySchema = z.object({
+  keyType: z.string(),
+  valueType: z.string(),
+  key: z.string(),
+  desc: z.string().optional(),
+})
+const stateKeysSchema = z.object({
+  global: z.record(z.string(), stateKeySchema).optional(),
+  local: z.record(z.string(), stateKeySchema).optional(),
+  box: z.record(z.string(), stateKeySchema).optional(),
+})
+
 const arc56Schema = arc4ContractSchema.extend({
   state: z
     .object({
@@ -120,8 +144,10 @@ const arc56Schema = arc4ContractSchema.extend({
           local: z.object({ ints: count.optional(), bytes: count.optional() }).optional(),
         })
         .optional(),
+      keys: stateKeysSchema.optional(),
     })
     .optional(),
+  bareActions: z.object({ create: z.array(z.string()).optional(), call: z.array(z.string()).optional() }).optional(),
   source: sourceSchema.optional(),
   byteCode: sourceSchema.optional(),
   templateVariables: z.record(z.string(), z.unknown()).optional(),
@@ -257,6 +283,15 @@ function scanTemplateVariables(source: { approval?: string; clear?: string } | u
   return [...names].sort()
 }
 
+function stateKeysOf(keys: Record<string, z.infer<typeof stateKeySchema>> | undefined): Record<string, StateKeyInfo> {
+  return Object.fromEntries(
+    Object.entries(keys ?? {}).map(([name, { keyType, valueType, key, desc }]) => [
+      name,
+      { keyType, valueType, key, ...(desc === undefined ? {} : { description: desc }) },
+    ]),
+  )
+}
+
 function zodDetail(error: z.ZodError): string {
   const first = error.issues[0]
   return first ? `${first.path.join('.') || '(root)'}: ${first.message}` : 'invalid shape'
@@ -296,6 +331,12 @@ export function normalizeAppSpec(appSpecJson: string): NormalizedAppSpec {
       source: spec.source,
       byteCode: spec.byteCode,
       templateVariables: declared.length > 0 ? declared : scanTemplateVariables(spec.source),
+      stateKeys: {
+        global: stateKeysOf(spec.state?.keys?.global),
+        local: stateKeysOf(spec.state?.keys?.local),
+        box: stateKeysOf(spec.state?.keys?.box),
+      },
+      bareActions: { create: spec.bareActions?.create ?? [], call: spec.bareActions?.call ?? [] },
     }
   }
 

@@ -52,6 +52,32 @@ describe('normalizeAppSpec', () => {
     expect(spec.templateVariables).toEqual(['LIMIT'])
   })
 
+  test('ARC-56 keeps named state keys and bare actions; other formats have neither', () => {
+    const spec = normalizeAppSpec(
+      JSON.stringify({
+        ...JSON.parse(arc56),
+        state: {
+          schema: { global: { ints: 1, bytes: 0 } },
+          keys: {
+            global: { count: { keyType: 'AVMString', valueType: 'uint64', key: 'Y291bnQ=', desc: 'hits' } },
+            local: {},
+            box: { greeting: { keyType: 'AVMString', valueType: 'AVMString', key: 'Z3JlZXRpbmc=' } },
+          },
+        },
+        bareActions: { create: ['NoOp'], call: [] },
+      }),
+    )
+    expect(spec.stateKeys).toEqual({
+      global: { count: { keyType: 'AVMString', valueType: 'uint64', key: 'Y291bnQ=', description: 'hits' } },
+      local: {},
+      box: { greeting: { keyType: 'AVMString', valueType: 'AVMString', key: 'Z3JlZXRpbmc=' } },
+    })
+    expect(spec.bareActions).toEqual({ create: ['NoOp'], call: [] })
+    expect(normalizeAppSpec(arc56).stateKeys).toEqual({ global: {}, local: {}, box: {} })
+    expect(normalizeAppSpec(arc32).stateKeys).toBeUndefined()
+    expect(normalizeAppSpec(arc4).bareActions).toBeUndefined()
+  })
+
   test('ARC-32 converts: contract wrapper, num_uints schema, TMPL scan, txn arg types', () => {
     const spec = normalizeAppSpec(arc32)
     expect(spec.format).toBe('arc32')

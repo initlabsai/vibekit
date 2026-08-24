@@ -59,8 +59,17 @@ const DEPLOY_DESCRIPTION = `Deploy a new smart contract instance from an ARC-56/
 Bare create (omit method) for contracts without constructor args — most contracts.
 ABI create (method + args) for contracts with a constructor (e.g. "createApplication").
 Plain create only: no idempotent update semantics (deploy again = new app).
+Unless a note is given, the create txn carries the AlgoKit deployer note (ALGOKIT_DEPLOYER:j{"name":…}) so the Explorer and AlgoKit tooling recognise the deployment by contract name.
 Pass appSpecPath — the built artifact (artifacts/<Name>.arc56.json). Paste appSpec JSON only if no file is available.
 Returns the new application ID and address (execute mode), or the unsigned create transaction (compose mode).`
+
+/** The note AlgoKit's deployer stamps on create txns; indexer note-prefix searches find deployments by name. */
+export const DEPLOYER_NOTE_PREFIX = 'ALGOKIT_DEPLOYER:j'
+
+/** AlgoKit-compatible deployer note for a named contract; undefined for an unnamed spec. */
+export function deployerNote(name: string | undefined): string | undefined {
+  return name ? `${DEPLOYER_NOTE_PREFIX}${JSON.stringify({ name, version: '1.0' })}` : undefined
+}
 
 /** Approval/clear bytecode from the spec: precompiled if present, else TEAL with TMPL_* substituted. */
 async function compilePrograms(
@@ -191,7 +200,8 @@ async function deployApp(
   const { approval, clear } = await compilePrograms(ctx, spec, args.deployTimeParams)
 
   const suggestedParams = await ctx.algod.getTransactionParams().do()
-  const note = args.note ? new TextEncoder().encode(args.note) : undefined
+  const noteText = args.note ?? deployerNote(spec.name)
+  const note = noteText ? new TextEncoder().encode(noteText) : undefined
   const extraPages = Math.min(3, Math.max(0, Math.ceil((approval.length + clear.length) / 2048) - 1))
   const schemaFields = {
     numGlobalInts: spec.schema.globalInts,
@@ -277,7 +287,7 @@ export const contractWriteTools: AnyTool[] = [
         .record(z.string(), z.union([z.string(), z.number()]))
         .optional()
         .describe('TMPL_* template substitutions applied to TEAL source before compiling'),
-      note: z.string().optional().describe('Optional note'),
+      note: z.string().optional().describe('Optional note (default: the AlgoKit deployer note for the contract name)'),
     }),
     output: appDeployResultSchema,
     requiresSigner: true,

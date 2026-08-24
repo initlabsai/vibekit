@@ -97,6 +97,26 @@ describe('contract write tools', () => {
     expect(Number(txn.applicationCall?.numGlobalInts)).toBe(1)
     expect(Number(txn.applicationCall?.numGlobalByteSlices)).toBe(2)
     expect(result.summary).toContain('Spike')
+    // The AlgoKit deployer note, so indexer note-prefix searches find the deployment by name.
+    expect(new TextDecoder().decode(txn.note)).toBe('ALGOKIT_DEPLOYER:j{"name":"Spike","version":"1.0"}')
+  })
+
+  test('app_deploy keeps an explicit note instead of the deployer note', async () => {
+    const ctx = fakeContext({
+      algod: {
+        getTransactionParams: () => chainable(suggestedParams),
+        compile: () => chainable({ result: bytesToBase64(new Uint8Array([1])) }),
+      },
+    })
+    const tool = contractWriteTools.find((t) => t.name === 'app_deploy')!
+    const result = (await tool.handler(ctx, {
+      sender: ADDR_A,
+      appSpec: arc56Spec,
+      deployTimeParams: { ANSWER: 1 },
+      note: 'mine',
+    } as never)) as { unsignedGroup: string[] }
+    const txn = algosdk.decodeUnsignedTransaction(base64ToBytes(result.unsignedGroup[0]!))
+    expect(new TextDecoder().decode(txn.note)).toBe('mine')
   })
 
   test('app_update composes an UpdateApplication txn carrying the recompiled programs', async () => {
