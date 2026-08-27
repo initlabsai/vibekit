@@ -75,7 +75,11 @@ function Resolve-Stable {
     $tag = $latest.tag_name
 
     if ($tag -match '^v\d.*-') {
-        Write-Fail "The latest release ($tag) is a prerelease. Use `$env:VIBEKIT_CHANNEL = 'alpha'."
+        Write-Fail @"
+The latest release ($tag) is a prerelease. Install it with:
+
+  `$env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
+"@
     }
     if ($tag -notmatch '^v\d') {
         Write-Fail @"

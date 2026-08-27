@@ -120,7 +120,9 @@ fetch_latest_stable() {
 
   case "$tag" in
     v[0-9]*-*)
-      error "The latest release ($tag) is a prerelease. Use VIBEKIT_CHANNEL=alpha."
+      error "The latest release ($tag) is a prerelease. Install it with:
+
+  curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh"
       ;;
     v[0-9]*)
       ;;
