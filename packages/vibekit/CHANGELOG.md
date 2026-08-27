@@ -1,5 +1,12 @@
 # @initlabs/vibekit
 
+## 1.0.0-alpha.2
+
+### Patch Changes
+
+- Pin the formatter to the style the codebase was already written in and format
+  the tree to it. No behavior change.
+
 ## 1.0.0-alpha.1
 
 ### Major Changes

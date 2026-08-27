@@ -9,5 +9,5 @@
     "@initlabs/vibekit-web": "0.1.0",
     "@initlabs/vibekit-website": "0.1.0"
   },
-  "changesets": ["first-public-alpha", "one-package"]
+  "changesets": ["first-public-alpha", "flatten-and-format", "one-package"]
 }

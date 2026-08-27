@@ -1,6 +1,6 @@
 {
   "name": "@initlabs/vibekit-explorer",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "private": true,
   "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds provisional signerless compose-only host wiring.",
   "license": "MIT",
