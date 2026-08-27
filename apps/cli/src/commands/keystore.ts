@@ -46,6 +46,18 @@ export function isProvisioned(dir: string = keystoreDataDir()): boolean {
   }
 }
 
+/**
+ * The managed keystore CLI is a `#!/usr/bin/env node` program, so node must be
+ * on PATH to *run* the daemon -- not just npm to install it. Without this the
+ * spawn succeeds and the daemon dies instantly, surfacing as a start timeout
+ * whose real cause is only in the log file.
+ */
+export function nodeMissingError(): string | undefined {
+  return Bun.which('node')
+    ? undefined
+    : 'node is required to run the keystore daemon (the keystore CLI is a Node program). Install Node.js and retry.'
+}
+
 /** Install the pinned keystore-node into the managed dir. Requires npm (golden-path dep). */
 export async function provisionKeystoreCli(quiet = false): Promise<string> {
   const dir = keystoreDataDir()
@@ -132,6 +144,8 @@ export async function ensureKeystoreDaemon(
   const start =
     options.start ??
     (async () => {
+      const missingNode = nodeMissingError()
+      if (missingNode) throw new Error(missingNode)
       const bin = await provisionKeystoreCli(options.quiet)
       const log = keystoreLogPath()
       await mkdir(join(log, '..'), { recursive: true })

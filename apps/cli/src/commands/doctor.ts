@@ -182,7 +182,17 @@ export async function commandDoctor(args: string[]): Promise<void> {
     warn('Docker not found (needed for `vibekit localnet`)')
   }
 
-  // 4. Keystore (for signing) — managed install, self-healing via --fix
+  // 4. Node (the keystore CLI installs with npm and runs under node)
+  if (Bun.which('node')) {
+    ok('node found (the keystore daemon runs under it)')
+  } else {
+    warn('node not found — signing is unavailable; the keystore daemon is a Node program')
+  }
+  if (!Bun.which('npm')) {
+    warn('npm not found — needed once to provision the keystore CLI')
+  }
+
+  // 5. Keystore (for signing) — managed install, self-healing via --fix
   if (!isProvisioned()) {
     if (fix) {
       try {
