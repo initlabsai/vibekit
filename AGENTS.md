@@ -2,7 +2,7 @@
 
 This is the operational contract for coding agents. `README.md` is
 human-facing and is not prerequisite reading; open it only when changing public
-project documentation. Read `docs/DESIGN.md` before structural changes.
+project documentation. Read `docs/CONSTITUTION.md` before structural changes.
 
 VibeKit exposes Algorand capabilities through one shared tool contract across
 MCP, CLI, and the agent loop. This monorepo owns the engine, its reusable
@@ -116,9 +116,9 @@ HTML, or terminal markup.
   Do not delete those comments.
 - Put JSDoc only on the public/exported `@initlabs/*` surface. Put tool
   descriptions on `ToolDefinition` and Zod `.describe()`.
-- Keep exactly `DESIGN.md` and `CONSTITUTION.md` under `docs/`. Fold durable
-  architecture, current state, gaps, and roadmap into `DESIGN.md`. Fold
-  durable rationale and governance into `CONSTITUTION.md`.
+- Keep `docs/` small. `CONSTITUTION.md` owns purpose, the bets, and how work
+  is judged; `PRODUCTION.md` holds dated shipping notes. Do not add a parallel
+  handover or review ledger.
 - Do not use "It's not X, it's Y" or other marketing cadence in comments or
   docs.
 
@@ -156,6 +156,7 @@ per platform, so the release matrix does not cross-compile.
 
 ## Docs
 
-- `docs/DESIGN.md` — canonical architecture, current state, gaps, and roadmap;
-  read it before structural changes
+- `docs/CONSTITUTION.md` — why the project exists, the bets it rests on, and
+  how work is judged; read it before structural changes
+- `docs/PRODUCTION.md` — open decisions, traps, and deferred work
 - `docs/CONSTITUTION.md` — why the project exists and how work is judged

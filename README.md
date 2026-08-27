@@ -116,8 +116,8 @@ bun run test
 bun run cli -- --help
 ```
 
-- [Design](./docs/DESIGN.md) — architecture, current state, gaps, and roadmap
-- [Constitution](./docs/CONSTITUTION.md) — principles and contribution standards
+- [Constitution](./docs/CONSTITUTION.md) — the bets the project rests on
+- [Contributing](./CONTRIBUTING.md) — conventions and review
 
 ## License
 

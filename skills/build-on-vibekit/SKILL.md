@@ -17,7 +17,7 @@ its existing `workspace:*` dependencies. Do not invent install, publish, or
 versioning instructions for external consumers.
 
 Before changing structure, read the repository `AGENTS.md` and
-`docs/DESIGN.md`. Ask before adding a dependency, package, app, registry, or
+`docs/CONSTITUTION.md`. Ask before adding a dependency, package, app, registry, or
 extension point.
 
 ## Choose the guide

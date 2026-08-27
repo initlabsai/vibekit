@@ -7,7 +7,7 @@ the authority for shipped behavior.
 ## Repository contracts
 
 - `AGENTS.md` — operational rules and required gates
-- `docs/DESIGN.md` — architecture, current state, gaps, and roadmap
+- `docs/CONSTITUTION.md` — the bets the project rests on and how work is judged
 - `docs/CONSTITUTION.md` — durable rationale and governance
 - `packages/core/src/contract.ts` — `ToolDefinition`, `ToolContext`,
   `ToolPlugin`, schemas, and tool flags

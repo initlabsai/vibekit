@@ -16,7 +16,7 @@ Before editing:
    references.
 2. Inspect `git status` and preserve unrelated or user-authored changes.
 3. Read the implementation and tests for any product behavior the skill
-   describes. Read `docs/DESIGN.md` before a structural change.
+   describes. Read `docs/CONSTITUTION.md` before a structural change.
 4. Load an available `skill-creator` skill for current format and authoring
    guidance.
 
@@ -69,7 +69,7 @@ Update the affected surfaces when their meaning changes:
   adding or removing a canonical skill;
 - `apps/cli/src/config/agents-md.ts` for generated project routing;
 - root `README.md` for public scope;
-- `docs/DESIGN.md` for durable architecture or current-state decisions;
+- `docs/CONSTITUTION.md` for durable rationale or governance decisions;
 - CLI tests when selection, generation, validation, or catalogs change.
 
 Regenerate the checked-in bundle:
