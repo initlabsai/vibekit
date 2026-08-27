@@ -104,10 +104,6 @@ h1 em, h2 em { color: var(--brass-bright); font-style: normal; }
 .tui.typing .reveal, .tui:not(.resolved) .reveal { opacity: 0; transform: translateY(.6rem); }
 .reveal { transition: opacity .5s ease, transform .5s ease; }
 .tui.resolved .tui-note { transition-delay: .35s; }
-.tui.resolved .round-signal i { animation: bar 1.6s ease-in-out infinite; }
-.round-signal i:nth-child(2n) { animation-delay: -.5s !important; } .round-signal i:nth-child(3n) { animation-delay: -1s !important; }
-@keyframes bar { 50% { transform: scaleY(.55); } }
-.round-signal i { transform-origin: bottom; }
 .tui-query small { color: var(--faint); font-size: .5rem; letter-spacing: .1em; }
 .tui-cards { align-items: stretch; display: grid; gap: .7rem; grid-template-columns: minmax(0, 1.55fr) minmax(8.5rem, .65fr); }
 .identity-card, .round-card { background: rgba(17, 19, 24, .96); margin: 0; min-width: 0; }

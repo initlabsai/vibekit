@@ -32,15 +32,24 @@
   const ctx = viz.getContext('2d')!
   const music = new Music()
   const bins = new Uint8Array(64)
+  // The hero's round-stream bars, on pages that have them. They hold their
+  // CSS heights until music plays, then read the same bins as the canvas.
+  const hero = [...document.querySelectorAll<HTMLElement>('[data-bars] i')]
 
   const draw = () => {
     ctx.clearRect(0, 0, viz.width, viz.height)
-    if (!music.playing) return
+    if (!music.playing) {
+      for (const bar of hero) bar.style.removeProperty('height')
+      return
+    }
     music.analyser.getByteFrequencyData(bins)
     for (let i = 0; i < 12; i++) {
       const h = Math.max(1, Math.round((bins[i * 3 + 1]! / 255) * viz.height))
       ctx.fillStyle = i > 8 ? '#ffb454' : '#6fd3d3'
       ctx.fillRect(i * 5, viz.height - h, 4, h)
+    }
+    for (let i = 0; i < hero.length; i++) {
+      hero[i]!.style.height = `${Math.max(6, Math.round((bins[i * 3 + 1]! / 255) * 100))}%`
     }
     requestAnimationFrame(draw)
   }
