@@ -26,7 +26,7 @@ renders what those tools return.
 | `apps/web` | The web Explorer (Next.js). Sample-backed reads plus a compose-only flow route. |
 | `apps/website` | The public site (Astro/Starlight). |
 | `skills/` | Canonical skills, compiled into the CLI by `bun run --cwd apps/cli bundle-skills`. `.agents/skills`, `.claude/skills`, `.grok/skills` are symlinks into it. |
-| `verify/` | The packed-consumer gate (`bun run verify:packed`). |
+| `verify/` | The packed-consumer gate (`bun run verify:packed`). The LocalNet smoke is `apps/cli/scripts/smoke-localnet.ts` (`bun run smoke:localnet`, needs `vibekit localnet start`; CI runs it). |
 | `test-prompts/` | Agent-run MCP acceptance prompts and their transcripts. |
 | `ideas/` | Dated design notes that are not yet work. |
 | `out/` | Marketing video build output (see the `marketing-content` skill). |

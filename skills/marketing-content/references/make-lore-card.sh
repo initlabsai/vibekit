@@ -13,9 +13,10 @@
 # QUOTE splits on `|`; the last line renders in hero amber, so put the payoff
 # there. Optional: KICKER, DATE, CAP, FOOT_L, FOOT_R, W/H.
 #
-# The face is lore-mask.svg — flat polygons, the editable source — rendered to
-# ASCII by lore-ascii.py. Everyone in the Directorate sits for the same portrait,
-# so one face serves the series and the name carries the character.
+# The face is lore-portrait.png (a photograph, prepared by lore-portrait-prep.py)
+# rendered to ASCII by lore-ascii.py. Everyone in the Directorate sits for the
+# same portrait, so one face serves the series and the name carries the
+# character; COLS raises or lowers the grain.
 set -eu
 OUT="$1"
 KICKER="${KICKER:-PRIOR ART DIRECTORATE // PERSONNEL 001}"; DATE="${DATE:-2036-02-11}"
@@ -24,7 +25,7 @@ CAP="${CAP:-ARCHIVE PORTRAIT // 4,096 BITS}"; W="${W:-1600}"; H="${H:-900}"
 DIR=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
-MASK=$(python3 "$DIR/lore-ascii.py" ${COLS:-58})
+MASK=$(python3 "$DIR/lore-ascii.py" "${COLS:-76}")
 
 QH=""; IFS='|' read -ra QL <<< "${QUOTE:-}"
 for i in "${!QL[@]}"; do
@@ -51,7 +52,7 @@ body{background:#0a0b0e;color:#e9e1d4;width:${W}px;height:${H}px;overflow:hidden
 .bar .dim{color:#605c56}
 .body{display:flex;gap:70px;align-items:center;flex:1;padding:26px 0}
 .frame{border:1px solid #2a251d;padding:16px 20px;background:#0d0f13}
-.frame pre{font-size:13px;line-height:13px;white-space:pre}
+.frame pre{font-size:10px;line-height:10px;white-space:pre}
 .cap{color:#4f4b45;font-size:14px;letter-spacing:.14em;margin-top:14px;text-align:center}
 blockquote{font-size:42px;line-height:1.36;letter-spacing:-.035em;text-indent:-.55em}
 blockquote b{color:#ffb454;font-weight:inherit}

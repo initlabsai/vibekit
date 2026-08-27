@@ -16,6 +16,22 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bunx turbo run build typecheck test
 
+  # The one gate the mocked clients cannot be: real algod, indexer, and
+  # signatures through executeToolCall, against a LocalNet the CLI starts.
+  localnet-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - run: bunx turbo run build --filter=@initlabs/vibekit
+      - run: bun run --cwd apps/cli dev localnet start
+      - run: bun run --cwd apps/cli smoke:localnet
+      - if: always()
+        run: bun run --cwd apps/cli dev localnet stop
+
   # Nobody develops on Windows here, so install.ps1 only gets exercised by CI.
   # Parsing is not enough: it parsed clean while resolving the release tag to
   # every tag joined together. Run it for real against the published release.

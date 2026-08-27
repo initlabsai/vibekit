@@ -178,10 +178,21 @@ the headline and the name attributes it underneath; the channel/payload/target
 telemetry sits below as a muted strip. `QUOTE` splits on `|` and the last line
 renders in hero amber, so put the payoff there.
 
-The portrait is `references/lore-mask.svg` — flat polygons in five brass tints,
-the editable source — rasterized to ASCII by `references/lore-ascii.py`. One
-character per facet, never a dither: the planes stay flat. But the character
-must track the fill's brightness (`. : + # @`, darkest first). Colour alone does
-not separate tones at glyph density; a face rendered in a single glyph is a
-blob, which cost three rounds to learn. Everyone in the Directorate sits for the
-same portrait, so one face serves the series.
+The portrait is a photograph rendered as ASCII — `references/lore-portrait-prep.py`
+prep, then `references/lore-ascii.py` to sample it. Tone comes from the
+character ramp (`. , : ; + = x X $ & @`) with an amber tint riding the same
+value; colour alone cannot separate tones at glyph density.
+
+It has to be a photograph. Three rounds went into hand-drawn vector faces —
+flat facets, then soft gradients — and both failed the same way: smooth shading
+gives the ramp almost nothing inside the skin, so the face flattens to one
+glyph and reads as a blob. Photographic micro-variation is the whole mechanism.
+Prep matters too: pull luminance from the RED channel, because a cool studio
+backdrop and warm hair collapse to the same grey, and lift the black point
+until the backdrop is truly black or it renders as a field of punctuation
+competing with the face.
+
+Everyone in the Directorate sits for the same portrait, so one face serves the
+series. Current source: a royalty-free Pexels portrait supplied by Gabe on
+2026-08-27 — record the photographer credit alongside it before this ships
+anywhere public.

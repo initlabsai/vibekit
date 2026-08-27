@@ -38,7 +38,7 @@ export function createRemoteFlowHost(network = 'localnet'): WriteFlowHost & Acco
       throw new Error('Account lists are not available in the web app')
     },
     lookupAccountAppStates: async () => {
-      throw new Error('Account shelves are TUI-only in this slice')
+      throw new Error('Account app states are not available in the web app')
     },
     searchTransactions: async () => {
       throw new Error('Transaction search is not available in the web app')

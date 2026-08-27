@@ -19,7 +19,8 @@
     "mcp": "turbo run build --filter=@initlabs/vibekit... && bun packages/vibekit/examples/stdio.ts",
     "verify:packed": "bun verify/verify-packed.ts",
     "format": "prettier --write \"**/*.{ts,tsx,json}\"",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "smoke:localnet": "bun run --cwd apps/cli smoke:localnet"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
