@@ -9,12 +9,12 @@ the authority for shipped behavior.
 - `AGENTS.md` — operational rules and required gates
 - `docs/CONSTITUTION.md` — the bets the project rests on and how work is judged
 - `docs/CONSTITUTION.md` — durable rationale and governance
-- `packages/core/src/contract.ts` — `ToolDefinition`, `ToolContext`,
+- `packages/vibekit/src/core/contract.ts` — `ToolDefinition`, `ToolContext`,
   `ToolPlugin`, schemas, and tool flags
-- `packages/core/src/deployment.ts` — context resolution and
+- `packages/vibekit/src/core/deployment.ts` — context resolution and
   `executeToolCall`
-- `packages/core/src/compose/` — write composition and execution
-- `packages/tools/` — canonical tool definitions and exact tool names
+- `packages/vibekit/src/core/compose/` — write composition and execution
+- `packages/vibekit/src/tools/` — canonical tool definitions and exact tool names
 
 Read the public exports and package tests alongside implementation. Do not
 teach private imports, alternate handler shapes, or a write path around the
@@ -26,7 +26,7 @@ Verify `use-vibekit` against:
 
 - `apps/cli/src/commands/` for `new`, `init`, LocalNet, keystore, dispenser,
   doctor, and generic tool behavior;
-- `packages/signer-keystore/` for daemon signing and account custody;
+- `packages/vibekit/src/signer-keystore/` for daemon signing and account custody;
 - `apps/cli/src/config/agents-md.ts` for generated project instructions;
 - the project's current `package.json` scripts and generated artifacts;
 - MCP tool schemas rather than remembered argument shapes.
@@ -46,11 +46,11 @@ older templates.
 
 Verify `build-on-vibekit` against:
 
-- `packages/mcp/` for the generic MCP adapters;
-- `packages/mcp/examples/` for reference stdio and HTTP deployments;
-- `packages/preset/` for the shared stock tool and plugin mix;
-- `packages/plugin-pera/`, `packages/plugin-nfd/`, and
-  `packages/plugin-alpha-arcade/` for current plugin patterns;
+- `packages/vibekit/src/mcp/` for the generic MCP adapters;
+- `packages/vibekit/examples/` for reference stdio and HTTP deployments;
+- `packages/vibekit/src/preset/` for the shared stock tool and plugin mix;
+- `packages/vibekit/src/plugins/pera/`, `packages/vibekit/src/plugins/nfd/`, and
+  `packages/vibekit/src/plugins/alpha-arcade/` for current plugin patterns;
 - package manifests and tests for peer dependencies, output schemas, services,
   network guards, and public exports.
 

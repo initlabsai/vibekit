@@ -1,12 +1,17 @@
 /**
- * The TUI's natural-language lane: an in-process @initlabs/vibekit-agent
+ * The TUI's natural-language lane: an in-process @initlabs/vibekit/agent
  * session over a compose-only localnet deployment. The model reads via tools
  * and composes writes as unsigned groups; it never signs (there is no
  * signer in its deployment) and never emits UI — its tool results become
  * records and trusted views through the explorer bridge, and any composed
  * unsigned group lands on the same approval card as a typed `pay`.
  */
-import { createAgent, WELL_KNOWN_ASSETS, type AgentEvent, type AgentSession } from '@initlabs/vibekit-agent'
+import {
+  createAgent,
+  WELL_KNOWN_ASSETS,
+  type AgentEvent,
+  type AgentSession,
+} from '@initlabs/vibekit/agent'
 import {
   accountTools,
   assetTools,
@@ -16,10 +21,10 @@ import {
   networkTools,
   transactionTools,
   transactionWriteTools,
-} from '@initlabs/vibekit-tools'
-import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit-core'
-import { estimateProgramTokens } from '@initlabs/vibekit-tools'
-import { readZeroSignalCatalog } from '@initlabs/vibekit-agent'
+} from '@initlabs/vibekit/tools'
+import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit'
+import { estimateProgramTokens } from '@initlabs/vibekit/tools'
+import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
 import {
   bridgeToolResult,
   unsignedGroupFromToolResult,
@@ -27,13 +32,13 @@ import {
   type ResultStore,
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
-import type { ProviderConfig } from '@initlabs/vibekit-agent'
+import type { ProviderConfig } from '@initlabs/vibekit/agent'
 import type { z } from 'zod'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
+import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
+import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import { enrichResultWithAbi, type ProgramData } from './abi-catalog.js'
 import { withAccountNames } from './keystore-host.js'
 import type { SectionBlock } from './sections.js'
@@ -50,7 +55,8 @@ export async function programCostLines(
   network: LiveNetworkId,
   config: { provider: string; model: string },
 ): Promise<string[]> {
-  if (applicationId === undefined) return ['The model asked for a program without an application id.']
+  if (applicationId === undefined)
+    return ['The model asked for a program without an application id.']
   let bytes: number | undefined
   try {
     const { algod } = createNetworkClients(resolveNetwork(network))
@@ -101,7 +107,15 @@ function explorerTools(extra: readonly AnyTool[] = []): AnyTool[] {
   ].filter((tool) => !tool.mutatesState && tool.name !== 'simulate_transactions')
 }
 
-const CONTEXT_KEYS = ['id', 'address', 'assetId', 'applicationId', 'round', 'groupId', 'network'] as const
+const CONTEXT_KEYS = [
+  'id',
+  'address',
+  'assetId',
+  'applicationId',
+  'round',
+  'groupId',
+  'network',
+] as const
 
 function describeRecord(data: unknown): string {
   if (data === null || typeof data !== 'object') return ''
@@ -151,7 +165,9 @@ export function explorerSystemPrompt(
   network: string,
   addressBook: ReadonlyArray<{ address: string; name?: string }>,
 ): string {
-  const book = addressBook.map((entry) => `- ${entry.name ?? 'unnamed'}: ${entry.address}`).join('\n')
+  const book = addressBook
+    .map((entry) => `- ${entry.name ?? 'unnamed'}: ${entry.address}`)
+    .join('\n')
   return [
     `You are the VibeKit Explorer on Algorand ${network}.`,
     `Tools: ${tools.map((tool) => tool.name).join(', ')}.`,
@@ -213,7 +229,10 @@ export interface ExplorerAgentOptions {
 }
 
 /** get_application_program with its methods labelled before the result leaves the tool. */
-function withProgramLabels(tools: AnyTool[], label: ExplorerAgentOptions['labelProgram']): AnyTool[] {
+function withProgramLabels(
+  tools: AnyTool[],
+  label: ExplorerAgentOptions['labelProgram'],
+): AnyTool[] {
   if (!label) return tools
   return tools.map((tool) =>
     tool.name === 'get_application_program'
@@ -236,13 +255,16 @@ const BUILTIN_PLUGINS = [nfdPlugin(), vestigePlugin(), peraPlugin()]
  * dotted plugin-namespaced view id → wire schema. A tool result declaring one
  * of these ids gets its card only after the wire parses.
  */
-const PLUGIN_VIEWS = Object.assign({}, ...BUILTIN_PLUGINS.map((plugin) => plugin.views ?? {})) as Record<
-  string,
-  z.ZodType
->
+const PLUGIN_VIEWS = Object.assign(
+  {},
+  ...BUILTIN_PLUGINS.map((plugin) => plugin.views ?? {}),
+) as Record<string, z.ZodType>
 
 /** Name and blurb per built-in plugin, in display order — the plugins screen's rows. */
-export const EXPLORER_PLUGIN_INFO = BUILTIN_PLUGINS.map(({ name, description }) => ({ name, description }))
+export const EXPLORER_PLUGIN_INFO = BUILTIN_PLUGINS.map(({ name, description }) => ({
+  name,
+  description,
+}))
 
 /** Creates the Explorer's agent session (compose-only, signerless). */
 export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession {
@@ -250,9 +272,14 @@ export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession
   const plugins = [nfdPlugin(), vestigePlugin(), peraPlugin()].filter(
     (plugin) => !options.disabledPlugins?.has(plugin.name),
   )
-  const tools = withProgramLabels(options.tools ?? explorerTools(options.extraTools), options.labelProgram)
+  const tools = withProgramLabels(
+    options.tools ?? explorerTools(options.extraTools),
+    options.labelProgram,
+  )
   // Plugin tools are merged by resolveDeployment; listing them here keeps the prompt honest.
-  const promptTools = options.tools ? tools : [...tools, ...plugins.flatMap((plugin) => plugin.tools)]
+  const promptTools = options.tools
+    ? tools
+    : [...tools, ...plugins.flatMap((plugin) => plugin.tools)]
   return createAgent({
     network,
     // Every network is served: the model passes `network` to leave the active one.
@@ -316,7 +343,11 @@ export function planToolResult(
   const compose = unsignedGroupFromToolResult(event)
   if (compose && !ctx.paymentInFlight) {
     const draftRecord = draftRecordFromComposeWire(
-      { resultId: ctx.newId('result-agent-payment-draft'), toolCallId: event.id, network: usedNetwork },
+      {
+        resultId: ctx.newId('result-agent-payment-draft'),
+        toolCallId: event.id,
+        network: usedNetwork,
+      },
       compose,
       event.toolName,
     )
@@ -327,7 +358,11 @@ export function planToolResult(
       event.input !== null && typeof event.input === 'object' && !Array.isArray(event.input)
         ? (event.input as Record<string, unknown>)
         : {}
-    const { record: bridged, view, degraded } = bridgeToolResult(event, {
+    const {
+      record: bridged,
+      view,
+      degraded,
+    } = bridgeToolResult(event, {
       resultId: ctx.newId('result-agent'),
       toolCallId: event.id,
       network: usedNetwork,
@@ -342,7 +377,13 @@ export function planToolResult(
     const table =
       event.view === 'table' && record.state === 'success' ? tableModel(record.data) : undefined
     if (pluginParse?.success) {
-      blocks.push({ id: 0, kind: 'plugin', view: event.view!, data: pluginParse.data, network: usedNetwork })
+      blocks.push({
+        id: 0,
+        kind: 'plugin',
+        view: event.view!,
+        data: pluginParse.data,
+        network: usedNetwork,
+      })
     } else if (table) {
       blocks.push({ id: 0, kind: 'table', title: event.toolName, ...table })
     } else if (view === undefined) {
@@ -353,7 +394,11 @@ export function planToolResult(
       // The program's first page also carries its call surface.
       const program =
         record.state === 'success'
-          ? (record.data as { fromLine?: number; program?: string; analysis?: { entrypoints?: string[] } })
+          ? (record.data as {
+              fromLine?: number
+              program?: string
+              analysis?: { entrypoints?: string[] }
+            })
           : undefined
       if (
         view === 'application.program' &&
@@ -365,7 +410,8 @@ export function planToolResult(
       }
     }
     // A raw card where a real one was promised is a bug somewhere; name it.
-    const pluginIssue = pluginParse && !pluginParse.success ? pluginParse.error.issues[0] : undefined
+    const pluginIssue =
+      pluginParse && !pluginParse.success ? pluginParse.error.issues[0] : undefined
     const note = degraded
       ? `${event.toolName} declared ${degraded.view} but its result didn't parse (${degraded.reason}) — shown raw.`
       : pluginIssue

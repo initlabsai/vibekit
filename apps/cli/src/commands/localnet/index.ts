@@ -112,7 +112,7 @@ async function commandStart(): Promise<void> {
     s.stop('Failed to start LocalNet')
     p.log.error(error instanceof Error ? error.message : String(error))
     p.log.info(
-      'If another localnet is running (e.g. AlgoKit\'s), stop it first — they share ports 4001/4002/8980.',
+      "If another localnet is running (e.g. AlgoKit's), stop it first — they share ports 4001/4002/8980.",
     )
     process.exit(1)
   }

@@ -49,7 +49,9 @@ export function lerpColor(from: string, to: string, t: number): string {
 
 /** `steps` colors from `from` to `to`, inclusive. */
 export function gradient(from: string, to: string, steps: number): string[] {
-  return Array.from({ length: steps }, (_, i) => lerpColor(from, to, steps === 1 ? 0 : i / (steps - 1)))
+  return Array.from({ length: steps }, (_, i) =>
+    lerpColor(from, to, steps === 1 ? 0 : i / (steps - 1)),
+  )
 }
 
 /** A slow breath between two colors: up, then back down, in `steps` frames. */

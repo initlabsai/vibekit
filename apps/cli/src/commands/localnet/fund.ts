@@ -36,9 +36,8 @@ export async function fundFromKmd(
     )
   }
 
-  const handle = (
-    (await kmd.initWalletHandle(wallet.id, '')) as { wallet_handle_token: string }
-  ).wallet_handle_token
+  const handle = ((await kmd.initWalletHandle(wallet.id, '')) as { wallet_handle_token: string })
+    .wallet_handle_token
 
   try {
     const { addresses } = (await kmd.listKeys(handle)) as { addresses: string[] }

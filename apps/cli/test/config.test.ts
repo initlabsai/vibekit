@@ -43,10 +43,11 @@ describe('agent registry', () => {
 
 describe('mcp registry', () => {
   test('categories split into documentation and development', () => {
-    expect(getMCPsByCategory('documentation').map((m) => m.id).sort()).toEqual([
-      'context7',
-      'kapa',
-    ])
+    expect(
+      getMCPsByCategory('documentation')
+        .map((m) => m.id)
+        .sort(),
+    ).toEqual(['context7', 'kapa'])
     expect(getMCPsByCategory('development').map((m) => m.id)).toEqual(['vibekit'])
   })
 })
@@ -99,7 +100,10 @@ describe('skill frontmatter', () => {
       const lines = skillMd!.content.split('\n')
       const end = lines.indexOf('---', 1)
       expect(lines[0]).toBe('---')
-      const parsed = Bun.YAML.parse(lines.slice(1, end).join('\n')) as { name?: string; description?: string }
+      const parsed = Bun.YAML.parse(lines.slice(1, end).join('\n')) as {
+        name?: string
+        description?: string
+      }
       expect(parsed.name).toBe(skill.name)
       expect(typeof parsed.description).toBe('string')
     }
@@ -112,14 +116,9 @@ describe('skill frontmatter', () => {
       const skillMd = skill.files.find((file) => file.path === 'SKILL.md')
       expect(skillMd, `${skill.name} has SKILL.md`).toBeDefined()
 
-      for (const match of skillMd!.content.matchAll(
-        /\]\((references\/[^)#]+\.md)(?:#[^)]+)?\)/g,
-      )) {
+      for (const match of skillMd!.content.matchAll(/\]\((references\/[^)#]+\.md)(?:#[^)]+)?\)/g)) {
         const target = match[1]
-        expect(
-          target,
-          `${skill.name} contains a reference target`,
-        ).toBeDefined()
+        expect(target, `${skill.name} contains a reference target`).toBeDefined()
         expect(files.has(target!), `${skill.name} links ${target}`).toBe(true)
       }
     }

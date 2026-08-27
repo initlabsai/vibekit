@@ -1,4 +1,4 @@
-import { jsonSafe } from '@initlabs/vibekit-core'
+import { jsonSafe } from '@initlabs/vibekit'
 import { z } from 'zod'
 
 import type { ViewSpec } from '../core/protocol.js'
@@ -80,6 +80,5 @@ export function viewModelFor<S extends z.ZodType, View extends string>(
   viewId: View,
   label: string,
 ) {
-  return (store: ResultStore, view: ViewSpec) =>
-    derive(store, view, schema, viewId, label)
+  return (store: ResultStore, view: ViewSpec) => derive(store, view, schema, viewId, label)
 }

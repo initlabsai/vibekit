@@ -12,7 +12,7 @@ import {
   resolveDeployment,
   type AnyTool,
   type ResolvedDeployment,
-} from '@initlabs/vibekit-core'
+} from '@initlabs/vibekit'
 import {
   accountTools,
   assetTools,
@@ -20,14 +20,11 @@ import {
   networkTools,
   transactionTools,
   transactionWriteTools,
-} from '@initlabs/vibekit-tools'
+} from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../agent-lane.js'
 import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'
-import {
-  buildApplicationDetailRecord,
-  buildApplicationLocalsRecord,
-} from '../views/application.js'
+import { buildApplicationDetailRecord, buildApplicationLocalsRecord } from '../views/application.js'
 import { buildAssetDetailRecord, buildAssetHoldingsRecord } from '../views/asset.js'
 import { buildBlockDetailRecord } from '../views/block.js'
 import {
@@ -49,8 +46,6 @@ import {
 import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../flows/payment.js'
 import type { JsonValue, StructuredResult } from '../core/results.js'
 
-
-
 /**
  * Decodes the authoritative facts of an unsigned group of 1–16 transactions.
  * Payment receiver/amount are filled only when every transaction is a plain pay
@@ -60,7 +55,9 @@ export function decodeUnsignedGroup(transactions: readonly string[]): DecodedPay
   if (transactions.length === 0 || transactions.length > 16) {
     throw new Error(`Unsupported group size: ${transactions.length}`)
   }
-  const decoded = transactions.map((entry) => algosdk.decodeUnsignedTransaction(base64ToBytes(entry)))
+  const decoded = transactions.map((entry) =>
+    algosdk.decodeUnsignedTransaction(base64ToBytes(entry)),
+  )
   const graphTransactions = decoded.map((txn) => formatAlgodTransaction(txn))
   let fee = 0n
   for (const txn of decoded) fee += BigInt(txn.fee)
@@ -102,11 +99,15 @@ export async function simulateUnsignedGroup(
 }> {
   // The bytes are already a group (group ids set), so no ATC: it refuses
   // grouped transactions. Simulate the encoded group directly.
-  const decoded = transactions.map((encoded) => algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)))
+  const decoded = transactions.map((encoded) =>
+    algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)),
+  )
   const request = new algosdk.modelsv2.SimulateRequest({
     txnGroups: [
       new algosdk.modelsv2.SimulateRequestTransactionGroup({
-        txns: decoded.map((txn) => algosdk.decodeSignedTransaction(algosdk.encodeUnsignedSimulateTransaction(txn))),
+        txns: decoded.map((txn) =>
+          algosdk.decodeSignedTransaction(algosdk.encodeUnsignedSimulateTransaction(txn)),
+        ),
       }),
     ],
     allowEmptySignatures: true,
@@ -254,9 +255,13 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
     // Every read tool, so callTool can page any list an agent or a lane fetched.
     tools: [
       ...transactionWriteTools,
-      ...[...transactionTools, ...accountTools, ...assetTools, ...contractTools, ...networkTools].filter(
-        (tool) => !tool.mutatesState && !tool.requiresSigner,
-      ),
+      ...[
+        ...transactionTools,
+        ...accountTools,
+        ...assetTools,
+        ...contractTools,
+        ...networkTools,
+      ].filter((tool) => !tool.mutatesState && !tool.requiresSigner),
     ],
   })
   const sendPayment = requireTool(deployment, 'send_payment')
@@ -409,7 +414,10 @@ export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): P
       const output = await executeToolCall(deployment, tool, args)
       // Hosts scope account lists by merging the address in; the tool's own wire lacks it.
       const wire =
-        typeof args.address === 'string' && output !== null && typeof output === 'object' && !Array.isArray(output)
+        typeof args.address === 'string' &&
+        output !== null &&
+        typeof output === 'object' &&
+        !Array.isArray(output)
           ? { ...(output as object), address: args.address }
           : output
       return bridgeToolResult(

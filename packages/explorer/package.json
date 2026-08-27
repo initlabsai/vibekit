@@ -1,6 +1,6 @@
 {
   "name": "@initlabs/vibekit-explorer",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "private": true,
   "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds provisional signerless compose-only host wiring.",
   "license": "MIT",
@@ -29,8 +29,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@initlabs/vibekit-core": "workspace:*",
-    "@initlabs/vibekit-tools": "workspace:*",
+    "@initlabs/vibekit": "workspace:*",
     "algosdk": "3.7.0",
     "zod": "^4.4.3"
   },

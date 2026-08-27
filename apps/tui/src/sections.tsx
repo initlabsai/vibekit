@@ -4,14 +4,27 @@ import {
   type ViewSpec,
   type WriteFlowState,
 } from '@initlabs/vibekit-explorer'
-import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollBoxRenderable } from '@opentui/core'
+import {
+  createTextAttributes,
+  type BoxRenderable,
+  type MouseEvent,
+  type ScrollBoxRenderable,
+} from '@opentui/core'
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
-import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
-import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
-import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
+import type { NfdRecord } from '@initlabs/vibekit/plugins/nfd'
+import type { AssetProfile } from '@initlabs/vibekit/plugins/pera'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/plugins/vestige'
 
-import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard, PeraAssetCard, RawCard, TableCard } from './cards/index.js'
+import {
+  MarketPricesCard,
+  MarketRankedCard,
+  NfdCard,
+  PaymentCard,
+  PeraAssetCard,
+  RawCard,
+  TableCard,
+} from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button, HighlightContext, usePulse } from './ui.js'
 import { ResultView, type OpenTarget } from './views.js'
@@ -23,7 +36,13 @@ export type SectionBlock =
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
   | { id: number; kind: 'plugin'; view: string; data: unknown; network: string }
   /** A coarse `table` cue's result, pre-shaped by tableModel — formatted raw, not trusted. */
-  | { id: number; kind: 'table'; title: string; facts: Array<[string, string]>; rows: Array<Record<string, unknown>> }
+  | {
+      id: number
+      kind: 'table'
+      title: string
+      facts: Array<[string, string]>
+      rows: Array<Record<string, unknown>>
+    }
   | { id: number; kind: 'payment'; flow: WriteFlowState }
 
 /** What a plugin card renders with; `data` is the schema-parsed wire. */
@@ -43,7 +62,9 @@ const PLUGIN_CARDS: Record<string, (props: PluginCardProps) => ReactNode> = {
         data={nfd}
         network={network}
         width={width}
-        onOpenAccount={nfd.address ? () => onOpen({ kind: 'account', address: nfd.address! }) : undefined}
+        onOpenAccount={
+          nfd.address ? () => onOpen({ kind: 'account', address: nfd.address! }) : undefined
+        }
       />
     )
   },
@@ -104,9 +125,7 @@ function ThinkingSpinner() {
     const id = setInterval(() => setFrame((n) => n + 1), 80)
     return () => clearInterval(id)
   }, [])
-  return (
-    <text fg={COLORS.brass} content={SPINNER[frame % SPINNER.length]!} />
-  )
+  return <text fg={COLORS.brass} content={SPINNER[frame % SPINNER.length]!} />
 }
 
 /** An arc that turns: the direct lane at work, in the live color. Thinking keeps the braille dots. */
@@ -119,7 +138,10 @@ function FetchLine({ text, width }: { text: string; width: number }) {
   return (
     <box flexDirection="row" height={1} marginTop={1}>
       {working ? <text fg={COLORS.signal}>{`${ARC[frame]} `}</text> : null}
-      <text fg={working ? COLORS.signal : COLORS.muted} content={shorten(text, Math.max(8, width - 2))} />
+      <text
+        fg={working ? COLORS.signal : COLORS.muted}
+        content={shorten(text, Math.max(8, width - 2))}
+      />
     </box>
   )
 }
@@ -155,11 +177,7 @@ export function ThinkingFold({
         {size ? <text fg={COLORS.borderSoft}>{size}</text> : null}
       </box>
       {expanded && text.length > 0 ? (
-        <text
-          fg={COLORS.muted}
-          marginTop={1}
-          content={wrapLines(text, width).join('\n')}
-        />
+        <text fg={COLORS.muted} marginTop={1} content={wrapLines(text, width).join('\n')} />
       ) : null}
     </box>
   )
@@ -173,7 +191,7 @@ const WELCOME_COMMANDS: ReadonlyArray<[string, string]> = [
   ['^n', 'localnet · testnet · mainnet'],
 ]
 
-const WELCOME_QUESTIONS = ["look up vibekit.algo on mainnet"] as const
+const WELCOME_QUESTIONS = ['look up vibekit.algo on mainnet'] as const
 const LINK_ATTR = createTextAttributes({ underline: true })
 
 /** Empty-feed invite: what works, and what this is (tool calls, not magic). */
@@ -269,12 +287,7 @@ export function NavPane({
         {sections.map((section, index) => {
           const selected = section.id === selectedId
           return (
-            <box
-              key={section.id}
-              height={1}
-              paddingX={1}
-              onMouseDown={() => onSelect(section.id)}
-            >
+            <box key={section.id} height={1} paddingX={1} onMouseDown={() => onSelect(section.id)}>
               <text
                 fg={selected ? COLORS.brassBright : COLORS.muted}
                 content={shorten(
@@ -398,101 +411,117 @@ export function ContentPane({
                 }}
               >
                 <box flexDirection="column" flexGrow={1}>
-                <box flexDirection="row" justifyContent="space-between" height={1}>
-                  <text
-                    fg={selected ? COLORS.brass : COLORS.faint}
-                    content={promptKicker(section.prompt, innerWidth - 4, selected)}
-                  />
-                  <text
-                    fg={COLORS.faint}
-                    content="close ×"
-                    onMouseDown={(event: MouseEvent) => {
-                      event.stopPropagation()
-                      onClose(section.id)
-                    }}
-                  />
-                </box>
-                {section.items.map((item, index) => {
-                  if (item.kind === 'note') {
-                    const color =
-                      item.tone === 'error'
-                        ? COLORS.brassBright
-                        : item.tone === 'agent'
-                          ? COLORS.text
-                          : COLORS.muted
-                    const streaming =
-                      item.tone === 'agent' &&
-                      liveThinkingSectionId === section.id &&
-                      index === section.items.length - 1
-                    const cursor = streaming && cursorOn ? '▌' : streaming ? ' ' : ''
-                    return (
-                      <text
-                        key={item.id}
-                        marginTop={1}
-                        fg={color}
-                        content={wrapLines(item.text + cursor, innerWidth).join('\n')}
-                      />
-                    )
-                  }
-                  const block = item.block
-                  const card =
-                    block.kind === 'view' ? (
-                      <ResultView
-                        store={store}
-                        view={block.view}
-                        width={cardWidth}
-                        onOpen={onOpen}
-                        onMore={() => onMore(section.id, item.id, block.view)}
-                        loadingMore={loadingMoreItemId === item.id}
-                      />
-                    ) : block.kind === 'raw' ? (
-                      <RawCard title={block.title} text={block.text} width={cardWidth} />
-                    ) : block.kind === 'table' ? (
-                      <TableCard title={block.title} facts={block.facts} rows={block.rows} width={cardWidth} />
-                    ) : block.kind === 'plugin' ? (
-                      (PLUGIN_CARDS[block.view]?.({ data: block.data, network: block.network, width: cardWidth, onOpen }) ?? (
-                        <RawCard title={block.view} text={JSON.stringify(block.data, null, 2)} width={cardWidth} />
-                      ))
-                    ) : (
-                      <PaymentCard
-                        key={block.flow.stage}
-                        model={(() => {
-                          const derived = createPaymentFlowViewModel(store, block.flow)
-                          return derived.ok ? derived.model : undefined
-                        })()}
-                        stage={block.flow.stage}
-                        busy={busyPayment}
-                        width={cardWidth}
-                      />
-                    )
-                  return (
-                    <box
-                      key={item.id}
-                      flexDirection="column"
-                      ref={(renderable: BoxRenderable | null) => {
-                        if (renderable) cardRegistry.current.set(item.id, renderable)
-                        else cardRegistry.current.delete(item.id)
-                      }}
+                  <box flexDirection="row" justifyContent="space-between" height={1}>
+                    <text
+                      fg={selected ? COLORS.brass : COLORS.faint}
+                      content={promptKicker(section.prompt, innerWidth - 4, selected)}
+                    />
+                    <text
+                      fg={COLORS.faint}
+                      content="close ×"
                       onMouseDown={(event: MouseEvent) => {
-                        // The click highlights the card; a drag still selects text.
                         event.stopPropagation()
-                        onSelectItem(section.id, item.id)
+                        onClose(section.id)
                       }}
-                    >
-                      <HighlightContext.Provider value={cursorItemId === item.id}>{card}</HighlightContext.Provider>
-                    </box>
-                  )
-                })}
-                {(section.thinking && section.thinking.length > 0) ||
-                liveThinkingSectionId === section.id ? (
-                  <ThinkingFold
-                    text={section.thinking ?? ''}
-                    expanded={section.thinkingOpen === true}
-                    live={liveThinkingSectionId === section.id}
-                    width={innerWidth}
-                    onToggle={() => onToggleThinking(section.id)}
-                  />
-                ) : null}
+                    />
+                  </box>
+                  {section.items.map((item, index) => {
+                    if (item.kind === 'note') {
+                      const color =
+                        item.tone === 'error'
+                          ? COLORS.brassBright
+                          : item.tone === 'agent'
+                            ? COLORS.text
+                            : COLORS.muted
+                      const streaming =
+                        item.tone === 'agent' &&
+                        liveThinkingSectionId === section.id &&
+                        index === section.items.length - 1
+                      const cursor = streaming && cursorOn ? '▌' : streaming ? ' ' : ''
+                      return (
+                        <text
+                          key={item.id}
+                          marginTop={1}
+                          fg={color}
+                          content={wrapLines(item.text + cursor, innerWidth).join('\n')}
+                        />
+                      )
+                    }
+                    const block = item.block
+                    const card =
+                      block.kind === 'view' ? (
+                        <ResultView
+                          store={store}
+                          view={block.view}
+                          width={cardWidth}
+                          onOpen={onOpen}
+                          onMore={() => onMore(section.id, item.id, block.view)}
+                          loadingMore={loadingMoreItemId === item.id}
+                        />
+                      ) : block.kind === 'raw' ? (
+                        <RawCard title={block.title} text={block.text} width={cardWidth} />
+                      ) : block.kind === 'table' ? (
+                        <TableCard
+                          title={block.title}
+                          facts={block.facts}
+                          rows={block.rows}
+                          width={cardWidth}
+                        />
+                      ) : block.kind === 'plugin' ? (
+                        (PLUGIN_CARDS[block.view]?.({
+                          data: block.data,
+                          network: block.network,
+                          width: cardWidth,
+                          onOpen,
+                        }) ?? (
+                          <RawCard
+                            title={block.view}
+                            text={JSON.stringify(block.data, null, 2)}
+                            width={cardWidth}
+                          />
+                        ))
+                      ) : (
+                        <PaymentCard
+                          key={block.flow.stage}
+                          model={(() => {
+                            const derived = createPaymentFlowViewModel(store, block.flow)
+                            return derived.ok ? derived.model : undefined
+                          })()}
+                          stage={block.flow.stage}
+                          busy={busyPayment}
+                          width={cardWidth}
+                        />
+                      )
+                    return (
+                      <box
+                        key={item.id}
+                        flexDirection="column"
+                        ref={(renderable: BoxRenderable | null) => {
+                          if (renderable) cardRegistry.current.set(item.id, renderable)
+                          else cardRegistry.current.delete(item.id)
+                        }}
+                        onMouseDown={(event: MouseEvent) => {
+                          // The click highlights the card; a drag still selects text.
+                          event.stopPropagation()
+                          onSelectItem(section.id, item.id)
+                        }}
+                      >
+                        <HighlightContext.Provider value={cursorItemId === item.id}>
+                          {card}
+                        </HighlightContext.Provider>
+                      </box>
+                    )
+                  })}
+                  {(section.thinking && section.thinking.length > 0) ||
+                  liveThinkingSectionId === section.id ? (
+                    <ThinkingFold
+                      text={section.thinking ?? ''}
+                      expanded={section.thinkingOpen === true}
+                      live={liveThinkingSectionId === section.id}
+                      width={innerWidth}
+                      onToggle={() => onToggleThinking(section.id)}
+                    />
+                  ) : null}
                 </box>
               </box>
             )

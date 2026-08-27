@@ -21,7 +21,9 @@ function tmux(args: string[]): string {
     stderr: 'pipe',
   })
   if (result.exitCode !== 0) {
-    throw new Error(`tmux ${args.join(' ')}: ${result.stderr.toString() || result.stdout.toString()}`)
+    throw new Error(
+      `tmux ${args.join(' ')}: ${result.stderr.toString() || result.stdout.toString()}`,
+    )
   }
   return result.stdout.toString()
 }
@@ -120,7 +122,6 @@ describe('TUI tmux journeys', () => {
     },
     { timeout: 20_000 },
   )
-
 
   test.skipIf(!HAS_TMUX)(
     'pay opens the approval modal over the feed',

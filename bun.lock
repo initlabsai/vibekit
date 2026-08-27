@@ -16,16 +16,7 @@
       "version": "1.0.0-alpha.0",
       "dependencies": {
         "@clack/prompts": "^1.7.0",
-        "@initlabs/vibekit-agent": "workspace:*",
-        "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-mcp": "workspace:*",
-        "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
-        "@initlabs/vibekit-plugin-nfd": "workspace:*",
-        "@initlabs/vibekit-plugin-pera": "workspace:*",
-        "@initlabs/vibekit-plugin-vestige": "workspace:*",
-        "@initlabs/vibekit-preset": "workspace:*",
-        "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools": "workspace:*",
+        "@initlabs/vibekit": "workspace:*",
         "algosdk": "3.7.0",
         "picocolors": "^1.1.1",
         "zod": "^4.4.3",
@@ -39,14 +30,8 @@
       "name": "@initlabs/vibekit-tui",
       "version": "1.0.0-alpha.0",
       "dependencies": {
-        "@initlabs/vibekit-agent": "workspace:*",
-        "@initlabs/vibekit-core": "workspace:*",
+        "@initlabs/vibekit": "workspace:*",
         "@initlabs/vibekit-explorer": "workspace:*",
-        "@initlabs/vibekit-plugin-nfd": "workspace:*",
-        "@initlabs/vibekit-plugin-pera": "workspace:*",
-        "@initlabs/vibekit-plugin-vestige": "workspace:*",
-        "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools": "workspace:*",
         "@opentui/core": "0.5.6",
         "@opentui/react": "0.5.6",
         "algosdk": "3.7.0",
@@ -90,197 +75,43 @@
         "typescript": "^5.9.3",
       },
     },
-    "packages/agent": {
-      "name": "@initlabs/vibekit-agent",
+    "packages/explorer": {
+      "name": "@initlabs/vibekit-explorer",
+      "version": "1.0.0-alpha.0",
+      "dependencies": {
+        "@initlabs/vibekit": "workspace:*",
+        "algosdk": "3.7.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.4.0",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/vibekit": {
+      "name": "@initlabs/vibekit",
       "version": "1.0.0-alpha.0",
       "dependencies": {
         "@ai-sdk/anthropic": "^4.0.40",
         "@ai-sdk/openai": "^4.0.45",
         "@ai-sdk/openai-compatible": "^3.0.34",
+        "@algorandfoundation/keystore-core": "1.0.0-canary.3",
+        "@algorandfoundation/keystore-node": "1.0.0-canary.3",
+        "@alpha-arcade/sdk": "^0.4.11",
+        "@modelcontextprotocol/server": "^2.0.0",
+        "@tanstack/store": "0.9.3",
+        "@txnlab/nfd-sdk": "^1.1.0",
         "ai": "^7.0.74",
       },
       "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "typescript": "^5.9.3",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/core": {
-      "name": "@initlabs/vibekit-core",
-      "version": "1.0.0-alpha.0",
-      "devDependencies": {
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/explorer": {
-      "name": "@initlabs/vibekit-explorer",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-tools": "workspace:*",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@types/bun": "^1.4.0",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/mcp": {
-      "name": "@initlabs/vibekit-mcp",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@modelcontextprotocol/server": "^2.0.0",
-      },
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@initlabs/vibekit-preset": "workspace:*",
-        "@initlabs/vibekit-signer-keystore": "workspace:*",
         "@modelcontextprotocol/client": "^2.0.0",
         "@types/bun": "^1.4.0",
         "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/plugin-alpha-arcade": {
-      "name": "@initlabs/vibekit-plugin-alpha-arcade",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@alpha-arcade/sdk": "^0.4.11",
-      },
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/plugin-nfd": {
-      "name": "@initlabs/vibekit-plugin-nfd",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@txnlab/nfd-sdk": "^1.1.0",
-      },
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/plugin-pera": {
-      "name": "@initlabs/vibekit-plugin-pera",
-      "version": "1.0.0-alpha.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/plugin-vestige": {
-      "name": "@initlabs/vibekit-plugin-vestige",
-      "version": "1.0.0-alpha.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/preset": {
-      "name": "@initlabs/vibekit-preset",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
-        "@initlabs/vibekit-plugin-nfd": "workspace:*",
-        "@initlabs/vibekit-plugin-pera": "workspace:*",
-        "@initlabs/vibekit-plugin-vestige": "workspace:*",
-        "@initlabs/vibekit-signer-keystore": "workspace:*",
-        "@initlabs/vibekit-tools": "workspace:*",
-      },
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/signer-keystore": {
-      "name": "@initlabs/vibekit-signer-keystore",
-      "version": "1.0.0-alpha.0",
-      "dependencies": {
-        "@algorandfoundation/keystore-core": "1.0.0-canary.3",
-        "@algorandfoundation/keystore-node": "1.0.0-canary.3",
-        "@tanstack/store": "0.9.3",
-      },
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
         "tweetnacl": "^1.0.3",
+        "typescript": "^5.9.3",
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
-        "algosdk": ">=3.7.0 <4",
-        "zod": "^4.0.0",
-      },
-    },
-    "packages/tools": {
-      "name": "@initlabs/vibekit-tools",
-      "version": "1.0.0-alpha.0",
-      "devDependencies": {
-        "@initlabs/vibekit-core": "workspace:*",
-        "@types/bun": "^1.4.0",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "peerDependencies": {
-        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
@@ -519,29 +350,11 @@
 
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.35.3", "", { "os": "win32", "cpu": "x64" }, "sha512-D4y1vNeZrIIJCN+uHaWVtH86B+aCrdMYYjicy9pXHvbGZeGYLLSd3wdVuC37FxVXlU1ARsk84eKWfWMXGYEqvA=="],
 
-    "@initlabs/vibekit-agent": ["@initlabs/vibekit-agent@workspace:packages/agent"],
+    "@initlabs/vibekit": ["@initlabs/vibekit@workspace:packages/vibekit"],
 
     "@initlabs/vibekit-cli": ["@initlabs/vibekit-cli@workspace:apps/cli"],
 
-    "@initlabs/vibekit-core": ["@initlabs/vibekit-core@workspace:packages/core"],
-
     "@initlabs/vibekit-explorer": ["@initlabs/vibekit-explorer@workspace:packages/explorer"],
-
-    "@initlabs/vibekit-mcp": ["@initlabs/vibekit-mcp@workspace:packages/mcp"],
-
-    "@initlabs/vibekit-plugin-alpha-arcade": ["@initlabs/vibekit-plugin-alpha-arcade@workspace:packages/plugin-alpha-arcade"],
-
-    "@initlabs/vibekit-plugin-nfd": ["@initlabs/vibekit-plugin-nfd@workspace:packages/plugin-nfd"],
-
-    "@initlabs/vibekit-plugin-pera": ["@initlabs/vibekit-plugin-pera@workspace:packages/plugin-pera"],
-
-    "@initlabs/vibekit-plugin-vestige": ["@initlabs/vibekit-plugin-vestige@workspace:packages/plugin-vestige"],
-
-    "@initlabs/vibekit-preset": ["@initlabs/vibekit-preset@workspace:packages/preset"],
-
-    "@initlabs/vibekit-signer-keystore": ["@initlabs/vibekit-signer-keystore@workspace:packages/signer-keystore"],
-
-    "@initlabs/vibekit-tools": ["@initlabs/vibekit-tools@workspace:packages/tools"],
 
     "@initlabs/vibekit-tui": ["@initlabs/vibekit-tui@workspace:apps/tui"],
 

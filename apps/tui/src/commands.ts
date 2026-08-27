@@ -42,7 +42,8 @@ export function resolvePaymentParties(
   if (algosdk.isValidAddress(to)) return { sender, receiver: to }
   const matches = accounts.filter((account) => account.name?.toLowerCase() === to.toLowerCase())
   if (matches.length === 1) return { sender, receiver: matches[0]!.address }
-  if (matches.length > 1) return { error: `"${to}" matches ${matches.length} accounts — use an address` }
+  if (matches.length > 1)
+    return { error: `"${to}" matches ${matches.length} accounts — use an address` }
   return { error: `No keystore account named "${to}" — use a label from the wallet or an address` }
 }
 
@@ -73,7 +74,8 @@ export function routeComposerInput(input: string): ComposerRoute {
   if (payment) return { status: 'payment', ...payment }
   const directed = parseEntityComposerCommand(trimmed)
   if (directed?.entity === 'asset') return { status: 'asset', assetId: directed.id }
-  if (directed?.entity === 'application') return { status: 'application', applicationId: directed.id }
+  if (directed?.entity === 'application')
+    return { status: 'application', applicationId: directed.id }
   if (directed?.entity === 'block') return { status: 'block', round: directed.id }
   if (directed?.entity === 'group') return { status: 'group', groupId: directed.id }
   const word = trimmed.toLowerCase()
@@ -81,7 +83,8 @@ export function routeComposerInput(input: string): ComposerRoute {
   if (isMineQuery(word, 'assets')) return { status: 'nav', screen: 'assets' }
   if (isMineQuery(word, 'apps')) return { status: 'nav', screen: 'apps' }
   if (isMineQuery(word, 'txns')) return { status: 'nav', screen: 'txns' }
-  if (word === 'blocks' || word === 'live' || word === 'tail') return { status: 'nav', screen: 'blocks' }
+  if (word === 'blocks' || word === 'live' || word === 'tail')
+    return { status: 'nav', screen: 'blocks' }
   // Natural-language "show me my accounts" — not the wallet picker (`accounts`).
   if (isMineQuery(word, 'accounts')) return { status: 'account-list' }
   if (word === 'network') return { status: 'network' }

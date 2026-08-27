@@ -36,7 +36,9 @@ export function BlockCard({
         kicker="BLOCK"
         pill={model.network.toUpperCase()}
         tone="idle"
-        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
+        action={
+          onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined
+        }
       />
       <Hero value={`round ${model.round}`} copy={String(model.round)} />
       <box marginTop={1} flexDirection="column">
@@ -64,12 +66,7 @@ export function BlockCard({
             </box>
           )}
         </box>
-        <Fact
-          label="proposer"
-          value={model.proposer ?? '—'}
-          copy={model.proposer}
-          width={body}
-        />
+        <Fact label="proposer" value={model.proposer ?? '—'} copy={model.proposer} width={body} />
         <Fact
           label="fees"
           value={
@@ -153,7 +150,14 @@ export function BlockListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={blocks.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={rows.length}
+          total={blocks.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )

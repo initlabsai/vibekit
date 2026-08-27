@@ -84,9 +84,7 @@ export function buildAccountPortfolioRecord(
 }
 
 /** Builds the titled trusted view that renders a portfolio record. */
-export function createAccountArtifact(
-  record: StructuredResult,
-): ExplorerArtifact {
+export function createAccountArtifact(record: StructuredResult): ExplorerArtifact {
   if (record.state !== 'success') {
     throw new Error('Cannot open a failed account record')
   }

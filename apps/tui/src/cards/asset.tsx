@@ -1,7 +1,4 @@
-import {
-  formatBaseUnits,
-  type AssetDetailViewModel,
-} from '@initlabs/vibekit-explorer'
+import { formatBaseUnits, type AssetDetailViewModel } from '@initlabs/vibekit-explorer'
 
 import {
   Button,
@@ -39,17 +36,14 @@ export function AssetCard({
         chip={model.unitName}
         pill={model.network.toUpperCase()}
         tone="idle"
-        action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
+        action={
+          onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined
+        }
       />
       <Hero value={title} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact
-          label="id"
-          value={String(model.assetId)}
-          copy={String(model.assetId)}
-          width={body}
-        />
+        <Fact label="id" value={String(model.assetId)} copy={String(model.assetId)} width={body} />
         <Fact
           label="supply"
           value={`${formatBaseUnits(model.totalSupply, model.decimals)}${model.unitName ? ` ${model.unitName}` : ''}`}
@@ -60,12 +54,7 @@ export function AssetCard({
           <Fact label="frozen" value={yesNo(model.defaultFrozen)} width={body} />
         )}
         {model.url ? <Fact label="url" value={model.url} width={body} /> : null}
-        <Fact
-          label="creator"
-          value={model.creator ?? '—'}
-          copy={model.creator}
-          width={body}
-        />
+        <Fact label="creator" value={model.creator ?? '—'} copy={model.creator} width={body} />
         {model.manager ? (
           <Fact label="manager" value={model.manager} copy={model.manager} width={body} />
         ) : null}
@@ -121,14 +110,12 @@ export function AssetListCard({
                 copy={String(asset.assetId)}
                 width={body - 12}
               />
-              {onOpen ? <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} /> : null}
+              {onOpen ? (
+                <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} />
+              ) : null}
             </box>
             {asset.name || asset.unitName ? (
-              <Fact
-                label="name"
-                value={asset.name ?? asset.unitName ?? ''}
-                width={body}
-              />
+              <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
             ) : null}
             {asset.unitName && asset.name ? (
               <Fact label="unit" value={asset.unitName} width={body} />
@@ -141,7 +128,14 @@ export function AssetListCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={assets.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={rows.length}
+          total={assets.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )
@@ -190,14 +184,12 @@ export function AssetHoldingsCard({
                 copy={String(asset.assetId)}
                 width={body - 12}
               />
-              {onOpen ? <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} /> : null}
+              {onOpen ? (
+                <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} />
+              ) : null}
             </box>
             {asset.name || asset.unitName ? (
-              <Fact
-                label="name"
-                value={asset.name ?? asset.unitName ?? ''}
-                width={body}
-              />
+              <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
             ) : null}
             {asset.unitName && asset.name ? (
               <Fact label="unit" value={asset.unitName} width={body} />
@@ -207,7 +199,14 @@ export function AssetHoldingsCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={assets.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={rows.length}
+          total={assets.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )
@@ -243,7 +242,14 @@ export function AssetHoldersCard({
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={rows.length} total={balances.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={rows.length}
+          total={balances.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )

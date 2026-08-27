@@ -4,7 +4,7 @@
  * coerced and checked by ABI type before anything is built.
  */
 import algosdk from 'algosdk'
-import type { ParsedMethod } from '@initlabs/vibekit-tools'
+import type { ParsedMethod } from '@initlabs/vibekit/tools'
 
 export type ParsedArgs =
   | {
@@ -18,7 +18,12 @@ export type ParsedArgs =
   | { ok: false; error: string }
 
 /** `+fund 0.2` / `+fee 0.002` (ALGO) pulled off the token list. */
-function takeModifiers(tokens: string[]): { rest: string[]; fund?: number; fee?: number; error?: string } {
+function takeModifiers(tokens: string[]): {
+  rest: string[]
+  fund?: number
+  fee?: number
+  error?: string
+} {
   const rest: string[] = []
   let fund: number | undefined
   let fee: number | undefined
@@ -27,7 +32,11 @@ function takeModifiers(tokens: string[]): { rest: string[]; fund?: number; fee?:
     if (token === '+fund' || token === '+fee') {
       const value = tokens[i + 1]
       const algo = value === undefined ? Number.NaN : Number(value)
-      if (!Number.isFinite(algo) || algo <= 0) return { rest, error: `${token} needs an ALGO amount, e.g. ${token} ${token === '+fund' ? '0.2' : '0.002'}` }
+      if (!Number.isFinite(algo) || algo <= 0)
+        return {
+          rest,
+          error: `${token} needs an ALGO amount, e.g. ${token} ${token === '+fund' ? '0.2' : '0.002'}`,
+        }
       const micro = Math.round(algo * 1_000_000)
       if (token === '+fund') fund = micro
       else fee = micro
@@ -73,7 +82,8 @@ export function splitTokens(raw: string): string[] {
 
 function unquote(token: string): string {
   const first = token[0]
-  if ((first === '"' || first === "'") && token.endsWith(first) && token.length >= 2) return token.slice(1, -1)
+  if ((first === '"' || first === "'") && token.endsWith(first) && token.length >= 2)
+    return token.slice(1, -1)
   return token
 }
 
@@ -86,7 +96,9 @@ export function coerceArg(type: string, token: string): { value: unknown } | { e
     return { error: `${type}: true or false` }
   }
   if (type === 'address' || type === 'account') {
-    return algosdk.isValidAddress(text) ? { value: text } : { error: `${type}: a 58-character Algorand address` }
+    return algosdk.isValidAddress(text)
+      ? { value: text }
+      : { error: `${type}: a 58-character Algorand address` }
   }
   if (type === 'asset' || type === 'application') {
     return /^\d+$/.test(text) ? { value: Number(text) } : { error: `${type}: an id (integer)` }
@@ -100,7 +112,9 @@ export function coerceArg(type: string, token: string): { value: unknown } | { e
   try {
     return { value: JSON.parse(token) }
   } catch {
-    return { error: `${type}: JSON${TXN_TYPES.has(type) ? ' — e.g. {"type":"pay","receiver":"…","amount":1000}' : ''}` }
+    return {
+      error: `${type}: JSON${TXN_TYPES.has(type) ? ' — e.g. {"type":"pay","receiver":"…","amount":1000}' : ''}`,
+    }
   }
 }
 
@@ -119,12 +133,18 @@ export function parseMethodArgs(method: ParsedMethod, raw: string): ParsedArgs {
   const line = mods.rest.join(' ')
   const args = method.args
   if (line.length === 0) {
-    return args.length === 0 ? { ok: true, named: {}, ...extras } : { ok: false, error: `${method.name} needs ${args.length} arg${args.length === 1 ? '' : 's'}: ${args.map((a, i) => argKey(a, i)).join(', ')}` }
+    return args.length === 0
+      ? { ok: true, named: {}, ...extras }
+      : {
+          ok: false,
+          error: `${method.name} needs ${args.length} arg${args.length === 1 ? '' : 's'}: ${args.map((a, i) => argKey(a, i)).join(', ')}`,
+        }
   }
   if (line.startsWith('{')) {
     try {
       const parsed: unknown = JSON.parse(line)
-      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) return { ok: true, named: parsed as Record<string, unknown>, ...extras }
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
+        return { ok: true, named: parsed as Record<string, unknown>, ...extras }
     } catch {
       // fall through to the token grammar
     }
@@ -150,7 +170,14 @@ export function parseMethodArgs(method: ParsedMethod, raw: string): ParsedArgs {
     const key = isPair ? token.slice(0, eq) : undefined
     const index = key === undefined ? position++ : args.findIndex((a, i) => argKey(a, i) === key)
     const arg = args[index]
-    if (!arg) return { ok: false, error: key === undefined ? `too many args — ${method.name} takes ${args.length}` : `no arg named ${key}` }
+    if (!arg)
+      return {
+        ok: false,
+        error:
+          key === undefined
+            ? `too many args — ${method.name} takes ${args.length}`
+            : `no arg named ${key}`,
+      }
     const coerced = coerceArg(arg.type, key === undefined ? token : token.slice(eq + 1))
     if ('error' in coerced) return { ok: false, error: `${argKey(arg, index)} — ${coerced.error}` }
     named[argKey(arg, index)] = coerced.value

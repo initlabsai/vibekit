@@ -1,4 +1,4 @@
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 import type { MouseEvent } from '@opentui/core'
 import {
   formatBaseUnits,
@@ -60,7 +60,8 @@ function stateValue(value: { action: number; bytes?: string; uint?: number | str
 
 function formatAbiValue(value: unknown): string {
   if (value === undefined || value === null) return '—'
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+    return String(value)
   try {
     return JSON.stringify(value)
   } catch {
@@ -87,12 +88,14 @@ export function TransactionCard({
 }) {
   if (!model) return <Unavailable title="TRANSACTION" width={width} />
   const body = innerWidth(width)
-  const payment = model.amountMicroAlgos === undefined
-    ? undefined
-    : { value: formatMicroAlgos(model.amountMicroAlgos), unit: 'ALGO' }
+  const payment =
+    model.amountMicroAlgos === undefined
+      ? undefined
+      : { value: formatMicroAlgos(model.amountMicroAlgos), unit: 'ALGO' }
   const transfer = assetUnits(model.assetAmount, model.assetDecimals, model.assetUnitName)
   const hero = payment ?? transfer
-  const tone: Tone = model.status === 'confirmed' ? 'ok' : model.status === 'failed' ? 'bad' : 'warn'
+  const tone: Tone =
+    model.status === 'confirmed' ? 'ok' : model.status === 'failed' ? 'bad' : 'warn'
   // A pool bootstrap writes a dozen keys; the card shows the first few, the count says the rest.
   const deltas = [
     ...(model.globalStateDelta ?? []).map((entry) => ({
@@ -138,7 +141,12 @@ export function TransactionCard({
         <Fact label="fee" value={algo(model.feeMicroAlgos) ?? '—'} width={body} />
         <Fact label="from" value={model.sender} copy={model.sender} width={body} />
         {model.clawbackFrom ? (
-          <Fact label="clawback" value={model.clawbackFrom} copy={model.clawbackFrom} width={body} />
+          <Fact
+            label="clawback"
+            value={model.clawbackFrom}
+            copy={model.clawbackFrom}
+            width={body}
+          />
         ) : null}
         {model.receiver ? (
           <Fact label="to" value={model.receiver} copy={model.receiver} width={body} />
@@ -169,7 +177,12 @@ export function TransactionCard({
         {model.methodName
           ? null
           : (model.applicationArgs ?? []).map((arg, index) => (
-              <Fact key={`arg-${index}`} label={`arg ${index}`} value={bytesDisplay(arg)} width={body} />
+              <Fact
+                key={`arg-${index}`}
+                label={`arg ${index}`}
+                value={bytesDisplay(arg)}
+                width={body}
+              />
             ))}
         {model.methodReturn !== undefined
           ? null
@@ -177,14 +190,24 @@ export function TransactionCard({
               log.startsWith(ARC4_RETURN_PREFIX) ? (
                 <Fact key={`log-${index}`} label="return" value={returnDisplay(log)} width={body} />
               ) : (
-                <Fact key={`log-${index}`} label={`log ${index}`} value={bytesDisplay(log)} width={body} />
+                <Fact
+                  key={`log-${index}`}
+                  label={`log ${index}`}
+                  value={bytesDisplay(log)}
+                  width={body}
+                />
               ),
             )}
         {deltas.slice(0, MAX_DELTAS).map((delta, index) => (
           <Fact key={`delta-${index}`} label={delta.label} value={delta.value} width={body} />
         ))}
         {deltas.length > MAX_DELTAS ? (
-          <Fact label="Δ …" value={`${deltas.length - MAX_DELTAS} more state changes`} valueColor={COLORS.faint} width={body} />
+          <Fact
+            label="Δ …"
+            value={`${deltas.length - MAX_DELTAS} more state changes`}
+            valueColor={COLORS.faint}
+            width={body}
+          />
         ) : null}
         {model.onCompletion ? (
           <Fact label="on-comp" value={formatOnCompletion(model.onCompletion)} width={body} />
@@ -211,7 +234,9 @@ export function TransactionCard({
         {model.group ? (
           <Fact label="group" value={model.group} copy={model.group} width={body} />
         ) : null}
-        {model.innerCount ? <Fact label="inner" value={`+${model.innerCount}`} width={body} /> : null}
+        {model.innerCount ? (
+          <Fact label="inner" value={`+${model.innerCount}`} width={body} />
+        ) : null}
         {model.note ? <Fact label="note" value={model.note} width={body} /> : null}
         <Fact label="network" value={model.network} width={body} />
       </box>
@@ -234,7 +259,9 @@ function queryLabel(
     query.txType ? formatBlockTxnType(query.txType) : undefined,
     query.assetId === undefined ? undefined : (unitFor(query.assetId) ?? `asset ${query.assetId}`),
     query.applicationId === undefined ? undefined : `app ${query.applicationId}`,
-    query.minRound !== undefined && query.maxRound !== undefined && query.minRound === query.maxRound
+    query.minRound !== undefined &&
+    query.maxRound !== undefined &&
+    query.minRound === query.maxRound
       ? `round ${query.minRound}`
       : [
           query.minRound === undefined ? undefined : `≥ ${query.minRound}`,
@@ -256,7 +283,10 @@ type ListRow = GraphSourceRow & { innerCount?: number; confirmedRound?: number; 
 
 /** The row's kind as the graph names it: creates and opt-ins say so, not "Application Call" / "0 USDC". */
 function rowType(row: ListRow): string {
-  if (row.type === 'appl' && (row.createdApplicationId !== undefined || Number(row.applicationId ?? 0) === 0)) {
+  if (
+    row.type === 'appl' &&
+    (row.createdApplicationId !== undefined || Number(row.applicationId ?? 0) === 0)
+  ) {
     return 'Application Create'
   }
   if (row.type === 'acfg' && row.createdAssetId !== undefined) return 'Asset Create'
@@ -272,8 +302,14 @@ function isOptIn(row: ListRow): boolean {
 }
 
 /** Rows with their inner transactions flattened beneath them, depth-first, as the graph draws them. */
-function withInners(rows: ReadonlyArray<ListRow>, depth = 0): Array<{ row: ListRow; depth: number; index: number }> {
-  return rows.flatMap((row, index) => [{ row, depth, index }, ...withInners(row.innerTxns ?? [], depth + 1)])
+function withInners(
+  rows: ReadonlyArray<ListRow>,
+  depth = 0,
+): Array<{ row: ListRow; depth: number; index: number }> {
+  return rows.flatMap((row, index) => [
+    { row, depth, index },
+    ...withInners(row.innerTxns ?? [], depth + 1),
+  ])
 }
 
 /** The asset behind an amount, the way the detail card says it: id · name. */
@@ -285,7 +321,8 @@ function assetFact(row: ListRow): string | undefined {
 function rowAmount(row: ListRow): string | undefined {
   // A zero payment carrying rekeyTo is the rekey itself — the graph says so, so does the row.
   if (row.rekeyTo && BigInt(row.paymentAmountMicroAlgos ?? 0) === BigInt(0)) return 'rekey'
-  if (isOptIn(row)) return `opt-in ${row.assetUnitName ?? (row.assetId === undefined ? '' : `#${row.assetId}`)}`.trim()
+  if (isOptIn(row))
+    return `opt-in ${row.assetUnitName ?? (row.assetId === undefined ? '' : `#${row.assetId}`)}`.trim()
   const payment = algo(row.paymentAmountMicroAlgos)
   if (payment) return payment
   if (row.assetAmount === undefined) return undefined
@@ -336,11 +373,14 @@ function TransactionTable({
     <box flexDirection="column" marginTop={1}>
       <text fg={COLORS.faint} content={header} />
       {withInners(rows).map(({ row, depth, index }, at) => {
-        const matchedViaInner = innerType !== undefined && row.type !== undefined && row.type !== innerType
+        const matchedViaInner =
+          innerType !== undefined && row.type !== undefined && row.type !== innerType
         const nest = depth === 0 ? '' : `${'  '.repeat(depth - 1)}└ `
         const type = `${nest}${rowType(row)}${matchedViaInner ? '*' : ''}`
         const to = rowCounterparty(row)
-        const party = to ? `${shorten(row.sender, each)} → ${shorten(to, each)}` : shorten(row.sender, partyW)
+        const party = to
+          ? `${shorten(row.sender, each)} → ${shorten(to, each)}`
+          : shorten(row.sender, partyW)
         const line = [
           pad(depth === 0 && index < 9 ? `[${index + 1}]` : '', numW),
           pad(type, typeW),
@@ -366,14 +406,25 @@ function TransactionTable({
         )
       })}
       {innerType && rows.some((row) => row.type !== undefined && row.type !== innerType) ? (
-        <text fg={COLORS.faint} content={`* matched through inner ${formatBlockTxnType(innerType)} txns`} />
+        <text
+          fg={COLORS.faint}
+          content={`* matched through inner ${formatBlockTxnType(innerType)} txns`}
+        />
       ) : null}
     </box>
   )
 }
 
 /** Inner transactions under their parent: indented, the few facts an inner has, recursive. */
-function InnerRows({ rows, depth, body }: { rows: ReadonlyArray<ListRow>; depth: number; body: number }) {
+function InnerRows({
+  rows,
+  depth,
+  body,
+}: {
+  rows: ReadonlyArray<ListRow>
+  depth: number
+  body: number
+}) {
   if (rows.length === 0) return null
   const indent = depth * 2
   const width = Math.max(8, body - indent)
@@ -394,12 +445,20 @@ function InnerRows({ rows, depth, body }: { rows: ReadonlyArray<ListRow>; depth:
               <Fact
                 label="to"
                 value={to}
-                copy={row.receiver ?? (row.applicationId === undefined ? undefined : String(row.applicationId))}
+                copy={
+                  row.receiver ??
+                  (row.applicationId === undefined ? undefined : String(row.applicationId))
+                }
                 width={width}
               />
             ) : null}
             {assetFact(row) ? (
-              <Fact label="asset" value={assetFact(row)!} copy={String(row.assetId)} width={width} />
+              <Fact
+                label="asset"
+                value={assetFact(row)!}
+                copy={String(row.assetId)}
+                width={width}
+              />
             ) : null}
             <InnerRows rows={row.innerTxns ?? []} depth={depth + 1} body={body} />
           </box>
@@ -488,14 +547,19 @@ export function TransactionListCard({
                   />
                   {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
                 </box>
-                {onOpen && row.id ? <Button label="open ▸" onPress={() => onOpen(row.id!)} /> : null}
+                {onOpen && row.id ? (
+                  <Button label="open ▸" onPress={() => onOpen(row.id!)} />
+                ) : null}
               </box>
               <Fact label="from" value={row.sender} copy={row.sender} width={body} />
               {to ? (
                 <Fact
                   label="to"
                   value={to}
-                  copy={row.receiver ?? (row.applicationId === undefined ? undefined : String(row.applicationId))}
+                  copy={
+                    row.receiver ??
+                    (row.applicationId === undefined ? undefined : String(row.applicationId))
+                  }
                   width={body}
                 />
               ) : null}
@@ -515,7 +579,12 @@ export function TransactionListCard({
                 <Fact label="fee" value={algo(row.feeMicroAlgos) ?? '—'} width={body} />
               )}
               {assetFact(row) ? (
-                <Fact label="asset" value={assetFact(row)!} copy={String(row.assetId)} width={body} />
+                <Fact
+                  label="asset"
+                  value={assetFact(row)!}
+                  copy={String(row.assetId)}
+                  width={body}
+                />
               ) : null}
               <InnerRows rows={row.innerTxns ?? []} depth={1} body={body} />
               {index < transactions.length - 1 ? <Rule width={body} /> : null}
@@ -528,7 +597,14 @@ export function TransactionListCard({
             width={body}
           />
         ) : null}
-        <MoreFooter shown={transactions.length} total={transactions.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={transactions.length}
+          total={transactions.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )

@@ -83,7 +83,10 @@ export function AccountCard({
   const nameW = Math.max(8, body - amountW - idW - 3)
   const sortButton =
     onCycleSort && model.assets.length > 1 ? (
-      <Button label={sort === 'none' ? 'sort ▾' : `sort ▾ ${ASSET_SORT_LABEL[sort]}`} onPress={onCycleSort} />
+      <Button
+        label={sort === 'none' ? 'sort ▾' : `sort ▾ ${ASSET_SORT_LABEL[sort]}`}
+        onPress={onCycleSort}
+      />
     ) : undefined
   return (
     <Frame width={width}>
@@ -94,7 +97,9 @@ export function AccountCard({
         action={
           <>
             {onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : null}
-            {onAssets && model.assets.length > 0 ? <Button label="assets ▸" onPress={onAssets} /> : null}
+            {onAssets && model.assets.length > 0 ? (
+              <Button label="assets ▸" onPress={onAssets} />
+            ) : null}
             {sortButton}
           </>
         }
@@ -109,7 +114,10 @@ export function AccountCard({
         ) : (
           <box flexDirection="column" marginTop={1}>
             {/* One line per holding, like Lora's table: name · amount · id. The id still copies on click. */}
-            <text fg={COLORS.faint} content={`${pad('name', nameW)} ${pad('amount', amountW, 'right')}  id`} />
+            <text
+              fg={COLORS.faint}
+              content={`${pad('name', nameW)} ${pad('amount', amountW, 'right')}  id`}
+            />
             {shown.map((asset) => (
               <box key={String(asset.assetId)} flexDirection="row" height={1}>
                 <text
@@ -126,7 +134,10 @@ export function AccountCard({
           </box>
         )}
         {ordered.length > maxAssets ? (
-          <FooterNote text={`${ordered.length - maxAssets} more${onAssets ? ' — assets ▸ lists them all' : ''}`} width={body} />
+          <FooterNote
+            text={`${ordered.length - maxAssets} more${onAssets ? ' — assets ▸ lists them all' : ''}`}
+            width={body}
+          />
         ) : null}
         {sort === 'none' ? null : (
           <FooterNote text={`sorted by ${ASSET_SORT_LABEL[sort]}`} width={body} />
@@ -178,7 +189,7 @@ export function AccountSummaryCard({
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
         {name ? <Fact label="name" value={name} width={body} /> : null}
-      <Fact label="address" value={address} copy={address} width={body} />
+        <Fact label="address" value={address} copy={address} width={body} />
         {minBalanceMicroAlgos === undefined ? null : (
           <Fact label="min bal" value={algo(minBalanceMicroAlgos) ?? '—'} width={body} />
         )}
@@ -252,10 +263,19 @@ export function AccountListCard({
             <Fact label="balance" value={algo(account.balanceMicroAlgos) ?? '—'} width={body} />
             {account.status ? <Fact label="status" value={account.status} width={body} /> : null}
             {account.minBalanceMicroAlgos === undefined ? null : (
-              <Fact label="min bal" value={algo(account.minBalanceMicroAlgos) ?? '—'} width={body} />
+              <Fact
+                label="min bal"
+                value={algo(account.minBalanceMicroAlgos) ?? '—'}
+                width={body}
+              />
             )}
             {account.rekeyedTo ? (
-              <Fact label="rekeyed" value={account.rekeyedTo} copy={account.rekeyedTo} width={body} />
+              <Fact
+                label="rekeyed"
+                value={account.rekeyedTo}
+                copy={account.rekeyedTo}
+                width={body}
+              />
             ) : null}
             {index < rows.length - 1 ? <Rule width={body} /> : null}
           </box>
@@ -264,7 +284,14 @@ export function AccountListCard({
           <FooterNote text="No accounts found on this network." width={body} />
         ) : null}
         {missingNote ? <FooterNote text={missingNote} width={body} /> : null}
-        <MoreFooter shown={rows.length} total={accounts.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={rows.length}
+          total={accounts.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )

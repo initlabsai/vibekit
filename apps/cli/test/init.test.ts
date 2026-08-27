@@ -3,7 +3,12 @@ import { mkdtempSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-import { generateConfigs, parseInitArgs, resolveVibekitPath, runInitAt } from '../src/commands/init.js'
+import {
+  generateConfigs,
+  parseInitArgs,
+  resolveVibekitPath,
+  runInitAt,
+} from '../src/commands/init.js'
 import { getAllSkillNames, getSkillNames } from '../src/skills/index.js'
 
 function makeDir(): string {
@@ -67,7 +72,9 @@ describe('headless runInitAt', () => {
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('VibeKit')
     // Default agent set is claude → skills land in .claude/skills.
     const firstSkill = getSkillNames()[0]!
-    expect(readFileSync(join(dir, '.claude', 'skills', firstSkill, 'SKILL.md'), 'utf-8')).toBeTruthy()
+    expect(
+      readFileSync(join(dir, '.claude', 'skills', firstSkill, 'SKILL.md'), 'utf-8'),
+    ).toBeTruthy()
   })
 
   test('headless keeps existing AGENTS.md unless --overwrite', async () => {
@@ -160,9 +167,9 @@ describe('generateConfigs', () => {
 
 describe('resolveVibekitPath', () => {
   test('bun-compiled binary: embedded $bunfs argv is never written; execPath wins', () => {
-    expect(resolveVibekitPath('/$bunfs/root/vibekit', '/home/dev/.local/bin/vibekit', '/dev/bin')).toBe(
-      '/home/dev/.local/bin/vibekit',
-    )
+    expect(
+      resolveVibekitPath('/$bunfs/root/vibekit', '/home/dev/.local/bin/vibekit', '/dev/bin'),
+    ).toBe('/home/dev/.local/bin/vibekit')
   })
 
   test('invoked as an on-disk vibekit script: argv path wins', () => {
@@ -172,8 +179,12 @@ describe('resolveVibekitPath', () => {
   })
 
   test('dev mode (bun run src/index.ts): falls back to the from-source shim', () => {
-    expect(resolveVibekitPath('/repo/apps/cli/src/index.ts', '/usr/local/bin/bun', '/repo/apps/cli/scripts/vibekit-dev')).toBe(
-      '/repo/apps/cli/scripts/vibekit-dev',
-    )
+    expect(
+      resolveVibekitPath(
+        '/repo/apps/cli/src/index.ts',
+        '/usr/local/bin/bun',
+        '/repo/apps/cli/scripts/vibekit-dev',
+      ),
+    ).toBe('/repo/apps/cli/scripts/vibekit-dev')
   })
 })

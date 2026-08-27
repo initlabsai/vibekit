@@ -52,12 +52,7 @@ export function ApplicationCard({
       <Hero value={`#${model.applicationId}`} copy={String(model.applicationId)} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact
-          label="creator"
-          value={model.creator ?? '—'}
-          copy={model.creator}
-          width={body}
-        />
+        <Fact label="creator" value={model.creator ?? '—'} copy={model.creator} width={body} />
         {model.account ? (
           <Fact label="account" value={model.account} copy={model.account} width={body} />
         ) : null}
@@ -73,7 +68,9 @@ export function ApplicationCard({
               <Fact
                 key={`${entry.key}-${index}`}
                 label={entry.key}
-                value={entry.type === 'uint' ? String(entry.uint ?? 0) : bytesDisplay(entry.bytes ?? '')}
+                value={
+                  entry.type === 'uint' ? String(entry.uint ?? 0) : bytesDisplay(entry.bytes ?? '')
+                }
                 width={body}
               />
             ))}
@@ -112,13 +109,24 @@ export function ApplicationProgramCard({
     .join(' · ')
   const preview = model.teal.split('\n').slice(0, PROGRAM_PREVIEW_LINES)
   const hidden = model.totalLines - model.fromLine + 1 - preview.length
-  const tail = hidden > 0 ? `${hidden.toLocaleString()} more lines · the agent read ${model.fromLine}–${model.toLine}` : ''
+  const tail =
+    hidden > 0
+      ? `${hidden.toLocaleString()} more lines · the agent read ${model.fromLine}–${model.toLine}`
+      : ''
   // Later pages of the same program: the facts are on the first card already.
   if (model.fromLine > 1) {
     return (
       <Frame width={width}>
-        <Header kicker="PROGRAM" chip={`${model.program} · lines ${model.fromLine}–${model.toLine}`} pill={model.network.toUpperCase()} />
-        <text fg={COLORS.faint} marginTop={1} content={preview.map((line) => shorten(line, body)).join('\n')} />
+        <Header
+          kicker="PROGRAM"
+          chip={`${model.program} · lines ${model.fromLine}–${model.toLine}`}
+          pill={model.network.toUpperCase()}
+        />
+        <text
+          fg={COLORS.faint}
+          marginTop={1}
+          content={preview.map((line) => shorten(line, body)).join('\n')}
+        />
         {tail ? <FooterNote text={tail} width={body} /> : null}
       </Frame>
     )
@@ -147,16 +155,23 @@ export function ApplicationProgramCard({
           <Fact label="boxes" value={facts.stateKeys.box.join(', ')} width={body} />
         ) : null}
         {facts.arc4Returns ? (
-          <Fact label="returns" value="ARC-4 — logged behind the 0x151f7c75 return prefix" width={body} />
+          <Fact
+            label="returns"
+            value="ARC-4 — logged behind the 0x151f7c75 return prefix"
+            width={body}
+          />
         ) : null}
-        <Fact label="reads" value={reads.length ? reads.join(', ') : 'none of RekeyTo, CloseRemainderTo, AssetCloseTo'} width={body} />
+        <Fact
+          label="reads"
+          value={
+            reads.length ? reads.join(', ') : 'none of RekeyTo, CloseRemainderTo, AssetCloseTo'
+          }
+          width={body}
+        />
         <Fact label="inner txns" value={String(facts.innerTransactions)} width={body} />
         {onComplete ? <Fact label="oncomplete" value={onComplete} width={body} /> : null}
         <Rule width={body} />
-        <text
-          fg={COLORS.faint}
-          content={preview.map((line) => shorten(line, body)).join('\n')}
-        />
+        <text fg={COLORS.faint} content={preview.map((line) => shorten(line, body)).join('\n')} />
         {tail ? <FooterNote text={tail} width={body} /> : null}
       </box>
     </Frame>
@@ -201,14 +216,23 @@ export function ApplicationMethodsCard({
           rows.map((row) => (
             <box key={row.name} flexDirection="column">
               <box flexDirection="row" height={1}>
-                <text fg={COLORS.text} content={shorten(row.name, nameWidth - 1).padEnd(nameWidth)} />
+                <text
+                  fg={COLORS.text}
+                  content={shorten(row.name, nameWidth - 1).padEnd(nameWidth)}
+                />
                 {row.signature ? (
-                  <text fg={COLORS.muted} content={shorten(row.signature, Math.max(8, body - nameWidth - 12))} />
+                  <text
+                    fg={COLORS.muted}
+                    content={shorten(row.signature, Math.max(8, body - nameWidth - 12))}
+                  />
                 ) : null}
                 {row.readonly ? <text fg={COLORS.faint} content="  read-only" /> : null}
               </box>
               {row.description ? (
-                <text fg={COLORS.faint} content={`${' '.repeat(nameWidth)}${shorten(row.description, body - nameWidth)}`} />
+                <text
+                  fg={COLORS.faint}
+                  content={`${' '.repeat(nameWidth)}${shorten(row.description, body - nameWidth)}`}
+                />
               ) : null}
             </box>
           ))
@@ -293,7 +317,14 @@ export function ApplicationListCard({
             {index < applications.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={applications.length} total={applications.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={applications.length}
+          total={applications.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )
@@ -318,15 +349,8 @@ export function ApplicationStateCard({
   return (
     <Frame width={width}>
       <Header kicker="APP STATE" pill={scope.toUpperCase()} tone="idle" />
-      <Fact
-        label="app"
-        value={String(applicationId)}
-        copy={String(applicationId)}
-        width={body}
-      />
-      {address ? (
-        <Fact label="address" value={address} copy={address} width={body} />
-      ) : null}
+      <Fact label="app" value={String(applicationId)} copy={String(applicationId)} width={body} />
+      {address ? <Fact label="address" value={address} copy={address} width={body} /> : null}
       {optedIn === undefined ? null : (
         <Fact label="opted" value={optedIn ? 'yes' : 'no'} width={body} />
       )}
@@ -375,9 +399,7 @@ export function ApplicationLocalsCard({
   return (
     <Frame width={width}>
       <Header kicker="APP LOCALS" pill={String(apps.length)} tone="idle" />
-      {address ? (
-        <Fact label="address" value={address} copy={address} width={body} />
-      ) : null}
+      {address ? <Fact label="address" value={address} copy={address} width={body} /> : null}
       <box marginTop={1} flexDirection="column">
         {apps.map((app) => (
           <box key={String(app.applicationId)} flexDirection="column" marginTop={1}>
@@ -405,7 +427,14 @@ export function ApplicationLocalsCard({
             ) : null}
           </box>
         ))}
-        <MoreFooter shown={apps.length} total={apps.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={apps.length}
+          total={apps.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )
@@ -449,7 +478,14 @@ export function ApplicationLogsCard({
             {index < logData.length - 1 ? <Rule width={body} /> : null}
           </box>
         ))}
-        <MoreFooter shown={logData.length} total={logData.length} nextToken={nextToken} onMore={onMore} loadingMore={loadingMore} width={body} />
+        <MoreFooter
+          shown={logData.length}
+          total={logData.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
       </box>
     </Frame>
   )
@@ -475,20 +511,13 @@ export function ApplicationBoxCard({
     <Frame width={width}>
       <Header kicker="APP BOX" pill={exists ? 'EXISTS' : 'MISSING'} tone={exists ? 'ok' : 'idle'} />
       <box marginTop={1} flexDirection="column">
-        <Fact
-          label="app"
-          value={String(applicationId)}
-          copy={String(applicationId)}
-          width={body}
-        />
+        <Fact label="app" value={String(applicationId)} copy={String(applicationId)} width={body} />
         <Fact label="name" value={boxName} width={body} />
         {exists && size !== undefined ? (
           <Fact label="size" value={`${size} bytes`} width={body} />
         ) : null}
         {exists ? <Fact label="value" value={value ?? ''} width={body} /> : null}
-        {exists ? null : (
-          <text fg={COLORS.muted} marginTop={1} content="box does not exist" />
-        )}
+        {exists ? null : <text fg={COLORS.muted} marginTop={1} content="box does not exist" />}
       </box>
     </Frame>
   )
@@ -517,7 +546,13 @@ export function ApplicationBoxesCard({
           <text fg={COLORS.muted} content="no boxes" />
         ) : (
           rows.map((box, index) => (
-            <Fact key={box.nameBase64} label={`box ${index + 1}`} value={box.name} copy={box.nameBase64} width={body} />
+            <Fact
+              key={box.nameBase64}
+              label={`box ${index + 1}`}
+              value={box.name}
+              copy={box.nameBase64}
+              width={body}
+            />
           ))
         )}
         {boxes.length > rows.length ? (

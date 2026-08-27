@@ -35,7 +35,12 @@ describe('ensureKeystoreDaemon', () => {
 
   test('reports failure when it never comes up or cannot start', async () => {
     expect(
-      await ensureKeystoreDaemon({ quiet: true, probe: async () => false, start: async () => 1, waitMs: 300 }),
+      await ensureKeystoreDaemon({
+        quiet: true,
+        probe: async () => false,
+        start: async () => 1,
+        waitMs: 300,
+      }),
     ).toBe(false)
     expect(
       await ensureKeystoreDaemon({

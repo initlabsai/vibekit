@@ -15,3 +15,38 @@ jobs:
           bun-version: 1.4.0
       - run: bun install --frozen-lockfile
       - run: bunx turbo run build typecheck test
+
+  # Nobody develops on Windows here, so install.ps1 only gets exercised by CI.
+  # Parsing is not enough: it parsed clean while resolving the release tag to
+  # every tag joined together. Run it for real against the published release.
+  install-ps1:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path ./install.ps1), [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | ForEach-Object { Write-Host $_ }; exit 1 }
+          Write-Host "install.ps1 parses clean"
+
+      # Windows PowerShell 5.1, not pwsh: it is what ships with Windows, and it
+      # differs from pwsh in ways that have already bitten us (no 307/308
+      # redirect following).
+      - name: Install
+        shell: powershell
+        env:
+          VIBEKIT_CHANNEL: alpha
+          VIBEKIT_FORCE_INSTALL: '1'
+          VIBEKIT_INSTALL_DIR: ${{ runner.temp }}\vibekit-ci
+        run: |
+          .\install.ps1
+          $cli = Join-Path $env:VIBEKIT_INSTALL_DIR 'vibekit.exe'
+          $tui = Join-Path $env:VIBEKIT_INSTALL_DIR 'vibekit-tui.exe'
+          if (-not (Test-Path $cli)) { throw "vibekit.exe missing" }
+          if (-not (Test-Path $tui)) { throw "vibekit-tui.exe missing" }
+          & $cli --version
+          if ($LASTEXITCODE -ne 0) { throw "vibekit --version failed" }

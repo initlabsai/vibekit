@@ -39,7 +39,11 @@ describe('diagnoseMcpConfig', () => {
     const issues = diagnoseMcpConfig(
       {
         mcpServers: {
-          vibekit: { command: '/usr/local/bin/vibekit', args: ['mcp'], env: { NETWORK: 'localnet' } },
+          vibekit: {
+            command: '/usr/local/bin/vibekit',
+            args: ['mcp'],
+            env: { NETWORK: 'localnet' },
+          },
         },
       },
       () => true,
@@ -88,7 +92,12 @@ describe('generateConfigs migration', () => {
       }),
     )
 
-    await generateConfigs({ agents: ['claude'], mcps: ['vibekit'], installPath: dir, selectedSkills: [] })
+    await generateConfigs({
+      agents: ['claude'],
+      mcps: ['vibekit'],
+      installPath: dir,
+      selectedSkills: [],
+    })
 
     const config = JSON.parse(readFileSync(join(dir, '.mcp.json'), 'utf-8')) as {
       mcpServers: Record<string, { command?: string }>

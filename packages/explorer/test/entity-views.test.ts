@@ -33,7 +33,12 @@ const identity = {
 
 function viewFor(
   record: { resultId: string },
-  view: 'asset.detail' | 'application.detail' | 'block.detail' | 'network.status' | 'transaction.detail',
+  view:
+    | 'asset.detail'
+    | 'application.detail'
+    | 'block.detail'
+    | 'network.status'
+    | 'transaction.detail',
 ) {
   return viewSpecSchema.parse({
     protocolVersion: EXPLORER_PROTOCOL_VERSION,
@@ -48,9 +53,14 @@ describe('directed entity commands', () => {
     expect(parseEntityComposerCommand('asset 1042')).toEqual({ entity: 'asset', id: 1042 })
     expect(parseEntityComposerCommand('ASA 1042')).toEqual({ entity: 'asset', id: 1042 })
     expect(parseEntityComposerCommand('app 1071')).toEqual({ entity: 'application', id: 1071 })
-    expect(parseEntityComposerCommand('application 1071')).toEqual({ entity: 'application', id: 1071 })
+    expect(parseEntityComposerCommand('application 1071')).toEqual({
+      entity: 'application',
+      id: 1071,
+    })
     expect(parseEntityComposerCommand('block 22')).toEqual({ entity: 'block', id: 22 })
-    expect(parseEntityComposerCommand('group AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=')).toEqual({
+    expect(
+      parseEntityComposerCommand('group AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='),
+    ).toEqual({
       entity: 'group',
       id: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
     })
@@ -138,7 +148,13 @@ describe('view cue', () => {
       }),
     ).toBe('asset.detail')
     expect(
-      viewCueForToolResult({ id: '2', toolName: 'my_table_tool', view: 'json', output: {}, isError: false }),
+      viewCueForToolResult({
+        id: '2',
+        toolName: 'my_table_tool',
+        view: 'json',
+        output: {},
+        isError: false,
+      }),
     ).toBeUndefined()
   })
 

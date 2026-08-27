@@ -32,7 +32,9 @@ export function TransactionGraphCard({
   })
   const legend = [
     tags.some((tag) => typeof tag === 'number') ? '(n) account n' : null,
-    graph.horizontals.some((row) => row.representation.kind === 'selfLoop') ? `${LOOP} to itself` : null,
+    graph.horizontals.some((row) => row.representation.kind === 'selfLoop')
+      ? `${LOOP} to itself`
+      : null,
     tags.includes('rekey') ? '(rk) rekeyed — the app acts as that account' : null,
   ].filter(Boolean)
 

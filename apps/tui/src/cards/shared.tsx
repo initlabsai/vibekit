@@ -1,6 +1,6 @@
 import algosdk from 'algosdk'
 
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten, wrapLines } from '../theme.js'
@@ -62,7 +62,10 @@ export function MoreFooter({
   if (onMore && nextToken) {
     return (
       <box flexDirection="row" marginTop={1} height={1} gap={2}>
-        <Button label={loadingMore ? 'loading…' : 'more ▸'} onPress={loadingMore ? () => {} : onMore} />
+        <Button
+          label={loadingMore ? 'loading…' : 'more ▸'}
+          onPress={loadingMore ? () => {} : onMore}
+        />
         <text fg={COLORS.faint}>{`${total} so far`}</text>
       </box>
     )
@@ -105,7 +108,11 @@ export function TableCard({
   const shown = rows.slice(0, TABLE_MAX_ROWS)
   return (
     <Frame width={width}>
-      <Header kicker={title.toUpperCase().replaceAll('_', ' ')} pill={String(rows.length)} tone="idle" />
+      <Header
+        kicker={title.toUpperCase().replaceAll('_', ' ')}
+        pill={String(rows.length)}
+        tone="idle"
+      />
       {facts.map(([key, value]) => (
         <Fact key={key} label={key} value={value} width={body} />
       ))}
@@ -119,33 +126,27 @@ export function TableCard({
           </box>
         ))}
         {rows.length > shown.length ? (
-          <FooterNote text={`${rows.length - shown.length} more rows — the model sees them all`} width={body} />
+          <FooterNote
+            text={`${rows.length - shown.length} more rows — the model sees them all`}
+            width={body}
+          />
         ) : null}
       </box>
     </Frame>
   )
 }
 
-export function RawCard({
-  title,
-  text,
-  width,
-}: {
-  title: string
-  text: string
-  width: number
-}) {
+export function RawCard({ title, text, width }: { title: string; text: string; width: number }) {
   // Wrap rather than shorten: the tail of an error message is the useful part.
   // Leading whitespace survives so pretty-printed JSON stays indented.
   const lines = text.split('\n').flatMap((line) => {
     const indent = /^\s*/.exec(line)![0]
-    return wrapLines(line.slice(indent.length), Math.max(innerWidth(width) - indent.length, 20)).map(
-      (wrapped) => indent + wrapped,
-    )
+    return wrapLines(
+      line.slice(indent.length),
+      Math.max(innerWidth(width) - indent.length, 20),
+    ).map((wrapped) => indent + wrapped)
   })
   const shown = lines.slice(0, 14)
   if (lines.length > 14) shown.push(`… ${lines.length - 14} more lines`)
-  return (
-    <Card title={title.toUpperCase()} badge="RAW" tone="idle" lines={shown} width={width} />
-  )
+  return <Card title={title.toUpperCase()} badge="RAW" tone="idle" lines={shown} width={width} />
 }

@@ -1,0 +1,115 @@
+{
+  "name": "@initlabs/vibekit",
+  "version": "1.0.0-alpha.1",
+  "description": "VibeKit: Algorand capabilities as one tool contract — core, domain tools, plugins, keystore signing, the MCP adapter, and the agent loop.",
+  "license": "MIT",
+  "author": "Init Labs LLC",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "import": "./dist/tools/index.js"
+    },
+    "./tools/views": {
+      "types": "./dist/tools/views.d.ts",
+      "import": "./dist/tools/views.js"
+    },
+    "./agent": {
+      "types": "./dist/agent/index.d.ts",
+      "import": "./dist/agent/index.js"
+    },
+    "./agent/config": {
+      "types": "./dist/agent/config.d.ts",
+      "import": "./dist/agent/config.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
+    },
+    "./mcp/stdio": {
+      "types": "./dist/mcp/stdio.d.ts",
+      "import": "./dist/mcp/stdio.js"
+    },
+    "./mcp/http": {
+      "types": "./dist/mcp/http.d.ts",
+      "import": "./dist/mcp/http.js"
+    },
+    "./signer-keystore": {
+      "types": "./dist/signer-keystore/index.d.ts",
+      "import": "./dist/signer-keystore/index.js"
+    },
+    "./preset": {
+      "types": "./dist/preset/index.d.ts",
+      "import": "./dist/preset/index.js"
+    },
+    "./plugins/nfd": {
+      "types": "./dist/plugins/nfd/index.d.ts",
+      "import": "./dist/plugins/nfd/index.js"
+    },
+    "./plugins/pera": {
+      "types": "./dist/plugins/pera/index.d.ts",
+      "import": "./dist/plugins/pera/index.js"
+    },
+    "./plugins/vestige": {
+      "types": "./dist/plugins/vestige/index.d.ts",
+      "import": "./dist/plugins/vestige/index.js"
+    },
+    "./plugins/alpha-arcade": {
+      "types": "./dist/plugins/alpha-arcade/index.d.ts",
+      "import": "./dist/plugins/alpha-arcade/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p examples/tsconfig.json --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.40",
+    "@ai-sdk/openai": "^4.0.45",
+    "@ai-sdk/openai-compatible": "^3.0.34",
+    "@algorandfoundation/keystore-core": "1.0.0-canary.3",
+    "@algorandfoundation/keystore-node": "1.0.0-canary.3",
+    "@alpha-arcade/sdk": "^0.4.11",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@tanstack/store": "0.9.3",
+    "@txnlab/nfd-sdk": "^1.1.0",
+    "ai": "^7.0.74"
+  },
+  "peerDependencies": {
+    "algosdk": ">=3.7.0 <4",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@types/bun": "^1.4.0",
+    "algosdk": "3.7.0",
+    "tweetnacl": "^1.0.3",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initlabsai/vibekit.git",
+    "directory": "packages/vibekit"
+  },
+  "homepage": "https://github.com/initlabsai/vibekit#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

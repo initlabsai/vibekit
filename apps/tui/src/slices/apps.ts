@@ -1,5 +1,5 @@
-import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit-core'
-import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit-agent/config'
+import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit'
+import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit/agent/config'
 import type { StructuredResult } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
@@ -11,7 +11,7 @@ import {
   tryNormalizeAppSpec,
   type NormalizedAppSpec,
   type ParsedMethod,
-} from '@initlabs/vibekit-tools'
+} from '@initlabs/vibekit/tools'
 import { readdirSync, readFileSync, type Dirent } from 'node:fs'
 import { join } from 'node:path'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -183,7 +183,9 @@ export function scanAppSpecs(root: string, maxDepth = 4): LocalAppSpec[] {
   walk(root, [])
   // ARC-56 first: when a name exists in several formats, the richest spec wins by-name lookups.
   return found.sort(
-    (a, b) => Number(b.spec.format === 'arc56') - Number(a.spec.format === 'arc56') || a.path.localeCompare(b.path),
+    (a, b) =>
+      Number(b.spec.format === 'arc56') - Number(a.spec.format === 'arc56') ||
+      a.path.localeCompare(b.path),
   )
 }
 
@@ -211,7 +213,11 @@ export function appGroups(
   for (const app of optedIn) group(app.name ?? `app ${app.appId}`).optedIn.push(app.appId)
   const rank = (g: AppGroup) => (g.deployed.length > 0 ? 0 : g.optedIn.length > 0 ? 1 : 2)
   return [...groups.values()]
-    .map((g) => ({ ...g, spec: g.specs[0], deployed: [...g.deployed].sort((a, b) => b.appId - a.appId) }))
+    .map((g) => ({
+      ...g,
+      spec: g.specs[0],
+      deployed: [...g.deployed].sort((a, b) => b.appId - a.appId),
+    }))
     .sort(
       (a, b) =>
         rank(a) - rank(b) ||
@@ -294,12 +300,15 @@ export function useApps({
       .then((record) => {
         if (cancelled) return
         setDetected(deployedFromRecord(record))
-        if (record.state !== 'success') setDeployedError('Could not search the indexer for deployments.')
+        if (record.state !== 'success')
+          setDeployedError('Could not search the indexer for deployments.')
         setDeployedLoading(false)
       })
       .catch((error) => {
         if (cancelled) return
-        setDeployedError(`Could not search for deployments — ${error instanceof Error ? error.message : String(error)}`)
+        setDeployedError(
+          `Could not search for deployments — ${error instanceof Error ? error.message : String(error)}`,
+        )
         setDeployedLoading(false)
       })
     return () => {
@@ -433,7 +442,10 @@ export function useApps({
       }
       const tool = contractWriteTools.find((entry) => entry.name === 'app_deploy')!
       const deployTimeParams = Object.fromEntries(
-        Object.entries(values).map(([key, value]) => [key, /^\d+$/.test(String(value)) ? Number(value) : String(value)]),
+        Object.entries(values).map(([key, value]) => [
+          key,
+          /^\d+$/.test(String(value)) ? Number(value) : String(value),
+        ]),
       )
       setCallBusy(true)
       setCallError(null)
@@ -500,7 +512,9 @@ export function useApps({
     // Pair by method: tool names are slugged, and one signature can be a
     // substring of another (`add` inside `readd`).
     const generated = toolsWithMethods(selected.spec.spec, { appId: selected.appId }).find(
-      (entry) => entry.tool.requiresSigner !== readonly && entry.method.signature === selectedMethod.signature,
+      (entry) =>
+        entry.tool.requiresSigner !== readonly &&
+        entry.method.signature === selectedMethod.signature,
     )
     if (!generated) {
       setCallError('No tool generated for this method.')
@@ -517,7 +531,9 @@ export function useApps({
       sender,
       ...toolArgsFor(method, parsed.named),
       ...(parsed.extraFeeMicroAlgos === undefined ? {} : { extraFee: parsed.extraFeeMicroAlgos }),
-      ...(parsed.fundMicroAlgos === undefined || readonly ? {} : { fundAppMicroAlgos: parsed.fundMicroAlgos }),
+      ...(parsed.fundMicroAlgos === undefined || readonly
+        ? {}
+        : { fundAppMicroAlgos: parsed.fundMicroAlgos }),
     })
       .then((result) => {
         setCallBusy(false)
@@ -532,7 +548,17 @@ export function useApps({
         setCallBusy(false)
         setCallError(error instanceof ToolError ? error.message : String(error))
       })
-  }, [callInput, deployOpen, live, network, onDraft, selected, selectedMethod, sender, submitDeploy])
+  }, [
+    callInput,
+    deployOpen,
+    live,
+    network,
+    onDraft,
+    selected,
+    selectedMethod,
+    sender,
+    submitDeploy,
+  ])
 
   return {
     deployed,

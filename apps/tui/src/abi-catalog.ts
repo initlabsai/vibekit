@@ -3,13 +3,13 @@
  * then decode recorded app calls onto stored results.
  */
 import type { StructuredResult } from '@initlabs/vibekit-explorer'
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 import {
   enrichTransactionsWithAbi,
   labelSelectors,
   programHash,
   type NormalizedAppSpec,
-} from '@initlabs/vibekit-tools'
+} from '@initlabs/vibekit/tools'
 
 /** Deployed appId → local spec, matching on contract name. */
 export function specCatalog(

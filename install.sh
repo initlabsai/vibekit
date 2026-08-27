@@ -86,6 +86,12 @@ http_get() {
 
 # Newest release whose tag matches the channel. Anchoring the pattern to the
 # opening quote excludes the heritage `cli-v*` tags from the pre-1.0 repo.
+#
+# head -1 trusts the API's order, which is newest-first EXCEPT that GitHub
+# hoists whichever release is flagged "latest" to the top. A prerelease tag
+# published without --prerelease therefore outranks every newer one. The
+# release workflow sets it from the hyphen in the tag; a hand-made release
+# must too.
 fetch_latest_prerelease() {
   channel="$1"
   info "Fetching latest $channel release..."
@@ -120,7 +126,9 @@ fetch_latest_stable() {
 
   case "$tag" in
     v[0-9]*-*)
-      error "The latest release ($tag) is a prerelease. Use VIBEKIT_CHANNEL=alpha."
+      error "The latest release ($tag) is a prerelease. Install it with:
+
+  curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh"
       ;;
     v[0-9]*)
       ;;
@@ -180,7 +188,7 @@ detect_platform() {
       esac
       ;;
     MINGW*|MSYS*|CYGWIN*)
-      error "Windows: download the binary from https://github.com/initlabsai/vibekit/releases"
+      error "Use the PowerShell installer on Windows: irm https://getvibekit.ai/install.ps1 | iex"
       ;;
     *)
       error "Unsupported operating system: $os"
@@ -274,18 +282,18 @@ check_path() {
 
   case "$shell_name" in
     zsh)
-      echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
+      echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.zshrc"
       echo "  source ~/.zshrc"
       ;;
     bash)
-      echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+      echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.bashrc"
       echo "  source ~/.bashrc"
       ;;
     fish)
-      echo "  fish_add_path ~/.local/bin"
+      echo "  fish_add_path $INSTALL_DIR"
       ;;
     *)
-      echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+      echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
       echo ""
       info "Add the above line to your shell's config file."
       ;;

@@ -11,7 +11,7 @@ import {
   resolveAgentConfig,
   zeroSignalSetupHint,
   type AgentSession,
-} from '@initlabs/vibekit-agent'
+} from '@initlabs/vibekit/agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { labelProgramMethods } from '../abi-catalog.js'
@@ -24,8 +24,8 @@ import {
   programCostLines,
   runAgentTurn,
 } from '../agent-lane.js'
-import type { AnyTool } from '@initlabs/vibekit-core'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import type { AnyTool } from '@initlabs/vibekit'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import type { KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'
@@ -78,8 +78,10 @@ export function useAgentLane({
   /** Modal yes/no before an expensive tool call runs. */
   askConfirm: (title: string, lines: string[]) => Promise<boolean>
 }) {
-  const { appendBlock, appendItem, appendNote, newItemId, patchSection, sectionsRef, updateItem } = feed
-  const { flowRef, setFlowMode, setFlowOrigin, trackFlowStep, updateFlowBlock, finishPayment } = payment
+  const { appendBlock, appendItem, appendNote, newItemId, patchSection, sectionsRef, updateItem } =
+    feed
+  const { flowRef, setFlowMode, setFlowOrigin, trackFlowStep, updateFlowBlock, finishPayment } =
+    payment
 
   const agentSectionRef = useRef<number | null>(null)
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
@@ -153,7 +155,10 @@ export function useAgentLane({
       }
       void (async () => {
         if (!agentRef.current) {
-          if (agentConfig.provider === 'zerosignal' && !(await probeZeroSignal(agentConfig.baseUrl))) {
+          if (
+            agentConfig.provider === 'zerosignal' &&
+            !(await probeZeroSignal(agentConfig.baseUrl))
+          ) {
             appendNote(sectionId, zeroSignalSetupHint(agentConfig.baseUrl), 'error')
             setAgentBusy(false)
             return
@@ -172,7 +177,10 @@ export function useAgentLane({
             labelProgram: (program) => labelProgramMethods(program, specCatalog, specHashCatalog),
             approveToolCall: async ({ toolName, input }) => {
               if (toolName !== 'get_application_program') return true
-              const { applicationId, network } = (input ?? {}) as { applicationId?: number; network?: string }
+              const { applicationId, network } = (input ?? {}) as {
+                applicationId?: number
+                network?: string
+              }
               const target = networkOfCall({ network }, sessionNetworkRef.current)
               const key = `${target}:${applicationId}`
               if (approvedProgramsRef.current.has(key)) return true

@@ -171,7 +171,13 @@ export function usePaymentFlow({
     (decision: 'approve' | 'deny') => {
       const current = flowRef.current
       const sectionId = flowSectionRef.current
-      if (busyRef.current || !current || current.stage !== 'awaiting-approval' || sectionId === null) return
+      if (
+        busyRef.current ||
+        !current ||
+        current.stage !== 'awaiting-approval' ||
+        sectionId === null
+      )
+        return
       setBusy(true)
       void performLivePaymentStep({
         host: host(),
@@ -220,10 +226,23 @@ export function usePaymentFlow({
               : undefined
           const round =
             derived && derived.ok ? derived.model.confirmation?.confirmedRound : undefined
-          const types = derived && derived.ok ? derived.model.simulation?.transactionTypes : undefined
-          const create = derived && derived.ok && derived.model.unsignedGroup.summary.startsWith('create app')
-          const what = create ? 'Deploy' : types?.length === 1 ? (types[0] === 'pay' ? 'Payment' : types[0] === 'appl' ? 'Call' : 'Transaction') : 'Group'
-          finishPayment(run.flow, `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`)
+          const types =
+            derived && derived.ok ? derived.model.simulation?.transactionTypes : undefined
+          const create =
+            derived && derived.ok && derived.model.unsignedGroup.summary.startsWith('create app')
+          const what = create
+            ? 'Deploy'
+            : types?.length === 1
+              ? types[0] === 'pay'
+                ? 'Payment'
+                : types[0] === 'appl'
+                  ? 'Call'
+                  : 'Transaction'
+              : 'Group'
+          finishPayment(
+            run.flow,
+            `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`,
+          )
         })
       })
     },

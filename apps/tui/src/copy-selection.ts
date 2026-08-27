@@ -10,7 +10,9 @@ import { useRenderer, useSelectionHandler } from '@opentui/react'
 import { createContext, useCallback, useContext, useEffect, useRef } from 'react'
 
 /** Selected text worth copying; empty drags are ignored. */
-export function selectedTextToCopy(selection: Pick<Selection, 'getSelectedText'>): string | undefined {
+export function selectedTextToCopy(
+  selection: Pick<Selection, 'getSelectedText'>,
+): string | undefined {
   const text = selection.getSelectedText()
   return text.length > 0 ? text : undefined
 }

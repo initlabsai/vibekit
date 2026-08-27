@@ -52,7 +52,10 @@ export function serializeToml(obj: Record<string, unknown>): string {
   return lines.join('\n')
 }
 
-export async function writeTomlFile(filePath: string, data: Record<string, unknown>): Promise<void> {
+export async function writeTomlFile(
+  filePath: string,
+  data: Record<string, unknown>,
+): Promise<void> {
   await ensureDir(dirname(filePath))
   await writeFile(filePath, serializeToml(data), 'utf-8')
 }

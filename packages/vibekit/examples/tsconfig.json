@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@initlabs/vibekit": ["../src/index.ts"],
+      "@initlabs/vibekit/mcp/stdio": ["../src/mcp/stdio.ts"],
+      "@initlabs/vibekit/mcp/http": ["../src/mcp/http.ts"],
+      "@initlabs/vibekit/preset": ["../src/preset/index.ts"],
+      "@initlabs/vibekit/signer-keystore": ["../src/signer-keystore/index.ts"]
+    }
+  },
+  "include": ["."]
+}

@@ -96,7 +96,12 @@ function toSpans(cells: Cell[]): GraphLine {
     // the run is an identifier, which ends where its text does.
     const sameRun = last && last.copy === cell.copy && (cell.ch === ' ' || last.fg === cell.fg)
     if (sameRun) last.text += cell.ch
-    else line.push({ text: cell.ch, fg: cell.fg, ...(cell.copy === undefined ? {} : { copy: cell.copy }) })
+    else
+      line.push({
+        text: cell.ch,
+        fg: cell.fg,
+        ...(cell.copy === undefined ? {} : { copy: cell.copy }),
+      })
   }
   return line
 }
@@ -111,7 +116,8 @@ function clipSpans(spans: GraphSpan[], width: number): GraphSpan[] {
   for (const span of spans) {
     if (used >= width) break
     const room = width - used
-    const text = span.text.length <= room ? span.text : `${span.text.slice(0, Math.max(0, room - 1))}…`
+    const text =
+      span.text.length <= room ? span.text : `${span.text.slice(0, Math.max(0, room - 1))}…`
     out.push({ text, fg: span.fg })
     used += text.length
   }
@@ -165,9 +171,14 @@ export function labelSegments(label: GraphLabel, isRemainder: boolean): GraphSpa
     // An opt-in moves nothing; the unit alone says which asset. The unit
     // copies the asset id, like any identifier on a card.
     if (segments.length > 0) segments.push({ text: ' ', fg: color })
-    if (label.type !== 'assetOptIn') segments.push({ text: unit === undefined ? value : `${value} `, fg: color })
+    if (label.type !== 'assetOptIn')
+      segments.push({ text: unit === undefined ? value : `${value} `, fg: color })
     if (unit !== undefined) {
-      segments.push({ text: unit, fg: color, ...(label.assetId === undefined ? {} : { copy: String(label.assetId) }) })
+      segments.push({
+        text: unit,
+        fg: color,
+        ...(label.assetId === undefined ? {} : { copy: String(label.assetId) }),
+      })
     }
     return segments
   }
@@ -201,12 +212,18 @@ function headingSpans(vertical: GraphVertical, avail: number): GraphSpan[] {
       const badge = `(${vertical.accountNumber}) `
       return [
         { text: badge, fg: COLORS.brass },
-        { text: shorten(vertical.address, Math.max(4, avail - badge.length)), fg: COLORS.signal, copy: vertical.address },
+        {
+          text: shorten(vertical.address, Math.max(4, avail - badge.length)),
+          fg: COLORS.signal,
+          copy: vertical.address,
+        },
       ]
     }
     case 'application': {
       const base = shorten(`app ${vertical.applicationId}`, avail)
-      const spans: GraphSpan[] = [{ text: base, fg: COLORS.signal, copy: String(vertical.applicationId) }]
+      const spans: GraphSpan[] = [
+        { text: base, fg: COLORS.signal, copy: String(vertical.applicationId) },
+      ]
       if (vertical.linkedAccount) {
         const tag = ` (${vertical.linkedAccount.accountNumber})`
         if (base.length + tag.length <= avail) spans.push({ text: tag, fg: COLORS.brass })
@@ -214,12 +231,17 @@ function headingSpans(vertical: GraphVertical, avail: number): GraphSpan[] {
       return spans
     }
     case 'asset':
-      return [{ text: shorten(`asa ${vertical.assetId}`, avail), fg: COLORS.signal, copy: String(vertical.assetId) }]
+      return [
+        {
+          text: shorten(`asa ${vertical.assetId}`, avail),
+          fg: COLORS.signal,
+          copy: String(vertical.assetId),
+        },
+      ]
     case 'opUp':
       return [{ text: 'OpUp', fg: COLORS.muted }]
   }
 }
-
 
 function drawGuides(cells: Cell[], centers: readonly number[]): void {
   for (const center of centers) drawText(cells, center, GUIDE, COLORS.borderSoft)
@@ -269,8 +291,14 @@ function laneLayout(
       // a clawback account do, and stay. Same rule the compact layout uses.
       const leftVertical = graph.verticals[rep.fromVertical]!
       const rightVertical = graph.verticals[rep.toVertical]!
-      const leftTag = compactMarker(leftVertical, rep.direction === 'leftToRight' ? rep.fromTag : rep.toTag)
-      const rightTag = compactMarker(rightVertical, rep.direction === 'leftToRight' ? rep.toTag : rep.fromTag)
+      const leftTag = compactMarker(
+        leftVertical,
+        rep.direction === 'leftToRight' ? rep.fromTag : rep.toTag,
+      )
+      const rightTag = compactMarker(
+        rightVertical,
+        rep.direction === 'leftToRight' ? rep.toTag : rep.fromTag,
+      )
       const tagsFit = leftTag.length + rightTag.length <= interior
       if (tagsFit) {
         drawText(main, a + 1, leftTag, COLORS.brass)
@@ -295,10 +323,7 @@ function laneLayout(
       } else {
         const above = newLine(width)
         drawGuides(above, centers)
-        const start = Math.max(
-          0,
-          Math.min(width - labelLen, ((a + b) >> 1) - (labelLen >> 1)),
-        )
+        const start = Math.max(0, Math.min(width - labelLen, ((a + b) >> 1) - (labelLen >> 1)))
         drawSpans(above, start, label)
         lines.push(toSpans(above))
       }
@@ -307,7 +332,8 @@ function laneLayout(
       const glyph = rep.kind === 'selfLoop' ? `${NODE}${LOOP}` : NODE
       const own = graph.verticals[rep.vertical]!
       const tags =
-        compactMarker(own, rep.fromTag) + (rep.kind === 'selfLoop' ? compactMarker(own, rep.toTag) : '')
+        compactMarker(own, rep.fromTag) +
+        (rep.kind === 'selfLoop' ? compactMarker(own, rep.toTag) : '')
       const spans: GraphSpan[] = [{ text: glyph, fg: color }]
       if (tags) spans.push({ text: tags, fg: COLORS.brass })
       spans.push({ text: ' ', fg: color }, ...label)
@@ -440,7 +466,9 @@ function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
     ...(assetId === undefined ? {} : { assetId: Number(assetId) }),
     ...(applicationId === undefined ? {} : { applicationId: Number(applicationId) }),
     ...(createdAssetId === undefined ? {} : { createdAssetId: Number(createdAssetId) }),
-    ...(createdApplicationId === undefined ? {} : { createdApplicationId: Number(createdApplicationId) }),
+    ...(createdApplicationId === undefined
+      ? {}
+      : { createdApplicationId: Number(createdApplicationId) }),
     ...(innerTxns === undefined ? {} : { innerTxns: innerTxns.map(toGraphTransaction) }),
   }
 }

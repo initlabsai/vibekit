@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 
-import { buildAssetHoldingsRecord, buildTransactionListRecord, mergePages, nextPageArgs } from '../src/index.js'
+import {
+  buildAssetHoldingsRecord,
+  buildTransactionListRecord,
+  mergePages,
+  nextPageArgs,
+} from '../src/index.js'
 
 const SENDER = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'
 const identity = (n: number, input?: Record<string, string | number>) => ({
@@ -12,15 +17,21 @@ const identity = (n: number, input?: Record<string, string | number>) => ({
 const row = (id: string) => ({ id, type: 'pay', sender: SENDER, paymentAmountMicroAlgos: 1 })
 
 describe('paged records', () => {
-  test('nextPageArgs is the record\'s own call plus its token', () => {
+  test("nextPageArgs is the record's own call plus its token", () => {
     const page = buildTransactionListRecord(identity(1, { address: SENDER, limit: 20 }), {
       transactions: [row('A')],
       nextToken: 'tok',
     })
     expect(nextPageArgs(page)).toEqual({ address: SENDER, limit: 20, nextToken: 'tok' })
     // Final page, or a record that does not know its call: nothing to fetch.
-    expect(nextPageArgs(buildTransactionListRecord(identity(2, { address: SENDER }), { transactions: [] }))).toBeUndefined()
-    expect(nextPageArgs(buildTransactionListRecord(identity(3), { transactions: [], nextToken: 'tok' }))).toBeUndefined()
+    expect(
+      nextPageArgs(
+        buildTransactionListRecord(identity(2, { address: SENDER }), { transactions: [] }),
+      ),
+    ).toBeUndefined()
+    expect(
+      nextPageArgs(buildTransactionListRecord(identity(3), { transactions: [], nextToken: 'tok' })),
+    ).toBeUndefined()
     expect(nextPageArgs(undefined)).toBeUndefined()
   })
 
@@ -36,7 +47,10 @@ describe('paged records', () => {
     })
     const merged = mergePages('transaction.list', first, second, identity(3))
     expect(merged.state).toBe('success')
-    const data = merged.state === 'success' ? (merged.data as { transactions: unknown[]; nextToken?: string; address?: string }) : undefined
+    const data =
+      merged.state === 'success'
+        ? (merged.data as { transactions: unknown[]; nextToken?: string; address?: string })
+        : undefined
     expect(data?.transactions).toHaveLength(3)
     expect(data?.nextToken).toBeUndefined()
     expect(data?.address).toBe(SENDER)
@@ -50,9 +64,16 @@ describe('paged records', () => {
       assets: [{ assetId: 1, amount: '1', isFrozen: false }],
       nextToken: 'n',
     })
-    const next = buildAssetHoldingsRecord(identity(2), { address: SENDER, assets: [{ assetId: 2, amount: '5', isFrozen: false }] })
+    const next = buildAssetHoldingsRecord(identity(2), {
+      address: SENDER,
+      assets: [{ assetId: 2, amount: '5', isFrozen: false }],
+    })
     const merged = mergePages('asset.holdings', first, next, identity(3))
-    expect(merged.state === 'success' && (merged.data as { assets: unknown[] }).assets).toHaveLength(2)
-    expect(() => mergePages('transaction.detail', first, next, identity(4))).toThrow(/not a paged list/)
+    expect(
+      merged.state === 'success' && (merged.data as { assets: unknown[] }).assets,
+    ).toHaveLength(2)
+    expect(() => mergePages('transaction.detail', first, next, identity(4))).toThrow(
+      /not a paged list/,
+    )
   })
 })

@@ -68,7 +68,10 @@ export function createFixtureEntityLookup(): EntityLookupHost &
         throw new Error(`No sample application ${applicationId} (try ${FIXTURE_APPLICATION_ID})`)
       }
       counter += 1
-      return buildApplicationDetailRecord(identity('application', applicationId, counter), APPLICATION_WIRE)
+      return buildApplicationDetailRecord(
+        identity('application', applicationId, counter),
+        APPLICATION_WIRE,
+      )
     },
     async lookupBlock(round: number): Promise<StructuredResult> {
       if (round !== FIXTURE_BLOCK_ROUND) {

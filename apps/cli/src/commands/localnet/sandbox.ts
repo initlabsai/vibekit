@@ -63,7 +63,11 @@ async function runInteractive(cmd: string[], cwd?: string): Promise<number> {
 
 export type DockerCheck =
   | { ok: true }
-  | { ok: false; problem: 'not-installed' | 'no-compose' | 'no-access' | 'not-running'; message: string }
+  | {
+      ok: false
+      problem: 'not-installed' | 'no-compose' | 'no-access' | 'not-running'
+      message: string
+    }
 
 export async function checkDocker(): Promise<DockerCheck> {
   try {
@@ -222,7 +226,9 @@ export class Sandbox {
   }
 
   async logs(options: { follow?: boolean; tail?: string } = {}): Promise<number> {
-    const args = this.project ? ['docker', 'compose', '-p', this.project, 'logs'] : ['docker', 'compose', 'logs']
+    const args = this.project
+      ? ['docker', 'compose', '-p', this.project, 'logs']
+      : ['docker', 'compose', 'logs']
     if (options.follow) args.push('--follow')
     if (options.tail) args.push('--tail', options.tail)
     return runInteractive(args, this.project ? undefined : this.directory)
@@ -306,7 +312,10 @@ export async function fetchAlgodStatus(): Promise<Record<string, string>> {
     ])
     if (!statusRes.ok || !versionsRes.ok) return { Status: 'Error' }
 
-    const status = (await statusRes.json()) as { 'last-round': number; 'time-since-last-round': number }
+    const status = (await statusRes.json()) as {
+      'last-round': number
+      'time-since-last-round': number
+    }
     const versions = (await versionsRes.json()) as {
       genesis_id: string
       genesis_hash_b64: string

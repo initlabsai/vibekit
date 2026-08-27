@@ -150,7 +150,13 @@ describe('first-party catalog views', () => {
           groupId: 'abc123',
           transactions: [
             { type: 'pay', sender: FIXTURE_SENDER, group: 'abc123', feeMicroAlgos: 1000 },
-            { type: 'appl', sender: FIXTURE_SENDER, group: 'abc123', applicationId: 1071, feeMicroAlgos: 1000 },
+            {
+              type: 'appl',
+              sender: FIXTURE_SENDER,
+              group: 'abc123',
+              applicationId: 1071,
+              feeMicroAlgos: 1000,
+            },
           ],
         },
         isError: false,
@@ -173,7 +179,11 @@ describe('first-party catalog views', () => {
         id: '1',
         toolName: 'search_assets',
         view: 'asset.list',
-        output: { assets: [{ assetId: 1042, name: 'Sample', unitName: 'SMPL', totalSupply: '1000', decimals: 0 }] },
+        output: {
+          assets: [
+            { assetId: 1042, name: 'Sample', unitName: 'SMPL', totalSupply: '1000', decimals: 0 },
+          ],
+        },
         isError: false,
       },
       identity,
@@ -212,7 +222,9 @@ describe('first-party catalog views', () => {
         toolName: 'get_account_assets',
         view: 'asset.holdings',
         output: {
-          assets: [{ assetId: 1042, amount: '12', isFrozen: false, name: 'Sample', unitName: 'SMPL' }],
+          assets: [
+            { assetId: 1042, amount: '12', isFrozen: false, name: 'Sample', unitName: 'SMPL' },
+          ],
         },
         isError: false,
       },
@@ -258,7 +270,11 @@ describe('first-party catalog views', () => {
       viewFor(locals.record, 'application.locals'),
     )
     if (!localsModel.ok) throw new Error(localsModel.error.message)
-    expect(localsModel.model.apps[0]?.entries[0]).toEqual({ key: 'counter', value: '7', type: 'uint' })
+    expect(localsModel.model.apps[0]?.entries[0]).toEqual({
+      key: 'counter',
+      value: '7',
+      type: 'uint',
+    })
   })
 
   test('read_global_state and read_local_state share the application.state scope shape', () => {

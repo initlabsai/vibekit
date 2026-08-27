@@ -84,7 +84,9 @@ function parseCsv(value: string | undefined, flag: string): string[] {
 function assertKnown(values: string[], known: readonly string[], flag: string): void {
   const unknown = values.filter((value) => !known.includes(value))
   if (unknown.length > 0) {
-    throw new Error(`${flag}: unknown value(s) ${unknown.join(', ')}. Available: ${known.join(', ')}`)
+    throw new Error(
+      `${flag}: unknown value(s) ${unknown.join(', ')}. Available: ${known.join(', ')}`,
+    )
   }
 }
 
@@ -344,7 +346,10 @@ async function fetchRemoteSkills(selected: SkillSelection): Promise<SkillDirecto
   return remoteSkills
 }
 
-async function installSkills(context: SetupContext, remoteSkills: SkillDirectory[]): Promise<number> {
+async function installSkills(
+  context: SetupContext,
+  remoteSkills: SkillDirectory[],
+): Promise<number> {
   const skills = [...getSkillsByNames(context.selectedSkills), ...remoteSkills]
 
   for (const targetDir of getAgentSkillsDirs(context.installPath, context.agents)) {
@@ -459,7 +464,11 @@ function showSummary(context: SetupContext): void {
 
   const hasCopilot = enabledAgents.some((a) => a.id === 'copilot')
   if (hasCopilot) {
-    lines.push('', `${pc.bold('VS Code Setup:')}`, `  Enable "Agent Skills" in Settings (search "agentskills")`)
+    lines.push(
+      '',
+      `${pc.bold('VS Code Setup:')}`,
+      `  Enable "Agent Skills" in Settings (search "agentskills")`,
+    )
   }
 
   p.note(lines.join('\n'), 'Setup Complete')
@@ -479,7 +488,8 @@ function showSummary(context: SetupContext): void {
 export async function runInitAt(installPath: string, flags?: InitFlags): Promise<void> {
   // Headless (--yes) guarantees agents is set — parseInitArgs enforces it.
   const agents = flags?.agents ?? (await selectAgentsStep())
-  const selectedSkills = flags?.skills ?? (flags?.yes ? getAllSkillNames() : await selectSkillsStep())
+  const selectedSkills =
+    flags?.skills ?? (flags?.yes ? getAllSkillNames() : await selectSkillsStep())
   const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULT_MCPS : await selectMCPsStep())
 
   const context: SetupContext = { agents, mcps, installPath, selectedSkills }
@@ -532,7 +542,11 @@ export async function commandInit(args: string[] = []): Promise<void> {
   try {
     await runSetupWizard(parseInitArgs(args))
   } catch (error) {
-    p.log.error(error instanceof Error ? `Setup failed: ${error.message}` : 'Setup failed with an unexpected error')
+    p.log.error(
+      error instanceof Error
+        ? `Setup failed: ${error.message}`
+        : 'Setup failed with an unexpected error',
+    )
     process.exit(1)
   }
 }

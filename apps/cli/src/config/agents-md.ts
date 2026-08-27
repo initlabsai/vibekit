@@ -72,4 +72,4 @@ npm run build               # compile contracts, generate typed clients
 npm test
 vibekit doctor              # check CLI, MCP, Docker, keystore
 \`\`\`
-`;
+`

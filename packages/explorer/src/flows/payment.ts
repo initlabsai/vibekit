@@ -1,4 +1,4 @@
-import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
 import { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema } from '../core/algo.js'
@@ -617,7 +617,9 @@ export function createPaymentFlowViewModel(
     network,
     sender: draftData.sender,
     ...(draftData.receiver === undefined ? {} : { receiver: draftData.receiver }),
-    ...(draftData.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: draftData.amountMicroAlgos }),
+    ...(draftData.amountMicroAlgos === undefined
+      ? {}
+      : { amountMicroAlgos: draftData.amountMicroAlgos }),
     ...(draftData.note === undefined ? {} : { note: draftData.note }),
     unsignedGroup: {
       size: draftData.unsignedGroup.transactions.length,

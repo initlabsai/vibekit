@@ -53,7 +53,8 @@ export interface BridgedToolResult {
 
 /** The first schema issue as `path: message`, else the error text. */
 function parseFailure(error: unknown): string {
-  const issue = (error as { issues?: Array<{ path: PropertyKey[]; message: string }> } | null)?.issues?.[0]
+  const issue = (error as { issues?: Array<{ path: PropertyKey[]; message: string }> } | null)
+    ?.issues?.[0]
   if (issue) return `${issue.path.map(String).join('.') || '(root)'}: ${issue.message}`
   return error instanceof Error ? error.message : String(error)
 }
@@ -68,7 +69,11 @@ export function viewCueForToolResult(event: ToolResultEventLike): TrustedViewId 
   return undefined
 }
 
-type RecordBuilder = (identity: ResultIdentity, output: unknown, toolName: string) => StructuredResult
+type RecordBuilder = (
+  identity: ResultIdentity,
+  output: unknown,
+  toolName: string,
+) => StructuredResult
 
 const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'transaction.detail': buildTransactionDetailRecord,

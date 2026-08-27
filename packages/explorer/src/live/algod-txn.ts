@@ -4,8 +4,8 @@
  * block tail — one mapping so cards stay honest across both paths.
  */
 import algosdk from 'algosdk'
-import { bytesToBase64 } from '@initlabs/vibekit-core'
-import type { FormattedTransaction } from '@initlabs/vibekit-tools'
+import { bytesToBase64 } from '@initlabs/vibekit'
+import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 
 const ON_COMPLETE_NAMES = ['noop', 'optin', 'closeout', 'clear', 'update', 'delete'] as const
 
@@ -81,8 +81,10 @@ export function formatAlgodTransaction(
     formatted.assetId = Number(txn.assetTransfer.assetIndex)
     formatted.assetAmount = safeUint64(txn.assetTransfer.amount)
     formatted.receiver = txn.assetTransfer.receiver.toString()
-    if (txn.assetTransfer.assetSender) formatted.clawbackFrom = txn.assetTransfer.assetSender.toString()
-    if (txn.assetTransfer.closeRemainderTo) formatted.closeTo = txn.assetTransfer.closeRemainderTo.toString()
+    if (txn.assetTransfer.assetSender)
+      formatted.clawbackFrom = txn.assetTransfer.assetSender.toString()
+    if (txn.assetTransfer.closeRemainderTo)
+      formatted.closeTo = txn.assetTransfer.closeRemainderTo.toString()
   }
   if (txn.applicationCall) {
     formatted.applicationId = Number(txn.applicationCall.appIndex)
@@ -118,7 +120,8 @@ export function formatAlgodTransaction(
   if (extras.createdApplicationId !== undefined && extras.createdApplicationId > 0) {
     formatted.createdApplicationId = extras.createdApplicationId
   }
-  if (extras.closeAmountMicroAlgos !== undefined) formatted.closeAmountMicroAlgos = extras.closeAmountMicroAlgos
+  if (extras.closeAmountMicroAlgos !== undefined)
+    formatted.closeAmountMicroAlgos = extras.closeAmountMicroAlgos
   if (extras.closeAssetAmount !== undefined) formatted.closeAssetAmount = extras.closeAssetAmount
   return formatted
 }

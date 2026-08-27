@@ -74,7 +74,10 @@ export type OpenTarget =
   | { kind: 'holdings'; address: string }
 
 /** The filter a detail card's "transactions ▸" opens, when the view has one. */
-export function transactionsFilterFor(store: ResultStore, view: ViewSpec): TransactionSearchFilter | undefined {
+export function transactionsFilterFor(
+  store: ResultStore,
+  view: ViewSpec,
+): TransactionSearchFilter | undefined {
   switch (view.view) {
     case 'account.portfolio': {
       const derived = createAccountPortfolioViewModel(store, view)
@@ -120,7 +123,8 @@ export function ResultView({
   const [flow, setFlow] = useState<'graph' | 'table'>('graph')
   const [layout, setLayout] = useState<'stack' | 'table'>('stack')
   const filter = onOpen ? transactionsFilterFor(store, view) : undefined
-  const onTransactions = onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
+  const onTransactions =
+    onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
   // A list pages when its record remembers its own call and has a token.
   const more = onMore && nextPageArgs(findResultRecord(store, view.source)) ? onMore : undefined
   switch (view.view) {
@@ -154,14 +158,22 @@ export function ResultView({
           maxAssets={20}
           onCycleSort={() => setSort(nextAssetSort(sort))}
           onTransactions={onTransactions}
-          onAssets={onOpen && filter?.address ? () => onOpen({ kind: 'holdings', address: filter.address! }) : undefined}
+          onAssets={
+            onOpen && filter?.address
+              ? () => onOpen({ kind: 'holdings', address: filter.address! })
+              : undefined
+          }
         />
       )
     }
     case 'asset.detail': {
       const derived = createAssetDetailViewModel(store, view)
       return (
-        <AssetCard model={derived.ok ? derived.model : undefined} width={width} onTransactions={onTransactions} />
+        <AssetCard
+          model={derived.ok ? derived.model : undefined}
+          width={width}
+          onTransactions={onTransactions}
+        />
       )
     }
     case 'application.detail': {
@@ -173,7 +185,8 @@ export function ResultView({
           onTransactions={onTransactions}
           onExplain={
             onOpen && derived.ok
-              ? () => onOpen({ kind: 'program', applicationId: Number(derived.model.applicationId) })
+              ? () =>
+                  onOpen({ kind: 'program', applicationId: Number(derived.model.applicationId) })
               : undefined
           }
         />
@@ -182,7 +195,11 @@ export function ResultView({
     case 'block.detail': {
       const derived = createBlockDetailViewModel(store, view)
       return (
-        <BlockCard model={derived.ok ? derived.model : undefined} width={width} onTransactions={onTransactions} />
+        <BlockCard
+          model={derived.ok ? derived.model : undefined}
+          width={width}
+          onTransactions={onTransactions}
+        />
       )
     }
     case 'network.status': {
@@ -304,7 +321,9 @@ export function ResultView({
           onMore={more}
           loadingMore={loadingMore}
           width={width}
-          onOpen={onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined}
+          onOpen={
+            onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined
+          }
         />
       )
     }
@@ -337,7 +356,9 @@ export function ResultView({
     }
     case 'application.explanation': {
       const derived = createApplicationExplanationViewModel(store, view)
-      return <ApplicationExplanationCard model={derived.ok ? derived.model : undefined} width={width} />
+      return (
+        <ApplicationExplanationCard model={derived.ok ? derived.model : undefined} width={width} />
+      )
     }
     case 'application.logs': {
       const derived = createApplicationLogsViewModel(store, view)

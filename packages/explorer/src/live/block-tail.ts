@@ -4,7 +4,7 @@
  * produce. Renderers append those records to the feed; this module never
  * owns UI.
  */
-import type { FormattedTransaction } from '@initlabs/vibekit-tools'
+import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { buildBlockDetailRecord } from '../views/block.js'
@@ -105,7 +105,9 @@ export function tickFromAlgodBlock(
     timestamp,
     transactionCount: transactions.length,
     ...(proposer && proposer.length > 0 ? { proposer } : {}),
-    ...(header.feesCollected != null ? { feesCollectedMicroAlgos: safeUint64(header.feesCollected) } : {}),
+    ...(header.feesCollected != null
+      ? { feesCollectedMicroAlgos: safeUint64(header.feesCollected) }
+      : {}),
     ...(header.proposerPayout != null
       ? { proposerPayoutMicroAlgos: safeUint64(header.proposerPayout) }
       : {}),

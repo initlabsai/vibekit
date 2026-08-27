@@ -28,7 +28,9 @@ export interface AgentDefinition {
   cliCommand?: string
 }
 
-const pointerContent = (relativeAgentsMd = './AGENTS.md') => `All agents should read \`AGENTS.md\` as the canonical source for project guidance.
+const pointerContent = (
+  relativeAgentsMd = './AGENTS.md',
+) => `All agents should read \`AGENTS.md\` as the canonical source for project guidance.
 
 See [AGENTS.md](${relativeAgentsMd}) for:
 
@@ -109,7 +111,8 @@ export const AGENTS = {
     baseConfigTemplate: { mcpServers: {} },
     mcpServersKey: 'mcpServers',
     skillsDir: '.pi/skills',
-    authInstructions: 'In pi: /mcp-auth kapa (first time; lazy servers show "not cached" until first use)',
+    authInstructions:
+      'In pi: /mcp-auth kapa (first time; lazy servers show "not cached" until first use)',
     setupNote: 'Pi needs the MCP adapter once: pi install npm:pi-mcp-adapter',
     cliCommand: 'pi',
   },

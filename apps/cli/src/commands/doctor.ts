@@ -18,7 +18,14 @@ import { writeJsonFile } from '../utils/files.js'
 /** The previous release's (0.x, gabrielkuettel/vibekit) MCP server key. */
 export const LEGACY_SERVER_KEY = 'vibekit-mcp'
 /** v1-era env vars that mean nothing to the v2 server. */
-const LEGACY_ENV_VARS = ['ALGORAND_NETWORK', 'ALGORAND_ALGOD', 'ALGORAND_TOKEN', 'ALGORAND_KMD', 'ALGORAND_KMD_TOKEN', 'ALGORAND_INDEXER']
+const LEGACY_ENV_VARS = [
+  'ALGORAND_NETWORK',
+  'ALGORAND_ALGOD',
+  'ALGORAND_TOKEN',
+  'ALGORAND_KMD',
+  'ALGORAND_KMD_TOKEN',
+  'ALGORAND_INDEXER',
+]
 
 export interface McpIssue {
   code: 'legacy-key' | 'bunfs-path' | 'missing-binary' | 'legacy-env' | 'no-vibekit-entry'
@@ -125,10 +132,14 @@ export async function commandDoctor(args: string[]): Promise<void> {
   const self = selfPath()
   const onPath = Bun.which('vibekit')
   if (!onPath) {
-    warn(`vibekit is not on PATH (running from ${self}) — agent configs use absolute paths, so this is fine`)
+    warn(
+      `vibekit is not on PATH (running from ${self}) — agent configs use absolute paths, so this is fine`,
+    )
   } else if (looksLikeV1(await runHelp(onPath))) {
     problems++
-    bad(`legacy vibekit found on PATH (the previous 0.x release, github.com/gabrielkuettel/vibekit): ${onPath}`)
+    bad(
+      `legacy vibekit found on PATH (the previous 0.x release, github.com/gabrielkuettel/vibekit): ${onPath}`,
+    )
     if (fix && existsSync(self) && basename(self) === 'vibekit' && self !== onPath) {
       await unlink(onPath) // survives "text file busy" when a v1 process is live
       await copyFile(self, onPath)
@@ -182,7 +193,17 @@ export async function commandDoctor(args: string[]): Promise<void> {
     warn('Docker not found (needed for `vibekit localnet`)')
   }
 
-  // 4. Keystore (for signing) — managed install, self-healing via --fix
+  // 4. Node (the keystore CLI installs with npm and runs under node)
+  if (Bun.which('node')) {
+    ok('node found (the keystore daemon runs under it)')
+  } else {
+    warn('node not found — signing is unavailable; the keystore daemon is a Node program')
+  }
+  if (!Bun.which('npm')) {
+    warn('npm not found — needed once to provision the keystore CLI')
+  }
+
+  // 5. Keystore (for signing) — managed install, self-healing via --fix
   if (!isProvisioned()) {
     if (fix) {
       try {
@@ -193,7 +214,9 @@ export async function commandDoctor(args: string[]): Promise<void> {
         bad(`keystore CLI could not be provisioned: ${err instanceof Error ? err.message : err}`)
       }
     } else {
-      warn(`keystore CLI not provisioned — any \`vibekit keystore\` command (or doctor --fix) installs the pinned version`)
+      warn(
+        `keystore CLI not provisioned — any \`vibekit keystore\` command (or doctor --fix) installs the pinned version`,
+      )
     }
   } else {
     ok(`keystore CLI managed at the pinned version (${KEYSTORE_NODE_VERSION})`)
@@ -210,7 +233,10 @@ export async function commandDoctor(args: string[]): Promise<void> {
 
   console.log()
   if (problems > 0) {
-    console.log(pc.red(`${problems} problem(s) found.`) + (fix ? '' : pc.dim(' Re-run with --fix to repair.')))
+    console.log(
+      pc.red(`${problems} problem(s) found.`) +
+        (fix ? '' : pc.dim(' Re-run with --fix to repair.')),
+    )
     process.exitCode = 1
   } else {
     console.log(pc.green('No blocking problems found.'))

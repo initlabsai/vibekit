@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import { viewDataSchemas, type ViewData } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas, type ViewData } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
@@ -166,13 +166,10 @@ export function buildApplicationDetailRecord(
   wire: unknown,
   toolName = 'lookup_application',
 ): StructuredResult {
-  const { globalState, ...application } =
-    viewDataSchemas['application.detail'].parse(wire)
+  const { globalState, ...application } = viewDataSchemas['application.detail'].parse(wire)
   const data: ApplicationDetailData = {
     ...application,
-    account: String(
-      algosdk.getApplicationAddress(BigInt(application.applicationId)),
-    ),
+    account: String(algosdk.getApplicationAddress(BigInt(application.applicationId))),
     globalStateCount: globalState?.length ?? 0,
     ...(globalState?.length ? { globalState: globalState.map(decodeGlobalEntry) } : {}),
   }
@@ -218,8 +215,7 @@ export function buildApplicationStateRecord(
   return record(identity, toolName, data)
 }
 
-type LocalKeyValue =
-  ViewData<'application.locals'>['appLocalStates'][number]['keyValue'][number]
+type LocalKeyValue = ViewData<'application.locals'>['appLocalStates'][number]['keyValue'][number]
 
 function localStateEntry(entry: LocalKeyValue) {
   // Algod state types: 1 = bytes, 2 = uint.

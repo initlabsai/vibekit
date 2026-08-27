@@ -1,10 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  classifyExplorerInput,
-} from '../src/index.js'
+import { FIXTURE_SENDER, FIXTURE_TRANSACTION_ID, classifyExplorerInput } from '../src/index.js'
 
 describe('deterministic Explorer input classification', () => {
   test('recognizes a canonical Algorand transaction ID', () => {

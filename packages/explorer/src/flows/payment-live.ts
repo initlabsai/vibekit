@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
@@ -76,7 +76,11 @@ function algoEffectsFromFacts(
   if (facts.graphTransactions && facts.graphTransactions.length > 0) {
     for (const txn of facts.graphTransactions) {
       add(txn.sender, -BigInt(txn.feeMicroAlgos))
-      if (txn.type === 'pay' && txn.receiver !== undefined && txn.paymentAmountMicroAlgos !== undefined) {
+      if (
+        txn.type === 'pay' &&
+        txn.receiver !== undefined &&
+        txn.paymentAmountMicroAlgos !== undefined
+      ) {
         const amount = BigInt(txn.paymentAmountMicroAlgos)
         add(txn.sender, -amount)
         add(txn.receiver, amount)
@@ -116,7 +120,9 @@ export function buildPaymentDraftRecord(
       transactions: compose.unsignedGroup,
       summary: compose.summary,
     },
-    ...(facts.graphTransactions === undefined ? {} : { graphTransactions: facts.graphTransactions }),
+    ...(facts.graphTransactions === undefined
+      ? {}
+      : { graphTransactions: facts.graphTransactions }),
   })
   return structuredResultSchema.parse({
     protocolVersion: EXPLORER_PROTOCOL_VERSION,
@@ -356,7 +362,11 @@ export async function performLivePaymentStep(input: {
         const record = await host.simulateDraft(draftRecord)
         store = addResult(store, record)
         return advance(
-          createWriteStageEvent({ stage: 'simulate', flowId: flow.flowId, simulation: resultRef(record) }),
+          createWriteStageEvent({
+            stage: 'simulate',
+            flowId: flow.flowId,
+            simulation: resultRef(record),
+          }),
           flow,
         )
       }
@@ -365,7 +375,11 @@ export async function performLivePaymentStep(input: {
         // Inspection reviews exactly the flow's simulation; before one exists there is no event.
         return advance(
           flow.simulation &&
-            createWriteStageEvent({ stage: 'inspect', flowId: flow.flowId, inspection: flow.simulation }),
+            createWriteStageEvent({
+              stage: 'inspect',
+              flowId: flow.flowId,
+              inspection: flow.simulation,
+            }),
           flow,
         )
       }
@@ -386,7 +400,10 @@ export async function performLivePaymentStep(input: {
         if (!flow) return { ok: false, message: 'No payment flow is open' }
         return advance(
           flow.approvalRequest &&
-            createApprovalDecisionEvent({ requestId: flow.approvalRequest.requestId, state: 'approved' }),
+            createApprovalDecisionEvent({
+              requestId: flow.approvalRequest.requestId,
+              state: 'approved',
+            }),
           flow,
         )
       }
@@ -432,7 +449,11 @@ export async function performLivePaymentStep(input: {
         const record = await host.submitSigned(signedRecord)
         store = addResult(store, record)
         return advance(
-          createWriteStageEvent({ stage: 'confirm', flowId: flow.flowId, confirmation: resultRef(record) }),
+          createWriteStageEvent({
+            stage: 'confirm',
+            flowId: flow.flowId,
+            confirmation: resultRef(record),
+          }),
           flow,
         )
       }

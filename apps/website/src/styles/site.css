@@ -71,8 +71,11 @@ a { color: inherit; text-decoration: none; }
   73% { clip-path: inset(35% 0 40% 0); transform: translate(-.3rem, 0); }
   75% { opacity: 0; }
 }
-.install { background: var(--card); border: 1px solid var(--border-soft); color: var(--text); font-family: var(--font-mono); font-size: .72rem; margin: 1.6rem 0 0; max-width: 22rem; padding: .7rem .9rem; }
+.install { background: var(--card); border: 1px solid var(--border-soft); color: var(--text); font-family: var(--font-mono); font-size: .72rem; margin: 1.6rem 0 0; max-width: 100%; overflow: hidden; padding: .7rem 3.6rem .7rem .9rem; position: relative; width: fit-content; }
 .install span { color: var(--brass); margin-right: .5rem; }
+.install .copy { background: none; border: 0; border-left: 1px solid var(--border-soft); color: var(--muted); cursor: pointer; font: inherit; padding: .7rem .75rem; position: absolute; right: 0; top: 0; bottom: 0; transition: background .15s, color .15s; }
+.install .copy:hover { background: var(--card-lit); color: var(--brass-bright); }
+.install .copy:focus-visible { color: var(--brass-bright); outline: 1px solid var(--brass); outline-offset: -1px; }
 
 .hero { align-items: center; display: grid; gap: clamp(2.5rem, 5vw, 6rem); grid-template-columns: minmax(20rem, .78fr) minmax(32rem, 1.22fr); min-height: calc(100vh - 4.4rem); padding-bottom: clamp(4rem, 8vw, 7rem); padding-top: clamp(3rem, 7vw, 6rem); }
 .hero-copy { padding-block: 2rem; position: relative; z-index: 1; }

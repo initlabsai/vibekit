@@ -53,7 +53,9 @@ describe('algod transaction formatting', () => {
       paymentAmountMicroAlgos: 250000,
       confirmedRound: 22,
     })
-    expect(typeof formatted.feeMicroAlgos === 'number' && formatted.feeMicroAlgos >= 1000).toBe(true)
+    expect(typeof formatted.feeMicroAlgos === 'number' && formatted.feeMicroAlgos >= 1000).toBe(
+      true,
+    )
     expect(formatted.id).toBe(txn.txID())
   })
 })
@@ -71,7 +73,9 @@ describe('tickFromAlgodBlock', () => {
       toolName: 'search_transactions',
       state: 'success',
     })
-    const data = result.transactions.data as { transactions: Array<{ sender: string; type?: string }> }
+    const data = result.transactions.data as {
+      transactions: Array<{ sender: string; type?: string }>
+    }
     expect(data.transactions[0]?.sender).toBe(FIXTURE_SENDER)
     expect(data.transactions[0]?.type).toBe('pay')
   })

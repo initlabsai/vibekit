@@ -4,17 +4,38 @@ import type { InputRenderable, SubmitEvent as OpenTUISubmitEvent } from '@opentu
 
 import { useEffect, useState, type RefObject } from 'react'
 
-import { Button, Fact, FooterNote, Frame, Header, Hero, HighlightContext, Ident, innerWidth, Rule, usePulse } from './ui.js'
+import {
+  Button,
+  Fact,
+  FooterNote,
+  Frame,
+  Header,
+  Hero,
+  HighlightContext,
+  Ident,
+  innerWidth,
+  Rule,
+  usePulse,
+} from './ui.js'
 import { ResultView, type OpenTarget } from './views.js'
-import { deployMethod, type AppGroup, type AppStateEntry, type SpecSelection } from './slices/apps.js'
-import type { ParsedMethod } from '@initlabs/vibekit-tools'
+import {
+  deployMethod,
+  type AppGroup,
+  type AppStateEntry,
+  type SpecSelection,
+} from './slices/apps.js'
+import type { ParsedMethod } from '@initlabs/vibekit/tools'
 import { methodPrompt } from './method-args.js'
 import { breath, COLORS, shorten } from './theme.js'
 
 /** Workspace pages that sit beside the chat transcript. */
 export type WorkspaceScreen = 'chat' | 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' | 'plugins'
 
-const SHELF: ReadonlyArray<{ id: Exclude<WorkspaceScreen, 'chat' | 'wallet'>; label: string; shortcut: string }> = [
+const SHELF: ReadonlyArray<{
+  id: Exclude<WorkspaceScreen, 'chat' | 'wallet'>
+  label: string
+  shortcut: string
+}> = [
   { id: 'assets', label: 'assets', shortcut: '^1' },
   { id: 'apps', label: 'apps', shortcut: '^2' },
   { id: 'txns', label: 'txns', shortcut: '^3' },
@@ -121,7 +142,11 @@ export function TopBar({
       </box>
       <box flexDirection="row" justifyContent="space-between" height={1}>
         <box flexDirection="row" gap={tight ? 1 : 2}>
-          <Button label={tight ? 'explore' : 'explore esc'} active={screen === 'chat'} onPress={onOpenChat} />
+          <Button
+            label={tight ? 'explore' : 'explore esc'}
+            active={screen === 'chat'}
+            onPress={onOpenChat}
+          />
           {SHELF.map((item) => (
             <Button
               key={item.id}
@@ -265,7 +290,9 @@ export function WalletScreen({
                   {`${selected ? '▸' : ' '}[${index + 1}] ${account.name ?? '—'}`}
                 </text>
                 <box flexDirection="row" gap={2}>
-                  <text fg={balances[account.address] === undefined ? COLORS.faint : COLORS.brassBright}>
+                  <text
+                    fg={balances[account.address] === undefined ? COLORS.faint : COLORS.brassBright}
+                  >
                     {balances[account.address] === undefined
                       ? '—'
                       : `${formatMicroAlgos(balances[account.address]!)} ALGO`}
@@ -278,7 +305,10 @@ export function WalletScreen({
                 </box>
               </box>
               {/* Plain text on purpose: a click here selects the account; drag still copies. */}
-              <text fg={selected ? COLORS.signal : COLORS.muted} content={shorten(account.address, inner)} />
+              <text
+                fg={selected ? COLORS.signal : COLORS.muted}
+                content={shorten(account.address, inner)}
+              />
             </box>
           )
         })
@@ -302,7 +332,9 @@ function formatCallResult(result: unknown): string {
   if (record.failureMessage) lines.push(record.failureMessage)
   const value = record.returns?.[0]?.value
   if (value !== undefined) {
-    lines.push(`return: ${typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value)}`)
+    lines.push(
+      `return: ${typeof value === 'string' || typeof value === 'number' ? String(value) : JSON.stringify(value)}`,
+    )
   }
   return lines.join('\n') || JSON.stringify(result)
 }
@@ -361,14 +393,30 @@ function MethodCall({
   return (
     <box flexDirection="column" paddingLeft={4}>
       <text fg={COLORS.faint} content={shorten(mode, width - 4)} />
-      <box height={3} flexDirection="row" alignItems="center" paddingX={1} border borderStyle="single" borderColor={COLORS.brass}>
+      <box
+        height={3}
+        flexDirection="row"
+        alignItems="center"
+        paddingX={1}
+        border
+        borderStyle="single"
+        borderColor={COLORS.brass}
+      >
         <text fg={COLORS.brassBright}>{`${methodPrompt(method)} ❯ `}</text>
         <input
           key={callEpoch}
           ref={inputRef}
           flexGrow={1}
           focused
-          placeholder={deploy ? method.args.map((arg) => `${arg.name}=…`).join(' ') : method.args.length === 0 ? (readonly ? 'enter to simulate' : 'enter to compose') : example}
+          placeholder={
+            deploy
+              ? method.args.map((arg) => `${arg.name}=…`).join(' ')
+              : method.args.length === 0
+                ? readonly
+                  ? 'enter to simulate'
+                  : 'enter to compose'
+                : example
+          }
           onInput={onInput}
           onSubmit={submitHandler}
         />
@@ -386,9 +434,13 @@ function MethodCall({
           width - 4,
         )}
       />
-      {callBusy ? <text fg={COLORS.muted} content={readonly && !deploy ? 'Simulating…' : 'Composing…'} /> : null}
+      {callBusy ? (
+        <text fg={COLORS.muted} content={readonly && !deploy ? 'Simulating…' : 'Composing…'} />
+      ) : null}
       {callError ? <text fg={COLORS.brassBright} content={shorten(callError, width - 4)} /> : null}
-      {callResult !== null ? <text fg={COLORS.text} content={formatCallResult(callResult)} /> : null}
+      {callResult !== null ? (
+        <text fg={COLORS.text} content={formatCallResult(callResult)} />
+      ) : null}
     </box>
   )
 }
@@ -445,21 +497,31 @@ function AppGroupCard({
   const appId = selected?.appId ?? newest?.appId ?? group.optedIn[0]
   const creator = newest?.creator
   const creatorLabel =
-    creator === undefined ? undefined : creator === sender ? `${accountName ?? shorten(creator, 16)} · this account` : creator
-  const status = group.deployed.length > 0 ? 'DEPLOYED' : group.optedIn.length > 0 ? 'OPTED IN' : 'NOT DEPLOYED'
+    creator === undefined
+      ? undefined
+      : creator === sender
+        ? `${accountName ?? shorten(creator, 16)} · this account`
+        : creator
+  const status =
+    group.deployed.length > 0 ? 'DEPLOYED' : group.optedIn.length > 0 ? 'OPTED IN' : 'NOT DEPLOYED'
   const live = new Map((globalState ?? []).map((entry) => [entry.key, entry.value]))
   const keys = spec?.stateKeys
   const stateRows = keys
     ? (['global', 'local', 'box'] as const).flatMap((scope) =>
         Object.entries(keys[scope]).map(([name, info]) => {
           const value = scope === 'global' ? live.get(name) : undefined
-          return { label: name, value: `${scope} · ${info.valueType}${value === undefined ? '' : ` = ${value}`}` }
+          return {
+            label: name,
+            value: `${scope} · ${info.valueType}${value === undefined ? '' : ` = ${value}`}`,
+          }
         }),
       )
     : []
   const bare = spec?.bareActions
   const schema = spec?.schema
-  const hasSchema = schema ? schema.globalInts + schema.globalBytes + schema.localInts + schema.localBytes > 0 : false
+  const hasSchema = schema
+    ? schema.globalInts + schema.globalBytes + schema.localInts + schema.localBytes > 0
+    : false
   const ids = (list: ReadonlyArray<{ appId: number } | number>) =>
     list.map((entry) => `#${typeof entry === 'number' ? entry : entry.appId}`).join(' · ')
   return (
@@ -480,23 +542,46 @@ function AppGroupCard({
         {appId !== undefined ? <Hero value={`#${appId}`} copy={String(appId)} /> : null}
         <box marginTop={1} flexDirection="column">
           <Rule width={body} />
-          {creatorLabel ? <Fact label="creator" value={creatorLabel} copy={creator} width={body} /> : null}
+          {creatorLabel ? (
+            <Fact label="creator" value={creatorLabel} copy={creator} width={body} />
+          ) : null}
           {group.deployed.length > 1 ? (
-            <Fact label="deploys" value={`${group.deployed.length} · ${ids(group.deployed)}`} width={body} />
+            <Fact
+              label="deploys"
+              value={`${group.deployed.length} · ${ids(group.deployed)}`}
+              width={body}
+            />
           ) : null}
           {group.optedIn.length > 0 && status === 'DEPLOYED' ? (
             <Fact label="opted in" value={ids(group.optedIn)} width={body} />
           ) : null}
           {group.specs.map((file, i) => (
-            <Fact key={file.path} label={i === 0 ? 'spec' : 'also'} value={file.path} width={body} />
+            <Fact
+              key={file.path}
+              label={i === 0 ? 'spec' : 'also'}
+              value={file.path}
+              width={body}
+            />
           ))}
           {spec?.description ? <Fact label="about" value={spec.description} width={body} /> : null}
-          {hasSchema && schema ? <Fact label="g-uint" value={String(schema.globalInts)} width={body} /> : null}
-          {hasSchema && schema ? <Fact label="g-bytes" value={String(schema.globalBytes)} width={body} /> : null}
-          {hasSchema && schema ? <Fact label="l-uint" value={String(schema.localInts)} width={body} /> : null}
-          {hasSchema && schema ? <Fact label="l-bytes" value={String(schema.localBytes)} width={body} /> : null}
+          {hasSchema && schema ? (
+            <Fact label="g-uint" value={String(schema.globalInts)} width={body} />
+          ) : null}
+          {hasSchema && schema ? (
+            <Fact label="g-bytes" value={String(schema.globalBytes)} width={body} />
+          ) : null}
+          {hasSchema && schema ? (
+            <Fact label="l-uint" value={String(schema.localInts)} width={body} />
+          ) : null}
+          {hasSchema && schema ? (
+            <Fact label="l-bytes" value={String(schema.localBytes)} width={body} />
+          ) : null}
           {bare && (bare.create.length > 0 || bare.call.length > 0) ? (
-            <Fact label="bare" value={`create ${bare.create.join('/') || '—'} · call ${bare.call.join('/') || '—'}`} width={body} />
+            <Fact
+              label="bare"
+              value={`create ${bare.create.join('/') || '—'} · call ${bare.call.join('/') || '—'}`}
+              width={body}
+            />
           ) : null}
           {spec && spec.templateVariables.length > 0 ? (
             <Fact label="templates" value={spec.templateVariables.join(', ')} width={body} />
@@ -520,33 +605,63 @@ function AppGroupCard({
                   const label = selected ? `[${i + 1}] ${method.signature}` : method.signature
                   return (
                     <box key={method.signature} flexDirection="column">
-                      <box flexDirection="row" height={1} onMouseDown={selected ? () => onSelectMethod(method) : undefined}>
-                        <text fg={open ? COLORS.brassBright : COLORS.text} content={shorten(label, body - 8)} />
-                        <text fg={COLORS.faint} content={`  ${method.readonly ? 'read' : 'write'}`} />
+                      <box
+                        flexDirection="row"
+                        height={1}
+                        onMouseDown={selected ? () => onSelectMethod(method) : undefined}
+                      >
+                        <text
+                          fg={open ? COLORS.brassBright : COLORS.text}
+                          content={shorten(label, body - 8)}
+                        />
+                        <text
+                          fg={COLORS.faint}
+                          content={`  ${method.readonly ? 'read' : 'write'}`}
+                        />
                       </box>
                       {method.description ? (
-                        <text fg={COLORS.faint} content={`    ${shorten(method.description, body - 4)}`} />
+                        <text
+                          fg={COLORS.faint}
+                          content={`    ${shorten(method.description, body - 4)}`}
+                        />
                       ) : null}
-                      {open && selected ? <MethodCall selected={selected} method={method} width={body} {...call} /> : null}
+                      {open && selected ? (
+                        <MethodCall selected={selected} method={method} width={body} {...call} />
+                      ) : null}
                     </box>
                   )
                 })
               )}
-              {spec.methods.length > 9 ? <FooterNote text={`${spec.methods.length - 9} more methods`} width={body} /> : null}
+              {spec.methods.length > 9 ? (
+                <FooterNote text={`${spec.methods.length - 9} more methods`} width={body} />
+              ) : null}
               {selected && deployOpen ? (
                 <box flexDirection="column" marginTop={1}>
                   <text fg={COLORS.brassBright} content={`deploy ${spec.name}`} />
-                  <MethodCall selected={selected} method={deployMethod(spec)} width={body} deploy {...call} />
+                  <MethodCall
+                    selected={selected}
+                    method={deployMethod(spec)}
+                    width={body}
+                    deploy
+                    {...call}
+                  />
                 </box>
               ) : null}
               {selected && !deployOpen && call.callBusy && !selectedMethod ? (
                 <text fg={COLORS.muted} marginTop={1} content="Composing the deploy…" />
               ) : null}
               {selected && !deployOpen && call.callError && !selectedMethod ? (
-                <text fg={COLORS.brassBright} marginTop={1} content={shorten(call.callError, body)} />
+                <text
+                  fg={COLORS.brassBright}
+                  marginTop={1}
+                  content={shorten(call.callError, body)}
+                />
               ) : null}
               {selected ? (
-                <FooterNote text="One call per review here. Groups and multi-step flows: ask the agent — it has these methods as tools." width={body} />
+                <FooterNote
+                  text="One call per review here. Groups and multi-step flows: ask the agent — it has these methods as tools."
+                  width={body}
+                />
               ) : null}
             </>
           ) : (
@@ -666,7 +781,13 @@ export function AppsScreen({
               )
             })}
             {loading ? <FooterNote text="Detecting deployments…" width={cardWidth} /> : null}
-            {deployedError ? <text fg={COLORS.brassBright} marginTop={1} content={shorten(deployedError, cardWidth)} /> : null}
+            {deployedError ? (
+              <text
+                fg={COLORS.brassBright}
+                marginTop={1}
+                content={shorten(deployedError, cardWidth)}
+              />
+            ) : null}
           </>
         )}
       </scrollbox>

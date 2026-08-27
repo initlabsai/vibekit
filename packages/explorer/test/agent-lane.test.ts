@@ -75,7 +75,12 @@ describe('agent lane result bridge', () => {
       confirmedRound: 23,
       assetId: 0,
       createdAssetId: 987,
-      assetConfig: { total: '18446744073709551615', decimals: 6, unitName: 'MAX', manager: recorded.request.sender },
+      assetConfig: {
+        total: '18446744073709551615',
+        decimals: 6,
+        unitName: 'MAX',
+        manager: recorded.request.sender,
+      },
       signer: recorded.request.receiver,
     }
     const record = buildTransactionDetailRecord(identity(), wire)

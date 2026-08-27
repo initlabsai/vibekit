@@ -8,7 +8,15 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import pc from 'picocolors'
 
 const TUI_ENTRIES = ['apps/tui/src/index.tsx', 'apps/tui/dist/index.js'] as const
-const SIDECAR_NAMES = ['vibekit-tui', 'vibekit-explore'] as const
+// The .exe variants are what the Windows installer writes; listing them
+// unconditionally avoids a platform branch (a bare `vibekit-tui` never
+// exists on Windows, and `.exe` never exists on POSIX).
+const SIDECAR_NAMES = [
+  'vibekit-tui',
+  'vibekit-tui.exe',
+  'vibekit-explore',
+  'vibekit-explore.exe',
+] as const
 
 export interface ResolveExploreOptions {
   env?: Record<string, string | undefined>
@@ -30,11 +38,7 @@ export function resolveExploreEntry(options: ResolveExploreOptions = {}): string
   // process.execPath is the only start that locates an installed sidecar:
   // inside a compiled binary import.meta.dir is the virtual /$bunfs root,
   // and cwd is wherever the user ran the command.
-  const startDirs = options.startDirs ?? [
-    process.cwd(),
-    dirname(process.execPath),
-    import.meta.dir,
-  ]
+  const startDirs = options.startDirs ?? [process.cwd(), dirname(process.execPath), import.meta.dir]
   for (const start of startDirs) {
     let dir = resolve(start)
     for (let depth = 0; depth < 8; depth += 1) {
@@ -72,7 +76,7 @@ async function ensureDaemons(): Promise<void> {
   await ensureKeystoreDaemon()
 
   const { loadStoredAgentConfig, probeZeroSignal, zeroSignalBaseUrl, zeroSignalSetupHint } =
-    await import('@initlabs/vibekit-agent/config')
+    await import('@initlabs/vibekit/agent/config')
   const stored = loadStoredAgentConfig()
   const provider = process.env.VIBEKIT_AGENT_PROVIDER ?? stored?.provider
   if (provider !== 'zerosignal') return
@@ -86,7 +90,11 @@ async function ensureDaemons(): Promise<void> {
   // `proxy start` daemonizes itself and returns; its first run may prompt,
   // so it keeps the terminal.
   console.error(pc.dim('starting zs-proxy…'))
-  await Bun.spawn([bin, 'proxy', 'start'], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }).exited
+  await Bun.spawn([bin, 'proxy', 'start'], {
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
+  }).exited
   const deadline = Date.now() + 5000
   while (Date.now() < deadline) {
     await Bun.sleep(200)

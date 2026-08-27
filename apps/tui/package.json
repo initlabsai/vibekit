@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit-tui",
   "private": true,
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "description": "The VibeKit OpenTUI/React Explorer.",
   "type": "module",
   "scripts": {
@@ -16,14 +16,8 @@
     "build:win32-x64": "bun build src/index.tsx --compile --target=bun-windows-x64 --outfile bin/vibekit-tui-win32-x64.exe"
   },
   "dependencies": {
-    "@initlabs/vibekit-agent": "workspace:*",
-    "@initlabs/vibekit-core": "workspace:*",
+    "@initlabs/vibekit": "workspace:*",
     "@initlabs/vibekit-explorer": "workspace:*",
-    "@initlabs/vibekit-plugin-nfd": "workspace:*",
-    "@initlabs/vibekit-plugin-pera": "workspace:*",
-    "@initlabs/vibekit-plugin-vestige": "workspace:*",
-    "@initlabs/vibekit-signer-keystore": "workspace:*",
-    "@initlabs/vibekit-tools": "workspace:*",
     "@opentui/core": "0.5.6",
     "@opentui/react": "0.5.6",
     "algosdk": "3.7.0",
@@ -32,8 +26,8 @@
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
-    "ai": "^7.0.74",
     "@types/react": "^19.2.18",
+    "ai": "^7.0.74",
     "typescript": "^5.9.3"
   }
 }

@@ -111,7 +111,9 @@ export function useFeed() {
   /** Nav jump: the section's first card takes the cursor and the section scrolls into view. */
   const selectSection = useCallback(
     (id: number) => {
-      const first = sectionsRef.current.find((section) => section.id === id)?.items.find((item) => item.kind === 'block')
+      const first = sectionsRef.current
+        .find((section) => section.id === id)
+        ?.items.find((item) => item.kind === 'block')
       setCursor(id, first?.id ?? null)
       scrollToSection(id)
     },
@@ -136,7 +138,9 @@ export function useFeed() {
   const updateSection = useCallback(
     (sectionId: number, update: (section: Section) => Section) => {
       commitSections(
-        sectionsRef.current.map((section) => (section.id === sectionId ? update(section) : section)),
+        sectionsRef.current.map((section) =>
+          section.id === sectionId ? update(section) : section,
+        ),
       )
     },
     [commitSections],
@@ -213,11 +217,14 @@ export function useFeed() {
   const moveSelection = useCallback(
     (delta: number) => {
       const cards = sectionsRef.current.flatMap((section) =>
-        section.items.flatMap((item) => (item.kind === 'block' ? [{ sectionId: section.id, itemId: item.id }] : [])),
+        section.items.flatMap((item) =>
+          item.kind === 'block' ? [{ sectionId: section.id, itemId: item.id }] : [],
+        ),
       )
       if (cards.length === 0) return
       const current = cards.findIndex((card) => card.itemId === cursorRef.current)
-      const index = current < 0 ? cards.length - 1 : Math.min(cards.length - 1, Math.max(0, current + delta))
+      const index =
+        current < 0 ? cards.length - 1 : Math.min(cards.length - 1, Math.max(0, current + delta))
       const card = cards[index]!
       setCursor(card.sectionId, card.itemId)
       scrollToCard(card.itemId)

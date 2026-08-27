@@ -16,7 +16,7 @@ import {
   requestDeviceCode,
   saveDispenserToken,
   type KeystoreSigner,
-} from '@initlabs/vibekit-signer-keystore'
+} from '@initlabs/vibekit/signer-keystore'
 
 async function openDaemonSecrets(): Promise<KeystoreSigner> {
   try {

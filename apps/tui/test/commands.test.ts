@@ -51,9 +51,7 @@ describe('transcript command routing', () => {
     expect(routeComposerInput('asset 1042')).toEqual({ status: 'asset', assetId: 1042 })
     expect(routeComposerInput('app 1071')).toEqual({ status: 'application', applicationId: 1071 })
     expect(routeComposerInput('block 22')).toEqual({ status: 'block', round: 22 })
-    expect(
-      routeComposerInput('group AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='),
-    ).toEqual({
+    expect(routeComposerInput('group AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=')).toEqual({
       status: 'group',
       groupId: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
     })

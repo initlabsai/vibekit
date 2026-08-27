@@ -40,10 +40,25 @@ export function isProvisioned(dir: string = keystoreDataDir()): boolean {
   const pkg = join(dir, 'node_modules', '@algorandfoundation', 'keystore-node', 'package.json')
   if (!existsSync(pkg)) return false
   try {
-    return (JSON.parse(readFileSync(pkg, 'utf-8')) as { version?: string }).version === KEYSTORE_NODE_VERSION
+    return (
+      (JSON.parse(readFileSync(pkg, 'utf-8')) as { version?: string }).version ===
+      KEYSTORE_NODE_VERSION
+    )
   } catch {
     return false
   }
+}
+
+/**
+ * The managed keystore CLI is a `#!/usr/bin/env node` program, so node must be
+ * on PATH to *run* the daemon -- not just npm to install it. Without this the
+ * spawn succeeds and the daemon dies instantly, surfacing as a start timeout
+ * whose real cause is only in the log file.
+ */
+export function nodeMissingError(): string | undefined {
+  return Bun.which('node')
+    ? undefined
+    : 'node is required to run the keystore daemon (the keystore CLI is a Node program). Install Node.js and retry.'
 }
 
 /** Install the pinned keystore-node into the managed dir. Requires npm (golden-path dep). */
@@ -57,10 +72,19 @@ export async function provisionKeystoreCli(quiet = false): Promise<string> {
     )
   }
 
-  if (!quiet) console.error(pc.dim(`Provisioning keystore-node@${KEYSTORE_NODE_VERSION} into ${dir} ...`))
+  if (!quiet)
+    console.error(pc.dim(`Provisioning keystore-node@${KEYSTORE_NODE_VERSION} into ${dir} ...`))
   await mkdir(dir, { recursive: true })
   const proc = Bun.spawn(
-    ['npm', 'install', '--prefix', dir, '--no-fund', '--no-audit', `@algorandfoundation/keystore-node@${KEYSTORE_NODE_VERSION}`],
+    [
+      'npm',
+      'install',
+      '--prefix',
+      dir,
+      '--no-fund',
+      '--no-audit',
+      `@algorandfoundation/keystore-node@${KEYSTORE_NODE_VERSION}`,
+    ],
     { stdout: 'ignore', stderr: 'pipe' },
   )
   if ((await proc.exited) !== 0) {
@@ -73,9 +97,9 @@ export async function provisionKeystoreCli(quiet = false): Promise<string> {
 
 /** Connect to the running daemon, or undefined when it is not up. */
 async function connectSigner(): Promise<
-  import('@initlabs/vibekit-signer-keystore').KeystoreSigner | undefined
+  import('@initlabs/vibekit/signer-keystore').KeystoreSigner | undefined
 > {
-  const { createKeystoreSigner } = await import('@initlabs/vibekit-signer-keystore')
+  const { createKeystoreSigner } = await import('@initlabs/vibekit/signer-keystore')
   try {
     return await createKeystoreSigner()
   } catch {
@@ -132,6 +156,8 @@ export async function ensureKeystoreDaemon(
   const start =
     options.start ??
     (async () => {
+      const missingNode = nodeMissingError()
+      if (missingNode) throw new Error(missingNode)
       const bin = await provisionKeystoreCli(options.quiet)
       const log = keystoreLogPath()
       await mkdir(join(log, '..'), { recursive: true })
@@ -147,7 +173,9 @@ export async function ensureKeystoreDaemon(
     pid = await start()
   } catch (error) {
     if (!options.quiet) {
-      console.error(pc.yellow(`keystore: ${error instanceof Error ? error.message : String(error)}`))
+      console.error(
+        pc.yellow(`keystore: ${error instanceof Error ? error.message : String(error)}`),
+      )
     }
     return false
   }
@@ -156,12 +184,15 @@ export async function ensureKeystoreDaemon(
     await Bun.sleep(200)
     if (await probe()) {
       if (!options.quiet) {
-        console.error(pc.dim(`keystore daemon started${pid ? ` (pid ${pid})` : ''} · log ${keystoreLogPath()}`))
+        console.error(
+          pc.dim(`keystore daemon started${pid ? ` (pid ${pid})` : ''} · log ${keystoreLogPath()}`),
+        )
       }
       return true
     }
   }
-  if (!options.quiet) console.error(pc.yellow(`keystore daemon did not answer in time — see ${keystoreLogPath()}`))
+  if (!options.quiet)
+    console.error(pc.yellow(`keystore daemon did not answer in time — see ${keystoreLogPath()}`))
   return false
 }
 
@@ -192,7 +223,11 @@ async function keystoreStop(): Promise<void> {
     return
   }
   if (await keystoreDaemonUp()) {
-    console.error(pc.yellow('The daemon was not started by vibekit (a `keystore serve` in a terminal?) — stop it there.'))
+    console.error(
+      pc.yellow(
+        'The daemon was not started by vibekit (a `keystore serve` in a terminal?) — stop it there.',
+      ),
+    )
     process.exit(1)
   }
   console.log('keystore daemon is not running')
@@ -202,7 +237,11 @@ async function keystoreStop(): Promise<void> {
 async function keystoreStatus(): Promise<void> {
   const up = await keystoreDaemonUp()
   const pid = readDaemonPid()
-  console.log(up ? `keystore daemon is running${pid ? ` (pid ${pid})` : ''}` : 'keystore daemon is not running')
+  console.log(
+    up
+      ? `keystore daemon is running${pid ? ` (pid ${pid})` : ''}`
+      : 'keystore daemon is not running',
+  )
   if (!up) process.exitCode = 1
 }
 
@@ -215,7 +254,8 @@ async function keystoreStatus(): Promise<void> {
 async function keystoreGenerate(args: string[]): Promise<void> {
   const nameAt = args.findIndex((arg) => arg === '--name' || arg.startsWith('--name='))
   const name = nameAt < 0 ? undefined : (args[nameAt]!.split('=')[1] ?? args[nameAt + 1])
-  const signer = args[0] === 'ed25519' && (await keystoreDaemonUp()) ? await connectSigner() : undefined
+  const signer =
+    args[0] === 'ed25519' && (await keystoreDaemonUp()) ? await connectSigner() : undefined
   if (!signer) return passthrough(['generate', ...args])
   try {
     const { address, keyId } = await signer.createAccount(name)
@@ -237,7 +277,9 @@ async function keystoreAccounts(args: string[]): Promise<void> {
     if (args.includes('--json')) {
       console.log(JSON.stringify(accounts, null, 2))
     } else if (accounts.length === 0) {
-      console.log('No signing accounts. Create one: vibekit keystore generate ed25519 --name <label>')
+      console.log(
+        'No signing accounts. Create one: vibekit keystore generate ed25519 --name <label>',
+      )
     } else {
       for (const account of accounts) {
         const name = account.name ? `  ${pc.cyan(account.name)}` : ''
@@ -269,7 +311,9 @@ async function keystoreRemove(args: string[]): Promise<void> {
       const accounts = await signer.listAccounts()
       const byName = accounts.filter((account) => account.name === target)
       if (byName.length > 1) {
-        console.error(pc.red(`Name "${target}" matches ${byName.length} accounts — remove by address:`))
+        console.error(
+          pc.red(`Name "${target}" matches ${byName.length} accounts — remove by address:`),
+        )
         for (const account of byName) console.error(`  ${account.address}`)
         process.exit(1)
       }

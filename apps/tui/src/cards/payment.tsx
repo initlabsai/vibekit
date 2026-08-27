@@ -1,8 +1,5 @@
 import algosdk from 'algosdk'
-import {
-  formatMicroAlgos,
-  type PaymentFlowViewModel,
-} from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type PaymentFlowViewModel } from '@initlabs/vibekit-explorer'
 
 import { COLORS } from '../theme.js'
 import {
@@ -56,9 +53,14 @@ export function paymentLines(model: PaymentFlowViewModel): string[] {
 }
 
 /** `HiWorld.hi(name: "gabe") → app 1018` (describeCall) pulled apart for display; undefined for any other summary. */
-export function parseCallSummary(
-  summary: string,
-): { call: string; appId: string; args: Array<{ name: string; value: string }>; fundMicroAlgos?: number } | undefined {
+export function parseCallSummary(summary: string):
+  | {
+      call: string
+      appId: string
+      args: Array<{ name: string; value: string }>
+      fundMicroAlgos?: number
+    }
+  | undefined {
   const match = /^([\w.]+)\((.*)\) → app (\d+)(?: · funds app (\d+) µALGO)?$/s.exec(summary)
   if (!match) return undefined
   const [, call, inner, appId, fund] = match
@@ -67,7 +69,7 @@ export function parseCallSummary(
   let depth = 0
   let quote = false
   for (const ch of inner!) {
-    if (ch === '"' ) quote = !quote
+    if (ch === '"') quote = !quote
     if (!quote) {
       if ('[{('.includes(ch)) depth += 1
       if (']})'.includes(ch)) depth -= 1
@@ -82,7 +84,9 @@ export function parseCallSummary(
   if (current.trim()) parts.push(current.trim())
   const args = parts.map((part) => {
     const colon = part.indexOf(': ')
-    return colon > 0 ? { name: part.slice(0, colon), value: part.slice(colon + 2) } : { name: '', value: part }
+    return colon > 0
+      ? { name: part.slice(0, colon), value: part.slice(colon + 2) }
+      : { name: '', value: part }
   })
   return { call: call!, appId: appId!, args, ...(fund ? { fundMicroAlgos: Number(fund) } : {}) }
 }
@@ -99,8 +103,11 @@ export function minBalanceHint(failureMessage: string, summary: string): string 
   // Round up to the next 0.01 ALGO so one retry is enough.
   const algo = (Math.ceil(short / 10_000) / 100).toFixed(2)
   const parsed = parseCallSummary(summary)
-  const appAddress = parsed ? algosdk.getApplicationAddress(BigInt(parsed.appId)).toString() : undefined
-  if (account === appAddress) return `the app account is short by ${formatMicroAlgos(short)} ALGO — deny, then retry with +fund ${algo} on the line`
+  const appAddress = parsed
+    ? algosdk.getApplicationAddress(BigInt(parsed.appId)).toString()
+    : undefined
+  if (account === appAddress)
+    return `the app account is short by ${formatMicroAlgos(short)} ALGO — deny, then retry with +fund ${algo} on the line`
   return `${account.slice(0, 8)}… is short by ${formatMicroAlgos(short)} ALGO — fund it first`
 }
 
@@ -115,7 +122,12 @@ function CallSummary({ summary, width }: { summary: string; width: number }) {
         <text fg={COLORS.muted} content={`  → app ${parsed.appId}`} />
       </box>
       {parsed.fundMicroAlgos ? (
-        <Fact label="funds app" value={`${formatMicroAlgos(parsed.fundMicroAlgos)} ALGO`} width={width} valueColor={COLORS.text} />
+        <Fact
+          label="funds app"
+          value={`${formatMicroAlgos(parsed.fundMicroAlgos)} ALGO`}
+          width={width}
+          valueColor={COLORS.text}
+        />
       ) : null}
       {parsed.args.length === 0 ? (
         <text fg={COLORS.faint} content="no arguments" />
@@ -193,12 +205,17 @@ export function PaymentBody({
             valueColor={COLORS.red}
           />
         ) : null}
-        {model.simulation?.failureMessage ? (
-          (() => {
-            const hint = minBalanceHint(model.simulation.failureMessage, model.unsignedGroup.summary)
-            return hint ? <Fact label="fix" value={hint} width={width} valueColor={COLORS.brassBright} /> : null
-          })()
-        ) : null}
+        {model.simulation?.failureMessage
+          ? (() => {
+              const hint = minBalanceHint(
+                model.simulation.failureMessage,
+                model.unsignedGroup.summary,
+              )
+              return hint ? (
+                <Fact label="fix" value={hint} width={width} valueColor={COLORS.brassBright} />
+              ) : null
+            })()
+          : null}
         {model.simulation
           ? model.simulation.effects.map((effect) => (
               <Fact
@@ -206,7 +223,9 @@ export function PaymentBody({
                 label={effect.role}
                 value={`${signedDelta(effect.deltaMicroAlgos)} ALGO`}
                 width={width}
-                valueColor={String(effect.deltaMicroAlgos).startsWith('-') ? COLORS.brass : COLORS.signal}
+                valueColor={
+                  String(effect.deltaMicroAlgos).startsWith('-') ? COLORS.brass : COLORS.signal
+                }
               />
             ))
           : null}
@@ -272,8 +291,7 @@ export function PaymentCard({
         : stage === 'denied'
           ? 'DENIED'
           : stage.toUpperCase()
-  const tone: Tone =
-    stage === 'denied' || failed ? 'bad' : stage === 'confirmed' ? 'ok' : 'warn'
+  const tone: Tone = stage === 'denied' || failed ? 'bad' : stage === 'confirmed' ? 'ok' : 'warn'
   return (
     <Frame width={width}>
       <Header

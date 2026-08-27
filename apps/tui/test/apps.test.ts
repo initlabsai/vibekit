@@ -94,14 +94,15 @@ describe('apps screen entries', () => {
         { name: 'Counter', appId: 1042 },
         { name: 'Counter', appId: 1050 },
       ],
-      [
-        { appId: 1071, name: 'Sample' },
-        { appId: 1042 },
-      ],
+      [{ appId: 1071, name: 'Sample' }, { appId: 1042 }],
       local,
     )
     expect(groups.map((g) => g.name)).toEqual(['Counter', 'Sample', 'app 1042', 'Greeter', 'Vault'])
-    expect(groups[0]).toMatchObject({ deployed: [{ appId: 1050 }, { appId: 1042 }], optedIn: [], specs: counter })
+    expect(groups[0]).toMatchObject({
+      deployed: [{ appId: 1050 }, { appId: 1042 }],
+      optedIn: [],
+      specs: counter,
+    })
     expect(groups[0]?.spec?.spec.format).toBe('arc56') // richest spec first
     expect(groups[1]).toMatchObject({ deployed: [], optedIn: [1071], specs: [] })
     expect(groups[3]?.spec?.path).toBe('contracts/greeter.json')
@@ -109,12 +110,25 @@ describe('apps screen entries', () => {
 
   test('deployedFromRecord reads AlgoKit deployer notes off app-create rows', () => {
     const record = (transactions: unknown): StructuredResult =>
-      ({ protocolVersion: '0.1.0-provisional', type: 'result', resultId: 'r', state: 'success', data: { transactions } }) as never
+      ({
+        protocolVersion: '0.1.0-provisional',
+        type: 'result',
+        resultId: 'r',
+        state: 'success',
+        data: { transactions },
+      }) as never
     expect(
       deployedFromRecord(
         record([
-          { note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}', createdApplicationId: 1007, sender: 'CREATOR' },
-          { note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}', createdApplicationId: '1003' },
+          {
+            note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}',
+            createdApplicationId: 1007,
+            sender: 'CREATOR',
+          },
+          {
+            note: 'ALGOKIT_DEPLOYER:j{"name":"HelloWorld","version":"1.0"}',
+            createdApplicationId: '1003',
+          },
           { note: 'ALGOKIT_DEPLOYER:j{"name":"Other"}' }, // no created app: an update, not a create
           { note: 'ALGOKIT_DEPLOYER:jnot json', createdApplicationId: 9 },
           { note: 'hello', createdApplicationId: 10 },
@@ -154,7 +168,10 @@ describe('apps screen entries', () => {
         toolName: 'get_account_app_local_states',
         network: 'localnet',
         state: 'success',
-        data: { address: 'X', apps: [{ applicationId: 1071 }, { applicationId: 0 }, { nope: true }] },
+        data: {
+          address: 'X',
+          apps: [{ applicationId: 1071 }, { applicationId: 0 }, { nope: true }],
+        },
       }),
     ).toEqual([{ appId: 1071 }])
     expect(
@@ -184,7 +201,11 @@ describe('spec catalog', () => {
 describe('call summary on the approval card', () => {
   test('splits describeCall output into call, app, and one row per argument', async () => {
     const { parseCallSummary } = await import('../src/cards/payment.js')
-    expect(parseCallSummary('HiWorld.hi(name: "a, b", n: 5, list: [1,2], t: {"type":"pay","amount":1}) → app 1018')).toEqual({
+    expect(
+      parseCallSummary(
+        'HiWorld.hi(name: "a, b", n: 5, list: [1,2], t: {"type":"pay","amount":1}) → app 1018',
+      ),
+    ).toEqual({
       call: 'HiWorld.hi',
       appId: '1018',
       args: [
@@ -194,7 +215,11 @@ describe('call summary on the approval card', () => {
         { name: 't', value: '{"type":"pay","amount":1}' },
       ],
     })
-    expect(parseCallSummary('HiWorld.ping() → app 1')).toEqual({ call: 'HiWorld.ping', appId: '1', args: [] })
+    expect(parseCallSummary('HiWorld.ping() → app 1')).toEqual({
+      call: 'HiWorld.ping',
+      appId: '1',
+      args: [],
+    })
     expect(parseCallSummary('[0] app call app 1018 (hi(string)string)')).toBeUndefined()
   })
 })
@@ -205,9 +230,13 @@ describe('min-balance hint', () => {
     const algosdk = (await import('algosdk')).default
     const app = algosdk.getApplicationAddress(BigInt(1003)).toString()
     const message = `transaction X: account ${app} balance 0 below min 109700 (0 assets)`
-    expect(minBalanceHint(message, 'HelloWorld.hello(name: "hey") → app 1003')).toContain('+fund 0.11')
+    expect(minBalanceHint(message, 'HelloWorld.hello(name: "hey") → app 1003')).toContain(
+      '+fund 0.11',
+    )
     const other = `transaction X: account ${'A'.repeat(58)} balance 5 below min 100000 (0 assets)`
-    expect(minBalanceHint(other, 'HelloWorld.hello(name: "hey") → app 1003')).toContain('fund it first')
+    expect(minBalanceHint(other, 'HelloWorld.hello(name: "hey") → app 1003')).toContain(
+      'fund it first',
+    )
     expect(minBalanceHint('logic eval error', 'x')).toBeUndefined()
   })
 })

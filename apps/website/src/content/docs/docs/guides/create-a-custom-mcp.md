@@ -14,9 +14,11 @@ Treat this guide as a preview of the shape, not a contract.
 
 A VibeKit MCP deployment is configuration: select tools, optional plugins,
 networks, and a signing mode, then pass that deployment to a transport adapter.
-Copy the executable examples in `packages/mcp/examples/` when starting a real
-server. The `@initlabs/vibekit-*` packages are not yet published to npm, so
-build inside the VibeKit monorepo with `workspace:*` dependencies.
+Copy the executable examples in `packages/vibekit/examples/` when starting a
+real server. Everything ships as one package — `bun add @initlabs/vibekit@alpha`
+— with subpath exports: `.` is the core contract, and `./tools`, `./preset`,
+`./mcp/stdio`, `./mcp/http`, `./signer-keystore`, and `./plugins/<name>` are
+the rest.
 
 ## Start with a focused stdio server
 
@@ -24,8 +26,8 @@ This server exposes only account and network reads on TestNet. Stdio is the
 normal local-agent transport.
 
 ```ts
-import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
-import { accountTools, networkTools } from '@initlabs/vibekit-tools'
+import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
+import { accountTools, networkTools } from '@initlabs/vibekit/tools'
 
 const handle = serveVibekitStdio({
   name: 'my-vibekit-mcp',
@@ -38,7 +40,7 @@ process.on('SIGINT', () => void handle.close())
 ```
 
 For the full stock tool surface, import `defaultTools` and `defaultPlugins()`
-from `@initlabs/vibekit-preset`. Keep that selection in one plain factory if
+from `@initlabs/vibekit/preset`. Keep that selection in one plain factory if
 more than one entry point needs it.
 
 ## Choose compose before execute
@@ -52,7 +54,7 @@ unreachable.
 
 `execute` requires `resolveSigner`; startup rejects an execute deployment
 without it. A local stdio deployment can use the VibeKit keystore pattern from
-`packages/mcp/examples/stdio.ts`. Do not put a signer behind an unauthenticated
+`packages/vibekit/examples/stdio.ts`. Do not put a signer behind an unauthenticated
 HTTP endpoint.
 
 ## Add a plugin
@@ -60,7 +62,7 @@ HTTP endpoint.
 Instantiate plugins through the deployment rather than copying their tools:
 
 ```ts
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
+import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 
 const handle = serveVibekitStdio({
   name: 'my-vibekit-mcp',
@@ -77,7 +79,7 @@ into every tool and requires it on writes.
 
 ## HTTP is an adapter, not another architecture
 
-Use `createVibekitHttpHandler` from `@initlabs/vibekit-mcp/http` when your own
+Use `createVibekitHttpHandler` from `@initlabs/vibekit/mcp/http` when your own
 application needs a stateless Streamable HTTP handler. The handler creates a
 fresh MCP server per request; it does not retain client sessions. Bring your
 own authentication, origin policy, and deployment model. The

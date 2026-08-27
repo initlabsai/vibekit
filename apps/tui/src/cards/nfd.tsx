@@ -1,4 +1,4 @@
-import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+import type { NfdRecord } from '@initlabs/vibekit/plugins/nfd'
 
 import { COLORS, wrapLines } from '../theme.js'
 import { Button, Fact, Frame, Header, Ident, innerWidth, Rule } from '../ui.js'
@@ -33,7 +33,9 @@ export function NfdCard({
 }) {
   const body = innerWidth(width)
   const props = data.properties ?? {}
-  const links = LINKS.filter(([key]) => props[key]).map(([key, label]) => [label, props[key]!] as const)
+  const links = LINKS.filter(([key]) => props[key]).map(
+    ([key, label]) => [label, props[key]!] as const,
+  )
   const byline = props.name && props.name !== data.name ? props.name : undefined
   const bio = props.bio ? wrapLines(props.bio, body).slice(0, 3) : []
   return (
@@ -54,7 +56,9 @@ export function NfdCard({
       </box>
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        {data.address ? <Fact label="address" value={data.address} copy={data.address} width={body} /> : null}
+        {data.address ? (
+          <Fact label="address" value={data.address} copy={data.address} width={body} />
+        ) : null}
         {data.owner && data.owner !== data.address ? (
           <Fact label="owner" value={data.owner} copy={data.owner} width={body} />
         ) : null}

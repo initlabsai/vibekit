@@ -291,5 +291,7 @@ test('an inner app create resolves to its created id on the way into the graph',
       innerTxns: [{ type: 'appl', sender: user, applicationId: 0, createdApplicationId: '77' }],
     },
   ])
-  expect(graph?.verticals.map((v) => (v.type === 'application' ? v.applicationId : v.type))).toEqual(['account', 10, 77])
+  expect(
+    graph?.verticals.map((v) => (v.type === 'application' ? v.applicationId : v.type)),
+  ).toEqual(['account', 10, 77])
 })

@@ -20,13 +20,13 @@ A deployment is a configured set of tools. It selects networks, execute or
 compose mode, and an optional signer.
 
 Every host sends calls through `executeToolCall` in
-`packages/core/src/deployment.ts`. Hosts include the MCP server, agent loop,
-and CLI. `executeToolCall` selects the network context, makes results
+`packages/vibekit/src/core/deployment.ts`. Hosts include the MCP server, agent
+loop, and CLI. `executeToolCall` selects the network context, makes results
 JSON-safe, and enforces output schemas. Resolved contexts and their service
 registries are frozen before handlers receive them.
 
-Write tools build transaction groups in `packages/core/src/compose/`. In
-execute mode the host signs and sends the group. In compose mode the host
+Write tools build transaction groups in `packages/vibekit/src/core/compose/`.
+In execute mode the host signs and sends the group. In compose mode the host
 returns the group unsigned.
 
 Explorer presentation is a separate, versioned protocol under
@@ -35,14 +35,21 @@ HTML, or terminal markup.
 
 ## Layout
 
-- `packages/core` — contract, deployment, codec, compose engine
-- `packages/tools` — the domain tools (accounts, assets, contracts, network,
-  transactions) as per-domain exports from one package
-- `packages/plugin-*` — third-party tool plugins
-- `packages/signer-keystore` — keystore daemon signing, testnet dispenser
-- `packages/mcp` — ToolDefinition-to-MCP adapter for stdio and HTTP
-- `packages/mcp/examples` — reference stdio and HTTP deployments
-- `packages/agent` — LLM tool loop
+- `packages/vibekit` — the one published package, `@initlabs/vibekit`. Every
+  area is a directory under `src/` and a subpath export:
+  - `src/core` (`.`) — contract, deployment, codec, compose engine
+  - `src/tools` (`./tools`, `./tools/views`) — the domain tools (accounts,
+    assets, contracts, network, transactions) as per-domain exports
+  - `src/plugins/*` (`./plugins/<name>`) — third-party tool plugins
+  - `src/signer-keystore` (`./signer-keystore`) — keystore daemon signing,
+    testnet dispenser
+  - `src/mcp` (`./mcp`, `./mcp/stdio`, `./mcp/http`) — ToolDefinition-to-MCP
+    adapter
+  - `src/preset` (`./preset`) — the batteries-included host wiring
+  - `src/agent` (`./agent`, `./agent/config`) — LLM tool loop
+  - `examples/` — reference stdio and HTTP deployments, typechecked with the
+    package
+  Tests mirror `src/` under `test/`.
 - `packages/explorer` — provisional browser-safe Explorer protocol, fixtures,
   workspace state, and semantic view models
 - Planned packages: `views-react` for selected semantic React composition and
@@ -71,7 +78,7 @@ HTML, or terminal markup.
 - Land tests with code. Run `bunx turbo run build typecheck test` before a
   commit.
 - Tool and plugin packages declare `algosdk`, Zod, and
-  `@initlabs/vibekit-core` as peer dependencies. Keep the repository's
+  `@initlabs/vibekit` as peer dependencies. Keep the repository's
   `algosdk` development/runtime version pinned exactly and the keystore canary
   dependencies pinned exactly. Ask before adding a dependency.
 - Use conventional commits. Do not add co-author lines.
@@ -79,7 +86,8 @@ HTML, or terminal markup.
   adapter. Do not add a new path around `executeToolCall`.
   - Share one factory for host wiring. Do not copy the tool and plugin mix into
     another host.
-  - If a write needs a side path around `packages/core/src/compose/`, stop.
+  - If a write needs a side path around `packages/vibekit/src/core/compose/`,
+    stop.
 - Package and layer additions are design smells until proven otherwise. A new
   package, protocol, registry, or extension point needs a named consumer that
   exists today plus owner sign-off; "a future head might need it" is not a
@@ -128,17 +136,17 @@ Versions come from Changesets. The repository is in pre-release mode
 (`.changeset/pre.json`, tag `alpha`), so `changeset version` produces
 `1.0.0-alpha.N` and increments N on each run.
 
-Every non-private package under `packages/` publishes to npm. The CLI, TUI,
+`packages/vibekit` is the only package that publishes to npm. The CLI, TUI,
 Explorer, and web apps are private: Changesets versions them so
 `vibekit --version` matches the release tag, but never publishes them. They
 ship as GitHub Release binaries.
 
 1. `bunx changeset` — record the change, one bump level per package.
-2. `bunx changeset version` — bumps manifests, rewrites the `@initlabs` peer
-   ranges, writes CHANGELOGs. Never hand-edit a version or a peer range.
+2. `bunx changeset version` — bumps manifests and writes CHANGELOGs. Never
+   hand-edit a version.
 3. `bun install` — required, not optional. `changeset version` leaves
    `bun.lock` stale and `bun pm pack` resolves `workspace:*` from the
-   lockfile, so skipping this publishes packages whose dependencies point at
+   lockfile, so skipping this publishes a package whose dependencies point at
    versions that do not exist.
 4. `bunx turbo run build typecheck test`
 5. `bun run verify:packed` — run before every publish.
@@ -146,7 +154,8 @@ ship as GitHub Release binaries.
    `.github/workflows/release.yml` builds the CLI and the Explorer sidecar for
    four platforms and attaches them to the release. A tag containing a hyphen
    is published as a prerelease.
-7. `bunx changeset publish --tag alpha` — needs `npm login` first.
+7. `bunx changeset publish` — needs npm auth first. In pre mode Changesets
+   applies the `alpha` dist-tag itself; passing `--tag alpha` is rejected.
 
 Before the first stable release run `bunx changeset pre exit`, then publish
 with `bunx changeset publish` and no `--tag`.

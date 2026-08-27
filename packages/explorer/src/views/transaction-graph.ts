@@ -1,4 +1,4 @@
-import type { FormattedTransaction } from '@initlabs/vibekit-tools'
+import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
@@ -187,7 +187,12 @@ interface MutableAssociated {
 }
 
 type MutableVertical =
-  | { type: 'account'; address: string; accountNumber: number; associatedAccounts: MutableAssociated[] }
+  | {
+      type: 'account'
+      address: string
+      accountNumber: number
+      associatedAccounts: MutableAssociated[]
+    }
   | {
       type: 'application'
       applicationId: number
@@ -268,7 +273,10 @@ function distinctByAddress(accounts: MutableAssociated[]): MutableAssociated[] {
   })
 }
 
-function accountVertical(address: string, associatedAccounts: MutableAssociated[] = []): MutableVertical {
+function accountVertical(
+  address: string,
+  associatedAccounts: MutableAssociated[] = [],
+): MutableVertical {
   return { type: 'account', address, accountNumber: -1, associatedAccounts }
 }
 
@@ -302,7 +310,11 @@ function rawVerticalsForTransaction(
           associatedAccounts.push({ kind: 'rekey', address: inner.sender, accountNumber: -1 })
         }
         if (isClawback(inner) && inner.clawbackFrom !== undefined) {
-          associatedAccounts.push({ kind: 'clawback', address: inner.clawbackFrom, accountNumber: -1 })
+          associatedAccounts.push({
+            kind: 'clawback',
+            address: inner.clawbackFrom,
+            accountNumber: -1,
+          })
         }
       }
       verticals.push({
@@ -333,17 +345,22 @@ function mergeRawVerticals(raw: MutableVertical[]): MutableVertical[] {
           (v.type === 'application' && v.linkedAccount?.address === current.address),
       )
       if (present) return acc
-      const app = raw.find((v) => v.type === 'application' && v.linkedAccount?.address === current.address)
+      const app = raw.find(
+        (v) => v.type === 'application' && v.linkedAccount?.address === current.address,
+      )
       if (app) return [...acc, app]
       // Prefer the richer entry when this account has associated identities elsewhere.
       const withAssociated = raw.find(
-        (v) => v.type === 'account' && v.address === current.address && v.associatedAccounts.length > 0,
+        (v) =>
+          v.type === 'account' && v.address === current.address && v.associatedAccounts.length > 0,
       )
       if (withAssociated) return [...acc, withAssociated]
       return [...acc, current]
     }
     if (current.type === 'application') {
-      const index = acc.findIndex((v) => v.type === 'application' && v.applicationId === current.applicationId)
+      const index = acc.findIndex(
+        (v) => v.type === 'application' && v.applicationId === current.applicationId,
+      )
       if (index === -1) return [...acc, current]
       // One application can act for several accounts; union them into one column.
       const existing = acc[index] as Extract<MutableVertical, { type: 'application' }>
@@ -352,7 +369,10 @@ function mergeRawVerticals(raw: MutableVertical[]): MutableVertical[] {
         type: 'application',
         applicationId: current.applicationId,
         ...(linkedAccount === undefined ? {} : { linkedAccount }),
-        associatedAccounts: distinctByAddress([...existing.associatedAccounts, ...current.associatedAccounts]),
+        associatedAccounts: distinctByAddress([
+          ...existing.associatedAccounts,
+          ...current.associatedAccounts,
+        ]),
       })
       return acc
     }
@@ -375,11 +395,14 @@ function numberVerticals(verticals: MutableVertical[]): MutableVertical[] {
   for (const vertical of verticals) {
     if (vertical.type === 'account') {
       vertical.accountNumber = claim(vertical.address)
-      for (const account of vertical.associatedAccounts) account.accountNumber = claim(account.address)
+      for (const account of vertical.associatedAccounts)
+        account.accountNumber = claim(account.address)
     }
     if (vertical.type === 'application') {
-      if (vertical.linkedAccount) vertical.linkedAccount.accountNumber = claim(vertical.linkedAccount.address)
-      for (const account of vertical.associatedAccounts) account.accountNumber = claim(account.address)
+      if (vertical.linkedAccount)
+        vertical.linkedAccount.accountNumber = claim(vertical.linkedAccount.address)
+      for (const account of vertical.associatedAccounts)
+        account.accountNumber = claim(account.address)
     }
   }
   return verticals
@@ -397,18 +420,25 @@ function findAccount(verticals: MutableVertical[], address: string) {
 }
 
 function findApplicationByEscrow(verticals: MutableVertical[], address: string) {
-  const index = verticals.findIndex((v) => v.type === 'application' && v.linkedAccount?.address === address)
+  const index = verticals.findIndex(
+    (v) => v.type === 'application' && v.linkedAccount?.address === address,
+  )
   return index === -1
     ? undefined
     : { index, vertical: verticals[index] as Extract<MutableVertical, { type: 'application' }> }
 }
 
-function fromWithoutParent(verticals: MutableVertical[], sender: string, tagAddress?: string): FromTo {
+function fromWithoutParent(
+  verticals: MutableVertical[],
+  sender: string,
+  tagAddress?: string,
+): FromTo {
   const account = findAccount(verticals, sender)
   if (account) {
     const tagged = tagAddress
-      ? (findAccount(verticals, tagAddress)?.vertical.associatedAccounts.find((a) => a.address === sender) ??
-        account.vertical.associatedAccounts.find((a) => a.address === tagAddress))
+      ? (findAccount(verticals, tagAddress)?.vertical.associatedAccounts.find(
+          (a) => a.address === sender,
+        ) ?? account.vertical.associatedAccounts.find((a) => a.address === tagAddress))
       : undefined
     const tag = tagged
       ? markerTag(tagged)
@@ -420,7 +450,9 @@ function fromWithoutParent(verticals: MutableVertical[], sender: string, tagAddr
   const application = findApplicationByEscrow(verticals, sender)
   if (application) {
     const tagged = tagAddress
-      ? findAccount(verticals, tagAddress)?.vertical.associatedAccounts.find((a) => a.address === sender)
+      ? findAccount(verticals, tagAddress)?.vertical.associatedAccounts.find(
+          (a) => a.address === sender,
+        )
       : undefined
     const tag = tagged ? markerTag(tagged) : application.vertical.linkedAccount?.accountNumber
     return { vertical: application.index, ...(tag === undefined ? {} : { tag }) }
@@ -441,13 +473,17 @@ function fromWithParent(
   const parent = verticals[parentIndex] as Extract<MutableVertical, { type: 'application' }>
 
   if (tagAddress !== undefined) {
-    const accountNumber = parent.associatedAccounts.find((a) => a.address === tagAddress)?.accountNumber
+    const accountNumber = parent.associatedAccounts.find(
+      (a) => a.address === tagAddress,
+    )?.accountNumber
     if (accountNumber !== undefined) return { vertical: parentIndex, tag: accountNumber }
   }
   if (parent.linkedAccount && sender === parent.linkedAccount.address) {
     return { vertical: parentIndex, tag: parent.linkedAccount.accountNumber }
   }
-  const isRekeyed = parent.associatedAccounts.some((a) => a.kind === 'rekey' && a.address === sender)
+  const isRekeyed = parent.associatedAccounts.some(
+    (a) => a.kind === 'rekey' && a.address === sender,
+  )
   const account = findAccount(verticals, sender)
   if (account) {
     return { vertical: account.index, tag: isRekeyed ? 'rekey' : account.vertical.accountNumber }
@@ -517,7 +553,8 @@ function representationsFor(
   methodNameFor?: (txn: GraphTransaction) => string | undefined,
 ): RowSeed[] {
   const senderFrom = (tagAddress?: string): FromTo => {
-    if (parent) return fromWithParent(verticals, txn.sender, effectiveApplicationId(parent), tagAddress)
+    if (parent)
+      return fromWithParent(verticals, txn.sender, effectiveApplicationId(parent), tagAddress)
     const from = fromWithoutParent(verticals, txn.sender, tagAddress)
     // Rekey-tag the sender endpoint when another key signed the outer
     // transaction, unless a clawback tag already claims it.
@@ -528,7 +565,8 @@ function representationsFor(
     case 'pay': {
       // A zero payment that carries rekeyTo exists for the rekey (the
       // "rekey to the app, act, rekey back" idiom); the amount says nothing.
-      const rekey = txn.rekeyTo !== undefined && BigInt(txn.paymentAmountMicroAlgos ?? 0) === BigInt(0)
+      const rekey =
+        txn.rekeyTo !== undefined && BigInt(txn.paymentAmountMicroAlgos ?? 0) === BigInt(0)
       const rows: RowSeed[] = [
         {
           representation: asRepresentation(
@@ -590,9 +628,15 @@ function representationsFor(
     case 'appl': {
       const to = isOpUp(txn)
         ? verticals.findIndex((v) => v.type === 'opUp')
-        : verticals.findIndex((v) => v.type === 'application' && v.applicationId === effectiveApplicationId(txn))
+        : verticals.findIndex(
+            (v) => v.type === 'application' && v.applicationId === effectiveApplicationId(txn),
+          )
       const type =
-        (txn.applicationId ?? 0) === 0 ? 'appCreate' : txn.onCompletion === 'update' ? 'appUpdate' : 'appCall'
+        (txn.applicationId ?? 0) === 0
+          ? 'appCreate'
+          : txn.onCompletion === 'update'
+            ? 'appUpdate'
+            : 'appCall'
       const methodName = txn.methodName ?? methodNameFor?.(txn)
       return [
         {
@@ -623,7 +667,10 @@ function representationsFor(
       if (txn.freezeTarget === undefined) return [asPoint(senderFrom(), label)]
       return [
         {
-          representation: asRepresentation(senderFrom(), toAccountOrApplication(verticals, txn.freezeTarget)),
+          representation: asRepresentation(
+            senderFrom(),
+            toAccountOrApplication(verticals, txn.freezeTarget),
+          ),
           label,
         },
       ]
@@ -689,7 +736,9 @@ export function buildTransactionsGraph(
 ): TransactionsGraph {
   const flattened = flattenTransactions(transactions)
   const verticals = numberVerticals(
-    mergeRawVerticals(flattened.flatMap((txn) => rawVerticalsForTransaction(txn, options.appAddressFor))),
+    mergeRawVerticals(
+      flattened.flatMap((txn) => rawVerticalsForTransaction(txn, options.appAddressFor)),
+    ),
   )
   const horizontals: GraphHorizontal[] = []
   for (const txn of transactions) {

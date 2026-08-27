@@ -20,7 +20,7 @@ import {
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
-import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit-plugin-nfd'
+import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
 import { useCallback, useRef } from 'react'
 
 import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
@@ -28,7 +28,7 @@ import { errorMessage, shorten } from '../theme.js'
 import type { Feed } from './feed.js'
 import { enrichResultWithAbi } from '../abi-catalog.js'
 import type { ExplorerHost } from './network.js'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 
 /**
  * Fetches the page after `view`'s record — the record's own call with its
@@ -102,12 +102,19 @@ export function useLookups({
 
   /** The busy/status/error dance around one request; a request while busy is dropped. */
   const withBusy = useCallback(
-    (sectionId: number, status: string, failure: string, task: () => Promise<void>): Promise<void> => {
+    (
+      sectionId: number,
+      status: string,
+      failure: string,
+      task: () => Promise<void>,
+    ): Promise<void> => {
       if (busyRef.current) return Promise.resolve()
       setBusy(true)
       setStatus(status)
       return task()
-        .catch((error: unknown) => appendNote(sectionId, `${failure} — ${errorMessage(error)}`, 'error'))
+        .catch((error: unknown) =>
+          appendNote(sectionId, `${failure} — ${errorMessage(error)}`, 'error'),
+        )
         .finally(() => {
           setBusy(false)
           setStatus('')
@@ -140,13 +147,18 @@ export function useLookups({
         failure?: string
       },
     ) =>
-      withBusy(sectionId, `looking up ${lookup.label}…`, lookup.failure ?? `Couldn't open ${lookup.label}`, async () => {
-        const record = await lookup.run()
-        if (!record) return
-        const view = presentRecord(sectionId, record, lookup.view)
-        const line = lookup.summary?.(record, view)
-        if (line) appendNote(sectionId, line)
-      }),
+      withBusy(
+        sectionId,
+        `looking up ${lookup.label}…`,
+        lookup.failure ?? `Couldn't open ${lookup.label}`,
+        async () => {
+          const record = await lookup.run()
+          if (!record) return
+          const view = presentRecord(sectionId, record, lookup.view)
+          const line = lookup.summary?.(record, view)
+          if (line) appendNote(sectionId, line)
+        },
+      ),
     [appendNote, presentRecord, withBusy],
   )
 
@@ -234,7 +246,10 @@ export function useLookups({
             ? await keystoreHost.listSigningAccounts()
             : [...FIXTURE_ADDRESS_BOOK]
           if (accounts.length === 0) {
-            appendNote(sectionId, 'No keystore accounts yet. Start the daemon, or paste an address.')
+            appendNote(
+              sectionId,
+              'No keystore accounts yet. Start the daemon, or paste an address.',
+            )
             return undefined
           }
           return withAccountNames(
@@ -372,7 +387,11 @@ export function useLookups({
             presentRecord(sectionId, match.record, view)
           }
           if (outcome.matches.length === 0) {
-            appendNote(sectionId, `No asset, application, or block ${raw} on ${networkRef.current}.`, 'error')
+            appendNote(
+              sectionId,
+              `No asset, application, or block ${raw} on ${networkRef.current}.`,
+              'error',
+            )
             return
           }
           if (outcome.misses.length > 0) {

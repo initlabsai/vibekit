@@ -69,8 +69,12 @@ export function useAccounts({
       .lookupAccounts(accountList.map((account) => account.address))
       .then((record) => {
         if (cancelled || record.state !== 'success') return
-        const data = record.data as { accounts?: Array<{ address: string; balanceMicroAlgos: number | string }> }
-        setBalances(Object.fromEntries((data.accounts ?? []).map((a) => [a.address, a.balanceMicroAlgos])))
+        const data = record.data as {
+          accounts?: Array<{ address: string; balanceMicroAlgos: number | string }>
+        }
+        setBalances(
+          Object.fromEntries((data.accounts ?? []).map((a) => [a.address, a.balanceMicroAlgos])),
+        )
       })
       .catch(() => {})
     return () => {
@@ -136,7 +140,8 @@ export function useAccounts({
         target === 'assets'
           ? () => host().lookupAccountAssets(address)
           : () => host().searchTransactions({ address })
-      const viewId = target === 'assets' ? ('asset.holdings' as const) : ('transaction.list' as const)
+      const viewId =
+        target === 'assets' ? ('asset.holdings' as const) : ('transaction.list' as const)
       void run()
         .then((record) => {
           const nextStore = addResult(storeRef.current, record)

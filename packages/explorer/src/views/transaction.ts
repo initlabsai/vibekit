@@ -1,11 +1,8 @@
-import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
-import {
-  algorandAddressCandidateSchema,
-  algorandTransactionIdSchema,
-} from '../core/classifier.js'
+import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../core/classifier.js'
 import type { ViewSpec } from '../core/protocol.js'
 import type {
   ResultIdentity,
@@ -130,9 +127,7 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
     )
     .optional(),
   methodReturn: z.unknown().optional(),
-  innerTxns: z
-    .array(z.lazy((): z.ZodType<TransactionRowData> => transactionRowSchema))
-    .optional(),
+  innerTxns: z.array(z.lazy((): z.ZodType<TransactionRowData> => transactionRowSchema)).optional(),
 })
 
 /**
@@ -223,9 +218,7 @@ export interface TransactionSearchFilter {
   nextToken?: string
 }
 
-export type TransactionCollectionData = z.infer<
-  typeof transactionCollectionDataSchema
->
+export type TransactionCollectionData = z.infer<typeof transactionCollectionDataSchema>
 
 /** Wraps a lookup_transaction result as a transaction detail record. */
 export function buildTransactionDetailRecord(
@@ -298,9 +291,7 @@ export type TransactionDetailViewModel = Omit<
 export function createTransactionDetailViewModel(
   store: ResultStore,
   view: ViewSpec,
-):
-  | { ok: true; model: TransactionDetailViewModel }
-  | { ok: false; error: ViewModelError } {
+): { ok: true; model: TransactionDetailViewModel } | { ok: false; error: ViewModelError } {
   const result = derive(
     store,
     view,
@@ -326,20 +317,10 @@ export function createTransactionCollectionViewModel(
   store: ResultStore,
   view: ViewSpec,
 ): ReturnType<
-  typeof derive<
-    typeof transactionCollectionDataSchema,
-    'transaction.list' | 'transaction.group'
-  >
+  typeof derive<typeof transactionCollectionDataSchema, 'transaction.list' | 'transaction.group'>
 > {
-  const viewId =
-    view.view === 'transaction.group' ? 'transaction.group' : 'transaction.list'
-  return derive(
-    store,
-    view,
-    transactionCollectionDataSchema,
-    viewId,
-    'Transaction collection',
-  )
+  const viewId = view.view === 'transaction.group' ? 'transaction.group' : 'transaction.list'
+  return derive(store, view, transactionCollectionDataSchema, viewId, 'Transaction collection')
 }
 
 export type TransactionCollectionViewModel = Extract<

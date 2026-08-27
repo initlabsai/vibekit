@@ -20,7 +20,9 @@ export function useReveal(steps = 2, stepMs = 70): number {
   const [step, setStep] = useState(MOTION ? 0 : steps)
   useEffect(() => {
     if (!MOTION) return
-    const ids = Array.from({ length: steps }, (_, i) => setTimeout(() => setStep(i + 1), stepMs * (i + 1)))
+    const ids = Array.from({ length: steps }, (_, i) =>
+      setTimeout(() => setStep(i + 1), stepMs * (i + 1)),
+    )
     return () => ids.forEach(clearTimeout)
   }, [stepMs, steps])
   return step
@@ -77,7 +79,14 @@ export function Frame({ width, children }: { width: number; children: ReactNode 
   const reveal = useReveal(2)
   const fill = useContext(HighlightContext) ? COLORS.cardLit : ramp[reveal]!
   return (
-    <box width={width} flexDirection="column" backgroundColor={fill} paddingX={2} paddingY={1} marginTop={1}>
+    <box
+      width={width}
+      flexDirection="column"
+      backgroundColor={fill}
+      paddingX={2}
+      paddingY={1}
+      marginTop={1}
+    >
       {children}
     </box>
   )
@@ -106,7 +115,10 @@ export function Button({
         onPress()
       }}
     >
-      <text fg={active ? COLORS.brassBright : COLORS.signal} attributes={active ? IDENT_ATTR : undefined}>
+      <text
+        fg={active ? COLORS.brassBright : COLORS.signal}
+        attributes={active ? IDENT_ATTR : undefined}
+      >
         {label}
       </text>
     </box>
@@ -159,19 +171,16 @@ export function Header({
 }
 
 /** Large primary figure — amount, TPS, round — with a muted unit. */
-export function Hero({
-  value,
-  unit,
-  copy,
-}: {
-  value: string
-  unit?: string
-  copy?: string
-}) {
+export function Hero({ value, unit, copy }: { value: string; unit?: string; copy?: string }) {
   return (
     <box flexDirection="row" height={1} marginTop={1}>
       {copy ? (
-        <Ident value={copy} display={value} width={Math.max(8, value.length)} color={COLORS.brassBright} />
+        <Ident
+          value={copy}
+          display={value}
+          width={Math.max(8, value.length)}
+          color={COLORS.brassBright}
+        />
       ) : (
         <text fg={COLORS.brassBright}>{value}</text>
       )}
@@ -231,15 +240,7 @@ export function GraphSpanText({ text, fg, copy }: { text: string; fg: string; co
 }
 
 /** Sender → receiver path. */
-export function PartyPath({
-  from,
-  to,
-  width,
-}: {
-  from: string
-  to?: string
-  width: number
-}) {
+export function PartyPath({ from, to, width }: { from: string; to?: string; width: number }) {
   if (!to) {
     return (
       <box marginTop={1}>

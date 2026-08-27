@@ -20,14 +20,14 @@ import {
   resolveDeployment,
   ToolError,
   type ResolvedDeployment,
-} from '@initlabs/vibekit-core'
+} from '@initlabs/vibekit'
 import {
   defaultPlugins,
   defaultTools,
   networksFromEnv,
   withKeystoreTools,
-} from '@initlabs/vibekit-preset'
-import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+} from '@initlabs/vibekit/preset'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
 async function buildDeployment(): Promise<{
   deployment: ResolvedDeployment
@@ -59,7 +59,9 @@ export async function commandTool(args: string[]): Promise<void> {
 
   try {
     if (!name || name === 'list' || name === '--help' || name === '-h') {
-      console.log(pc.bold('vibekit tool <name> [json-args] — call any VibeKit tool from the shell\n'))
+      console.log(
+        pc.bold('vibekit tool <name> [json-args] — call any VibeKit tool from the shell\n'),
+      )
       for (const tool of deployment.tools) {
         console.log(`  ${pc.cyan(tool.name.padEnd(28))} ${tool.description.split('.')[0]}`)
       }

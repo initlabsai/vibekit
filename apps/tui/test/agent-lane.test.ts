@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { MockLanguageModelV4, simulateReadableStream } from 'ai/test'
 import { z } from 'zod'
 
-import { defineTool } from '@initlabs/vibekit-core'
+import { defineTool } from '@initlabs/vibekit'
 import {
   createFixturePaymentHost,
   createFixtureResultStore,
@@ -17,10 +17,10 @@ import {
 } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 
-import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
+import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
 import { viewFor } from '../src/slices/lookup.js'
 import { labelProgramMethods, specsByProgramHash } from '../src/abi-catalog.js'
-import { normalizeAppSpec } from '@initlabs/vibekit-tools'
+import { normalizeAppSpec } from '@initlabs/vibekit/tools'
 import { readFileSync } from 'node:fs'
 import {
   addResult,
@@ -56,7 +56,11 @@ function toolCallThenText(toolName: string, input: Record<string, unknown>, text
             toolName,
             input: JSON.stringify(input),
           },
-          { type: 'finish' as const, finishReason: { unified: 'tool-calls' as const, raw: 'tool-calls' }, usage: USAGE },
+          {
+            type: 'finish' as const,
+            finishReason: { unified: 'tool-calls' as const, raw: 'tool-calls' },
+            usage: USAGE,
+          },
         ] as never,
       }),
     },
@@ -67,7 +71,11 @@ function toolCallThenText(toolName: string, input: Record<string, unknown>, text
           { type: 'text-start' as const, id: 't1' },
           { type: 'text-delta' as const, id: 't1', delta: text },
           { type: 'text-end' as const, id: 't1' },
-          { type: 'finish' as const, finishReason: { unified: 'stop' as const, raw: 'stop' }, usage: USAGE },
+          {
+            type: 'finish' as const,
+            finishReason: { unified: 'stop' as const, raw: 'stop' },
+            usage: USAGE,
+          },
         ] as never,
       }),
     },
@@ -113,10 +121,7 @@ const newId = (prefix: string) => `${prefix}-${++counter}`
 
 describe('TUI agent lane', () => {
   test('activeSenderLine names the active account, with its label when known', () => {
-    const book = [
-      { address: TXN_WIRE.sender, name: 'SMOKE1' },
-      { address: TXN_WIRE.receiver },
-    ]
+    const book = [{ address: TXN_WIRE.sender, name: 'SMOKE1' }, { address: TXN_WIRE.receiver }]
     expect(activeSenderLine(TXN_WIRE.sender, book)).toContain('SMOKE1')
     expect(activeSenderLine(TXN_WIRE.sender, book)).toContain('default sender')
     // Unlabeled active account: bare address, still a default-sender line.
@@ -165,7 +170,6 @@ describe('TUI agent lane', () => {
     expect(derived.model.accounts[0]).toMatchObject({ address: TXN_WIRE.sender, name: 'SMOKE1' })
     expect(derived.model.accounts[1]!.name).toBeUndefined()
   })
-
 
   test('the explorer prompt tells the model to look up keystore accounts', () => {
     const prompt = explorerSystemPrompt(
@@ -255,7 +259,12 @@ describe('TUI agent lane', () => {
         doStream: toolCallThenText(
           'send_payment',
           // Every network is served, so a write must name its network.
-          { sender: TXN_WIRE.sender, receiver: TXN_WIRE.receiver, amountMicroAlgos: 250000, network: 'localnet' },
+          {
+            sender: TXN_WIRE.sender,
+            receiver: TXN_WIRE.receiver,
+            amountMicroAlgos: 250000,
+            network: 'localnet',
+          },
           'Review the payment in the panel.',
         ),
       }),
@@ -296,7 +305,11 @@ describe('TUI agent lane', () => {
   test('the default explorer agent registers resolve_nfd', async () => {
     const session = createExplorerAgent({
       model: new MockLanguageModelV4({
-        doStream: toolCallThenText('resolve_nfd', { name: 'alice.algo' }, 'Need a live network for that.'),
+        doStream: toolCallThenText(
+          'resolve_nfd',
+          { name: 'alice.algo' },
+          'Need a live network for that.',
+        ),
       }),
       addressBook: [],
       network: 'localnet',
@@ -318,16 +331,25 @@ describe('TUI agent lane', () => {
 describe('explain_application', () => {
   test('the agent’s markdown becomes a trusted explanation record', async () => {
     const { explainApplicationTool } = await import('../src/explain-tool.js')
-    const output = await explainApplicationTool.handler(
-      {} as never,
-      { applicationId: 42, markdown: '## Pool\n- swap' },
-    )
+    const output = await explainApplicationTool.handler({} as never, {
+      applicationId: 42,
+      markdown: '## Pool\n- swap',
+    })
     const bridged = bridgeToolResult(
-      { id: 'call-x', toolName: 'explain_application', output, view: 'application.explanation', isError: false },
+      {
+        id: 'call-x',
+        toolName: 'explain_application',
+        output,
+        view: 'application.explanation',
+        isError: false,
+      },
       { resultId: newId('result-explain'), toolCallId: 'call-x', network: 'mainnet' },
     )
     expect(bridged.view).toBe('application.explanation')
-    expect(bridged.record).toMatchObject({ state: 'success', data: { applicationId: 42, markdown: '## Pool\n- swap' } })
+    expect(bridged.record).toMatchObject({
+      state: 'success',
+      data: { applicationId: 42, markdown: '## Pool\n- swap' },
+    })
   })
 
   test('the explorer prompt routes explanations through the card', () => {
@@ -360,17 +382,34 @@ test('the methods view derives from a program record', () => {
     methods: [{ selector: '02bece11', name: 'hello', signature: 'hello(string)string' }],
   }
   const bridged = bridgeToolResult(
-    { id: 'call-p', toolName: 'get_application_program', output: program, view: 'application.program', isError: false },
+    {
+      id: 'call-p',
+      toolName: 'get_application_program',
+      output: program,
+      view: 'application.program',
+      isError: false,
+    },
     { resultId: newId('result-program'), toolCallId: 'call-p', network: 'mainnet' },
   )
   const store = addResult(createFixtureResultStore(), bridged.record)
-  const methods = createApplicationMethodsViewModel(store, viewFor(bridged.record, 'application.methods'))
+  const methods = createApplicationMethodsViewModel(
+    store,
+    viewFor(bridged.record, 'application.methods'),
+  )
   expect(methods.ok).toBe(true)
   if (methods.ok) expect(methods.model.analysis.entrypoints).toEqual(['0x02bece11', 'bootstrap'])
 })
 
 test('a known spec labels program selectors with names and args — inside the tool call', async () => {
-  const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/tools/test/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
+  const spec = normalizeAppSpec(
+    readFileSync(
+      new URL(
+        '../../../packages/vibekit/test/tools/fixtures/hello-world.arc56.json',
+        import.meta.url,
+      ),
+      'utf8',
+    ),
+  )
   // The spec matches by compiled-program hash, with no deploy record at all.
   const byHash = specsByProgramHash([{ spec }])
   expect(byHash.size).toBe(1)
@@ -424,7 +463,10 @@ test('a known spec labels program selectors with names and args — inside the t
       throw new Error('unexpected agent error')
     },
   })
-  expect((outputs[0] as { methods: Array<{ name?: string }> }).methods.map((m) => m.name)).toEqual(['hello', 'getMessage'])
+  expect((outputs[0] as { methods: Array<{ name?: string }> }).methods.map((m) => m.name)).toEqual([
+    'hello',
+    'getMessage',
+  ])
 })
 
 describe('planToolResult', () => {
@@ -435,20 +477,29 @@ describe('planToolResult', () => {
     specCatalog: new Map(),
     addressBook: [{ address: TXN_WIRE.sender, name: 'SMOKE1' }],
   }
-  const result = (toolName: string, output: unknown, extra: Record<string, unknown> = {}) =>
-    ({ type: 'tool-result' as const, id: 'call-1', toolName, output, isError: false, ...extra })
+  const result = (toolName: string, output: unknown, extra: Record<string, unknown> = {}) => ({
+    type: 'tool-result' as const,
+    id: 'call-1',
+    toolName,
+    output,
+    isError: false,
+    ...extra,
+  })
 
   test('a viewed result is one card on the network the call named', () => {
     const plan = planToolResult(
-      result('lookup_transaction', TXN_WIRE, { view: 'transaction.detail', input: { network: 'mainnet' } }),
+      result('lookup_transaction', TXN_WIRE, {
+        view: 'transaction.detail',
+        input: { network: 'mainnet' },
+      }),
       ctx,
     )
     expect(plan.usedNetwork).toBe('mainnet')
     if (plan.kind !== 'cards') throw new Error(plan.kind)
     expect(plan.record.network).toBe('mainnet')
-    expect(plan.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind))).toEqual([
-      'transaction.detail',
-    ])
+    expect(
+      plan.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind)),
+    ).toEqual(['transaction.detail'])
   })
 
   test('a composed group is a payment — unless one is already awaiting approval', () => {
@@ -486,14 +537,20 @@ describe('planToolResult', () => {
       },
       methods: [{ selector: '02bece11' }],
     }
-    const first = planToolResult(result('get_application_program', program, { view: 'application.program' }), ctx)
+    const first = planToolResult(
+      result('get_application_program', program, { view: 'application.program' }),
+      ctx,
+    )
     if (first.kind !== 'cards') throw new Error(first.kind)
-    expect(first.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind))).toEqual([
-      'application.program',
-      'application.methods',
-    ])
+    expect(
+      first.blocks.map((block) => (block.kind === 'view' ? block.view.view : block.kind)),
+    ).toEqual(['application.program', 'application.methods'])
     const later = planToolResult(
-      result('get_application_program', { ...program, fromLine: 3, toLine: 4 }, { view: 'application.program' }),
+      result(
+        'get_application_program',
+        { ...program, fromLine: 3, toLine: 4 },
+        { view: 'application.program' },
+      ),
       ctx,
     )
     if (later.kind !== 'cards') throw new Error(later.kind)
@@ -502,13 +559,23 @@ describe('planToolResult', () => {
 
   test('a plugin-declared view renders its card only when the wire parses', () => {
     const nfd = { name: 'alice.algo', address: TXN_WIRE.sender, state: 'owned' }
-    const plan = planToolResult(result('resolve_nfd', nfd, { view: 'nfd.profile', input: { network: 'mainnet' } }), ctx)
+    const plan = planToolResult(
+      result('resolve_nfd', nfd, { view: 'nfd.profile', input: { network: 'mainnet' } }),
+      ctx,
+    )
     if (plan.kind !== 'cards') throw new Error(plan.kind)
-    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'nfd.profile', network: 'mainnet' })
+    expect(plan.blocks[0]).toMatchObject({
+      kind: 'plugin',
+      view: 'nfd.profile',
+      network: 'mainnet',
+    })
     expect(plan.note).toBeUndefined()
 
     // A wire that misses the plugin's schema degrades to raw, and says so.
-    const bad = planToolResult(result('resolve_nfd', { appId: 'seven' }, { view: 'nfd.profile' }), ctx)
+    const bad = planToolResult(
+      result('resolve_nfd', { appId: 'seven' }, { view: 'nfd.profile' }),
+      ctx,
+    )
     if (bad.kind !== 'cards') throw new Error(bad.kind)
     expect(bad.blocks[0]?.kind).toBe('raw')
     expect(bad.note).toContain('nfd.profile')
@@ -534,20 +601,34 @@ describe('planToolResult', () => {
         },
       ],
     }
-    const ranked = planToolResult(result('search_assets_ranked', markets, { view: 'vestige.markets' }), ctx)
+    const ranked = planToolResult(
+      result('search_assets_ranked', markets, { view: 'vestige.markets' }),
+      ctx,
+    )
     if (ranked.kind !== 'cards') throw new Error(ranked.kind)
     expect(ranked.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.markets' })
   })
 
   test('pera registers its asset profile view', () => {
-    const profile = { assetId: 31566704, verificationTier: 'trusted', name: 'USDC', isCollectible: false }
+    const profile = {
+      assetId: 31566704,
+      verificationTier: 'trusted',
+      name: 'USDC',
+      isCollectible: false,
+    }
     const plan = planToolResult(result('get_asset_profile', profile, { view: 'pera.asset' }), ctx)
     if (plan.kind !== 'cards') throw new Error(plan.kind)
     expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'pera.asset' })
   })
 
   test("a coarse 'table' cue renders rows; other shapes stay raw", () => {
-    const wire = { query: 'x', results: [{ address: 'AAA', name: 'a.algo' }, { address: 'BBB', name: null }] }
+    const wire = {
+      query: 'x',
+      results: [
+        { address: 'AAA', name: 'a.algo' },
+        { address: 'BBB', name: null },
+      ],
+    }
     const plan = planToolResult(result('batch_reverse_resolve_nfd', wire, { view: 'table' }), ctx)
     if (plan.kind !== 'cards') throw new Error(plan.kind)
     expect(plan.blocks[0]).toMatchObject({
@@ -573,7 +654,10 @@ describe('planToolResult', () => {
       toLine: 1,
       teal: 'int 1',
     }
-    const plan = planToolResult(result('get_application_program', incomplete, { view: 'application.program' }), ctx)
+    const plan = planToolResult(
+      result('get_application_program', incomplete, { view: 'application.program' }),
+      ctx,
+    )
     if (plan.kind !== 'cards') throw new Error(plan.kind)
     expect(plan.blocks[0]?.kind).toBe('raw')
     expect(plan.note).toContain('application.program')

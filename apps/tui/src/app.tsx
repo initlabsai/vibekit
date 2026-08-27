@@ -11,11 +11,19 @@ import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit-agent'
+import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent'
 
 import { EXPLORER_PLUGIN_INFO } from './agent-lane.js'
 import { ApprovalModal, ConfirmModal } from './approval-modal.js'
-import { AppsScreen, BlocksScreen, Composer, PluginsScreen, ShelfScreen, TopBar, WalletScreen } from './chrome.js'
+import {
+  AppsScreen,
+  BlocksScreen,
+  Composer,
+  PluginsScreen,
+  ShelfScreen,
+  TopBar,
+  WalletScreen,
+} from './chrome.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { explainApplicationTool } from './explain-tool.js'
@@ -63,7 +71,11 @@ export function App() {
   const [agentBusy, setAgentBusy] = useState(false)
   const [status, setStatus] = useState('')
   const [inputEpoch, setInputEpoch] = useState(0)
-  const [confirm, setConfirm] = useState<{ title: string; lines: string[]; resolve: (ok: boolean) => void } | null>(null)
+  const [confirm, setConfirm] = useState<{
+    title: string
+    lines: string[]
+    resolve: (ok: boolean) => void
+  } | null>(null)
   // Plugin enablement: config is truth at startup, state mirrors it for the session.
   const [disabledPlugins, setDisabledPlugins] = useState<ReadonlySet<string>>(
     () =>
@@ -119,7 +131,10 @@ export function App() {
     [],
   )
   const apps = useApps({ screen, network, sender: activeSender, live, host, onDraft: onAppsDraft })
-  const agentExtraTools = useMemo(() => [...apps.extraTools, explainApplicationTool], [apps.extraTools])
+  const agentExtraTools = useMemo(
+    () => [...apps.extraTools, explainApplicationTool],
+    [apps.extraTools],
+  )
 
   const lookup = useLookups({
     feed,
@@ -195,7 +210,15 @@ export function App() {
     setBusy,
     setStatus,
   })
-  const { flow, flowRef, startPayment, decide: decidePayment, isFlowSection, modalOpen: paymentModalOpen, modalModel } = payment
+  const {
+    flow,
+    flowRef,
+    startPayment,
+    decide: decidePayment,
+    isFlowSection,
+    modalOpen: paymentModalOpen,
+    modalModel,
+  } = payment
   appsDraftRef.current = (wire, toolName, label) => {
     if (flowRef.current !== null) {
       apps.setCallError('A write is already awaiting approval.')
@@ -355,7 +378,18 @@ export function App() {
         }
       }
     },
-    [createSection, openAccount, openApplication, openAsset, openBlock, openHoldings, openTransaction, openTransactions, runAgent, setScreen],
+    [
+      createSection,
+      openAccount,
+      openApplication,
+      openAsset,
+      openBlock,
+      openHoldings,
+      openTransaction,
+      openTransactions,
+      runAgent,
+      setScreen,
+    ],
   )
 
   // Keyboard path for table rows: the highlighted list, else the newest one in the selected section.
@@ -389,7 +423,9 @@ export function App() {
         .then((next) => {
           if (next) feed.replaceBlockView(sectionId, itemId, next)
         })
-        .catch((error: unknown) => appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'))
+        .catch((error: unknown) =>
+          appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'),
+        )
         .finally(() => setLoadingMoreItemId(null))
     },
     [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
@@ -400,12 +436,18 @@ export function App() {
   const cardActions = useMemo(() => {
     const section = sections.find((candidate) => candidate.id === selectedId)
     const views = (section?.items ?? [])
-      .flatMap((item) => (item.kind === 'block' && item.block.kind === 'view' ? [{ itemId: item.id, view: item.block.view }] : []))
+      .flatMap((item) =>
+        item.kind === 'block' && item.block.kind === 'view'
+          ? [{ itemId: item.id, view: item.block.view }]
+          : [],
+      )
       .filter((card) => feed.cursorItemId === null || card.itemId === feed.cursorItemId)
       .reverse()
-    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void; a?: () => void } = {}
+    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void; a?: () => void } =
+      {}
     for (const { itemId, view } of views) {
-      if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group')) actions.rows = true
+      if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group'))
+        actions.rows = true
       if (!actions.t) {
         const filter = transactionsFilterFor(storeRef.current, view)
         if (filter) actions.t = () => openTarget({ kind: 'transactions', filter })
@@ -430,7 +472,10 @@ export function App() {
     }
     return actions
   }, [feed.cursorItemId, loadMore, openTarget, sections, selectedId, storeRef])
-  const runCardAction = useCallback((key: 't' | 'e' | 'm' | 'a') => cardActions[key]?.(), [cardActions])
+  const runCardAction = useCallback(
+    (key: 't' | 'e' | 'm' | 'a') => cardActions[key]?.(),
+    [cardActions],
+  )
 
   const closeSelectedSection = useCallback(() => {
     feed.closeSelectedSection(
@@ -565,7 +610,8 @@ export function App() {
   const composerFocused = screen === 'chat' && !modalOpen && focus === 'composer'
   const reclaimFocus = useCallback(() => {
     if (composerFocused) composerRef.current?.focus()
-    else if (screen === 'apps' && (apps.selectedMethod || apps.deployOpen)) methodInputRef.current?.focus()
+    else if (screen === 'apps' && (apps.selectedMethod || apps.deployOpen))
+      methodInputRef.current?.focus()
   }, [apps.deployOpen, apps.selectedMethod, composerFocused, screen])
   const showNav = navOpen && !isNarrow && screen === 'chat'
   const hint =
@@ -592,204 +638,204 @@ export function App() {
               ? apps.selected.appId === undefined
                 ? '1-9 method · d deploy · esc back'
                 : '1-9 method · o open · d redeploy · esc back'
-            : '1-9 open · ←/→ account · esc explore'
-      : screen === 'blocks'
-        ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
-      : screen === 'plugins'
-        ? '1-9 toggle · esc explore'
-      : screen === 'assets' || screen === 'txns'
-        ? '←/→ account · esc explore'
-        : focus === 'content'
-          ? [
-              '↑/↓ scroll',
-              '←/→ cards',
-              cardActions.rows ? '1-9 open row' : null,
-              cardActions.t ? 't txns' : null,
-              cardActions.a ? 'a assets' : null,
-              cardActions.e ? 'e explain' : null,
-              cardActions.m ? 'm more' : null,
-              'x close',
-              'tab/esc composer',
-            ]
-              .filter(Boolean)
-              .join(' · ')
-          : sections.length > 0
-            ? `enter send · tab feed (${sections.length}) · ^s session · ^n network · ctrl+c quit`
-            : 'enter send · drag copies · ^n network · ctrl+c quit'
+              : '1-9 open · ←/→ account · esc explore'
+        : screen === 'blocks'
+          ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
+          : screen === 'plugins'
+            ? '1-9 toggle · esc explore'
+            : screen === 'assets' || screen === 'txns'
+              ? '←/→ account · esc explore'
+              : focus === 'content'
+                ? [
+                    '↑/↓ scroll',
+                    '←/→ cards',
+                    cardActions.rows ? '1-9 open row' : null,
+                    cardActions.t ? 't txns' : null,
+                    cardActions.a ? 'a assets' : null,
+                    cardActions.e ? 'e explain' : null,
+                    cardActions.m ? 'm more' : null,
+                    'x close',
+                    'tab/esc composer',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                : sections.length > 0
+                  ? `enter send · tab feed (${sections.length}) · ^s session · ^n network · ctrl+c quit`
+                  : 'enter send · drag copies · ^n network · ctrl+c quit'
 
   return (
     <CopyContext.Provider value={copyIdent}>
-    <box
-      flexDirection="column"
-      width="100%"
-      height="100%"
-      backgroundColor={COLORS.background}
-      onMouseUp={reclaimFocus}
-    >
-      <TopBar
-        screen={screen}
-        modeLabel={modeLabel}
-        live={live}
-        network={network}
-        latestRound={tail.latestRound}
-        accountName={senderAccount?.name}
-        address={activeSender}
-        width={width}
-        onOpenChat={() => {
-          setScreen('chat')
-          setFocus('composer')
-        }}
-        onOpenWallet={() => openWorkspace('wallet')}
-        onOpenScreen={openWorkspace}
-        onSwitchNetwork={() => switchNetwork()}
-      />
-      {screen === 'wallet' ? (
-        <WalletScreen
-          accounts={accountList}
-          loading={accounts.accountsLoading}
-          signer={accounts.signer}
-          network={network}
-          balances={accounts.balances}
-          activeSender={activeSender}
-          width={width}
-          onSelect={setActiveSender}
-          keys={keybar}
-        />
-      ) : screen === 'apps' ? (
-        <AppsScreen
-          network={network}
-          groups={apps.groups}
-          accountName={senderAccount?.name}
-          selected={apps.selected}
-          selectedMethod={apps.selectedMethod}
-          deployOpen={apps.deployOpen}
-          sender={activeSender}
-          deployedLoading={apps.deployedLoading}
-          deployedError={apps.deployedError}
-          optedInLoading={apps.optedInLoading}
-          globalState={apps.globalState}
-          width={width}
-          onActivate={activateAppsEntry}
-          onOpenApp={openAppsApp}
-          onSelectMethod={apps.selectMethod}
-          callEpoch={apps.callEpoch}
-          callBusy={apps.callBusy}
-          callError={apps.callError}
-          callResult={apps.callResult}
-          onInput={apps.setCallInput}
-          onSubmit={apps.submitCall}
-          inputRef={methodInputRef}
-          keys={keybar}
-        />
-      ) : screen === 'blocks' ? (
-        <BlocksScreen
-          network={network}
+      <box
+        flexDirection="column"
+        width="100%"
+        height="100%"
+        backgroundColor={COLORS.background}
+        onMouseUp={reclaimFocus}
+      >
+        <TopBar
+          screen={screen}
+          modeLabel={modeLabel}
           live={live}
-          running={tail.running}
-          paused={tail.paused}
+          network={network}
           latestRound={tail.latestRound}
-          error={tail.error}
-          store={store}
-          views={tail.views}
-          width={width}
-          onToggle={tail.togglePause}
-          onOpen={openTarget}
-          keys={keybar}
-        />
-      ) : screen === 'plugins' ? (
-        <PluginsScreen
-          plugins={EXPLORER_PLUGIN_INFO.map((info) => ({
-            ...info,
-            enabled: !disabledPlugins.has(info.name),
-          }))}
-          width={width}
-          onToggle={togglePlugin}
-          keys={keybar}
-        />
-      ) : screen === 'assets' || screen === 'txns' ? (
-        <ShelfScreen
-          title={screen === 'assets' ? 'ASSETS' : 'TRANSACTIONS'}
           accountName={senderAccount?.name}
           address={activeSender}
-          loading={accounts.shelfLoading}
-          error={accounts.shelfError}
-          empty={screen === 'assets' ? 'No assets on this account.' : 'No transactions yet.'}
-          store={store}
-          view={accounts.shelfView}
           width={width}
-          onOpen={openTarget}
-          onMore={accounts.loadMoreShelf}
-          loadingMore={accounts.shelfLoadingMore}
-          keys={keybar}
+          onOpenChat={() => {
+            setScreen('chat')
+            setFocus('composer')
+          }}
+          onOpenWallet={() => openWorkspace('wallet')}
+          onOpenScreen={openWorkspace}
+          onSwitchNetwork={() => switchNetwork()}
         />
-      ) : (
-        <box flexGrow={1} flexDirection="row">
-          {showNav ? (
-            <NavPane
+        {screen === 'wallet' ? (
+          <WalletScreen
+            accounts={accountList}
+            loading={accounts.accountsLoading}
+            signer={accounts.signer}
+            network={network}
+            balances={accounts.balances}
+            activeSender={activeSender}
+            width={width}
+            onSelect={setActiveSender}
+            keys={keybar}
+          />
+        ) : screen === 'apps' ? (
+          <AppsScreen
+            network={network}
+            groups={apps.groups}
+            accountName={senderAccount?.name}
+            selected={apps.selected}
+            selectedMethod={apps.selectedMethod}
+            deployOpen={apps.deployOpen}
+            sender={activeSender}
+            deployedLoading={apps.deployedLoading}
+            deployedError={apps.deployedError}
+            optedInLoading={apps.optedInLoading}
+            globalState={apps.globalState}
+            width={width}
+            onActivate={activateAppsEntry}
+            onOpenApp={openAppsApp}
+            onSelectMethod={apps.selectMethod}
+            callEpoch={apps.callEpoch}
+            callBusy={apps.callBusy}
+            callError={apps.callError}
+            callResult={apps.callResult}
+            onInput={apps.setCallInput}
+            onSubmit={apps.submitCall}
+            inputRef={methodInputRef}
+            keys={keybar}
+          />
+        ) : screen === 'blocks' ? (
+          <BlocksScreen
+            network={network}
+            live={live}
+            running={tail.running}
+            paused={tail.paused}
+            latestRound={tail.latestRound}
+            error={tail.error}
+            store={store}
+            views={tail.views}
+            width={width}
+            onToggle={tail.togglePause}
+            onOpen={openTarget}
+            keys={keybar}
+          />
+        ) : screen === 'plugins' ? (
+          <PluginsScreen
+            plugins={EXPLORER_PLUGIN_INFO.map((info) => ({
+              ...info,
+              enabled: !disabledPlugins.has(info.name),
+            }))}
+            width={width}
+            onToggle={togglePlugin}
+            keys={keybar}
+          />
+        ) : screen === 'assets' || screen === 'txns' ? (
+          <ShelfScreen
+            title={screen === 'assets' ? 'ASSETS' : 'TRANSACTIONS'}
+            accountName={senderAccount?.name}
+            address={activeSender}
+            loading={accounts.shelfLoading}
+            error={accounts.shelfError}
+            empty={screen === 'assets' ? 'No assets on this account.' : 'No transactions yet.'}
+            store={store}
+            view={accounts.shelfView}
+            width={width}
+            onOpen={openTarget}
+            onMore={accounts.loadMoreShelf}
+            loadingMore={accounts.shelfLoadingMore}
+            keys={keybar}
+          />
+        ) : (
+          <box flexGrow={1} flexDirection="row">
+            {showNav ? (
+              <NavPane
+                sections={sections}
+                selectedId={selectedId}
+                width={navWidth}
+                onSelect={feed.selectSection}
+              />
+            ) : null}
+            <ContentPane
               sections={sections}
               selectedId={selectedId}
-              width={navWidth}
-              onSelect={feed.selectSection}
+              store={store}
+              focused={focus === 'content'}
+              busyPayment={busy && flow !== null}
+              liveThinkingSectionId={agentBusy ? agentSectionRef.current : null}
+              hasAgent={Boolean(agentConfig)}
+              keys={keybar}
+              width={showNav ? width - navWidth : width}
+              scrollRef={feed.contentScrollRef}
+              sectionRegistry={feed.sectionRegistry}
+              onSelect={feed.markSection}
+              onToggleThinking={feed.toggleThinking}
+              onOpen={openTarget}
+              onClose={closeSection}
+              onMore={loadMore}
+              onSuggest={(text) => {
+                if (composerRef.current) composerRef.current.value = text
+                setFocus('composer')
+              }}
+              loadingMoreItemId={loadingMoreItemId}
+              cursorItemId={feed.cursorItemId}
+              cardRegistry={feed.cardRegistry}
+              onSelectItem={feed.setCursor}
+              status={status}
             />
-          ) : null}
-          <ContentPane
-            sections={sections}
-            selectedId={selectedId}
-            store={store}
-            focused={focus === 'content'}
-            busyPayment={busy && flow !== null}
-            liveThinkingSectionId={agentBusy ? agentSectionRef.current : null}
-            hasAgent={Boolean(agentConfig)}
-            keys={keybar}
-            width={showNav ? width - navWidth : width}
-            scrollRef={feed.contentScrollRef}
-            sectionRegistry={feed.sectionRegistry}
-            onSelect={feed.markSection}
-            onToggleThinking={feed.toggleThinking}
-            onOpen={openTarget}
-            onClose={closeSection}
-            onMore={loadMore}
-            onSuggest={(text) => {
-              if (composerRef.current) composerRef.current.value = text
-              setFocus('composer')
-            }}
-            loadingMoreItemId={loadingMoreItemId}
-            cursorItemId={feed.cursorItemId}
-            cardRegistry={feed.cardRegistry}
-            onSelectItem={feed.setCursor}
-            status={status}
+          </box>
+        )}
+        {screen === 'chat' ? (
+          <Composer
+            epoch={inputEpoch}
+            focused={composerFocused}
+            hint={hint}
+            inputRef={composerRef}
+            onFocus={() => setFocus('composer')}
+            onSubmit={submit}
           />
-        </box>
-      )}
-      {screen === 'chat' ? (
-        <Composer
-          epoch={inputEpoch}
-          focused={composerFocused}
-          hint={hint}
-          inputRef={composerRef}
-          onFocus={() => setFocus('composer')}
-          onSubmit={submit}
-        />
-      ) : null}
-      {approvalOpen ? (
-        <ApprovalModal
-          model={modalModel}
-          network={network}
-          origin={payment.flowOrigin}
-          screenWidth={width}
-          screenHeight={height}
-        />
-      ) : null}
-      {confirm ? (
-        <ConfirmModal
-          title={`AGENT ▸ ${network.toUpperCase()}`}
-          kicker={confirm.title}
-          lines={confirm.lines}
-          screenWidth={width}
-          screenHeight={height}
-        />
-      ) : null}
-    </box>
+        ) : null}
+        {approvalOpen ? (
+          <ApprovalModal
+            model={modalModel}
+            network={network}
+            origin={payment.flowOrigin}
+            screenWidth={width}
+            screenHeight={height}
+          />
+        ) : null}
+        {confirm ? (
+          <ConfirmModal
+            title={`AGENT ▸ ${network.toUpperCase()}`}
+            kicker={confirm.title}
+            lines={confirm.lines}
+            screenWidth={width}
+            screenHeight={height}
+          />
+        ) : null}
+      </box>
     </CopyContext.Provider>
   )
 }

@@ -1,4 +1,4 @@
-import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/plugins/vestige'
 
 import { Button, Fact, Frame, Header, innerWidth, Rule } from '../ui.js'
 
@@ -101,7 +101,9 @@ export function MarketRankedCard({
               value={[asset.ticker, asset.name].filter(Boolean).join(' — ') || '—'}
               width={body}
             />
-            {asset.rank !== null ? <Fact label="rank" value={`#${asset.rank}`} width={body} /> : null}
+            {asset.rank !== null ? (
+              <Fact label="rank" value={`#${asset.rank}`} width={body} />
+            ) : null}
             <Fact
               label="price"
               value={asset.priceUsd !== null ? `$${trimPrice(asset.priceUsd)}` : '—'}

@@ -22,7 +22,10 @@ const groups = corpus.groups as unknown as Record<
 
 const recordings: [string, GraphTransaction[]][] = [
   ...Object.entries(transactions).map(([id, txn]): [string, GraphTransaction[]] => [id, [txn]]),
-  ...Object.entries(groups).map(([id, group]): [string, GraphTransaction[]] => [id, group.transactions]),
+  ...Object.entries(groups).map(([id, group]): [string, GraphTransaction[]] => [
+    id,
+    group.transactions,
+  ]),
 ]
 
 // Escrow addresses recorded from algosdk getApplicationAddress for the corpus apps.
@@ -43,7 +46,10 @@ function verticalIndexes(row: GraphHorizontal): number[] {
 }
 
 /** Expected (depth, isRemainder) row sequence per the wire's innerTxns nesting. */
-function expectedRowShape(txns: GraphTransaction[], depth = 0): { depth: number; isRemainder: boolean }[] {
+function expectedRowShape(
+  txns: GraphTransaction[],
+  depth = 0,
+): { depth: number; isRemainder: boolean }[] {
   return txns.flatMap((txn) => {
     const rows = [{ depth, isRemainder: false }]
     if ((txn.type === 'pay' || txn.type === 'axfer') && txn.closeTo !== undefined) {
@@ -66,7 +72,12 @@ function accountNumberClaims(graph: TransactionsGraph): [string, number][] {
     if (vertical.type === 'application') {
       return [
         ...(vertical.linkedAccount
-          ? [[vertical.linkedAccount.address, vertical.linkedAccount.accountNumber] as [string, number]]
+          ? [
+              [vertical.linkedAccount.address, vertical.linkedAccount.accountNumber] as [
+                string,
+                number,
+              ],
+            ]
           : []),
         ...vertical.associatedAccounts.map((a): [string, number] => [a.address, a.accountNumber]),
       ]
@@ -117,13 +128,17 @@ describe('transaction graph structural invariants', () => {
       expect(numbers).toEqual(numbers.map((_, i) => i + 1))
 
       // Dedupe: one column per entity.
-      const accountAddresses = graph.verticals.flatMap((v) => (v.type === 'account' ? [v.address] : []))
+      const accountAddresses = graph.verticals.flatMap((v) =>
+        v.type === 'account' ? [v.address] : [],
+      )
       expect(new Set(accountAddresses).size).toBe(accountAddresses.length)
       const escrowAddresses = graph.verticals.flatMap((v) =>
         v.type === 'application' && v.linkedAccount ? [v.linkedAccount.address] : [],
       )
       for (const escrow of escrowAddresses) expect(accountAddresses).not.toContain(escrow)
-      const applicationIds = graph.verticals.flatMap((v) => (v.type === 'application' ? [v.applicationId] : []))
+      const applicationIds = graph.verticals.flatMap((v) =>
+        v.type === 'application' ? [v.applicationId] : [],
+      )
       expect(new Set(applicationIds).size).toBe(applicationIds.length)
       const assetIds = graph.verticals.flatMap((v) => (v.type === 'asset' ? [v.assetId] : []))
       expect(new Set(assetIds).size).toBe(assetIds.length)
@@ -132,7 +147,10 @@ describe('transaction graph structural invariants', () => {
   }
 
   test('an empty group builds an empty graph', () => {
-    expect(buildTransactionsGraph([], { appAddressFor })).toEqual({ verticals: [], horizontals: [] })
+    expect(buildTransactionsGraph([], { appAddressFor })).toEqual({
+      verticals: [],
+      horizontals: [],
+    })
   })
 })
 
@@ -151,7 +169,14 @@ describe('hand-verified against algokit-lora snapshots', () => {
     expect(graph.horizontals).toEqual([
       {
         representation: { kind: 'selfLoop', vertical: 0, fromTag: 1, toTag: 1 },
-        label: { type: 'assetOptIn', assetAmount: 0, assetId: 312769, assetDecimals: 6, assetUnitName: 'USDt', assetName: 'Tether USDt' },
+        label: {
+          type: 'assetOptIn',
+          assetAmount: 0,
+          assetId: 312769,
+          assetDecimals: 6,
+          assetUnitName: 'USDt',
+          assetName: 'Tether USDt',
+        },
         depth: 0,
         ancestors: [],
         isRemainder: false,
@@ -249,7 +274,11 @@ describe('hand-verified against algokit-lora snapshots', () => {
     // The close-out remainder is its own sub-row back to the close-to account;
     // fromTag stays the sender-side tag after index normalization.
     expect(remainder!.isRemainder).toBe(true)
-    expect(remainder!.label).toEqual({ type: 'assetTransferRemainder', assetAmount: 1, assetId: 847594689 })
+    expect(remainder!.label).toEqual({
+      type: 'assetTransferRemainder',
+      assetAmount: 1,
+      assetId: 847594689,
+    })
     expect(remainder!.representation).toEqual({
       kind: 'vector',
       fromVertical: 0,
@@ -294,7 +323,11 @@ describe('hand-verified against algokit-lora snapshots', () => {
       },
     ])
 
-    expect(graph.horizontals.map((row) => row.label.type)).toEqual(['appCall', 'payment', 'appCall'])
+    expect(graph.horizontals.map((row) => row.label.type)).toEqual([
+      'appCall',
+      'payment',
+      'appCall',
+    ])
     const [, payment, innerCall] = graph.horizontals
     expect(payment!.label.amountMicroAlgos).toBe(236706032)
     expect(payment!.representation).toEqual({
@@ -345,9 +378,21 @@ describe('single transaction with nested inners', () => {
         applicationId: 1002541853,
         linkedAccount: { address: ESCROWS[1002541853], accountNumber: 4 },
         associatedAccounts: [
-          { kind: 'rekey', address: '2PIFZW53RHCSFSYMCFUBW4XOCXOMB7XOYQSQ6KGT3KVGJTL4HM6COZRNMM', accountNumber: 3 },
-          { kind: 'rekey', address: 'FCHEP67BCAA64RTZZNHLOUJF22TDWPWKSWO4FDRLLHC3NMKCCMRCKPIYSM', accountNumber: 5 },
-          { kind: 'rekey', address: 'EOXLRDMDV4Y7GEWY5GEDCIJV7SQM3A3TBHYAPBTWHS7JTOOYHZXPUEGCE4', accountNumber: 6 },
+          {
+            kind: 'rekey',
+            address: '2PIFZW53RHCSFSYMCFUBW4XOCXOMB7XOYQSQ6KGT3KVGJTL4HM6COZRNMM',
+            accountNumber: 3,
+          },
+          {
+            kind: 'rekey',
+            address: 'FCHEP67BCAA64RTZZNHLOUJF22TDWPWKSWO4FDRLLHC3NMKCCMRCKPIYSM',
+            accountNumber: 5,
+          },
+          {
+            kind: 'rekey',
+            address: 'EOXLRDMDV4Y7GEWY5GEDCIJV7SQM3A3TBHYAPBTWHS7JTOOYHZXPUEGCE4',
+            accountNumber: 6,
+          },
         ],
       },
       {
@@ -371,7 +416,9 @@ describe('single transaction with nested inners', () => {
     ])
 
     expect(graph.horizontals).toHaveLength(14)
-    expect(graph.horizontals.map((row) => row.depth)).toEqual([0, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1])
+    expect(graph.horizontals.map((row) => row.depth)).toEqual([
+      0, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1,
+    ])
 
     const rows = graph.horizontals
     expect(rows[0]!.representation).toEqual({
@@ -418,7 +465,12 @@ describe('single transaction with nested inners', () => {
     expect(rows[12]!.ancestors).toEqual([0, 11])
 
     // inner/9: self-payment (rekey back) is a self loop on the sender column.
-    expect(rows[13]!.representation).toEqual({ kind: 'selfLoop', vertical: 0, fromTag: 'rekey', toTag: 1 })
+    expect(rows[13]!.representation).toEqual({
+      kind: 'selfLoop',
+      vertical: 0,
+      fromTag: 'rekey',
+      toTag: 1,
+    })
     expect(rows[13]!.label).toEqual({ type: 'rekey', amountMicroAlgos: 0 })
   })
 
@@ -595,7 +647,9 @@ describe('created ids, freezes, and asset configs', () => {
   })
 
   test('acfg without params on an existing asset is a destroy', () => {
-    const graph = buildTransactionsGraph([{ ...base, type: 'acfg', assetId: 987 }], { appAddressFor })
+    const graph = buildTransactionsGraph([{ ...base, type: 'acfg', assetId: 987 }], {
+      appAddressFor,
+    })
     expect(graph.verticals[1]).toEqual({ type: 'asset', assetId: 987 })
     expect(graph.horizontals[0]!.label).toEqual({ type: 'assetDestroy' })
   })
@@ -655,7 +709,11 @@ describe('wire-level approximations', () => {
 
     const opUpIndexes = graph.verticals.flatMap((v, i) => (v.type === 'opUp' ? [i] : []))
     expect(opUpIndexes).toHaveLength(1)
-    expect(graph.horizontals.map((row) => row.label.type)).toEqual(['appCall', 'appCreate', 'appCreate'])
+    expect(graph.horizontals.map((row) => row.label.type)).toEqual([
+      'appCall',
+      'appCreate',
+      'appCreate',
+    ])
     for (const row of graph.horizontals.slice(1)) {
       expect(row.representation).toMatchObject({ kind: 'vector', toVertical: opUpIndexes[0]! })
     }
@@ -665,7 +723,9 @@ describe('wire-level approximations', () => {
     const busy: GraphTransaction = { ...opUpInner, logs: ['aGk='] }
     const graph = buildTransactionsGraph([busy], { appAddressFor })
     expect(graph.verticals.some((v) => v.type === 'opUp')).toBe(false)
-    expect(graph.verticals.some((v) => v.type === 'application' && v.applicationId === 0)).toBe(true)
+    expect(graph.verticals.some((v) => v.type === 'application' && v.applicationId === 0)).toBe(
+      true,
+    )
   })
 
   test('clawback rows tag the revoked account on the sender endpoint', () => {
@@ -686,7 +746,9 @@ describe('wire-level approximations', () => {
         type: 'account',
         address: clawback.sender,
         accountNumber: 1,
-        associatedAccounts: [{ kind: 'clawback', address: clawback.clawbackFrom!, accountNumber: 2 }],
+        associatedAccounts: [
+          { kind: 'clawback', address: clawback.clawbackFrom!, accountNumber: 2 },
+        ],
       },
       { type: 'account', address: clawback.receiver!, accountNumber: 3, associatedAccounts: [] },
     ])
@@ -706,7 +768,12 @@ describe('wire-level approximations', () => {
     const graph = buildTransactionsGraph([txn])
 
     // The escrow keeps its own account column and applications carry no linked account.
-    expect(graph.verticals.map((v) => v.type)).toEqual(['account', 'application', 'account', 'application'])
+    expect(graph.verticals.map((v) => v.type)).toEqual([
+      'account',
+      'application',
+      'account',
+      'application',
+    ])
     for (const vertical of graph.verticals) {
       if (vertical.type === 'application') expect(vertical.linkedAccount).toBeUndefined()
     }
@@ -725,7 +792,11 @@ describe('stored group records feed the graph', () => {
       'wDegGrdXE32WoxPfioFELwPVWBIiZK0GF1bwos7fJs0='
     ]
     const record = buildTransactionGroupRecord(
-      { resultId: 'result-group-retention', toolCallId: 'tool-call-group-retention', network: 'testnet' },
+      {
+        resultId: 'result-group-retention',
+        toolCallId: 'tool-call-group-retention',
+        network: 'testnet',
+      },
       wire,
     )
     if (record.state !== 'success') throw new Error('Expected success record')

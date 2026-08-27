@@ -11,11 +11,36 @@ Works with **Claude Code**, **Codex**, **Cursor**, **Copilot**, **Grok**,
 
 Alpha release — [feedback welcome](https://github.com/initlabsai/vibekit/issues).
 
+## Requirements
+
+| For | You need |
+| --- | --- |
+| Browsing the chain — queries, the Explorer, `vibekit new` | Nothing. The CLI and Explorer are self-contained binaries. |
+| **Signing anything** — payments, assets, deploys | **Node.js** (and `npm` once). The keystore daemon runs under Node. |
+| **Building a project** — compiling and testing contracts | **Node.js 24+**. The starter templates use `puya-ts`, `tsx`, and `vitest`. |
+| LocalNet | Docker Compose v2. On Linux, add yourself to the `docker` group (`sudo usermod -aG docker $USER`, then log out and back in). |
+| The keystore, on Linux | A Secret Service keychain |
+| The keystore, on Windows | [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (`winget install Microsoft.VCRedist.2015+.x64`) |
+
+`vibekit doctor` reports what is missing without changing anything.
+
 ## Quick start
 
+macOS and Linux:
+
 ```bash
-curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
+curl -fsSL https://getvibekit.ai/alpha | sh
 ```
+
+Windows:
+
+```powershell
+irm https://getvibekit.ai/alpha.ps1 | iex
+```
+
+Both install the CLI and the Explorer sidecar. There is no stable release yet,
+so `/alpha` and `/alpha.ps1` are `/install` and `/install.ps1` with the
+prerelease channel pre-set.
 
 Scaffold a project and set up your agent:
 
@@ -32,9 +57,6 @@ vibekit explore
 
 Then open your AI tool in the project and start building.
 
-> Windows binaries are attached to each [release](https://github.com/initlabsai/vibekit/releases).
-> The PowerShell installer is not ready yet.
-
 ## Platform support
 
 | Platform              | Status |
@@ -44,8 +66,8 @@ Then open your AI tool in the project and start building.
 | macOS (Intel)         | Alpha  |
 | Windows (x64)         | Alpha  |
 
-Development runs on Linux. macOS and Windows binaries are built in CI and are
-less exercised.
+Development runs on Linux. The macOS and Windows binaries are built in CI and
+have been run by hand; they are less exercised than Linux.
 
 ## Why VibeKit
 
@@ -97,12 +119,19 @@ vibekit mcp                # Run the MCP server over stdio
 
 Templates for `vibekit new`: `contracts`, `fullstack`, `kitchensink`.
 
-## Packages
+## Package
 
-The CLI is one host over a shared tool contract. The same tools are available
-as TypeScript packages — `@initlabs/vibekit-core`, `-tools`, `-mcp`, `-agent`,
-`-signer-keystore`, `-preset`, and the plugins — published to npm under the
-`alpha` tag.
+The CLI is one host over a shared tool contract. The same tools ship as one
+TypeScript package, `@initlabs/vibekit`, published to npm under the `alpha`
+tag:
+
+```bash
+bun add @initlabs/vibekit@alpha
+```
+
+`.` is the tool contract; `./tools`, `./tools/views`, `./preset`, `./mcp`,
+`./mcp/stdio`, `./mcp/http`, `./agent`, `./agent/config`, `./signer-keystore`,
+and `./plugins/<name>` are the rest.
 
 ## Development
 

@@ -1,4 +1,4 @@
-import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
+import type { AssetProfile } from '@initlabs/vibekit/plugins/pera'
 
 import { COLORS, wrapLines } from '../theme.js'
 import { Button, Fact, Frame, Header, Hero, innerWidth, Rule, type Tone } from '../ui.js'
@@ -13,7 +13,9 @@ function tierTone(tier: string): Tone {
 }
 
 /** Project handles and links, in display order; each row copies its value. */
-const PROJECT_LINKS: ReadonlyArray<[key: keyof NonNullable<AssetProfile['project']>, label: string]> = [
+const PROJECT_LINKS: ReadonlyArray<
+  [key: keyof NonNullable<AssetProfile['project']>, label: string]
+> = [
   ['url', 'website'],
   ['twitter', 'twitter'],
   ['discord', 'discord'],
@@ -47,7 +49,9 @@ export function PeraAssetCard({
         chip={network.toUpperCase()}
         pill={data.verificationTier.toUpperCase()}
         tone={tierTone(data.verificationTier)}
-        action={onOpen ? <Button label="asset ▸" onPress={() => onOpen(data.assetId)} /> : undefined}
+        action={
+          onOpen ? <Button label="asset ▸" onPress={() => onOpen(data.assetId)} /> : undefined
+        }
       />
       <Hero
         value={data.name ?? `Asset #${data.assetId}`}
@@ -56,7 +60,9 @@ export function PeraAssetCard({
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
         <Fact label="id" value={String(data.assetId)} copy={String(data.assetId)} width={body} />
-        {data.priceUsd ? <Fact label="price" value={`$${trimPrice(data.priceUsd)}`} width={body} /> : null}
+        {data.priceUsd ? (
+          <Fact label="price" value={`$${trimPrice(data.priceUsd)}`} width={body} />
+        ) : null}
         {data.isCollectible ? <Fact label="collectible" value="yes" width={body} /> : null}
         {project.name && project.name !== data.name ? (
           <Fact label="project" value={project.name} width={body} />
