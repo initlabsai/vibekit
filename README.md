@@ -81,8 +81,12 @@ LocalNet, mint test assets, call methods, and check the result. Ask it what
 went wrong and it reads the chain to find out.
 
 Keys never reach the model. Signing goes through a local keystore daemon over
-a socket, and every write pauses for your approval first. Signerless setups
-return an unsigned transaction group for a wallet to review instead.
+a socket; the agent asks for a signature and never sees key material.
+
+Who reviews a write depends on the host. In the Explorer, every write stops at
+an approval screen showing the decoded group and its simulation. `vibekit mcp`
+defaults to execute mode and signs without prompting — set `SIGNING=compose`
+to get unsigned transaction groups back for a wallet to review instead.
 
 ## The Explorer
 
@@ -129,9 +133,9 @@ tag:
 bun add @initlabs/vibekit@alpha
 ```
 
-`.` is the tool contract; `./tools`, `./tools/views`, `./preset`, `./mcp`,
-`./mcp/stdio`, `./mcp/http`, `./agent`, `./agent/config`, `./signer-keystore`,
-and `./plugins/<name>` are the rest.
+`.` is the tool contract (also at `./core`); `./tools`, `./tools/views`,
+`./preset`, `./mcp`, `./mcp/stdio`, `./mcp/http`, `./agent`, `./agent/config`,
+`./signer-keystore`, and `./plugins/<name>` are the rest.
 
 ## Development
 
