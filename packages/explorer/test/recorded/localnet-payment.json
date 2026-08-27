@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-08-19",
+  "network": "localnet",
+  "note": "Real engine and custody outputs: send_payment (compose) and simulate_transactions run through resolveDeployment/executeToolCall against a live localnet; the group was then signed by the keystore daemon and submitted, confirming on-chain. The mapper contract tests pin these wire shapes and bytes.",
+  "request": {
+    "sender": "WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ",
+    "receiver": "L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE",
+    "amountMicroAlgos": 250000,
+    "note": "Explorer fixture payment"
+  },
+  "compose": {
+    "unsignedGroup": [
+      "iqNhbXTOAAPQkKNmZWXNA+iiZnYVo2dlbqxkb2NrZXJuZXQtdjGiZ2jEIDRSF9ew9NmLHRa+ULWIZ8GqxKO/Gu7Xe7DYRFFb9QyQomx2zQP9pG5vdGXEGEV4cGxvcmVyIGZpeHR1cmUgcGF5bWVudKNyY3bEIF6YZnqjef52E0irFLpgSz9PaWcfjBDB9oIUytTxnBiDo3NuZMQgs+PXcPbm7M3HcUGJ+8+wPucmkjyuEoMiehGlqSr/frGkdHlwZaNwYXk="
+    ],
+    "summary": "[0] pay 250000 microALGO WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ → L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE"
+  },
+  "simulate": {
+    "wouldSucceed": true,
+    "simulatedRound": 21,
+    "txids": ["M6ZESI2KYMT7W7XPAXK3EA45RTJKYFD2ECPRYSR2MPZDWXUWAVXA"],
+    "transactionResults": [
+      {
+        "txid": "M6ZESI2KYMT7W7XPAXK3EA45RTJKYFD2ECPRYSR2MPZDWXUWAVXA"
+      }
+    ],
+    "returns": []
+  },
+  "signed": {
+    "transactions": [
+      "gqNzaWfEQKylLIb3qUiuHrP4qwExEiueoW1+ER0BTwLjh6uwae6+UVYL+adJK8VkhYi/AS1OXKcCDoVkoEmk94VYlEF3jQmjdHhuiqNhbXTOAAPQkKNmZWXNA+iiZnYVo2dlbqxkb2NrZXJuZXQtdjGiZ2jEIDRSF9ew9NmLHRa+ULWIZ8GqxKO/Gu7Xe7DYRFFb9QyQomx2zQP9pG5vdGXEGEV4cGxvcmVyIGZpeHR1cmUgcGF5bWVudKNyY3bEIF6YZnqjef52E0irFLpgSz9PaWcfjBDB9oIUytTxnBiDo3NuZMQgs+PXcPbm7M3HcUGJ+8+wPucmkjyuEoMiehGlqSr/frGkdHlwZaNwYXk="
+    ],
+    "txIds": ["M6ZESI2KYMT7W7XPAXK3EA45RTJKYFD2ECPRYSR2MPZDWXUWAVXA"],
+    "signer": "WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ"
+  },
+  "confirmation": {
+    "transactionId": "M6ZESI2KYMT7W7XPAXK3EA45RTJKYFD2ECPRYSR2MPZDWXUWAVXA",
+    "confirmedRound": 22
+  }
+}

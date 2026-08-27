@@ -1,0 +1,42 @@
+---
+// OpenTUI's `tiny` face, converted from block glyphs to geometry so browser
+// font metrics cannot change the wordmark.
+const LOGO = ['█ █ █ █▄▄ █▀▀ █▄▀ █ ▀█▀', '▀▄▀ █ █▄█ ██▄ █ █ █  █']
+const cellWidth = 5
+const rowHeight = 8
+const width = Math.max(...LOGO.map((row) => row.length)) * cellWidth
+const blocks = LOGO.flatMap((row, rowIndex) =>
+  [...row].flatMap((glyph, columnIndex) => {
+    const x = columnIndex * cellWidth
+    const y = rowIndex * rowHeight
+    if (glyph === '█') return [{ x, y, height: rowHeight }]
+    if (glyph === '▀') return [{ x, y, height: rowHeight / 2 }]
+    if (glyph === '▄') return [{ x, y: y + rowHeight / 2, height: rowHeight / 2 }]
+    return []
+  }),
+)
+---
+
+<span class="mark">
+  <svg viewBox={`0 0 ${width} ${2 * rowHeight}`} role="img" aria-label="VibeKit" shape-rendering="crispEdges">
+    {blocks.map(({ x, y, height }) => <rect x={x} y={y} width={cellWidth} height={height} />)}
+  </svg>
+</span>
+
+<style>
+  .mark {
+    align-items: center;
+    display: inline-flex;
+  }
+
+  svg {
+    display: block;
+    height: 1.55rem;
+    overflow: visible;
+    width: auto;
+  }
+
+  rect {
+    fill: var(--brass-bright, var(--vk-brass-bright, #ffb454));
+  }
+</style>

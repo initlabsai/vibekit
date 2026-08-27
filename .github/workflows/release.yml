@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: linux-x64 }
+          - { os: macos-latest, target: darwin-arm64 }
+          - { os: macos-15-intel, target: darwin-x64 }
+          - { os: windows-latest, target: win32-x64, ext: .exe }
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.0'
+
+      - run: bun install --frozen-lockfile
+      - run: bun run bundle-skills
+        working-directory: apps/cli
+      - run: bunx turbo run build --filter=@initlabs/vibekit-cli^... --filter=@initlabs/vibekit-tui^...
+
+      # OpenTUI ships a native lib per platform, so each target builds on its
+      # own OS rather than cross-compiling from one runner.
+      - run: bun run build:${{ matrix.target }}
+        working-directory: apps/cli
+      - run: bun run build:${{ matrix.target }}
+        working-directory: apps/tui
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vibekit-${{ matrix.target }}
+          path: |
+            apps/cli/bin/vibekit-${{ matrix.target }}${{ matrix.ext }}
+            apps/tui/bin/vibekit-tui-${{ matrix.target }}${{ matrix.ext }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      # A tag with a hyphen (v1.0.0-alpha.0) is a prerelease.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          case "$TAG" in *-*) pre=--prerelease ;; *) pre= ;; esac
+          gh release create "$TAG" --repo "$REPO" --title "$TAG" --generate-notes $pre || true
+          gh release upload "$TAG" --repo "$REPO" --clobber $(find assets -type f)

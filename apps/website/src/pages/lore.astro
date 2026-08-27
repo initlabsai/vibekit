@@ -1,0 +1,72 @@
+---
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import Landing from '../layouts/Landing.astro'
+---
+
+<Landing title="VibeKit — lore" description="Where VibeKit came from, why it exists, and what it's for. Some of it is even true.">
+  <Header />
+
+  <main class="lore shell">
+    <header class="lore-head">
+      <p class="eyebrow">TRANSMISSION LOG // ORIGIN</p>
+      <h1>a toolkit from <em>the future.</em></h1>
+      <p class="lede">How VibeKit got here, according to VibeKit. Followed by the parts we can actually prove.</p>
+    </header>
+
+    <article class="story">
+      <p class="stamp"><span>2036-02-11</span><span>ORIGIN UNVERIFIED</span><span>RECONSTRUCTION DETERMINISTIC</span></p>
+
+      <p>In spring 2036 a quantum computer came online that could do what cryptographers had been warning about for years. Within a month every digital signature the world’s money ran on was forgeable. Banks, settlement rails, most blockchains: gone, frozen, or worse.<sup class="fn">1</sup> The record calls it <b>the Great Post-Quantum Collapse</b>. Everyone living through it called it the outage.<sup class="fn">2</sup></p>
+
+      <p>One chain kept producing blocks.<sup class="fn">3</sup> Algorand had spent years moving to post-quantum cryptography. Falcon signatures on accounts since v5, a roadmap it actually followed. It was the only ledger anyone still trusted.</p>
+
+      <p>It wasn’t enough. Not enough of the world had been built on it. The rails that survived were an island, and the island was too small.</p>
+
+      <p>Somewhere in the 2030s, entangled particles turned out to correlate across time as well as space. Nobody has explained this to anyone’s satisfaction. It worked anyway. The channel was terrible: a few thousand bits across a decade. Nowhere near enough to send software, so a small team sent prompts instead. You don’t ship the thing, you ship the instructions and let the machine on the far end build it: the tools they wished every builder had been handed in 2026. They tested it against models that wouldn’t exist for eight years.</p>
+
+      <p>It arrived in early 2026, in a session nobody logged. An init commit with a single prompt. A wordmark in block glyphs. A README that said only: <em>give this prompt to your coding agent. humanity depends on it.</em> And some MP3s, with instructions to put them on everything.</p>
+
+      <p>The developer who ran it still doesn’t understand the code. He didn’t write it. He didn’t exactly not write it. He typed something, went to make coffee, and came back to a repository. He called it VibeKit, because he had vibed it into existence and this was the kit.</p>
+
+      <p>He never found out what it was for. The plan didn’t need him to understand it. It needed him to ship it. Now it needs enough of you to use it before 2036.</p>
+
+      <p class="stamp end"><span>END OF TRANSMISSION</span><span>MAKE IT UBIQUITOUS</span></p>
+
+      <p class="footnote"><sup>1</sup> Solana was also affected. Establishing this took several days, as the symptoms were not considered unusual.</p>
+
+      <p class="footnote"><sup>2</sup> XRP, which by 2036 had at last replaced SWIFT as the ISO 20022 rails for the entire global financial system, called it The Haltening. The community maintained that it was priced in.</p>
+
+      <p class="footnote"><sup>3</sup> It was not Ethereum. Its 70-year post-quantum roadmap was, at the time of the outage, proceeding exactly on schedule.</p>
+    </article>
+
+    <section class="truth">
+      <p class="eyebrow">THE PARTS WE CAN PROVE</p>
+      <h2>what it actually is.</h2>
+      <div class="truth-grid">
+        <div>
+          <h3>the problem</h3>
+          <p>Coding agents write code fast and guess at Algorand badly. On a chain, guessing costs money. And the easiest way to let an agent transact is to hand it a key — the one thing you must never do.</p>
+        </div>
+        <div>
+          <h3>the toolkit</h3>
+          <p>A CLI that scaffolds a project and configures your agent. An MCP server with typed tools for accounts, assets, transactions, and contracts. Maintained skills installed into the project. A keystore that signs locally, so seeds never enter model context.</p>
+        </div>
+        <div>
+          <h3>the explorer</h3>
+          <p>A terminal console for the chain. Ask in English or paste an ID; every card is real chain data. Writes are simulated and shown to you before anything is signed.</p>
+        </div>
+        <div>
+          <h3>the goal</h3>
+          <p>Make Algorand the easiest chain for an agent to build on correctly, so it ends up everywhere. The quantum part isn’t fiction: Algorand accounts already support post-quantum Falcon signatures as of v5, and full resistance is on the roadmap. Open source, by <a href="https://github.com/initlabsai">Init Labs</a>.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
+        <a class="button quiet" href="/docs/">read the field manual</a>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Landing>

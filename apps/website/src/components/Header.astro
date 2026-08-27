@@ -1,0 +1,38 @@
+---
+import Mark from './Mark.astro'
+import Player from './Player.astro'
+const path = Astro.url.pathname
+---
+
+<header class="nav shell" data-nav>
+  <a class="brand" href="/" aria-label="VibeKit home"><Mark /></a>
+  <nav aria-label="Main navigation">
+    <div class="links" id="nav-links" data-links>
+      <a href="/docs/">docs</a>
+      <a href="/lore/" aria-current={path.startsWith('/lore') ? 'page' : undefined}>lore</a>
+      <a href="https://github.com/initlabsai/vibekit">github <span aria-hidden="true">↗</span></a>
+    </div>
+    <Player />
+    <button class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links" data-burger>
+      <i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+    </button>
+  </nav>
+</header>
+
+<script>
+  const nav = document.querySelector('[data-nav]') as HTMLElement
+  const burger = nav.querySelector('[data-burger]') as HTMLButtonElement
+
+  const set = (open: boolean) => {
+    nav.classList.toggle('open', open)
+    burger.setAttribute('aria-expanded', String(open))
+  }
+
+  burger.addEventListener('click', () => set(!nav.classList.contains('open')))
+  // Close on navigation, on Escape, and on a click outside the header.
+  nav.querySelectorAll('[data-links] a').forEach((a) => a.addEventListener('click', () => set(false)))
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false))
+  document.addEventListener('click', (e) => {
+    if (!nav.contains(e.target as Node)) set(false)
+  })
+</script>

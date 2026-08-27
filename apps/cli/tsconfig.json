@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "bun"
+    ],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src",
+    "scripts"
+  ]
+}

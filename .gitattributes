@@ -1,0 +1,2 @@
+# Windows checkouts must not CRLF-mangle bundled skills or shell scripts.
+* text=auto eol=lf

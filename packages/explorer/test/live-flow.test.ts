@@ -1,0 +1,356 @@
+import { describe, expect, test } from 'bun:test'
+
+import {
+  buildPaymentConfirmationRecord,
+  buildPaymentDraftRecord,
+  buildPaymentSignedGroupRecord,
+  buildPaymentSimulationRecord,
+  completeApprovedPaymentFlow,
+  createFixturePaymentHost,
+  createFixtureResultStore,
+  startPaymentFlow,
+  createExplorerFixtureResultStore,
+  createPaymentFlowViewModel,
+  performLivePaymentStep,
+  type PaymentFlowHost,
+  type ResultStore,
+  type WriteFlowState,
+} from '../src/index.js'
+import { decodeUnsignedGroup } from '../src/live/index.js'
+import recorded from './recorded/localnet-payment.json'
+
+let counter = 0
+const newId = (prefix: string) => `${prefix}-${++counter}`
+
+function stubHost(overrides: Partial<PaymentFlowHost> = {}): PaymentFlowHost {
+  const decoded = decodeUnsignedGroup(recorded.compose.unsignedGroup)
+  return {
+    network: 'localnet',
+    async draftPayment() {
+      return buildPaymentDraftRecord(
+        {
+          resultId: newId('result-stub-draft'),
+          toolCallId: newId('tool-call-stub-draft'),
+          network: 'localnet',
+        },
+        recorded.compose,
+        decoded,
+      )
+    },
+    async simulateDraft(draftRecord) {
+      return buildPaymentSimulationRecord(
+        {
+          resultId: newId('result-stub-simulation'),
+          toolCallId: newId('tool-call-stub-simulation'),
+          network: draftRecord.network,
+        },
+        recorded.simulate,
+        decoded,
+      )
+    },
+    ...overrides,
+  }
+}
+
+const DRAFT_PARAMS = {
+  sender: recorded.request.sender,
+  receiver: recorded.request.receiver,
+  amountMicroAlgos: recorded.request.amountMicroAlgos,
+  note: recorded.request.note,
+}
+
+describe('shared live payment flow controller', () => {
+  test('walks draft → simulate → inspect → approval → decision over host-produced records', async () => {
+    const host = stubHost()
+    let store: ResultStore = createExplorerFixtureResultStore()
+    let flow: WriteFlowState | null = null
+
+    for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
+      const outcome = await performLivePaymentStep({
+        host,
+        store,
+        flow,
+        kind,
+        draftParams: DRAFT_PARAMS,
+        newId,
+      })
+      expect(outcome.ok).toBeTrue()
+      if (!outcome.ok) return
+      store = outcome.store
+      flow = outcome.flow
+    }
+    expect(flow?.stage).toBe('approved')
+
+    const derived = createPaymentFlowViewModel(store, flow!)
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.simulation?.wouldSucceed).toBeTrue()
+    expect(derived.model.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)
+  })
+
+  test('refuses signing and confirmation on a host without those capabilities', async () => {
+    const host = stubHost()
+    let store: ResultStore = createExplorerFixtureResultStore()
+    let flow: WriteFlowState | null = null
+    for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
+      const outcome = await performLivePaymentStep({
+        host,
+        store,
+        flow,
+        kind,
+        draftParams: DRAFT_PARAMS,
+        newId,
+      })
+      if (!outcome.ok) throw new Error(outcome.message)
+      store = outcome.store
+      flow = outcome.flow
+    }
+
+    const sign = await performLivePaymentStep({ host, store, flow, kind: 'sign', newId })
+    expect(sign).toEqual({ ok: false, message: expect.stringContaining('no signer') })
+    const confirm = await performLivePaymentStep({ host, store, flow, kind: 'confirm', newId })
+    expect(confirm).toEqual({ ok: false, message: expect.stringContaining('cannot submit') })
+  })
+
+  test('a signing host walks the flow to a confirmed on-chain record', async () => {
+    const host = stubHost({
+      async signDraft() {
+        return buildPaymentSignedGroupRecord(
+          {
+            resultId: newId('result-stub-signed'),
+            toolCallId: newId('tool-call-stub-signed'),
+            network: 'localnet',
+          },
+          recorded.signed,
+        )
+      },
+      async submitSigned() {
+        return buildPaymentConfirmationRecord(
+          {
+            resultId: newId('result-stub-confirmation'),
+            toolCallId: newId('tool-call-stub-confirmation'),
+            network: 'localnet',
+          },
+          recorded.confirmation,
+        )
+      },
+    })
+    let store: ResultStore = createExplorerFixtureResultStore()
+    let flow: WriteFlowState | null = null
+    const kinds = [
+      'draft',
+      'simulate',
+      'inspect',
+      'request-approval',
+      'approve',
+      'sign',
+      'confirm',
+    ] as const
+    for (const kind of kinds) {
+      const outcome = await performLivePaymentStep({
+        host,
+        store,
+        flow,
+        kind,
+        draftParams: DRAFT_PARAMS,
+        newId,
+      })
+      if (!outcome.ok) throw new Error(`${kind}: ${outcome.message}`)
+      store = outcome.store
+      flow = outcome.flow
+    }
+    expect(flow?.stage).toBe('confirmed')
+
+    const derived = createPaymentFlowViewModel(store, flow!)
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.signed).toEqual({
+      size: 1,
+      txIds: recorded.signed.txIds,
+      signer: recorded.signed.signer,
+    })
+    expect(derived.model.confirmation).toEqual(recorded.confirmation)
+  })
+
+  test('signing is never invoked before an approved decision exists', async () => {
+    let signCalls = 0
+    const host = stubHost({
+      async signDraft() {
+        signCalls += 1
+        throw new Error('should not be called')
+      },
+    })
+    let store: ResultStore = createExplorerFixtureResultStore()
+    let flow: WriteFlowState | null = null
+    for (const kind of ['draft', 'simulate', 'inspect', 'request-approval'] as const) {
+      const outcome = await performLivePaymentStep({
+        host,
+        store,
+        flow,
+        kind,
+        draftParams: DRAFT_PARAMS,
+        newId,
+      })
+      if (!outcome.ok) throw new Error(outcome.message)
+      store = outcome.store
+      flow = outcome.flow
+    }
+
+    const sign = await performLivePaymentStep({ host, store, flow, kind: 'sign', newId })
+    expect(sign).toEqual({ ok: false, message: 'Cannot sign from stage awaiting-approval' })
+    expect(signCalls).toBe(0)
+  })
+
+  test('surfaces host failures as explicit refusals, never partial state', async () => {
+    const host = stubHost({
+      async draftPayment() {
+        throw new Error('algod unreachable')
+      },
+    })
+    const store = createExplorerFixtureResultStore()
+    const outcome = await performLivePaymentStep({
+      host,
+      store,
+      flow: null,
+      kind: 'draft',
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    expect(outcome).toEqual({ ok: false, message: 'algod unreachable' })
+  })
+
+  test('refuses out-of-order steps with the machine message', async () => {
+    const host = stubHost()
+    const store = createExplorerFixtureResultStore()
+    const outcome = await performLivePaymentStep({
+      host,
+      store,
+      flow: null,
+      kind: 'simulate',
+      newId,
+    })
+    expect(outcome).toEqual({ ok: false, message: 'No payment flow is open' })
+  })
+})
+
+describe('auto-advanced payment flow', () => {
+  test('runs the mechanical stages and pauses only at the human decision', async () => {
+    const host = createFixturePaymentHost()
+    const seenStages: string[] = []
+    const run = await startPaymentFlow({
+      host,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+      onStep: (_store, flow) => seenStages.push(flow.stage),
+    })
+    expect(run.ok).toBeTrue()
+    expect(seenStages).toEqual(['drafted', 'simulated', 'inspected', 'awaiting-approval'])
+    expect(run.flow?.stage).toBe('awaiting-approval')
+
+    const derived = createPaymentFlowViewModel(run.store, run.flow!)
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.approval?.state).toBe('pending')
+  })
+
+  test('after approval a signing host completes to a confirmed record', async () => {
+    const host = createFixturePaymentHost()
+    const started = await startPaymentFlow({
+      host,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    if (!started.ok || !started.flow) throw new Error(started.message)
+    const approved = await performLivePaymentStep({
+      host,
+      store: started.store,
+      flow: started.flow,
+      kind: 'approve',
+      newId,
+    })
+    if (!approved.ok) throw new Error(approved.message)
+
+    const seenStages: string[] = []
+    const done = await completeApprovedPaymentFlow({
+      host,
+      store: approved.store,
+      flow: approved.flow,
+      newId,
+      onStep: (_store, flow) => seenStages.push(flow.stage),
+    })
+    expect(done.ok).toBeTrue()
+    expect(seenStages).toEqual(['signed', 'confirmed'])
+    expect(done.flow?.stage).toBe('confirmed')
+
+    const derived = createPaymentFlowViewModel(done.store, done.flow!)
+    if (!derived.ok) throw new Error(derived.error.message)
+    expect(derived.model.confirmation?.transactionId).toBe(derived.model.signed?.txIds[0])
+  })
+
+  test('a custody-less host rests honestly at approved', async () => {
+    const host = stubHost()
+    const started = await startPaymentFlow({
+      host,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    if (!started.ok || !started.flow) throw new Error(started.message)
+    const approved = await performLivePaymentStep({
+      host,
+      store: started.store,
+      flow: started.flow,
+      kind: 'approve',
+      newId,
+    })
+    if (!approved.ok) throw new Error(approved.message)
+
+    const done = await completeApprovedPaymentFlow({
+      host,
+      store: approved.store,
+      flow: approved.flow,
+      newId,
+    })
+    expect(done).toMatchObject({ ok: true, pausedForSigner: true })
+    expect(done.flow?.stage).toBe('approved')
+  })
+
+  test('a failed step keeps the progress already made', async () => {
+    const host = createFixturePaymentHost()
+    const broken = {
+      ...host,
+      async simulateDraft(): Promise<never> {
+        throw new Error('algod unreachable')
+      },
+    }
+    const run = await startPaymentFlow({
+      host: broken,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    expect(run.ok).toBeFalse()
+    expect(run.message).toBe('algod unreachable')
+    expect(run.flow?.stage).toBe('drafted')
+  })
+
+  test('completing is refused before an approval decision exists', async () => {
+    const host = createFixturePaymentHost()
+    const started = await startPaymentFlow({
+      host,
+      store: createFixtureResultStore(),
+      draftParams: DRAFT_PARAMS,
+      newId,
+    })
+    if (!started.ok || !started.flow) throw new Error(started.message)
+    const done = await completeApprovedPaymentFlow({
+      host,
+      store: started.store,
+      flow: started.flow,
+      newId,
+    })
+    expect(done).toMatchObject({
+      ok: false,
+      message: 'Cannot sign from stage awaiting-approval',
+    })
+  })
+})

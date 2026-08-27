@@ -1,0 +1,46 @@
+{
+  "name": "@initlabs/vibekit-plugin-pera",
+  "version": "1.0.0-alpha.0",
+  "description": "VibeKit plugin: Pera Wallet asset profiles (verification tier, project identity, USD price) for Algorand.",
+  "license": "MIT",
+  "author": "Init Labs LLC",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "@initlabs/vibekit-core": "^1.0.0-alpha.0",
+    "algosdk": ">=3.7.0 <4",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@initlabs/vibekit-core": "workspace:*",
+    "@types/bun": "^1.4.0",
+    "algosdk": "3.7.0",
+    "zod": "^4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initlabsai/vibekit.git",
+    "directory": "packages/plugin-pera"
+  },
+  "homepage": "https://github.com/initlabsai/vibekit#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

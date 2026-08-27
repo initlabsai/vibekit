@@ -1,0 +1,51 @@
+{
+  "hints": {},
+  "source": {
+    "approval": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50IFRNUExfRkVFCg==",
+    "clear": "I3ByYWdtYSB2ZXJzaW9uIDgKaW50IDEK"
+  },
+  "state": {
+    "global": {
+      "num_byte_slices": 2,
+      "num_uints": 3
+    },
+    "local": {
+      "num_byte_slices": 0,
+      "num_uints": 1
+    }
+  },
+  "schema": {
+    "global": {
+      "declared": {},
+      "reserved": {}
+    },
+    "local": {
+      "declared": {},
+      "reserved": {}
+    }
+  },
+  "contract": {
+    "name": "Vault",
+    "desc": "A tiny ARC-32 sample used by app-spec tests.",
+    "methods": [
+      {
+        "name": "deposit",
+        "desc": "Deposit into the vault.",
+        "args": [
+          {
+            "type": "pay",
+            "name": "payment"
+          },
+          {
+            "type": "uint64",
+            "name": "lockRounds"
+          }
+        ],
+        "returns": {
+          "type": "void"
+        }
+      }
+    ],
+    "networks": {}
+  }
+}

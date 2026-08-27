@@ -1,0 +1,265 @@
+---
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import Landing from '../layouts/Landing.astro'
+
+const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'AI SIGNS · NEVER SEES KEYS', 'CLI · MCP · EXPLORER', 'WRITES STOP FOR REVIEW', 'POST-QUANTUM READY', 'STILL STANDING IN 2036', 'FROM THE FUTURE, ALLEGEDLY']
+---
+
+<Landing>
+  <Header />
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-copy">
+        <h1 class="glitch" data-text="from prompt">from prompt<br />to <em>mainnet.</em></h1>
+        <p class="sub">the agentic stack for Algorand builders.</p>
+        <p class="lede">
+          VibeKit gives your coding agent current Algorand guidance, project templates, typed chain tools, and a signer that keeps keys out of the model.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
+          <a class="button quiet" href="/lore/">read the lore</a>
+        </div>
+        <pre class="install"><span>$</span> curl -fsSL getvibekit.ai/install | sh</pre>
+      </div>
+
+      <div class="tui" aria-label="A stylized VibeKit Explorer lookup" data-tui>
+        <div class="tui-top">
+          <span>◆ VIBEKIT <b>EXPLORER</b></span>
+          <span class="tui-live"><i aria-hidden="true"></i> MAINNET <b data-round>········</b></span>
+        </div>
+        <div class="tui-tabs" role="tablist" aria-label="Explorer pages">
+          <button type="button" role="tab" class="active" aria-selected="true" data-tab="explore">explore</button
+          ><button type="button" role="tab" aria-selected="false" data-tab="assets">assets</button
+          ><button type="button" role="tab" aria-selected="false" data-tab="apps">apps</button
+          ><button type="button" role="tab" aria-selected="false" data-tab="txns">txns</button
+          ><button type="button" role="tab" aria-selected="false" data-tab="blocks">blocks</button>
+        </div>
+        <div class="tui-feed">
+          <div class="tui-panel" data-panel="explore">
+          <div class="tui-query">
+            <span aria-hidden="true">›</span>
+            <p><span data-typed="look up vibekit.algo on mainnet">look up vibekit.algo on mainnet</span><i class="caret" aria-hidden="true"></i></p>
+            <small>AGENT LANE</small>
+          </div>
+          <div class="tui-cards reveal">
+            <article class="identity-card">
+              <div class="card-kicker"><span>NFD</span><span class="verified">● VERIFIED</span></div>
+              <strong>vibekit.algo</strong>
+              <p>VIBEKIT</p>
+              <dl>
+                <div><dt>network</dt><dd>mainnet</dd></div>
+                <div><dt>owner</dt><dd>EZ6NRX…QZPXI</dd></div>
+              </dl>
+            </article>
+            <aside class="round-card" aria-label="Live round signal">
+              <span>ROUND STREAM</span>
+              <div class="round-signal" aria-hidden="true" data-bars><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <strong>LIVE</strong>
+              <small>indexer caught up</small>
+            </aside>
+          </div>
+          <p class="tui-note reveal"><span>↳</span> deepseek flash v4 · via ZeroSignal</p>
+          </div>
+
+          <div class="tui-panel" data-panel="assets" hidden>
+            <div class="tui-table">
+              <div class="tt-head"><span>id</span><span>name</span><span>supply</span><span>dec</span></div>
+              <div class="tt-row on"><span>31566704</span><span>USDC</span><span>150.59M</span><span>6</span></div>
+              <div class="tt-row"><span>2494786278</span><span>MONKO</span><span>982.24B</span><span>6</span></div>
+              <div class="tt-row"><span>2582294183</span><span>GONNA</span><span>994.55B</span><span>6</span></div>
+              <div class="tt-row"><span>386192725</span><span>goBTC</span><span>29.31</span><span>8</span></div>
+            </div>
+            <div class="tt-detail">
+              <div class="card-kicker"><span>ASSET</span><span class="verified">● 31566704</span></div>
+              <dl>
+                <div><dt>creator</dt><dd>2UEQT…QFHM</dd></div>
+                <div><dt>manager</dt><dd>37XL3…HAL4</dd></div>
+                <div><dt>freeze</dt><dd>3ERES…O5GE</dd></div>
+                <div><dt>clawback</dt><dd>—</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="tui-panel" data-panel="apps" hidden>
+            <div class="tt-cards">
+              <article class="tt-app">
+                <div class="card-kicker"><span>APPLICATION</span><span class="verified">● 1002541853</span></div>
+                <strong>Tinyman AMM v2</strong>
+                <dl>
+                  <div><dt>creator</dt><dd>RCXJ7…4KZQ</dd></div>
+                  <div><dt>global</dt><dd>12 keys</dd></div>
+                  <div><dt>boxes</dt><dd>4</dd></div>
+                  <div><dt>local</dt><dd>3 keys</dd></div>
+                </dl>
+                <p class="tt-methods"><span>swap</span><span>mint</span><span>burn</span><span>bootstrap</span></p>
+              </article>
+              <article class="tt-app">
+                <div class="card-kicker"><span>APPLICATION</span><span class="verified">● 1284326447</span></div>
+                <strong>Folks Lending Pool</strong>
+                <dl>
+                  <div><dt>creator</dt><dd>XJQ5F…9PLM</dd></div>
+                  <div><dt>global</dt><dd>21 keys</dd></div>
+                  <div><dt>boxes</dt><dd>0</dd></div>
+                  <div><dt>local</dt><dd>—</dd></div>
+                </dl>
+                <p class="tt-methods"><span>deposit</span><span>withdraw</span><span>claim</span></p>
+              </article>
+            </div>
+          </div>
+
+          <div class="tui-panel" data-panel="txns" hidden>
+            <div class="tui-table">
+              <div class="tt-head"><span>type</span><span>from → to</span><span>amount</span><span>round</span></div>
+              <div class="tt-row on"><span class="tt-kind">pay</span><span>EZ6NRX… → XKQ2WD…</span><span>12.500000</span><span data-round-cell>64,457,153</span></div>
+              <div class="tt-row"><span class="tt-kind">axfer</span><span>2UEQTM… → RCXJ7Q…</span><span>1,250.00 USDC</span><span>64,457,152</span></div>
+              <div class="tt-row"><span class="tt-kind">appl</span><span>RCXJ7Q… → app 1002541853</span><span>swap</span><span>64,457,152</span></div>
+              <div class="tt-row"><span class="tt-kind">acfg</span><span>XJQ5FN… → —</span><span>create</span><span>64,457,151</span></div>
+            </div>
+            <div class="tt-detail">
+              <div class="card-kicker"><span>TRANSACTION</span><span class="verified">● CONFIRMED</span></div>
+              <dl>
+                <div><dt>fee</dt><dd>0.001000</dd></div>
+                <div><dt>group</dt><dd>—</dd></div>
+                <div><dt>inner txns</dt><dd>0</dd></div>
+                <div><dt>note</dt><dd>—</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="tui-panel" data-panel="blocks" hidden>
+            <div class="tui-table">
+              <div class="tt-head"><span>round</span><span>proposer</span><span>txns</span><span>time</span></div>
+              <div class="tt-row on"><span data-round-cell>64,457,153</span><span>A7F2QK…</span><span>31</span><span>now</span></div>
+              <div class="tt-row"><span>64,457,152</span><span>M4KD8P…</span><span>18</span><span>2.8s</span></div>
+              <div class="tt-row"><span>64,457,151</span><span>QZ1XVB…</span><span>44</span><span>5.6s</span></div>
+              <div class="tt-row"><span>64,457,150</span><span>A7F2QK…</span><span>7</span><span>8.4s</span></div>
+            </div>
+            <div class="tt-detail">
+              <div class="card-kicker"><span>BLOCK</span><span class="verified">● LIVE</span></div>
+              <dl>
+                <div><dt>proposer</dt><dd>A7F2QK…</dd></div>
+                <div><dt>fees</dt><dd>0.031000</dd></div>
+                <div><dt>payout</dt><dd>0.010000</dd></div>
+                <div><dt>time</dt><dd>2.8s</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="tui-composer"><span>›</span><span>ask anything, or paste an id</span><b>^W wallet</b></div>
+      </div>
+    </section>
+
+    <section class="signal-band" aria-label="status ticker">
+      <div class="ticker"><div class="ticker-track">{[...ticker, ...ticker].map((t) => <span>{t}<i aria-hidden="true">◆</i></span>)}</div></div>
+    </section>
+
+    <section class="paths shell">
+      <p class="eyebrow">PICK A HATCH</p>
+      <h2>compile. deploy. test. debug.<br /><em>one conversation.</em></h2>
+      <div class="path-grid">
+        <a class="path" href="/docs/tutorials/first-project">
+          <span>01 // NEW PROJECT</span><h3>one command, whole stack</h3><p>Scaffold TypeScript, install the skills, and configure the agent you already use.</p><b>start fresh →</b>
+        </a>
+        <a class="path" href="/docs/tutorials/explore-with-vibekit">
+          <span>02 // EXPLORER</span><h3>ask the chain anything</h3><p>Plain English or a pasted ID. Every card is real chain data; writes stop for review before anything is signed. The chain remembers everything.</p><b>open the console →</b>
+        </a>
+        <a class="path" href="/docs/guides/create-a-vibekit-plugin">
+          <span>03 // YOUR TOOLS</span><h3>plug in your weird stuff</h3><p>Wrap your own capability in the same tool contract and it shows up in the CLI, MCP, and Explorer.</p><b>build a plugin →</b>
+        </a>
+      </div>
+    </section>
+
+    <section class="deal shell">
+      <div class="deal-grid">
+        <div>
+          <p class="eyebrow">THE DEAL // LESSONS FROM 2036</p>
+          <h2>your agent transacts.<br /><em>it never holds the keys.</em></h2>
+        </div>
+        <ol class="rules">
+          <li><b>01</b><span>The keys stay in the keystore. An agent requests a transaction; it never sees a seed. This is the one that mattered.</span></li>
+          <li><b>02</b><span>Every card is real chain data. The model narrates; it doesn’t invent.</span></li>
+          <li><b>03</b><span>Writes stop at a review screen. You approve, then it signs.</span></li>
+          <li><b>04</b><span>The guidance ships with the tools and stays current. Stale docs are how it went wrong the first time.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="transmission shell">
+      <div class="tx-frame">
+        <dl class="tx-meta">
+          <div><dt>from</dt><dd>2036</dd></div>
+          <div><dt>to</dt><dd>2026</dd></div>
+          <div><dt>priority</dt><dd>high</dd></div>
+          <div><dt>checksum</dt><dd class="ok">ok</dd></div>
+        </dl>
+        <p class="tx-body">i am writing to you from 2036, after the great post-quantum collapse. the global financial system is gone. we are in an emergency.</p>
+        <p class="tx-body">algorand is the only chain still standing. it was not integrated deeply enough to avoid the worst of it.</p>
+        <p class="tx-body">we are sending this toolkit back to you. it is called vibekit. build fast. build everywhere. make it ubiquitous. the future of humanity depends on it.</p>
+        <a class="button quiet" href="/lore/">read the lore <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section class="closing shell">
+      <p class="eyebrow">8 SKILLS · 57 CHAIN TOOLS · ONE SIGNER</p>
+      <h2>build on it.<br /><em>the future needs you.</em></h2>
+      <a class="button primary" href="/docs/">read the field manual <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <Footer />
+</Landing>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const typed = document.querySelector<HTMLElement>('[data-typed]')!
+  const tui = document.querySelector<HTMLElement>('[data-tui]')!
+
+  const type = (el: HTMLElement, text: string, ms: number) =>
+    new Promise<void>((done) => {
+      let i = 0
+      el.textContent = ''
+      const step = () => { el.textContent = text.slice(0, ++i); i < text.length ? setTimeout(step, ms + Math.random() * ms) : done() }
+      step()
+    })
+
+  if (!reduced) {
+    tui.classList.add('typing')
+    setTimeout(async () => {
+      await type(typed, typed.dataset.typed!, 38)
+      await new Promise((r) => setTimeout(r, 250))
+      tui.classList.remove('typing')
+      tui.classList.add('resolved')
+    }, 500)
+  } else tui.classList.add('resolved')
+
+  // Explorer page tabs: swap the panel, keep the chrome.
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')]
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')]
+  for (const tab of tabs) {
+    tab.addEventListener('click', () => {
+      const id = tab.dataset.tab
+      for (const t of tabs) {
+        const on = t === tab
+        t.classList.toggle('active', on)
+        t.setAttribute('aria-selected', String(on))
+      }
+      for (const panel of panels) panel.hidden = panel.dataset.panel !== id
+    })
+  }
+
+  // The live round: fetched once, then advanced locally at Algorand's block time.
+  const round = document.querySelector<HTMLElement>('[data-round]')!
+  fetch('https://mainnet-api.algonode.cloud/v2/status').then((r) => r.json()).then(({ 'last-round': n }: { 'last-round': number }) => {
+    const cells = [...document.querySelectorAll<HTMLElement>('[data-round-cell]')]
+    const show = () => {
+      const label = n.toLocaleString('en-US')
+      round.textContent = label
+      for (const cell of cells) cell.textContent = label
+      n++
+    }
+    show()
+    setInterval(show, 2800)
+  }).catch(() => { round.parentElement!.remove() })
+</script>
