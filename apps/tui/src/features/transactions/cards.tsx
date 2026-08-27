@@ -265,10 +265,6 @@ function withInners(
   ])
 }
 
-function assetFact(row: TransactionRowData): string | undefined {
-  return row.assetId === undefined ? undefined : assetLabel(row)
-}
-
 function rowAmount(row: TransactionRowData): string | undefined {
   const kind = transactionKind(row)
   if (kind === 'rekey') return 'rekey'
@@ -362,55 +358,77 @@ function TransactionTable({
   )
 }
 
-/** Inner transactions under their parent: indented, the few facts an inner has, recursive. */
-function InnerRows({
-  rows,
+/**
+ * One transaction as a block of facts: its kind and amount on the first line,
+ * then the facts it has, then its inner transactions as nested blocks. Depth
+ * indents; an outer row also carries its id, round, time, fee, and open button.
+ */
+function RowBlock({
+  row,
   depth,
   body,
+  innerType,
+  onOpen,
 }: {
-  rows: ReadonlyArray<TransactionRowData>
+  row: TransactionRowData
   depth: number
   body: number
+  /** The indexer type filter this list ran with; a row of another type matched through an inner. */
+  innerType?: string
+  onOpen?: (txid: string) => void
 }) {
-  if (rows.length === 0) return null
-  const indent = depth * 2
-  const width = Math.max(8, body - indent)
+  const width = Math.max(8, body - depth * 2)
+  const amount = rowAmount(row)
+  const to = rowCounterparty(row)
+  const kind =
+    innerType && row.type !== undefined && row.type !== innerType
+      ? `${rowType(row)} · inner ${formatBlockTxnType(innerType)}`
+      : rowType(row)
   return (
-    <box flexDirection="column" marginLeft={indent}>
-      {rows.map((row, index) => {
-        const amount = rowAmount(row)
-        const to = rowCounterparty(row)
-        return (
-          <box key={`${row.sender}-${index}`} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" height={1}>
-              <text fg={COLORS.faint}>{'└ '}</text>
-              <Chip label={rowType(row)} />
-              {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
-            </box>
-            <Fact label="from" value={row.sender} copy={row.sender} width={width} />
-            {to ? (
-              <Fact
-                label="to"
-                value={to}
-                copy={
-                  row.receiver ??
-                  (row.applicationId === undefined ? undefined : String(row.applicationId))
-                }
-                width={width}
-              />
-            ) : null}
-            {assetFact(row) ? (
-              <Fact
-                label="asset"
-                value={assetFact(row)!}
-                copy={String(row.assetId)}
-                width={width}
-              />
-            ) : null}
-            <InnerRows rows={row.innerTxns ?? []} depth={depth + 1} body={body} />
-          </box>
-        )
-      })}
+    <box flexDirection="column" marginTop={1} marginLeft={depth === 0 ? 0 : 2}>
+      <box flexDirection="row" height={1} justifyContent="space-between">
+        <box flexDirection="row">
+          {depth > 0 ? <text fg={COLORS.faint}>{'└ '}</text> : null}
+          <Chip label={kind} />
+          {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
+        </box>
+        {depth === 0 && onOpen && row.id ? (
+          <Button label="open ▸" onPress={() => onOpen(row.id!)} />
+        ) : null}
+      </box>
+      <Fact label="from" value={row.sender} copy={row.sender} width={width} />
+      {to ? (
+        <Fact
+          label="to"
+          value={to}
+          copy={
+            row.receiver ??
+            (row.applicationId === undefined ? undefined : String(row.applicationId))
+          }
+          width={width}
+        />
+      ) : null}
+      {row.id ? <Fact label="id" value={row.id} copy={row.id} width={width} /> : null}
+      {row.confirmedRound === undefined ? null : (
+        <Fact
+          label="round"
+          value={String(row.confirmedRound)}
+          copy={String(row.confirmedRound)}
+          width={width}
+        />
+      )}
+      {row.roundTime === undefined ? null : (
+        <Fact label="time" value={formatExplorerTime(row.roundTime)} width={width} />
+      )}
+      {row.feeMicroAlgos === undefined ? null : (
+        <Fact label="fee" value={algo(row.feeMicroAlgos)} width={width} />
+      )}
+      {row.assetId === undefined ? null : (
+        <Fact label="asset" value={assetLabel(row)} copy={String(row.assetId)} width={width} />
+      )}
+      {(row.innerTxns ?? []).map((inner, index) => (
+        <RowBlock key={`${inner.sender}-${index}`} row={inner} depth={depth + 1} body={body} />
+      ))}
     </box>
   )
 }
@@ -478,66 +496,12 @@ export function TransactionListCard({
         <TransactionTable rows={transactions} innerType={innerType} body={body} onOpen={onOpen} />
       ) : null}
       <box flexDirection="column">
-        {(layout === 'table' ? [] : transactions).map((row, index) => {
-          const amount = rowAmount(row)
-          const to = rowCounterparty(row)
-          return (
-            <box key={row.id ?? `${row.sender}-${index}`} flexDirection="column" marginTop={1}>
-              <box flexDirection="row" height={1} justifyContent="space-between">
-                <box flexDirection="row">
-                  <Chip
-                    label={
-                      innerType && row.type !== undefined && row.type !== innerType
-                        ? `${rowType(row)} · inner ${formatBlockTxnType(innerType)}`
-                        : rowType(row)
-                    }
-                  />
-                  {amount ? <text fg={COLORS.brassBright}>{`  ${amount}`}</text> : null}
-                </box>
-                {onOpen && row.id ? (
-                  <Button label="open ▸" onPress={() => onOpen(row.id!)} />
-                ) : null}
-              </box>
-              <Fact label="from" value={row.sender} copy={row.sender} width={body} />
-              {to ? (
-                <Fact
-                  label="to"
-                  value={to}
-                  copy={
-                    row.receiver ??
-                    (row.applicationId === undefined ? undefined : String(row.applicationId))
-                  }
-                  width={body}
-                />
-              ) : null}
-              {row.id ? <Fact label="id" value={row.id} copy={row.id} width={body} /> : null}
-              {row.confirmedRound === undefined ? null : (
-                <Fact
-                  label="round"
-                  value={String(row.confirmedRound)}
-                  copy={String(row.confirmedRound)}
-                  width={body}
-                />
-              )}
-              {row.roundTime === undefined ? null : (
-                <Fact label="time" value={formatExplorerTime(row.roundTime)} width={body} />
-              )}
-              {row.feeMicroAlgos === undefined ? null : (
-                <Fact label="fee" value={algo(row.feeMicroAlgos)} width={body} />
-              )}
-              {assetFact(row) ? (
-                <Fact
-                  label="asset"
-                  value={assetFact(row)!}
-                  copy={String(row.assetId)}
-                  width={body}
-                />
-              ) : null}
-              <InnerRows rows={row.innerTxns ?? []} depth={1} body={body} />
-              {index < transactions.length - 1 ? <Rule width={body} /> : null}
-            </box>
-          )
-        })}
+        {(layout === 'table' ? [] : transactions).map((row, index) => (
+          <box key={row.id ?? `${row.sender}-${index}`} flexDirection="column">
+            <RowBlock row={row} depth={0} body={body} innerType={innerType} onOpen={onOpen} />
+            {index < transactions.length - 1 ? <Rule width={body} /> : null}
+          </box>
+        ))}
         {viaInner > 0 && innerType ? (
           <FooterNote
             text={`${viaInner} app call${viaInner === 1 ? '' : 's'} matched through inner ${formatBlockTxnType(innerType)} txns`}
