@@ -1,4 +1,4 @@
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 import type { MouseEvent } from '@opentui/core'
 import {
   formatBaseUnits,

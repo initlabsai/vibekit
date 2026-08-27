@@ -119,12 +119,19 @@ vibekit mcp                # Run the MCP server over stdio
 
 Templates for `vibekit new`: `contracts`, `fullstack`, `kitchensink`.
 
-## Packages
+## Package
 
-The CLI is one host over a shared tool contract. The same tools are available
-as TypeScript packages — `@initlabs/vibekit-core`, `-tools`, `-mcp`, `-agent`,
-`-signer-keystore`, `-preset`, and the plugins — published to npm under the
-`alpha` tag.
+The CLI is one host over a shared tool contract. The same tools ship as one
+TypeScript package, `@initlabs/vibekit`, published to npm under the `alpha`
+tag:
+
+```bash
+bun add @initlabs/vibekit@alpha
+```
+
+`.` is the tool contract; `./tools`, `./tools/views`, `./preset`, `./mcp`,
+`./mcp/stdio`, `./mcp/http`, `./agent`, `./agent/config`, `./signer-keystore`,
+and `./plugins/<name>` are the rest.
 
 ## Development
 

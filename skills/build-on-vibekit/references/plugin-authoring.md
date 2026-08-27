@@ -7,30 +7,25 @@ tools.
 
 Use the nearest existing package as a pattern:
 
-- `packages/plugin-pera` — small HTTP service, output shaping, network guard,
+- `packages/vibekit/src/plugins/pera` — small HTTP service, output shaping, network guard,
   semantic view, and fake-service tests
-- `packages/plugin-nfd` — per-network client cache and normalization of unusual
+- `packages/vibekit/src/plugins/nfd` — per-network client cache and normalization of unusual
   SDK failures
-- `packages/plugin-alpha-arcade` — configured factory options and a larger SDK
+- `packages/vibekit/src/plugins/alpha-arcade` — configured factory options and a larger SDK
   integration
 
-## Package shape
+## Plugin shape
 
-Keep a plugin in `packages/plugin-<name>/` only when there is a current named
-consumer and owner approval for the package. Follow the existing package
-shape: `src/`, `test/`, `tsconfig.json`, and `package.json` with a compiled
-`dist` export.
+A plugin is a directory in the one published package: source in
+`packages/vibekit/src/plugins/<name>/` with an `index.ts`, tests in
+`packages/vibekit/test/plugins/<name>/`, and a `./plugins/<name>` entry in the
+`exports` map of `packages/vibekit/package.json`. Add one only when there is a
+current named consumer and owner approval.
 
-Plugin packages declare these peer dependencies:
-
-- `@initlabs/vibekit-core`
-- `algosdk`
-- `zod`
-
-Use `workspace:*` for the core development dependency. Keep the repository's
-`algosdk` development version pinned exactly and match the existing Zod policy.
-Third-party SDKs used by the implementation belong in `dependencies`. Ask
-before adding any dependency.
+The package declares `algosdk` and `zod` as peers; import core from
+`@initlabs/vibekit` and tools from its subpaths. Third-party SDKs used by the
+implementation go in the package's `dependencies` — every consumer of
+`@initlabs/vibekit` installs them, so ask before adding any dependency.
 
 ## Implement the service boundary
 
@@ -50,7 +45,7 @@ import {
   ToolError,
   type ToolContext,
   type ToolPlugin,
-} from "@initlabs/vibekit-core";
+} from "@initlabs/vibekit";
 import { z } from "zod";
 
 const PLUGIN_NAME = "example";
@@ -110,7 +105,7 @@ perform network calls.
 
 Instantiate the plugin in a deployment's `plugins` array. Do not copy its tools
 into the deployment's base tool list. To ship it in every stock host at once,
-add it to `defaultPlugins()` in `packages/preset` — that is the one
+add it to `defaultPlugins()` in `packages/vibekit/src/preset` — that is the one
 registration point for the CLI hosts and the reference app; the TUI keeps its
 own roster in `apps/tui/src/agent-lane.ts`.
 
@@ -125,6 +120,6 @@ Tests should cover:
 Run the package gates from the repository root:
 
 ```bash
-bun run --cwd packages/plugin-<name> typecheck
-bun run --cwd packages/plugin-<name> test
+bun run --cwd packages/vibekit typecheck
+bun run --cwd packages/vibekit test
 ```

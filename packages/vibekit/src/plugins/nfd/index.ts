@@ -1,0 +1,218 @@
+/**
+ * NFD plugin: name resolution tools over @txnlab/nfd-sdk.
+ * A ToolPlugin proving the plugin contract — tools get their client via the
+ * services bag, keyed by plugin name, through the typed accessor below.
+ */
+import { defineTool, ToolError, type AnyTool, type ToolContext, type ToolPlugin } from '../../core/index.js'
+import { NfdApiClient } from '@txnlab/nfd-sdk'
+import { z } from 'zod'
+
+export const PLUGIN_NAME = 'nfd'
+
+/** NFD serves mainnet and testnet; clients are cached per network id. */
+export interface NfdService {
+  clientFor(networkId: string): NfdApiClient
+}
+
+function createNfdService(): NfdService {
+  const clients = new Map<string, NfdApiClient>()
+  return {
+    clientFor(networkId) {
+      const cached = clients.get(networkId)
+      if (cached) return cached
+      if (networkId !== 'mainnet' && networkId !== 'testnet') {
+        throw new ToolError('UNSUPPORTED_NETWORK', `NFD is not available on ${networkId} (mainnet/testnet only)`)
+      }
+      const client = networkId === 'testnet' ? NfdApiClient.testNet() : NfdApiClient.mainNet()
+      clients.set(networkId, client)
+      return client
+    },
+  }
+}
+
+/** Typed accessor — the plugin-side pattern for reading ctx.services. */
+export function getNfdClient(ctx: ToolContext): NfdApiClient {
+  const service = ctx.services[PLUGIN_NAME] as NfdService | undefined
+  if (!service) {
+    throw new ToolError('PLUGIN_NOT_CONFIGURED', 'The nfd plugin is not registered in this deployment')
+  }
+  return service.clientFor(ctx.network.id)
+}
+
+/**
+ * The NFD SDK rejects with plain objects ({ name, message, … }), not Errors;
+ * hosts that stringify unknown throws would show "[object Object]".
+ */
+async function nfdCall<T>(call: Promise<T>): Promise<T> {
+  try {
+    return await call
+  } catch (error: unknown) {
+    if (error instanceof Error) throw error
+    const { name, message } = (error ?? {}) as { name?: string; message?: string }
+    throw new ToolError('NFD_ERROR', message ? `NFD: ${message}` : `NFD request failed (${name ?? 'unknown'})`)
+  }
+}
+
+/** ipfs:// → HTTPS gateway URL; non-IPFS input passes through. */
+function ipfsToHttps(url: string): string | undefined {
+  if (url.startsWith('ipfs://')) return url.replace('ipfs://', 'https://images.nf.domains/ipfs/')
+  // User-controlled field: only https survives (blocks javascript:/data: schemes).
+  return url.startsWith('https://') ? url : undefined
+}
+
+/** Pick well-known social/profile fields from NFD properties. */
+function extractProperties(properties?: {
+  internal?: Record<string, string>
+  userDefined?: Record<string, string>
+  verified?: Record<string, string>
+}) {
+  if (!properties) return undefined
+  const v = properties.verified ?? {}
+  const u = properties.userDefined ?? {}
+  const picked: Record<string, string> = {}
+
+  const avatar = (v.avatar && ipfsToHttps(v.avatar)) || (u.avatar && ipfsToHttps(u.avatar))
+  if (avatar) picked.avatar = avatar
+  else if (v.avatarasaid) picked.avatar = `assetid:${v.avatarasaid}`
+
+  for (const key of ['twitter', 'discord', 'telegram', 'github', 'email', 'domain', 'blueskydid', 'nostrpubkey'] as const) {
+    if (v[key]) picked[key] = v[key]
+  }
+  for (const key of ['bio', 'website', 'name'] as const) {
+    if (u[key] && !picked[key]) picked[key] = u[key]!
+  }
+  return Object.keys(picked).length > 0 ? picked : undefined
+}
+
+const propertiesSchema = z.record(z.string(), z.string()).optional()
+
+/** resolve_nfd's wire shape; hosts that resolve names directly build the same record. */
+export const nfdRecordSchema = z.object({
+  name: z.string(),
+  address: z.string().optional(),
+  owner: z.string().optional(),
+  appId: z.number().optional(),
+  state: z.string().optional(),
+  properties: propertiesSchema,
+})
+
+export type NfdRecord = z.infer<typeof nfdRecordSchema>
+
+/** Shapes an SDK NFD (any view) into the resolve_nfd record. */
+export function nfdRecord(
+  nfd: {
+    name?: string
+    depositAccount?: string
+    owner?: string
+    appID?: number
+    state?: string
+    properties?: Parameters<typeof extractProperties>[0]
+  },
+  requestedName: string,
+): NfdRecord {
+  return {
+    // The SDK types name as required but does no runtime validation of the
+    // API body — fall back to the requested name rather than dropping the key.
+    name: nfd.name ?? requestedName.toLowerCase(),
+    address: nfd.depositAccount ?? nfd.owner,
+    owner: nfd.owner,
+    appId: nfd.appID,
+    state: nfd.state,
+    properties: extractProperties(nfd.properties),
+  }
+}
+
+export const nfdTools: AnyTool[] = [
+  defineTool({
+    name: 'resolve_nfd',
+    description:
+      'Resolve an NFD name (e.g. "vibekit.algo") to its Algorand deposit address. Use when a user refers to an account by name instead of address.',
+    parameters: z.object({
+      name: z.string().describe('The NFD name to resolve (e.g. "vibekit.algo")'),
+    }),
+    output: nfdRecordSchema,
+    view: 'nfd.profile',
+    handler: async (ctx, args) => {
+      // A bare label ("vibekit") means the .algo name; models drop the suffix often.
+      const name = args.name.toLowerCase().trim()
+      const full = name.includes('.') ? name : `${name}.algo`
+      const nfd = await nfdCall(getNfdClient(ctx).resolve(full, { view: 'full' }))
+      return nfdRecord(nfd, full)
+    },
+  }),
+  defineTool({
+    name: 'reverse_resolve_nfd',
+    description:
+      'Look up the NFD name associated with an Algorand address, to display a human-readable name.',
+    parameters: z.object({
+      address: z.string().describe('The Algorand address to look up'),
+    }),
+    output: z.object({
+      address: z.string(),
+      name: z.string().nullable(),
+      appId: z.number().optional(),
+      properties: propertiesSchema,
+    }),
+    view: 'account',
+    handler: async (ctx, args) => {
+      const result = await nfdCall(getNfdClient(ctx).reverseLookup([args.address], { view: 'full' }))
+      const nfd = result[args.address]
+      // The API returns an empty object (not a missing key) for unnamed
+      // addresses — an absent `name` would be dropped by jsonSafe and violate
+      // the schema's `name: null` contract.
+      if (!nfd?.name) return { address: args.address, name: null }
+      return {
+        address: args.address,
+        name: nfd.name,
+        appId: nfd.appID,
+        properties: extractProperties(nfd.properties),
+      }
+    },
+  }),
+  defineTool({
+    name: 'batch_reverse_resolve_nfd',
+    description:
+      'Look up NFD names for multiple addresses at once. Prefer over repeated reverse_resolve_nfd for 2+ addresses.',
+    parameters: z.object({
+      addresses: z.array(z.string()).describe('The Algorand addresses to look up'),
+    }),
+    output: z.object({
+      results: z.array(
+        z.object({
+          address: z.string(),
+          name: z.string().nullable(),
+          avatar: z.string().optional(),
+        }),
+      ),
+    }),
+    view: 'table',
+    handler: async (ctx, args) => {
+      const result = await nfdCall(getNfdClient(ctx).reverseLookup(args.addresses, { view: 'thumbnail' }))
+      return {
+        results: args.addresses.map((address) => {
+          const nfd = result[address]
+          // Empty object = no NFD for this address (see reverse_resolve_nfd).
+          if (!nfd?.name) return { address, name: null }
+          const v = nfd.properties?.verified ?? {}
+          const u = nfd.properties?.userDefined ?? {}
+          let avatar: string | undefined
+          if (v.avatar) avatar = ipfsToHttps(v.avatar)
+          else if (v.avatarasaid) avatar = `assetid:${v.avatarasaid}`
+          else if (u.avatar) avatar = ipfsToHttps(u.avatar)
+          return { address, name: nfd.name, avatar }
+        }),
+      }
+    },
+  }),
+] as AnyTool[]
+
+/** The plugin factory — `plugins: [nfdPlugin()]` in createVibekitMcp options. */
+export function nfdPlugin(): ToolPlugin {
+  return {
+    name: PLUGIN_NAME,
+    description: 'NFD name resolution — name.algo ↔ address, profiles (mainnet/testnet)',
+    tools: nfdTools,
+    service: createNfdService(),
+    views: { 'nfd.profile': nfdRecordSchema },
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit-cli",
   "private": true,
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "description": "The vibekit CLI: init, new, localnet, mcp.",
   "type": "module",
   "scripts": {
@@ -19,16 +19,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.7.0",
-    "@initlabs/vibekit-agent": "workspace:*",
-    "@initlabs/vibekit-core": "workspace:*",
-    "@initlabs/vibekit-mcp": "workspace:*",
-    "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
-    "@initlabs/vibekit-plugin-nfd": "workspace:*",
-    "@initlabs/vibekit-plugin-pera": "workspace:*",
-    "@initlabs/vibekit-plugin-vestige": "workspace:*",
-    "@initlabs/vibekit-preset": "workspace:*",
-    "@initlabs/vibekit-signer-keystore": "workspace:*",
-    "@initlabs/vibekit-tools": "workspace:*",
+    "@initlabs/vibekit": "workspace:*",
     "algosdk": "3.7.0",
     "picocolors": "^1.1.1",
     "zod": "^4.4.3"

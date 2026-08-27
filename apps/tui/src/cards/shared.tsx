@@ -1,6 +1,6 @@
 import algosdk from 'algosdk'
 
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten, wrapLines } from '../theme.js'

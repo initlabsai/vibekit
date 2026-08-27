@@ -20,14 +20,14 @@ import {
   resolveDeployment,
   ToolError,
   type ResolvedDeployment,
-} from '@initlabs/vibekit-core'
+} from '@initlabs/vibekit'
 import {
   defaultPlugins,
   defaultTools,
   networksFromEnv,
   withKeystoreTools,
-} from '@initlabs/vibekit-preset'
-import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+} from '@initlabs/vibekit/preset'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
 async function buildDeployment(): Promise<{
   deployment: ResolvedDeployment

@@ -10,7 +10,7 @@ import {
   resolveDeployment,
   ToolError,
   type ToolPlugin,
-} from '@initlabs/vibekit-core'
+} from '@initlabs/vibekit'
 import {
   accountTools,
   networkTools,
@@ -18,16 +18,16 @@ import {
   viewDataSchemas,
   type FormattedTransaction,
   type ViewData,
-} from '@initlabs/vibekit-tools'
-import { viewDataSchemas as viewSchemasFromSubpath } from '@initlabs/vibekit-tools/views'
-import { createVibekitMcp, VIEW_META_KEY } from '@initlabs/vibekit-mcp'
-import type { AgentEvent, ProviderConfig } from '@initlabs/vibekit-agent'
-import { createSignerFromKeystore, type KeystoreLike } from '@initlabs/vibekit-signer-keystore'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import { defaultPlugins, defaultTools } from '@initlabs/vibekit-preset'
-import { alphaArcadePlugin } from '@initlabs/vibekit-plugin-alpha-arcade'
+} from '@initlabs/vibekit/tools'
+import { viewDataSchemas as viewSchemasFromSubpath } from '@initlabs/vibekit/tools/views'
+import { createVibekitMcp, VIEW_META_KEY } from '@initlabs/vibekit/mcp'
+import type { AgentEvent, ProviderConfig } from '@initlabs/vibekit/agent'
+import { createSignerFromKeystore, type KeystoreLike } from '@initlabs/vibekit/signer-keystore'
+import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
+import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
+import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
+import { defaultPlugins, defaultTools } from '@initlabs/vibekit/preset'
+import { alphaArcadePlugin } from '@initlabs/vibekit/plugins/alpha-arcade'
 import { z } from 'zod'
 
 function fail(message: string): never {
@@ -59,7 +59,7 @@ if (typeof viewDataSchemas['transaction.detail']?.parse !== 'function') {
 }
 // The ./views subpath must serve the same object as the root export.
 if (viewSchemasFromSubpath !== viewDataSchemas) {
-  fail('@initlabs/vibekit-tools/views does not re-serve the root viewDataSchemas object')
+  fail('@initlabs/vibekit/tools/views does not re-serve the root viewDataSchemas object')
 }
 
 const echo = defineTool({

@@ -1,4 +1,4 @@
-import { jsonSafe } from '@initlabs/vibekit-core'
+import { jsonSafe } from '@initlabs/vibekit'
 import { z } from 'zod'
 
 import type { ViewSpec } from '../core/protocol.js'

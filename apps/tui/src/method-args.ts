@@ -4,7 +4,7 @@
  * coerced and checked by ABI type before anything is built.
  */
 import algosdk from 'algosdk'
-import type { ParsedMethod } from '@initlabs/vibekit-tools'
+import type { ParsedMethod } from '@initlabs/vibekit/tools'
 
 export type ParsedArgs =
   | {

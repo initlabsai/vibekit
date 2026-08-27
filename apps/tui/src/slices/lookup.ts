@@ -20,7 +20,7 @@ import {
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
-import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit-plugin-nfd'
+import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
 import { useCallback, useRef } from 'react'
 
 import { withAccountNames, type KeystorePaymentHost } from '../keystore-host.js'
@@ -28,7 +28,7 @@ import { errorMessage, shorten } from '../theme.js'
 import type { Feed } from './feed.js'
 import { enrichResultWithAbi } from '../abi-catalog.js'
 import type { ExplorerHost } from './network.js'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 
 /**
  * Fetches the page after `view`'s record — the record's own call with its

@@ -1,4 +1,4 @@
-import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
+import type { AssetProfile } from '@initlabs/vibekit/plugins/pera'
 
 import { COLORS, wrapLines } from '../theme.js'
 import { Button, Fact, Frame, Header, Hero, innerWidth, Rule, type Tone } from '../ui.js'

@@ -1,12 +1,12 @@
 /**
- * The TUI's natural-language lane: an in-process @initlabs/vibekit-agent
+ * The TUI's natural-language lane: an in-process @initlabs/vibekit/agent
  * session over a compose-only localnet deployment. The model reads via tools
  * and composes writes as unsigned groups; it never signs (there is no
  * signer in its deployment) and never emits UI — its tool results become
  * records and trusted views through the explorer bridge, and any composed
  * unsigned group lands on the same approval card as a typed `pay`.
  */
-import { createAgent, WELL_KNOWN_ASSETS, type AgentEvent, type AgentSession } from '@initlabs/vibekit-agent'
+import { createAgent, WELL_KNOWN_ASSETS, type AgentEvent, type AgentSession } from '@initlabs/vibekit/agent'
 import {
   accountTools,
   assetTools,
@@ -16,10 +16,10 @@ import {
   networkTools,
   transactionTools,
   transactionWriteTools,
-} from '@initlabs/vibekit-tools'
-import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit-core'
-import { estimateProgramTokens } from '@initlabs/vibekit-tools'
-import { readZeroSignalCatalog } from '@initlabs/vibekit-agent'
+} from '@initlabs/vibekit/tools'
+import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit'
+import { estimateProgramTokens } from '@initlabs/vibekit/tools'
+import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
 import {
   bridgeToolResult,
   unsignedGroupFromToolResult,
@@ -27,13 +27,13 @@ import {
   type ResultStore,
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
-import type { ProviderConfig } from '@initlabs/vibekit-agent'
+import type { ProviderConfig } from '@initlabs/vibekit/agent'
 import type { z } from 'zod'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
-import { nfdPlugin } from '@initlabs/vibekit-plugin-nfd'
-import { peraPlugin } from '@initlabs/vibekit-plugin-pera'
-import { vestigePlugin } from '@initlabs/vibekit-plugin-vestige'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
+import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
+import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import { enrichResultWithAbi, type ProgramData } from './abi-catalog.js'
 import { withAccountNames } from './keystore-host.js'
 import type { SectionBlock } from './sections.js'

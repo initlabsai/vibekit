@@ -11,7 +11,7 @@ import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit-agent'
+import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent'
 
 import { EXPLORER_PLUGIN_INFO } from './agent-lane.js'
 import { ApprovalModal, ConfirmModal } from './approval-modal.js'

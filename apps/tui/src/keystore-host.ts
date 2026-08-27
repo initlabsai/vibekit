@@ -5,7 +5,7 @@
  * only through the flow controller, which requires a recorded approved
  * decision before it will invoke `signDraft`.
  */
-import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 import type {
   EntityLookupHost,
   PaymentFlowHost,

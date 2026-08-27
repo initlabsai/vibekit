@@ -80,7 +80,7 @@ async function ensureDaemons(): Promise<void> {
   await ensureKeystoreDaemon()
 
   const { loadStoredAgentConfig, probeZeroSignal, zeroSignalBaseUrl, zeroSignalSetupHint } =
-    await import('@initlabs/vibekit-agent/config')
+    await import('@initlabs/vibekit/agent/config')
   const stored = loadStoredAgentConfig()
   const provider = process.env.VIBEKIT_AGENT_PROVIDER ?? stored?.provider
   if (provider !== 'zerosignal') return

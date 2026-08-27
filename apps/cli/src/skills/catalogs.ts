@@ -14,7 +14,7 @@ import { mkdtemp, readdir, readFile, rm } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join, relative } from 'path'
 
-import { vibekitConfigPath } from '@initlabs/vibekit-agent/config'
+import { vibekitConfigPath } from '@initlabs/vibekit/agent/config'
 
 import { extractTarball } from '../utils/tarball.js'
 import type { SkillDirectory, SkillFile } from './index.js'

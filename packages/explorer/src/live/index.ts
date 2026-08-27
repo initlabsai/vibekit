@@ -12,7 +12,7 @@ import {
   resolveDeployment,
   type AnyTool,
   type ResolvedDeployment,
-} from '@initlabs/vibekit-core'
+} from '@initlabs/vibekit'
 import {
   accountTools,
   assetTools,
@@ -20,7 +20,7 @@ import {
   networkTools,
   transactionTools,
   transactionWriteTools,
-} from '@initlabs/vibekit-tools'
+} from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../agent-lane.js'
 import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'

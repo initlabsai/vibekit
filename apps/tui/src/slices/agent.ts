@@ -11,7 +11,7 @@ import {
   resolveAgentConfig,
   zeroSignalSetupHint,
   type AgentSession,
-} from '@initlabs/vibekit-agent'
+} from '@initlabs/vibekit/agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { labelProgramMethods } from '../abi-catalog.js'
@@ -24,8 +24,8 @@ import {
   programCostLines,
   runAgentTurn,
 } from '../agent-lane.js'
-import type { AnyTool } from '@initlabs/vibekit-core'
-import type { NormalizedAppSpec } from '@initlabs/vibekit-tools'
+import type { AnyTool } from '@initlabs/vibekit'
+import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import type { KeystorePaymentHost } from '../keystore-host.js'
 import { shorten } from '../theme.js'
 import type { Feed } from './feed.js'

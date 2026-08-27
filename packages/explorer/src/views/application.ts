@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import { viewDataSchemas, type ViewData } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas, type ViewData } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'

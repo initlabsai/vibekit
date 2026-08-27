@@ -4,8 +4,8 @@
  * block tail — one mapping so cards stay honest across both paths.
  */
 import algosdk from 'algosdk'
-import { bytesToBase64 } from '@initlabs/vibekit-core'
-import type { FormattedTransaction } from '@initlabs/vibekit-tools'
+import { bytesToBase64 } from '@initlabs/vibekit'
+import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 
 const ON_COMPLETE_NAMES = ['noop', 'optin', 'closeout', 'clear', 'update', 'delete'] as const
 

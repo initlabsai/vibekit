@@ -85,9 +85,9 @@ export async function provisionKeystoreCli(quiet = false): Promise<string> {
 
 /** Connect to the running daemon, or undefined when it is not up. */
 async function connectSigner(): Promise<
-  import('@initlabs/vibekit-signer-keystore').KeystoreSigner | undefined
+  import('@initlabs/vibekit/signer-keystore').KeystoreSigner | undefined
 > {
-  const { createKeystoreSigner } = await import('@initlabs/vibekit-signer-keystore')
+  const { createKeystoreSigner } = await import('@initlabs/vibekit/signer-keystore')
   try {
     return await createKeystoreSigner()
   } catch {

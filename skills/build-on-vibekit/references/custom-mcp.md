@@ -1,6 +1,6 @@
 # Custom MCP deployment
 
-Use `packages/mcp/examples/` as the executable reference. VibeKit uses
+Use `packages/vibekit/examples/` as the executable reference. VibeKit uses
 `@modelcontextprotocol/server` v2 and the MCP `2026-07-28` stateless protocol.
 A deployment is configuration: a set of tools, optional plugins, served
 networks, compose or execute mode, and an optional signer. The MCP package
@@ -21,13 +21,13 @@ the next tool call to pass it back.
 
 ## Work within the current boundary
 
-Copy a file from `packages/mcp/examples/` into your own entry point; do not add a new app to this monorepo without owner approval.
+Copy a file from `packages/vibekit/examples/` into your own entry point; do not add a new app to this monorepo without owner approval.
 Apps are independent deployment units, import only public `@initlabs/*`
 exports through `workspace:*`, and never use relative imports into packages.
 Packages must never depend on an app.
 
 Keep one shared definition of the tool and plugin mix. The stock mix lives in
-`@initlabs/vibekit-preset`: `defaultTools` (every domain), `defaultPlugins()`,
+`@initlabs/vibekit/preset`: `defaultTools` (every domain), `defaultPlugins()`,
 `withKeystoreTools()`, and `networksFromEnv()`; the CLI hosts and the reference
 app compose from it. A custom deployment that wants a different mix composes
 its own arrays the same way — extract one plain options factory rather than
@@ -60,8 +60,8 @@ host's approval boundary.
 Stdio is the local-agent path:
 
 ```ts
-import { serveVibekitStdio } from "@initlabs/vibekit-mcp/stdio";
-import { accountTools, networkTools } from "@initlabs/vibekit-tools";
+import { serveVibekitStdio } from "@initlabs/vibekit/mcp/stdio";
+import { accountTools, networkTools } from "@initlabs/vibekit/tools";
 
 const handle = serveVibekitStdio({
   name: "my-vibekit-mcp",
@@ -77,7 +77,7 @@ process.on("SIGINT", () => void handle.close());
 Write operational messages to stderr. Stdout belongs to the MCP transport.
 Close the host and any signer or service resources during shutdown.
 
-For execute mode, follow `packages/mcp/examples/stdio.ts`: create the signer, add any
+For execute mode, follow `packages/vibekit/examples/stdio.ts`: create the signer, add any
 signer-dependent tools, pass `resolveSigner`, and close the signer on exit. Do
 not expose mnemonic or seed material to a tool handler.
 
@@ -87,8 +87,8 @@ The HTTP adapter returns a `2026-07-28` stateless fetch handler. Its server
 factory is invoked once per request:
 
 ```ts
-import { createVibekitHttpHandler } from "@initlabs/vibekit-mcp/http";
-import { accountTools, networkTools } from "@initlabs/vibekit-tools";
+import { createVibekitHttpHandler } from "@initlabs/vibekit/mcp/http";
+import { accountTools, networkTools } from "@initlabs/vibekit/tools";
 
 const handler = createVibekitHttpHandler({
   name: "my-vibekit-mcp",
@@ -115,7 +115,7 @@ authentication at the application or gateway boundary.
 From the repository root:
 
 ```bash
-bun run --cwd packages/mcp typecheck
+bun run --cwd packages/vibekit typecheck
 bun run mcp
 ```
 

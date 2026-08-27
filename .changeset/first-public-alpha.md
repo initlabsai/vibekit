@@ -1,14 +1,5 @@
 ---
-'@initlabs/vibekit-core': major
-'@initlabs/vibekit-tools': major
-'@initlabs/vibekit-mcp': major
-'@initlabs/vibekit-agent': major
-'@initlabs/vibekit-signer-keystore': major
-'@initlabs/vibekit-preset': major
-'@initlabs/vibekit-plugin-nfd': major
-'@initlabs/vibekit-plugin-pera': major
-'@initlabs/vibekit-plugin-vestige': major
-'@initlabs/vibekit-plugin-alpha-arcade': major
+'@initlabs/vibekit': major
 '@initlabs/vibekit-explorer': major
 '@initlabs/vibekit-cli': major
 '@initlabs/vibekit-tui': major
@@ -23,7 +14,7 @@ through `executeToolCall`, so the same tool behaves identically whether an
 agent, a shell, or the Explorer invoked it.
 
 - **Tools** for accounts, assets, contracts, network, and transactions, served
-  from one package as per-domain exports.
+  as per-domain exports from `@initlabs/vibekit/tools`.
 - **Writes build transaction groups** through a single compose engine. In
   execute mode the host signs and sends; in compose mode it returns the group
   unsigned. There is no side path around it.
@@ -33,7 +24,7 @@ agent, a shell, or the Explorer invoked it.
 - **MCP adapters** for stdio and stateless Streamable HTTP, so any MCP client
   can drive the same deployment.
 - **Plugins** for NFD, Pera, Vestige, and Alpha Arcade, each declaring
-  `algosdk`, Zod, and `@initlabs/vibekit-core` as peers.
+  `algosdk` and Zod as peers.
 - **The Explorer** (`vibekit explore`): a chat-first terminal transcript with a
   results feed — deterministic lookup, live global state, one card per
   contract, ABI method calls checked by type (reads simulate inline, writes go
@@ -44,6 +35,6 @@ agent, a shell, or the Explorer invoked it.
   Grok. LocalNet management, a `doctor` command, and shell access to any tool
   round it out.
 
-Prerelease caveats: the packages carry no API stability promise until 1.0, the
+Prerelease caveats: the package carries no API stability promise until 1.0, the
 Explorer presentation protocol is not frozen, and macOS and Windows are not yet
 confirmed.

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import type { ParsedMethod } from '@initlabs/vibekit-tools'
+import type { ParsedMethod } from '@initlabs/vibekit/tools'
 
 import { methodPrompt, parseMethodArgs, splitTokens } from '../src/method-args.js'
 

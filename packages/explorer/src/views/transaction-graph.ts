@@ -1,4 +1,4 @@
-import type { FormattedTransaction } from '@initlabs/vibekit-tools'
+import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'

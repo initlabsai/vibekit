@@ -15,7 +15,7 @@ import {
   readZeroSignalCatalog,
   formatZeroSignalPrice,
   type StoredAgentConfig,
-} from "@initlabs/vibekit-agent/config";
+} from "@initlabs/vibekit/agent/config";
 
 import { confirm, select, text } from "../utils/prompts.js";
 

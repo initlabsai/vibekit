@@ -2,23 +2,15 @@
   "mode": "pre",
   "tag": "alpha",
   "initialVersions": {
+    "@initlabs/vibekit": "0.1.0",
     "@initlabs/vibekit-cli": "0.1.0",
+    "@initlabs/vibekit-explorer": "0.1.0",
     "@initlabs/vibekit-tui": "0.1.0",
     "@initlabs/vibekit-web": "0.1.0",
-    "@initlabs/vibekit-website": "0.1.0",
-    "@initlabs/vibekit-agent": "0.1.0",
-    "@initlabs/vibekit-core": "0.1.0",
-    "@initlabs/vibekit-explorer": "0.1.0",
-    "@initlabs/vibekit-mcp": "0.1.0",
-    "@initlabs/vibekit-plugin-alpha-arcade": "0.1.0",
-    "@initlabs/vibekit-plugin-nfd": "0.1.0",
-    "@initlabs/vibekit-plugin-pera": "0.1.0",
-    "@initlabs/vibekit-plugin-vestige": "0.1.0",
-    "@initlabs/vibekit-preset": "0.1.0",
-    "@initlabs/vibekit-signer-keystore": "0.1.0",
-    "@initlabs/vibekit-tools": "0.1.0"
+    "@initlabs/vibekit-website": "0.1.0"
   },
   "changesets": [
-    "first-public-alpha"
+    "first-public-alpha",
+    "one-package"
   ]
 }

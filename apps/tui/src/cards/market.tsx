@@ -1,4 +1,4 @@
-import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/plugins/vestige'
 
 import { Button, Fact, Frame, Header, innerWidth, Rule } from '../ui.js'
 

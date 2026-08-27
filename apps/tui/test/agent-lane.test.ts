@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { MockLanguageModelV4, simulateReadableStream } from 'ai/test'
 import { z } from 'zod'
 
-import { defineTool } from '@initlabs/vibekit-core'
+import { defineTool } from '@initlabs/vibekit'
 import {
   createFixturePaymentHost,
   createFixtureResultStore,
@@ -17,10 +17,10 @@ import {
 } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 
-import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit-agent'
+import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
 import { viewFor } from '../src/slices/lookup.js'
 import { labelProgramMethods, specsByProgramHash } from '../src/abi-catalog.js'
-import { normalizeAppSpec } from '@initlabs/vibekit-tools'
+import { normalizeAppSpec } from '@initlabs/vibekit/tools'
 import { readFileSync } from 'node:fs'
 import {
   addResult,
@@ -370,7 +370,7 @@ test('the methods view derives from a program record', () => {
 })
 
 test('a known spec labels program selectors with names and args — inside the tool call', async () => {
-  const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/tools/test/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
+  const spec = normalizeAppSpec(readFileSync(new URL('../../../packages/vibekit/test/tools/fixtures/hello-world.arc56.json', import.meta.url), 'utf8'))
   // The spec matches by compiled-program hash, with no deploy record at all.
   const byHash = specsByProgramHash([{ spec }])
   expect(byHash.size).toBe(1)

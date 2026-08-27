@@ -24,7 +24,7 @@ for the capability it performs and give its parameters and output meaningful
 schemas.
 
 ```ts
-import { defineTool, type ToolPlugin } from '@initlabs/vibekit-core'
+import { defineTool, type ToolPlugin } from '@initlabs/vibekit'
 import { z } from 'zod'
 
 const echoTool = defineTool({
@@ -61,7 +61,7 @@ plugin factory. Do not create them at module import time. A typed accessor
 should read the service from `ctx.services` and throw
 `ToolError('PLUGIN_NOT_CONFIGURED', ...)` when the plugin is absent.
 
-Plugin packages declare `@initlabs/vibekit-core`, `zod`, and `algosdk` as peer
+Plugin packages declare `@initlabs/vibekit`, `zod`, and `algosdk` as peer
 dependencies. Keep the plugin’s own SDKs in regular dependencies. A factory is
 the configuration boundary: importing a plugin must not read environment
 variables, perform a network request, or mutate global state.
@@ -85,5 +85,5 @@ plugin’s tools into the base tool list. Test the factory, schemas, flags,
 missing-plugin error, and the service’s edge cases with fakes rather than live
 network calls.
 
-The first-party plugins in `packages/plugin-pera`, `packages/plugin-nfd`, and
-`packages/plugin-alpha-arcade` are the current implementation patterns.
+The first-party plugins in `packages/vibekit/src/plugins/pera`, `packages/vibekit/src/plugins/nfd`, and
+`packages/vibekit/src/plugins/alpha-arcade` are the current implementation patterns.

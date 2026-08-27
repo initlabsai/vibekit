@@ -7,7 +7,7 @@ import { useEffect, useState, type RefObject } from 'react'
 import { Button, Fact, FooterNote, Frame, Header, Hero, HighlightContext, Ident, innerWidth, Rule, usePulse } from './ui.js'
 import { ResultView, type OpenTarget } from './views.js'
 import { deployMethod, type AppGroup, type AppStateEntry, type SpecSelection } from './slices/apps.js'
-import type { ParsedMethod } from '@initlabs/vibekit-tools'
+import type { ParsedMethod } from '@initlabs/vibekit/tools'
 import { methodPrompt } from './method-args.js'
 import { breath, COLORS, shorten } from './theme.js'
 

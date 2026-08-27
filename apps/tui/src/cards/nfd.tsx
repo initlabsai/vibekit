@@ -1,4 +1,4 @@
-import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
+import type { NfdRecord } from '@initlabs/vibekit/plugins/nfd'
 
 import { COLORS, wrapLines } from '../theme.js'
 import { Button, Fact, Frame, Header, Ident, innerWidth, Rule } from '../ui.js'

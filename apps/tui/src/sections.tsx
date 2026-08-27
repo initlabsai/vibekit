@@ -7,9 +7,9 @@ import {
 import { createTextAttributes, type BoxRenderable, type MouseEvent, type ScrollBoxRenderable } from '@opentui/core'
 import { useEffect, useState, type ReactNode, type RefObject } from 'react'
 
-import type { NfdRecord } from '@initlabs/vibekit-plugin-nfd'
-import type { AssetProfile } from '@initlabs/vibekit-plugin-pera'
-import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-plugin-vestige'
+import type { NfdRecord } from '@initlabs/vibekit/plugins/nfd'
+import type { AssetProfile } from '@initlabs/vibekit/plugins/pera'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/plugins/vestige'
 
 import { MarketPricesCard, MarketRankedCard, NfdCard, PaymentCard, PeraAssetCard, RawCard, TableCard } from './cards/index.js'
 import { COLORS, shorten, wrapLines } from './theme.js'

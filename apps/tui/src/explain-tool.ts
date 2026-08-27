@@ -3,7 +3,7 @@
  * EXPLANATION card. The handler keeps the markdown verbatim — the card is
  * labelled as the model's words, not chain data.
  */
-import { defineTool } from '@initlabs/vibekit-core'
+import { defineTool } from '@initlabs/vibekit'
 import { applicationExplanationDataSchema } from '@initlabs/vibekit-explorer'
 import { z } from 'zod'
 

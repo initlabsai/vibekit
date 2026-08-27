@@ -1,4 +1,4 @@
-import { viewDataSchemas } from '@initlabs/vibekit-tools/views'
+import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
 import { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema } from '../core/algo.js'

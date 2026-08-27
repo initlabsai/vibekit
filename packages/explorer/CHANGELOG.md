@@ -1,5 +1,20 @@
 # @initlabs/vibekit-explorer
 
+## 1.0.0-alpha.1
+
+### Major Changes
+
+- Collapse the ten npm packages into one, `@initlabs/vibekit`, with subpath
+  exports. `@initlabs/vibekit-core` is now the root import; the rest move to
+  `./tools`, `./tools/views`, `./agent`, `./agent/config`, `./mcp`,
+  `./mcp/stdio`, `./mcp/http`, `./signer-keystore`, `./preset`, and
+  `./plugins/<name>`. The old package names are retired.
+
+### Patch Changes
+
+- Updated dependencies
+  - @initlabs/vibekit@1.0.0-alpha.1
+
 ## 1.0.0-alpha.0
 
 ### Major Changes
@@ -23,7 +38,7 @@
   - **MCP adapters** for stdio and stateless Streamable HTTP, so any MCP client
     can drive the same deployment.
   - **Plugins** for NFD, Pera, Vestige, and Alpha Arcade, each declaring
-    `algosdk`, Zod, and `@initlabs/vibekit-core` as peers.
+    `algosdk`, Zod, and `@initlabs/vibekit` as peers.
   - **The Explorer** (`vibekit explore`): a chat-first terminal transcript with a
     results feed — deterministic lookup, live global state, one card per
     contract, ABI method calls checked by type (reads simulate inline, writes go
@@ -41,5 +56,5 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @initlabs/vibekit-core@1.0.0-alpha.0
-  - @initlabs/vibekit-tools@1.0.0-alpha.0
+  - @initlabs/vibekit@1.0.0-alpha.0
+  - @initlabs/vibekit/tools@1.0.0-alpha.0

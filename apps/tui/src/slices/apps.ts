@@ -1,5 +1,5 @@
-import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit-core'
-import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit-agent/config'
+import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit'
+import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit/agent/config'
 import type { StructuredResult } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
@@ -11,7 +11,7 @@ import {
   tryNormalizeAppSpec,
   type NormalizedAppSpec,
   type ParsedMethod,
-} from '@initlabs/vibekit-tools'
+} from '@initlabs/vibekit/tools'
 import { readdirSync, readFileSync, type Dirent } from 'node:fs'
 import { join } from 'node:path'
 import { useCallback, useEffect, useMemo, useState } from 'react'

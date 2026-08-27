@@ -18,7 +18,7 @@ import {
   type DecodedPaymentFacts,
   type WriteFlowState,
 } from '../src/index.js'
-import { base64ToBytes } from '@initlabs/vibekit-core'
+import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
 import recorded from './recorded/localnet-payment.json'

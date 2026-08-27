@@ -1,6 +1,6 @@
 /**
  * `vibekit mcp` — the local MCP server over stdio, importing
- * @initlabs/vibekit-mcp as a library (no app→app dependency).
+ * @initlabs/vibekit/mcp as a library (no app→app dependency).
  *
  * Config via env (set by `vibekit init` in agent MCP configs):
  *   NETWORK   default network id (default: localnet)
@@ -8,14 +8,14 @@
  *   SIGNING   'execute' (keystore daemon) or 'compose' (unsigned groups out)
  */
 
-import { serveVibekitStdio } from '@initlabs/vibekit-mcp/stdio'
+import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
 import {
   defaultPlugins,
   defaultTools,
   networksFromEnv,
   withKeystoreTools,
-} from '@initlabs/vibekit-preset'
-import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit-signer-keystore'
+} from '@initlabs/vibekit/preset'
+import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
 export async function commandMcp(): Promise<void> {
   const requestedMode = process.env.SIGNING === 'compose' ? 'compose' : 'execute'
