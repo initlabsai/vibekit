@@ -1,8 +1,8 @@
 import { defineTool, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
-import { searchBlockHeaders } from './handlers/block-headers.js'
-import { lookupBlock } from './handlers/block.js'
-import { getNetworkStatus } from './handlers/status.js'
+import { searchBlockHeaders } from './block-headers.js'
+import { lookupBlock } from './block.js'
+import { getNetworkStatus } from './status.js'
 
 import {
   blockDetailSchema,

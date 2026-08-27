@@ -5,17 +5,19 @@ import {
   buildPaymentDraftRecord,
   buildPaymentSignedGroupRecord,
   buildPaymentSimulationRecord,
+} from '../src/flows/payment-live.js'
+import {
   completeApprovedPaymentFlow,
   createFixturePaymentHost,
   createFixtureResultStore,
   startPaymentFlow,
-  createExplorerFixtureResultStore,
   createPaymentFlowViewModel,
   performLivePaymentStep,
   type PaymentFlowHost,
   type ResultStore,
   type WriteFlowState,
 } from '../src/index.js'
+import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
 import { decodeUnsignedGroup } from '../src/live/index.js'
 import recorded from './recorded/localnet-payment.json' with { type: 'json' }
 

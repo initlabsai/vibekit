@@ -1,7 +1,7 @@
 import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 import { z } from 'zod'
 
-import { uint64JsonSchema } from '../core/algo.js'
+import { uint64JsonSchema } from '../format.js'
 
 /**
  * Renderer-independent flow graph for a transaction group: one vertical

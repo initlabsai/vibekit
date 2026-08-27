@@ -1,8 +1,8 @@
 import type { TransactionSearchFilter } from './transaction.js'
 import { z } from 'zod'
 
-import { uint64JsonSchema } from '../core/algo.js'
-import { algorandAddressCandidateSchema } from '../core/classifier.js'
+import { uint64JsonSchema } from '../format.js'
+import { algorandAddressCandidateSchema } from '../input.js'
 import type { OpenView } from '../core/protocol.js'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'

@@ -3,14 +3,16 @@ import { describe, expect, test } from 'bun:test'
 import {
   EXPLORER_PROTOCOL_VERSION,
   FIXTURE_RESULT_ID,
-  FIXTURE_TOOL_CALL_ID,
   approvalDecisionSchema,
   approvalRequestSchema,
-  createTransactionFixtureViewSpec,
-  transactionFixtureResult,
   viewSpecSchema,
   writeStageEventSchema,
 } from '../src/index.js'
+import {
+  FIXTURE_TOOL_CALL_ID,
+  createTransactionFixtureViewSpec,
+  transactionFixtureResult,
+} from '../src/sample/transaction.js'
 
 describe('explorer protocol', () => {
   test('visibly versions result, view, and approval messages', () => {

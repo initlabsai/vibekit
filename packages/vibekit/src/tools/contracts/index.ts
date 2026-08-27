@@ -1,28 +1,23 @@
 import { defineTool, ToolError, type AnyTool } from '../../core/index.js'
 import algosdk from 'algosdk'
 import { z } from 'zod'
-import { lookupApplication, lookupApplicationLogs } from './handlers/lookup.js'
+import { lookupApplication, lookupApplicationLogs } from './lookup.js'
 import {
   estimateProgramTokens,
   getApplicationProgram,
   programHash,
   PROGRAM_PAGE_LINES,
-} from './handlers/program.js'
-import { analyzeTeal, labelSelectors } from './lib/teal.js'
-import { searchApplications } from './handlers/search.js'
-import {
-  listApplicationBoxes,
-  readBoxState,
-  readGlobalState,
-  readLocalState,
-} from './handlers/state.js'
+} from './program.js'
+import { analyzeTeal, labelSelectors } from './teal.js'
+import { searchApplications } from './search.js'
+import { listApplicationBoxes, readBoxState, readGlobalState, readLocalState } from './state.js'
 import {
   appSpecParams,
   parseAppSpec,
   requireAppSpec,
   substituteTemplateParams,
   withAppSpecFile,
-} from './lib/app-spec.js'
+} from './app-spec.js'
 
 import {
   appInfoSchema,
@@ -45,30 +40,25 @@ export {
   programHash,
   PROGRAM_PAGE_LINES,
 }
-export type { TealAnalysis, OnCompletionAction, LabelledMethod } from './lib/teal.js'
-export type { ApplicationProgram } from './handlers/program.js'
+export type { TealAnalysis, OnCompletionAction, LabelledMethod } from './teal.js'
+export type { ApplicationProgram } from './program.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { listApplicationBoxes, readBoxState, readGlobalState, readLocalState }
 export { parseAppSpec, substituteTemplateParams }
-export { detectAppSpecFormat, normalizeAppSpec, tryNormalizeAppSpec } from './lib/app-spec.js'
-export type {
-  AppSpecFormat,
-  NormalizedAppSpec,
-  ParsedAppSpec,
-  ParsedMethod,
-} from './lib/app-spec.js'
+export { detectAppSpecFormat, normalizeAppSpec, tryNormalizeAppSpec } from './app-spec.js'
+export type { AppSpecFormat, NormalizedAppSpec, ParsedAppSpec, ParsedMethod } from './app-spec.js'
 export {
   toolsFromArc56,
   toolsWithMethods,
   toolArgsFor,
   arc56SimulateResultSchema,
   describeCall,
-} from './lib/from-arc56.js'
-export type { GeneratedAppTool, ToolsFromArc56Options } from './lib/from-arc56.js'
-export { decodeAppCall, decodeAppCallForApp, enrichTransactionsWithAbi } from './lib/abi.js'
-export type { DecodedAppCall, DecodedAbiValue } from './lib/abi.js'
-export type { FormattedApplication } from './lib/format.js'
-export type { StateValue } from './handlers/state.js'
+} from './from-arc56.js'
+export type { GeneratedAppTool, ToolsFromArc56Options } from './from-arc56.js'
+export { decodeAppCall, decodeAppCallForApp, enrichTransactionsWithAbi } from './abi.js'
+export type { DecodedAppCall, DecodedAbiValue } from './abi.js'
+export type { FormattedApplication } from './format.js'
+export type { StateValue } from './state.js'
 
 export { contractWriteTools, DEPLOYER_NOTE_PREFIX, deployerNote } from './tools-write.js'
 

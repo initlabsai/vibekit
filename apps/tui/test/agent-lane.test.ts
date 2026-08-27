@@ -18,8 +18,8 @@ import {
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
-import { viewFor } from '../src/slices/lookup.js'
-import { labelProgramMethods, specsByProgramHash } from '../src/abi-catalog.js'
+import { viewFor } from '../src/lookup.js'
+import { labelProgramMethods, specsByProgramHash } from '../src/features/apps/abi-catalog.js'
 import { normalizeAppSpec } from '@initlabs/vibekit/tools'
 import { readFileSync } from 'node:fs'
 import {
@@ -27,7 +27,7 @@ import {
   createAccountListViewModel,
   createResultStore,
 } from '@initlabs/vibekit-explorer'
-import { withAccountNames } from '../src/keystore-host.js'
+import { withAccountNames } from '../src/features/network/keystore-host.js'
 
 import {
   activeSenderLine,
@@ -36,7 +36,7 @@ import {
   explorerSystemPrompt,
   planToolResult,
   runAgentTurn,
-} from '../src/agent-lane.js'
+} from '../src/features/agent/session.js'
 
 const USAGE = {
   inputTokens: { total: 10, noCache: undefined, cacheRead: undefined, cacheWrite: undefined },
@@ -330,7 +330,7 @@ describe('TUI agent lane', () => {
 
 describe('explain_application', () => {
   test('the agent’s markdown becomes a trusted explanation record', async () => {
-    const { explainApplicationTool } = await import('../src/explain-tool.js')
+    const { explainApplicationTool } = await import('../src/features/agent/explain-tool.js')
     const output = await explainApplicationTool.handler({} as never, {
       applicationId: 42,
       markdown: '## Pool\n- swap',

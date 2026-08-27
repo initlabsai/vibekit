@@ -1,11 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { ToolError } from '../../src/core/index.js'
 import { contractTools } from '../../src/tools/contracts/index.js'
-import {
-  lookupApplication,
-  lookupApplicationLogs,
-} from '../../src/tools/contracts/handlers/lookup.js'
-import { searchApplications } from '../../src/tools/contracts/handlers/search.js'
+import { lookupApplication, lookupApplicationLogs } from '../../src/tools/contracts/lookup.js'
+import { searchApplications } from '../../src/tools/contracts/search.js'
 import { decodeAddress } from 'algosdk'
 
 import { bytesToBase64 } from '../../src/core/index.js'
@@ -15,7 +12,7 @@ import {
   readBoxState,
   readGlobalState,
   readLocalState,
-} from '../../src/tools/contracts/handlers/state.js'
+} from '../../src/tools/contracts/state.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const utf8 = (s: string) => new TextEncoder().encode(s)

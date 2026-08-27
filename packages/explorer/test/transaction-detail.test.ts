@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 
-import { buildTransactionDetailRecord, transactionDetailDataSchema } from '../src/index.js'
+import {
+  buildTransactionDetailRecord,
+  transactionDetailDataSchema,
+} from '../src/views/transaction.js'
 
 const SENDER = 'L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE'
 const APP_ADDR = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'

@@ -1,13 +1,13 @@
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
-import { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema } from '../core/algo.js'
+import { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema } from '../format.js'
 import {
   buildTransactionsGraph,
   transactionsGraphSchema,
   type GraphTransaction,
 } from '../views/transaction-graph.js'
-import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../core/classifier.js'
+import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../input.js'
 import {
   approvalDecisionSchema,
   approvalRequestSchema,

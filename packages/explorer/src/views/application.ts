@@ -2,8 +2,8 @@ import algosdk from 'algosdk'
 import { viewDataSchemas, type ViewData } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
-import { uint64JsonSchema } from '../core/algo.js'
-import { algorandAddressCandidateSchema } from '../core/classifier.js'
+import { uint64JsonSchema } from '../format.js'
+import { algorandAddressCandidateSchema } from '../input.js'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { addressEnvelopeSchema, record, viewModelFor } from './derive.js'
 

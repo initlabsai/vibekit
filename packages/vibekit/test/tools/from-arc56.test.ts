@@ -213,8 +213,8 @@ describe('spec-named args reach the generated handler', () => {
 
 describe('fundAppMicroAlgos', () => {
   test('a funded write composes a two-txn group: payment to the app account, then the call', async () => {
-    const { toolsWithMethods } = await import('../../src/tools/contracts/lib/from-arc56.js')
-    const { describeCall } = await import('../../src/tools/contracts/lib/from-arc56.js')
+    const { toolsWithMethods } = await import('../../src/tools/contracts/from-arc56.js')
+    const { describeCall } = await import('../../src/tools/contracts/from-arc56.js')
     const spec = {
       name: 'Boxy',
       methods: [{ name: 'put', args: [{ name: 'v', type: 'string' }], returns: { type: 'void' } }],

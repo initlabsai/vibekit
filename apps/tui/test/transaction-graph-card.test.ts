@@ -19,7 +19,7 @@ import {
   markerText,
   MIN_LANE_WIDTH,
   verticalName,
-} from '../src/cards/transaction-graph-layout.js'
+} from '../src/features/transactions/graph-layout.js'
 import { COLORS } from '../src/theme.js'
 
 const corpus = JSON.parse(

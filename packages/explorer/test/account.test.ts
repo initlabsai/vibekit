@@ -2,23 +2,23 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   addResult,
-  buildAccountPortfolioRecord,
   EXPLORER_PROTOCOL_VERSION,
   createAccountOpenView,
   createAccountPortfolioViewModel,
-  createFixtureAccountLookup,
   createFixturePaymentHost,
   createFixtureResultStore,
   createResultStore,
   createTransactionCollectionViewModel,
   FIXTURE_ADDRESS_BOOK,
-  FIXTURE_APPLICATION_ID,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   formatMicroAlgos,
   viewSpecSchema,
 } from '../src/index.js'
+import { buildAccountPortfolioRecord } from '../src/views/account.js'
+import { createFixtureAccountLookup } from '../src/sample/account.js'
+import { FIXTURE_APPLICATION_ID } from '../src/sample/entities.js'
 
 const RECORDED_WIRE = {
   address: FIXTURE_SENDER,

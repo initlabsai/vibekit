@@ -22,7 +22,7 @@ import {
   transactionWriteTools,
 } from '@initlabs/vibekit/tools'
 
-import { bridgeToolResult } from '../agent-lane.js'
+import { bridgeToolResult } from '../bridge.js'
 import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'
 import { buildApplicationDetailRecord, buildApplicationLocalsRecord } from '../views/application.js'
 import { buildAssetDetailRecord, buildAssetHoldingsRecord } from '../views/asset.js'

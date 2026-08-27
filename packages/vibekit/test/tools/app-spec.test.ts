@@ -7,7 +7,7 @@ import {
   normalizeAppSpec,
   parseAppSpec,
   tryNormalizeAppSpec,
-} from '../../src/tools/contracts/lib/app-spec.js'
+} from '../../src/tools/contracts/app-spec.js'
 
 const fixture = (name: string) => readFileSync(join(import.meta.dir, 'fixtures', name), 'utf8')
 

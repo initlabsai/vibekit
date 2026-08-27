@@ -18,7 +18,7 @@ import {
   requireAppSpec,
   substituteTemplateParams,
   withAppSpecFile,
-} from './lib/app-spec.js'
+} from './app-spec.js'
 
 const appCallParams = z.object({
   sender: z.string().describe('Sender address'),

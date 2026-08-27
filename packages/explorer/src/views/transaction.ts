@@ -1,8 +1,8 @@
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
-import { uint64JsonSchema } from '../core/algo.js'
-import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../core/classifier.js'
+import { uint64JsonSchema } from '../format.js'
+import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../input.js'
 import type { ViewSpec } from '../core/protocol.js'
 import type {
   ResultIdentity,

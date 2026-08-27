@@ -1,15 +1,15 @@
 import { defineTool, ToolError, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
 import { transactionListSchema } from '../shared/schemas.js'
-import { lookupAsset } from './handlers/lookup.js'
-import { topAssetHolders } from './handlers/holders.js'
-import { approxWords, scaleBaseUnits } from './handlers/format.js'
-import { searchAssetBalances, searchAssetTransactions, searchAssets } from './handlers/search.js'
+import { lookupAsset } from './lookup.js'
+import { topAssetHolders } from './holders.js'
+import { approxWords, scaleBaseUnits } from './format.js'
+import { searchAssetBalances, searchAssetTransactions, searchAssets } from './search.js'
 import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './schemas.js'
 
 export * from './schemas.js'
 export { lookupAsset, searchAssetBalances, searchAssetTransactions, searchAssets }
-export type { FormattedAsset, AssetBalance } from './handlers/format.js'
+export type { FormattedAsset, AssetBalance } from './format.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 
 export { assetWriteTools } from './tools-write.js'

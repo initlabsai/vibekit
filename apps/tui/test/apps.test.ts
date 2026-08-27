@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { specCatalog } from '../src/abi-catalog.js'
+import { specCatalog } from '../src/features/apps/abi-catalog.js'
 import {
   appGroups,
   deployedFromRecord,
@@ -12,7 +12,7 @@ import {
   mergeDeployed,
   optedInFromRecord,
   scanAppSpecs,
-} from '../src/slices/apps.js'
+} from '../src/features/apps/hooks.js'
 
 const arc56 = JSON.stringify({
   arcs: [22],
@@ -200,7 +200,7 @@ describe('spec catalog', () => {
 
 describe('call summary on the approval card', () => {
   test('splits describeCall output into call, app, and one row per argument', async () => {
-    const { parseCallSummary } = await import('../src/cards/payment.js')
+    const { parseCallSummary } = await import('../src/features/write-flow/cards.js')
     expect(
       parseCallSummary(
         'HiWorld.hi(name: "a, b", n: 5, list: [1,2], t: {"type":"pay","amount":1}) → app 1018',
@@ -226,7 +226,7 @@ describe('call summary on the approval card', () => {
 
 describe('min-balance hint', () => {
   test('names +fund with the rounded-up shortfall when the app account is short', async () => {
-    const { minBalanceHint } = await import('../src/cards/payment.js')
+    const { minBalanceHint } = await import('../src/features/write-flow/cards.js')
     const algosdk = (await import('algosdk')).default
     const app = algosdk.getApplicationAddress(BigInt(1003)).toString()
     const message = `transaction X: account ${app} balance 0 below min 109700 (0 assets)`

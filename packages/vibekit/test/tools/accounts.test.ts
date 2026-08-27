@@ -1,17 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import { ToolError, jsonSafe } from '../../src/core/index.js'
 import algosdk from 'algosdk'
-import {
-  getAccountAppLocalStates,
-  getAccountAssets,
-} from '../../src/tools/accounts/handlers/assets.js'
-import { batchLookupAccounts, lookupAccount } from '../../src/tools/accounts/handlers/lookup.js'
+import { getAccountAppLocalStates, getAccountAssets } from '../../src/tools/accounts/assets.js'
+import { batchLookupAccounts, lookupAccount } from '../../src/tools/accounts/lookup.js'
 import { transactionQueryOf } from '../../src/tools/shared/schemas.js'
-import { getAccountPortfolio } from '../../src/tools/accounts/handlers/portfolio.js'
-import {
-  searchAccounts,
-  searchAccountTransactions,
-} from '../../src/tools/accounts/handlers/search.js'
+import { getAccountPortfolio } from '../../src/tools/accounts/portfolio.js'
+import { searchAccounts, searchAccountTransactions } from '../../src/tools/accounts/search.js'
 import { accountTools } from '../../src/tools/accounts/index.js'
 import { chainable, fakeContext } from './fake-context.js'
 

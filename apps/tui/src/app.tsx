@@ -13,34 +13,32 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent'
 
-import { EXPLORER_PLUGIN_INFO } from './agent-lane.js'
-import { ApprovalModal, ConfirmModal } from './approval-modal.js'
-import {
-  AppsScreen,
-  BlocksScreen,
-  Composer,
-  PluginsScreen,
-  ShelfScreen,
-  TopBar,
-  WalletScreen,
-} from './chrome.js'
+import { EXPLORER_PLUGIN_INFO } from './features/agent/session.js'
+import { ApprovalModal, ConfirmModal } from './features/write-flow/approval-modal.js'
+import { AppsScreen } from './features/apps/screen.js'
+import { BlocksScreen } from './features/blocks/screen.js'
+import { Composer } from './feed/feed.js'
+import { PluginsScreen } from './features/plugins/screen.js'
+import { AccountListScreen } from './features/accounts/list-screen.js'
+import { TopBar } from './top-bar.js'
+import { WalletScreen } from './features/accounts/wallet-screen.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
-import { explainApplicationTool } from './explain-tool.js'
-import { ContentPane, NavPane } from './sections.js'
-import { transactionsFilterFor, type OpenTarget } from './views.js'
-import { useAccounts } from './slices/accounts.js'
-import { useApps } from './slices/apps.js'
+import { explainApplicationTool } from './features/agent/explain-tool.js'
+import { ContentPane, NavPane } from './feed/feed.js'
+import { transactionsFilterFor, type OpenTarget } from './result-card.js'
+import { useAccounts } from './features/accounts/hooks.js'
+import { useApps } from './features/apps/hooks.js'
 import { startPaymentFlowFromDraftRecord } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
-import { useAgentLane } from './slices/agent.js'
-import { useFeed } from './slices/feed.js'
-import { useExplorerKeys } from './slices/keys.js'
-import { useLookups } from './slices/lookup.js'
-import { loadNextPage } from './slices/lookup.js'
-import { NETWORKS, useNetwork } from './slices/network.js'
-import { usePaymentFlow } from './slices/payment.js'
-import { useBlockTail } from './slices/tail.js'
+import { useAgentLane } from './features/agent/hooks.js'
+import { useFeed } from './feed/hooks.js'
+import { useExplorerKeys } from './keys.js'
+import { useLookups } from './lookup.js'
+import { loadNextPage } from './lookup.js'
+import { NETWORKS, useNetwork } from './features/network/hooks.js'
+import { usePaymentFlow } from './features/write-flow/hooks.js'
+import { useBlockTail } from './features/blocks/hooks.js'
 import { COLORS, errorMessage, shorten } from './theme.js'
 
 const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.algo · paste an id'
@@ -52,9 +50,10 @@ const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.
  * Tab hands focus to the feed; a payment decision is a true modal over
  * everything.
  *
- * This component is the composition root: each feature lives in a slice hook
- * under `slices/`, and the genuinely shared state (result store, busy flags,
- * status line) stays here and is passed into the hooks as parameters.
+ * This component is the composition root: each feature lives under
+ * `features/<name>/` (hooks.ts, screen.tsx, cards.tsx), the transcript under
+ * `feed/`, and the genuinely shared state (result store, busy flags, status
+ * line) stays here and is passed into the hooks as parameters.
  */
 export function App() {
   const dimensions = useTerminalDimensions()
@@ -121,7 +120,7 @@ export function App() {
     setScreen,
     accountList,
     cycleAccount,
-    openWorkspace,
+    openScreen,
   } = accounts
 
   // The apps slice mounts before the payment lane; drafts route through a ref.
@@ -499,7 +498,7 @@ export function App() {
       const outcome = routeComposerInput(trimmed)
       // Navigation-only inputs don't earn a section.
       if (outcome.status === 'nav') {
-        openWorkspace(outcome.screen)
+        openScreen(outcome.screen)
         return
       }
       const sectionId = createSection(trimmed)
@@ -556,7 +555,7 @@ export function App() {
       networkRef,
       openAccount,
       openAccountName,
-      openWorkspace,
+      openScreen,
       openAmbiguous,
       openMyAccounts,
       openApplication,
@@ -579,7 +578,7 @@ export function App() {
     modalOpen,
     decide,
     switchNetwork,
-    openWorkspace,
+    openScreen,
     screen,
     setScreen,
     accountList,
@@ -685,8 +684,8 @@ export function App() {
             setScreen('chat')
             setFocus('composer')
           }}
-          onOpenWallet={() => openWorkspace('wallet')}
-          onOpenScreen={openWorkspace}
+          onOpenWallet={() => openScreen('wallet')}
+          onOpenScreen={openScreen}
           onSwitchNetwork={() => switchNetwork()}
         />
         {screen === 'wallet' ? (
@@ -753,7 +752,7 @@ export function App() {
             keys={keybar}
           />
         ) : screen === 'assets' || screen === 'txns' ? (
-          <ShelfScreen
+          <AccountListScreen
             title={screen === 'assets' ? 'ASSETS' : 'TRANSACTIONS'}
             accountName={senderAccount?.name}
             address={activeSender}

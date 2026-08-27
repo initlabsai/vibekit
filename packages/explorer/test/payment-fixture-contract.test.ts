@@ -1,10 +1,18 @@
 import { describe, expect, test } from 'bun:test'
 
+import { algorandTransactionIdSchema } from '../src/input.js'
 import {
-  algorandTransactionIdSchema,
   createExplorerFixtureResultStore,
   createPaymentFixtureEvent,
   createPaymentFixtureResultStore,
+  PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
+  PAYMENT_FIXTURE_FEE_MICROALGOS,
+  PAYMENT_FIXTURE_GROUP_SUMMARY,
+  PAYMENT_FIXTURE_SIMULATION_RESULT_ID,
+  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
+  paymentFixtureResults,
+} from '../src/sample/payment.js'
+import {
   createPaymentFlowViewModel,
   createResultStore,
   FIXTURE_RECEIVER,
@@ -12,22 +20,18 @@ import {
   FIXTURE_TRANSACTION_ID,
   parsePaymentComposerCommand,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
-  PAYMENT_FIXTURE_FEE_MICROALGOS,
-  PAYMENT_FIXTURE_GROUP_SUMMARY,
-  PAYMENT_FIXTURE_SIMULATION_RESULT_ID,
-  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  paymentFixtureResults,
+  type StructuredResult,
+  type WriteFlowState,
+} from '../src/index.js'
+import {
   paymentSimulationDataSchema,
   writeFlowEventKinds,
   writeFlowEventSchema,
   writeFlowReducer,
-  type StructuredResult,
   type WriteFlowEventKind,
-  type WriteFlowState,
-} from '../src/index.js'
+} from '../src/flows/payment.js'
 
 function collectLeaves(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(collectLeaves)

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '../../src/core/index.js'
-import { parseAppSpec, substituteTemplateParams } from '../../src/tools/contracts/lib/app-spec.js'
+import { parseAppSpec, substituteTemplateParams } from '../../src/tools/contracts/app-spec.js'
 import { contractWriteTools } from '../../src/tools/contracts/tools-write.js'
 import { chainable, fakeContext } from './fake-context.js'
 

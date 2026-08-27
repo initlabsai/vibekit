@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  buildAssetHoldingsRecord,
-  buildTransactionListRecord,
-  mergePages,
-  nextPageArgs,
-} from '../src/index.js'
+import { buildAssetHoldingsRecord, mergePages, nextPageArgs } from '../src/index.js'
+import { buildTransactionListRecord } from '../src/views/transaction.js'
 
 const SENDER = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'
 const identity = (n: number, input?: Record<string, string | number>) => ({

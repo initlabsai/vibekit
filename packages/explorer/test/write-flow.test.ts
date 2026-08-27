@@ -1,14 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 
+import { createPaymentFixtureEvent, PAYMENT_FIXTURE_FLOW_ID } from '../src/sample/payment.js'
 import {
-  createPaymentFixtureEvent,
-  PAYMENT_FIXTURE_FLOW_ID,
   writeFlowNextEventKinds,
   writeFlowReducer,
   writeFlowStateSchema,
   type WriteFlowEventKind,
-  type WriteFlowState,
-} from '../src/index.js'
+} from '../src/flows/payment.js'
+import { type WriteFlowState } from '../src/index.js'
 
 function advance(state: WriteFlowState | null, kind: WriteFlowEventKind): WriteFlowState {
   const transition = writeFlowReducer(state, createPaymentFixtureEvent(kind))

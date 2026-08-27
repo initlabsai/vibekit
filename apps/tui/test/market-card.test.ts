@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { compactUsd, trimPrice } from '../src/cards/market.js'
+import { compactUsd, trimPrice } from '../src/features/plugins/market.js'
 
 describe('trimPrice', () => {
   test('keeps short prices exact and truncates long tails after leading zeros', () => {

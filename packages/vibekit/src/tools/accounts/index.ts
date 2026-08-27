@@ -1,10 +1,10 @@
 import { defineTool, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
 import { transactionListSchema } from '../shared/schemas.js'
-import { getAccountAppLocalStates, getAccountAssets } from './handlers/assets.js'
-import { batchLookupAccounts, lookupAccount } from './handlers/lookup.js'
-import { getAccountPortfolio } from './handlers/portfolio.js'
-import { searchAccounts, searchAccountTransactions } from './handlers/search.js'
+import { getAccountAppLocalStates, getAccountAssets } from './assets.js'
+import { batchLookupAccounts, lookupAccount } from './lookup.js'
+import { getAccountPortfolio } from './portfolio.js'
+import { searchAccounts, searchAccountTransactions } from './search.js'
 import {
   accountAssetListSchema,
   accountListSchema,

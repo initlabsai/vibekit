@@ -1,13 +1,13 @@
 import { defineTool, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
 import { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
-import { lookupTransaction, lookupTransactionGroup } from './handlers/lookup.js'
-import { searchTransactions } from './handlers/search.js'
+import { lookupTransaction, lookupTransactionGroup } from './lookup.js'
+import { searchTransactions } from './search.js'
 import { transactionGroupSchema } from './schemas.js'
 
 export * from './schemas.js'
 export { lookupTransaction, lookupTransactionGroup, searchTransactions }
-export type { SearchTransactionsArgs } from './handlers/search.js'
+export type { SearchTransactionsArgs } from './search.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 export { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
 

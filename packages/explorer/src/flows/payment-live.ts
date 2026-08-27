@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 
-import { uint64JsonSchema } from '../core/algo.js'
-import { algorandAddressCandidateSchema } from '../core/classifier.js'
+import { uint64JsonSchema } from '../format.js'
+import { algorandAddressCandidateSchema } from '../input.js'
 import {
   type JsonValue,
   addResult,

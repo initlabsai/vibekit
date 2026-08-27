@@ -1,11 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '../../src/core/index.js'
 import { transactionTools } from '../../src/tools/transactions/index.js'
-import {
-  lookupTransaction,
-  lookupTransactionGroup,
-} from '../../src/tools/transactions/handlers/lookup.js'
-import { searchTransactions } from '../../src/tools/transactions/handlers/search.js'
+import { lookupTransaction, lookupTransactionGroup } from '../../src/tools/transactions/lookup.js'
+import { searchTransactions } from '../../src/tools/transactions/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {

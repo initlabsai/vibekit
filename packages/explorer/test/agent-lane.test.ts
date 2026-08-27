@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
+import { buildTransactionDetailRecord } from '../src/views/transaction.js'
 import {
-  buildTransactionDetailRecord,
   createFixturePaymentHost,
   createFixtureResultStore,
   createPaymentFlowViewModel,

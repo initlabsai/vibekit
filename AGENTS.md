@@ -13,16 +13,16 @@ renders what those tools return.
 | --- | --- |
 | `packages/vibekit` | The one published package, `@initlabs/vibekit`. Every `src/` area is a subpath export. |
 | `packages/vibekit/src/core` (`.`) | The tool contract, `resolveDeployment`, `executeToolCall`, the codec, and the compose engine (`core/compose/`). |
-| `packages/vibekit/src/tools` (`./tools`, `./tools/views`) | The domain tools: accounts, assets, contracts, network, transactions. `views.ts` maps each view id to its wire schema. |
+| `packages/vibekit/src/tools` (`./tools`, `./tools/views`) | The domain tools: accounts, assets, contracts, network, transactions — each a flat directory of `index.ts` (the tool definitions), `schemas.ts`, and the functions behind them. `views.ts` maps each view id to its wire schema. |
 | `packages/vibekit/src/plugins/*` (`./plugins/<name>`) | Third-party tool plugins: nfd, pera, vestige, alpha-arcade. |
 | `packages/vibekit/src/signer-keystore` (`./signer-keystore`) | The algosdk signer over the keystore daemon, its account tools, the testnet dispenser. |
 | `packages/vibekit/src/mcp` (`./mcp`, `./mcp/stdio`, `./mcp/http`) | Host: ToolDefinition-to-MCP adapter and transports. |
 | `packages/vibekit/src/agent` (`./agent`, `./agent/config`) | Host: the LLM tool loop and its stored config. |
 | `packages/vibekit/src/preset` (`./preset`) | The stock tool and plugin mix every stock host composes from. |
 | `packages/vibekit/examples` | Reference stdio and HTTP deployments, typechecked with the package. |
-| `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the write flow (`src/flows`), recorded sample data (`src/fixtures`), and the live host (`src/live`). Not a UI. |
+| `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the write flow (`src/flows`), the tool-result bridge (`src/bridge.ts`), input classification (`src/input.ts`), formatting (`src/format.ts`), recorded sample data (`src/sample`), and the live host (`src/live`). Not a UI. `src/index.ts` lists what the apps use; everything else is internal. |
 | `apps/cli` | The `vibekit` binary: `new`, `init`, `localnet`, `keystore`, `dispenser`, `doctor`, `tool`, `mcp`, `explore`. Host: `commands/tool.ts` and `commands/mcp.ts`. |
-| `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. |
+| `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. `features/<name>/` holds one feature's hooks, screen, and cards; `feed/` is the transcript; `app.tsx` composes them. |
 | `apps/web` | The web Explorer (Next.js). Sample-backed reads plus a compose-only flow route. |
 | `apps/website` | The public site (Astro/Starlight). |
 | `skills/` | Canonical skills, compiled into the CLI by `bun run --cwd apps/cli bundle-skills`. `.agents/skills`, `.claude/skills`, `.grok/skills` are symlinks into it. |
@@ -44,7 +44,7 @@ host (mcp | agent | cli tool) → executeToolCall(deployment, tool, args)
   → picks the network context → tool.handler(ctx, args) → jsonSafe()
   → output schema check → wire result
 Explorer: wire → build*Record (packages/explorer/src/views) → StructuredResult
-  → ViewSpec → create*ViewModel → card (apps/tui/src/cards)
+  → ViewSpec → create*ViewModel → card (apps/tui/src/features/*/cards.tsx)
 ```
 
 Write:
@@ -118,6 +118,10 @@ One word per concept. Do not introduce a synonym.
   `algosdk` development/runtime version pinned exactly and the keystore canary
   dependencies pinned exactly. Ask before adding a dependency.
 - Use conventional commits. Do not add co-author lines.
+- Dependencies point inward: `core ← tools / plugins / signer-keystore ←
+  hosts (mcp, agent, cli) ← apps`, and `explorer ← apps`. Never the
+  reverse. `packages/vibekit/test/repo-rules.test.ts` pins this and the
+  comment rule below.
 - Keep core small. Add a new capability as a new tool or a thin host
   adapter. Do not add a new path around `executeToolCall`.
   - Share one factory for host wiring. Do not copy the tool and plugin mix into

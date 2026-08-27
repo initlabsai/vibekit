@@ -3,21 +3,25 @@ import { describe, expect, test } from 'bun:test'
 import {
   buildPaymentDraftRecord,
   buildPaymentSimulationRecord,
-  createExplorerFixtureResultStore,
+  structuredResultFromToolEvent,
+  type DecodedPaymentFacts,
+} from '../src/flows/payment-live.js'
+import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
+import {
   createPaymentFlowViewModel,
   createWriteStageEvent,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
   addResult,
-  paymentDraftDataSchema,
-  paymentSimulationDataSchema,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  paymentSignedGroupDataSchema,
-  structuredResultFromToolEvent,
-  writeFlowReducer,
-  type DecodedPaymentFacts,
   type WriteFlowState,
 } from '../src/index.js'
+import {
+  paymentDraftDataSchema,
+  paymentSimulationDataSchema,
+  paymentSignedGroupDataSchema,
+  writeFlowReducer,
+} from '../src/flows/payment.js'
 import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'

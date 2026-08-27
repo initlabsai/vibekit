@@ -2,9 +2,6 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   EXPLORER_PROTOCOL_VERSION,
-  FIXTURE_APPLICATION_ID,
-  FIXTURE_ASSET_ID,
-  FIXTURE_BLOCK_ROUND,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   addResult,
@@ -13,17 +10,22 @@ import {
   createAssetDetailViewModel,
   createBlockDetailViewModel,
   createTransactionDetailViewModel,
-  createFixtureEntityLookup,
   createNetworkStatusViewModel,
   createResultStore,
-  formatBlockTime,
   formatBlockTxnType,
   formatExplorerTime,
   lookupAmbiguousEntity,
   parseEntityComposerCommand,
-  viewCueForToolResult,
   viewSpecSchema,
 } from '../src/index.js'
+import {
+  FIXTURE_APPLICATION_ID,
+  FIXTURE_ASSET_ID,
+  FIXTURE_BLOCK_ROUND,
+  createFixtureEntityLookup,
+} from '../src/sample/entities.js'
+import { formatBlockTime } from '../src/views/block.js'
+import { viewCueForToolResult } from '../src/bridge.js'
 
 const identity = {
   resultId: 'result-entity',

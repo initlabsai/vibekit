@@ -5,8 +5,8 @@ import {
   type ResultStore,
 } from '@initlabs/vibekit-explorer'
 
-import { loadNextPage, viewFor } from '../src/slices/lookup.js'
-import type { ExplorerHost } from '../src/slices/network.js'
+import { loadNextPage, viewFor } from '../src/lookup.js'
+import type { ExplorerHost } from '../src/features/network/hooks.js'
 
 const SENDER = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'
 const identity = (n: number, input?: Record<string, string | number>) => ({

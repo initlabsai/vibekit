@@ -2,9 +2,9 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { ToolError } from '../../src/core/index.js'
 
-import { getApplicationProgram } from '../../src/tools/contracts/handlers/program.js'
-import { normalizeAppSpec } from '../../src/tools/contracts/lib/app-spec.js'
-import { analyzeTeal, labelSelectors } from '../../src/tools/contracts/lib/teal.js'
+import { getApplicationProgram } from '../../src/tools/contracts/program.js'
+import { normalizeAppSpec } from '../../src/tools/contracts/app-spec.js'
+import { analyzeTeal, labelSelectors } from '../../src/tools/contracts/teal.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 /** Tinyman AMM v2 approval program (mainnet app 1002541853), disassembled by algod. */

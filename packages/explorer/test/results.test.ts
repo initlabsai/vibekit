@@ -4,14 +4,13 @@ import {
   EXPLORER_PROTOCOL_VERSION,
   FIXTURE_RESULT_ID,
   FIXTURE_SENDER,
-  FIXTURE_TOOL_CALL_ID,
   addResult,
   createFixtureResultStore,
   createResultStore,
   resolveResultReference,
   structuredResultSchema,
-  transactionFixtureResult,
 } from '../src/index.js'
+import { FIXTURE_TOOL_CALL_ID, transactionFixtureResult } from '../src/sample/transaction.js'
 
 describe('client-owned result store', () => {
   test('resolves by result id, tool-call id, and optional data path', () => {

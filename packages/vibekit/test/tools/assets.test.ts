@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '../../src/core/index.js'
 import { assetTools } from '../../src/tools/assets/index.js'
-import { lookupAsset } from '../../src/tools/assets/handlers/lookup.js'
-import { topAssetHolders } from '../../src/tools/assets/handlers/holders.js'
+import { lookupAsset } from '../../src/tools/assets/lookup.js'
+import { topAssetHolders } from '../../src/tools/assets/holders.js'
 import {
   searchAssetBalances,
   searchAssetTransactions,
   searchAssets,
-} from '../../src/tools/assets/handlers/search.js'
+} from '../../src/tools/assets/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const usdcParams = {

@@ -22,7 +22,7 @@ Two layers, shipped separately:
 
 A plugin tool returns its result plus a `card` description, and the TUI renders
 it with the primitives every first-party card already uses
-(`Frame`/`Header`/`Fact`/`Ident`/`Button` in `apps/tui/src/ui.tsx`):
+(`Frame`/`Header`/`Fact`/`Ident`/`Button` in `apps/tui/src/primitives.tsx`):
 
 ```ts
 card: {
@@ -57,7 +57,7 @@ an action or two"; facts + rows + a button is that.
 
 ## Named consumers (abstraction-budget rule)
 
-- The NFD card (`apps/tui/src/cards/nfd.tsx`, hand-built 2026-08-22) is exactly
+- The NFD card (`apps/tui/src/features/plugins/nfd.tsx`, hand-built 2026-08-22) is exactly
   a card description — reference implementation #1.
 - alpha-arcade markets render as raw JSON in the TUI today — #2.
 

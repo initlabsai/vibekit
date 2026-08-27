@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  formatBaseUnits,
-  formatMicroAlgos,
-  parseAlgosToMicroAlgos,
-  sameUint64,
-} from '../src/index.js'
+import { formatBaseUnits, formatMicroAlgos } from '../src/index.js'
+import { parseAlgosToMicroAlgos, sameUint64 } from '../src/format.js'
 
 describe('exact microALGO math', () => {
   test('formats microALGOs as exact decimal ALGO strings', () => {

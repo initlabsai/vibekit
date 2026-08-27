@@ -8,10 +8,10 @@ import {
   createFixtureResultStore,
   createTransactionDetailViewModel,
   lookupFixture,
-  transactionDetailDataSchema,
-  transactionFixtureResult,
   viewSpecSchema,
 } from '../src/index.js'
+import { transactionDetailDataSchema } from '../src/views/transaction.js'
+import { transactionFixtureResult } from '../src/sample/transaction.js'
 
 function collectLeaves(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(collectLeaves)

@@ -107,7 +107,7 @@ Instantiate the plugin in a deployment's `plugins` array. Do not copy its tools
 into the deployment's base tool list. To ship it in every stock host at once,
 add it to `defaultPlugins()` in `packages/vibekit/src/preset` — that is the one
 registration point for the CLI hosts and the reference app; the TUI keeps its
-own roster in `apps/tui/src/agent-lane.ts`.
+own roster in `apps/tui/src/features/agent/session.ts`.
 
 Tests should cover:
 

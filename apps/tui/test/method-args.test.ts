@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { ParsedMethod } from '@initlabs/vibekit/tools'
 
-import { methodPrompt, parseMethodArgs, splitTokens } from '../src/method-args.js'
+import { methodPrompt, parseMethodArgs, splitTokens } from '../src/features/apps/method-args.js'
 
 const ADDR = 'P5CVZ5SJRYHOSSARSX2XMSD5HWJK7Z5WEMQCAHHQ47DOK4BMWWVPQN6DVU'
 const method: ParsedMethod = {
