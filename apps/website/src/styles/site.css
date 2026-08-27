@@ -193,6 +193,9 @@ footer small { border-left: 1px solid var(--border-soft); color: var(--faint); f
 .story p b { color: var(--brass-bright); font-weight: 500; }
 .stamp { color: var(--faint) !important; display: flex; flex-wrap: wrap; font-family: var(--font-mono); font-size: .62rem !important; gap: 1.5rem; letter-spacing: .1em; margin-bottom: 2.4rem !important; }
 .stamp.end { border-top: 1px solid var(--border-soft); margin-top: 2.4rem; padding-top: 1rem; }
+.story .fn { color: var(--brass); font-size: .62em; padding-left: .1em; vertical-align: super; }
+.footnote { color: var(--faint) !important; font-size: .78rem !important; line-height: 1.7 !important; max-width: 38rem; }
+.footnote sup { color: var(--brass); padding-right: .25em; }
 .story .rules { margin: 2rem 0 2.4rem; max-width: 42rem; }
 .truth { border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 3rem; }
 .truth h2 { font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 2rem; }
