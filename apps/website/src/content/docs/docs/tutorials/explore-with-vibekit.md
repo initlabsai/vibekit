@@ -2,6 +2,8 @@
 title: Explore with VibeKit
 description: Use the terminal Explorer to inspect Algorand and review writes.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
 The VibeKit Explorer is a full-screen terminal app for Algorand. It is useful

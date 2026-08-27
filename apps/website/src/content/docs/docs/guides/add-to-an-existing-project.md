@@ -2,6 +2,8 @@
 title: Add VibeKit to an existing project
 description: Configure skills and MCP tools without replacing the project you have.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
 

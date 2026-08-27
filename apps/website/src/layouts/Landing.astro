@@ -6,7 +6,7 @@ interface Props {
   description?: string
 }
 
-const { title = 'VibeKit — from prompt to mainnet.', description = 'The agentic stack for Algorand builders. Skills, chain tools, LocalNet, and a signer that never shows the AI your keys.' } = Astro.props
+const { title = 'VibeKit — from prompt to mainnet.', description = 'The agentic stack for Algorand builders. Skills, typed chain tools, and a signer that never shows the AI your keys.' } = Astro.props
 
 // Absolute URLs: scrapers do not resolve relative og:image paths.
 const canonical = new URL(Astro.url.pathname, Astro.site).href

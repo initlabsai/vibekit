@@ -2,8 +2,15 @@
 title: Create a custom MCP
 description: Serve exactly the VibeKit tools and plugins your agent needs.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
+:::danger[Alpha — this API will change]
+The package surface described here is **not stable**. It ships under the
+`alpha` dist-tag and breaking changes will land without a major version bump.
+Treat this guide as a preview of the shape, not a contract.
+:::
 
 A VibeKit MCP deployment is configuration: select tools, optional plugins,
 networks, and a signing mode, then pass that deployment to a transport adapter.

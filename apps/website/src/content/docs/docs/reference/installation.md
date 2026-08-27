@@ -2,6 +2,8 @@
 title: Installation
 description: Run VibeKit from the current source checkout.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
 

@@ -2,6 +2,8 @@
 title: Your first project
 description: Scaffold an Algorand project and set it up for an AI coding agent.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
 This tutorial creates a contracts project, configures an agent, and starts a

@@ -2,6 +2,8 @@
 title: Configuration
 description: The few settings that matter when using VibeKit.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
 

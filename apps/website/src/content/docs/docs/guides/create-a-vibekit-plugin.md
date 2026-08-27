@@ -2,8 +2,15 @@
 title: Create a VibeKit plugin
 description: Package a new capability as typed tools that any VibeKit host can use.
 draft: false
+banner:
+  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
 ---
 
+:::danger[Alpha — this API will change]
+The package surface described here is **not stable**. It ships under the
+`alpha` dist-tag and breaking changes will land without a major version bump.
+Treat this guide as a preview of the shape, not a contract.
+:::
 
 A VibeKit plugin is a workspace package that returns a `ToolPlugin`: a name, a tool
 array, and optionally a service or trusted Explorer view schemas. The host puts
