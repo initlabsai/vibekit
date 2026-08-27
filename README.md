@@ -18,7 +18,7 @@ Alpha release — [feedback welcome](https://github.com/initlabsai/vibekit/issue
 | Browsing the chain — queries, the Explorer, `vibekit new` | Nothing. The CLI and Explorer are self-contained binaries. |
 | **Signing anything** — payments, assets, deploys | **Node.js** (and `npm` once). The keystore daemon runs under Node. |
 | **Building a project** — compiling and testing contracts | **Node.js 24+**. The starter templates use `puya-ts`, `tsx`, and `vitest`. |
-| LocalNet | Docker Compose v2 |
+| LocalNet | Docker Compose v2. On Linux, add yourself to the `docker` group (`sudo usermod -aG docker $USER`, then log out and back in). |
 | The keystore, on Linux | A Secret Service keychain |
 | The keystore, on Windows | [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (`winget install Microsoft.VCRedist.2015+.x64`) |
 
