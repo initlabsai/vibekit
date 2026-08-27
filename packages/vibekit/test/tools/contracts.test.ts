@@ -47,9 +47,9 @@ describe('registry', () => {
       'read_local_state',
       'read_box_state',
       'list_application_boxes',
-      'app_get_info',
+      'get_application_info',
       'get_application_program',
-      'app_list_methods',
+      'list_app_spec_methods',
     ])
     for (const tool of contractTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
@@ -416,12 +416,12 @@ describe('readBoxState', () => {
   })
 })
 
-describe('app_list_methods', () => {
+describe('list_app_spec_methods', () => {
   test('returns parsed methods without touching the chain', async () => {
     const spec = JSON.stringify({
       contract: { name: 'Old', methods: [{ name: 'go', args: [], returns: { type: 'void' } }] },
     })
-    const tool = contractTools.find((t) => t.name === 'app_list_methods')!
+    const tool = contractTools.find((t) => t.name === 'list_app_spec_methods')!
     const result = (await tool.handler(fakeContext({}), { appSpec: spec } as never)) as {
       methods: Array<{ signature: string }>
     }

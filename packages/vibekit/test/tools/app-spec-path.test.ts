@@ -13,10 +13,13 @@ const tool = (name: string) =>
 const readDisk = (path: string) => readFile(path, 'utf8')
 
 describe('appSpecPath', () => {
-  test('app_list_methods reads the spec from disk', async () => {
-    const result = (await tool('app_list_methods').handler(fakeContext({ readFile: readDisk }), {
-      appSpecPath: SPEC_PATH,
-    })) as {
+  test('list_app_spec_methods reads the spec from disk', async () => {
+    const result = (await tool('list_app_spec_methods').handler(
+      fakeContext({ readFile: readDisk }),
+      {
+        appSpecPath: SPEC_PATH,
+      },
+    )) as {
       name: string
       methods: Array<{ name: string }>
     }
@@ -26,7 +29,7 @@ describe('appSpecPath', () => {
 
   test('a missing file and a missing spec are distinct, clear errors', async () => {
     await expect(
-      tool('app_list_methods').handler(fakeContext({ readFile: readDisk }), {
+      tool('list_app_spec_methods').handler(fakeContext({ readFile: readDisk }), {
         appSpecPath: '/nowhere/x.arc56.json',
       }),
     ).rejects.toMatchObject({ code: 'APP_SPEC_NOT_FOUND' })
@@ -44,7 +47,7 @@ describe('appSpecPath', () => {
       'app_deploy',
       'app_update',
       'app_call',
-      'app_list_methods',
+      'list_app_spec_methods',
       'read_global_state',
       'read_local_state',
       'read_box_state',
@@ -57,7 +60,7 @@ describe('appSpecPath', () => {
 
 describe('appSpecPath on a deployment with no file grant', () => {
   test('refuses the path form instead of reading the host filesystem', async () => {
-    const tool = contractTools.find((entry) => entry.name === 'app_list_methods')!
+    const tool = contractTools.find((entry) => entry.name === 'list_app_spec_methods')!
     await expect(
       tool.handler(fakeContext({}), { appSpecPath: '/etc/hostname' }),
     ).rejects.toMatchObject({ code: 'APP_SPEC_PATH_UNAVAILABLE' })

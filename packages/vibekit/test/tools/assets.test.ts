@@ -27,7 +27,7 @@ describe('registry', () => {
     expect(assetTools.map((t) => t.name)).toEqual([
       'lookup_asset',
       'top_asset_holders',
-      'search_asset_balances',
+      'search_asset_holders',
       'search_asset_transactions',
       'search_assets',
       'get_asset_info',

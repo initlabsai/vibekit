@@ -100,7 +100,7 @@ export const applicationBoxSchema = z.object({
   size: z.number().optional(),
 })
 
-/** Wire shape of app_get_info ('json' view). */
+/** Wire shape of get_application_info ('json' view). */
 export const appInfoSchema = z.object({
   appId: z.number(),
   creator: z.string(),
@@ -169,7 +169,7 @@ export const applicationProgramSchema = z.object({
   ),
 })
 
-/** Wire shape of app_list_methods ('table' view). */
+/** Wire shape of list_app_spec_methods ('table' view). */
 export const appMethodsSchema = z.object({
   name: z.string().optional(),
   methods: z.array(

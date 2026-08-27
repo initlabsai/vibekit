@@ -23,7 +23,7 @@ state, and boxes stay. It succeeds only if the contract allows
 `method`); check with `get_application_program` when unsure. A state-schema
 change cannot be an update — that is a new `app_deploy`. Say which one you did.
 
-Prefer `appSpecPath` for `app_deploy`, `app_call`, `app_list_methods`, and state
+Prefer `appSpecPath` for `app_deploy`, `app_call`, `list_app_spec_methods`, and state
 decoding tools. Do not paste a large application spec into model context when
 the file exists.
 
@@ -50,7 +50,7 @@ tools and keystore instead; never search for or populate those secrets.
 | Balance and holdings      | `lookup_account`, `get_account_portfolio`, `get_account_assets`                     |
 | Send ALGO                 | `send_payment` through MCP                                                          |
 | Create or transfer an ASA | `asset_create`, `asset_transfer`, `asset_opt_in`                                    |
-| Deploy, update, or call a contract | `app_deploy`, `app_update`, `app_call`, `app_get_info`, `app_list_methods`                        |
+| Deploy, update, or call a contract | `app_deploy`, `app_update`, `app_call`, `get_application_info`, `list_app_spec_methods`                        |
 | Read contract state       | `read_global_state`, `read_local_state`, `list_application_boxes`, `read_box_state` |
 | Debug a transaction       | `lookup_transaction`, `lookup_application_logs`, `simulate_transactions`            |
 | Resolve an NFD            | `resolve_nfd`, `reverse_resolve_nfd`                                                |

@@ -18,7 +18,7 @@ export const assetTools: AnyTool[] = [
   defineTool({
     name: 'lookup_asset',
     description:
-      'Look up an Algorand Standard Asset (ASA) by its ID. Common ASA IDs: USDC=31566704, USDT=312769, goETH=386192725, goBTC=386195940',
+      'Look up an Algorand Standard Asset (ASA) by its ID via the indexer: params plus creation round; a destroyed asset still resolves. Common ASA IDs: USDC=31566704, USDT=312769, goETH=386192725, goBTC=386195940. get_asset_info is the algod view of the same asset.',
     parameters: z.object({
       assetId: z.number().describe('The asset ID to look up'),
     }),
@@ -41,9 +41,9 @@ export const assetTools: AnyTool[] = [
     handler: async (ctx, args) => topAssetHolders(ctx, args),
   }),
   defineTool({
-    name: 'search_asset_balances',
+    name: 'search_asset_holders',
     description:
-      'Search for holders of a specific asset. IMPORTANT: Results are paginated by address, NOT sorted by balance. To find top/largest holders, you MUST set currencyGreaterThan to a high raw-unit value (e.g. for USDC with 6 decimals: 1000000000000 = $1M minimum). Without this filter, results will be arbitrary small holders.',
+      'One page of holders of an asset, in address order, with an optional minimum balance (currencyGreaterThan, raw base units). For the largest holders use top_asset_holders instead: this page is not sorted by balance.',
     parameters: z.object({
       assetId: z.number().describe('The asset ID'),
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
@@ -98,7 +98,7 @@ export const assetTools: AnyTool[] = [
   defineTool({
     name: 'get_asset_info',
     description:
-      "Get an asset's current parameters directly from algod (name, supply, roles, frozen state).",
+      "An asset's current parameters straight from algod (name, supply, roles, frozen state); fails once the asset is destroyed. Same shape as lookup_asset, which is the indexer view.",
     parameters: z.object({ assetId: z.number().describe('The asset ID') }),
     output: assetDetailSchema,
     view: 'asset.detail',

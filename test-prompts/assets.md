@@ -4,7 +4,7 @@ Test the full ASA lifecycle on localnet. Follow [README.md](README.md)
 conventions. Every write call: explicit `network: "localnet"`.
 
 **Tools:** `asset_create`, `get_asset_info`, `lookup_asset`, `search_assets`,
-`search_asset_balances`, `search_asset_transactions`, `asset_opt_in`,
+`search_asset_holders`, `search_asset_transactions`, `asset_opt_in`,
 `asset_transfer`, `asset_freeze`, `asset_config`, `asset_opt_out`, `asset_destroy`
 
 **Prereq:** ACCT_A and ACCT_B both funded (asset opt-ins raise min balance —
@@ -31,7 +31,7 @@ fund ACCT_B too: `vibekit localnet fund <ACCT_B>`).
 5. `asset_opt_in`: ACCT_B opts into ASSET_ID.
 6. `asset_transfer`: 500 base units of ASSET_ID from ACCT_A to ACCT_B.
    - Verify: executes.
-7. `search_asset_balances` for ASSET_ID.
+7. `search_asset_holders` for ASSET_ID.
    - Verify: ACCT_A and ACCT_B both listed; amounts are raw base-unit decimal strings (ACCT_B exactly "500") and the page carries a `decimals` field matching the asset.
 8. `search_asset_transactions` for ASSET_ID, `limit: 10`.
    - Verify: the transfer appears with `assetAmount` 500 and correct sender/receiver.

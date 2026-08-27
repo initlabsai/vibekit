@@ -4,7 +4,7 @@ Test smart-contract deploy, calls, and state reads on localnet. Follow
 [README.md](README.md) conventions. Every write call: explicit
 `network: "localnet"`.
 
-**Tools:** `app_deploy`, `app_list_methods`, `app_get_info`,
+**Tools:** `app_deploy`, `list_app_spec_methods`, `get_application_info`,
 `lookup_application`, `search_applications`, `app_call`, `read_global_state`,
 `app_opt_in`, `read_local_state`, `read_box_state`, `lookup_application_logs`,
 `app_close_out`, `app_delete`, plus `lookup_transaction` (inner-txn check)
@@ -43,14 +43,14 @@ Pass this JSON **as a string** for the `appSpec` parameter:
 
 ### Spec introspection (no chain writes)
 
-1. `app_list_methods` with the spec above.
+1. `list_app_spec_methods` with the spec above.
    - Verify: returns contract name `SmokeCounter` and the `ping()void` method.
 
 ### Deploy
 
 2. `app_deploy` from ACCT_A with the spec (bare create — no `method`).
    - Verify: returns numeric `appId`, a valid `appAddress`, `txid`, `confirmedRound`. Record APP_ID.
-3. `app_get_info` for APP_ID.
+3. `get_application_info` for APP_ID.
    - Verify: creator = ACCT_A; global schema shows 1 uint.
 4. `lookup_application` for APP_ID (indexer view).
    - Verify: consistent with step 3.
@@ -102,7 +102,7 @@ Pass this JSON **as a string** for the `appSpec` parameter:
 17. `app_close_out` on APP_ID from ACCT_A.
     - Verify: executes; `read_local_state` now reports `optedIn: false`.
 18. `app_delete` on APP_ID from ACCT_A.
-    - Verify: executes; `app_get_info` / `lookup_application` for APP_ID now reports not-found (e.g. `APP_NOT_FOUND`) or deleted — report which.
+    - Verify: executes; `get_application_info` / `lookup_application` for APP_ID now reports not-found (e.g. `APP_NOT_FOUND`) or deleted — report which.
 
 ### Error path
 

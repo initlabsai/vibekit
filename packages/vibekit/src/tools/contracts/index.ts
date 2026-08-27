@@ -61,7 +61,8 @@ export { contractWriteTools, DEPLOYER_NOTE_PREFIX, deployerNote } from './tools-
 export const contractTools: AnyTool[] = [
   defineTool({
     name: 'lookup_application',
-    description: 'Look up a smart contract application by its ID',
+    description:
+      'Look up an application by its ID via the indexer: creator, global state, schemas. get_application_info is the algod view; call one, not both.',
     parameters: z.object({
       applicationId: z.number().describe('The application ID to look up'),
     }),
@@ -162,9 +163,9 @@ Examples:
     handler: async (ctx, args) => listApplicationBoxes(ctx, args),
   }),
   defineTool({
-    name: 'app_get_info',
+    name: 'get_application_info',
     description:
-      "Get an application's current parameters from algod: creator, schema, program sizes, extra pages.",
+      "An application's current parameters straight from algod: creator, schema, program sizes, extra pages. lookup_application is the indexer view; call one, not both.",
     parameters: z.object({ appId: z.number().describe('The application ID') }),
     output: appInfoSchema,
     view: 'json',
@@ -217,7 +218,7 @@ Examples:
     handler: async (ctx, args) => getApplicationProgram(ctx, args),
   }),
   defineTool({
-    name: 'app_list_methods',
+    name: 'list_app_spec_methods',
     description: 'List the ABI methods of an app spec: signatures, args, returns, descriptions.',
     parameters: z.object(appSpecParams),
     output: appMethodsSchema,
