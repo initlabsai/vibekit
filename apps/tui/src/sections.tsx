@@ -35,7 +35,7 @@ export type SectionBlock =
   | { id: number; kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
   | { id: number; kind: 'plugin'; view: string; data: unknown; network: string }
-  /** A coarse `table` cue's result, pre-shaped by tableModel — formatted raw, not trusted. */
+  /** A coarse `table` view's result, pre-shaped by tableModel — formatted raw, not trusted. */
   | {
       id: number
       kind: 'table'

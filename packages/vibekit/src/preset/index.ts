@@ -1,5 +1,5 @@
 /**
- * The batteries-included host wiring, shared by every stock host (CLI mcp/tool
+ * The stock host wiring, shared by every stock host (CLI mcp/tool
  * commands, the reference MCP server). One place to add a tool domain or a
  * plugin; hosts that want a different mix keep composing by hand.
  */

@@ -2,13 +2,13 @@ import { describe, expect, test } from 'bun:test'
 import { lstatSync, readlinkSync } from 'fs'
 import { resolve } from 'path'
 
-import { AGENTS, AGENT_IDS } from '../src/config/agents.js'
+import { HARNESSES, HARNESS_IDS, type HarnessDefinition } from '../src/config/harnesses.js'
 import { MCPS, MCP_IDS, getMCPsByCategory } from '../src/config/mcps.js'
 import { getSkillNames } from '../src/skills/index.js'
 
 describe('agent registry', () => {
   test('every agent produces a config for every MCP', () => {
-    for (const agentId of AGENT_IDS) {
+    for (const agentId of HARNESS_IDS) {
       for (const mcpId of MCP_IDS) {
         const config = MCPS[mcpId].getAgentConfig(agentId)
         expect(config, `${mcpId} config for ${agentId}`).toBeDefined()
@@ -19,8 +19,8 @@ describe('agent registry', () => {
   })
 
   test('config files are distinct, except pi deliberately shares .mcp.json with claude', () => {
-    const files = AGENT_IDS.map((id) => AGENTS[id].configFile)
-    const sharers = AGENT_IDS.filter((id) => AGENTS[id].configFile === '.mcp.json')
+    const files = HARNESS_IDS.map((id) => HARNESSES[id].configFile)
+    const sharers = HARNESS_IDS.filter((id) => HARNESSES[id].configFile === '.mcp.json')
     expect(sharers.sort()).toEqual(['claude', 'pi']) // pi-mcp-adapter reads the standard .mcp.json
     expect(new Set(files).size).toBe(files.length - 1)
   })
@@ -34,10 +34,11 @@ describe('agent registry', () => {
   })
 
   test('codex and grok are the toml agents', () => {
-    expect(AGENT_IDS.filter((id) => AGENTS[id].configFormat === 'toml').sort()).toEqual([
-      'codex',
-      'grok',
-    ])
+    expect(
+      HARNESS_IDS.filter(
+        (id) => (HARNESSES[id] as HarnessDefinition).configFormat === 'toml',
+      ).sort(),
+    ).toEqual(['codex', 'grok'])
   })
 })
 

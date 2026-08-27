@@ -137,7 +137,6 @@ export function Pill({ label, tone = 'idle' }: { label: string; tone?: Tone }) {
 
 /**
  * Card masthead: brass kicker, optional type chip, optional status pill.
- * Mirrors the v1 Explorer header (icon + title + pill) in terminal terms.
  */
 export function Header({
   kicker,

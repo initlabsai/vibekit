@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from '../core/algo.js'
 import { algorandAddressCandidateSchema } from '../core/classifier.js'
-import type { ExplorerArtifact } from '../core/protocol.js'
+import type { OpenView } from '../core/protocol.js'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
 import { record, viewModelFor } from './derive.js'
@@ -84,7 +84,7 @@ export function buildAccountPortfolioRecord(
 }
 
 /** Builds the titled trusted view that renders a portfolio record. */
-export function createAccountArtifact(record: StructuredResult): ExplorerArtifact {
+export function createAccountOpenView(record: StructuredResult): OpenView {
   if (record.state !== 'success') {
     throw new Error('Cannot open a failed account record')
   }

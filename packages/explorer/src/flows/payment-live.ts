@@ -219,7 +219,7 @@ export interface ToolResultEventLike {
   toolName: string
   output: unknown
   isError: boolean
-  /** The tool's declared view cue, when present. */
+  /** The tool's declared view id, when present. */
   view?: string
 }
 
@@ -272,7 +272,7 @@ export interface PaymentDraftParams {
 }
 
 /**
- * The capability a renderer needs to run the live payment flow. The TUI
+ * The capability an app needs to run the live payment flow. The TUI
  * satisfies it in-process (adding keystore signing behind explicit approval);
  * the browser satisfies the signerless subset with a fetch wrapper over a
  * compose-only server route. Custody appears only through the optional

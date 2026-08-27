@@ -7,14 +7,14 @@
  */
 import { executeToolCall, injectNetworkParam, ToolError } from '../core/index.js'
 import type { McpServer } from '@modelcontextprotocol/server'
-import type { ResolvedDeployment } from './options.js'
+import type { ResolvedMcpDeployment } from './options.js'
 
-/** Namespaced _meta key carrying the tool's view cue to heads. */
+/** Namespaced _meta key carrying the tool's view id to MCP clients that render views. */
 export const VIEW_META_KEY = 'ai.vibekit/view'
 
 export { NETWORK_PARAM } from '../core/index.js'
 
-export function registerTools(server: McpServer, deployment: ResolvedDeployment): void {
+export function registerTools(server: McpServer, deployment: ResolvedMcpDeployment): void {
   for (const tool of deployment.tools) {
     const inputSchema = injectNetworkParam(tool, deployment)
 

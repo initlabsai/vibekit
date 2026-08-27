@@ -1,6 +1,6 @@
 /**
  * `vibekit localnet` — start/stop/reset/status/fund/logs for the local
- * Algorand network. MVP subset of AlgoKit CLI's localnet command group.
+ * Algorand network. A subset of AlgoKit CLI's localnet command group.
  */
 
 import * as p from '@clack/prompts'

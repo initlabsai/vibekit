@@ -28,8 +28,8 @@ generated code rather than from integration seams.
 ### Bet 2 — The engine makes capabilities portable; surfaces are the product
 
 A stateless, contract-driven core keeps integration thin. Every surface — MCP,
-CLI, agent loop, Explorer — is a door into the same contract, and each door
-exists because a real class of agent or person comes through it.
+CLI, agent loop, Explorer — is a host over the same contract, and each host
+exists because a real class of agent or person uses it.
 
 _Falsified if_ adding a surface keeps requiring changes to the core.
 

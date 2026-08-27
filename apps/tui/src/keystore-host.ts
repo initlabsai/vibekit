@@ -1,9 +1,9 @@
 /**
- * The TUI's custody adapter: the shared compose-only host plus keystore-daemon
- * signing. Key material never enters this process — the daemon signs raw
- * bytes over its local socket (the §6 trust boundary). Signing is reachable
- * only through the flow controller, which requires a recorded approved
- * decision before it will invoke `signDraft`.
+ * The TUI host: the live host plus keystore-daemon signing and its address
+ * book. Key material never enters this process — the daemon signs raw bytes
+ * over its local socket. `signDraft` is public here; the guarantee that it
+ * runs only after a recorded approval lives in the flow controller
+ * (`completeApprovedPaymentFlow`), which is the only caller.
  */
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 import type {
@@ -13,32 +13,17 @@ import type {
   TransactionSearchFilter,
 } from '@initlabs/vibekit-explorer'
 import {
-  createPaymentComposeHost,
+  createLiveHost,
   signedGroupRecordFor,
   unsignedTransactionsForDraft,
-  type BlockTailTick,
+  type LiveHost,
   type LiveNetworkId,
 } from '@initlabs/vibekit-explorer/live'
 
-/** The TUI payment host: compose, simulate, submit, and keystore signing. */
-export interface KeystorePaymentHost extends PaymentFlowHost, EntityLookupHost {
-  probe(timeoutMs?: number): Promise<boolean>
-  /** Looks an account's portfolio up as an authoritative record. */
-  lookupAccount(address: string): Promise<StructuredResult>
-  /** Looks several accounts up as one account.list record. */
-  lookupAccounts(addresses: readonly string[]): Promise<StructuredResult>
-  /** Looks a transaction up as an authoritative record. */
-  lookupTransaction(txid: string): Promise<StructuredResult>
-  /** Looks every transaction in an atomic group up as one transaction.group record. */
-  lookupTransactionGroup(groupId: string): Promise<StructuredResult>
-  lookupAccountAssets(address: string): Promise<StructuredResult>
-  lookupAccountAppStates(address: string): Promise<StructuredResult>
-  searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
-  /** Any of the host's tools by name; paging re-runs a record's own call with its nextToken. */
-  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
-  statusRound(): Promise<{ lastRound: number }>
-  waitAfterBlock(round: number): Promise<{ lastRound: number }>
-  readBlockTick(round: number): Promise<BlockTailTick>
+/** The live host plus keystore signing (so it satisfies PaymentFlowHost) and the daemon's address book. */
+export interface KeystorePaymentHost extends LiveHost, EntityLookupHost {
+  /** Signs the approved draft group in the keystore daemon. */
+  signDraft(draftRecord: StructuredResult): Promise<StructuredResult>
   /** The keystore daemon's address book (names never leave this process). */
   listSigningAccounts(): Promise<Array<{ address: string; name?: string }>>
   close(): Promise<void>
@@ -72,7 +57,7 @@ export function withAccountNames(
 export function createKeystorePaymentHost(
   network: LiveNetworkId = 'localnet',
 ): KeystorePaymentHost {
-  const compose = createPaymentComposeHost(network)
+  const compose = createLiveHost(network)
   let signerPromise: Promise<KeystoreSigner> | undefined
   const signer = () => (signerPromise ??= createKeystoreSigner())
 

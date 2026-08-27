@@ -1,13 +1,13 @@
 /**
- * Provisional signerless flow route: the browser's PaymentFlowHost backend.
- * Compose-only by construction — the deployment has no signer, so nothing
- * here can sign or submit. Phase 7's hosted API replaces this route.
+ * The web app's flow route: the browser's PaymentFlowHost backend, served by
+ * the live host. Compose-only by construction — the deployment has no signer,
+ * so nothing here can sign or submit.
  */
 import { structuredResultSchema } from '@initlabs/vibekit-explorer'
-import { createPaymentComposeHost } from '@initlabs/vibekit-explorer/live'
+import { createLiveHost } from '@initlabs/vibekit-explorer/live'
 import { z } from 'zod'
 
-const host = createPaymentComposeHost()
+const host = createLiveHost()
 
 const flowRequestSchema = z.discriminatedUnion('action', [
   z.object({

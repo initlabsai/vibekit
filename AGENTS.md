@@ -1,70 +1,105 @@
 # AGENTS.md
 
-This is the operational contract for coding agents. `README.md` is
-human-facing and is not prerequisite reading; open it only when changing public
-project documentation. Read `docs/CONSTITUTION.md` before structural changes.
+The map of this repository, for people and coding agents alike. `README.md`
+is the product page. Read `docs/CONSTITUTION.md` before structural changes.
 
-VibeKit exposes Algorand capabilities through one shared tool contract across
-MCP, CLI, and the agent loop. This monorepo owns the engine, its reusable
-packages, and the official hosted API and shared TUI/web Explorer apps. Apps
-consume the public package surface and remain independent build and deployment
-units.
+VibeKit exposes Algorand capabilities through one tool contract across MCP,
+CLI, and an LLM agent loop, and ships an Explorer (terminal and web) that
+renders what those tools return.
 
-## Architecture
+## What runs where
 
-Every tool is a `ToolDefinition`. A `ToolDefinition` has Zod parameters, an
-output schema, and a handler. It may declare a semantic Explorer `view` id;
-the explorer registry decides which ids are trusted.
+| Path | What it is |
+| --- | --- |
+| `packages/vibekit` | The one published package, `@initlabs/vibekit`. Every `src/` area is a subpath export. |
+| `packages/vibekit/src/core` (`.`) | The tool contract, `resolveDeployment`, `executeToolCall`, the codec, and the compose engine (`core/compose/`). |
+| `packages/vibekit/src/tools` (`./tools`, `./tools/views`) | The domain tools: accounts, assets, contracts, network, transactions. `views.ts` maps each view id to its wire schema. |
+| `packages/vibekit/src/plugins/*` (`./plugins/<name>`) | Third-party tool plugins: nfd, pera, vestige, alpha-arcade. |
+| `packages/vibekit/src/signer-keystore` (`./signer-keystore`) | The algosdk signer over the keystore daemon, its account tools, the testnet dispenser. |
+| `packages/vibekit/src/mcp` (`./mcp`, `./mcp/stdio`, `./mcp/http`) | Host: ToolDefinition-to-MCP adapter and transports. |
+| `packages/vibekit/src/agent` (`./agent`, `./agent/config`) | Host: the LLM tool loop and its stored config. |
+| `packages/vibekit/src/preset` (`./preset`) | The stock tool and plugin mix every stock host composes from. |
+| `packages/vibekit/examples` | Reference stdio and HTTP deployments, typechecked with the package. |
+| `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the write flow (`src/flows`), recorded sample data (`src/fixtures`), and the live host (`src/live`). Not a UI. |
+| `apps/cli` | The `vibekit` binary: `new`, `init`, `localnet`, `keystore`, `dispenser`, `doctor`, `tool`, `mcp`, `explore`. Host: `commands/tool.ts` and `commands/mcp.ts`. |
+| `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. |
+| `apps/web` | The web Explorer (Next.js). Sample-backed reads plus a compose-only flow route. |
+| `apps/website` | The public site (Astro/Starlight). |
+| `skills/` | Canonical skills, compiled into the CLI by `bun run --cwd apps/cli bundle-skills`. `.agents/skills`, `.claude/skills`, `.grok/skills` are symlinks into it. |
+| `verify/` | The packed-consumer gate (`bun run verify:packed`). |
+| `test-prompts/` | Agent-run MCP acceptance prompts and their transcripts. |
+| `ideas/` | Dated design notes that are not yet work. |
+| `out/` | Marketing video build output (see the `marketing-content` skill). |
+| `docs/` | `CONSTITUTION.md` and `PRODUCTION.md` only. |
 
-A deployment is a configured set of tools. It selects networks, execute or
-compose mode, and an optional signer.
+Tests mirror `src/` under each package's `test/`. Apps consume packages only
+through their public exports (`workspace:*`); packages never depend on apps.
+
+## How a call flows
+
+Read:
+
+```
+host (mcp | agent | cli tool) → executeToolCall(deployment, tool, args)
+  → picks the network context → tool.handler(ctx, args) → jsonSafe()
+  → output schema check → wire result
+Explorer: wire → build*Record (packages/explorer/src/views) → StructuredResult
+  → ViewSpec → create*ViewModel → card (apps/tui/src/cards)
+```
+
+Write:
+
+```
+tool.handler → composeOrExecute(ctx, TxnSpec[]) (core/compose)
+  → compose mode: unsigned group, base64 | execute mode: sign, send, confirm
+Explorer write flow: draft → simulate → inspect → approve → sign → confirm
+  (packages/explorer/src/flows; every stage is a recorded result)
+```
 
 Every host sends calls through `executeToolCall` in
-`packages/vibekit/src/core/deployment.ts`. Hosts include the MCP server, agent
-loop, and CLI. `executeToolCall` selects the network context, makes results
-JSON-safe, and enforces output schemas. Resolved contexts and their service
-registries are frozen before handlers receive them.
+`packages/vibekit/src/core/deployment.ts`. Resolved contexts are frozen
+before handlers receive them. Tools return structured data and declare a
+`view` id; they never return JSX, HTML, or terminal markup.
 
-Write tools build transaction groups in `packages/vibekit/src/core/compose/`.
-In execute mode the host signs and sends the group. In compose mode the host
-returns the group unsigned.
+## Glossary
 
-Explorer presentation is a separate, versioned protocol under
-`packages/explorer`. Tools return structured data. Tools never return JSX,
-HTML, or terminal markup.
+One word per concept. Do not introduce a synonym.
 
-## Layout
-
-- `packages/vibekit` — the one published package, `@initlabs/vibekit`. Every
-  area is a directory under `src/` and a subpath export:
-  - `src/core` (`.`) — contract, deployment, codec, compose engine
-  - `src/tools` (`./tools`, `./tools/views`) — the domain tools (accounts,
-    assets, contracts, network, transactions) as per-domain exports
-  - `src/plugins/*` (`./plugins/<name>`) — third-party tool plugins
-  - `src/signer-keystore` (`./signer-keystore`) — keystore daemon signing,
-    testnet dispenser
-  - `src/mcp` (`./mcp`, `./mcp/stdio`, `./mcp/http`) — ToolDefinition-to-MCP
-    adapter
-  - `src/preset` (`./preset`) — the batteries-included host wiring
-  - `src/agent` (`./agent`, `./agent/config`) — LLM tool loop
-  - `examples/` — reference stdio and HTTP deployments, typechecked with the
-    package
-  Tests mirror `src/` under `test/`.
-- `packages/explorer` — provisional browser-safe Explorer protocol, fixtures,
-  workspace state, and semantic view models
-- Planned packages: `views-react` for selected semantic React composition and
-  `sdk`
-- `apps/cli` — the `vibekit` binary
-- Private apps: `tui` (OpenTUI) and `web` (Next.js) are fixture-backed
-  renderers; `website` (Astro/Starlight) is the public site; `api` remains
-  planned
-- `verify/` — the packed-consumer gate and its fixture (`bun run verify:packed`)
-- `skills/` — canonical vendored skills, compiled into the CLI at build time
-  by `bun run --cwd apps/cli bundle-skills`
-- `.agents/skills`, `.claude/skills`, and `.grok/skills` — Git-tracked relative
-  symlinks into `skills/` for local agent discovery
-- `test-prompts/` — agent-run acceptance tests
-- `docs/` — exactly the two canonical design documents listed below
+- **tool** — a `ToolDefinition`: name, description, Zod parameters, optional
+  output schema, flags, `view`, handler.
+- **deployment** — a configured set of tools and plugins over one or more
+  networks, in execute or compose mode, with an optional signer.
+- **host** — a process that runs tool calls through `executeToolCall`: the
+  MCP server, the agent loop, `vibekit tool`. In `packages/explorer`, a
+  `*Host` interface is the backend an Explorer app calls for results
+  (`LiveHost`, the fixture host).
+- **core** — `packages/vibekit/src/core`. Not "kernel" or "engine".
+- **compose engine** — `core/compose/`: `TxnSpec[]` to a transaction group.
+- **compose mode / execute mode** — return the group unsigned / sign and send.
+- **plugin / service** — a `ToolPlugin` and the client it puts at
+  `ctx.services[name]`.
+- **preset** — the stock tool and plugin mix.
+- **result** — a `StructuredResult`: the versioned envelope around one tool
+  call's `data`. Builders are named `build*Record`; that is the same thing.
+- **wire shape** — the post-`jsonSafe` JSON a tool returns; what output
+  schemas and `viewDataSchemas` describe.
+- **view id** — the dotted string a tool declares (`transaction.detail`).
+  **ViewSpec** binds a trusted view id to a result reference. A **view
+  model** is what `create*ViewModel` derives from the store for a ViewSpec.
+  A **card** is the TUI component that renders one.
+- **write flow** — the draft/simulate/inspect/approve/sign/confirm state
+  machine in `packages/explorer/src/flows`. The code still says "payment"
+  in places; it carries app calls and groups too.
+- **agent lane / direct lane** — in the TUI, whether input went to the
+  model or was routed deterministically (an id, a command). The only uses
+  of "lane".
+- **keystore daemon** — `keystore serve` from `@algorandfoundation/keystore-node`;
+  the only thing that holds keys. The ZeroSignal proxy is a different daemon.
+- **skill** — a bundled skill (`skills/`, compiled in) or a catalog skill
+  (a pinned remote repo in `apps/cli/src/skills/catalogs.ts`).
+- **app spec** — an ARC-56 (or normalized ARC-32/4) JSON spec.
+- **My Apps / known apps** — the TUI's list of locally deployed contracts
+  with specs / the hardcoded mainnet app-id-to-label map.
 
 ## Rules
 
@@ -76,13 +111,14 @@ HTML, or terminal markup.
 - Describe the wire shape in output schemas after `jsonSafe`. Bigints become
   a number or a decimal string. Bytes become base64.
 - Land tests with code. Run `bunx turbo run build typecheck test` before a
-  commit.
+  commit. Tests are type-checked; a test that references a field the type
+  lacks fails typecheck.
 - Tool and plugin packages declare `algosdk`, Zod, and
   `@initlabs/vibekit` as peer dependencies. Keep the repository's
   `algosdk` development/runtime version pinned exactly and the keystore canary
   dependencies pinned exactly. Ask before adding a dependency.
 - Use conventional commits. Do not add co-author lines.
-- Keep the kernel small. Add a new capability as a new tool or a thin host
+- Keep core small. Add a new capability as a new tool or a thin host
   adapter. Do not add a new path around `executeToolCall`.
   - Share one factory for host wiring. Do not copy the tool and plugin mix into
     another host.
@@ -90,40 +126,41 @@ HTML, or terminal markup.
     stop.
 - Package and layer additions are design smells until proven otherwise. A new
   package, protocol, registry, or extension point needs a named consumer that
-  exists today plus owner sign-off; "a future head might need it" is not a
-  consumer. Prefer a plain function over a registry and an existing package
+  exists today plus owner sign-off; a consumer that might exist later is not
+  a consumer. Prefer a plain function over a registry and an existing package
   over a new one. When an architecture instinct and a measured line-count
   disagree, the line-count wins (`docs/CONSTITUTION.md`).
-- Keep official API/TUI/web apps here as private terminal workspaces and
-  independent deployment artifacts. They import `@initlabs/*` through public
-  exports using `workspace:*`; no relative or private cross-package imports.
-  Packages never depend on apps.
-- Put shared Explorer state/protocol in `packages/explorer` and selected
-  React composition in `packages/views-react`. Keep renderer primitives in
-  their apps. `bun run verify:packed` builds the out-of-workspace consumer
-  from packed tarballs; run it after any change to package exports,
-  manifests, or public types.
+- Apps are private workspaces and independent deployment artifacts. They
+  import `@initlabs/*` through public exports using `workspace:*`; no relative
+  or private cross-package imports. Packages never depend on apps.
+- Shared Explorer state and protocol live in `packages/explorer`; rendering
+  primitives live in their apps. `bun run verify:packed` builds the
+  out-of-workspace consumer from packed tarballs; run it after any change to
+  package exports, manifests, or public types.
+- Comments describe the code as committed. No plans, phases, milestone
+  labels, "provisional", or references to earlier versions of the product.
+  Comment why, constraints, and edges that look like bugs. Do not narrate.
+  Do not delete those comments.
+- A new file is named for what it contains, not for the layer it sits in.
+- Put JSDoc only on the public/exported `@initlabs/*` surface. Put tool
+  descriptions on `ToolDefinition` and Zod `.describe()`.
 - If a skill tells an agent to skip a gate, treat that as a bug. Update the
   skill, generated AGENTS.md templates, and system prompts with the gate.
-- Skills ship in two tiers. Vendored skills live in `skills/` and compile
+- Skills ship in two tiers. Bundled skills live in `skills/` and compile
   into the CLI. Remote catalogs (third-party skill repos) are declared in
   `apps/cli/src/skills/catalogs.ts`, each pinned to a reviewed commit SHA and
   fetched as a codeload tarball at init time — codeload has no unauthenticated
   rate limit, so no GitHub token is required for public catalogs. Never point
   a catalog `ref` at a branch. To bump a pin: review the new upstream content,
   then update `ref` and the `skills` list together in one commit.
-- Treat `skills/` as a product surface, not ancillary documentation. When a
-  VibeKit feature, contract, client, or workflow changes, update every affected
-  vendored skill in the same change. Skills are normative: describe shipped
-  behavior only, not plans or in-flight implementation. Do not restore
-  AlgoKit-coupled guidance unchanged.
+- Treat `skills/` as a product surface. When a VibeKit feature, contract,
+  client, or workflow changes, update every affected bundled skill in the
+  same change. Skills are normative: describe shipped behavior only, not
+  plans or in-flight implementation. Do not restore AlgoKit-coupled guidance
+  unchanged.
 - Keep `skills/` as the only content source. When its inventory changes, update
   the relative discovery symlinks and their tests; do not duplicate canonical
   files under an agent-specific directory.
-- Comment why, constraints, and edges that look like bugs. Do not narrate.
-  Do not delete those comments.
-- Put JSDoc only on the public/exported `@initlabs/*` surface. Put tool
-  descriptions on `ToolDefinition` and Zod `.describe()`.
 - Keep `docs/` small. `CONSTITUTION.md` owns purpose, the bets, and how work
   is judged; `PRODUCTION.md` holds dated shipping notes. Do not add a parallel
   handover or review ledger.
@@ -168,4 +205,3 @@ per platform, so the release matrix does not cross-compile.
 - `docs/CONSTITUTION.md` — why the project exists, the bets it rests on, and
   how work is judged; read it before structural changes
 - `docs/PRODUCTION.md` — open decisions, traps, and deferred work
-- `docs/CONSTITUTION.md` — why the project exists and how work is judged

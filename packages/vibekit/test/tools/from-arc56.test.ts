@@ -39,17 +39,18 @@ describe('toolsFromArc56', () => {
     expect(greet.requiresSigner ?? false).toBe(false)
     expect(greet.view).toBe('json')
 
-    const incrementShape = (increment.parameters as { shape: Record<string, unknown> }).shape
+    const incrementShape = (increment.parameters as unknown as { shape: Record<string, unknown> })
+      .shape
     expect(incrementShape.sender).toBeDefined()
     expect(incrementShape.amount).toBeDefined()
     expect(incrementShape.appId).toBeUndefined() // bound at generation
-    const greetShape = (greet.parameters as { shape: Record<string, unknown> }).shape
+    const greetShape = (greet.parameters as unknown as { shape: Record<string, unknown> }).shape
     expect(greetShape.who).toBeDefined()
   })
 
   test('unbound appId is a required parameter', () => {
     const tools = toolsFromArc56(arc56)
-    const shape = (tools[0]!.parameters as { shape: Record<string, unknown> }).shape
+    const shape = (tools[0]!.parameters as unknown as { shape: Record<string, unknown> }).shape
     expect(shape.appId).toBeDefined()
   })
 
@@ -97,8 +98,8 @@ describe('toolsFromArc56', () => {
       throw new Error('expected compose result')
     }
     expect((result as { unsignedGroup: string[] }).unsignedGroup).toHaveLength(1)
-    expect((result as { summary: string }).summary).toMatch(/app/i)
-    expect((result as { summary: string }).summary).toMatch(/^\w+\.\w+\(.*\) → app \d+$/)
+    expect((result as unknown as { summary: string }).summary).toMatch(/app/i)
+    expect((result as unknown as { summary: string }).summary).toMatch(/^\w+\.\w+\(.*\) → app \d+$/)
   })
 
   test('rejects a missing required ABI argument', async () => {
@@ -171,7 +172,7 @@ describe('spec-named args reach the generated handler', () => {
     const [generated] = toolsWithMethods(JSON.stringify(camelSpec), { appId: 7 })
     if (!generated) throw new Error('expected a generated tool')
     const params = Object.keys(
-      (generated.tool.parameters as unknown as { shape: Record<string, unknown> }).shape,
+      (generated.tool.parameters as unknown as unknown as { shape: Record<string, unknown> }).shape,
     )
     // userName slugs to lowercase; an arg literally named `sender` is prefixed
     // so it cannot collide with the tool's own sender parameter.

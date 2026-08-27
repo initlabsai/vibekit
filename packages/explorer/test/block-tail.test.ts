@@ -12,7 +12,7 @@ import {
   type BlockTailTick,
 } from '../src/live/block-tail.js'
 
-const params: algosdk.SuggestedParamsWithMinFee = {
+const params: algosdk.SuggestedParams = {
   fee: 1000,
   firstValid: 1,
   lastValid: 1001,
@@ -73,6 +73,7 @@ describe('tickFromAlgodBlock', () => {
       toolName: 'search_transactions',
       state: 'success',
     })
+    if (result.transactions.state !== 'success') throw new Error('expected a success record')
     const data = result.transactions.data as {
       transactions: Array<{ sender: string; type?: string }>
     }
@@ -86,8 +87,11 @@ describe('tickFromAlgodBlock', () => {
       { round: 9, timestamp: 1 },
       [],
     )
-    expect(result.block.data).toMatchObject({ round: 9, transactionCount: 0 })
-    expect(result.transactions.data).toMatchObject({ transactions: [] })
+    expect(result.block).toMatchObject({
+      state: 'success',
+      data: { round: 9, transactionCount: 0 },
+    })
+    expect(result.transactions).toMatchObject({ state: 'success', data: { transactions: [] } })
   })
 })
 

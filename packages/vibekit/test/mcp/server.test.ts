@@ -4,7 +4,7 @@ import { Client } from '@modelcontextprotocol/client'
 import { InMemoryTransport } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 import { VIEW_META_KEY, createVibekitMcp } from '../../src/mcp/index.js'
-import { resolveDeployment } from '../../src/mcp/options.js'
+import { resolveMcpDeployment } from '../../src/mcp/options.js'
 
 const echo = defineTool({
   name: 'echo',
@@ -89,28 +89,28 @@ describe('createVibekitMcp', () => {
   })
 })
 
-describe('resolveDeployment validation', () => {
+describe('resolveMcpDeployment validation', () => {
   test('rejects duplicate tool names at startup', () => {
     expect(() =>
-      resolveDeployment({ network: 'localnet', mode: 'compose', tools: [echo, echo] }),
+      resolveMcpDeployment({ network: 'localnet', mode: 'compose', tools: [echo, echo] }),
     ).toThrow('Duplicate tool name: echo')
   })
 
   test('rejects duplicate plugin names at startup', () => {
     const plugin = { name: 'p', tools: [] }
     expect(() =>
-      resolveDeployment({ network: 'localnet', mode: 'compose', plugins: [plugin, plugin] }),
+      resolveMcpDeployment({ network: 'localnet', mode: 'compose', plugins: [plugin, plugin] }),
     ).toThrow('Duplicate plugin name: p')
   })
 
   test('rejects execute mode without a signer', () => {
     expect(() =>
-      resolveDeployment({ network: 'localnet', mode: 'execute', tools: [echo] }),
+      resolveMcpDeployment({ network: 'localnet', mode: 'execute', tools: [echo] }),
     ).toThrow(/requires resolveSigner/)
   })
 
   test('injects plugin services under the plugin name', () => {
-    const deployment = resolveDeployment({
+    const deployment = resolveMcpDeployment({
       network: 'localnet',
       mode: 'compose',
       plugins: [{ name: 'nfd', tools: [], service: { hello: true } }],
@@ -119,7 +119,7 @@ describe('resolveDeployment validation', () => {
   })
 
   test('pools contexts per network, default first, servedNetworks filled', () => {
-    const deployment = resolveDeployment({
+    const deployment = resolveMcpDeployment({
       network: 'testnet',
       networks: ['localnet', 'testnet'],
       mode: 'compose',

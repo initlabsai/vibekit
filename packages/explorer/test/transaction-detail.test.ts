@@ -32,6 +32,7 @@ describe('transaction.detail records', () => {
         ],
       },
     )
+    if (record.state !== 'success') throw new Error(record.error.message)
     const data = transactionDetailDataSchema.parse(record.data)
     expect(data.applicationArgs).toHaveLength(2)
     expect(data.logs?.[0]?.startsWith('FR98dQ')).toBe(true)

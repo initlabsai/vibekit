@@ -10,7 +10,7 @@ export interface VibekitMcpOptions extends DeploymentOptions {
   version?: string
 }
 
-export interface ResolvedDeployment extends CoreDeployment {
+export interface ResolvedMcpDeployment extends CoreDeployment {
   name: string
   version: string
 }
@@ -19,7 +19,7 @@ export interface ResolvedDeployment extends CoreDeployment {
  * Validate the tool registry and build pooled per-network contexts
  * (core's resolveDeployment), plus the MCP server identity.
  */
-export function resolveDeployment(options: VibekitMcpOptions): ResolvedDeployment {
+export function resolveMcpDeployment(options: VibekitMcpOptions): ResolvedMcpDeployment {
   return {
     ...resolveCoreDeployment(options),
     name: options.name ?? 'vibekit',

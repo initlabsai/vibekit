@@ -295,7 +295,7 @@ export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession
 }
 
 /**
- * What a coarse `table` cue renders: top-level scalars as facts, plus the
+ * What a coarse `table` view renders: top-level scalars as facts, plus the
  * first array-of-objects as rows. Any other shape stays raw.
  */
 export function tableModel(
@@ -326,7 +326,7 @@ export type ToolResultPlan = { usedNetwork: LiveNetworkId } & (
 /**
  * Decides what one tool result becomes — an approval flow, a record plus its
  * cards, or an error note — without touching any state. The tool's declared
- * view cue selects the trusted view; a composed unsigned group outranks it.
+ * view id selects the trusted view; a composed unsigned group outranks it.
  */
 export function planToolResult(
   event: Extract<AgentEvent, { type: 'tool-result' }>,
@@ -437,7 +437,7 @@ export interface AgentTurnHandlers {
   onError(message: string): void
 }
 
-/** Pumps one user turn through the session, dispatching renderer callbacks. */
+/** Pumps one user turn through the session, dispatching the app's callbacks. */
 export async function runAgentTurn(
   session: AgentSession,
   input: string,

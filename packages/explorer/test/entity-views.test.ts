@@ -136,7 +136,7 @@ describe('fixture entity lookup', () => {
   })
 })
 
-describe('view cue', () => {
+describe('view id', () => {
   test('resolves a trusted declared view and ignores coarse hints', () => {
     expect(
       viewCueForToolResult({

@@ -4,8 +4,8 @@
  * (never returned to agents), and enters via the human-run
  * `vibekit dispenser login` device flow.
  *
- * Unlike v1 (which requested no offline_access and died on expiry), the device
- * flow asks for a refresh token and the handler refreshes transparently;
+ * The device flow asks for a refresh token (offline_access) and the handler
+ * refreshes transparently;
  * DISPENSER_TOKEN_EXPIRED is only thrown when re-login is genuinely required.
  */
 

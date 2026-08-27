@@ -13,7 +13,7 @@ import {
   type ToolResultEventLike,
 } from '../src/index.js'
 import { draftRecordFromComposeWire } from '../src/live/index.js'
-import recorded from './recorded/localnet-payment.json'
+import recorded from './recorded/localnet-payment.json' with { type: 'json' }
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
@@ -37,7 +37,7 @@ const TXN_WIRE = {
 }
 
 describe('agent lane result bridge', () => {
-  test('the declared view cue selects the trusted view — not the tool name', () => {
+  test('the declared view id selects the trusted view — not the tool name', () => {
     // A third-party tool: unknown name, declared trusted view, compatible wire.
     const event: ToolResultEventLike = {
       id: 'call-1',
@@ -56,7 +56,7 @@ describe('agent lane result bridge', () => {
 
     const store = [...createFixtureResultStore(), bridged.record]
     const derived = createTransactionDetailViewModel(store, {
-      protocolVersion: '0.1.0-provisional',
+      protocolVersion: '0.1.0',
       type: 'view',
       view: 'transaction.detail',
       source: { source: 'result', id: bridged.record.resultId },
@@ -84,16 +84,19 @@ describe('agent lane result bridge', () => {
       signer: recorded.request.receiver,
     }
     const record = buildTransactionDetailRecord(identity(), wire)
-    expect(record.data).toMatchObject({
-      assetId: 0,
-      createdAssetId: 987,
-      assetConfig: { total: '18446744073709551615', decimals: 6, unitName: 'MAX' },
-      signer: recorded.request.receiver,
+    expect(record).toMatchObject({
+      state: 'success',
+      data: {
+        assetId: 0,
+        createdAssetId: 987,
+        assetConfig: { total: '18446744073709551615', decimals: 6, unitName: 'MAX' },
+        signer: recorded.request.receiver,
+      },
     })
 
     const store = [...createFixtureResultStore(), record]
     const derived = createTransactionDetailViewModel(store, {
-      protocolVersion: '0.1.0-provisional',
+      protocolVersion: '0.1.0',
       type: 'view',
       view: 'transaction.detail',
       source: { source: 'result', id: record.resultId },

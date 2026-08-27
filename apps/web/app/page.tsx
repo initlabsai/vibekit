@@ -3,7 +3,7 @@
 import {
   addResult,
   completeApprovedPaymentFlow,
-  createAccountArtifact,
+  createAccountOpenView,
   createAccountPortfolioViewModel,
   createFixturePaymentHost,
   createFixtureResultStore,
@@ -19,7 +19,7 @@ import {
   startPaymentFlow,
   type AccountLookupHost,
   type AccountPortfolioViewModel,
-  type ExplorerArtifact,
+  type OpenView,
   type PaymentFlowHost,
   type PaymentFlowViewModel,
   type ResultStore,
@@ -396,7 +396,7 @@ export default function Page() {
   const sampleHost = useMemo(() => createFixturePaymentHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
-  const [artifact, setArtifact] = useState<ExplorerArtifact | null>(null)
+  const [artifact, setArtifact] = useState<OpenView | null>(null)
   const [flow, setFlow] = useState<WriteFlowState | null>(null)
   const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
   const [busy, setBusy] = useState(false)
@@ -517,7 +517,7 @@ export default function Page() {
         .then((record) => {
           setBusy(false)
           setStore((current) => addResult(current, record))
-          setArtifact(createAccountArtifact(record))
+          setArtifact(createAccountOpenView(record))
           setAccountsOpen(false)
           setStatus('Account opened')
         })

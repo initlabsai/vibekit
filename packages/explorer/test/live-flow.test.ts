@@ -17,7 +17,7 @@ import {
   type WriteFlowState,
 } from '../src/index.js'
 import { decodeUnsignedGroup } from '../src/live/index.js'
-import recorded from './recorded/localnet-payment.json'
+import recorded from './recorded/localnet-payment.json' with { type: 'json' }
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`

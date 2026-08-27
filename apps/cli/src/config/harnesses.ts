@@ -1,11 +1,8 @@
-/**
- * Agent registry — how to configure each supported AI coding agent.
- * Ported from v1 apps/cli (one module instead of a directory per agent).
- */
+/** The supported AI coding tools ("harnesses") and where each keeps its config and skills. */
 
 import { join } from 'path'
 
-export interface AgentDefinition {
+export interface HarnessDefinition {
   id: string
   displayName: string
   /** Output config file path relative to the install dir (e.g. '.mcp.json'). */
@@ -39,7 +36,7 @@ See [AGENTS.md](${relativeAgentsMd}) for:
 - Development workflows for Algorand smart contracts
 `
 
-export const AGENTS = {
+export const HARNESSES = {
   claude: {
     id: 'claude',
     displayName: 'Claude Code',
@@ -126,18 +123,18 @@ export const AGENTS = {
     authInstructions: 'Run: opencode mcp auth kapa',
     cliCommand: 'opencode',
   },
-} as const satisfies Record<string, AgentDefinition>
+} as const satisfies Record<string, HarnessDefinition>
 
-export type AgentId = keyof typeof AGENTS
-export const AGENT_IDS = Object.keys(AGENTS) as AgentId[]
-export type AgentSelection = AgentId[]
+export type HarnessId = keyof typeof HARNESSES
+export const HARNESS_IDS = Object.keys(HARNESSES) as HarnessId[]
+export type HarnessSelection = HarnessId[]
 
-export function getEnabledAgents(selected: AgentSelection): AgentDefinition[] {
-  return selected.map((id) => AGENTS[id])
+export function enabledHarnesses(selected: HarnessSelection): HarnessDefinition[] {
+  return selected.map((id) => HARNESSES[id])
 }
 
-export function getAgentSkillsDirs(basePath: string, selected: AgentSelection): string[] {
-  return getEnabledAgents(selected)
+export function getAgentSkillsDirs(basePath: string, selected: HarnessSelection): string[] {
+  return enabledHarnesses(selected)
     .filter((agent) => agent.skillsDir)
     .map((agent) => join(basePath, agent.skillsDir!))
 }

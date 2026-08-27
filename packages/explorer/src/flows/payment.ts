@@ -49,7 +49,7 @@ export const paymentDraftDataSchema = z
         summary: z.string().min(1),
       })
       .strict(),
-    // Decoded txn rows for the flow graph; omitted on records that predate L4.
+    // Decoded txn rows for the flow graph; optional so older recorded fixtures still parse.
     graphTransactions: z.array(viewDataSchemas['transaction.detail']).min(1).optional(),
   })
   .strict()
@@ -383,7 +383,7 @@ export const writeFlowEventKinds = [
 /** Semantic event kind a client can offer next. */
 export type WriteFlowEventKind = (typeof writeFlowEventKinds)[number]
 
-/** Lists the event kinds the machine accepts next, for renderer affordances. */
+/** Lists the event kinds the machine accepts next, so an app can enable the right controls. */
 export function writeFlowNextEventKinds(
   state: WriteFlowState | null,
 ): readonly WriteFlowEventKind[] {
@@ -476,7 +476,7 @@ export const paymentFlowViewModelSchema = z
 /** Renderer-ready semantic model for one observable payment write flow. */
 export type PaymentFlowViewModel = z.infer<typeof paymentFlowViewModelSchema>
 
-/** Result of deriving the renderer-ready payment flow model. */
+/** Result of deriving the payment flow view model. */
 export type PaymentFlowViewModelResult =
   { ok: true; model: PaymentFlowViewModel } | { ok: false; error: ViewModelError }
 
@@ -485,7 +485,7 @@ function invalid(message: string): PaymentFlowViewModelResult {
 }
 
 /**
- * Derives one renderer-ready write-flow model from the flow's result
+ * Derives one write-flow view model from the flow's result
  * references. Authoritative sender, network, fees, effects, and the unsigned
  * group bytes come from structured results; a simulation that disagrees with
  * the draft, or a record from another network, refuses to present rather

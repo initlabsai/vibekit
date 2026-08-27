@@ -35,7 +35,7 @@ describe('registry', () => {
     for (const tool of assetTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
-      expect(tool.view ?? tool.display).toBeDefined()
+      expect(tool.view).toBeDefined()
     }
   })
 })

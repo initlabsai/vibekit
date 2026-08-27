@@ -12,7 +12,7 @@ import {
   writeStageEventSchema,
 } from '../src/index.js'
 
-describe('provisional explorer protocol', () => {
+describe('explorer protocol', () => {
   test('visibly versions result, view, and approval messages', () => {
     const view = createTransactionFixtureViewSpec()
     const request = approvalRequestSchema.parse({
@@ -31,7 +31,7 @@ describe('provisional explorer protocol', () => {
     })
 
     for (const message of [transactionFixtureResult, view, request, decision]) {
-      expect(message.protocolVersion).toBe('0.1.0-provisional')
+      expect(message.protocolVersion).toBe('0.1.0')
     }
   })
 
@@ -66,7 +66,7 @@ describe('provisional explorer protocol', () => {
       toolCallId: FIXTURE_TOOL_CALL_ID,
       draft: { source: 'result', id: FIXTURE_RESULT_ID },
     }
-    expect(writeStageEventSchema.parse(draft).protocolVersion).toBe('0.1.0-provisional')
+    expect(writeStageEventSchema.parse(draft).protocolVersion).toBe('0.1.0')
     expect(writeStageEventSchema.safeParse({ ...draft, stage: 'sign' }).success).toBeFalse()
     expect(writeStageEventSchema.safeParse({ ...draft, amount: 0.25 }).success).toBeFalse()
     expect(

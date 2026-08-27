@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { resolveNetwork } from '../../../src/core/index.js'
+import { resolveNetwork, type NetworkId } from '../../../src/core/index.js'
 import { vestigePlugin, vestigeTools, getVestige } from '../../../src/plugins/vestige/index.js'
 
-const ctxFor = (network: string, service?: unknown) =>
+const ctxFor = (network: NetworkId, service?: unknown) =>
   ({ network: resolveNetwork(network), services: service ? { vestige: service } : {} }) as never
 
 describe('vestige plugin', () => {

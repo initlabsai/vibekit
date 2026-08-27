@@ -38,7 +38,7 @@ type FetchCall = { url: string; body: string | undefined; headers: Record<string
 
 function fakeFetch(routes: Array<(call: FetchCall) => { status: number; json: unknown } | null>) {
   const calls: FetchCall[] = []
-  const fetchFn = (async (url: RequestInfo | URL, init?: RequestInit) => {
+  const fetchFn = (async (url: string | URL | Request, init?: RequestInit) => {
     const call: FetchCall = {
       url: String(url),
       body: init?.body ? String(init.body) : undefined,

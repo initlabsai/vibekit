@@ -1,7 +1,7 @@
 /**
  * Transaction specifications: the JSON shapes agents produce, turned into
- * real transactions by the compose engine. Ported from v1 minus appSpecPath
- * (v2 hosts pass specs inline; filesystem resolution is a host concern).
+ * real transactions by the compose engine. Specs carry the app spec inline;
+ * resolving a path to a spec is a host concern.
  */
 
 export interface BaseTxnSpec {

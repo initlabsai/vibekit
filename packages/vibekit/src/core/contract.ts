@@ -43,7 +43,7 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   /** Read whose result is large (a whole program). Hosts may ask before running it. */
   expensive?: boolean
   /**
-   * The tool's one view cue. Either a semantic Explorer view id the success
+   * The tool's view. Either a semantic Explorer view id the success
    * payload binds to (dotted, for example `transaction.detail` — the
    * explorer registry decides which ids are trusted) or a coarse rendering
    * hint for everything else (`table`, `txn`, `json`, `markdown`, `account`).
@@ -69,7 +69,7 @@ export interface ToolPlugin {
   service?: unknown
   /**
    * Trusted views this plugin's tools declare, keyed by plugin-namespaced
-   * dotted id (`nfd.profile`) — the same `view` cue the tool carries — each
+   * dotted id (`nfd.profile`) — the same `view` the tool carries — each
    * mapped to the zod schema of its success wire (post-jsonSafe). Rendering
    * hosts parse the wire with this schema before showing a card; headless
    * hosts ignore it. Unregistered ids fall back to a raw record.

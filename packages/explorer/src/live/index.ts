@@ -1,8 +1,8 @@
 /**
- * Provisional live host wiring for the Explorer payment flow: one shared
- * factory both renderers import (`@initlabs/vibekit-explorer/live`) so the
- * compose-only deployment and group decoding are never copied per app. It is
- * not part of the browser-safe root export; Phase 7's hosted API absorbs it.
+ * The live host: a compose-only (signerless) deployment over the vibekit tools
+ * on one named network, wrapped so every call returns a StructuredResult. Both
+ * Explorer apps import it (`@initlabs/vibekit-explorer/live`); it needs
+ * algosdk and node, so it is not part of the browser-safe root export.
  */
 import algosdk from 'algosdk'
 import {
@@ -186,8 +186,8 @@ export interface LivePaymentParams {
   note?: string
 }
 
-/** A signerless compose-only host for the live Explorer payment flow. */
-export interface PaymentComposeHost {
+/** What the live host offers: reads, the write-flow steps, and the block tail. Nothing here can sign. */
+export interface LiveHost {
   network: string
   /** True when the network's algod answers within the timeout. */
   probe(timeoutMs?: number): Promise<boolean>
@@ -248,7 +248,7 @@ export type LiveNetworkId = 'localnet' | 'testnet' | 'mainnet'
  * the transaction write tools on one named network. No signing, submission,
  * or key material is reachable from here by construction.
  */
-export function createPaymentComposeHost(network: LiveNetworkId = 'localnet'): PaymentComposeHost {
+export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
   const deployment = resolveDeployment({
     network,
     mode: 'compose',

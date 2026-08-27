@@ -21,7 +21,7 @@ import {
 import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
-import recorded from './recorded/localnet-payment.json'
+import recorded from './recorded/localnet-payment.json' with { type: 'json' }
 
 const DRAFT_IDENTITY = {
   resultId: 'result-live-draft-001',
@@ -221,7 +221,7 @@ describe('live payment mapping over recorded engine outputs', () => {
       { resultId: 'result-agent-001', network: 'localnet' },
     )
     expect(success).toMatchObject({
-      protocolVersion: '0.1.0-provisional',
+      protocolVersion: '0.1.0',
       state: 'success',
       toolCallId: 'tool-call-agent-001',
       data: recorded.compose,

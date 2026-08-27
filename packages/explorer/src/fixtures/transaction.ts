@@ -1,5 +1,5 @@
 import { classifyExplorerInput, type ClassifiedExplorerInput } from '../core/classifier.js'
-import { viewSpecSchema, type ExplorerArtifact, type ViewSpec } from '../core/protocol.js'
+import { viewSpecSchema, type OpenView, type ViewSpec } from '../core/protocol.js'
 import { createResultStore, type ResultStore, type StructuredResult } from '../core/results.js'
 import { transactionDetailDataSchema } from '../views/transaction.js'
 import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
@@ -71,7 +71,7 @@ export type FixtureLookupOutcome =
       classification: TransactionClassification
       result: StructuredResult
       view: ViewSpec
-      artifact: ExplorerArtifact
+      artifact: OpenView
     }
   | {
       status: 'ambiguous'

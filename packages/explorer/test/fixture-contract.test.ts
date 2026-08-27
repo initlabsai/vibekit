@@ -21,7 +21,7 @@ function collectLeaves(value: unknown): unknown[] {
   return [value]
 }
 
-describe('fixture-backed transaction vertical slice', () => {
+describe('fixture-backed transaction lookup', () => {
   test('looks up the known transaction and produces a trusted transaction.detail view', () => {
     const lookup = lookupFixture(` ${FIXTURE_TRANSACTION_ID} `)
     expect(lookup.status).toBe('resolved')
@@ -29,7 +29,7 @@ describe('fixture-backed transaction vertical slice', () => {
 
     expect(viewSpecSchema.safeParse(lookup.view).success).toBeTrue()
     expect(lookup.view).toEqual({
-      protocolVersion: '0.1.0-provisional',
+      protocolVersion: '0.1.0',
       type: 'view',
       view: 'transaction.detail',
       source: { source: 'result', id: FIXTURE_RESULT_ID },

@@ -10,7 +10,7 @@ import {
 import { buildTransactionGroupRecord } from '../src/views/transaction.js'
 // Naming note: transactions are mainnet; each group entry carries its own
 // `network` (two of Lora's snapshot groups only exist on testnet).
-import corpus from './recorded/mainnet-graph-corpus.json'
+import corpus from './recorded/mainnet-graph-corpus.json' with { type: 'json' }
 
 const appAddressFor = (applicationId: number) => getApplicationAddress(applicationId).toString()
 

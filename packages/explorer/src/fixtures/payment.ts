@@ -189,7 +189,7 @@ export function createPaymentFixtureResultStore(): ResultStore {
   return createResultStore(paymentFixtureResults)
 }
 
-/** Creates the full fixture store both renderers own: transaction plus payment results. */
+/** Creates the full fixture store both apps start from: transaction plus payment results. */
 export function createExplorerFixtureResultStore(): ResultStore {
   return createResultStore([transactionFixtureResult, ...paymentFixtureResults])
 }
@@ -199,7 +199,7 @@ function reference(id: string): ResultReference {
 }
 
 /**
- * A PaymentFlowHost backed by the recorded fixture flow, so renderers run the
+ * A PaymentFlowHost backed by the recorded fixture flow, so the apps run the
  * exact same controller with or without a live chain. Each call returns a
  * freshly identified copy of the recorded record (the store rejects duplicate
  * ids), with the recorded data — including the real signed bytes and the real
@@ -270,7 +270,7 @@ export function createFixturePaymentHost(): PaymentFlowHost &
 /**
  * Creates the protocol event for one semantic step of the fixture payment
  * flow. Every event carries only result references; the machine and both
- * renderers read authoritative facts from the structured results.
+ * apps read authoritative facts from the structured results.
  */
 export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEvent {
   switch (kind) {

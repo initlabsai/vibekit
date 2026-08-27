@@ -1,4 +1,4 @@
-/** Shared application formatting (ported from v1 contracts handlers). */
+/** Shared application formatting. */
 import { knownAppLabel } from '../../shared/known-apps.js'
 import type algosdk from 'algosdk'
 import { bytesToBase64 } from '../../../core/index.js'

@@ -1,9 +1,8 @@
 /**
- * `vibekit init` — interactive setup wizard for AI coding agents.
- *
- * Ported from v1 apps/cli and slimmed: no Vault/keyring/WalletConnect providers
- * (keys live in the keystore daemon), no GitHub PAT, no dispenser auth, no
- * AlgoKit install (localnet is `vibekit localnet` now).
+ * `vibekit init` — interactive setup wizard: picks harnesses, skills, and MCP
+ * servers, then writes each harness's config, skills, and AGENTS.md. Keys live
+ * in the keystore daemon and localnet is `vibekit localnet`, so no provider,
+ * PAT, or AlgoKit setup happens here.
  */
 
 import * as p from '@clack/prompts'
@@ -13,13 +12,13 @@ import { basename, dirname, extname, join } from 'path'
 import { existsSync, readFileSync } from 'fs'
 
 import {
-  AGENTS,
-  AGENT_IDS,
-  getEnabledAgents,
+  HARNESSES,
+  HARNESS_IDS,
+  enabledHarnesses,
   getAgentSkillsDirs,
-  type AgentId,
-  type AgentSelection,
-} from '../config/agents.js'
+  type HarnessId,
+  type HarnessSelection,
+} from '../config/harnesses.js'
 import {
   getMCPsByCategory,
   getSelectedMCPs,
@@ -45,7 +44,7 @@ import { confirm, handleCancel, multiselect, select, text } from '../utils/promp
 import { LOGO } from '../logo.js'
 
 export interface SetupContext {
-  agents: AgentSelection
+  agents: HarnessSelection
   mcps: MCPSelection
   installPath: string
   selectedSkills: SkillSelection
@@ -62,7 +61,7 @@ export interface SetupContext {
  */
 export interface InitFlags {
   dir?: string
-  agents?: AgentSelection
+  agents?: HarnessSelection
   skills?: SkillSelection
   mcps?: MCPSelection
   yes: boolean
@@ -98,8 +97,8 @@ export function parseInitArgs(args: string[]): InitFlags {
     else if (arg === '--overwrite') flags.overwrite = true
     else if (arg === '--agents') {
       const values = parseCsv(args[++i], '--agents')
-      assertKnown(values, AGENT_IDS, '--agents')
-      flags.agents = values as AgentSelection
+      assertKnown(values, HARNESS_IDS, '--agents')
+      flags.agents = values as HarnessSelection
     } else if (arg === '--skills') {
       const value = args[++i]
       if (value === 'all') flags.skills = getAllSkillNames()
@@ -124,7 +123,7 @@ export function parseInitArgs(args: string[]): InitFlags {
     }
   }
   if (flags.yes && !flags.agents) {
-    throw new Error(`--yes requires --agents <csv> (available: ${AGENT_IDS.join(', ')})`)
+    throw new Error(`--yes requires --agents <csv> (available: ${HARNESS_IDS.join(', ')})`)
   }
   return flags
 }
@@ -147,10 +146,10 @@ function welcome(): void {
   )
 }
 
-async function selectAgentsStep(): Promise<AgentSelection> {
+async function selectAgentsStep(): Promise<HarnessSelection> {
   return multiselect({
     message: 'Which AI coding tools are you using?',
-    options: AGENT_IDS.map((id) => ({ value: id, label: AGENTS[id].displayName })),
+    options: HARNESS_IDS.map((id) => ({ value: id, label: HARNESSES[id].displayName })),
     required: true,
   })
 }
@@ -288,7 +287,7 @@ function resolveTemplate(value: unknown): unknown {
 }
 
 export async function generateConfigs(context: SetupContext): Promise<void> {
-  for (const agent of getEnabledAgents(context.agents)) {
+  for (const agent of enabledHarnesses(context.agents)) {
     const outputPath = join(context.installPath, agent.configFile)
 
     // Merge into an existing JSON config: foreign MCP servers survive, and
@@ -306,7 +305,7 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
     delete serversSection[LEGACY_SERVER_KEY]
 
     for (const mcp of getSelectedMCPs(context.mcps)) {
-      const agentConfig = mcp.getAgentConfig(agent.id as AgentId)
+      const agentConfig = mcp.getAgentConfig(agent.id as HarnessId)
       if (agentConfig) {
         serversSection[agentConfig.serverKey] = agentConfig.config
       }
@@ -370,7 +369,7 @@ interface TemplateFile {
 
 async function installAgentFiles(context: SetupContext, flags?: InitFlags): Promise<void> {
   const templates: TemplateFile[] = [{ path: 'AGENTS.md', content: agentsMdContent }]
-  for (const agent of getEnabledAgents(context.agents)) {
+  for (const agent of enabledHarnesses(context.agents)) {
     if (agent.templateFile && agent.templateContent) {
       templates.push({ path: agent.templateFile, content: agent.templateContent })
     }
@@ -412,7 +411,7 @@ async function installAgentFiles(context: SetupContext, flags?: InitFlags): Prom
 
 function buildFilePreview(context: SetupContext): string[] {
   const lines: string[] = []
-  for (const agent of getEnabledAgents(context.agents)) {
+  for (const agent of enabledHarnesses(context.agents)) {
     lines.push(`  ${pc.dim(join(context.installPath, agent.configFile))}`)
     if (agent.skillsDir) {
       lines.push(
@@ -428,7 +427,7 @@ function buildFilePreview(context: SetupContext): string[] {
 }
 
 function showSummary(context: SetupContext): void {
-  const enabledAgents = getEnabledAgents(context.agents)
+  const enabledAgents = enabledHarnesses(context.agents)
   const mcpNames = getSelectedMCPs(context.mcps).map((mcp) => mcp.displayName)
 
   const lines = [
@@ -516,7 +515,7 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
   }
 
   if (mcps.includes('kapa')) {
-    for (const agent of getEnabledAgents(agents)) {
+    for (const agent of enabledHarnesses(agents)) {
       if (agent.authInstructions) {
         p.note(agent.authInstructions, `${agent.displayName} Kapa Auth`)
       }

@@ -89,7 +89,7 @@ function cell(value: unknown): string {
 }
 
 /**
- * Generic card for any tool declaring the coarse `table` cue: top-level
+ * Generic card for any tool declaring the coarse `table` view: top-level
  * scalars as facts, the result's array as fact-rows. No schema — this is
  * RawCard with manners, not a trusted view.
  */

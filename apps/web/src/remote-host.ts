@@ -35,16 +35,16 @@ export function createRemoteFlowHost(network = 'localnet'): PaymentFlowHost & Ac
     lookupAccounts: (addresses: readonly string[]) =>
       postFlowAction({ action: 'lookup-accounts', addresses: [...addresses] }),
     lookupAccountAssets: async () => {
-      throw new Error('Account shelves are TUI-only in this slice')
+      throw new Error('Account lists are not available in the web app')
     },
     lookupAccountAppStates: async () => {
       throw new Error('Account shelves are TUI-only in this slice')
     },
     searchTransactions: async () => {
-      throw new Error('Transaction search is TUI-only in this slice')
+      throw new Error('Transaction search is not available in the web app')
     },
     callTool: async () => {
-      throw new Error('Paging is TUI-only in this slice')
+      throw new Error('Paging is not available in the web app')
     },
   }
 }

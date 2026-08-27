@@ -131,7 +131,7 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
 })
 
 /**
- * Authoritative transaction data required by the first trusted detail view.
+ * Authoritative transaction data behind the transaction.detail view.
  * Extra wire fields are dropped.
  */
 export const transactionDetailDataSchema = z.object({
@@ -185,7 +185,7 @@ export const transactionDetailDataSchema = z.object({
   innerTxns: z.array(transactionRowSchema).optional(),
 })
 
-/** Authoritative transaction data required by the first trusted detail view. */
+/** Authoritative transaction data behind the transaction.detail view. */
 export type TransactionDetailData = z.infer<typeof transactionDetailDataSchema>
 
 /** A page of transactions, optionally scoped to a group id or account. */

@@ -4,7 +4,7 @@ import {
   addResult,
   buildAccountPortfolioRecord,
   EXPLORER_PROTOCOL_VERSION,
-  createAccountArtifact,
+  createAccountOpenView,
   createAccountPortfolioViewModel,
   createFixtureAccountLookup,
   createFixturePaymentHost,
@@ -45,7 +45,7 @@ describe('account portfolio slice', () => {
       { resultId: 'result-account-002', toolCallId: 'tool-call-account-002', network: 'localnet' },
       RECORDED_WIRE,
     )
-    const artifact = createAccountArtifact(record)
+    const artifact = createAccountOpenView(record)
     expect(artifact).toMatchObject({
       title: `Account ${FIXTURE_SENDER.slice(0, 6)}…${FIXTURE_SENDER.slice(-4)}`,
       view: { view: 'account.portfolio', source: { source: 'result', id: 'result-account-002' } },
@@ -104,7 +104,7 @@ describe('account portfolio slice', () => {
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.transactions[0]?.id).toBe(FIXTURE_TRANSACTION_ID)
     const empty = await host.searchTransactions({ address: FIXTURE_RECEIVER })
-    expect(empty.data).toMatchObject({ transactions: [] })
+    expect(empty).toMatchObject({ state: 'success', data: { transactions: [] } })
   })
 
   test('the sample list lookup returns one account.list record', async () => {
@@ -130,7 +130,7 @@ describe('account portfolio slice', () => {
     const store = addResult(createFixtureResultStore(), record)
     // Point an account view at the transaction fixture record.
     const wrong = createAccountPortfolioViewModel(store, {
-      protocolVersion: '0.1.0-provisional',
+      protocolVersion: '0.1.0',
       type: 'view',
       view: 'account.portfolio',
       source: { source: 'result', id: 'result-fixture-transaction-001' },

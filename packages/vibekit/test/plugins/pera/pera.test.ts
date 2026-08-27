@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
-import { resolveNetwork } from '../../../src/core/index.js'
+import { resolveNetwork, type NetworkId } from '../../../src/core/index.js'
 import { peraPlugin, peraTools, getPera } from '../../../src/plugins/pera/index.js'
 
-const ctxFor = (network: string, service?: unknown) =>
+const ctxFor = (network: NetworkId, service?: unknown) =>
   ({ network: resolveNetwork(network), services: service ? { pera: service } : {} }) as never
 
 describe('pera plugin', () => {

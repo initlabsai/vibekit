@@ -1,6 +1,6 @@
 /**
  * Runtime ToolDefinition[] from an ARC-56 (or normalized ARC-32/4) spec.
- * The xArc seed: each ABI method becomes a typed tool. Readonly methods
+ * Each ABI method becomes a typed tool. Readonly methods
  * simulate without a signer; writes go through composeOrExecute.
  */
 import {

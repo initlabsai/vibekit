@@ -1,7 +1,7 @@
 /**
- * The orchestrator's stream protocol. Every head (TUI, hosted API, web agent)
- * renders from these events (streaming text, tool activity, results with
- * their view cues), never from per-tool knowledge of its own.
+ * The agent loop's event stream. A host renders from these events (streaming
+ * text, tool activity, results with their view ids), never from per-tool
+ * knowledge of its own.
  */
 export type AgentEvent =
   | { type: 'text-delta'; text: string }
@@ -15,7 +15,7 @@ export type AgentEvent =
       input?: unknown
       /** JSON-safe tool output; on isError, `{ error: { code, message } }`. */
       output: unknown
-      /** The tool's declared view cue: a semantic Explorer id or a coarse hint. */
+      /** The tool's declared view: a semantic Explorer view id or a coarse hint. */
       view?: string
       isError: boolean
     }

@@ -44,7 +44,7 @@ describe('appSpecPath', () => {
       'read_local_state',
       'read_box_state',
     ]) {
-      const shape = (tool(name).parameters as { shape: Record<string, unknown> }).shape
+      const shape = (tool(name).parameters as unknown as { shape: Record<string, unknown> }).shape
       expect(Object.keys(shape)).toContain('appSpecPath')
     }
   })

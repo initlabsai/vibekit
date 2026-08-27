@@ -108,7 +108,7 @@ describe('zeroSignalBaseUrl', () => {
 })
 
 function fakeFetch(byPath: Record<string, { status: number; body?: unknown }>): typeof fetch {
-  return (async (input: URL | RequestInfo) => {
+  return (async (input: string | URL | Request) => {
     const url = String(input)
     const match = Object.entries(byPath).find(([path]) => url.endsWith(path))
     if (!match) throw new Error(`unexpected fetch: ${url}`)
@@ -129,7 +129,7 @@ describe('zerosignal provider', () => {
   test('probe hits /healthz at the server root, not under /v1', async () => {
     let probed = ''
     const ok = await probeZeroSignal(ZEROSIGNAL_DEFAULT_BASE_URL, (async (
-      input: URL | RequestInfo,
+      input: string | URL | Request,
     ) => {
       probed = String(input)
       return new Response(null, { status: 200 })

@@ -13,7 +13,7 @@ export interface SearchAssetBalancesArgs {
 export async function searchAssetBalances(
   ctx: ToolContext,
   args: SearchAssetBalancesArgs,
-): Promise<{ balances: AssetBalance[]; nextToken?: string }> {
+): Promise<{ balances: AssetBalance[]; decimals?: number; nextToken?: string }> {
   const indexer = ctx.indexer
   const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
   let query = indexer.lookupAssetBalances(args.assetId).limit(100)

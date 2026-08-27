@@ -5,10 +5,7 @@ import { uint64 } from '../../shared/format.js'
 import { getAccountAssets } from './assets.js'
 import type { AccountAsset } from './format.js'
 
-/**
- * Core account portfolio: ALGO balance + all asset holdings.
- * Does NOT include USD enrichment — that's explorer-specific middleware.
- */
+/** Account portfolio: ALGO balance + all asset holdings. No fiat values. */
 export async function getAccountPortfolio(
   ctx: ToolContext,
   args: { address: string },

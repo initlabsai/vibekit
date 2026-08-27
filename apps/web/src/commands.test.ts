@@ -16,7 +16,7 @@ describe('web semantic wiring', () => {
     expect(outcome.artifact).toEqual({
       title: 'Transaction detail',
       view: {
-        protocolVersion: '0.1.0-provisional',
+        protocolVersion: '0.1.0',
         type: 'view',
         view: 'transaction.detail',
         source: { source: 'result', id: FIXTURE_RESULT_ID },

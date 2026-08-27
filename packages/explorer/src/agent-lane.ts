@@ -1,6 +1,6 @@
 /**
  * The agent lane's result-to-view bridge. Tools return structured JSON and
- * declare a view cue; the cue picks the view, never the model. Any
+ * declare a view id; that id picks the view, never the model. Any
  * third-party tool that declares a trusted view and matches the wire schema
  * gets the same card. Unknown cues or unexpected shapes fall back to a raw
  * record with no view — never a dropped result.
@@ -43,7 +43,7 @@ import {
   buildTransactionListRecord,
 } from './views/transaction.js'
 
-/** A structured record plus the trusted view its tool's cue selected, if any. */
+/** A structured record plus the trusted view its tool's view id selected, if any. */
 export interface BridgedToolResult {
   record: StructuredResult
   view?: TrustedViewId
@@ -63,7 +63,7 @@ function isTrustedViewId(value: string): value is TrustedViewId {
   return (TRUSTED_VIEW_IDS as readonly string[]).includes(value)
 }
 
-/** Resolves the trusted view cue from the tool's declared view, if trusted. */
+/** The tool's declared view id, when it is a trusted one. */
 export function viewCueForToolResult(event: ToolResultEventLike): TrustedViewId | undefined {
   if (event.view && isTrustedViewId(event.view)) return event.view
   return undefined
@@ -103,7 +103,7 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
 
 /**
  * Wraps one agent tool result as a structured record, selecting a trusted
- * view from the tool's declared view cue.
+ * view from the tool's declared view id.
  */
 export function bridgeToolResult(
   event: ToolResultEventLike,
@@ -133,7 +133,7 @@ export function bridgeToolResult(
 
 /**
  * Detects an agent-composed write: any successful tool output that is core's
- * UnsignedGroupResult. The renderer routes it into the approval flow instead
+ * UnsignedGroupResult. The app routes it into the approval flow instead
  * of leaving it as chat output. Tool name is not consulted — compose-mode
  * app_call, asset_create, send_payment, and generated ARC-56 writes share
  * this wire.

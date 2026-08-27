@@ -57,7 +57,7 @@ describe('fixture-backed payment write flow', () => {
   test('fixture events validate as versioned protocol messages', () => {
     for (const kind of writeFlowEventKinds) {
       const event = createPaymentFixtureEvent(kind)
-      expect(writeFlowEventSchema.parse(event).protocolVersion).toBe('0.1.0-provisional')
+      expect(writeFlowEventSchema.parse(event).protocolVersion).toBe('0.1.0')
     }
   })
 

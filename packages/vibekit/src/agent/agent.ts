@@ -1,6 +1,6 @@
 /**
- * The orchestrator: an LLM tool loop over ToolDefinition[] with a streaming
- * event protocol. The TUI runs it in-process; the hosted API wraps it.
+ * The agent loop: an LLM tool loop over ToolDefinition[] with a streaming
+ * event protocol. The TUI runs it in-process.
  *
  * Deployment semantics (registry validation, pooled per-network contexts,
  * network-param injection) come from @initlabs/vibekit and are identical

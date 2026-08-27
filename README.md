@@ -148,7 +148,8 @@ bun add @initlabs/vibekit@alpha
 
 ## Development
 
-See [AGENTS.md](./AGENTS.md) for development and release guidance.
+[AGENTS.md](./AGENTS.md) is the map of the repository: what runs where, how a
+tool call flows, the glossary, the rules, and the release procedure.
 
 ```bash
 bun install

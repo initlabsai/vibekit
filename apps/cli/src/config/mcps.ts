@@ -1,10 +1,9 @@
 /**
  * MCP registry — the MCP servers `vibekit init` can configure, and how each
- * agent's config file expresses them. Ported from v1 apps/cli, slimmed: no
- * Docker/provider/PAT/dispenser gating (the v2 MCP needs none of those).
+ * harness's config file expresses them.
  */
 
-import type { AgentId } from './agents.js'
+import type { HarnessId } from './harnesses.js'
 
 export type MCPCategory = 'documentation' | 'development'
 
@@ -19,7 +18,7 @@ export interface MCPDefinition {
   displayName: string
   description: string
   category: MCPCategory
-  getAgentConfig: (agentId: AgentId) => AgentMCPConfig | undefined
+  getAgentConfig: (agentId: HarnessId) => AgentMCPConfig | undefined
   hint?: string
 }
 

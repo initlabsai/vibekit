@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/server'
 import { registerTools } from './adapter.js'
-import { resolveDeployment, type VibekitMcpOptions } from './options.js'
+import { resolveMcpDeployment, type VibekitMcpOptions } from './options.js'
 
 export { VIEW_META_KEY, NETWORK_PARAM } from './adapter.js'
 export type { VibekitMcpOptions } from './options.js'
@@ -13,7 +13,7 @@ export type { VibekitMcpOptions } from './options.js'
  * `@initlabs/vibekit/mcp/stdio` and `@initlabs/vibekit/mcp/http`.
  */
 export function createVibekitMcp(options: VibekitMcpOptions): McpServer {
-  const deployment = resolveDeployment(options)
+  const deployment = resolveMcpDeployment(options)
   const server = new McpServer({ name: deployment.name, version: deployment.version })
   registerTools(server, deployment)
   return server
@@ -24,6 +24,6 @@ export function createVibekitMcp(options: VibekitMcpOptions): McpServer {
  * call builds a fresh server — the shape both serveStdio and createMcpHandler want.
  */
 export function createServerFactory(options: VibekitMcpOptions): () => McpServer {
-  resolveDeployment(options)
+  resolveMcpDeployment(options)
   return () => createVibekitMcp(options)
 }

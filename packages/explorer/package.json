@@ -2,7 +2,7 @@
   "name": "@initlabs/vibekit-explorer",
   "version": "1.0.0-alpha.2",
   "private": true,
-  "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds provisional signerless compose-only host wiring.",
+  "description": "Browser-safe Explorer protocol, workspace state, fixtures, and semantic view models; the ./live subpath adds the signerless compose-only live host.",
   "license": "MIT",
   "author": "Init Labs LLC",
   "type": "module",
@@ -24,7 +24,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
     "test": "bun test",
     "clean": "rm -rf dist"
   },

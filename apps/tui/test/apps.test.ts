@@ -111,7 +111,7 @@ describe('apps screen entries', () => {
   test('deployedFromRecord reads AlgoKit deployer notes off app-create rows', () => {
     const record = (transactions: unknown): StructuredResult =>
       ({
-        protocolVersion: '0.1.0-provisional',
+        protocolVersion: '0.1.0',
         type: 'result',
         resultId: 'r',
         state: 'success',
@@ -161,7 +161,7 @@ describe('apps screen entries', () => {
   test('optedInFromRecord reads application.locals app ids and ignores junk', () => {
     expect(
       optedInFromRecord({
-        protocolVersion: '0.1.0-provisional',
+        protocolVersion: '0.1.0',
         type: 'result',
         resultId: 'r',
         toolCallId: 't',
@@ -176,7 +176,7 @@ describe('apps screen entries', () => {
     ).toEqual([{ appId: 1071 }])
     expect(
       optedInFromRecord({
-        protocolVersion: '0.1.0-provisional',
+        protocolVersion: '0.1.0',
         type: 'result',
         resultId: 'r',
         toolCallId: 't',

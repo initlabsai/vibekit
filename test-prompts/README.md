@@ -1,4 +1,4 @@
-# VibeKit v2 MCP Test Prompts
+# VibeKit MCP Test Prompts
 
 Agent-executed acceptance tests for the VibeKit tool surface (~52 tools). Each
 file is a self-contained prompt: paste it (or dispatch it to a sub-agent) in a

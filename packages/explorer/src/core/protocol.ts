@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { resultReferenceSchema, type ResultReference } from './results.js'
 import { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from './version.js'
 
-/** Trusted view identifiers proven by the current vertical slices. */
+/** View ids the Explorer apps render as cards; anything else shows as a raw record. */
 export const TRUSTED_VIEW_IDS = [
   'transaction.detail',
   'transaction.list',
@@ -30,7 +30,7 @@ export const TRUSTED_VIEW_IDS = [
   'network.status',
 ] as const
 
-/** Trusted view identifiers proven by the current vertical slices. */
+/** A view id from TRUSTED_VIEW_IDS. */
 export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]
 
 /** A trusted presentation specification selected by the model or direct lane. */
@@ -46,8 +46,8 @@ export const viewSpecSchema = z
 /** A trusted presentation specification selected by the model or direct lane. */
 export type ViewSpec = z.infer<typeof viewSpecSchema>
 
-/** A titled trusted view — what a head renders as its open artifact. */
-export interface ExplorerArtifact {
+/** A titled trusted view — what an app shows as its open view. */
+export interface OpenView {
   title: string
   view: ViewSpec
 }
@@ -117,7 +117,7 @@ export const writeStageEventSchema = z.discriminatedUnion('stage', [
   writeConfirmEventSchema,
 ])
 
-/** Observable write-flow stage event carried by the provisional protocol. */
+/** Observable write-flow stage event. */
 export type WriteStageEvent = z.infer<typeof writeStageEventSchema>
 
 /** A pending human approval that references authoritative inspection data. */

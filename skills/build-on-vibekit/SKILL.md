@@ -57,7 +57,7 @@ existing plugin; plugin work does not require changing a host.
 - `packages/vibekit/src/core/deployment.ts` — registry validation, network contexts,
   and `executeToolCall`
 - `packages/vibekit/src/mcp/` — the generic ToolDefinition-to-MCP adapter
-- `packages/vibekit/src/preset/` — the batteries-included mix (default tools, default
+- `packages/vibekit/src/preset/` — the stock mix (default tools, default
   plugins, keystore tools, NETWORK env convention) the stock hosts compose from
 - `packages/vibekit/examples/` — the reference stdio and HTTP deployments, typechecked with the package
 - `packages/vibekit/src/plugins/nfd/` and `.../pera/` — service-backed plugin
