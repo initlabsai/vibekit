@@ -15,12 +15,21 @@ Alpha release — [feedback welcome](https://github.com/initlabsai/vibekit/issue
 
 | For | You need |
 | --- | --- |
-| Browsing the chain — queries, the Explorer, `vibekit new` | Nothing. The CLI and Explorer are self-contained binaries. |
-| **Signing anything** — payments, assets, deploys | **Node.js** (and `npm` once). The keystore daemon runs under Node. |
-| **Building a project** — compiling and testing contracts | **Node.js 24+**. The starter templates use `puya-ts`, `tsx`, and `vitest`. |
-| LocalNet | Docker Compose v2. On Linux, add yourself to the `docker` group (`sudo usermod -aG docker $USER`, then log out and back in). |
-| The keystore, on Linux | A Secret Service keychain |
-| The keystore, on Windows | [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (`winget install Microsoft.VCRedist.2015+.x64`) |
+| VibeKit CLI | Nothing — a self-contained binary |
+| VibeKit Explorer | Nothing — a self-contained binary |
+| Keystore | Node.js, and your OS keychain |
+| Starter templates | Node.js 24+ |
+| LocalNet | Docker Compose v2 |
+
+The keystore is what signs, so payments, assets, and deploys go through it. Its
+daemon runs under Node and is installed once with `npm`. On Linux it needs a
+Secret Service keychain; on Windows, the [Visual C++
+Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+(`winget install Microsoft.VCRedist.2015+.x64`).
+
+The starter templates compile and test with `puya-ts`, `tsx`, and `vitest`. On
+Linux, LocalNet also needs you in the `docker` group (`sudo usermod -aG docker
+$USER`, then log out and back in).
 
 `vibekit doctor` reports what is missing without changing anything.
 
