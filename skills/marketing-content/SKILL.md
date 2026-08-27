@@ -110,6 +110,27 @@ Lessons that cost time — don't relearn them:
     deliberately visible low-opacity scanlines, and at most a small piece of
     non-semantic telemetry outside the copy. Preserve legibility and inspect
     the effect after final encoding; compression can erase subtle scanlines.
+12. **Driving `claude` in a tape: three gotchas.** First launch shows a trust
+    prompt and an MCP-enable prompt — send an `Enter` for each before typing,
+    or the prompt lands in a dialog and the turn never runs. The turn-complete
+    footer verb is randomised (`Crunched for 9s`, `Cooked for 9s`, `Worked for
+    9s`), so wait on `/ for [0-9]+s/`, never on one verb. And `unset
+    CLAUDE_CODE_CHILD_SESSION` or a nested session prints a transcript warning
+    over the footage.
+13. **Never tell the model not to use tools to save time.** It says so on
+    camera ("you asked me to answer without tools, so I'll go from what a
+    standard file contains rather than reading it") and the whole point of the
+    beat dies. Let it read the file; that is the demo.
+14. **Wait on text that is actually on screen.** `Wait+Screen` matches the
+    visible buffer, so a card kicker inside a tall card that renders below the
+    fold never matches. Prefer a footer or composer string that is always
+    visible.
+15. **A modal you did not know about looks exactly like a hang.** The
+    Explorer's explain flow opens a cost-approval modal (`EXPLAIN THIS
+    CONTRACT?` / `[enter] run`); a tape that never presses Enter sits at
+    `working…` until vhs times out. When a recording stalls, re-run the tape
+    with no waits and a fixed `Sleep`, then look at the last frame. Guessing
+    cost three failed takes; the diagnostic took one.
 12. **Time state changes to their informational value.** Hold confirmations,
     approvals, and results long enough to read the decisive status, then cut
     forward. Do not leave a resolved screen on display merely because the
