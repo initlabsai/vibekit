@@ -274,18 +274,18 @@ check_path() {
 
   case "$shell_name" in
     zsh)
-      echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
+      echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.zshrc"
       echo "  source ~/.zshrc"
       ;;
     bash)
-      echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+      echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.bashrc"
       echo "  source ~/.bashrc"
       ;;
     fish)
-      echo "  fish_add_path ~/.local/bin"
+      echo "  fish_add_path $INSTALL_DIR"
       ;;
     *)
-      echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+      echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
       echo ""
       info "Add the above line to your shell's config file."
       ;;
