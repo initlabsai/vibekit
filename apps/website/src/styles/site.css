@@ -101,8 +101,33 @@ h1 em, h2 em { color: var(--brass-bright); font-style: normal; }
 .tui-live b { color: var(--brass-bright); font-variant-numeric: tabular-nums; font-weight: 500; padding-left: .3rem; }
 .tui-live i { animation: pulse 2.4s ease-in-out infinite; background: var(--signal); border-radius: 50%; display: inline-block; height: .36rem; margin-right: .35rem; width: .36rem; }
 .tui-tabs { border-bottom: 1px solid var(--border-soft); display: flex; font-size: .6rem; gap: clamp(1rem, 2.2vw, 2rem); min-height: 2.25rem; padding: .65rem .9rem 0; }
-.tui-tabs span { color: var(--signal); padding-bottom: .55rem; }
-.tui-tabs .active { border-bottom: 1px solid var(--brass-bright); color: var(--brass-bright); }
+.tui-tabs button { background: none; border: 0; border-bottom: 1px solid transparent; color: var(--signal); cursor: pointer; font: inherit; letter-spacing: inherit; padding: 0 0 .55rem; transition: color .15s, border-color .15s; }
+.tui-tabs button:hover { color: var(--brass-bright); }
+.tui-tabs button:focus-visible { outline: 1px solid var(--brass-bright); outline-offset: .25rem; }
+.tui-tabs .active { border-bottom-color: var(--brass-bright); color: var(--brass-bright); }
+.tui-panel[hidden] { display: none; }
+.tui-table { display: grid; gap: 1px; }
+.tt-head, .tt-row { align-items: center; display: grid; font-size: .62rem; gap: .8rem; grid-template-columns: minmax(5.5rem, .8fr) minmax(0, 1.6fr) minmax(4.5rem, .9fr) minmax(4.5rem, .8fr); padding: .5rem .7rem; }
+.tt-head { color: var(--faint); font-size: .5rem; letter-spacing: .12em; text-transform: uppercase; }
+.tt-row { background: rgba(17, 19, 24, .92); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tt-row span:nth-child(2) { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-row.on { border-left: 2px solid var(--brass-bright); color: var(--text); padding-left: calc(.7rem - 2px); }
+.tt-row.on span:first-child { color: var(--brass-bright); }
+.tt-kind { color: var(--signal) !important; }
+.tt-detail { background: rgba(17, 19, 24, .96); border-top: 2px solid var(--brass); margin-top: .9rem; padding: .85rem 1rem 1rem; }
+.tt-detail dl { display: grid; gap: .5rem 1.2rem; grid-template-columns: 1fr 1fr; margin: .9rem 0 0; }
+.tt-detail dl div { border-top: 1px solid var(--border-soft); padding-top: .5rem; }
+.tt-detail dt { color: var(--faint); font-size: .48rem; letter-spacing: .09em; text-transform: uppercase; }
+.tt-detail dd { color: var(--text); font-size: .66rem; margin: .2rem 0 0; }
+.tt-cards { display: grid; gap: .7rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+.tt-app { background: rgba(17, 19, 24, .96); border-top: 2px solid var(--brass); padding: .9rem 1rem 1rem; }
+.tt-app > strong { color: var(--text); display: block; font-size: 1rem; font-weight: 500; letter-spacing: -.03em; margin-top: .7rem; }
+.tt-app dl { display: grid; gap: .45rem 1rem; grid-template-columns: 1fr 1fr; margin: .9rem 0 0; }
+.tt-app dl div { border-top: 1px solid var(--border-soft); padding-top: .45rem; }
+.tt-app dt { color: var(--faint); font-size: .46rem; letter-spacing: .09em; text-transform: uppercase; }
+.tt-app dd { color: var(--text); font-size: .62rem; margin: .18rem 0 0; }
+.tt-methods { display: flex; flex-wrap: wrap; gap: .3rem; margin: .9rem 0 0; }
+.tt-methods span { border: 1px solid var(--border-soft); color: var(--signal); font-size: .53rem; padding: .18rem .4rem; }
 .tui-feed { background-image: linear-gradient(rgba(42, 39, 35, .16) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 39, 35, .16) 1px, transparent 1px); background-size: 2.75rem 2.75rem; min-height: 23rem; padding: clamp(1rem, 2.2vw, 1.65rem); position: relative; }
 .tui-query { align-items: center; background: rgba(17, 19, 24, .92); border-left: 2px solid var(--brass-bright); display: grid; gap: .65rem; grid-template-columns: auto 1fr auto; margin: 0 0 clamp(1.2rem, 3vw, 2rem); padding: .72rem .8rem; }
 .tui-query > span { color: var(--brass-bright); font-size: 1.15rem; }
