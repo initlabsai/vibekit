@@ -227,4 +227,4 @@ Examples:
       return { name: spec.name, methods: spec.methods }
     },
   }),
-] as AnyTool[]
+]

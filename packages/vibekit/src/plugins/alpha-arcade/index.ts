@@ -129,7 +129,7 @@ export const alphaArcadeTools: AnyTool[] = [
       ),
     }),
   }),
-] as AnyTool[]
+]
 
 /** The plugin factory — `plugins: [alphaArcadePlugin({ apiKey })]`. */
 export function alphaArcadePlugin(options: AlphaArcadeOptions = {}): ToolPlugin {

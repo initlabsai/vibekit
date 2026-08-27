@@ -126,4 +126,4 @@ export const assetTools: AnyTool[] = [
       }
     },
   }),
-] as AnyTool[]
+]

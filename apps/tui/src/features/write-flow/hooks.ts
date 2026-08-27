@@ -17,6 +17,24 @@ import type { Feed } from '../../feed/hooks.js'
 import type { ExplorerHost } from '../network/hooks.js'
 import type { KeystorePaymentHost } from '../network/keystore-host.js'
 
+/** "Payment confirmed on-chain in round N." — the noun comes from what the group held. */
+function confirmedNote(store: ResultStore, flow: WriteFlowState | null): string {
+  const derived = flow?.stage === 'confirmed' ? createWriteFlowViewModel(store, flow) : undefined
+  const model = derived?.ok ? derived.model : undefined
+  const types = model?.simulation?.transactionTypes
+  const what = model?.unsignedGroup.summary.startsWith('create app')
+    ? 'Deploy'
+    : types?.length !== 1
+      ? 'Group'
+      : types[0] === 'pay'
+        ? 'Payment'
+        : types[0] === 'appl'
+          ? 'Call'
+          : 'Transaction'
+  const round = model?.confirmation?.confirmedRound
+  return `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`
+}
+
 /**
  * Owns the payment write flow: start/decide orchestration, the flow block in
  * the feed, and the approval modal's derived model.
@@ -225,13 +243,14 @@ export function useWriteFlow({
       )
         return
       setBusy(true)
-      void performWriteFlowStep({
-        host: host(),
-        store: storeRef.current,
-        flow: current,
-        kind: decision,
-        newId,
-      }).then((outcome) => {
+      void (async () => {
+        const outcome = await performWriteFlowStep({
+          host: host(),
+          store: storeRef.current,
+          flow: current,
+          kind: decision,
+          newId,
+        })
         if (!outcome.ok) {
           setBusy(false)
           appendNote(sectionId, `Couldn't ${decision} — ${outcome.message}`, 'error')
@@ -244,7 +263,7 @@ export function useWriteFlow({
           return
         }
         setStatus(live === true ? 'signing and submitting…' : 'finishing the sample…')
-        void completeApprovedWriteFlow({
+        const run = await completeApprovedWriteFlow({
           host: host(),
           store: outcome.store,
           flow: outcome.flow,
@@ -253,41 +272,16 @@ export function useWriteFlow({
             commitStore(nextStore)
             updateFlowBlock(nextFlow)
           },
-        }).then((run) => {
-          commitStore(run.store)
-          if (!run.ok) {
-            finishFlow(run.flow, `Approved, but completion failed — ${run.message}`, 'error')
-            return
-          }
-          if (run.pausedForSigner) {
-            finishFlow(run.flow, 'Approved — signing is unavailable without the keystore daemon.')
-            return
-          }
-          const derived =
-            run.flow && run.flow.stage === 'confirmed'
-              ? createWriteFlowViewModel(run.store, run.flow)
-              : undefined
-          const round =
-            derived && derived.ok ? derived.model.confirmation?.confirmedRound : undefined
-          const types =
-            derived && derived.ok ? derived.model.simulation?.transactionTypes : undefined
-          const create =
-            derived && derived.ok && derived.model.unsignedGroup.summary.startsWith('create app')
-          const what = create
-            ? 'Deploy'
-            : types?.length === 1
-              ? types[0] === 'pay'
-                ? 'Payment'
-                : types[0] === 'appl'
-                  ? 'Call'
-                  : 'Transaction'
-              : 'Group'
-          finishFlow(
-            run.flow,
-            `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`,
-          )
         })
-      })
+        commitStore(run.store)
+        if (!run.ok) {
+          finishFlow(run.flow, `Approved, but completion failed — ${run.message}`, 'error')
+        } else if (run.pausedForSigner) {
+          finishFlow(run.flow, 'Approved — signing is unavailable without the keystore daemon.')
+        } else {
+          finishFlow(run.flow, confirmedNote(run.store, run.flow))
+        }
+      })()
     },
     [
       appendNote,

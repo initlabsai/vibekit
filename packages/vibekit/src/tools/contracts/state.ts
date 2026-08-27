@@ -8,10 +8,6 @@ import { ABIUintType, decodeAddress, encodeAddress } from 'algosdk'
 import { isNotFound } from '../shared/errors.js'
 import { tryNormalizeAppSpec } from './app-spec.js'
 
-// ============================================================================
-// Shared types and helpers
-// ============================================================================
-
 export interface StateValue {
   /** App-spec name when resolvable, else UTF-8 decode of the raw key. */
   key: string
@@ -114,10 +110,6 @@ function decodeStateItems(
   return state
 }
 
-// ============================================================================
-// Read Global State
-// ============================================================================
-
 export interface ReadGlobalStateArgs {
   appId: number
   appSpec?: string
@@ -139,10 +131,6 @@ export async function readGlobalState(
     : []
   return { appId, scope: 'global', state }
 }
-
-// ============================================================================
-// Read Local State
-// ============================================================================
 
 export interface ReadLocalStateArgs {
   appId: number
@@ -179,10 +167,6 @@ export async function readLocalState(
   // Distinguish "not opted in" from "opted in with empty state".
   return { appId, scope: 'local', address, optedIn: accountInfo.appLocalState != null, state }
 }
-
-// ============================================================================
-// Read Box
-// ============================================================================
 
 export interface ReadBoxArgs {
   appId: number
@@ -284,10 +268,6 @@ export async function readBoxState(
     throw error
   }
 }
-
-// ============================================================================
-// List Application Boxes
-// ============================================================================
 
 export interface ListApplicationBoxesArgs {
   appId: number

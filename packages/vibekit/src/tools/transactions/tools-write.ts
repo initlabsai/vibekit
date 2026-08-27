@@ -244,4 +244,4 @@ export const transactionWriteTools: AnyTool[] = [
         extraOpcodeBudget: args.extraOpcodeBudget,
       }),
   }),
-] as AnyTool[]
+]

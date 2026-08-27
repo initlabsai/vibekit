@@ -67,4 +67,4 @@ export const networkTools: AnyTool[] = [
     view: 'block.list',
     handler: async (ctx, args) => searchBlockHeaders(ctx, args),
   }),
-] as AnyTool[]
+]

@@ -56,7 +56,9 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
    * Hosts that do not render views ignore it.
    */
   view?: string
-  handler: (ctx: ToolContext, args: z.infer<P>) => Promise<unknown>
+  // A method, not a function property: method parameters are checked
+  // bivariantly, which is what lets a ToolDefinition<P> sit in an AnyTool[].
+  handler(ctx: ToolContext, args: z.infer<P>): Promise<unknown>
 }
 
 /** Identity function; lets TypeScript infer the handler's args from `parameters`. */

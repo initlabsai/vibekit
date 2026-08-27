@@ -173,8 +173,15 @@ pun/structural gag, one user-benefit framing. Recommend one. Keep each under
 `references/tweets.md` before sending anything.
 
 For lore tweets (the /lore page series), the image is a personnel-record card:
-`references/make-lore-card.sh` (env-var fields -> 1600x900 png), with the
-Prior Art Directorate fox mask in `references/lore-mask.txt`. Everyone in the
-Directorate wears the mask, so one face serves the whole series and the
-character is carried by the name and role. `@` cells in the art become lit
-hero-amber eyes.
+`references/make-lore-card.sh` (env-var fields -> 1600x900 png). The quote is
+the headline and the name attributes it underneath; the channel/payload/target
+telemetry sits below as a muted strip. `QUOTE` splits on `|` and the last line
+renders in hero amber, so put the payoff there.
+
+The portrait is `references/lore-mask.svg` — flat polygons in five brass tints,
+the editable source — rasterized to ASCII by `references/lore-ascii.py`. One
+character per facet, never a dither: the planes stay flat. But the character
+must track the fill's brightness (`. : + # @`, darkest first). Colour alone does
+not separate tones at glyph density; a face rendered in a single glyph is a
+blob, which cost three rounds to learn. Everyone in the Directorate sits for the
+same portrait, so one face serves the series.

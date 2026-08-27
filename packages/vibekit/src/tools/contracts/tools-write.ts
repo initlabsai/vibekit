@@ -61,7 +61,7 @@ function appTool(
     view: 'txn',
     handler: async (ctx, args) =>
       composeOrExecute(ctx, [{ ...(await withAppSpecFile(ctx, args)), type } as TxnSpec]),
-  }) as AnyTool
+  })
 }
 
 const DEPLOY_DESCRIPTION = `Deploy a new smart contract instance from an ARC-56/ARC-32 app spec.
@@ -310,7 +310,7 @@ export const contractWriteTools: AnyTool[] = [
       const resolved = await withAppSpecFile(ctx, args)
       return deployApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
     },
-  }) as AnyTool,
+  }),
   defineTool({
     name: 'app_update',
     description: UPDATE_DESCRIPTION,
@@ -333,7 +333,7 @@ export const contractWriteTools: AnyTool[] = [
       const resolved = await withAppSpecFile(ctx, args)
       return updateApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
     },
-  }) as AnyTool,
+  }),
   appTool('app_call', 'app_call', 'Call a smart contract method (or bare NoOp).'),
   appTool(
     'app_opt_in',

@@ -123,4 +123,4 @@ export const accountTools: AnyTool[] = [
     view: 'account.portfolio',
     handler: async (ctx, args) => getAccountPortfolio(ctx, args),
   }),
-] as AnyTool[]
+]

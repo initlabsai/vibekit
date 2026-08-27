@@ -60,4 +60,4 @@ export const transactionTools: AnyTool[] = [
     view: 'transaction.group',
     handler: async (ctx, args) => lookupTransactionGroup(ctx, args),
   }),
-] as AnyTool[]
+]

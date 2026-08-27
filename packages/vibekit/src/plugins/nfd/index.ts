@@ -232,7 +232,7 @@ export const nfdTools: AnyTool[] = [
       }
     },
   }),
-] as AnyTool[]
+]
 
 /** The plugin factory — `plugins: [nfdPlugin()]` in createVibekitMcp options. */
 export function nfdPlugin(): ToolPlugin {

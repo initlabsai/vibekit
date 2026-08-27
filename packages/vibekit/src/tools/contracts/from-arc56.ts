@@ -176,7 +176,7 @@ function toolForMethod(
           }
         : result
     },
-  }) as AnyTool
+  })
 }
 
 /** `HiWorld.hi(name: "gabe") → app 1018`, for the approval card. */

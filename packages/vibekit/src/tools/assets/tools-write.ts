@@ -25,7 +25,7 @@ function writeTool<P extends z.ZodType>(def: {
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, [def.toSpec(args)]),
-  }) as AnyTool
+  })
 }
 
 export const assetWriteTools: AnyTool[] = [

@@ -1,8 +1,9 @@
 /**
- * Persisted Explorer agent config: ~/.config/vibekit/config.json (0600),
- * written by `vibekit explore setup`, read by the TUI. Env vars override
- * the file. This module stays free of 'ai' imports so the CLI can pull it
- * through the ./config subpath without bundling the model SDKs.
+ * Persisted Explorer config: ~/.config/vibekit/config.json (0600), written by
+ * `vibekit explore setup` and the TUI, read by both. Each concern owns one
+ * top-level key; writes preserve the others. Env vars override the file.
+ * This module stays free of 'ai' imports so the CLI can pull it through the
+ * ./config subpath without bundling the model SDKs.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -10,6 +11,39 @@ import { dirname, join } from 'node:path'
 import { z } from 'zod'
 
 import type { ProviderConfig } from './provider.js'
+
+type Env = Record<string, string | undefined>
+
+export function vibekitConfigPath(env: Env = process.env): string {
+  const base = env.XDG_CONFIG_HOME || join(homedir(), '.config')
+  return join(base, 'vibekit', 'config.json')
+}
+
+function readConfig(env: Env): Record<string, unknown> {
+  try {
+    return JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as Record<string, unknown>
+  } catch {
+    return {} // no file yet, or unreadable JSON: every section reads as absent
+  }
+}
+
+/** One top-level key of config.json: parsed on read (absent or malformed reads as `empty`), validated on write. */
+function section<T>(key: string, schema: z.ZodType<T>, empty: T) {
+  return {
+    load(env: Env = process.env): T {
+      const parsed = schema.safeParse(readConfig(env)[key])
+      return parsed.success ? parsed.data : empty
+    },
+    /** Writes this section, preserving the others; returns the path. */
+    save(value: T, env: Env = process.env): string {
+      const path = vibekitConfigPath(env)
+      mkdirSync(dirname(path), { recursive: true })
+      const next = { ...readConfig(env), [key]: schema.parse(value) }
+      writeFileSync(path, `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 })
+      return path
+    },
+  }
+}
 
 const agentSectionSchema = z.object({
   provider: z.enum(['anthropic', 'openai', 'openai-compatible', 'ollama', 'zerosignal']),
@@ -20,138 +54,42 @@ const agentSectionSchema = z.object({
 /** API keys never live in the file; they stay in env (ANTHROPIC_API_KEY, …). */
 export type StoredAgentConfig = z.infer<typeof agentSectionSchema>
 
-export function vibekitConfigPath(env: Record<string, string | undefined> = process.env): string {
-  const base = env.XDG_CONFIG_HOME || join(homedir(), '.config')
-  return join(base, 'vibekit', 'config.json')
-}
-
-/** The stored agent section, or undefined when absent or malformed. */
-export function loadStoredAgentConfig(
-  env: Record<string, string | undefined> = process.env,
-): StoredAgentConfig | undefined {
-  try {
-    const raw = JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as { agent?: unknown }
-    const parsed = agentSectionSchema.safeParse(raw.agent)
-    return parsed.success ? parsed.data : undefined
-  } catch {
-    return undefined
-  }
-}
-
-/** Writes the agent section, preserving any other keys in config.json. */
-export function saveStoredAgentConfig(
-  config: StoredAgentConfig,
-  env: Record<string, string | undefined> = process.env,
-): string {
-  const path = vibekitConfigPath(env)
-  let existing: Record<string, unknown> = {}
-  try {
-    existing = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
-  } catch {
-    // First write, or unreadable JSON — start fresh rather than fail setup.
-  }
-  mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(
-    path,
-    `${JSON.stringify({ ...existing, agent: agentSectionSchema.parse(config) }, null, 2)}\n`,
-    {
-      mode: 0o600,
-    },
-  )
-  return path
-}
+const agent = section<StoredAgentConfig | undefined>(
+  'agent',
+  agentSectionSchema.optional(),
+  undefined,
+)
+export const loadStoredAgentConfig = agent.load
+export const saveStoredAgentConfig = (config: StoredAgentConfig, env?: Env) =>
+  agent.save(config, env)
 
 const appEntrySchema = z.object({
   name: z.string().min(1),
   appId: z.number().int().nonnegative(),
 })
 
-const appsSectionSchema = z.record(z.string(), z.array(appEntrySchema))
-
 /** One deployed-app association shown on the Explorer's My Apps screen. */
 export type StoredAppEntry = z.infer<typeof appEntrySchema>
 
 /** Deployed-app associations keyed by network id (localnet/testnet/mainnet). */
-export type StoredApps = z.infer<typeof appsSectionSchema>
+export type StoredApps = Record<string, StoredAppEntry[]>
 
-/** The stored apps section; absent or malformed reads as empty. */
-export function loadStoredApps(env: Record<string, string | undefined> = process.env): StoredApps {
-  try {
-    const raw = JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as { apps?: unknown }
-    const parsed = appsSectionSchema.safeParse(raw.apps)
-    return parsed.success ? parsed.data : {}
-  } catch {
-    return {}
-  }
-}
-
-/** Writes the apps section, preserving any other keys in config.json. */
-export function saveStoredApps(
-  apps: StoredApps,
-  env: Record<string, string | undefined> = process.env,
-): string {
-  const path = vibekitConfigPath(env)
-  let existing: Record<string, unknown> = {}
-  try {
-    existing = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
-  } catch {
-    // First write, or unreadable JSON — start fresh rather than fail.
-  }
-  mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(
-    path,
-    `${JSON.stringify({ ...existing, apps: appsSectionSchema.parse(apps) }, null, 2)}\n`,
-    { mode: 0o600 },
-  )
-  return path
-}
-
-const pluginsSectionSchema = z.record(z.string(), z.boolean())
+const apps = section<StoredApps>('apps', z.record(z.string(), z.array(appEntrySchema)), {})
+export const loadStoredApps = apps.load
+export const saveStoredApps = apps.save
 
 /** Plugin enablement by plugin name; a name absent from the map reads as enabled. */
-export type StoredPlugins = z.infer<typeof pluginsSectionSchema>
+export type StoredPlugins = Record<string, boolean>
 
-/** The stored plugins section; absent or malformed reads as empty (all enabled). */
-export function loadStoredPlugins(
-  env: Record<string, string | undefined> = process.env,
-): StoredPlugins {
-  try {
-    const raw = JSON.parse(readFileSync(vibekitConfigPath(env), 'utf8')) as { plugins?: unknown }
-    const parsed = pluginsSectionSchema.safeParse(raw.plugins)
-    return parsed.success ? parsed.data : {}
-  } catch {
-    return {}
-  }
-}
-
-/** Writes the plugins section, preserving any other keys in config.json. */
-export function saveStoredPlugins(
-  plugins: StoredPlugins,
-  env: Record<string, string | undefined> = process.env,
-): string {
-  const path = vibekitConfigPath(env)
-  let existing: Record<string, unknown> = {}
-  try {
-    existing = JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>
-  } catch {
-    // First write, or unreadable JSON — start fresh rather than fail.
-  }
-  mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(
-    path,
-    `${JSON.stringify({ ...existing, plugins: pluginsSectionSchema.parse(plugins) }, null, 2)}\n`,
-    { mode: 0o600 },
-  )
-  return path
-}
+const plugins = section<StoredPlugins>('plugins', z.record(z.string(), z.boolean()), {})
+export const loadStoredPlugins = plugins.load
+export const saveStoredPlugins = plugins.save
 
 /**
  * Effective agent config: env vars win over the stored file, so power
  * users and CI can override without touching setup.
  */
-export function resolveAgentConfig(
-  env: Record<string, string | undefined> = process.env,
-): ProviderConfig | undefined {
+export function resolveAgentConfig(env: Env = process.env): ProviderConfig | undefined {
   if (env.VIBEKIT_AGENT_MODEL) {
     return {
       provider: (env.VIBEKIT_AGENT_PROVIDER ?? 'ollama') as ProviderConfig['provider'],
