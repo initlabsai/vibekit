@@ -3,14 +3,14 @@ title: vibekit // field manual
 description: Get an agent onto Algorand without handing it the keys.
 draft: false
 banner:
-  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
+  content: '<strong>VibeKit is in alpha.</strong> The package is unstable and not ready to build on — APIs will break without notice.'
 ---
 
 :::danger[Alpha — not ready to build on]
-VibeKit is an alpha release. The `@initlabs/*` packages are published under the
-`alpha` dist-tag, carry **no API stability guarantee**, and will change in
-breaking ways without a major version bump. The Explorer presentation protocol
-is not frozen. macOS and Windows are not yet verified.
+VibeKit is an alpha release. `@initlabs/vibekit` is published under the `alpha`
+dist-tag, carries **no API stability guarantee**, and will change in breaking
+ways without a major version bump. The Explorer presentation protocol is not
+frozen.
 
 Use this to try VibeKit and tell us what breaks. Do not build something you
 need to keep working.

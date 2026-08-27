@@ -68,7 +68,8 @@ Installs to `~\.vibekit\bin` and adds that directory to your user `PATH`
 automatically. Restart your terminal for the change to take effect.
 
 :::caution
-Windows binaries are built by CI but not yet verified by hand. If something
+This installer runs on a real Windows runner every push, and the binary is
+smoke-tested there — but Windows is far less exercised than Linux. If something
 breaks, [open an issue](https://github.com/initlabsai/vibekit/issues).
 :::
 
@@ -78,7 +79,7 @@ Both installers read the same environment variables.
 
 | Variable | Meaning |
 | --- | --- |
-| `VIBEKIT_VERSION` | Install a specific tag, e.g. `v1.0.0-alpha.0` |
+| `VIBEKIT_VERSION` | Install a specific tag, e.g. `v1.0.0-alpha.2` |
 | `VIBEKIT_CHANNEL` | `stable` (default), `alpha`, or `beta` |
 | `VIBEKIT_INSTALL_DIR` | Override the install directory |
 | `VIBEKIT_FORCE_INSTALL` | Replace an existing install without prompting |
@@ -91,11 +92,11 @@ prompt.
 A specific version, on either platform:
 
 ```bash
-curl -fsSL https://getvibekit.ai/install | VIBEKIT_VERSION=v1.0.0-alpha.0 sh
+curl -fsSL https://getvibekit.ai/install | VIBEKIT_VERSION=v1.0.0-alpha.2 sh
 ```
 
 ```powershell
-$env:VIBEKIT_VERSION = "v1.0.0-alpha.0"; irm https://getvibekit.ai/install.ps1 | iex
+$env:VIBEKIT_VERSION = "v1.0.0-alpha.2"; irm https://getvibekit.ai/install.ps1 | iex
 ```
 
 ## Manual install

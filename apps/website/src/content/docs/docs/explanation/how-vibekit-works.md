@@ -3,7 +3,7 @@ title: How VibeKit works
 description: The small mental model behind VibeKit’s CLI, MCP, plugins, and Explorer.
 draft: false
 banner:
-  content: '<strong>VibeKit is in alpha.</strong> The packages are unstable and not ready to build on — APIs will break without notice.'
+  content: '<strong>VibeKit is in alpha.</strong> The package is unstable and not ready to build on — APIs will break without notice.'
 ---
 
 
