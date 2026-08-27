@@ -55,7 +55,15 @@ Finished videos go in `out/` at the repo root (gitignored) — never commit
 video files; work files (tapes, cards, QA frames) stay in a temp dir.
 Working tapes: `references/segA.tape` (paste IDs → cards),
 `references/segB.tape` (english → AI), `references/assemble.md` (the exact
-ffmpeg commands).
+ffmpeg commands), `references/make-card.sh` (title cards).
+
+`vhs` needs `ttyd` installed (`sudo pacman -S ttyd`) or every recording fails
+with "ttyd is not installed".
+
+Match the terminal background to the brand ground or the cut between a shell
+segment and a TUI segment visibly jumps:
+
+    Set Theme { "background": "#0a0b0e", "foreground": "#e9e1d4", "cursor": "#ffb454" }
 
 Lessons that cost time — don't relearn them:
 
@@ -82,9 +90,14 @@ Lessons that cost time — don't relearn them:
    between. Re-rolling one segment doesn't touch the others.
 8. **Verify frames, not vibes**: extract QA frames at several timestamps and
    actually look at them before calling it done.
-9. **Title cards must look native to the terminal.** Use the same monospace
-   family and palette as the recording. A static card is usually ~2s: one
-   visual idea, one big line, and at most one muted subtitle.
+9. **Title cards are HTML, not `drawtext`.** Render them with
+    `references/make-card.sh` (HTML → headless chromium → png → mp4). ffmpeg
+    `drawtext` cards look like conference slides; the HTML ones look like the
+    website, because they are built from the same CSS. The house style is a
+    brass top rule, a spaced brass kicker (`2026 // TRANSMISSION RECEIVED`),
+    one big statement in warm neutral with the payoff line in hero amber, and
+    CSS scanlines. Keep to one visual idea and ~2.5s. Never hand-roll a
+    `drawtext` card because it seems quicker — it is, and it looks it.
 10. **Typewriter cards must remain readable at every frame.** Keep the copy
     compact (normally 3–5 short lines), reveal it at a human-readable pace,
     and render each completed line continuously while the next one types. Do
