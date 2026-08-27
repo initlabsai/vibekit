@@ -29,7 +29,6 @@ import { ContentPane, NavPane } from './feed/feed.js'
 import { transactionsFilterFor, type OpenTarget } from './result-card.js'
 import { useAccounts } from './features/accounts/hooks.js'
 import { useApps } from './features/apps/hooks.js'
-import { startPaymentFlowFromDraftRecord } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
 import { useAgentLane } from './features/agent/hooks.js'
 import { useFeed } from './feed/hooks.js'
@@ -37,7 +36,7 @@ import { useExplorerKeys } from './keys.js'
 import { useLookups } from './lookup.js'
 import { loadNextPage } from './lookup.js'
 import { NETWORKS, useNetwork } from './features/network/hooks.js'
-import { usePaymentFlow } from './features/write-flow/hooks.js'
+import { useWriteFlow } from './features/write-flow/hooks.js'
 import { useBlockTail } from './features/blocks/hooks.js'
 import { COLORS, errorMessage, shorten } from './theme.js'
 
@@ -193,12 +192,13 @@ export function App() {
     openApplication(createSection(`app ${appId}`), appId)
   }, [apps.selected, createSection, openApplication, setScreen])
 
-  const payment = usePaymentFlow({
+  const payment = useWriteFlow({
     feed,
     store,
     storeRef,
     commitStore,
     host,
+    keystoreHost,
     newId,
     live,
     networkRef,
@@ -229,26 +229,13 @@ export function App() {
       wire,
       toolName,
     )
-    const sectionId = createSection(`call ${label}`)
-    payment.setFlowMode('live')
-    payment.setFlowOrigin('typed')
     setScreen('chat')
-    void startPaymentFlowFromDraftRecord({
-      host: keystoreHost,
-      store: storeRef.current,
+    payment.startFromDraft(
+      createSection(`call ${label}`),
       draftRecord,
-      newId,
-      onStep: payment.trackFlowStep(sectionId),
-    }).then((run) => {
-      commitStore(run.store)
-      if (!run.ok) {
-        const message = `Couldn't prepare the call — ${run.message}`
-        // finishPayment only notes into a section a flow step reached; a
-        // failure before the first step would otherwise vanish.
-        if (run.flow) payment.finishPayment(run.flow, message, 'error')
-        else appendNote(sectionId, message, 'error')
-      } else if (run.flow) payment.updateFlowBlock(run.flow)
-    })
+      'typed',
+      "Couldn't prepare the call",
+    )
   }
   // One modal at a time: the payment approval or an expensive-call confirm.
   // An agent-composed payment waits for the turn to end, so its one-line

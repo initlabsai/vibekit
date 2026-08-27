@@ -1,3 +1,8 @@
+/**
+ * The write-flow host side: record builders for each stage, the host
+ * capability an app provides, and the controller that walks a flow through
+ * its stages. Any composed group runs here — payments, app calls, deploys.
+ */
 import { z } from 'zod'
 
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
@@ -5,31 +10,29 @@ import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { uint64JsonSchema } from '../format.js'
 import { algorandAddressCandidateSchema } from '../input.js'
 import {
-  type JsonValue,
   addResult,
   findResultRecord,
-  structuredResultSchema,
   type ResultIdentity,
   type ResultStore,
   type StructuredResult,
 } from '../core/results.js'
-import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
+import { record } from '../views/derive.js'
 import {
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
   createWriteStageEvent,
 } from '../core/protocol.js'
 import {
-  paymentConfirmationDataSchema,
-  paymentDraftDataSchema,
-  paymentSignedGroupDataSchema,
-  paymentSimulationDataSchema,
+  confirmationDataSchema,
+  writeDraftDataSchema,
+  signedGroupDataSchema,
+  writeSimulationDataSchema,
   writeFlowReducer,
-  type PaymentDraftData,
+  type WriteDraftData,
   type WriteFlowEvent,
   type WriteFlowEventKind,
   type WriteFlowState,
-} from './payment.js'
+} from './write-flow.js'
 
 /** The JSON-safe wire shape a compose-mode write tool returns. */
 export const composeWireResultSchema = z.object({
@@ -50,7 +53,7 @@ export const simulateWireResultSchema = z.object({
  * The bytes are authoritative; these fields must come from them, never from
  * request parameters. Receiver/amount are set when the group is a single pay.
  */
-export const decodedPaymentFactsSchema = z
+export const decodedGroupFactsSchema = z
   .object({
     sender: algorandAddressCandidateSchema,
     receiver: algorandAddressCandidateSchema.optional(),
@@ -63,10 +66,10 @@ export const decodedPaymentFactsSchema = z
   .strict()
 
 /** Facts a host decodes from the actual unsigned group bytes. */
-export type DecodedPaymentFacts = z.infer<typeof decodedPaymentFactsSchema>
+export type DecodedGroupFacts = z.infer<typeof decodedGroupFactsSchema>
 
 function algoEffectsFromFacts(
-  facts: DecodedPaymentFacts,
+  facts: DecodedGroupFacts,
   toJson: (value: bigint) => number | string,
 ): Array<{ account: string; deltaMicroAlgos: number | string }> {
   const byAccount = new Map<string, bigint>()
@@ -101,15 +104,15 @@ function algoEffectsFromFacts(
 }
 
 /** Wraps a compose-mode payment result and its decoded facts as a draft record. */
-export function buildPaymentDraftRecord(
+export function buildDraftRecord(
   identity: ResultIdentity,
   wire: unknown,
-  decoded: DecodedPaymentFacts,
+  decoded: DecodedGroupFacts,
   toolName = 'send_payment',
 ): StructuredResult {
   const compose = composeWireResultSchema.parse(wire)
-  const facts = decodedPaymentFactsSchema.parse(decoded)
-  const data: PaymentDraftData = paymentDraftDataSchema.parse({
+  const facts = decodedGroupFactsSchema.parse(decoded)
+  const data: WriteDraftData = writeDraftDataSchema.parse({
     sender: facts.sender,
     ...(facts.receiver === undefined ? {} : { receiver: facts.receiver }),
     ...(facts.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: facts.amountMicroAlgos }),
@@ -124,17 +127,7 @@ export function buildPaymentDraftRecord(
       ? {}
       : { graphTransactions: facts.graphTransactions }),
   })
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    ...(identity.input === undefined ? {} : { input: identity.input }),
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName,
-    network: identity.network,
-    data,
-  })
+  return record(identity, toolName, data)
 }
 
 /**
@@ -142,19 +135,19 @@ export function buildPaymentDraftRecord(
  * and optional payment facts come from the decoded draft group — the bytes
  * under approval — and ALGO balance effects derive from them with integer math.
  */
-export function buildPaymentSimulationRecord(
+export function buildSimulationRecord(
   identity: ResultIdentity,
   wire: unknown,
-  decoded: DecodedPaymentFacts,
+  decoded: DecodedGroupFacts,
 ): StructuredResult {
   const simulation = simulateWireResultSchema.parse(wire)
-  const facts = decodedPaymentFactsSchema.parse(decoded)
+  const facts = decodedGroupFactsSchema.parse(decoded)
   const toJson = (value: bigint): number | string => {
     const absolute = value < 0n ? -value : value
     return absolute <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
   }
   const effects = algoEffectsFromFacts(facts, toJson)
-  const data = paymentSimulationDataSchema.parse({
+  const data = writeSimulationDataSchema.parse({
     wouldSucceed: simulation.wouldSucceed,
     ...(simulation.failureMessage === undefined
       ? {}
@@ -167,100 +160,23 @@ export function buildPaymentSimulationRecord(
     effects,
     simulatedRound: simulation.simulatedRound,
   })
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName: 'simulate_transactions',
-    network: identity.network,
-    data,
-  })
+  return record(identity, 'simulate_transactions', data)
 }
 
 /** Wraps signed group bytes and their transaction ids as a signed record. */
-export function buildPaymentSignedGroupRecord(
+export function buildSignedGroupRecord(
   identity: ResultIdentity,
   data: { transactions: string[]; txIds: string[]; signer: string },
 ): StructuredResult {
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName: 'sign_group',
-    network: identity.network,
-    data: paymentSignedGroupDataSchema.parse(data),
-  })
+  return record(identity, 'sign_group', signedGroupDataSchema.parse(data))
 }
 
 /** Wraps an on-chain confirmation as a confirmation record. */
-export function buildPaymentConfirmationRecord(
+export function buildConfirmationRecord(
   identity: ResultIdentity,
   data: { transactionId: string; confirmedRound: number },
 ): StructuredResult {
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName: 'submit_group',
-    network: identity.network,
-    data: paymentConfirmationDataSchema.parse(data),
-  })
-}
-
-/** The tool-result subset of the orchestrator's AgentEvent stream. */
-export interface ToolResultEventLike {
-  id: string
-  toolName: string
-  output: unknown
-  isError: boolean
-  /** The tool's declared view id, when present. */
-  view?: string
-}
-
-const toolErrorOutputSchema = z.object({
-  error: z.object({ code: z.string().min(1), message: z.string().min(1) }),
-})
-
-/**
- * Wraps one orchestrator tool-result event as a versioned structured result.
- * The event's `id` is the tool-call id; the caller supplies the result id and
- * the network the call ran on (a call parameter, not event state).
- */
-export function structuredResultFromToolEvent(
-  event: ToolResultEventLike,
-  identity: { resultId: string; network: string; input?: JsonValue },
-): StructuredResult {
-  if (event.isError) {
-    const parsed = toolErrorOutputSchema.safeParse(event.output)
-    return structuredResultSchema.parse({
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
-      type: 'result',
-      state: 'error',
-      resultId: identity.resultId,
-      toolCallId: event.id,
-      toolName: event.toolName,
-      network: identity.network,
-      error: parsed.success
-        ? parsed.data.error
-        : { code: 'TOOL_ERROR', message: 'Tool call failed without a structured error' },
-    })
-  }
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: event.id,
-    toolName: event.toolName,
-    network: identity.network,
-    data: event.output,
-  })
+  return record(identity, 'submit_group', confirmationDataSchema.parse(data))
 }
 
 /** Parameters for composing one unsigned payment draft. */
@@ -278,7 +194,7 @@ export interface PaymentDraftParams {
  * compose-only server route. Custody appears only through the optional
  * capabilities and never inside this controller.
  */
-export interface PaymentFlowHost {
+export interface WriteFlowHost {
   network: string
   draftPayment(params: PaymentDraftParams): Promise<StructuredResult>
   simulateDraft(draftRecord: StructuredResult): Promise<StructuredResult>
@@ -289,7 +205,7 @@ export interface PaymentFlowHost {
 }
 
 /** Result of one live payment step: new client state, or an explicit refusal. */
-export type LivePaymentStepOutcome =
+export type WriteFlowStepOutcome =
   { ok: true; store: ResultStore; flow: WriteFlowState } | { ok: false; message: string }
 
 /**
@@ -297,7 +213,7 @@ export type LivePaymentStepOutcome =
  * `flow` always hold the furthest state reached, so a failed step leaves the
  * earlier observable stages intact rather than discarding them.
  */
-export interface PaymentFlowRun {
+export interface WriteFlowRun {
   ok: boolean
   message?: string
   /** True when the host has no signer, so the flow rests at `approved`. */
@@ -327,14 +243,14 @@ function draftEventFor(flowId: string, record: StructuredResult): WriteFlowEvent
  * the host carries those capabilities; without them the steps are explicit
  * refusals, never silent skips.
  */
-export async function performLivePaymentStep(input: {
-  host: PaymentFlowHost
+export async function performWriteFlowStep(input: {
+  host: WriteFlowHost
   store: ResultStore
   flow: WriteFlowState | null
   kind: WriteFlowEventKind
   draftParams?: PaymentDraftParams
   newId: (prefix: string) => string
-}): Promise<LivePaymentStepOutcome> {
+}): Promise<WriteFlowStepOutcome> {
   const { host, flow, kind, newId } = input
   let store = input.store
 
@@ -464,18 +380,18 @@ export async function performLivePaymentStep(input: {
 }
 
 async function runSteps(input: {
-  host: PaymentFlowHost
+  host: WriteFlowHost
   store: ResultStore
   flow: WriteFlowState | null
   kinds: readonly WriteFlowEventKind[]
   draftParams?: PaymentDraftParams
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<PaymentFlowRun> {
+}): Promise<WriteFlowRun> {
   let store = input.store
   let flow = input.flow
   for (const kind of input.kinds) {
-    const outcome = await performLivePaymentStep({
+    const outcome = await performWriteFlowStep({
       host: input.host,
       store,
       flow,
@@ -497,13 +413,13 @@ async function runSteps(input: {
  * the one point that needs a human. Every stage still happens as its own
  * observable protocol event; `onStep` streams each one to the renderer.
  */
-export async function startPaymentFlow(input: {
-  host: PaymentFlowHost
+export async function startWriteFlow(input: {
+  host: WriteFlowHost
   store: ResultStore
   draftParams: PaymentDraftParams
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<PaymentFlowRun> {
+}): Promise<WriteFlowRun> {
   return runSteps({
     ...input,
     flow: null,
@@ -516,13 +432,13 @@ export async function startPaymentFlow(input: {
  * without a signer the flow rests at `approved` (`pausedForSigner`) — an
  * honest stop, never a fake confirmation.
  */
-export async function completeApprovedPaymentFlow(input: {
-  host: PaymentFlowHost
+export async function completeApprovedWriteFlow(input: {
+  host: WriteFlowHost
   store: ResultStore
   flow: WriteFlowState
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<PaymentFlowRun> {
+}): Promise<WriteFlowRun> {
   if (input.flow.stage !== 'approved') {
     return {
       ok: false,
@@ -543,13 +459,13 @@ export async function completeApprovedPaymentFlow(input: {
  * then simulates, inspects, and requests approval — pausing at the same
  * approval card as every other payment.
  */
-export async function startPaymentFlowFromDraftRecord(input: {
-  host: PaymentFlowHost
+export async function startWriteFlowFromDraft(input: {
+  host: WriteFlowHost
   store: ResultStore
   draftRecord: StructuredResult
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<PaymentFlowRun> {
+}): Promise<WriteFlowRun> {
   let store: ResultStore
   try {
     store = addResult(input.store, input.draftRecord)

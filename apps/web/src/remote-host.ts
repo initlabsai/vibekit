@@ -2,7 +2,7 @@ import {
   structuredResultSchema,
   type AccountLookupHost,
   type PaymentDraftParams,
-  type PaymentFlowHost,
+  type WriteFlowHost,
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
 
@@ -21,11 +21,11 @@ async function postFlowAction(body: unknown): Promise<StructuredResult> {
 }
 
 /**
- * The browser's PaymentFlowHost: a fetch wrapper over the app's signerless
+ * The browser's WriteFlowHost: a fetch wrapper over the app's signerless
  * compose-only server route. Chain access and group decoding stay
  * server-side; the browser only handles validated protocol records.
  */
-export function createRemoteFlowHost(network = 'localnet'): PaymentFlowHost & AccountLookupHost {
+export function createRemoteFlowHost(network = 'localnet'): WriteFlowHost & AccountLookupHost {
   return {
     network,
     draftPayment: (params: PaymentDraftParams) => postFlowAction({ action: 'draft', params }),

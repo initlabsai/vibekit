@@ -1,4 +1,4 @@
-import { createFixturePaymentHost } from '@initlabs/vibekit-explorer'
+import { createSampleHost } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -7,7 +7,7 @@ import { createKeystorePaymentHost, type KeystorePaymentHost } from './keystore-
 export const NETWORKS: LiveNetworkId[] = ['localnet', 'testnet', 'mainnet']
 
 /** Either the live keystore host for the active network or the fixture host. */
-export type ExplorerHost = KeystorePaymentHost | ReturnType<typeof createFixturePaymentHost>
+export type ExplorerHost = KeystorePaymentHost | ReturnType<typeof createSampleHost>
 
 export interface NetworkLane {
   network: LiveNetworkId
@@ -36,7 +36,7 @@ export function useNetwork(): NetworkLane {
   const networkRef = useRef<LiveNetworkId>(network)
   networkRef.current = network
   const keystoreHost = hostFor(network)
-  const sampleHost = useMemo(() => createFixturePaymentHost(), [])
+  const sampleHost = useMemo(() => createSampleHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
 
   useEffect(() => {

@@ -18,7 +18,7 @@ export type SectionBlock =
       facts: Array<[string, string]>
       rows: Array<Record<string, unknown>>
     }
-  | { id: number; kind: 'payment'; flow: WriteFlowState }
+  | { id: number; kind: 'write'; flow: WriteFlowState }
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =

@@ -13,6 +13,7 @@ import { searchApplications } from './search.js'
 import { listApplicationBoxes, readBoxState, readGlobalState, readLocalState } from './state.js'
 import {
   appSpecParams,
+  normalizeAppSpec,
   parseAppSpec,
   requireAppSpec,
   substituteTemplateParams,
@@ -45,15 +46,10 @@ export type { ApplicationProgram } from './program.js'
 export { lookupApplication, lookupApplicationLogs, searchApplications }
 export { listApplicationBoxes, readBoxState, readGlobalState, readLocalState }
 export { parseAppSpec, substituteTemplateParams }
-export { detectAppSpecFormat, normalizeAppSpec, tryNormalizeAppSpec } from './app-spec.js'
+export { detectAppSpecFormat, tryNormalizeAppSpec } from './app-spec.js'
+export { normalizeAppSpec }
 export type { AppSpecFormat, NormalizedAppSpec, ParsedAppSpec, ParsedMethod } from './app-spec.js'
-export {
-  toolsFromArc56,
-  toolsWithMethods,
-  toolArgsFor,
-  arc56SimulateResultSchema,
-  describeCall,
-} from './from-arc56.js'
+export { toolsFromArc56, toolsWithMethods, toolArgsFor, describeCall } from './from-arc56.js'
 export type { GeneratedAppTool, ToolsFromArc56Options } from './from-arc56.js'
 export { decodeAppCall, decodeAppCallForApp, enrichTransactionsWithAbi } from './abi.js'
 export type { DecodedAppCall, DecodedAbiValue } from './abi.js'
@@ -227,7 +223,7 @@ Examples:
     output: appMethodsSchema,
     view: 'table',
     handler: async (_ctx, args) => {
-      const spec = parseAppSpec(requireAppSpec(await withAppSpecFile(args)))
+      const spec = normalizeAppSpec(requireAppSpec(await withAppSpecFile(args)))
       return { name: spec.name, methods: spec.methods }
     },
   }),

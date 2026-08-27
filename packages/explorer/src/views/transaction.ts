@@ -10,7 +10,7 @@ import type {
   StructuredResult,
   ViewModelError,
 } from '../core/results.js'
-import { derive, record } from './derive.js'
+import { derive, record, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
@@ -278,39 +278,17 @@ export function buildTransactionGroupRecord(
   return buildTransactionListRecord(identity, wire, toolName)
 }
 
-/**
- * Renderer-ready semantic model for the trusted transaction detail view;
- * `paymentAmountMicroAlgos` surfaces as `amountMicroAlgos`.
- */
-export type TransactionDetailViewModel = Omit<
-  { view: 'transaction.detail'; network: string } & TransactionDetailData,
-  'paymentAmountMicroAlgos'
-> & { amountMicroAlgos?: TransactionDetailData['paymentAmountMicroAlgos'] }
-
 /** Derives transaction presentation from one trusted result reference. */
-export function createTransactionDetailViewModel(
-  store: ResultStore,
-  view: ViewSpec,
-): { ok: true; model: TransactionDetailViewModel } | { ok: false; error: ViewModelError } {
-  const result = derive(
-    store,
-    view,
-    transactionDetailDataSchema,
-    'transaction.detail' as const,
-    'Transaction result',
-  )
-  if (!result.ok) return result
-  const { paymentAmountMicroAlgos, ...model } = result.model
-  return {
-    ok: true,
-    model: {
-      ...model,
-      ...(paymentAmountMicroAlgos === undefined
-        ? {}
-        : { amountMicroAlgos: paymentAmountMicroAlgos }),
-    },
-  }
-}
+export const createTransactionDetailViewModel = viewModelFor(
+  transactionDetailDataSchema,
+  'transaction.detail' as const,
+  'Transaction result',
+)
+
+export type TransactionDetailViewModel = Extract<
+  ReturnType<typeof createTransactionDetailViewModel>,
+  { ok: true }
+>['model']
 
 /** Derives a transaction list or group model. */
 export function createTransactionCollectionViewModel(

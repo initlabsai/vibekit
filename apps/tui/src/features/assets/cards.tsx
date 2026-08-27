@@ -11,7 +11,7 @@ import {
   Rule,
   Unavailable,
 } from '../../primitives.js'
-import { MoreFooter } from '../../generic-cards.js'
+import { ListCard } from '../../generic-cards.js'
 
 function yesNo(value: boolean): string {
   return value ? 'yes' : 'no'
@@ -95,49 +95,34 @@ export function AssetListCard({
   loadingMore?: boolean
   onOpen?: (assetId: number) => void
 }) {
-  const body = innerWidth(width)
-  const rows = assets
   return (
-    <Frame width={width}>
-      <Header kicker="ASSETS" pill={String(assets.length)} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((asset, index) => (
-          <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="id"
-                value={String(asset.assetId)}
-                copy={String(asset.assetId)}
-                width={body - 12}
-              />
-              {onOpen ? (
-                <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} />
-              ) : null}
-            </box>
-            {asset.name || asset.unitName ? (
-              <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
-            ) : null}
-            {asset.unitName && asset.name ? (
-              <Fact label="unit" value={asset.unitName} width={body} />
-            ) : null}
-            <Fact label="supply" value={asset.totalSupply} width={body} />
-            <Fact label="decimals" value={String(asset.decimals)} width={body} />
-            {asset.creator ? (
-              <Fact label="creator" value={asset.creator} copy={asset.creator} width={body} />
-            ) : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={rows.length}
-          total={assets.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="ASSETS"
+      pill={String(assets.length)}
+      rows={assets}
+      keyOf={(asset) => String(asset.assetId)}
+      lead={(asset) => ({ label: 'id', value: String(asset.assetId), copy: String(asset.assetId) })}
+      onOpen={onOpen && ((asset) => onOpen(Number(asset.assetId)))}
+      facts={(asset, body) => (
+        <>
+          {asset.name || asset.unitName ? (
+            <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
+          ) : null}
+          {asset.unitName && asset.name ? (
+            <Fact label="unit" value={asset.unitName} width={body} />
+          ) : null}
+          <Fact label="supply" value={asset.totalSupply} width={body} />
+          <Fact label="decimals" value={String(asset.decimals)} width={body} />
+          {asset.creator ? (
+            <Fact label="creator" value={asset.creator} copy={asset.creator} width={body} />
+          ) : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }
 
@@ -169,46 +154,31 @@ export function AssetHoldingsCard({
   loadingMore?: boolean
   onOpen?: (assetId: number) => void
 }) {
-  const body = innerWidth(width)
-  const rows = assets
   return (
-    <Frame width={width}>
-      <Header kicker="ASSET HOLDINGS" pill={String(assets.length)} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((asset, index) => (
-          <box key={String(asset.assetId)} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="id"
-                value={String(asset.assetId)}
-                copy={String(asset.assetId)}
-                width={body - 12}
-              />
-              {onOpen ? (
-                <Button label="open ▸" onPress={() => onOpen(Number(asset.assetId))} />
-              ) : null}
-            </box>
-            {asset.name || asset.unitName ? (
-              <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
-            ) : null}
-            {asset.unitName && asset.name ? (
-              <Fact label="unit" value={asset.unitName} width={body} />
-            ) : null}
-            <Fact label="amount" value={baseUnits(asset.amount, asset.decimals)} width={body} />
-            {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={rows.length}
-          total={assets.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="ASSET HOLDINGS"
+      pill={String(assets.length)}
+      rows={assets}
+      keyOf={(asset) => String(asset.assetId)}
+      lead={(asset) => ({ label: 'id', value: String(asset.assetId), copy: String(asset.assetId) })}
+      onOpen={onOpen && ((asset) => onOpen(Number(asset.assetId)))}
+      facts={(asset, body) => (
+        <>
+          {asset.name || asset.unitName ? (
+            <Fact label="name" value={asset.name ?? asset.unitName ?? ''} width={body} />
+          ) : null}
+          {asset.unitName && asset.name ? (
+            <Fact label="unit" value={asset.unitName} width={body} />
+          ) : null}
+          <Fact label="amount" value={baseUnits(asset.amount, asset.decimals)} width={body} />
+          {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }
 
@@ -228,29 +198,23 @@ export function AssetHoldersCard({
   onMore?: () => void
   loadingMore?: boolean
 }) {
-  const body = innerWidth(width)
-  const rows = balances
   return (
-    <Frame width={width}>
-      <Header kicker="HOLDERS" pill={String(balances.length)} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((holder, index) => (
-          <box key={holder.address} flexDirection="column" marginTop={1}>
-            <Fact label="address" value={holder.address} copy={holder.address} width={body} />
-            <Fact label="amount" value={baseUnits(holder.amount, decimals)} width={body} />
-            {holder.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={rows.length}
-          total={balances.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="HOLDERS"
+      pill={String(balances.length)}
+      rows={balances}
+      keyOf={(holder) => holder.address}
+      facts={(holder, body) => (
+        <>
+          <Fact label="address" value={holder.address} copy={holder.address} width={body} />
+          <Fact label="amount" value={baseUnits(holder.amount, decimals)} width={body} />
+          {holder.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }

@@ -1,10 +1,12 @@
 import {
-  completeApprovedPaymentFlow,
-  createPaymentFlowViewModel,
+  completeApprovedWriteFlow,
+  createWriteFlowViewModel,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performLivePaymentStep,
-  startPaymentFlow,
+  performWriteFlowStep,
+  startWriteFlow,
+  startWriteFlowFromDraft,
   type ResultStore,
+  type StructuredResult,
   type WriteFlowState,
 } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
@@ -13,17 +15,19 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { resolvePaymentParties } from '../../commands.js'
 import type { Feed } from '../../feed/hooks.js'
 import type { ExplorerHost } from '../network/hooks.js'
+import type { KeystorePaymentHost } from '../network/keystore-host.js'
 
 /**
  * Owns the payment write flow: start/decide orchestration, the flow block in
  * the feed, and the approval modal's derived model.
  */
-export function usePaymentFlow({
+export function useWriteFlow({
   feed,
   store,
   storeRef,
   commitStore,
   host,
+  keystoreHost,
   newId,
   live,
   networkRef,
@@ -39,6 +43,8 @@ export function usePaymentFlow({
   storeRef: { current: ResultStore }
   commitStore: (next: ResultStore) => void
   host: () => ExplorerHost
+  /** Drafts composed elsewhere (agent, method line) always run live: they carry real group bytes. */
+  keystoreHost: KeystorePaymentHost
   newId: (prefix: string) => string
   live: 'probing' | boolean
   networkRef: { current: LiveNetworkId }
@@ -69,7 +75,7 @@ export function usePaymentFlow({
       const targetItem = flowItemRef.current
       if (targetSection === null || targetItem === null) return
       updateItem(targetSection, targetItem, (item) =>
-        item.kind === 'block' && item.block.kind === 'payment'
+        item.kind === 'block' && item.block.kind === 'write'
           ? { ...item, block: { ...item.block, flow: nextFlow } }
           : item,
       )
@@ -77,7 +83,7 @@ export function usePaymentFlow({
     [updateItem],
   )
 
-  const finishPayment = useCallback(
+  const finishFlow = useCallback(
     (finalFlow: WriteFlowState | null, message: string, tone: 'muted' | 'error' = 'muted') => {
       if (finalFlow) updateFlowBlock(finalFlow)
       const sectionId = flowSectionRef.current
@@ -97,7 +103,7 @@ export function usePaymentFlow({
       commitStore(nextStore)
       if (flowSectionRef.current === null) {
         flowSectionRef.current = sectionId
-        flowItemRef.current = appendBlock(sectionId, { id: 0, kind: 'payment', flow: nextFlow })
+        flowItemRef.current = appendBlock(sectionId, { id: 0, kind: 'write', flow: nextFlow })
         flowRef.current = nextFlow
         setFlow(nextFlow)
       } else {
@@ -127,7 +133,7 @@ export function usePaymentFlow({
           ? `composing and simulating on ${networkRef.current}…`
           : `preparing a sample payment (always 0.25 ALGO — ${networkRef.current} is offline)…`,
       )
-      void startPaymentFlow({
+      void startWriteFlow({
         host: host(),
         store: storeRef.current,
         draftParams: {
@@ -141,7 +147,7 @@ export function usePaymentFlow({
         commitStore(run.store)
         setBusy(false)
         if (!run.ok) {
-          finishPayment(run.flow, `Couldn't prepare the payment — ${run.message}`, 'error')
+          finishFlow(run.flow, `Couldn't prepare the payment — ${run.message}`, 'error')
           return
         }
         if (run.flow) updateFlowBlock(run.flow)
@@ -154,13 +160,56 @@ export function usePaymentFlow({
       appendNote,
       busyRef,
       commitStore,
-      finishPayment,
+      finishFlow,
       host,
       live,
       networkRef,
       newId,
       setBusy,
       setStatus,
+      storeRef,
+      trackFlowStep,
+      updateFlowBlock,
+    ],
+  )
+
+  /**
+   * Starts the approval flow from a draft composed elsewhere: an agent tool
+   * result or a method-line call. The one path for both, so failure handling
+   * cannot drift between them.
+   */
+  const startFromDraft = useCallback(
+    (
+      sectionId: number,
+      draftRecord: StructuredResult,
+      origin: 'agent' | 'typed',
+      failurePrefix: string,
+    ) => {
+      setFlowMode('live')
+      setFlowOrigin(origin)
+      void startWriteFlowFromDraft({
+        host: keystoreHost,
+        store: storeRef.current,
+        draftRecord,
+        newId,
+        onStep: trackFlowStep(sectionId),
+      }).then((run) => {
+        commitStore(run.store)
+        if (!run.ok) {
+          const message = `${failurePrefix} — ${run.message}`
+          // finishFlow notes into the section a flow step reached; a failure
+          // before the first step (the store refusing the draft) has no flow yet.
+          if (run.flow) finishFlow(run.flow, message, 'error')
+          else appendNote(sectionId, message, 'error')
+        } else if (run.flow) updateFlowBlock(run.flow)
+      })
+    },
+    [
+      appendNote,
+      commitStore,
+      finishFlow,
+      keystoreHost,
+      newId,
       storeRef,
       trackFlowStep,
       updateFlowBlock,
@@ -179,7 +228,7 @@ export function usePaymentFlow({
       )
         return
       setBusy(true)
-      void performLivePaymentStep({
+      void performWriteFlowStep({
         host: host(),
         store: storeRef.current,
         flow: current,
@@ -194,11 +243,11 @@ export function usePaymentFlow({
         commitStore(outcome.store)
         updateFlowBlock(outcome.flow)
         if (decision === 'deny') {
-          finishPayment(outcome.flow, 'Denied — nothing was signed.')
+          finishFlow(outcome.flow, 'Denied — nothing was signed.')
           return
         }
         setStatus(flowMode === 'live' ? 'signing and submitting…' : 'finishing the sample…')
-        void completeApprovedPaymentFlow({
+        void completeApprovedWriteFlow({
           host: host(),
           store: outcome.store,
           flow: outcome.flow,
@@ -210,19 +259,16 @@ export function usePaymentFlow({
         }).then((run) => {
           commitStore(run.store)
           if (!run.ok) {
-            finishPayment(run.flow, `Approved, but completion failed — ${run.message}`, 'error')
+            finishFlow(run.flow, `Approved, but completion failed — ${run.message}`, 'error')
             return
           }
           if (run.pausedForSigner) {
-            finishPayment(
-              run.flow,
-              'Approved — signing is unavailable without the keystore daemon.',
-            )
+            finishFlow(run.flow, 'Approved — signing is unavailable without the keystore daemon.')
             return
           }
           const derived =
             run.flow && run.flow.stage === 'confirmed'
-              ? createPaymentFlowViewModel(run.store, run.flow)
+              ? createWriteFlowViewModel(run.store, run.flow)
               : undefined
           const round =
             derived && derived.ok ? derived.model.confirmation?.confirmedRound : undefined
@@ -239,7 +285,7 @@ export function usePaymentFlow({
                   ? 'Call'
                   : 'Transaction'
               : 'Group'
-          finishPayment(
+          finishFlow(
             run.flow,
             `${what} confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`,
           )
@@ -250,7 +296,7 @@ export function usePaymentFlow({
       appendNote,
       busyRef,
       commitStore,
-      finishPayment,
+      finishFlow,
       flowMode,
       host,
       newId,
@@ -271,7 +317,7 @@ export function usePaymentFlow({
 
   const modalModel = useMemo(() => {
     if (!modalOpen || !flow) return undefined
-    const derived = createPaymentFlowViewModel(store, flow)
+    const derived = createWriteFlowViewModel(store, flow)
     return derived.ok ? derived.model : undefined
   }, [flow, modalOpen, store])
 
@@ -282,9 +328,10 @@ export function usePaymentFlow({
     setFlowMode,
     setFlowOrigin,
     startPayment,
+    startFromDraft,
     decide,
     updateFlowBlock,
-    finishPayment,
+    finishFlow,
     trackFlowStep,
     isFlowSection,
     modalOpen,
@@ -292,4 +339,4 @@ export function usePaymentFlow({
   }
 }
 
-export type PaymentLane = ReturnType<typeof usePaymentFlow>
+export type WriteFlow = ReturnType<typeof useWriteFlow>

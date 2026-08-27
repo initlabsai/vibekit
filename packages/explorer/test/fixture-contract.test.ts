@@ -70,7 +70,7 @@ describe('fixture-backed transaction lookup', () => {
         status: 'confirmed',
         sender: FIXTURE_SENDER,
         receiver: FIXTURE_RECEIVER,
-        amountMicroAlgos: 100000,
+        paymentAmountMicroAlgos: 100000,
         feeMicroAlgos: 1000,
         confirmedRound: 8,
       },

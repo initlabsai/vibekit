@@ -3,7 +3,6 @@ import {
   bytesToBase64,
   composeOrExecute,
   defineTool,
-  resolveAbiMethod,
   ToolError,
   writeResultSchema,
   type AnyTool,
@@ -18,7 +17,15 @@ import {
   requireAppSpec,
   substituteTemplateParams,
   withAppSpecFile,
+  type ParsedMethod,
 } from './app-spec.js'
+
+/** The ABI method a normalized spec declares under `name`; no second parse of the spec. */
+function abiMethodFromSpec(spec: { methods: ParsedMethod[] }, name: string): algosdk.ABIMethod {
+  const method = spec.methods.find((candidate) => candidate.name === name)
+  if (!method) throw new ToolError('METHOD_NOT_FOUND', `Method "${name}" not found in app spec`)
+  return algosdk.ABIMethod.fromSignature(method.signature)
+}
 
 const appCallParams = z.object({
   sender: z.string().describe('Sender address'),
@@ -126,10 +133,9 @@ async function updateApp(
 
   const atc = new AtomicTransactionComposer()
   if (args.method) {
-    const abiMethod = resolveAbiMethod({ appSpec: args.appSpec, method: args.method }, 0)
     atc.addMethodCall({
       appID,
-      method: abiMethod!,
+      method: abiMethodFromSpec(spec, args.method),
       methodArgs: (args.args ?? []) as algosdk.ABIArgument[],
       sender: args.sender,
       signer,
@@ -219,10 +225,9 @@ async function deployApp(
 
   const atc = new AtomicTransactionComposer()
   if (args.method) {
-    const abiMethod = resolveAbiMethod({ appSpec: args.appSpec, method: args.method }, 0)
     atc.addMethodCall({
       appID: BigInt(0),
-      method: abiMethod!,
+      method: abiMethodFromSpec(spec, args.method),
       methodArgs: (args.args ?? []) as algosdk.ABIArgument[],
       sender: args.sender,
       signer,

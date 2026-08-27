@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  buildPaymentDraftRecord,
-  buildPaymentSimulationRecord,
-  structuredResultFromToolEvent,
-  type DecodedPaymentFacts,
-} from '../src/flows/payment-live.js'
+  buildDraftRecord,
+  buildSimulationRecord,
+  type DecodedGroupFacts,
+} from '../src/flows/write-flow-host.js'
+import { structuredResultFromToolEvent } from '../src/bridge.js'
 import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
 import {
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   createWriteStageEvent,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
@@ -17,11 +17,11 @@ import {
   type WriteFlowState,
 } from '../src/index.js'
 import {
-  paymentDraftDataSchema,
-  paymentSimulationDataSchema,
-  paymentSignedGroupDataSchema,
+  writeDraftDataSchema,
+  writeSimulationDataSchema,
+  signedGroupDataSchema,
   writeFlowReducer,
-} from '../src/flows/payment.js'
+} from '../src/flows/write-flow.js'
 import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
@@ -38,7 +38,7 @@ const SIMULATION_IDENTITY = {
   network: 'localnet',
 }
 
-function decodedFacts(): DecodedPaymentFacts {
+function decodedFacts(): DecodedGroupFacts {
   return decodeUnsignedGroup(recorded.compose.unsignedGroup)
 }
 
@@ -78,27 +78,23 @@ describe('live payment mapping over recorded engine outputs', () => {
   })
 
   test('wraps the recorded compose output as a valid draft record', () => {
-    const record = buildPaymentDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
+    const record = buildDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
     expect(record).toMatchObject({
       state: 'success',
       toolName: 'send_payment',
       network: 'localnet',
     })
     if (record.state !== 'success') throw new Error('Expected success record')
-    const data = paymentDraftDataSchema.parse(record.data)
+    const data = writeDraftDataSchema.parse(record.data)
     expect(data.amountMicroAlgos).toBe(250000)
     expect(data.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)
     expect(data.unsignedGroup.summary).toBe(recorded.compose.summary)
   })
 
   test('wraps the recorded simulation with facts from the group under approval', () => {
-    const record = buildPaymentSimulationRecord(
-      SIMULATION_IDENTITY,
-      recorded.simulate,
-      decodedFacts(),
-    )
+    const record = buildSimulationRecord(SIMULATION_IDENTITY, recorded.simulate, decodedFacts())
     if (record.state !== 'success') throw new Error('Expected success record')
-    const data = paymentSimulationDataSchema.parse(record.data)
+    const data = writeSimulationDataSchema.parse(record.data)
     expect(data).toMatchObject({
       wouldSucceed: true,
       simulatedRound: recorded.simulate.simulatedRound,
@@ -115,8 +111,8 @@ describe('live payment mapping over recorded engine outputs', () => {
   })
 
   test('live records drive the same machine and view model as fixtures', () => {
-    const draftRecord = buildPaymentDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
-    const simulationRecord = buildPaymentSimulationRecord(
+    const draftRecord = buildDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
+    const simulationRecord = buildSimulationRecord(
       SIMULATION_IDENTITY,
       recorded.simulate,
       decodedFacts(),
@@ -158,7 +154,7 @@ describe('live payment mapping over recorded engine outputs', () => {
     }
     expect(flow?.stage).toBe('approved')
 
-    const derived = createPaymentFlowViewModel(store, flow!)
+    const derived = createWriteFlowViewModel(store, flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model).toMatchObject({
       network: 'localnet',
@@ -170,7 +166,7 @@ describe('live payment mapping over recorded engine outputs', () => {
   })
 
   test('wraps daemon-signed bytes only when they embed exactly the drafted group', () => {
-    const draftRecord = buildPaymentDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
+    const draftRecord = buildDraftRecord(DRAFT_IDENTITY, recorded.compose, decodedFacts())
     const signedBytes = recorded.signed.transactions.map((txn) => base64ToBytes(txn))
     const record = signedGroupRecordFor(
       {
@@ -182,14 +178,14 @@ describe('live payment mapping over recorded engine outputs', () => {
       signedBytes,
     )
     if (record.state !== 'success') throw new Error('Expected success record')
-    expect(paymentSignedGroupDataSchema.parse(record.data)).toEqual({
+    expect(signedGroupDataSchema.parse(record.data)).toEqual({
       transactions: recorded.signed.transactions,
       txIds: recorded.signed.txIds,
       signer: recorded.request.sender,
     })
 
     // A signature over anything but the approved bytes must be refused.
-    const otherDraft = buildPaymentDraftRecord(
+    const otherDraft = buildDraftRecord(
       {
         ...DRAFT_IDENTITY,
         resultId: 'result-live-draft-002',

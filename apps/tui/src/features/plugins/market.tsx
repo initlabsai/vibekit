@@ -1,6 +1,7 @@
 import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/plugins/vestige'
 
 import { Button, Fact, Frame, Header, innerWidth, Rule } from '../../primitives.js'
+import { ListCard } from '../../generic-cards.js'
 
 /**
  * Trims a plain-decimal price to 6 significant digits for display — the wire
@@ -36,34 +37,30 @@ export function MarketPricesCard({
   width: number
   onOpen?: (assetId: number) => void
 }) {
-  const body = innerWidth(width)
-  const rows = data.prices
   return (
-    <Frame width={width}>
-      <Header kicker="PRICES" chip="VESTIGE" pill={network.toUpperCase()} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((row, index) => (
-          <box key={row.assetId} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="asset"
-                value={row.assetId === 0 ? 'ALGO' : String(row.assetId)}
-                copy={String(row.assetId)}
-                width={body - 12}
-              />
-              {onOpen && row.assetId !== 0 ? (
-                <Button label="open ▸" onPress={() => onOpen(row.assetId)} />
-              ) : null}
-            </box>
-            <Fact label="price" value={`$${trimPrice(row.priceUsd)}`} width={body} />
-            {row.confidence < 0.5 ? (
-              <Fact label="confidence" value={`low (${row.confidence.toFixed(2)})`} width={body} />
-            ) : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-      </box>
-    </Frame>
+    <ListCard
+      kicker="PRICES"
+      chip="VESTIGE"
+      pill={network.toUpperCase()}
+      rows={data.prices}
+      keyOf={(row) => String(row.assetId)}
+      lead={(row) => ({
+        label: 'asset',
+        value: row.assetId === 0 ? 'ALGO' : String(row.assetId),
+        copy: String(row.assetId),
+      })}
+      canOpen={(row) => row.assetId !== 0}
+      onOpen={onOpen && ((row) => onOpen(row.assetId))}
+      facts={(row, body) => (
+        <>
+          <Fact label="price" value={`$${trimPrice(row.priceUsd)}`} width={body} />
+          {row.confidence < 0.5 ? (
+            <Fact label="confidence" value={`low (${row.confidence.toFixed(2)})`} width={body} />
+          ) : null}
+        </>
+      )}
+      width={width}
+    />
   )
 }
 
@@ -79,45 +76,36 @@ export function MarketRankedCard({
   width: number
   onOpen?: (assetId: number) => void
 }) {
-  const body = innerWidth(width)
-  const rows = data.assets
   return (
-    <Frame width={width}>
-      <Header kicker="MARKETS" chip="VESTIGE" pill={network.toUpperCase()} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((asset, index) => (
-          <box key={asset.assetId} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="id"
-                value={String(asset.assetId)}
-                copy={String(asset.assetId)}
-                width={body - 12}
-              />
-              {onOpen ? <Button label="open ▸" onPress={() => onOpen(asset.assetId)} /> : null}
-            </box>
-            <Fact
-              label="name"
-              value={[asset.ticker, asset.name].filter(Boolean).join(' — ') || '—'}
-              width={body}
-            />
-            {asset.rank !== null ? (
-              <Fact label="rank" value={`#${asset.rank}`} width={body} />
-            ) : null}
-            <Fact
-              label="price"
-              value={asset.priceUsd !== null ? `$${trimPrice(asset.priceUsd)}` : '—'}
-              width={body}
-            />
-            <Fact
-              label="market"
-              value={`cap ${compactUsd(asset.marketCapUsd)} · tvl ${compactUsd(asset.tvlUsd)} · vol 24h ${compactUsd(asset.volume1dUsd)}`}
-              width={body}
-            />
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-      </box>
-    </Frame>
+    <ListCard
+      kicker="MARKETS"
+      chip="VESTIGE"
+      pill={network.toUpperCase()}
+      rows={data.assets}
+      keyOf={(asset) => String(asset.assetId)}
+      lead={(asset) => ({ label: 'id', value: String(asset.assetId), copy: String(asset.assetId) })}
+      onOpen={onOpen && ((asset) => onOpen(asset.assetId))}
+      facts={(asset, body) => (
+        <>
+          <Fact
+            label="name"
+            value={[asset.ticker, asset.name].filter(Boolean).join(' — ') || '—'}
+            width={body}
+          />
+          {asset.rank !== null ? <Fact label="rank" value={`#${asset.rank}`} width={body} /> : null}
+          <Fact
+            label="price"
+            value={asset.priceUsd !== null ? `$${trimPrice(asset.priceUsd)}` : '—'}
+            width={body}
+          />
+          <Fact
+            label="market"
+            value={`cap ${compactUsd(asset.marketCapUsd)} · tvl ${compactUsd(asset.tvlUsd)} · vol 24h ${compactUsd(asset.volume1dUsd)}`}
+            width={body}
+          />
+        </>
+      )}
+      width={width}
+    />
   )
 }

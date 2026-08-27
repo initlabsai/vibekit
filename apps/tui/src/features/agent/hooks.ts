@@ -1,9 +1,4 @@
-import {
-  addResult,
-  FIXTURE_ADDRESS_BOOK,
-  startPaymentFlowFromDraftRecord,
-  type ResultStore,
-} from '@initlabs/vibekit-explorer'
+import { addResult, FIXTURE_ADDRESS_BOOK, type ResultStore } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
   listZeroSignalModels,
@@ -29,7 +24,7 @@ import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import type { KeystorePaymentHost } from '../network/keystore-host.js'
 import { shorten } from '../../theme.js'
 import type { Feed } from '../../feed/hooks.js'
-import type { PaymentLane } from '../write-flow/hooks.js'
+import type { WriteFlow } from '../write-flow/hooks.js'
 
 /**
  * Owns the agent lane: session lifecycle, streaming text/reasoning accretion
@@ -56,7 +51,7 @@ export function useAgentLane({
   askConfirm,
 }: {
   feed: Feed
-  payment: PaymentLane
+  payment: WriteFlow
   activeSender: string | undefined
   keystoreHost: KeystorePaymentHost
   networkRef: { current: LiveNetworkId }
@@ -80,8 +75,7 @@ export function useAgentLane({
 }) {
   const { appendBlock, appendItem, appendNote, newItemId, patchSection, sectionsRef, updateItem } =
     feed
-  const { flowRef, setFlowMode, setFlowOrigin, trackFlowStep, updateFlowBlock, finishPayment } =
-    payment
+  const { flowRef, startFromDraft } = payment
 
   const agentSectionRef = useRef<number | null>(null)
   const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
@@ -223,21 +217,8 @@ export function useAgentLane({
             })
             if (plan.usedNetwork !== networkRef.current) onNetworkUsed(plan.usedNetwork, sectionId)
             switch (plan.kind) {
-              case 'payment':
-                setFlowMode('live')
-                setFlowOrigin('agent')
-                void startPaymentFlowFromDraftRecord({
-                  host: keystoreHost,
-                  store: storeRef.current,
-                  draftRecord: plan.draftRecord,
-                  newId,
-                  onStep: trackFlowStep(sectionId),
-                }).then((run) => {
-                  commitStore(run.store)
-                  if (!run.ok)
-                    finishPayment(run.flow, `The agent's payment failed — ${run.message}`, 'error')
-                  else if (run.flow) updateFlowBlock(run.flow)
-                })
+              case 'write':
+                startFromDraft(sectionId, plan.draftRecord, 'agent', "The agent's write failed")
                 return
               case 'cards':
                 commitStore(addResult(storeRef.current, plan.record))
@@ -283,7 +264,6 @@ export function useAgentLane({
       appendItem,
       appendNote,
       commitStore,
-      finishPayment,
       flowRef,
       keystoreHost,
       networkRef,
@@ -292,12 +272,10 @@ export function useAgentLane({
       patchSection,
       sectionsRef,
       setAgentBusy,
-      setFlowMode,
       setStatus,
       signerReady,
+      startFromDraft,
       storeRef,
-      trackFlowStep,
-      updateFlowBlock,
       updateItem,
     ],
   )

@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto'
 
 import { ToolError, type ToolContext } from '../../core/index.js'
+import type { z } from 'zod'
+import type { Mutual } from '../shared/schemas.js'
+import { applicationProgramSchema } from './schemas.js'
 import { analyzeTeal, type TealAnalysis } from './teal.js'
 
 /** Lines of TEAL one call returns by default; ~4 tokens a line. */
@@ -50,8 +53,19 @@ export interface ApplicationProgram {
   toLine: number
   teal: string
   analysis: TealAnalysis
-  methods: Array<{ selector: string; name?: string; signature?: string }>
+  /** Selectors from the analysis; the rest is filled in by a host that knows the app spec. */
+  methods: Array<{
+    selector: string
+    name?: string
+    signature?: string
+    args?: Array<{ name?: string; type: string }>
+    returns?: string
+    readonly?: boolean
+    description?: string
+  }>
 }
+
+true satisfies Mutual<ApplicationProgram, z.infer<typeof applicationProgramSchema>>
 
 export async function getApplicationProgram(
   ctx: ToolContext,

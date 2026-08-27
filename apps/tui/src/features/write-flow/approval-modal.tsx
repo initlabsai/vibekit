@@ -1,7 +1,7 @@
-import type { PaymentFlowViewModel } from '@initlabs/vibekit-explorer'
+import type { WriteFlowViewModel } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 
-import { PaymentBody } from './cards.js'
+import { WriteFlowBody } from './cards.js'
 import { computeGraphLayout } from '../transactions/graph-layout.js'
 import { breath, COLORS } from '../../theme.js'
 import { GraphSpanText, Header, usePulse } from '../../primitives.js'
@@ -70,7 +70,7 @@ export function ApprovalModal({
   screenWidth,
   screenHeight,
 }: {
-  model: PaymentFlowViewModel | undefined
+  model: WriteFlowViewModel | undefined
   network: LiveNetworkId
   /** Agent-composed groups carry the hallucination warning; typed ones do not. */
   origin: 'agent' | 'typed'
@@ -147,7 +147,7 @@ export function ApprovalModal({
               ))}
             </box>
           ) : null}
-          <PaymentBody model={model} width={body} big />
+          <WriteFlowBody model={model} width={body} big />
         </>
       ) : (
         <text fg={COLORS.muted} marginTop={1} content="The write record could not be derived." />

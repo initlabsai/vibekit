@@ -1,17 +1,17 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  completeApprovedPaymentFlow,
-  createFixturePaymentHost,
+  completeApprovedWriteFlow,
+  createSampleHost,
   createFixtureResultStore,
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performLivePaymentStep,
-  startPaymentFlow,
-  type PaymentFlowHost,
+  performWriteFlowStep,
+  startWriteFlow,
+  type WriteFlowHost,
 } from '@initlabs/vibekit-explorer'
 
 import { routeComposerInput } from './commands.js'
@@ -40,9 +40,9 @@ describe('web payment wiring', () => {
   })
 
   test('the browser flow auto-advances to approval and completes after the decision', async () => {
-    const host = createFixturePaymentHost()
+    const host = createSampleHost()
     const stages: string[] = []
-    const prepared = await startPaymentFlow({
+    const prepared = await startWriteFlow({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
@@ -52,7 +52,7 @@ describe('web payment wiring', () => {
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
     expect(prepared.flow.stage).toBe('awaiting-approval')
 
-    const approved = await performLivePaymentStep({
+    const approved = await performWriteFlowStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -60,7 +60,7 @@ describe('web payment wiring', () => {
       newId,
     })
     if (!approved.ok) throw new Error(approved.message)
-    const done = await completeApprovedPaymentFlow({
+    const done = await completeApprovedWriteFlow({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -77,27 +77,27 @@ describe('web payment wiring', () => {
       'confirmed',
     ])
 
-    const derived = createPaymentFlowViewModel(done.store, done.flow)
+    const derived = createWriteFlowViewModel(done.store, done.flow)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.confirmation?.transactionId).toBe(derived.model.signed?.txIds[0])
   })
 
   test('a custody-less remote host rests at approved with nothing signed', async () => {
-    const fixture = createFixturePaymentHost()
+    const fixture = createSampleHost()
     // The browser's live host has no signDraft — model that shape here.
-    const host: PaymentFlowHost = {
+    const host: WriteFlowHost = {
       network: 'localnet',
       draftPayment: (params) => fixture.draftPayment(params),
       simulateDraft: (record) => fixture.simulateDraft(record),
     }
-    const prepared = await startPaymentFlow({
+    const prepared = await startWriteFlow({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
-    const approved = await performLivePaymentStep({
+    const approved = await performWriteFlowStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -105,7 +105,7 @@ describe('web payment wiring', () => {
       newId,
     })
     if (!approved.ok) throw new Error(approved.message)
-    const done = await completeApprovedPaymentFlow({
+    const done = await completeApprovedWriteFlow({
       host,
       store: approved.store,
       flow: approved.flow,

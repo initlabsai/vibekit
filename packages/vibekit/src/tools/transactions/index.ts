@@ -1,6 +1,6 @@
 import { defineTool, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
-import { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
+import { formattedTransactionSchema, transactionListSchema, txTypeEnum } from '../shared/schemas.js'
 import { lookupTransaction, lookupTransactionGroup } from './lookup.js'
 import { searchTransactions } from './search.js'
 import { transactionGroupSchema } from './schemas.js'
@@ -10,11 +10,6 @@ export { lookupTransaction, lookupTransactionGroup, searchTransactions }
 export type { SearchTransactionsArgs } from './search.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 export { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
-
-const txTypeEnum = z
-  .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])
-  .optional()
-  .describe('Filter by transaction type')
 
 export { transactionWriteTools, txnSpecSchema } from './tools-write.js'
 

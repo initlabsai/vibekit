@@ -2,7 +2,7 @@ import { parseAlgosToMicroAlgos } from '../format.js'
 import type { AccountLookupHost } from '../views/account.js'
 import type { TransactionLookupHost } from '../views/transaction.js'
 import { createFixtureEntityLookup } from './entities.js'
-import type { PaymentFlowHost } from '../flows/payment-live.js'
+import type { WriteFlowHost } from '../flows/write-flow-host.js'
 import { createFixtureAccountLookup } from './account.js'
 import {
   approvalDecisionSchema,
@@ -14,13 +14,13 @@ import {
   writeSimulateEventSchema,
 } from '../core/protocol.js'
 import {
-  paymentConfirmationDataSchema,
-  paymentDraftDataSchema,
-  paymentSignedGroupDataSchema,
-  paymentSimulationDataSchema,
+  confirmationDataSchema,
+  writeDraftDataSchema,
+  signedGroupDataSchema,
+  writeSimulationDataSchema,
   type WriteFlowEvent,
   type WriteFlowEventKind,
-} from '../flows/payment.js'
+} from '../flows/write-flow.js'
 import {
   createResultStore,
   type ResultReference,
@@ -89,7 +89,7 @@ export const PAYMENT_FIXTURE_SIGNED_RESULT_ID = 'result-fixture-payment-signed-0
 /** The compose summary recorded with the fixture group. */
 export const PAYMENT_FIXTURE_GROUP_SUMMARY = `[0] pay 250000 microALGO ${FIXTURE_SENDER} → ${FIXTURE_RECEIVER}`
 
-const draftData = paymentDraftDataSchema.parse({
+const draftData = writeDraftDataSchema.parse({
   sender: FIXTURE_SENDER,
   receiver: FIXTURE_RECEIVER,
   amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
@@ -112,7 +112,7 @@ const draftData = paymentDraftDataSchema.parse({
   ],
 })
 
-const simulationData = paymentSimulationDataSchema.parse({
+const simulationData = writeSimulationDataSchema.parse({
   wouldSucceed: true,
   sender: FIXTURE_SENDER,
   receiver: FIXTURE_RECEIVER,
@@ -126,13 +126,13 @@ const simulationData = paymentSimulationDataSchema.parse({
   simulatedRound: 21,
 })
 
-const signedGroupData = paymentSignedGroupDataSchema.parse({
+const signedGroupData = signedGroupDataSchema.parse({
   transactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION],
   txIds: [PAYMENT_FIXTURE_TRANSACTION_ID],
   signer: FIXTURE_SENDER,
 })
 
-const confirmationData = paymentConfirmationDataSchema.parse({
+const confirmationData = confirmationDataSchema.parse({
   transactionId: PAYMENT_FIXTURE_TRANSACTION_ID,
   confirmedRound: 22,
 })
@@ -199,13 +199,13 @@ function reference(id: string): ResultReference {
 }
 
 /**
- * A PaymentFlowHost backed by the recorded fixture flow, so the apps run the
+ * A WriteFlowHost backed by the recorded fixture flow, so the apps run the
  * exact same controller with or without a live chain. Each call returns a
  * freshly identified copy of the recorded record (the store rejects duplicate
  * ids), with the recorded data — including the real signed bytes and the real
  * round-22 confirmation — unchanged.
  */
-export function createFixturePaymentHost(): PaymentFlowHost &
+export function createSampleHost(): WriteFlowHost &
   AccountLookupHost &
   TransactionLookupHost &
   ReturnType<typeof createFixtureEntityLookup> & {

@@ -89,9 +89,9 @@ export function TransactionCard({
   if (!model) return <Unavailable title="TRANSACTION" width={width} />
   const body = innerWidth(width)
   const payment =
-    model.amountMicroAlgos === undefined
+    model.paymentAmountMicroAlgos === undefined
       ? undefined
-      : { value: formatMicroAlgos(model.amountMicroAlgos), unit: 'ALGO' }
+      : { value: formatMicroAlgos(model.paymentAmountMicroAlgos), unit: 'ALGO' }
   const transfer = assetUnits(model.assetAmount, model.assetDecimals, model.assetUnitName)
   const hero = payment ?? transfer
   const tone: Tone =
@@ -138,7 +138,7 @@ export function TransactionCard({
             width={body}
           />
         )}
-        <Fact label="fee" value={algo(model.feeMicroAlgos) ?? '—'} width={body} />
+        <Fact label="fee" value={algo(model.feeMicroAlgos)} width={body} />
         <Fact label="from" value={model.sender} copy={model.sender} width={body} />
         {model.clawbackFrom ? (
           <Fact
@@ -216,7 +216,7 @@ export function TransactionCard({
           <Fact label="close" value={model.closeTo} copy={model.closeTo} width={body} />
         ) : null}
         {model.closeTo === undefined || model.closeAmountMicroAlgos === undefined ? null : (
-          <Fact label="closed" value={algo(model.closeAmountMicroAlgos) ?? '—'} width={body} />
+          <Fact label="closed" value={algo(model.closeAmountMicroAlgos)} width={body} />
         )}
         {model.closeTo === undefined || model.closeAssetAmount === undefined ? null : (
           <Fact
@@ -576,7 +576,7 @@ export function TransactionListCard({
                 <Fact label="time" value={formatExplorerTime(row.roundTime)} width={body} />
               )}
               {row.feeMicroAlgos === undefined ? null : (
-                <Fact label="fee" value={algo(row.feeMicroAlgos) ?? '—'} width={body} />
+                <Fact label="fee" value={algo(row.feeMicroAlgos)} width={body} />
               )}
               {assetFact(row) ? (
                 <Fact
@@ -598,8 +598,7 @@ export function TransactionListCard({
           />
         ) : null}
         <MoreFooter
-          shown={transactions.length}
-          total={transactions.length}
+          count={transactions.length}
           nextToken={nextToken}
           onMore={onMore}
           loadingMore={loadingMore}

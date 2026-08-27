@@ -1,5 +1,22 @@
 import { z } from 'zod'
 
+const microAlgosNote = (what: string) =>
+  `${what} in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53`
+
+/** A uint64 microALGO field on the wire: number, or a decimal string above 2^53. */
+export const microAlgos = (what: string) =>
+  z.union([z.number(), z.string()]).describe(microAlgosNote(what))
+
+/** The optional form of {@link microAlgos}. */
+export const optionalMicroAlgos = (what: string) =>
+  z.union([z.number(), z.string()]).optional().describe(microAlgosNote(what))
+
+/** The indexer transaction-type filter shared by every transaction search. */
+export const txTypeEnum = z
+  .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])
+  .optional()
+  .describe('Filter by transaction type')
+
 /** Asset parameters on an acfg body: present on creates and reconfigures, absent on destroys. */
 export interface FormattedAssetConfig {
   /** Total supply in base units; decimal string when the uint64 exceeds 2^53. */
@@ -98,17 +115,10 @@ export const formattedTransactionSchema = z.object({
   id: z.string().optional(),
   type: z.string().optional(),
   sender: z.string(),
-  feeMicroAlgos: z
-    .union([z.number(), z.string()])
-    .describe('Fee in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53'),
+  feeMicroAlgos: microAlgos('Fee'),
   confirmedRound: z.number().optional(),
   roundTime: z.number().optional(),
-  paymentAmountMicroAlgos: z
-    .union([z.number(), z.string()])
-    .optional()
-    .describe(
-      'Payment amount in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
-    ),
+  paymentAmountMicroAlgos: optionalMicroAlgos('Payment amount'),
   receiver: z.string().optional(),
   assetId: z
     .number()
@@ -148,12 +158,7 @@ export const formattedTransactionSchema = z.object({
   assetDecimals: z.number().int().nonnegative().optional(),
   rekeyTo: z.string().optional(),
   closeTo: z.string().optional(),
-  closeAmountMicroAlgos: z
-    .union([z.number(), z.string()])
-    .optional()
-    .describe(
-      'Pay close-out amount in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
-    ),
+  closeAmountMicroAlgos: optionalMicroAlgos('Pay close-out amount'),
   closeAssetAmount: z
     .union([z.number(), z.string()])
     .optional()
@@ -191,7 +196,8 @@ export const formattedTransactionSchema = z.object({
 
 // Drift guards: the documented interfaces above and the wire schemas must
 // describe the same shape; a divergence fails the build.
-type Mutual<A, B> = [A, B] extends [B, A] ? true : never
+/** `true` only when two types describe exactly the same shape; the drift guard for interface/schema pairs. */
+export type Mutual<A, B> = [A, B] extends [B, A] ? true : never
 true satisfies Mutual<FormattedAssetConfig, z.infer<typeof formattedAssetConfigSchema>>
 true satisfies Mutual<FormattedTransaction, z.infer<typeof formattedTransactionSchema>>
 

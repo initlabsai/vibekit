@@ -5,6 +5,9 @@
  * text shows", never "what the program guarantees".
  */
 import { ABIMethod } from 'algosdk'
+import type { z } from 'zod'
+import type { Mutual } from '../shared/schemas.js'
+import { applicationProgramSchema } from './schemas.js'
 
 export type OnCompletionAction =
   'NoOp' | 'OptIn' | 'CloseOut' | 'ClearState' | 'UpdateApplication' | 'DeleteApplication'
@@ -29,6 +32,8 @@ export interface TealAnalysis {
   /** OnCompletion values the program routes on, and what that branch does. */
   onCompletion: Array<{ action: OnCompletionAction; outcome: 'handled' | 'rejected' }>
 }
+
+true satisfies Mutual<TealAnalysis, z.infer<typeof applicationProgramSchema>['analysis']>
 
 /** First four bytes of sha512/256("return"): every ARC-4 return value is logged behind it. */
 const ARC4_RETURN_PREFIX = '151f7c75'

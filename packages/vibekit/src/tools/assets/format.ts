@@ -1,3 +1,7 @@
+import type { z } from 'zod'
+import type { Mutual } from '../shared/schemas.js'
+import { assetDetailSchema, assetHoldersSchema } from './schemas.js'
+
 type IndexerAsset = InstanceType<typeof import('algosdk').indexerModels.Asset>
 
 /** Formatted asset returned by handlers. */
@@ -24,6 +28,9 @@ export interface AssetBalance {
   amount: string
   isFrozen: boolean
 }
+
+true satisfies Mutual<FormattedAsset, z.infer<typeof assetDetailSchema>>
+true satisfies Mutual<AssetBalance, z.infer<typeof assetHoldersSchema>['balances'][number]>
 
 /**
  * Raw base units scaled by decimals, exact, comma-grouped: 1500000000 @ 6 →

@@ -5,7 +5,7 @@ import {
   EXPLORER_PROTOCOL_VERSION,
   createAccountOpenView,
   createAccountPortfolioViewModel,
-  createFixturePaymentHost,
+  createSampleHost,
   createFixtureResultStore,
   createResultStore,
   createTransactionCollectionViewModel,
@@ -80,7 +80,7 @@ describe('account portfolio slice', () => {
   })
 
   test('the sample host serves empty assets, the sample opted-in app, and the recorded sender payment', async () => {
-    const host = createFixturePaymentHost()
+    const host = createSampleHost()
     const assets = await host.lookupAccountAssets(FIXTURE_SENDER)
     expect(assets).toMatchObject({ toolName: 'get_account_assets', data: { assets: [] } })
     const apps = await host.lookupAccountAppStates(FIXTURE_SENDER)

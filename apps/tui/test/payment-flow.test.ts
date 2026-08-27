@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  completeApprovedPaymentFlow,
-  createFixturePaymentHost,
+  completeApprovedWriteFlow,
+  createSampleHost,
   createFixtureResultStore,
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performLivePaymentStep,
-  startPaymentFlow,
+  performWriteFlowStep,
+  startWriteFlow,
 } from '@initlabs/vibekit-explorer'
 
 import { paymentLines } from '../src/features/write-flow/cards.js'
@@ -38,9 +38,9 @@ describe('TUI payment wiring', () => {
   })
 
   test('one command auto-advances to the approval card; one decision completes it', async () => {
-    const host = createFixturePaymentHost()
+    const host = createSampleHost()
     const stages: string[] = []
-    const prepared = await startPaymentFlow({
+    const prepared = await startWriteFlow({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
@@ -50,7 +50,7 @@ describe('TUI payment wiring', () => {
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
     expect(prepared.flow.stage).toBe('awaiting-approval')
 
-    const approved = await performLivePaymentStep({
+    const approved = await performWriteFlowStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -58,7 +58,7 @@ describe('TUI payment wiring', () => {
       newId,
     })
     if (!approved.ok) throw new Error(approved.message)
-    const done = await completeApprovedPaymentFlow({
+    const done = await completeApprovedWriteFlow({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -77,21 +77,21 @@ describe('TUI payment wiring', () => {
       'confirmed',
     ])
 
-    const derived = createPaymentFlowViewModel(done.store, done.flow)
+    const derived = createWriteFlowViewModel(done.store, done.flow)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.confirmation?.transactionId).toBe(derived.model.signed?.txIds[0])
   })
 
   test('denial ends the flow with nothing signed', async () => {
-    const host = createFixturePaymentHost()
-    const prepared = await startPaymentFlow({
+    const host = createSampleHost()
+    const prepared = await startWriteFlow({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
-    const denied = await performLivePaymentStep({
+    const denied = await performWriteFlowStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -104,15 +104,15 @@ describe('TUI payment wiring', () => {
   })
 
   test('payment lines keep the amount, parties, and confirmation facts', async () => {
-    const host = createFixturePaymentHost()
-    const prepared = await startPaymentFlow({
+    const host = createSampleHost()
+    const prepared = await startWriteFlow({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
-    const derived = createPaymentFlowViewModel(prepared.store, prepared.flow)
+    const derived = createWriteFlowViewModel(prepared.store, prepared.flow)
     if (!derived.ok) throw new Error(derived.error.message)
     const lines = paymentLines(derived.model)
     expect(lines[0]).toContain('ALGO')

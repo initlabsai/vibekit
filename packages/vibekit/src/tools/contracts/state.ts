@@ -6,6 +6,7 @@
 import { base64ToBytes, bytesToBase64, ToolError, type ToolContext } from '../../core/index.js'
 import { ABIUintType, decodeAddress, encodeAddress } from 'algosdk'
 import { isNotFound } from '../shared/errors.js'
+import { tryNormalizeAppSpec } from './app-spec.js'
 
 // ============================================================================
 // Shared types and helpers
@@ -71,16 +72,9 @@ function buildStateKeyMap(
   appSpecJson: string,
   scope: 'global' | 'local',
 ): Map<string, string> | undefined {
-  const appSpec = JSON.parse(appSpecJson)
-  const stateKeyMap = new Map<string, string>()
-
-  if (appSpec.state?.keys?.[scope]) {
-    for (const [name, info] of Object.entries(appSpec.state.keys[scope])) {
-      const keyInfo = info as { key: string }
-      stateKeyMap.set(keyInfo.key, name)
-    }
-  }
-
+  const keys = tryNormalizeAppSpec(appSpecJson)?.stateKeys?.[scope]
+  if (!keys) return undefined
+  const stateKeyMap = new Map(Object.entries(keys).map(([name, info]) => [info.key, name]))
   return stateKeyMap.size > 0 ? stateKeyMap : undefined
 }
 

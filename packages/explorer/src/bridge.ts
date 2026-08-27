@@ -5,13 +5,14 @@
  * gets the same card. Unknown cues or unexpected shapes fall back to a raw
  * record with no view — never a dropped result.
  */
+import { z } from 'zod'
+
 import { TRUSTED_VIEW_IDS, type TrustedViewId } from './core/protocol.js'
+import { structuredResultSchema, type JsonValue } from './core/results.js'
+import { EXPLORER_PROTOCOL_VERSION } from './core/version.js'
+import { record } from './views/derive.js'
 import type { ResultIdentity, StructuredResult } from './core/results.js'
-import {
-  composeWireResultSchema,
-  structuredResultFromToolEvent,
-  type ToolResultEventLike,
-} from './flows/payment-live.js'
+import { composeWireResultSchema } from './flows/write-flow-host.js'
 import {
   buildAccountListRecord,
   buildAccountPortfolioRecord,
@@ -42,6 +43,56 @@ import {
   buildTransactionGroupRecord,
   buildTransactionListRecord,
 } from './views/transaction.js'
+
+/** The tool-result subset of the orchestrator's AgentEvent stream. */
+export interface ToolResultEventLike {
+  id: string
+  toolName: string
+  output: unknown
+  isError: boolean
+  /** The tool's declared view id, when present. */
+  view?: string
+}
+
+const toolErrorOutputSchema = z.object({
+  error: z.object({ code: z.string().min(1), message: z.string().min(1) }),
+})
+
+/**
+ * Wraps one orchestrator tool-result event as a versioned structured result.
+ * The event's `id` is the tool-call id; the caller supplies the result id and
+ * the network the call ran on (a call parameter, not event state).
+ */
+export function structuredResultFromToolEvent(
+  event: ToolResultEventLike,
+  identity: { resultId: string; network: string; input?: JsonValue },
+): StructuredResult {
+  if (event.isError) {
+    const parsed = toolErrorOutputSchema.safeParse(event.output)
+    return structuredResultSchema.parse({
+      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      type: 'result',
+      state: 'error',
+      resultId: identity.resultId,
+      toolCallId: event.id,
+      toolName: event.toolName,
+      network: identity.network,
+      error: parsed.success
+        ? parsed.data.error
+        : { code: 'TOOL_ERROR', message: 'Tool call failed without a structured error' },
+    })
+  }
+  return record(
+    {
+      resultId: identity.resultId,
+      toolCallId: event.id,
+      network: identity.network,
+      ...(identity.input === undefined ? {} : { input: identity.input }),
+    },
+    event.toolName,
+    event.output,
+  )
+}
 
 /** A structured record plus the trusted view its tool's view id selected, if any. */
 export interface BridgedToolResult {

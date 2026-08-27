@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import { formatMicroAlgos, type PaymentFlowViewModel } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type WriteFlowViewModel } from '@initlabs/vibekit-explorer'
 
 import { COLORS } from '../../theme.js'
 import {
@@ -21,7 +21,7 @@ function signedDelta(value: number | string): string {
 }
 
 /** Flat lines for tests and for hosts that still want a text dump. */
-export function paymentLines(model: PaymentFlowViewModel): string[] {
+export function paymentLines(model: WriteFlowViewModel): string[] {
   const lines = [
     model.amountMicroAlgos === undefined
       ? `${model.unsignedGroup.summary} · ${model.network}`
@@ -146,12 +146,12 @@ function CallSummary({ summary, width }: { summary: string; width: number }) {
   )
 }
 
-export function PaymentBody({
+export function WriteFlowBody({
   model,
   width,
   big = false,
 }: {
-  model: PaymentFlowViewModel
+  model: WriteFlowViewModel
   width: number
   /** Render the amount as a two-row ascii figure (the approval modal). */
   big?: boolean
@@ -187,7 +187,7 @@ export function PaymentBody({
           />
         ) : null}
         {model.simulation ? (
-          <Fact label="fee" value={algo(model.simulation.feeMicroAlgos) ?? '—'} width={width} />
+          <Fact label="fee" value={algo(model.simulation.feeMicroAlgos)} width={width} />
         ) : null}
         {model.simulation?.simulatedRound === undefined ? null : (
           <Fact
@@ -267,13 +267,13 @@ export function PaymentBody({
   )
 }
 
-export function PaymentCard({
+export function WriteFlowCard({
   model,
   stage,
   busy,
   width,
 }: {
-  model: PaymentFlowViewModel | undefined
+  model: WriteFlowViewModel | undefined
   stage: string
   busy: boolean
   width: number
@@ -299,7 +299,7 @@ export function PaymentCard({
         pill={badge}
         tone={tone}
       />
-      <PaymentBody model={model} width={innerWidth(width)} />
+      <WriteFlowBody model={model} width={innerWidth(width)} />
     </Frame>
   )
 }

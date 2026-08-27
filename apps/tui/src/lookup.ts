@@ -172,8 +172,8 @@ export function useLookups({
         run: () => host().lookupTransaction(txid),
         summary: (_record, view) => {
           const derived = createTransactionDetailViewModel(storeRef.current, view)
-          return derived.ok && derived.model.amountMicroAlgos !== undefined
-            ? `${formatMicroAlgos(derived.model.amountMicroAlgos)} ALGO from ${shorten(derived.model.sender, 12)} to ${shorten(derived.model.receiver ?? '—', 12)}, ${derived.model.status}.`
+          return derived.ok && derived.model.paymentAmountMicroAlgos !== undefined
+            ? `${formatMicroAlgos(derived.model.paymentAmountMicroAlgos)} ALGO from ${shorten(derived.model.sender, 12)} to ${shorten(derived.model.receiver ?? '—', 12)}, ${derived.model.status}.`
             : undefined
         },
       }),

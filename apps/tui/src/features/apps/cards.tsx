@@ -18,7 +18,7 @@ import {
   Rule,
   Unavailable,
 } from '../../primitives.js'
-import { bytesDisplay, MoreFooter } from '../../generic-cards.js'
+import { ListCard, bytesDisplay } from '../../generic-cards.js'
 
 export function ApplicationCard({
   model,
@@ -287,46 +287,36 @@ export function ApplicationListCard({
   loadingMore?: boolean
   onOpen?: (applicationId: number) => void
 }) {
-  const body = innerWidth(width)
   return (
-    <Frame width={width}>
-      <Header kicker="APPLICATIONS" pill={String(applications.length)} tone="idle" />
-      <box flexDirection="column">
-        {applications.map((application, index) => (
-          <box key={String(application.applicationId)} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="id"
-                value={String(application.applicationId)}
-                copy={String(application.applicationId)}
-                width={body - 12}
-              />
-              {onOpen ? (
-                <Button label="open ▸" onPress={() => onOpen(Number(application.applicationId))} />
-              ) : null}
-            </box>
-            {application.creator ? (
-              <Fact
-                label="creator"
-                value={application.creator}
-                copy={application.creator}
-                width={body}
-              />
-            ) : null}
-            <Fact label="keys" value={String(application.globalStateCount ?? 0)} width={body} />
-            {index < applications.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={applications.length}
-          total={applications.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="APPLICATIONS"
+      pill={String(applications.length)}
+      rows={applications}
+      keyOf={(application) => String(application.applicationId)}
+      lead={(application) => ({
+        label: 'id',
+        value: String(application.applicationId),
+        copy: String(application.applicationId),
+      })}
+      onOpen={onOpen && ((application) => onOpen(Number(application.applicationId)))}
+      facts={(application, body) => (
+        <>
+          {application.creator ? (
+            <Fact
+              label="creator"
+              value={application.creator}
+              copy={application.creator}
+              width={body}
+            />
+          ) : null}
+          <Fact label="keys" value={String(application.globalStateCount ?? 0)} width={body} />
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }
 
@@ -395,48 +385,46 @@ export function ApplicationLocalsCard({
   onMore?: () => void
   loadingMore?: boolean
 }) {
-  const body = innerWidth(width)
   return (
-    <Frame width={width}>
-      <Header kicker="APP LOCALS" pill={String(apps.length)} tone="idle" />
-      {address ? <Fact label="address" value={address} copy={address} width={body} /> : null}
-      <box marginTop={1} flexDirection="column">
-        {apps.map((app) => (
-          <box key={String(app.applicationId)} flexDirection="column" marginTop={1}>
+    <ListCard
+      kicker="APP LOCALS"
+      pill={String(apps.length)}
+      rows={apps}
+      keyOf={(app) => String(app.applicationId)}
+      before={(body) =>
+        address ? <Fact label="address" value={address} copy={address} width={body} /> : null
+      }
+      facts={(app, body) => (
+        <>
+          <Fact
+            label="app"
+            value={String(app.applicationId)}
+            copy={String(app.applicationId)}
+            width={body}
+          />
+          <Fact
+            label="keys"
+            value={`${app.entries.length} key${app.entries.length === 1 ? '' : 's'}`}
+            width={body}
+          />
+          {app.entries.slice(0, 6).map((entry) => (
             <Fact
-              label="app"
-              value={String(app.applicationId)}
-              copy={String(app.applicationId)}
+              key={entry.key}
+              label={shorten(entry.key, 9)}
+              value={entry.type ? `${entry.type} · ${entry.value}` : entry.value}
               width={body}
             />
-            <Fact
-              label="keys"
-              value={`${app.entries.length} key${app.entries.length === 1 ? '' : 's'}`}
-              width={body}
-            />
-            {app.entries.slice(0, 6).map((entry) => (
-              <Fact
-                key={entry.key}
-                label={shorten(entry.key, 9)}
-                value={entry.type ? `${entry.type} · ${entry.value}` : entry.value}
-                width={body}
-              />
-            ))}
-            {app.entries.length > 6 ? (
-              <FooterNote text={`${app.entries.length - 6} more keys`} width={body} />
-            ) : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={apps.length}
-          total={apps.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+          ))}
+          {app.entries.length > 6 ? (
+            <FooterNote text={`${app.entries.length - 6} more keys`} width={body} />
+          ) : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }
 
@@ -456,38 +444,33 @@ export function ApplicationLogsCard({
   onMore?: () => void
   loadingMore?: boolean
 }) {
-  const body = innerWidth(width)
   return (
-    <Frame width={width}>
-      <Header kicker="APP LOGS" pill={String(applicationId)} tone="idle" />
-      <box flexDirection="column">
-        {logData.map((row, index) => (
-          <box key={row.txid} flexDirection="column" marginTop={1}>
-            <Fact label="id" value={row.txid} copy={row.txid} width={body} />
-            <Fact
-              label="logs"
-              value={`${row.logs.length} log${row.logs.length === 1 ? '' : 's'}`}
-              width={body}
-            />
-            {row.logs.slice(0, 3).map((line, logIndex) => (
-              <Fact key={`${row.txid}-${logIndex}`} label="log" value={line} width={body} />
-            ))}
-            {row.logs.length > 3 ? (
-              <FooterNote text={`${row.logs.length - 3} more logs`} width={body} />
-            ) : null}
-            {index < logData.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={logData.length}
-          total={logData.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="APP LOGS"
+      pill={String(applicationId)}
+      rows={logData}
+      keyOf={(row) => row.txid}
+      facts={(row, body) => (
+        <>
+          <Fact label="id" value={row.txid} copy={row.txid} width={body} />
+          <Fact
+            label="logs"
+            value={`${row.logs.length} log${row.logs.length === 1 ? '' : 's'}`}
+            width={body}
+          />
+          {row.logs.slice(0, 3).map((line, logIndex) => (
+            <Fact key={`${row.txid}-${logIndex}`} label="log" value={line} width={body} />
+          ))}
+          {row.logs.length > 3 ? (
+            <FooterNote text={`${row.logs.length - 3} more logs`} width={body} />
+          ) : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }
 

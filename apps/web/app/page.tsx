@@ -2,12 +2,12 @@
 
 import {
   addResult,
-  completeApprovedPaymentFlow,
+  completeApprovedWriteFlow,
   createAccountOpenView,
   createAccountPortfolioViewModel,
-  createFixturePaymentHost,
+  createSampleHost,
   createFixtureResultStore,
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   createTransactionDetailViewModel,
   FIXTURE_ADDRESS_BOOK,
   formatMicroAlgos,
@@ -15,13 +15,13 @@ import {
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performLivePaymentStep,
-  startPaymentFlow,
+  performWriteFlowStep,
+  startWriteFlow,
   type AccountLookupHost,
   type AccountPortfolioViewModel,
   type OpenView,
-  type PaymentFlowHost,
-  type PaymentFlowViewModel,
+  type WriteFlowHost,
+  type WriteFlowViewModel,
   type ResultStore,
   type TransactionDetailViewModel,
   type WriteFlowState,
@@ -98,9 +98,9 @@ function Detail({
         <div>
           <dt>Amount</dt>
           <dd>
-            {model.amountMicroAlgos === undefined
+            {model.paymentAmountMicroAlgos === undefined
               ? '—'
-              : `${formatMicroAlgos(model.amountMicroAlgos)} ALGO`}
+              : `${formatMicroAlgos(model.paymentAmountMicroAlgos)} ALGO`}
           </dd>
         </div>
         <div>
@@ -193,7 +193,7 @@ function AccountsLanding({
   )
 }
 
-const FLOW_STEPS: Array<{ label: string; stages: PaymentFlowViewModel['stage'][] }> = [
+const FLOW_STEPS: Array<{ label: string; stages: WriteFlowViewModel['stage'][] }> = [
   { label: 'Draft', stages: ['drafted'] },
   { label: 'Simulate', stages: ['simulated'] },
   { label: 'Inspect', stages: ['inspected'] },
@@ -212,7 +212,7 @@ function PaymentFlow({
   onDeny,
   onClose,
 }: {
-  model: PaymentFlowViewModel | undefined
+  model: WriteFlowViewModel | undefined
   errorMessage: string | undefined
   canSign: boolean
   terminalNote: string | undefined
@@ -393,7 +393,7 @@ function PaymentFlow({
 
 export default function Page() {
   const remoteHost = useMemo(() => createRemoteFlowHost(), [])
-  const sampleHost = useMemo(() => createFixturePaymentHost(), [])
+  const sampleHost = useMemo(() => createSampleHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
   const [artifact, setArtifact] = useState<OpenView | null>(null)
@@ -423,7 +423,7 @@ export default function Page() {
         return
       }
       const useLive = live === true
-      const host: PaymentFlowHost = useLive ? remoteHost : sampleHost
+      const host: WriteFlowHost = useLive ? remoteHost : sampleHost
       setFlowMode(useLive ? 'live' : 'sample')
       setBusy(true)
       setStatus(
@@ -431,7 +431,7 @@ export default function Page() {
           ? 'Preparing the payment on localnet…'
           : `Preparing a sample payment (always ${formatMicroAlgos(PAYMENT_FIXTURE_AMOUNT_MICROALGOS)} ALGO — localnet is offline)…`,
       )
-      void startPaymentFlow({
+      void startWriteFlow({
         host,
         store,
         draftParams: {
@@ -462,9 +462,9 @@ export default function Page() {
   const decide = useCallback(
     (decision: 'approve' | 'deny') => {
       if (busy || !flow || flow.stage !== 'awaiting-approval') return
-      const host: PaymentFlowHost = flowMode === 'live' ? remoteHost : sampleHost
+      const host: WriteFlowHost = flowMode === 'live' ? remoteHost : sampleHost
       setBusy(true)
-      void performLivePaymentStep({ host, store, flow, kind: decision, newId }).then((outcome) => {
+      void performWriteFlowStep({ host, store, flow, kind: decision, newId }).then((outcome) => {
         if (!outcome.ok) {
           setBusy(false)
           setStatus(`Couldn't ${decision} — ${outcome.message}`)
@@ -478,7 +478,7 @@ export default function Page() {
           return
         }
         setStatus(flowMode === 'live' ? 'Approved' : 'Approved · finishing the sample…')
-        void completeApprovedPaymentFlow({
+        void completeApprovedWriteFlow({
           host,
           store: outcome.store,
           flow: outcome.flow,
@@ -565,7 +565,7 @@ export default function Page() {
       ? createAccountPortfolioViewModel(store, artifact.view)
       : undefined
   const accountModel = accountView?.ok ? accountView.model : undefined
-  const flowView = flow ? createPaymentFlowViewModel(store, flow) : undefined
+  const flowView = flow ? createWriteFlowViewModel(store, flow) : undefined
   const flowModel = flowView?.ok ? flowView.model : undefined
   // The browser holds no custody: live signing waits for wallet integration.
   const terminalNote =

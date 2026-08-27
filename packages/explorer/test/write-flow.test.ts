@@ -6,7 +6,7 @@ import {
   writeFlowReducer,
   writeFlowStateSchema,
   type WriteFlowEventKind,
-} from '../src/flows/payment.js'
+} from '../src/flows/write-flow.js'
 import { type WriteFlowState } from '../src/index.js'
 
 function advance(state: WriteFlowState | null, kind: WriteFlowEventKind): WriteFlowState {

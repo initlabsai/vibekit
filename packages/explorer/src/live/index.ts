@@ -23,27 +23,18 @@ import {
 } from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../bridge.js'
-import { buildAccountListRecord, buildAccountPortfolioRecord } from '../views/account.js'
-import { buildApplicationDetailRecord, buildApplicationLocalsRecord } from '../views/application.js'
-import { buildAssetDetailRecord, buildAssetHoldingsRecord } from '../views/asset.js'
-import { buildBlockDetailRecord } from '../views/block.js'
-import {
-  buildTransactionDetailRecord,
-  buildTransactionGroupRecord,
-  buildTransactionListRecord,
-  type TransactionSearchFilter,
-} from '../views/transaction.js'
+import type { TransactionSearchFilter } from '../views/transaction.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
-  buildPaymentConfirmationRecord,
-  buildPaymentDraftRecord,
-  buildPaymentSignedGroupRecord,
-  buildPaymentSimulationRecord,
-  decodedPaymentFactsSchema,
-  type DecodedPaymentFacts,
-} from '../flows/payment-live.js'
-import { paymentDraftDataSchema, paymentSignedGroupDataSchema } from '../flows/payment.js'
+  buildConfirmationRecord,
+  buildDraftRecord,
+  buildSignedGroupRecord,
+  buildSimulationRecord,
+  decodedGroupFactsSchema,
+  type DecodedGroupFacts,
+} from '../flows/write-flow-host.js'
+import { writeDraftDataSchema, signedGroupDataSchema } from '../flows/write-flow.js'
 import type { JsonValue, StructuredResult } from '../core/results.js'
 
 /**
@@ -51,7 +42,7 @@ import type { JsonValue, StructuredResult } from '../core/results.js'
  * Payment receiver/amount are filled only when every transaction is a plain pay
  * and there is exactly one of them — mixed groups stay group-shaped.
  */
-export function decodeUnsignedGroup(transactions: readonly string[]): DecodedPaymentFacts {
+export function decodeUnsignedGroup(transactions: readonly string[]): DecodedGroupFacts {
   if (transactions.length === 0 || transactions.length > 16) {
     throw new Error(`Unsupported group size: ${transactions.length}`)
   }
@@ -68,7 +59,7 @@ export function decodeUnsignedGroup(transactions: readonly string[]): DecodedPay
     decoded[0]!.type === algosdk.TransactionType.pay &&
     decoded[0]!.payment &&
     decoded[0]!.payment.closeRemainderTo === undefined
-  return decodedPaymentFactsSchema.parse({
+  return decodedGroupFactsSchema.parse({
     sender: decoded[0]!.sender.toString(),
     ...(singlePay
       ? {
@@ -128,7 +119,7 @@ export function unsignedTransactionsForDraft(draftRecord: StructuredResult): alg
   if (draftRecord.state !== 'success') {
     throw new Error('Cannot decode a failed draft record')
   }
-  const draft = paymentDraftDataSchema.parse(draftRecord.data)
+  const draft = writeDraftDataSchema.parse(draftRecord.data)
   return draft.unsignedGroup.transactions.map((txn) =>
     algosdk.decodeUnsignedTransaction(base64ToBytes(txn)),
   )
@@ -147,7 +138,7 @@ export function signedGroupRecordFor(
   if (draftRecord.state !== 'success') {
     throw new Error('Cannot sign a failed draft record')
   }
-  const draft = paymentDraftDataSchema.parse(draftRecord.data)
+  const draft = writeDraftDataSchema.parse(draftRecord.data)
   if (signedTransactions.length !== draft.unsignedGroup.transactions.length) {
     throw new Error('Signed group size does not match the drafted group')
   }
@@ -160,7 +151,7 @@ export function signedGroupRecordFor(
     }
     txIds.push(decoded.txn.txID())
   }
-  return buildPaymentSignedGroupRecord(identity, {
+  return buildSignedGroupRecord(identity, {
     transactions: signedTransactions.map((signed) => bytesToBase64(signed)),
     txIds,
     signer: draft.sender,
@@ -175,7 +166,7 @@ export function draftRecordFromComposeWire(
 ): StructuredResult {
   const { unsignedGroup } = wire as { unsignedGroup: string[] }
   const decoded = decodeUnsignedGroup(unsignedGroup)
-  return buildPaymentDraftRecord(identity, wire, decoded, toolName)
+  return buildDraftRecord(identity, wire, decoded, toolName)
 }
 
 /** Parameters for composing one live unsigned payment. */
@@ -265,17 +256,6 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
     ],
   })
   const sendPayment = requireTool(deployment, 'send_payment')
-  const accountPortfolio = requireTool(deployment, 'get_account_portfolio')
-  const batchLookupAccounts = requireTool(deployment, 'batch_lookup_accounts')
-  const lookupTransactionTool = requireTool(deployment, 'lookup_transaction')
-  const lookupTransactionGroupTool = requireTool(deployment, 'lookup_transaction_group')
-  const lookupAssetTool = requireTool(deployment, 'lookup_asset')
-  const lookupApplicationTool = requireTool(deployment, 'lookup_application')
-  const lookupBlockTool = requireTool(deployment, 'lookup_block')
-  const accountAssetsTool = requireTool(deployment, 'get_account_assets')
-  const accountAppStatesTool = requireTool(deployment, 'get_account_app_local_states')
-  const accountTransactionsTool = requireTool(deployment, 'search_account_transactions')
-  const searchTransactionsTool = requireTool(deployment, 'search_transactions')
   const context = deployment.contexts.get(network)
   if (!context) throw new Error(`Deployment is missing network ${network}`)
 
@@ -286,6 +266,30 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
     network: extra?.network ?? network,
     ...(extra?.input === undefined ? {} : { input: extra.input }),
   })
+
+  /**
+   * Any of the deployment's tools by name. The tool's view id picks the record
+   * builder; `input` is recorded so a list can re-run its own call for the
+   * next page. Every read below is this.
+   */
+  const callTool = async (toolName: string, args: Record<string, unknown>) => {
+    const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+    if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+    const id = newId('tool-call-live')
+    const output = await executeToolCall(deployment, tool, args)
+    // Hosts scope account lists by merging the address in; the tool's own wire lacks it.
+    const wire =
+      typeof args.address === 'string' &&
+      output !== null &&
+      typeof output === 'object' &&
+      !Array.isArray(output)
+        ? { ...(output as object), address: args.address }
+        : output
+    return bridgeToolResult(
+      { id, toolName, output: wire, isError: false, ...(tool.view ? { view: tool.view } : {}) },
+      { resultId: newId('result-live'), toolCallId: id, network, input: args as JsonValue },
+    ).record
+  }
 
   return {
     network,
@@ -315,11 +319,11 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
       if (draftRecord.state !== 'success') {
         throw new Error('Cannot simulate a failed draft record')
       }
-      const draft = paymentDraftDataSchema.parse(draftRecord.data)
+      const draft = writeDraftDataSchema.parse(draftRecord.data)
       // The group bytes, not reconstructed specs, are the simulated truth.
       const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions)
       const wire = await simulateUnsignedGroup(context.algod, draft.unsignedGroup.transactions)
-      return buildPaymentSimulationRecord(
+      return buildSimulationRecord(
         identity('payment-simulation', { network: draftRecord.network }),
         wire,
         decoded,
@@ -329,102 +333,44 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
       if (signedRecord.state !== 'success') {
         throw new Error('Cannot submit a failed signed record')
       }
-      const signed = paymentSignedGroupDataSchema.parse(signedRecord.data)
+      const signed = signedGroupDataSchema.parse(signedRecord.data)
       const bytes = signed.transactions.map((txn) => base64ToBytes(txn))
       const { txid } = await context.algod.sendRawTransaction(bytes).do()
       const confirmation = await algosdk.waitForConfirmation(context.algod, txid, 4)
-      return buildPaymentConfirmationRecord(
+      return buildConfirmationRecord(
         identity('payment-confirmation', { network: signedRecord.network }),
         { transactionId: txid, confirmedRound: Number(confirmation.confirmedRound) },
       )
     },
-    async lookupAccount(address) {
-      const wire = await executeToolCall(deployment, accountPortfolio, { address })
-      return buildAccountPortfolioRecord(identity('account'), wire)
-    },
-    async lookupAccounts(addresses) {
-      const wire = await executeToolCall(deployment, batchLookupAccounts, {
-        addresses: [...addresses],
-      })
-      return buildAccountListRecord(identity('accounts'), wire, 'batch_lookup_accounts')
-    },
-    async lookupTransaction(txid) {
-      const wire = await executeToolCall(deployment, lookupTransactionTool, { txid })
-      return buildTransactionDetailRecord(identity('transaction'), wire)
-    },
-    async lookupTransactionGroup(groupId) {
-      const wire = await executeToolCall(deployment, lookupTransactionGroupTool, { groupId })
-      return buildTransactionGroupRecord(identity('transaction-group'), wire)
-    },
-    async lookupAsset(assetId) {
-      const wire = await executeToolCall(deployment, lookupAssetTool, { assetId })
-      return buildAssetDetailRecord(identity('asset'), wire)
-    },
-    async lookupApplication(applicationId) {
-      const wire = await executeToolCall(deployment, lookupApplicationTool, { applicationId })
-      return buildApplicationDetailRecord(identity('application'), wire)
-    },
-    async lookupBlock(round) {
-      const wire = await executeToolCall(deployment, lookupBlockTool, { round })
-      return buildBlockDetailRecord(identity('block'), wire)
-    },
-    async lookupAccountAssets(address) {
-      const wire = await executeToolCall(deployment, accountAssetsTool, { address })
-      return buildAssetHoldingsRecord(
-        identity('account-assets', { input: { address } }),
-        wire,
-        'get_account_assets',
-      )
-    },
-    async lookupAccountAppStates(address) {
-      const wire = await executeToolCall(deployment, accountAppStatesTool, { address })
-      return buildApplicationLocalsRecord(
-        identity('account-apps', { input: { address } }),
-        { ...(wire as object), address },
-        'get_account_app_local_states',
-      )
-    },
-    async searchTransactions(filter) {
-      const { address, assetId, applicationId, round, txType, nextToken } = filter
+    lookupAccount: (address) => callTool('get_account_portfolio', { address }),
+    lookupAccounts: (addresses) => callTool('batch_lookup_accounts', { addresses: [...addresses] }),
+    lookupTransaction: (txid) => callTool('lookup_transaction', { txid }),
+    lookupTransactionGroup: (groupId) => callTool('lookup_transaction_group', { groupId }),
+    lookupAsset: (assetId) => callTool('lookup_asset', { assetId }),
+    lookupApplication: (applicationId) => callTool('lookup_application', { applicationId }),
+    lookupBlock: (round) => callTool('lookup_block', { round }),
+    lookupAccountAssets: (address) => callTool('get_account_assets', { address }),
+    lookupAccountAppStates: (address) => callTool('get_account_app_local_states', { address }),
+    searchTransactions({ address, assetId, applicationId, round, txType, nextToken }) {
       const page = {
         limit: 20,
         ...(nextToken ? { nextToken } : {}),
         ...(txType ? { txType } : {}),
       }
-      const tool = address ? accountTransactionsTool : searchTransactionsTool
-      const args = address
-        ? { ...page, address, ...(assetId === undefined ? {} : { assetId }) }
-        : {
+      return address
+        ? callTool('search_account_transactions', {
+            ...page,
+            address,
+            ...(assetId === undefined ? {} : { assetId }),
+          })
+        : callTool('search_transactions', {
             ...page,
             ...(assetId === undefined ? {} : { assetId }),
             ...(applicationId === undefined ? {} : { applicationId }),
             ...(round === undefined ? {} : { minRound: round, maxRound: round }),
-          }
-      const wire = await executeToolCall(deployment, tool, args)
-      return buildTransactionListRecord(
-        identity('txn-search', { input: args }),
-        { ...(wire as object), ...(address ? { address } : {}) },
-        tool.name,
-      )
+          })
     },
-    async callTool(toolName, args) {
-      const tool = deployment.tools.find((candidate) => candidate.name === toolName)
-      if (!tool) throw new Error(`This host has no tool named ${toolName}`)
-      const id = newId('tool-call-live')
-      const output = await executeToolCall(deployment, tool, args)
-      // Hosts scope account lists by merging the address in; the tool's own wire lacks it.
-      const wire =
-        typeof args.address === 'string' &&
-        output !== null &&
-        typeof output === 'object' &&
-        !Array.isArray(output)
-          ? { ...(output as object), address: args.address }
-          : output
-      return bridgeToolResult(
-        { id, toolName, output: wire, isError: false, ...(tool.view ? { view: tool.view } : {}) },
-        { resultId: newId('result-live'), toolCallId: id, network, input: args as JsonValue },
-      ).record
-    },
+    callTool,
     async statusRound() {
       const status = await context.algod.status().do()
       return { lastRound: Number(status.lastRound) }

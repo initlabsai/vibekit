@@ -3,7 +3,7 @@
  * with its welcome panel and thinking fold, and the composer input.
  */
 import {
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   type ResultStore,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
@@ -18,7 +18,7 @@ import {
 import { useEffect, useState, type RefObject } from 'react'
 
 import { PLUGIN_CARDS } from '../features/plugins/cards.js'
-import { PaymentCard } from '../features/write-flow/cards.js'
+import { WriteFlowCard } from '../features/write-flow/cards.js'
 import { RawCard, TableCard } from '../generic-cards.js'
 import { HighlightContext, usePulse } from '../primitives.js'
 import { ResultCard, type OpenTarget } from '../result-card.js'
@@ -393,10 +393,10 @@ export function ContentPane({
                           />
                         ))
                       ) : (
-                        <PaymentCard
+                        <WriteFlowCard
                           key={block.flow.stage}
                           model={(() => {
-                            const derived = createPaymentFlowViewModel(store, block.flow)
+                            const derived = createWriteFlowViewModel(store, block.flow)
                             return derived.ok ? derived.model : undefined
                           })()}
                           stage={block.flow.stage}

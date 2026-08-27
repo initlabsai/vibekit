@@ -17,7 +17,7 @@ import {
   Rule,
   Unavailable,
 } from '../../primitives.js'
-import { algo, MoreFooter, pad } from '../../generic-cards.js'
+import { ListCard, algo, pad } from '../../generic-cards.js'
 
 function holdingAmount(amount: number | string, decimals?: number, unitName?: string): string {
   const display = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
@@ -191,7 +191,7 @@ export function AccountSummaryCard({
         {name ? <Fact label="name" value={name} width={body} /> : null}
         <Fact label="address" value={address} copy={address} width={body} />
         {minBalanceMicroAlgos === undefined ? null : (
-          <Fact label="min bal" value={algo(minBalanceMicroAlgos) ?? '—'} width={body} />
+          <Fact label="min bal" value={algo(minBalanceMicroAlgos)} width={body} />
         )}
         {rekeyedTo ? (
           <Fact label="rekeyed" value={rekeyedTo} copy={rekeyedTo} width={body} />
@@ -243,56 +243,43 @@ export function AccountListCard({
   loadingMore?: boolean
   onOpen?: (address: string) => void
 }) {
-  const body = innerWidth(width)
-  const rows = accounts
   const missingNote =
     missing && missing.length > 0
       ? `${missing.length} not found on this network: ${missing.map((address) => shorten(address, 12)).join(', ')}`
       : undefined
   return (
-    <Frame width={width}>
-      <Header kicker="ACCOUNTS" pill={String(accounts.length)} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((account, index) => (
-          <box key={account.address} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact label="name" value={account.name ?? '—'} width={body - 12} />
-              {onOpen ? <Button label="open ▸" onPress={() => onOpen(account.address)} /> : null}
-            </box>
-            <Fact label="address" value={account.address} copy={account.address} width={body} />
-            <Fact label="balance" value={algo(account.balanceMicroAlgos) ?? '—'} width={body} />
-            {account.status ? <Fact label="status" value={account.status} width={body} /> : null}
-            {account.minBalanceMicroAlgos === undefined ? null : (
-              <Fact
-                label="min bal"
-                value={algo(account.minBalanceMicroAlgos) ?? '—'}
-                width={body}
-              />
-            )}
-            {account.rekeyedTo ? (
-              <Fact
-                label="rekeyed"
-                value={account.rekeyedTo}
-                copy={account.rekeyedTo}
-                width={body}
-              />
-            ) : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        {accounts.length === 0 ? (
-          <FooterNote text="No accounts found on this network." width={body} />
-        ) : null}
-        {missingNote ? <FooterNote text={missingNote} width={body} /> : null}
-        <MoreFooter
-          shown={rows.length}
-          total={accounts.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="ACCOUNTS"
+      pill={String(accounts.length)}
+      rows={accounts}
+      keyOf={(account) => account.address}
+      lead={(account) => ({ label: 'name', value: account.name ?? '—' })}
+      onOpen={onOpen && ((account) => onOpen(account.address))}
+      facts={(account, body) => (
+        <>
+          <Fact label="address" value={account.address} copy={account.address} width={body} />
+          <Fact label="balance" value={algo(account.balanceMicroAlgos)} width={body} />
+          {account.status ? <Fact label="status" value={account.status} width={body} /> : null}
+          {account.minBalanceMicroAlgos === undefined ? null : (
+            <Fact label="min bal" value={algo(account.minBalanceMicroAlgos)} width={body} />
+          )}
+          {account.rekeyedTo ? (
+            <Fact label="rekeyed" value={account.rekeyedTo} copy={account.rekeyedTo} width={body} />
+          ) : null}
+        </>
+      )}
+      after={(body) => (
+        <>
+          {accounts.length === 0 ? (
+            <FooterNote text="No accounts found on this network." width={body} />
+          ) : null}
+          {missingNote ? <FooterNote text={missingNote} width={body} /> : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }

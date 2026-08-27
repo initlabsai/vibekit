@@ -13,7 +13,7 @@ import {
   paymentFixtureResults,
 } from '../src/sample/payment.js'
 import {
-  createPaymentFlowViewModel,
+  createWriteFlowViewModel,
   createResultStore,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
@@ -26,12 +26,12 @@ import {
   type WriteFlowState,
 } from '../src/index.js'
 import {
-  paymentSimulationDataSchema,
+  writeSimulationDataSchema,
   writeFlowEventKinds,
   writeFlowEventSchema,
   writeFlowReducer,
   type WriteFlowEventKind,
-} from '../src/flows/payment.js'
+} from '../src/flows/write-flow.js'
 
 function collectLeaves(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(collectLeaves)
@@ -87,7 +87,7 @@ describe('fixture-backed payment write flow', () => {
     let state: WriteFlowState | null = null
     for (const kind of HAPPY_PATH) {
       state = advance(state, kind)
-      const derived = createPaymentFlowViewModel(store, state)
+      const derived = createWriteFlowViewModel(store, state)
       expect(derived.ok).toBeTrue()
       if (!derived.ok) continue
       expect(derived.model).toMatchObject({
@@ -108,7 +108,7 @@ describe('fixture-backed payment write flow', () => {
     }
     if (!state) throw new Error('Expected confirmed flow')
 
-    const confirmed = createPaymentFlowViewModel(store, state)
+    const confirmed = createWriteFlowViewModel(store, state)
     if (!confirmed.ok) throw new Error('Expected confirmed model')
     expect(confirmed.model.simulation).toEqual({
       wouldSucceed: true,
@@ -148,7 +148,7 @@ describe('fixture-backed payment write flow', () => {
       state = advance(state, kind)
     }
     if (!state) throw new Error('Expected denied flow')
-    const derived = createPaymentFlowViewModel(store, state)
+    const derived = createWriteFlowViewModel(store, state)
     if (!derived.ok) throw new Error('Expected denied model')
     expect(derived.model.stage).toBe('denied')
     expect(derived.model.approval).toEqual({
@@ -167,8 +167,8 @@ describe('fixture-backed payment write flow', () => {
     if (!simulationRecord || simulationRecord.state !== 'success') {
       throw new Error('Expected simulation fixture')
     }
-    const tamperedData = paymentSimulationDataSchema.parse({
-      ...paymentSimulationDataSchema.parse(simulationRecord.data),
+    const tamperedData = writeSimulationDataSchema.parse({
+      ...writeSimulationDataSchema.parse(simulationRecord.data),
       amountMicroAlgos: 999,
     })
     const tamperedStore = createResultStore(
@@ -179,7 +179,7 @@ describe('fixture-backed payment write flow', () => {
       ),
     )
     const state = advance(advance(null, 'draft'), 'simulate')
-    const derived = createPaymentFlowViewModel(tamperedStore, state)
+    const derived = createWriteFlowViewModel(tamperedStore, state)
     expect(derived).toEqual({
       ok: false,
       error: { code: 'INVALID_VIEW_DATA', message: expect.stringContaining('does not simulate') },

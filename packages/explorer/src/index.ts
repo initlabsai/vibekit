@@ -115,20 +115,17 @@ export type {
   GraphVertical,
   TransactionsGraph,
 } from './views/transaction-graph.js'
-export { createPaymentFlowViewModel } from './flows/payment.js'
-export type { PaymentFlowViewModel, WriteFlowState } from './flows/payment.js'
+export { createWriteFlowViewModel } from './flows/write-flow.js'
+export type { WriteFlowViewModel, WriteFlowState } from './flows/write-flow.js'
 export {
-  completeApprovedPaymentFlow,
-  performLivePaymentStep,
-  startPaymentFlow,
-  startPaymentFlowFromDraftRecord,
-} from './flows/payment-live.js'
-export type {
-  PaymentDraftParams,
-  PaymentFlowHost,
-  ToolResultEventLike,
-} from './flows/payment-live.js'
+  completeApprovedWriteFlow,
+  performWriteFlowStep,
+  startWriteFlow,
+  startWriteFlowFromDraft,
+} from './flows/write-flow-host.js'
+export type { PaymentDraftParams, WriteFlowHost } from './flows/write-flow-host.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
+export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'
 export type { EntityLookupHost } from './entity-lookup.js'
 export { FIXTURE_ADDRESS_BOOK } from './sample/account.js'
@@ -136,7 +133,7 @@ export {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  createFixturePaymentHost,
+  createSampleHost,
   parsePaymentComposerCommand,
 } from './sample/payment.js'
 export {

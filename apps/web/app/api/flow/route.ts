@@ -1,5 +1,5 @@
 /**
- * The web app's flow route: the browser's PaymentFlowHost backend, served by
+ * The web app's flow route: the browser's WriteFlowHost backend, served by
  * the live host. Compose-only by construction — the deployment has no signer,
  * so nothing here can sign or submit.
  */

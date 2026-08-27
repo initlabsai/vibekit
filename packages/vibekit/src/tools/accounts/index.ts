@@ -1,6 +1,6 @@
 import { defineTool, type AnyTool } from '../../core/index.js'
 import { z } from 'zod'
-import { transactionListSchema } from '../shared/schemas.js'
+import { transactionListSchema, txTypeEnum } from '../shared/schemas.js'
 import { getAccountAppLocalStates, getAccountAssets } from './assets.js'
 import { batchLookupAccounts, lookupAccount } from './lookup.js'
 import { getAccountPortfolio } from './portfolio.js'
@@ -23,11 +23,6 @@ export {
   getAccountAppLocalStates,
   getAccountPortfolio,
 }
-
-const txTypeEnum = z
-  .enum(['pay', 'keyreg', 'acfg', 'axfer', 'afrz', 'appl', 'stpf', 'hb'])
-  .optional()
-  .describe('Filter by transaction type')
 
 export const accountTools: AnyTool[] = [
   defineTool({

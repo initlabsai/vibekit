@@ -1,3 +1,8 @@
+/**
+ * The write flow: the data each stage records, the stage machine (reducer),
+ * and the view model an approval screen renders. Payment-shaped fields
+ * (receiver, amount) are present when the group is one plain pay.
+ */
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
@@ -35,7 +40,7 @@ export const paymentEffectSchema = z
  * group bytes are the ground truth the flow inspects and approves. Payment
  * receiver/amount are present when the group is a single plain pay.
  */
-export const paymentDraftDataSchema = z
+export const writeDraftDataSchema = z
   .object({
     sender: algorandAddressCandidateSchema,
     receiver: algorandAddressCandidateSchema.optional(),
@@ -59,7 +64,7 @@ export const paymentDraftDataSchema = z
  * group facts so the approval view has one authoritative source; the view
  * model cross-checks them against the draft before presenting.
  */
-export const paymentSimulationDataSchema = z
+export const writeSimulationDataSchema = z
   .object({
     wouldSucceed: z.boolean(),
     failureMessage: z.string().min(1).optional(),
@@ -83,7 +88,7 @@ export const paymentSimulationDataSchema = z
  * the approved draft group; hosts verify that correspondence before building
  * this record.
  */
-export const paymentSignedGroupDataSchema = z
+export const signedGroupDataSchema = z
   .object({
     transactions: z.array(z.string().min(1)).min(1).describe('base64 signed, group order'),
     txIds: z.array(algorandTransactionIdSchema).min(1),
@@ -92,7 +97,7 @@ export const paymentSignedGroupDataSchema = z
   .strict()
 
 /** Authoritative data of a payment confirmation result. */
-export const paymentConfirmationDataSchema = z
+export const confirmationDataSchema = z
   .object({
     transactionId: algorandTransactionIdSchema,
     confirmedRound: z.number().int().positive(),
@@ -100,16 +105,16 @@ export const paymentConfirmationDataSchema = z
   .strict()
 
 /** Authoritative data of a composed, unsigned payment draft result. */
-export type PaymentDraftData = z.infer<typeof paymentDraftDataSchema>
+export type WriteDraftData = z.infer<typeof writeDraftDataSchema>
 
 /** Authoritative data of a payment simulation result. */
-export type PaymentSimulationData = z.infer<typeof paymentSimulationDataSchema>
+export type WriteSimulationData = z.infer<typeof writeSimulationDataSchema>
 
 /** Authoritative data of a signed payment group. */
-export type PaymentSignedGroupData = z.infer<typeof paymentSignedGroupDataSchema>
+export type SignedGroupData = z.infer<typeof signedGroupDataSchema>
 
 /** Authoritative data of a payment confirmation result. */
-export type PaymentConfirmationData = z.infer<typeof paymentConfirmationDataSchema>
+export type ConfirmationData = z.infer<typeof confirmationDataSchema>
 
 /**
  * Observable stages of one write flow: every state the constitution requires
@@ -416,7 +421,7 @@ const paymentEffectViewSchema = z
   .strict()
 
 /** Renderer-ready semantic model for one observable write flow. */
-export const paymentFlowViewModelSchema = z
+export const writeFlowViewModelSchema = z
   .object({
     flow: z.literal('payment'),
     flowId: z.string().min(1),
@@ -474,13 +479,13 @@ export const paymentFlowViewModelSchema = z
   .strict()
 
 /** Renderer-ready semantic model for one observable payment write flow. */
-export type PaymentFlowViewModel = z.infer<typeof paymentFlowViewModelSchema>
+export type WriteFlowViewModel = z.infer<typeof writeFlowViewModelSchema>
 
 /** Result of deriving the payment flow view model. */
-export type PaymentFlowViewModelResult =
-  { ok: true; model: PaymentFlowViewModel } | { ok: false; error: ViewModelError }
+export type WriteFlowViewModelResult =
+  { ok: true; model: WriteFlowViewModel } | { ok: false; error: ViewModelError }
 
-function invalid(message: string): PaymentFlowViewModelResult {
+function invalid(message: string): WriteFlowViewModelResult {
   return { ok: false, error: { code: 'INVALID_VIEW_DATA', message } }
 }
 
@@ -491,24 +496,24 @@ function invalid(message: string): PaymentFlowViewModelResult {
  * the draft, or a record from another network, refuses to present rather
  * than showing facts the approval would not act on.
  */
-export function createPaymentFlowViewModel(
+export function createWriteFlowViewModel(
   store: ResultStore,
   flow: WriteFlowState,
-): PaymentFlowViewModelResult {
+): WriteFlowViewModelResult {
   const draft = resolveResultReference(store, flow.draft)
   if (!draft.ok) return draft
-  const parsedDraft = paymentDraftDataSchema.safeParse(draft.value)
+  const parsedDraft = writeDraftDataSchema.safeParse(draft.value)
   if (!parsedDraft.success) {
     return invalid('Draft result did not match the payment draft schema')
   }
   const draftData = parsedDraft.data
   const network = draft.record.network
 
-  let simulation: PaymentFlowViewModel['simulation']
+  let simulation: WriteFlowViewModel['simulation']
   if (flow.simulation) {
     const resolution = resolveResultReference(store, flow.simulation)
     if (!resolution.ok) return resolution
-    const parsed = paymentSimulationDataSchema.safeParse(resolution.value)
+    const parsed = writeSimulationDataSchema.safeParse(resolution.value)
     if (!parsed.success) {
       return invalid('Simulation result did not match the payment simulation schema')
     }
@@ -557,11 +562,11 @@ export function createPaymentFlowViewModel(
     }
   }
 
-  let signed: PaymentFlowViewModel['signed']
+  let signed: WriteFlowViewModel['signed']
   if (flow.signed) {
     const resolution = resolveResultReference(store, flow.signed)
     if (!resolution.ok) return resolution
-    const parsed = paymentSignedGroupDataSchema.safeParse(resolution.value)
+    const parsed = signedGroupDataSchema.safeParse(resolution.value)
     if (!parsed.success) {
       return invalid('Signed result did not match the payment signed-group schema')
     }
@@ -580,11 +585,11 @@ export function createPaymentFlowViewModel(
     signed = { size: data.transactions.length, txIds: data.txIds, signer: data.signer }
   }
 
-  let confirmation: PaymentFlowViewModel['confirmation']
+  let confirmation: WriteFlowViewModel['confirmation']
   if (flow.confirmation) {
     const resolution = resolveResultReference(store, flow.confirmation)
     if (!resolution.ok) return resolution
-    const parsed = paymentConfirmationDataSchema.safeParse(resolution.value)
+    const parsed = confirmationDataSchema.safeParse(resolution.value)
     if (!parsed.success) {
       return invalid('Confirmation result did not match the payment confirmation schema')
     }
@@ -599,7 +604,7 @@ export function createPaymentFlowViewModel(
     confirmation = parsed.data
   }
 
-  let graph: PaymentFlowViewModel['graph']
+  let graph: WriteFlowViewModel['graph']
   if (draftData.graphTransactions && draftData.graphTransactions.length > 0) {
     try {
       const built = buildTransactionsGraph(draftData.graphTransactions as GraphTransaction[])
@@ -609,7 +614,7 @@ export function createPaymentFlowViewModel(
     }
   }
 
-  const model = paymentFlowViewModelSchema.parse({
+  const model = writeFlowViewModelSchema.parse({
     flow: 'payment',
     flowId: flow.flowId,
     stage: flow.stage,

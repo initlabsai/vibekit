@@ -1,24 +1,16 @@
 import { z } from 'zod'
+import { microAlgos, optionalMicroAlgos } from '../shared/schemas.js'
 
 /** Wire shape of lookup_account ('account.summary' view). */
 export const formattedAccountSchema = z.object({
   address: z.string(),
-  balanceMicroAlgos: z
-    .union([z.number(), z.string()])
-    .describe(
-      'Balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
-    ),
+  balanceMicroAlgos: microAlgos('Balance'),
   totalAssetsOptedIn: z.number().optional(),
   totalAppsOptedIn: z.number().optional(),
   totalCreatedAssets: z.number().optional(),
   totalCreatedApps: z.number().optional(),
   status: z.string().optional(),
-  minBalanceMicroAlgos: z
-    .union([z.number(), z.string()])
-    .optional()
-    .describe(
-      'Minimum balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
-    ),
+  minBalanceMicroAlgos: optionalMicroAlgos('Minimum balance'),
   rekeyedTo: z.string().optional(),
   rewardBase: z.union([z.number(), z.string()]).optional(),
   createdAtRound: z.number().optional(),
@@ -78,11 +70,7 @@ export const appLocalStatesSchema = z.object({
 /** Wire shape of get_account_portfolio ('account.portfolio' view). */
 export const accountPortfolioSchema = z.object({
   address: z.string(),
-  balanceMicroAlgos: z
-    .union([z.number(), z.string()])
-    .describe(
-      'Balance in microALGOs (1 ALGO = 1,000,000 microALGOs); decimal string when above 2^53',
-    ),
+  balanceMicroAlgos: microAlgos('Balance'),
   assets: z.array(accountAsset),
   totalAssets: z.number(),
 })

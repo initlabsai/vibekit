@@ -223,8 +223,15 @@ describe('readGlobalState', () => {
   })
 
   test('maps keys to human-readable names via appSpec', async () => {
+    // The smallest ARC-56 file with a named global key; a bare state object is not a spec.
     const appSpec = JSON.stringify({
-      state: { keys: { global: { counterName: { key: btoa('c') } } } },
+      name: 'Counter',
+      methods: [],
+      state: {
+        keys: {
+          global: { counterName: { keyType: 'AVMString', valueType: 'AVMUint64', key: btoa('c') } },
+        },
+      },
     })
     const ctx = fakeContext({
       algod: {

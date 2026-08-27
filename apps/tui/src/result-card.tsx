@@ -134,9 +134,9 @@ export function ResultCard({
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
       if (!derived.ok) return <TransactionCard model={undefined} width={width} />
-      const { amountMicroAlgos, ...model } = derived.model
+      const model = derived.model
       // Every detail gets the flow graph a group does (inner txns included).
-      const graph = buildGroupGraph([{ ...model, paymentAmountMicroAlgos: amountMicroAlgos }])
+      const graph = buildGroupGraph([model])
       return (
         <box flexDirection="column">
           <TransactionCard model={derived.model} width={width} />

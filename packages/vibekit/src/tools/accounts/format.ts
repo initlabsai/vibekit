@@ -1,6 +1,9 @@
 /** Shared account formatting for the accounts tool domain. */
 
+import type { z } from 'zod'
 import { uint64 } from '../shared/format.js'
+import type { Mutual } from '../shared/schemas.js'
+import { accountAssetListSchema, formattedAccountSchema } from './schemas.js'
 
 type IndexerAccount = InstanceType<typeof import('algosdk').indexerModels.Account>
 
@@ -34,7 +37,10 @@ export interface AccountAsset {
   unitName?: string
 }
 
-/** Account application local state. */
+true satisfies Mutual<FormattedAccount, z.infer<typeof formattedAccountSchema>>
+true satisfies Mutual<AccountAsset, z.infer<typeof accountAssetListSchema>['assets'][number]>
+
+/** Account application local state. Pre-jsonSafe: `uint` is a bigint here and number | string on the wire. */
 export interface AccountAppLocalState {
   applicationId: number
   schema: { numByteSlice: number; numUint: number }

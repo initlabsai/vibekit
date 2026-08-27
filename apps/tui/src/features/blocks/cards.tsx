@@ -17,7 +17,7 @@ import {
   Rule,
   Unavailable,
 } from '../../primitives.js'
-import { algo, MoreFooter } from '../../generic-cards.js'
+import { ListCard, algo } from '../../generic-cards.js'
 
 export function BlockCard({
   model,
@@ -70,14 +70,12 @@ export function BlockCard({
         <Fact
           label="fees"
           value={
-            model.feesCollectedMicroAlgos === undefined
-              ? '—'
-              : (algo(model.feesCollectedMicroAlgos) ?? '—')
+            model.feesCollectedMicroAlgos === undefined ? '—' : algo(model.feesCollectedMicroAlgos)
           }
           width={body}
         />
         {model.proposerPayoutMicroAlgos === undefined ? null : (
-          <Fact label="payout" value={algo(model.proposerPayoutMicroAlgos) ?? '—'} width={body} />
+          <Fact label="payout" value={algo(model.proposerPayoutMicroAlgos)} width={body} />
         )}
         {model.previousRound === undefined ? null : (
           <Fact
@@ -121,44 +119,31 @@ export function BlockListCard({
   loadingMore?: boolean
   onOpen?: (round: number) => void
 }) {
-  const body = innerWidth(width)
-  const rows = blocks
   return (
-    <Frame width={width}>
-      <Header kicker="BLOCKS" pill={String(blocks.length)} tone="idle" />
-      <box flexDirection="column">
-        {rows.map((block, index) => (
-          <box key={block.round} flexDirection="column" marginTop={1}>
-            <box flexDirection="row" justifyContent="space-between" height={1}>
-              <Fact
-                label="round"
-                value={String(block.round)}
-                copy={String(block.round)}
-                width={body - 12}
-              />
-              {onOpen ? <Button label="open ▸" onPress={() => onOpen(block.round)} /> : null}
-            </box>
-            <Fact label="time" value={formatExplorerTime(block.timestamp)} width={body} />
-            <Fact
-              label="txns"
-              value={`${block.transactionCount} txn${block.transactionCount === 1 ? '' : 's'}`}
-              width={body}
-            />
-            {block.proposer ? (
-              <Fact label="proposer" value={block.proposer} copy={block.proposer} width={body} />
-            ) : null}
-            {index < rows.length - 1 ? <Rule width={body} /> : null}
-          </box>
-        ))}
-        <MoreFooter
-          shown={rows.length}
-          total={blocks.length}
-          nextToken={nextToken}
-          onMore={onMore}
-          loadingMore={loadingMore}
-          width={body}
-        />
-      </box>
-    </Frame>
+    <ListCard
+      kicker="BLOCKS"
+      pill={String(blocks.length)}
+      rows={blocks}
+      keyOf={(block) => String(block.round)}
+      lead={(block) => ({ label: 'round', value: String(block.round), copy: String(block.round) })}
+      onOpen={onOpen && ((block) => onOpen(block.round))}
+      facts={(block, body) => (
+        <>
+          <Fact label="time" value={formatExplorerTime(block.timestamp)} width={body} />
+          <Fact
+            label="txns"
+            value={`${block.transactionCount} txn${block.transactionCount === 1 ? '' : 's'}`}
+            width={body}
+          />
+          {block.proposer ? (
+            <Fact label="proposer" value={block.proposer} copy={block.proposer} width={body} />
+          ) : null}
+        </>
+      )}
+      nextToken={nextToken}
+      onMore={onMore}
+      loadingMore={loadingMore}
+      width={width}
+    />
   )
 }

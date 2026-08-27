@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 import { defineTool } from '@initlabs/vibekit'
 import {
-  createFixturePaymentHost,
+  createSampleHost,
   createFixtureResultStore,
   createApplicationMethodsViewModel,
   bridgeToolResult,
@@ -12,7 +12,7 @@ import {
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  startPaymentFlowFromDraftRecord,
+  startWriteFlowFromDraft,
   type ToolResultEventLike,
 } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
@@ -290,8 +290,8 @@ describe('TUI agent lane', () => {
       { resultId: newId('result-agent-draft'), toolCallId: 'call-1', network: 'localnet' },
       compose,
     )
-    const run = await startPaymentFlowFromDraftRecord({
-      host: createFixturePaymentHost(),
+    const run = await startWriteFlowFromDraft({
+      host: createSampleHost(),
       store: createFixtureResultStore(),
       draftRecord,
       newId,
@@ -508,7 +508,7 @@ describe('planToolResult', () => {
       summary: 'pay 0.25 ALGO',
       network: 'localnet',
     })
-    expect(planToolResult(compose, ctx).kind).toBe('payment')
+    expect(planToolResult(compose, ctx).kind).toBe('write')
     const second = planToolResult(compose, { ...ctx, paymentInFlight: true })
     if (second.kind !== 'cards') throw new Error(second.kind)
     expect(second.blocks[0]?.kind).toBe('raw')

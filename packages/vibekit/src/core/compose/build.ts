@@ -257,7 +257,7 @@ export async function buildGroup(
         requireAddress(spec.receiver, 'receiver', i)
         requireCloseConfirmation(spec.closeAssetTo, spec.confirmCloseAccount, 'closeAssetTo', i)
         const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
-          sender: spec.clawbackTarget ? sender : sender,
+          sender,
           receiver: spec.receiver,
           assetIndex: BigInt(spec.assetId),
           amount: BigInt(spec.amount),
@@ -320,8 +320,8 @@ export async function buildGroup(
           defaultFrozen: spec.defaultFrozen ?? false,
           manager: optionalAddress(spec.manager, 'manager', i),
           reserve: optionalAddress(spec.reserve, 'reserve', i),
-          freeze: spec.freeze,
-          clawback: spec.clawback,
+          freeze: optionalAddress(spec.freeze, 'freeze', i),
+          clawback: optionalAddress(spec.clawback, 'clawback', i),
           note,
           suggestedParams,
         })

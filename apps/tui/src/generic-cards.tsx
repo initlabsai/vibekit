@@ -4,6 +4,8 @@ import algosdk from 'algosdk'
 import { base64ToBytes } from '@initlabs/vibekit'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 
+import type { ReactNode } from 'react'
+
 import { COLORS, shorten, wrapLines } from './theme.js'
 import { Button, Card, Fact, FooterNote, Frame, Header, innerWidth, Rule } from './primitives.js'
 
@@ -23,9 +25,9 @@ export function bytesDisplay(base64: string): string {
   }
 }
 
-export function algo(value: number | string | undefined): string | undefined {
-  if (value === undefined) return undefined
-  return `${formatMicroAlgos(value)} ALGO`
+/** `1.5 ALGO`, or a dash when the field is absent. */
+export function algo(value: number | string | undefined): string {
+  return value === undefined ? '—' : `${formatMicroAlgos(value)} ALGO`
 }
 
 /** Fixed-width cell for one-line table rows; shortens, never wraps. */
@@ -34,27 +36,18 @@ export function pad(text: string, width: number, align: 'left' | 'right' = 'left
   return align === 'right' ? cut.padStart(width) : cut.padEnd(width)
 }
 
-export function pageNotes(total: number, shown: number, nextToken?: string): string[] {
-  const notes: string[] = []
-  if (total > shown) notes.push(`${total - shown} more`)
-  if (nextToken) notes.push('more pages available')
-  return notes
-}
-
 /**
  * The bottom of a list card: a more ▸ button with the running count when the
- * record can fetch its next page, else the plain notes (rows hidden, pages left).
+ * record can fetch its next page, else a note that pages remain.
  */
 export function MoreFooter({
-  shown,
-  total,
+  count,
   nextToken,
   onMore,
   loadingMore = false,
   width,
 }: {
-  shown: number
-  total: number
+  count: number
   nextToken?: string
   onMore?: () => void
   loadingMore?: boolean
@@ -67,16 +60,83 @@ export function MoreFooter({
           label={loadingMore ? 'loading…' : 'more ▸'}
           onPress={loadingMore ? () => {} : onMore}
         />
-        <text fg={COLORS.faint}>{`${total} so far`}</text>
+        <text fg={COLORS.faint}>{`${count} so far`}</text>
       </box>
     )
   }
+  return nextToken ? <FooterNote text="more pages available" width={width} /> : null
+}
+
+/**
+ * The skeleton every list card shares: a header with the count, one block
+ * per row (an optional lead line beside the open ▸ button, then the row's
+ * facts), rules between rows, and the paging footer.
+ */
+export function ListCard<T>({
+  kicker,
+  chip,
+  pill,
+  rows,
+  keyOf,
+  lead,
+  canOpen,
+  onOpen,
+  facts,
+  before,
+  after,
+  nextToken,
+  onMore,
+  loadingMore,
+  width,
+}: {
+  kicker: string
+  chip?: string
+  pill: string
+  rows: ReadonlyArray<T>
+  keyOf: (row: T) => string
+  /** The first line, beside the open button; omit when the row's first fact spans the width. */
+  lead?: (row: T) => { label: string; value: string; copy?: string }
+  /** Rows without an open button (an id that is not an entity), when onOpen is set. */
+  canOpen?: (row: T) => boolean
+  onOpen?: (row: T) => void
+  facts: (row: T, body: number) => ReactNode
+  before?: (body: number) => ReactNode
+  after?: (body: number) => ReactNode
+  nextToken?: string
+  onMore?: () => void
+  loadingMore?: boolean
+  width: number
+}) {
+  const body = innerWidth(width)
   return (
-    <>
-      {pageNotes(total, shown, nextToken).map((note) => (
-        <FooterNote key={note} text={note} width={width} />
-      ))}
-    </>
+    <Frame width={width}>
+      <Header kicker={kicker} chip={chip} pill={pill} tone="idle" />
+      {before?.(body)}
+      <box flexDirection="column">
+        {rows.map((row, index) => (
+          <box key={keyOf(row)} flexDirection="column" marginTop={1}>
+            {lead ? (
+              <box flexDirection="row" justifyContent="space-between" height={1}>
+                <Fact {...lead(row)} width={body - 12} />
+                {onOpen && (canOpen?.(row) ?? true) ? (
+                  <Button label="open ▸" onPress={() => onOpen(row)} />
+                ) : null}
+              </box>
+            ) : null}
+            {facts(row, body)}
+            {index < rows.length - 1 ? <Rule width={body} /> : null}
+          </box>
+        ))}
+        {after?.(body)}
+        <MoreFooter
+          count={rows.length}
+          nextToken={nextToken}
+          onMore={onMore}
+          loadingMore={loadingMore}
+          width={body}
+        />
+      </box>
+    </Frame>
   )
 }
 

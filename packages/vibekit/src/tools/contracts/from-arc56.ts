@@ -19,24 +19,7 @@ import { normalizeAppSpec, type NormalizedAppSpec, type ParsedMethod } from './a
 
 const RESERVED_PARAM_NAMES = new Set(['sender', 'appId', 'extraFee', 'note', 'network'])
 
-/** Wire shape of a generated readonly-method call (simulateGroup, jsonSafe). */
-export const arc56SimulateResultSchema = z.object({
-  wouldSucceed: z.boolean(),
-  failureMessage: z.string().optional(),
-  failedAt: z.array(z.number()).optional(),
-  simulatedRound: z.number(),
-  txids: z.array(z.string()),
-  transactionResults: z.array(
-    z.object({
-      txid: z.string(),
-      logs: z.array(z.string()).optional(),
-      budgetConsumed: z.number().optional(),
-    }),
-  ),
-  returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
-  appBudgetAdded: z.number().optional(),
-  appBudgetConsumed: z.number().optional(),
-})
+import { simulateResultSchema } from '../transactions/tools-write.js'
 
 export interface ToolsFromArc56Options {
   /**
@@ -155,7 +138,7 @@ function toolForMethod(
     name,
     description,
     parameters,
-    output: readonly ? arc56SimulateResultSchema : writeResultSchema,
+    output: readonly ? simulateResultSchema : writeResultSchema,
     ...(readonly ? {} : { requiresSigner: true }),
     view: readonly ? 'json' : 'txn',
     handler: async (ctx, args) => {

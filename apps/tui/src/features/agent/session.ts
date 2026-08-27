@@ -318,7 +318,7 @@ export function tableModel(
 
 /** What the feed does with one tool result. */
 export type ToolResultPlan = { usedNetwork: LiveNetworkId } & (
-  | { kind: 'payment'; draftRecord: StructuredResult }
+  | { kind: 'write'; draftRecord: StructuredResult }
   | { kind: 'cards'; record: StructuredResult; blocks: SectionBlock[]; note?: string }
   | { kind: 'dropped'; message: string }
 )
@@ -351,7 +351,7 @@ export function planToolResult(
       compose,
       event.toolName,
     )
-    return { usedNetwork, kind: 'payment', draftRecord }
+    return { usedNetwork, kind: 'write', draftRecord }
   }
   try {
     const { network: _network, ...input } =
