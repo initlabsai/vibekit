@@ -11,11 +11,36 @@ Works with **Claude Code**, **Codex**, **Cursor**, **Copilot**, **Grok**,
 
 Alpha release — [feedback welcome](https://github.com/initlabsai/vibekit/issues).
 
+## Requirements
+
+| For | You need |
+| --- | --- |
+| Browsing the chain — queries, the Explorer, `vibekit new` | Nothing. The CLI and Explorer are self-contained binaries. |
+| **Signing anything** — payments, assets, deploys | **Node.js** (and `npm` once). The keystore daemon runs under Node. |
+| **Building a project** — compiling and testing contracts | **Node.js 24+**. The starter templates use `puya-ts`, `tsx`, and `vitest`. |
+| LocalNet | Docker Compose v2 |
+| The keystore, on Linux | A Secret Service keychain |
+| The keystore, on Windows | [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (`winget install Microsoft.VCRedist.2015+.x64`) |
+
+`vibekit doctor` reports what is missing without changing anything.
+
 ## Quick start
 
+macOS and Linux:
+
 ```bash
-curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
+curl -fsSL https://getvibekit.ai/alpha | sh
 ```
+
+Windows:
+
+```powershell
+irm https://getvibekit.ai/alpha.ps1 | iex
+```
+
+Both install the CLI and the Explorer sidecar. There is no stable release yet,
+so `/alpha` and `/alpha.ps1` are `/install` and `/install.ps1` with the
+prerelease channel pre-set.
 
 Scaffold a project and set up your agent:
 
@@ -31,9 +56,6 @@ vibekit explore
 ```
 
 Then open your AI tool in the project and start building.
-
-> Windows binaries are attached to each [release](https://github.com/initlabsai/vibekit/releases).
-> The PowerShell installer is not ready yet.
 
 ## Platform support
 

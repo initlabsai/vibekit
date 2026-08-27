@@ -13,6 +13,28 @@ sidecar as a sibling of the CLI binary, so both land in the same directory.
 There is no stable release yet, so every install below sets the `alpha`
 channel. Once 1.0.0 ships you can drop it.
 
+## Requirements
+
+The CLI and the Explorer are self-contained binaries — nothing else is needed
+to install them or to read the chain. Signing and building do have
+prerequisites.
+
+| For | You need |
+| --- | --- |
+| Browsing the chain — queries, the Explorer, `vibekit new` | Nothing |
+| **Signing anything** — payments, assets, deploys | **Node.js**, plus `npm` once |
+| **Building a project** — compiling and testing contracts | **Node.js 24+** |
+| LocalNet | Docker Compose v2 |
+| The keystore, on Linux | A Secret Service keychain |
+| The keystore, on Windows | [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (`winget install Microsoft.VCRedist.2015+.x64`) |
+
+Signing needs Node because the keystore daemon is a Node program; `vibekit
+keystore` provisions the pinned `@algorandfoundation/keystore-node` with npm
+the first time. Building needs it because the starter templates declare
+`engines: node >=24` and run `puya-ts`, `tsx`, and `vitest`.
+
+`vibekit doctor` reports what is missing without changing anything.
+
 ## macOS and Linux
 
 ```bash
@@ -93,16 +115,6 @@ vibekit doctor
 `doctor` reports what is missing — Docker for LocalNet, the keystore daemon for
 signing — without changing anything. `vibekit doctor --fix` is the opt-in
 repair path.
-
-## Requirements
-
-- Docker Compose v2 for LocalNet
-- Node.js and npm — the keystore daemon runs under Node; `vibekit keystore`
-  installs the pinned `@algorandfoundation/keystore-node` for you
-- A Secret Service keychain on Linux when you use the keystore
-- On Windows, the
-  [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
-  for OS credential store support (`winget install Microsoft.VCRedist.2015+.x64`)
 
 ## Run from a source checkout
 
