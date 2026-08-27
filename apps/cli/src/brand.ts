@@ -14,9 +14,5 @@ function truecolor(hex: string): (text: string) => string {
 
 /** Hero amber (`brassBright`): the wordmark, headings, figures. */
 export const amber = truecolor('#ffb454')
-/** Structural brass: labels and secondary structure. */
-export const brass = truecolor('#c4a06a')
 /** Signal teal: commands to run, live things, success. */
 export const teal = truecolor('#6fd3d3')
-/** Muted warm grey for asides. */
-export const muted = truecolor('#8e8476')

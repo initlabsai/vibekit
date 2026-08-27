@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  COMPOSE_PROJECT_NAME,
+  LOCALNET_PROJECT,
   composeFileStatus,
   getAlgodConfigJson,
   getAlgodNetworkTemplate,
@@ -12,7 +12,7 @@ import {
 describe('compose file generation', () => {
   test('compose yaml names the project and all four services', () => {
     const yaml = getComposeYaml()
-    expect(yaml).toContain(`name: "${COMPOSE_PROJECT_NAME}"`)
+    expect(yaml).toContain(`name: "${LOCALNET_PROJECT}"`)
     for (const service of ['algod:', 'conduit:', 'indexer-db:', 'indexer:']) {
       expect(yaml).toContain(service)
     }

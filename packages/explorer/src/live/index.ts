@@ -23,7 +23,7 @@ import {
 } from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../bridge.js'
-import type { TransactionSearchFilter } from '../views/transaction.js'
+import type { ExplorerReadHost } from '../host.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
@@ -178,7 +178,7 @@ export interface LivePaymentParams {
 }
 
 /** What the live host offers: reads, the write-flow steps, and the block tail. Nothing here can sign. */
-export interface LiveHost {
+export interface LiveHost extends ExplorerReadHost {
   network: string
   /** True when the network's algod answers within the timeout. */
   probe(timeoutMs?: number): Promise<boolean>
@@ -191,28 +191,6 @@ export interface LiveHost {
    * custody: it can only broadcast bytes some signer produced elsewhere.
    */
   submitSigned(signedRecord: StructuredResult): Promise<StructuredResult>
-  /** Looks an account's portfolio up as an authoritative record. */
-  lookupAccount(address: string): Promise<StructuredResult>
-  /** Looks several accounts up as one account.list record. */
-  lookupAccounts(addresses: readonly string[]): Promise<StructuredResult>
-  /** Looks a transaction up as an authoritative record. */
-  lookupTransaction(txid: string): Promise<StructuredResult>
-  /** Looks every transaction in an atomic group up as one transaction.group record. */
-  lookupTransactionGroup(groupId: string): Promise<StructuredResult>
-  /** Looks an ASA up as an authoritative record. */
-  lookupAsset(assetId: number): Promise<StructuredResult>
-  /** Looks an application up as an authoritative record. */
-  lookupApplication(applicationId: number): Promise<StructuredResult>
-  /** Looks a block up as an authoritative record. */
-  lookupBlock(round: number): Promise<StructuredResult>
-  /** Lists assets held by an account. */
-  lookupAccountAssets(address: string): Promise<StructuredResult>
-  /** Lists application local state for apps an account has opted into. */
-  lookupAccountAppStates(address: string): Promise<StructuredResult>
-  /** Lists transactions involving an account. */
-  /** One page of transactions scoped by account, asset, application, or round. */
-  searchTransactions(filter: TransactionSearchFilter): Promise<StructuredResult>
-  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   /** Current algod lastRound. */
   statusRound(): Promise<{ lastRound: number }>
   /** Resolves when lastRound is greater than `round` (algod wait-for-block). */

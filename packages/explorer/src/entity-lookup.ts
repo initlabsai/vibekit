@@ -1,15 +1,12 @@
 import type { StructuredResult } from './core/results.js'
-import type { ApplicationLookupHost } from './views/application.js'
-import type { AssetLookupHost } from './views/asset.js'
-import type { BlockLookupHost } from './views/block.js'
+import type { EntityLookupHost } from './host.js'
 
 /** Entity kinds a bare numeric identifier can resolve to. */
 export type AmbiguousEntityKind = 'asset' | 'application' | 'block'
 
-/** The three lookups a host runs concurrently for a bare numeric identifier. */
-export type EntityLookupHost = AssetLookupHost & ApplicationLookupHost & BlockLookupHost
-
 /** One successful concurrent match. */
+export type { EntityLookupHost } from './host.js'
+
 export interface EntityLookupMatch {
   entity: AmbiguousEntityKind
   record: StructuredResult

@@ -5,6 +5,9 @@
 
 import type { HarnessId } from './harnesses.js'
 
+/** The previous release's (0.x, gabrielkuettel/vibekit) MCP server key; doctor and init migrate it. */
+export const LEGACY_SERVER_KEY = 'vibekit-mcp'
+
 export type MCPCategory = 'documentation' | 'development'
 
 export interface AgentMCPConfig {

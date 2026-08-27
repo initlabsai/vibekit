@@ -57,6 +57,19 @@ export function formatBaseUnits(value: Uint64Json, decimals: number): string {
 }
 
 /**
+ * An ASA amount for display: scaled when the decimals are known, raw base
+ * units otherwise, with the unit name when given. `1500000 · 6 · USDC` → `1.5 USDC`.
+ */
+export function formatAssetAmount(
+  amount: Uint64Json,
+  decimals?: number,
+  unitName?: string,
+): string {
+  const value = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
+  return unitName ? `${value} ${unitName}` : value
+}
+
+/**
  * Parses a human decimal ALGO amount into safe-integer microALGOs using digit
  * math. Returns undefined for malformed input, more than six decimal places,
  * or amounts beyond the safe-integer range.

@@ -1,4 +1,8 @@
-import { formatBaseUnits, type AssetDetailViewModel } from '@initlabs/vibekit-explorer'
+import {
+  formatAssetAmount,
+  formatBaseUnits,
+  type AssetDetailViewModel,
+} from '@initlabs/vibekit-explorer'
 
 import {
   Button,
@@ -126,11 +130,6 @@ export function AssetListCard({
   )
 }
 
-/** Raw base units scaled for display; unknown decimals stay raw. */
-function baseUnits(amount: string, decimals?: number): string {
-  return decimals === undefined ? amount : formatBaseUnits(amount, decimals)
-}
-
 export function AssetHoldingsCard({
   assets,
   nextToken,
@@ -170,7 +169,11 @@ export function AssetHoldingsCard({
           {asset.unitName && asset.name ? (
             <Fact label="unit" value={asset.unitName} width={body} />
           ) : null}
-          <Fact label="amount" value={baseUnits(asset.amount, asset.decimals)} width={body} />
+          <Fact
+            label="amount"
+            value={formatAssetAmount(asset.amount, asset.decimals)}
+            width={body}
+          />
           {asset.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
         </>
       )}
@@ -207,7 +210,7 @@ export function AssetHoldersCard({
       facts={(holder, body) => (
         <>
           <Fact label="address" value={holder.address} copy={holder.address} width={body} />
-          <Fact label="amount" value={baseUnits(holder.amount, decimals)} width={body} />
+          <Fact label="amount" value={formatAssetAmount(holder.amount, decimals)} width={body} />
           {holder.isFrozen ? <Fact label="frozen" value="yes" width={body} /> : null}
         </>
       )}

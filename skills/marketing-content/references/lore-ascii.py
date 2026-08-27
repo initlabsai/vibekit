@@ -1,49 +1,53 @@
 #!/usr/bin/env python3
-"""Rasterize lore-mask.svg into ASCII. Prints HTML for a <pre>.
+"""Render a portrait as ASCII. Prints HTML for a <pre>.
 
-The SVG polygons stay the editable source; this is the render. Each facet gets
-ONE character for its whole area, so every plane stays flat — no dithering. The
-character still has to track the fill's brightness: colour alone does not
-separate tones at glyph density, and a face rendered in a single glyph reads as
-a blob. Hence the ramp `. : + # @` over the five fills, darkest first.
+    lore-ascii.py [cols] [source]
 
-    lore-ascii.py [cols]      (rows follow from the 200x230 viewBox)
+Source defaults to lore-mask.svg (rendered through headless chromium); pass any
+png/jpg to use a photograph instead — a real photo is what makes this read like
+a photograph, and the pipeline is the same either way.
+
+Tone comes from the character ramp, not from colour: each cell picks a glyph by
+the luminance of the image block under it, then takes an amber tint from the
+same value. Colour alone does not separate tones at glyph density.
 """
-import itertools, re, sys, pathlib
+import subprocess, sys, tempfile, pathlib
+from PIL import Image, ImageOps
 
-VB_W, VB_H = 200, 230
-ASPECT = 0.6  # JetBrains Mono advance width, in em. Cell height == font-size.
-CHARS = {"#5f4c2f": ".", "#7c6340": ":", "#c4a06a": "+", "#e2c795": "#", "#ffb454": "@"}
+ASPECT = 0.6                      # JetBrains Mono advance width, in em; cell height == font-size
+RAMP = " .,:;+=xX$&@"             # darkest first
+TINTS = ["#5f4c2f", "#7c6340", "#c4a06a", "#e2c795", "#ffb454"]
+GAMMA = 0.82                      # < 1 lifts midtones so the face keeps detail
 
-cols = int(sys.argv[1]) if len(sys.argv) > 1 else 44
-rows = round(cols * ASPECT * VB_H / VB_W)
-svg = (pathlib.Path(__file__).parent / "lore-mask.svg").read_text()
-facets = [
-    ([tuple(map(float, p.split(","))) for p in pts.split()], fill)
-    for pts, fill in re.findall(r'points="([^"]+)"\s+fill="([^"]+)"', svg)
-]
+cols = int(sys.argv[1]) if len(sys.argv) > 1 else 58
+src = pathlib.Path(sys.argv[2] if len(sys.argv) > 2 else pathlib.Path(__file__).parent / "lore-mask.svg")
 
-def inside(pt, poly):
-    x, y = pt
-    hit = False
-    for i in range(len(poly)):
-        (x1, y1), (x2, y2) = poly[i - 1], poly[i]
-        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
-            hit = not hit
-    return hit
+with tempfile.TemporaryDirectory() as tmp:
+    if src.suffix.lower() == ".svg":
+        png = pathlib.Path(tmp) / "r.png"
+        subprocess.run(["chromium", "--headless", "--disable-gpu", "--hide-scrollbars",
+                        "--window-size=800,960", f"--screenshot={png}", f"file://{src.resolve()}"],
+                       check=True, capture_output=True)
+        src = png
+    img = ImageOps.autocontrast(Image.open(src).convert("L"), cutoff=1)
+
+rows = max(1, round(cols * ASPECT * img.height / img.width))
+img = img.resize((cols, rows), Image.BOX)          # box average == one sample per cell
 
 out = []
-for r in range(rows):
-    y = (r + 0.5) * VB_H / rows
-    cells = []
-    for c in range(cols):
-        x = (c + 0.5) * VB_W / cols
-        fill = next((f for poly, f in reversed(facets) if inside((x, y), poly)), None)
-        cells.append((CHARS.get(fill, " "), fill))
-    line = ""
-    for fill, run in itertools.groupby(cells, key=lambda t: t[1]):
-        text = "".join(ch for ch, _ in run)
-        line += text if fill is None or text.isspace() else f'<span style="color:{fill}">{text}</span>'
+for y in range(rows):
+    line, run, tint = "", "", None
+    for x in range(cols):
+        v = (img.getpixel((x, y)) / 255) ** GAMMA
+        ch = RAMP[min(len(RAMP) - 1, int(v * len(RAMP)))]
+        t = TINTS[min(len(TINTS) - 1, int(v * len(TINTS)))]
+        if t != tint:
+            if run:
+                line += run if not run.strip() else f'<span style="color:{tint}">{run}</span>'
+            run, tint = "", t
+        run += ch
+    if run:
+        line += run if not run.strip() else f'<span style="color:{tint}">{run}</span>'
     out.append(line.rstrip())
 while out and not out[-1]:
     out.pop()

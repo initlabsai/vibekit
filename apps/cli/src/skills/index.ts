@@ -16,13 +16,12 @@ export interface SkillDirectory {
 }
 
 /** Array of skill names selected by the user. */
-export type SkillSelection = string[]
 
 export function getSkillNames(): string[] {
   return BUNDLED_SKILLS.map((skill) => skill.name)
 }
 
-export function getSkillsByNames(names: SkillSelection): SkillDirectory[] {
+export function getSkillsByNames(names: string[]): SkillDirectory[] {
   return BUNDLED_SKILLS.filter((skill) => names.includes(skill.name))
 }
 

@@ -15,11 +15,6 @@ const LIST_KEYS: Partial<Record<TrustedViewId, string>> = {
   'block.list': 'blocks',
 }
 
-/** A host that can run any of its tools by name, the way the agent lane does. */
-export interface ToolCallHost {
-  callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
-}
-
 /**
  * The arguments that fetch the page after `result`: the call that produced
  * it plus its nextToken. Undefined when the record is final, failed, or
@@ -64,3 +59,5 @@ export function mergePages(
     },
   )
 }
+
+export type { ToolCallHost } from '../host.js'

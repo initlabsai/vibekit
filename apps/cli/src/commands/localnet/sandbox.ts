@@ -20,6 +20,7 @@ import {
   getConduitYaml,
   type ComposeFileStatus,
 } from './compose.js'
+import { run, runInteractive, type RunResult } from '../../utils/run.js'
 
 export const SERVICE_NAMES = ['algod', 'conduit', 'indexer-db', 'indexer'] as const
 
@@ -29,35 +30,14 @@ export function localnetConfigDir(): string {
     return process.env.VIBEKIT_LOCALNET_CONFIG_DIR
   }
   const base =
-    process.platform === 'win32' && process.env.APPDATA
+    process.env.XDG_CONFIG_HOME ??
+    (process.platform === 'win32' && process.env.APPDATA
       ? process.env.APPDATA
-      : join(homedir(), '.config')
+      : join(homedir(), '.config'))
   return join(base, 'vibekit', 'localnet')
 }
 
 // --- Process helpers ---
-
-export interface RunResult {
-  exitCode: number
-  stdout: string
-  stderr: string
-}
-
-async function run(cmd: string[], cwd?: string): Promise<RunResult> {
-  const proc = Bun.spawn(cmd, { cwd, stdout: 'pipe', stderr: 'pipe' })
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ])
-  return { exitCode, stdout, stderr }
-}
-
-/** Run a command with output streamed to the terminal (for `logs --follow`). */
-async function runInteractive(cmd: string[], cwd?: string): Promise<number> {
-  const proc = Bun.spawn(cmd, { cwd, stdout: 'inherit', stderr: 'inherit' })
-  return proc.exited
-}
 
 // --- Docker preflight ---
 
@@ -296,12 +276,6 @@ export function waitForIndexer(timeoutSeconds = 60): Promise<boolean> {
 }
 
 // --- Status details ---
-
-export interface ServiceStatus {
-  service: string
-  running: boolean
-  details: Record<string, string>
-}
 
 export async function fetchAlgodStatus(): Promise<Record<string, string>> {
   try {

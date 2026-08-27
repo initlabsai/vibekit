@@ -54,7 +54,7 @@ export type {
   ViewSpec,
   WriteStageEvent,
 } from './core/protocol.js'
-export { formatBaseUnits, formatMicroAlgos } from './format.js'
+export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
 export { classifyExplorerInput, parseEntityComposerCommand } from './input.js'
 export { mergePages, nextPageArgs } from './views/pages.js'
 export {
@@ -63,7 +63,7 @@ export {
   createAccountPortfolioViewModel,
   createAccountSummaryViewModel,
 } from './views/account.js'
-export type { AccountLookupHost, AccountPortfolioViewModel } from './views/account.js'
+export type { AccountPortfolioViewModel } from './views/account.js'
 export {
   applicationExplanationDataSchema,
   createApplicationBoxViewModel,
@@ -105,8 +105,12 @@ export {
   createTransactionCollectionViewModel,
   createTransactionDetailViewModel,
 } from './views/transaction.js'
-export type { TransactionDetailViewModel, TransactionSearchFilter } from './views/transaction.js'
-export { buildTransactionsGraph } from './views/transaction-graph.js'
+export type {
+  TransactionDetailViewModel,
+  TransactionRowData,
+  TransactionSearchFilter,
+} from './views/transaction.js'
+export { buildTransactionsGraph, transactionKind } from './views/transaction-graph.js'
 export type {
   GraphHorizontal,
   GraphLabel,
@@ -127,7 +131,6 @@ export type { PaymentDraftParams, WriteFlowHost } from './flows/write-flow-host.
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'
-export type { EntityLookupHost } from './entity-lookup.js'
 export { FIXTURE_ADDRESS_BOOK } from './sample/account.js'
 export {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
@@ -145,3 +148,14 @@ export {
   lookupFixture,
 } from './sample/transaction.js'
 export type { FixtureLookupOutcome } from './sample/transaction.js'
+export type {
+  AccountLookupHost,
+  ApplicationLookupHost,
+  AssetLookupHost,
+  BlockLookupHost,
+  EntityLookupHost,
+  ExplorerReadHost,
+  ToolCallHost,
+  TransactionLookupHost,
+} from './host.js'
+export type { TransactionKind, TransactionKindSource } from './views/transaction-graph.js'

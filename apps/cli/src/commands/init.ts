@@ -26,20 +26,19 @@ import {
   MCP_IDS,
   type MCPId,
   type MCPSelection,
+  LEGACY_SERVER_KEY,
 } from '../config/mcps.js'
 import { agentsMdContent } from '../config/agents-md.js'
-import { LEGACY_SERVER_KEY } from './doctor.js'
 import {
   getAllSkillNames,
   getSkillNames,
   getSkillsByNames,
   type SkillDirectory,
-  type SkillSelection,
 } from '../skills/index.js'
 import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/catalogs.js'
 import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
-import { expandPath } from '../utils/paths.js'
+import { expandPath, resolveVibekitPath } from '../utils/paths.js'
 import { confirm, handleCancel, multiselect, select, text } from '../utils/prompts.js'
 import { LOGO } from '../logo.js'
 
@@ -47,7 +46,7 @@ export interface SetupContext {
   agents: HarnessSelection
   mcps: MCPSelection
   installPath: string
-  selectedSkills: SkillSelection
+  selectedSkills: string[]
 }
 
 // --- Headless flags ---
@@ -62,7 +61,7 @@ export interface SetupContext {
 export interface InitFlags {
   dir?: string
   agents?: HarnessSelection
-  skills?: SkillSelection
+  skills?: string[]
   mcps?: MCPSelection
   yes: boolean
   overwrite: boolean
@@ -171,7 +170,7 @@ const OFFICIAL_SKILLS: Record<string, [label: string, hint: string]> = {
 }
 
 /** Official skills pre-checked; catalog skills opt-in. */
-async function selectSkillsStep(): Promise<SkillSelection> {
+async function selectSkillsStep(): Promise<string[]> {
   const rank = (name: string) => Object.keys(OFFICIAL_SKILLS).indexOf(name) + 1 || Infinity
   const official = getSkillNames().sort((a, b) => rank(a) - rank(b))
   return handleCancel(
@@ -237,28 +236,7 @@ async function selectMCPsStep(): Promise<MCPSelection> {
 
 // --- Config generation ---
 
-/**
- * Resolve the path agents should use to spawn `vibekit mcp`: the invoked
- * binary when running compiled, or the from-source shim in dev mode (so
- * agent sessions track the tree instead of a stale compiled bin/vibekit).
- * Exported for tests via the injectable variant below.
- */
-export function resolveVibekitPath(
-  argv1: string | undefined,
-  execPath: string,
-  devFallback: string,
-): string {
-  // bun-compiled binaries report the *embedded* entry as argv[1]
-  // (/$bunfs/root/...) — never write that; the real on-disk binary is execPath.
-  if (argv1?.startsWith('/$bunfs')) {
-    return execPath
-  }
-  if (argv1 && basename(argv1, extname(argv1)) === 'vibekit') {
-    return argv1
-  }
-  return devFallback
-}
-
+/** The `vibekit` agents spawn for `mcp`: the compiled binary, or the from-source shim in dev. */
 function getVibekitPath(): string {
   return resolveVibekitPath(
     process.argv[1],
@@ -327,7 +305,7 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
  * Fetch the selected catalog skills. A failed catalog degrades to a warning —
  * init never hard-blocks on the network; bundled skills still install.
  */
-async function fetchRemoteSkills(selected: SkillSelection): Promise<SkillDirectory[]> {
+async function fetchRemoteSkills(selected: string[]): Promise<SkillDirectory[]> {
   const remoteSkills: SkillDirectory[] = []
   for (const { catalog, names } of splitCatalogSelection(selected)) {
     const s = p.spinner()

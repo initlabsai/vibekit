@@ -8,6 +8,7 @@ import {
   type GraphTransaction,
   type GraphVertical,
   type TransactionsGraph,
+  type TransactionRowData,
 } from '@initlabs/vibekit-explorer'
 import { getApplicationAddress } from 'algosdk'
 
@@ -420,43 +421,7 @@ export function computeGraphLayout(graph: TransactionsGraph, bodyWidth: number):
   return laneLayout(graph, gutter, laneWidth, bodyWidth)
 }
 
-/**
- * A transaction row as the collection view model carries it — a subset of
- * the wire transaction, with uint64 ids possibly serialized as strings and,
- * when the record retains them, nested inner transactions.
- */
-export interface GraphSourceRow {
-  id?: string
-  type?: string
-  sender: string
-  feeMicroAlgos?: number | string
-  paymentAmountMicroAlgos?: number | string
-  receiver?: string
-  assetId?: number | string
-  assetAmount?: number | string
-  assetName?: string
-  assetUnitName?: string
-  assetDecimals?: number
-  applicationId?: number | string
-  onCompletion?: string
-  closeTo?: string
-  closeAmountMicroAlgos?: number | string
-  closeAssetAmount?: number | string
-  clawbackFrom?: string
-  rekeyTo?: string
-  createdAssetId?: number | string
-  createdApplicationId?: number | string
-  globalStateDelta?: unknown
-  localStateDelta?: unknown
-  logs?: string[]
-  applicationArgs?: string[]
-  methodName?: string
-  methodArgs?: Array<{ name?: string; type: string; value?: unknown }>
-  methodReturn?: unknown
-  innerTxns?: GraphSourceRow[]
-}
-
-function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
+function toGraphTransaction(row: TransactionRowData): GraphTransaction {
   // Spread, then coerce: a hand-copied field list here dropped rekeyTo and
   // createdApplicationId once each. Ids arrive as number | string on the wire.
   const { assetId, applicationId, createdAssetId, createdApplicationId, innerTxns, ...rest } = row
@@ -478,7 +443,9 @@ function toGraphTransaction(row: GraphSourceRow): GraphTransaction {
  * application escrow addresses. Returns undefined — table fallback — when
  * the rows are empty or the graph model rejects them.
  */
-export function buildGroupGraph(rows: readonly GraphSourceRow[]): TransactionsGraph | undefined {
+export function buildGroupGraph(
+  rows: readonly TransactionRowData[],
+): TransactionsGraph | undefined {
   if (rows.length === 0) return undefined
   try {
     const graph = buildTransactionsGraph(rows.map(toGraphTransaction), {

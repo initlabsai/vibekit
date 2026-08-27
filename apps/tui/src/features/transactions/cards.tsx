@@ -1,16 +1,17 @@
 import { base64ToBytes } from '@initlabs/vibekit'
 import type { MouseEvent } from '@opentui/core'
 import {
-  formatBaseUnits,
+  formatAssetAmount,
   formatBlockTxnType,
   formatExplorerTime,
   formatMicroAlgos,
   formatOnCompletion,
+  transactionKind,
   type TransactionDetailViewModel,
+  type TransactionRowData,
 } from '@initlabs/vibekit-explorer'
 
 import { COLORS, shorten } from '../../theme.js'
-import type { GraphSourceRow } from './graph-layout.js'
 import {
   Button,
   Chip,
@@ -69,33 +70,14 @@ function formatAbiValue(value: unknown): string {
   }
 }
 
-function assetUnits(
-  amount: number | string | undefined,
-  decimals?: number,
-  unitName?: string,
-): { value: string; unit?: string } | undefined {
-  if (amount === undefined) return undefined
-  const value = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
-  return { value, unit: unitName }
-}
+type FactRow = { label: string; value: string; copy?: string; color?: string }
 
-export function TransactionCard({
-  model,
-  width,
-}: {
-  model: TransactionDetailViewModel | undefined
-  width: number
-}) {
-  if (!model) return <Unavailable title="TRANSACTION" width={width} />
-  const body = innerWidth(width)
-  const payment =
-    model.paymentAmountMicroAlgos === undefined
-      ? undefined
-      : { value: formatMicroAlgos(model.paymentAmountMicroAlgos), unit: 'ALGO' }
-  const transfer = assetUnits(model.assetAmount, model.assetDecimals, model.assetUnitName)
-  const hero = payment ?? transfer
-  const tone: Tone =
-    model.status === 'confirmed' ? 'ok' : model.status === 'failed' ? 'bad' : 'warn'
+/** The detail card's rows, in reading order; absent fields produce no row. */
+function detailFacts(model: TransactionDetailViewModel): FactRow[] {
+  const id = (value: number | string | undefined, label: string) =>
+    value === undefined ? undefined : { label, value: String(value), copy: String(value) }
+  const address = (value: string | undefined, label: string) =>
+    value ? { label, value, copy: value } : undefined
   // A pool bootstrap writes a dozen keys; the card shows the first few, the count says the rest.
   const deltas = [
     ...(model.globalStateDelta ?? []).map((entry) => ({
@@ -109,12 +91,101 @@ export function TransactionCard({
       })),
     ),
   ]
-  const assetLabel =
+  const rows: Array<FactRow | undefined> = [
+    { label: 'id', value: model.id, copy: model.id },
+    model.roundTime === undefined
+      ? undefined
+      : { label: 'time', value: formatExplorerTime(model.roundTime) },
+    id(model.confirmedRound, 'block'),
+    { label: 'fee', value: algo(model.feeMicroAlgos) },
+    address(model.sender, 'from'),
+    address(model.clawbackFrom, 'clawback'),
+    address(model.receiver, 'to'),
     model.assetId === undefined
       ? undefined
-      : model.assetName
-        ? `${model.assetId} · ${model.assetName}`
-        : String(model.assetId)
+      : { label: 'asset', value: assetLabel(model), copy: String(model.assetId) },
+    id(model.applicationId, 'app'),
+    model.methodName ? { label: 'method', value: model.methodName } : undefined,
+    ...(model.methodArgs ?? []).map((arg) => ({
+      label: arg.name ?? arg.type,
+      value: formatAbiValue(arg.value),
+    })),
+    model.methodReturn === undefined
+      ? undefined
+      : { label: 'return', value: formatAbiValue(model.methodReturn) },
+    // Raw args and logs only when no spec decoded them.
+    ...(model.methodName
+      ? []
+      : (model.applicationArgs ?? []).map((arg, index) => ({
+          label: `arg ${index}`,
+          value: bytesDisplay(arg),
+        }))),
+    ...(model.methodReturn !== undefined
+      ? []
+      : (model.logs ?? []).map((log, index) =>
+          log.startsWith(ARC4_RETURN_PREFIX)
+            ? { label: 'return', value: returnDisplay(log) }
+            : { label: `log ${index}`, value: bytesDisplay(log) },
+        )),
+    ...deltas.slice(0, MAX_DELTAS),
+    deltas.length > MAX_DELTAS
+      ? {
+          label: 'Δ …',
+          value: `${deltas.length - MAX_DELTAS} more state changes`,
+          color: COLORS.faint,
+        }
+      : undefined,
+    model.onCompletion
+      ? { label: 'on-comp', value: formatOnCompletion(model.onCompletion) }
+      : undefined,
+    address(model.closeTo, 'close'),
+    model.closeTo === undefined || model.closeAmountMicroAlgos === undefined
+      ? undefined
+      : { label: 'closed', value: algo(model.closeAmountMicroAlgos) },
+    model.closeTo === undefined || model.closeAssetAmount === undefined
+      ? undefined
+      : {
+          label: 'closed',
+          value: formatAssetAmount(
+            model.closeAssetAmount,
+            model.assetDecimals,
+            model.assetUnitName,
+          ),
+        },
+    address(model.rekeyTo, 'rekey'),
+    address(model.group, 'group'),
+    model.innerCount ? { label: 'inner', value: `+${model.innerCount}` } : undefined,
+    model.note ? { label: 'note', value: model.note } : undefined,
+    { label: 'network', value: model.network },
+  ]
+  return rows.filter((row): row is FactRow => row !== undefined)
+}
+
+/** The asset behind an amount, the way every card says it: id · name. */
+function assetLabel(row: { assetId?: number | string; assetName?: string }): string {
+  return row.assetName ? `${row.assetId} · ${row.assetName}` : String(row.assetId)
+}
+
+export function TransactionCard({
+  model,
+  width,
+}: {
+  model: TransactionDetailViewModel | undefined
+  width: number
+}) {
+  if (!model) return <Unavailable title="TRANSACTION" width={width} />
+  const body = innerWidth(width)
+  const hero =
+    model.paymentAmountMicroAlgos !== undefined
+      ? { value: formatMicroAlgos(model.paymentAmountMicroAlgos), unit: 'ALGO' }
+      : model.assetAmount !== undefined
+        ? {
+            value: formatAssetAmount(model.assetAmount, model.assetDecimals),
+            unit: model.assetUnitName,
+          }
+        : undefined
+  const tone: Tone =
+    model.status === 'confirmed' ? 'ok' : model.status === 'failed' ? 'bad' : 'warn'
   return (
     <Frame width={width}>
       <Header
@@ -126,119 +197,16 @@ export function TransactionCard({
       {hero ? <Hero value={hero.value} unit={hero.unit} /> : null}
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact label="id" value={model.id} copy={model.id} width={body} />
-        {model.roundTime === undefined ? null : (
-          <Fact label="time" value={formatExplorerTime(model.roundTime)} width={body} />
-        )}
-        {model.confirmedRound === undefined ? null : (
+        {detailFacts(model).map((row, index) => (
           <Fact
-            label="block"
-            value={String(model.confirmedRound)}
-            copy={String(model.confirmedRound)}
-            width={body}
-          />
-        )}
-        <Fact label="fee" value={algo(model.feeMicroAlgos)} width={body} />
-        <Fact label="from" value={model.sender} copy={model.sender} width={body} />
-        {model.clawbackFrom ? (
-          <Fact
-            label="clawback"
-            value={model.clawbackFrom}
-            copy={model.clawbackFrom}
-            width={body}
-          />
-        ) : null}
-        {model.receiver ? (
-          <Fact label="to" value={model.receiver} copy={model.receiver} width={body} />
-        ) : null}
-        {assetLabel && model.assetId !== undefined ? (
-          <Fact label="asset" value={assetLabel} copy={String(model.assetId)} width={body} />
-        ) : null}
-        {model.applicationId === undefined ? null : (
-          <Fact
-            label="app"
-            value={String(model.applicationId)}
-            copy={String(model.applicationId)}
-            width={body}
-          />
-        )}
-        {model.methodName ? <Fact label="method" value={model.methodName} width={body} /> : null}
-        {(model.methodArgs ?? []).map((arg, index) => (
-          <Fact
-            key={`${arg.name ?? arg.type}-${index}`}
-            label={arg.name ?? arg.type}
-            value={formatAbiValue(arg.value)}
+            key={`${row.label}-${index}`}
+            label={row.label}
+            value={row.value}
+            copy={row.copy}
+            valueColor={row.color}
             width={body}
           />
         ))}
-        {model.methodReturn === undefined ? null : (
-          <Fact label="return" value={formatAbiValue(model.methodReturn)} width={body} />
-        )}
-        {model.methodName
-          ? null
-          : (model.applicationArgs ?? []).map((arg, index) => (
-              <Fact
-                key={`arg-${index}`}
-                label={`arg ${index}`}
-                value={bytesDisplay(arg)}
-                width={body}
-              />
-            ))}
-        {model.methodReturn !== undefined
-          ? null
-          : (model.logs ?? []).map((log, index) =>
-              log.startsWith(ARC4_RETURN_PREFIX) ? (
-                <Fact key={`log-${index}`} label="return" value={returnDisplay(log)} width={body} />
-              ) : (
-                <Fact
-                  key={`log-${index}`}
-                  label={`log ${index}`}
-                  value={bytesDisplay(log)}
-                  width={body}
-                />
-              ),
-            )}
-        {deltas.slice(0, MAX_DELTAS).map((delta, index) => (
-          <Fact key={`delta-${index}`} label={delta.label} value={delta.value} width={body} />
-        ))}
-        {deltas.length > MAX_DELTAS ? (
-          <Fact
-            label="Δ …"
-            value={`${deltas.length - MAX_DELTAS} more state changes`}
-            valueColor={COLORS.faint}
-            width={body}
-          />
-        ) : null}
-        {model.onCompletion ? (
-          <Fact label="on-comp" value={formatOnCompletion(model.onCompletion)} width={body} />
-        ) : null}
-        {model.closeTo ? (
-          <Fact label="close" value={model.closeTo} copy={model.closeTo} width={body} />
-        ) : null}
-        {model.closeTo === undefined || model.closeAmountMicroAlgos === undefined ? null : (
-          <Fact label="closed" value={algo(model.closeAmountMicroAlgos)} width={body} />
-        )}
-        {model.closeTo === undefined || model.closeAssetAmount === undefined ? null : (
-          <Fact
-            label="closed"
-            value={
-              assetUnits(model.closeAssetAmount, model.assetDecimals, model.assetUnitName)?.value ??
-              String(model.closeAssetAmount)
-            }
-            width={body}
-          />
-        )}
-        {model.rekeyTo ? (
-          <Fact label="rekey" value={model.rekeyTo} copy={model.rekeyTo} width={body} />
-        ) : null}
-        {model.group ? (
-          <Fact label="group" value={model.group} copy={model.group} width={body} />
-        ) : null}
-        {model.innerCount ? (
-          <Fact label="inner" value={`+${model.innerCount}`} width={body} />
-        ) : null}
-        {model.note ? <Fact label="note" value={model.note} width={body} /> : null}
-        <Fact label="network" value={model.network} width={body} />
       </box>
     </Frame>
   )
@@ -278,62 +246,41 @@ function compactTime(roundTime: number): string {
   return new Date(roundTime * 1000).toISOString().slice(11, 16)
 }
 
-/** A list row is the graph's source row plus the list-only presentation fields. */
-type ListRow = GraphSourceRow & { innerCount?: number; confirmedRound?: number; roundTime?: number }
-
-/** The row's kind as the graph names it: creates and opt-ins say so, not "Application Call" / "0 USDC". */
-function rowType(row: ListRow): string {
-  if (
-    row.type === 'appl' &&
-    (row.createdApplicationId !== undefined || Number(row.applicationId ?? 0) === 0)
-  ) {
-    return 'Application Create'
-  }
-  if (row.type === 'acfg' && row.createdAssetId !== undefined) return 'Asset Create'
+/** The row's kind as the graph names it: creates say so, not "Application Call" / "Asset Config". */
+function rowType(row: TransactionRowData): string {
+  const kind = transactionKind(row)
+  if (kind === 'appCreate') return 'Application Create'
+  if (kind === 'assetCreate') return 'Asset Create'
   return formatBlockTxnType(row.type ?? 'txn')
-}
-
-function isOptIn(row: ListRow): boolean {
-  return (
-    row.type === 'axfer' &&
-    row.receiver === row.sender &&
-    BigInt(row.assetAmount ?? 0) === BigInt(0)
-  )
 }
 
 /** Rows with their inner transactions flattened beneath them, depth-first, as the graph draws them. */
 function withInners(
-  rows: ReadonlyArray<ListRow>,
+  rows: ReadonlyArray<TransactionRowData>,
   depth = 0,
-): Array<{ row: ListRow; depth: number; index: number }> {
+): Array<{ row: TransactionRowData; depth: number; index: number }> {
   return rows.flatMap((row, index) => [
     { row, depth, index },
     ...withInners(row.innerTxns ?? [], depth + 1),
   ])
 }
 
-/** The asset behind an amount, the way the detail card says it: id · name. */
-function assetFact(row: ListRow): string | undefined {
-  if (row.assetId === undefined) return undefined
-  return row.assetName ? `${row.assetId} · ${row.assetName}` : String(row.assetId)
+function assetFact(row: TransactionRowData): string | undefined {
+  return row.assetId === undefined ? undefined : assetLabel(row)
 }
 
-function rowAmount(row: ListRow): string | undefined {
-  // A zero payment carrying rekeyTo is the rekey itself — the graph says so, so does the row.
-  if (row.rekeyTo && BigInt(row.paymentAmountMicroAlgos ?? 0) === BigInt(0)) return 'rekey'
-  if (isOptIn(row))
+function rowAmount(row: TransactionRowData): string | undefined {
+  const kind = transactionKind(row)
+  if (kind === 'rekey') return 'rekey'
+  if (kind === 'assetOptIn')
     return `opt-in ${row.assetUnitName ?? (row.assetId === undefined ? '' : `#${row.assetId}`)}`.trim()
-  const payment = algo(row.paymentAmountMicroAlgos)
-  if (payment) return payment
+  if (row.paymentAmountMicroAlgos !== undefined) return algo(row.paymentAmountMicroAlgos)
   if (row.assetAmount === undefined) return undefined
-  const units = assetUnits(row.assetAmount, row.assetDecimals, row.assetUnitName)
-  if (!units) return undefined
-  return units.unit
-    ? `${units.value} ${units.unit}`
-    : `${units.value}${row.assetId === undefined ? '' : ` #${row.assetId}`}`
+  const value = formatAssetAmount(row.assetAmount, row.assetDecimals, row.assetUnitName)
+  return row.assetUnitName || row.assetId === undefined ? value : `${value} #${row.assetId}`
 }
 
-function rowCounterparty(row: ListRow): string | undefined {
+function rowCounterparty(row: TransactionRowData): string | undefined {
   return row.receiver ?? (row.applicationId === undefined ? undefined : `app ${row.applicationId}`)
 }
 
@@ -348,7 +295,7 @@ function TransactionTable({
   body,
   onOpen,
 }: {
-  rows: ReadonlyArray<ListRow>
+  rows: ReadonlyArray<TransactionRowData>
   innerType?: string
   body: number
   onOpen?: (txid: string) => void
@@ -421,7 +368,7 @@ function InnerRows({
   depth,
   body,
 }: {
-  rows: ReadonlyArray<ListRow>
+  rows: ReadonlyArray<TransactionRowData>
   depth: number
   body: number
 }) {
@@ -484,7 +431,7 @@ export function TransactionListCard({
 }: {
   title: string
   groupId?: string
-  transactions: ReadonlyArray<ListRow>
+  transactions: ReadonlyArray<TransactionRowData>
   nextToken?: string
   query?: Parameters<typeof queryLabel>[0]
   width: number

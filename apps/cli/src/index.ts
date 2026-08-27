@@ -52,6 +52,16 @@ ${pc.bold('Accounts:')}
     vibekit keystore list       List raw keys (or ask your agent: list_signing_addresses)
     Agents can create accounts too (create_signing_account); mnemonic/seed flows: vibekit keystore generate seed
 
+${pc.bold('Environment:')}
+  NETWORK, NETWORKS           Default network and the networks served by tool/mcp (localnet,testnet,mainnet)
+  SIGNING=compose             tool/mcp: never connect a signer; return unsigned groups
+  VIBEKIT_AGENT_MODEL         Explorer model id; with VIBEKIT_AGENT_PROVIDER, _BASE_URL, _API_KEY it overrides
+                              the stored setup (vibekit explore setup)
+  ANTHROPIC_API_KEY, OPENAI_API_KEY   Model provider keys; never stored in a file
+  VIBEKIT_EXPLORE             Path to the Explorer TUI entry when not found beside this binary
+  GITHUB_TOKEN                Optional, for catalog skill downloads when rate-limited
+  XDG_CONFIG_HOME, XDG_DATA_HOME      Where config.json / localnet files and the managed keystore CLI live
+
 ${pc.bold('Links:')}
   Documentation:  ${teal('https://github.com/initlabsai/vibekit')}
 `)

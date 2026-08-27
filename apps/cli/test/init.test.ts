@@ -3,12 +3,8 @@ import { mkdtempSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-import {
-  generateConfigs,
-  parseInitArgs,
-  resolveVibekitPath,
-  runInitAt,
-} from '../src/commands/init.js'
+import { generateConfigs, parseInitArgs, runInitAt } from '../src/commands/init.js'
+import { resolveVibekitPath } from '../src/utils/paths.js'
 import { getAllSkillNames, getSkillNames } from '../src/skills/index.js'
 
 function makeDir(): string {

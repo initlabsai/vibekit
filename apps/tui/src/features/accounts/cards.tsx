@@ -1,5 +1,5 @@
 import {
-  formatBaseUnits,
+  formatAssetAmount,
   formatMicroAlgos,
   type AccountPortfolioViewModel,
 } from '@initlabs/vibekit-explorer'
@@ -18,11 +18,6 @@ import {
   Unavailable,
 } from '../../primitives.js'
 import { ListCard, algo, pad } from '../../generic-cards.js'
-
-function holdingAmount(amount: number | string, decimals?: number, unitName?: string): string {
-  const display = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
-  return unitName ? `${display} ${unitName}` : display
-}
 
 /** How an account card's asset rows are ordered; cycled with the `s` key. */
 export type AssetSort = 'none' | 'amount-desc' | 'amount-asc' | 'id-asc'
@@ -123,7 +118,7 @@ export function AccountCard({
                 <text
                   fg={COLORS.text}
                   content={`${pad(asset.name ?? asset.unitName ?? `asset ${asset.assetId}`, nameW)} ${pad(
-                    holdingAmount(asset.amount, asset.decimals, asset.unitName),
+                    formatAssetAmount(asset.amount, asset.decimals, asset.unitName),
                     amountW,
                     'right',
                   )}${asset.isFrozen ? ' ❄' : ' '} `}

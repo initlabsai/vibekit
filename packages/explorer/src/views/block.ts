@@ -48,11 +48,6 @@ export const blockListDataSchema = z.object({
 
 export type BlockListData = z.infer<typeof blockListDataSchema>
 
-/** The capability of looking a block up as an authoritative record. */
-export interface BlockLookupHost {
-  lookupBlock(round: number): Promise<StructuredResult>
-}
-
 /** Wraps a lookup_block result as a block detail record; prev/next rounds derive from the round. */
 export function buildBlockDetailRecord(
   identity: ResultIdentity,
@@ -138,3 +133,5 @@ const ON_COMPLETION_LABEL: Record<string, string> = {
 export function formatOnCompletion(value: string): string {
   return ON_COMPLETION_LABEL[value.toLowerCase()] ?? value
 }
+
+export type { BlockLookupHost } from '../host.js'

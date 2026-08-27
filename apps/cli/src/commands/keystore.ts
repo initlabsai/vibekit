@@ -14,6 +14,8 @@ import { closeSync, existsSync, openSync, readFileSync, unlinkSync, writeFileSyn
 import { mkdir } from 'fs/promises'
 import { spawn } from 'node:child_process'
 
+import { run, runInteractive } from '../utils/run.js'
+
 /** The one place the keystore-node version lives; bump with a tested release. */
 export const KEYSTORE_NODE_VERSION = '1.0.0-canary.3'
 
@@ -75,21 +77,19 @@ export async function provisionKeystoreCli(quiet = false): Promise<string> {
   if (!quiet)
     console.error(pc.dim(`Provisioning keystore-node@${KEYSTORE_NODE_VERSION} into ${dir} ...`))
   await mkdir(dir, { recursive: true })
-  const proc = Bun.spawn(
-    [
-      'npm',
-      'install',
-      '--prefix',
-      dir,
-      '--no-fund',
-      '--no-audit',
-      `@algorandfoundation/keystore-node@${KEYSTORE_NODE_VERSION}`,
-    ],
-    { stdout: 'ignore', stderr: 'pipe' },
-  )
-  if ((await proc.exited) !== 0) {
-    const stderr = await new Response(proc.stderr).text()
-    throw new Error(`Failed to provision keystore-node: ${stderr.trim().split('\n').at(-1)}`)
+  const install = await run([
+    'npm',
+    'install',
+    '--prefix',
+    dir,
+    '--no-fund',
+    '--no-audit',
+    `@algorandfoundation/keystore-node@${KEYSTORE_NODE_VERSION}`,
+  ])
+  if (install.exitCode !== 0) {
+    throw new Error(
+      `Failed to provision keystore-node: ${install.stderr.trim().split('\n').at(-1)}`,
+    )
   }
   if (!quiet) console.error(pc.dim('Provisioned.'))
   return managedKeystoreBin(dir)
@@ -291,11 +291,30 @@ async function keystoreAccounts(args: string[]): Promise<void> {
   }
 }
 
+/** What `keystore remove <target>` should do, from the daemon's address book. Pure. */
+export type RemoveTarget =
+  | { kind: 'account'; account: { address: string; name?: string } }
+  | { kind: 'ambiguous'; matches: Array<{ address: string; name?: string }> }
+  /** A valid address the daemon does not hold: nothing to remove. */
+  | { kind: 'unknown-address' }
+  /** Not an address and not a known name: a raw key id for the keystore CLI. */
+  | { kind: 'key-id' }
+
+export function resolveRemoveTarget(
+  accounts: ReadonlyArray<{ address: string; name?: string }>,
+  target: string,
+): RemoveTarget {
+  const byName = accounts.filter((account) => account.name === target)
+  if (byName.length > 1) return { kind: 'ambiguous', matches: byName }
+  const account = accounts.find((entry) => entry.address === target) ?? byName[0]
+  if (account) return { kind: 'account', account }
+  return algosdk.isValidAddress(target) ? { kind: 'unknown-address' } : { kind: 'key-id' }
+}
+
 /**
  * `vibekit keystore remove <address|name|key-id> [--yes]` — resolve an
- * account through the daemon and destroy its key. Unresolved non-address
- * targets fall through to the raw keystore CLI, which removes by key id
- * without a daemon.
+ * account through the daemon and destroy its key. A raw key id falls
+ * through to the keystore CLI, which removes without a daemon.
  */
 async function keystoreRemove(args: string[]): Promise<void> {
   const yes = args.includes('--yes') || args.includes('-y')
@@ -306,22 +325,35 @@ async function keystoreRemove(args: string[]): Promise<void> {
   }
 
   const signer = (await ensureKeystoreDaemon()) ? await connectSigner() : undefined
-  if (signer) {
-    try {
-      const accounts = await signer.listAccounts()
-      const byName = accounts.filter((account) => account.name === target)
-      if (byName.length > 1) {
+  if (!signer) {
+    if (algosdk.isValidAddress(target)) {
+      // Address resolution needs the daemon's address book.
+      console.error(pc.red(DAEMON_HINT))
+      process.exit(1)
+    }
+    return passthrough(['remove', target])
+  }
+  try {
+    const resolved = resolveRemoveTarget(await signer.listAccounts(), target)
+    switch (resolved.kind) {
+      case 'ambiguous':
         console.error(
-          pc.red(`Name "${target}" matches ${byName.length} accounts — remove by address:`),
+          pc.red(
+            `Name "${target}" matches ${resolved.matches.length} accounts — remove by address:`,
+          ),
         )
-        for (const account of byName) console.error(`  ${account.address}`)
+        for (const account of resolved.matches) console.error(`  ${account.address}`)
         process.exit(1)
-      }
-      const match = accounts.find((account) => account.address === target) ?? byName[0]
-      if (match) {
+      case 'unknown-address':
+        console.error(pc.red(`No key in the keystore daemon for address ${target}`))
+        process.exit(1)
+      case 'key-id':
+        return passthrough(['remove', target])
+      case 'account': {
+        const { account } = resolved
         if (!yes) {
           const { confirm } = await import('../utils/prompts.js')
-          const label = match.name ? `${match.name} (${match.address})` : match.address
+          const label = account.name ? `${account.name} (${account.address})` : account.address
           const approved = await confirm(
             `Destroy the key for ${label}? Funds on this account become unrecoverable.`,
             false,
@@ -331,25 +363,13 @@ async function keystoreRemove(args: string[]): Promise<void> {
             return
           }
         }
-        const { keyId } = await signer.removeAccount(match.address)
-        console.log(`Removed ${match.address} (${keyId})`)
-        return
+        const { keyId } = await signer.removeAccount(account.address)
+        console.log(`Removed ${account.address} (${keyId})`)
       }
-      if (algosdk.isValidAddress(target)) {
-        console.error(pc.red(`No key in the keystore daemon for address ${target}`))
-        process.exit(1)
-      }
-      // Not an address and not a known name — likely a raw key id; the
-      // keystore CLI handles those (and works without the daemon).
-    } finally {
-      await signer.close()
     }
-  } else if (algosdk.isValidAddress(target)) {
-    // Address resolution needs the daemon's address book.
-    console.error(pc.red(DAEMON_HINT))
-    process.exit(1)
+  } finally {
+    await signer.close()
   }
-  await passthrough(['remove', target])
 }
 
 async function passthrough(args: string[]): Promise<void> {
@@ -361,8 +381,7 @@ async function passthrough(args: string[]): Promise<void> {
     process.exit(1)
   }
 
-  const proc = Bun.spawn([bin, ...args], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' })
-  process.exitCode = await proc.exited
+  process.exitCode = await runInteractive([bin, ...args])
 }
 
 export async function commandKeystore(args: string[]): Promise<void> {

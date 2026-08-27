@@ -135,11 +135,6 @@ export type ApplicationLocalsData = z.infer<typeof applicationLocalsDataSchema>
 export type ApplicationLogsData = z.infer<typeof applicationLogsDataSchema>
 export type ApplicationBoxData = z.infer<typeof applicationBoxDataSchema>
 
-/** The capability of looking an application up as an authoritative record. */
-export interface ApplicationLookupHost {
-  lookupApplication(applicationId: number): Promise<StructuredResult>
-}
-
 /** base64 key -> utf-8 when all printable, else the base64 itself. */
 function decodeStateKey(base64: string): string {
   try {
@@ -410,3 +405,5 @@ export type ApplicationBoxViewModel = Extract<
   ReturnType<typeof createApplicationBoxViewModel>,
   { ok: true }
 >['model']
+
+export type { ApplicationLookupHost } from '../host.js'

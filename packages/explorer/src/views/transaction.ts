@@ -239,13 +239,6 @@ export function buildTransactionDetailRecord(
   })
 }
 
-/** The capability of looking a transaction up as an authoritative record. */
-export interface TransactionLookupHost {
-  lookupTransaction(txid: string): Promise<StructuredResult>
-  /** Looks every transaction in an atomic group up as one transaction.group record. */
-  lookupTransactionGroup(groupId: string): Promise<StructuredResult>
-}
-
 /** Rows carry inner transactions on the wire; the stored row also states their count. */
 function withInnerCounts(row: TransactionRowData): TransactionRowData {
   if (!row.innerTxns?.length) return row
@@ -305,3 +298,5 @@ export type TransactionCollectionViewModel = Extract<
   ReturnType<typeof createTransactionCollectionViewModel>,
   { ok: true }
 >['model']
+
+export type { TransactionLookupHost } from '../host.js'

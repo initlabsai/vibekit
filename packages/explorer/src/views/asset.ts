@@ -79,11 +79,6 @@ export type AssetListData = z.infer<typeof assetListDataSchema>
 export type AssetHoldingsData = z.infer<typeof assetHoldingsDataSchema>
 export type AssetHoldersData = z.infer<typeof assetHoldersDataSchema>
 
-/** The capability of looking an asset up as an authoritative record. */
-export interface AssetLookupHost {
-  lookupAsset(assetId: number): Promise<StructuredResult>
-}
-
 /** Wraps a lookup_asset result as an asset detail record. */
 export function buildAssetDetailRecord(
   identity: ResultIdentity,
@@ -159,3 +154,5 @@ export type AssetHoldersViewModel = Extract<
   ReturnType<typeof createAssetHoldersViewModel>,
   { ok: true }
 >['model']
+
+export type { AssetLookupHost } from '../host.js'

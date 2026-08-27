@@ -20,9 +20,7 @@ export const TEALDBG_PORT = 9392
 export const INDEXER_PORT = 8980
 export const POSTGRES_PORT = 5443
 
-export const COMPOSE_PROJECT_NAME = 'vibekit_localnet'
-
-export function getComposeYaml(name: string = COMPOSE_PROJECT_NAME): string {
+export function getComposeYaml(name: string = LOCALNET_PROJECT): string {
   return `name: "${name}"
 
 services:

@@ -216,8 +216,58 @@ function flattenTransactions(transactions: readonly GraphTransaction[]): GraphTr
   return transactions.flatMap((txn) => [txn, ...flattenTransactions(txn.innerTxns ?? [])])
 }
 
+/** The fields the idioms below read; the wire and the list rows both satisfy it. */
+export interface TransactionKindSource {
+  type?: string
+  sender: string
+  receiver?: string
+  paymentAmountMicroAlgos?: number | string
+  assetId?: number | string
+  assetAmount?: number | string
+  rekeyTo?: string
+  clawbackFrom?: string
+  closeTo?: string
+  applicationId?: number | string
+  createdApplicationId?: number | string
+  createdAssetId?: number | string
+}
+
+/** What a row is when its type alone undersells it: a create, an opt-in, a rekey, a clawback. */
+export type TransactionKind = 'appCreate' | 'assetCreate' | 'assetOptIn' | 'clawback' | 'rekey'
+
+/**
+ * The idioms behind a bare transaction type. A zero payment carrying rekeyTo
+ * is the rekey itself ("rekey to the app, act, rekey back"); a zero
+ * self-transfer is the opt-in; an axfer with clawbackFrom is a clawback; an
+ * appl with no target (or a created id) is the create; an acfg with a
+ * created id is the create. Undefined means the type says it all.
+ */
+export function transactionKind(txn: TransactionKindSource): TransactionKind | undefined {
+  switch (txn.type) {
+    case 'pay':
+      return txn.rekeyTo !== undefined && BigInt(txn.paymentAmountMicroAlgos ?? 0) === 0n
+        ? 'rekey'
+        : undefined
+    case 'axfer':
+      if (txn.clawbackFrom !== undefined) return 'clawback'
+      return txn.closeTo === undefined &&
+        (txn.receiver ?? txn.sender) === txn.sender &&
+        BigInt(txn.assetAmount ?? 0) === 0n
+        ? 'assetOptIn'
+        : undefined
+    case 'appl':
+      return txn.createdApplicationId !== undefined || Number(txn.applicationId ?? 0) === 0
+        ? 'appCreate'
+        : undefined
+    case 'acfg':
+      return txn.createdAssetId !== undefined ? 'assetCreate' : undefined
+    default:
+      return undefined
+  }
+}
+
 function isClawback(txn: GraphTransaction): boolean {
-  return txn.type === 'axfer' && txn.clawbackFrom !== undefined
+  return transactionKind(txn) === 'clawback'
 }
 
 /** The application an appl row acts on: the target id, or the created id on creates. */
@@ -563,10 +613,7 @@ function representationsFor(
 
   switch (txn.type) {
     case 'pay': {
-      // A zero payment that carries rekeyTo exists for the rekey (the
-      // "rekey to the app, act, rekey back" idiom); the amount says nothing.
-      const rekey =
-        txn.rekeyTo !== undefined && BigInt(txn.paymentAmountMicroAlgos ?? 0) === BigInt(0)
+      const rekey = transactionKind(txn) === 'rekey'
       const rows: RowSeed[] = [
         {
           representation: asRepresentation(
@@ -590,13 +637,9 @@ function representationsFor(
       return rows
     }
     case 'axfer': {
-      const clawback = isClawback(txn)
-      // A zero self-transfer is the opt-in idiom (Lora's OptIn subtype); say so instead of "0 UNIT".
-      const optIn =
-        !clawback &&
-        txn.closeTo === undefined &&
-        (txn.receiver ?? txn.sender) === txn.sender &&
-        BigInt(txn.assetAmount ?? 0) === BigInt(0)
+      const kind = transactionKind(txn)
+      const clawback = kind === 'clawback'
+      const optIn = kind === 'assetOptIn'
       const rows: RowSeed[] = [
         {
           representation: asRepresentation(
