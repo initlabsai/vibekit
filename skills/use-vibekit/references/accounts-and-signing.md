@@ -55,6 +55,16 @@ described as one:
 - post-quantum signatures ship in the v42 consensus upgrade (algod
   v5.0.0-stable); networks reject them until that upgrade takes effect.
 
+**Do not derive an address for it yourself.** `algosdk` 3.7.0 exports
+`addressFromPQKey(scheme, publicKey)`, and it will happily return a
+well-formed address for a keystore Falcon key — verified byte-identical to a
+hand-rolled derivation of the spec. That address is a trap: the SDK derives
+the *keypair* from a 25-word Algorand mnemonic through
+`pq25WordMnemonicToSeed` (the `PQK` step), while the keystore derives it
+straight from a BIP39 seed. Same words, different key, different address. An
+account funded at such an address would not be recoverable from the mnemonic
+in any other wallet.
+
 Treat it as post-quantum signing available in the keystore today, and say so
 in those words.
 
