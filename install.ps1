@@ -50,13 +50,21 @@ function Get-Releases {
 function Resolve-Prerelease ($Channel) {
     Write-Info "Fetching latest $Channel release..."
 
-    $match = Get-Releases | Where-Object { $_.tag_name -match "^v.*-$Channel\.\d+$" } | Select-Object -First 1
-    if (-not $match) {
+    # Assign before iterating: Invoke-RestMethod emits a JSON array as ONE
+    # pipeline object, so `Get-Releases | Where-Object` would hand the whole
+    # array to $_ -- and `-match` over an array returns the matching elements
+    # rather than a boolean, so every release would "pass" the filter.
+    $releases = Get-Releases
+    $found = $null
+    foreach ($release in $releases) {
+        if ($release.tag_name -match "^v.*-$Channel\.\d+$") { $found = $release; break }
+    }
+    if (-not $found) {
         Write-Fail "No $Channel release found. See: https://github.com/$Repo/releases"
     }
 
-    Write-Host 'Found: ' -ForegroundColor Green -NoNewline; Write-Host $match.tag_name
-    return $match.tag_name
+    Write-Host 'Found: ' -ForegroundColor Green -NoNewline; Write-Host $found.tag_name
+    return $found.tag_name
 }
 
 # GitHub's "latest" already excludes prereleases, but the heritage cli-v*
@@ -160,12 +168,11 @@ function Install-Binaries ($Version) {
 # Report pre-1.0 state; never touch it. Old mnemonics and private keys live
 # in the OS credential store, and `vibekit doctor --fix` is the opt-in repair path.
 function Show-LegacyNotice {
-    $candidates = @(
-        (Join-Path $env:APPDATA 'vibekit\accounts.db'),
-        (Join-Path $HOME '.config\vibekit\accounts.db')
-    )
+    # Join-Path throws on a null root, so filter the roots before joining.
+    $roots = @($env:APPDATA, (Join-Path $HOME '.config')) | Where-Object { $_ }
+    $candidates = foreach ($root in $roots) { Join-Path $root 'vibekit\accounts.db' }
     foreach ($path in $candidates) {
-        if ($path -and (Test-Path $path)) {
+        if (Test-Path $path) {
             Write-Host ''
             Write-Warn "Found accounts from a pre-1.0 VibeKit ($path)."
             Write-Info "Nothing was changed. Run 'vibekit doctor' to review it."
