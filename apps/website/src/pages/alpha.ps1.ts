@@ -2,7 +2,7 @@
  * Serves the canonical install.ps1 at https://getvibekit.ai/alpha.ps1 with the
  * channel pre-set, so the prerelease one-liner is short enough to read:
  *
- *   irm getvibekit.ai/alpha.ps1 | iex
+ *   irm https://getvibekit.ai/alpha.ps1 | iex
  *
  * The line is prepended rather than substituted into the script, so it cannot
  * silently stop applying if install.ps1 is reworded. An explicit

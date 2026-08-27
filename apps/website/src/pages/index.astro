@@ -238,9 +238,11 @@ const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'A
   // Windows visitors get the .ps1 twin rather than a command that errors.
   const cmdEl = document.querySelector<HTMLElement>('[data-cmd]')!
   const promptEl = document.querySelector<HTMLElement>('[data-prompt]')!
+  // The scheme is not optional here: bare `irm getvibekit.ai/...` defaults to
+  // http, and Windows PowerShell will not follow the 308 upgrade to https.
   const platform = (navigator as any).userAgentData?.platform ?? navigator.platform ?? ''
   if (/win/i.test(platform)) {
-    cmdEl.textContent = 'irm getvibekit.ai/alpha.ps1 | iex'
+    cmdEl.textContent = 'irm https://getvibekit.ai/alpha.ps1 | iex'
     promptEl.textContent = '>'
   }
 
