@@ -55,7 +55,8 @@ Finished videos go in `out/` at the repo root (gitignored) — never commit
 video files; work files (tapes, cards, QA frames) stay in a temp dir.
 Working tapes: `references/segA.tape` (paste IDs → cards),
 `references/segB.tape` (english → AI), `references/assemble.md` (the exact
-ffmpeg commands), `references/make-card.sh` (title cards).
+ffmpeg commands), `references/make-card.sh` (title cards),
+`references/add-music.sh` (the music pass).
 
 `vhs` needs `ttyd` installed (`sudo pacman -S ttyd`) or every recording fails
 with "ttyd is not installed".
@@ -142,6 +143,27 @@ Recording against live mainnet needs: keystore daemon
 configured agent provider (zs-proxy for zerosignal — probe its `/v1/models`).
 Good demo IDs: asset `31566704` (USDC), app `1002541853` (Tinyman v2),
 txns from `packages/explorer/test/recorded/mainnet-graph-corpus.json`.
+
+## Music
+
+The four site tracks live in `apps/website/public/music/` and are already
+credited in `apps/website/src/scripts/music.ts` — use those, do not go find a
+new track. Lay them down with `references/add-music.sh`, which trims to the
+cut, fades in 0.5s, fades out over the tail, and ducks to 0.85.
+
+Start past a quiet intro rather than opening on nothing. Measured, not
+guessed (`ffmpeg -hide_banner -ss N -t 6 -i t.mp3 -af volumedetect -f null
+/dev/null` — the default log level, since `-v error` hides the summary):
+
+| track | use |
+| --- | --- |
+| `retro` | hot from 0 — short clips |
+| `neon-drive` | settles at 30s — feature reels |
+| `neon-horizon` | quiet intro, start at 15s — long story cuts |
+| `80s-retro` | dips around 75s; don't land an ending there |
+
+Keep a silent master of every cut (`out/silent/`) so the track can be swapped
+without re-encoding video.
 
 ## Tweets
 
