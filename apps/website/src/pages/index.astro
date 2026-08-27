@@ -21,7 +21,7 @@ const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'A
           <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
           <a class="button quiet" href="/lore/">read the lore</a>
         </div>
-        <pre class="install"><span>$</span> curl -fsSL getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh<button type="button" class="copy" data-copy="curl -fsSL getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh" aria-label="Copy install command">copy</button></pre>
+        <pre class="install"><span data-prompt>$</span> <code data-cmd>curl -fsSL getvibekit.ai/alpha | sh</code><button type="button" class="copy" aria-label="Copy install command">copy</button></pre>
       </div>
 
       <div class="tui" aria-label="A stylized VibeKit Explorer lookup" data-tui>
@@ -234,11 +234,20 @@ const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'A
     }, 500)
   } else tui.classList.add('resolved')
 
-  // Hero install command: copy to clipboard, confirm in place.
-  const copyBtn = document.querySelector<HTMLButtonElement>('[data-copy]')
+  // Hero install command. PowerShell cannot run the sh one-liner at all, so
+  // Windows visitors get the .ps1 twin rather than a command that errors.
+  const cmdEl = document.querySelector<HTMLElement>('[data-cmd]')!
+  const promptEl = document.querySelector<HTMLElement>('[data-prompt]')!
+  const platform = (navigator as any).userAgentData?.platform ?? navigator.platform ?? ''
+  if (/win/i.test(platform)) {
+    cmdEl.textContent = 'irm getvibekit.ai/alpha.ps1 | iex'
+    promptEl.textContent = '>'
+  }
+
+  const copyBtn = document.querySelector<HTMLButtonElement>('.install .copy')
   copyBtn?.addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText(copyBtn.dataset.copy!)
+      await navigator.clipboard.writeText(cmdEl.textContent!)
       copyBtn.textContent = 'copied'
     } catch {
       copyBtn.textContent = 'failed'

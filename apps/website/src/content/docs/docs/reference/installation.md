@@ -16,6 +16,13 @@ channel. Once 1.0.0 ships you can drop it.
 ## macOS and Linux
 
 ```bash
+curl -fsSL https://getvibekit.ai/alpha | sh
+```
+
+`/alpha` is the same script as `/install` with the channel pre-set, so the
+one-liner stays short. The explicit form is equivalent:
+
+```bash
 curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
 ```
 
@@ -23,6 +30,13 @@ Installs to `~/.local/bin`. If that is not on your `PATH`, the installer prints
 the line to add for your shell.
 
 ## Windows
+
+```powershell
+irm https://getvibekit.ai/alpha.ps1 | iex
+```
+
+`/alpha.ps1` is `/install.ps1` with the channel pre-set. The explicit form is
+equivalent:
 
 ```powershell
 $env:VIBEKIT_CHANNEL = "alpha"; irm https://getvibekit.ai/install.ps1 | iex
