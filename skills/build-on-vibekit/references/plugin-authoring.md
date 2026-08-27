@@ -23,9 +23,11 @@ A plugin is a directory in the one published package: source in
 current named consumer and owner approval.
 
 The package declares `algosdk` and `zod` as peers; import core from
-`@initlabs/vibekit` and tools from its subpaths. Third-party SDKs used by the
-implementation go in the package's `dependencies` — every consumer of
-`@initlabs/vibekit` installs them, so ask before adding any dependency.
+`@initlabs/vibekit` and tools from its subpaths. A third-party SDK the plugin
+wraps is an optional peer dependency of the package (declared in
+`peerDependencies` and `peerDependenciesMeta`, installed as a devDependency
+for the workspace, and listed in the README's subpath table), so only
+consumers of that subpath install it. Ask before adding any dependency.
 
 ## Implement the service boundary
 

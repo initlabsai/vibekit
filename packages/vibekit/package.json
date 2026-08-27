@@ -79,25 +79,65 @@
     "test": "bun test",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@ai-sdk/anthropic": "^4.0.0",
+    "@ai-sdk/openai": "^4.0.0",
+    "@ai-sdk/openai-compatible": "^3.0.0",
+    "@algorandfoundation/keystore-core": "1.0.0-canary.3",
+    "@algorandfoundation/keystore-node": "1.0.0-canary.3",
+    "@alpha-arcade/sdk": "^0.4.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@tanstack/store": "0.9.3",
+    "@txnlab/nfd-sdk": "^1.1.0",
+    "ai": "^7.0.0",
+    "algosdk": ">=3.7.0 <4",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/anthropic": {
+      "optional": true
+    },
+    "@ai-sdk/openai": {
+      "optional": true
+    },
+    "@ai-sdk/openai-compatible": {
+      "optional": true
+    },
+    "@algorandfoundation/keystore-core": {
+      "optional": true
+    },
+    "@algorandfoundation/keystore-node": {
+      "optional": true
+    },
+    "@alpha-arcade/sdk": {
+      "optional": true
+    },
+    "@modelcontextprotocol/server": {
+      "optional": true
+    },
+    "@tanstack/store": {
+      "optional": true
+    },
+    "@txnlab/nfd-sdk": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
     "@ai-sdk/anthropic": "^4.0.40",
     "@ai-sdk/openai": "^4.0.45",
     "@ai-sdk/openai-compatible": "^3.0.34",
     "@algorandfoundation/keystore-core": "1.0.0-canary.3",
     "@algorandfoundation/keystore-node": "1.0.0-canary.3",
     "@alpha-arcade/sdk": "^0.4.11",
+    "@modelcontextprotocol/client": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
     "@tanstack/store": "0.9.3",
     "@txnlab/nfd-sdk": "^1.1.0",
-    "ai": "^7.0.74"
-  },
-  "peerDependencies": {
-    "algosdk": ">=3.7.0 <4",
-    "zod": "^4.0.0"
-  },
-  "devDependencies": {
-    "@modelcontextprotocol/client": "^2.0.0",
     "@types/bun": "^1.4.0",
+    "ai": "^7.0.74",
     "algosdk": "3.7.0",
     "tweetnacl": "^1.0.3",
     "typescript": "^5.9.3",

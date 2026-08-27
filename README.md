@@ -146,6 +146,19 @@ bun add @initlabs/vibekit@alpha
 `./preset`, `./mcp`, `./mcp/stdio`, `./mcp/http`, `./agent`, `./agent/config`,
 `./signer-keystore`, and `./plugins/<name>` are the rest.
 
+`algosdk` and `zod` are the only required peers. Each subpath that wraps a
+third-party SDK declares it as an optional peer, so you install what you use:
+
+| Subpath | Install alongside |
+| --- | --- |
+| `.`, `./tools`, `./tools/views` | nothing more |
+| `./mcp`, `./mcp/stdio`, `./mcp/http` | `@modelcontextprotocol/server` |
+| `./agent` | `ai`, plus `@ai-sdk/anthropic`, `@ai-sdk/openai`, or `@ai-sdk/openai-compatible` |
+| `./signer-keystore` | `@algorandfoundation/keystore-core`, `@algorandfoundation/keystore-node`, `@tanstack/store` |
+| `./plugins/nfd` | `@txnlab/nfd-sdk` |
+| `./plugins/alpha-arcade` | `@alpha-arcade/sdk` |
+| `./preset` | all of the above |
+
 ## Development
 
 [AGENTS.md](./AGENTS.md) is the map of the repository: what runs where, how a

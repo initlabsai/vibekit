@@ -10,8 +10,9 @@
 #   make-lore-card.sh out.png
 #
 # Optional: KICKER, DATE, CAP, FOOT_L, FOOT_R, W/H.
-# The face is lore-mask.txt: the Directorate wears masks, so every card shares it
-# and the character is carried by the name and role. `@` cells become lit eyes.
+# The face is lore-mask.svg: the Directorate wears masks, so every card shares it
+# and the character is carried by the name and role. Flat facets, one hue plus
+# hero-amber eyes — edit the polygons in place, there is no generator.
 set -eu
 OUT="$1"
 KICKER="${KICKER:-PRIOR ART DIRECTORATE // PERSONNEL 001}"; DATE="${DATE:-2036-02-11}"
@@ -20,7 +21,7 @@ W="${W:-1600}"; H="${H:-900}"; CAP="${CAP:-IDENTITY WITHHELD // MASK ON FILE}"
 DIR=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
-PORTRAIT=$(sed 's|@|<i>█</i>|g' "$DIR/lore-mask.txt")
+MASK=$(cat "$DIR/lore-mask.svg")
 ROWS=""; IFS=';' read -ra PAIRS <<< "${META:-}"
 for p in "${PAIRS[@]}"; do
   [ -z "$p" ] && continue
@@ -41,9 +42,7 @@ body{background:#0a0b0e;color:#e9e1d4;width:${W}px;height:${H}px;overflow:hidden
 .bar .dim{color:#605c56}
 .body{display:flex;gap:64px;align-items:center;flex:1;padding:34px 0}
 .frame{border:1px solid #3a352c;padding:22px 26px;background:#111318}
-.frame pre{color:#c4a06a;font-size:26px;line-height:26px;white-space:pre;
- text-shadow:0 0 14px rgba(196,160,106,.35)}
-.frame i{color:#ffb454;font-style:normal;text-shadow:0 0 18px rgba(255,180,84,.9)}
+.frame svg{display:block;width:400px}
 .cap{color:#605c56;font-size:15px;letter-spacing:.14em;margin-top:14px;text-align:center}
 .role{color:#c4a06a;font-size:21px;font-weight:700;letter-spacing:.16em}
 h1{font-size:76px;font-weight:500;letter-spacing:-.045em;line-height:1.1;margin:.18em 0 .1em}
@@ -56,7 +55,7 @@ h1{font-size:76px;font-weight:500;letter-spacing:-.045em;line-height:1.1;margin:
   <p class="bar"><span>$KICKER</span><span class="dim">$DATE</span></p>
   <div class="body">
     <div>
-      <div class="frame"><pre>$PORTRAIT</pre></div>
+      <div class="frame">$MASK</div>
       <p class="cap">$CAP</p>
     </div>
     <div>
