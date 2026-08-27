@@ -98,6 +98,7 @@ h1 em, h2 em { color: var(--brass-bright); font-style: normal; }
 .tui-top { align-items: center; border-bottom: 1px solid var(--border-soft); color: var(--brass); display: flex; font-size: .62rem; justify-content: space-between; letter-spacing: .1em; min-height: 2.5rem; padding-inline: .9rem; }
 .tui-top b { color: var(--brass-bright); font-weight: inherit; }
 .tui-live { color: var(--signal); }
+.tui-live b { color: var(--brass-bright); font-variant-numeric: tabular-nums; font-weight: 500; padding-left: .3rem; }
 .tui-live i { animation: pulse 2.4s ease-in-out infinite; background: var(--signal); border-radius: 50%; display: inline-block; height: .36rem; margin-right: .35rem; width: .36rem; }
 .tui-tabs { border-bottom: 1px solid var(--border-soft); display: flex; font-size: .6rem; gap: clamp(1rem, 2.2vw, 2rem); min-height: 2.25rem; padding: .65rem .9rem 0; }
 .tui-tabs span { color: var(--signal); padding-bottom: .55rem; }
