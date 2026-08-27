@@ -7,6 +7,10 @@ interface Props {
 }
 
 const { title = 'VibeKit — from prompt to mainnet.', description = 'The agentic stack for Algorand builders. Skills, chain tools, LocalNet, and a signer that never shows the AI your keys.' } = Astro.props
+
+// Absolute URLs: scrapers do not resolve relative og:image paths.
+const canonical = new URL(Astro.url.pathname, Astro.site).href
+const ogImage = new URL('/og-image.png', Astro.site).href
 ---
 
 <!doctype html>
@@ -15,9 +19,20 @@ const { title = 'VibeKit — from prompt to mainnet.', description = 'The agenti
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="VibeKit" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="VibeKit — from prompt to mainnet." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <meta name="theme-color" content="#0a0b0e" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

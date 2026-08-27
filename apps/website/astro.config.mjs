@@ -41,6 +41,11 @@ export default defineConfig({
       head: [
         { tag: 'link', attrs: { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap' } },
         { tag: 'meta', attrs: { property: 'og:site_name', content: 'VibeKit' } },
+        { tag: 'meta', attrs: { property: 'og:image', content: 'https://getvibekit.ai/og-image.png' } },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+        { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://getvibekit.ai/og-image.png' } },
         { tag: 'meta', attrs: { name: 'theme-color', content: '#0a0b0e' } },
       ],
     }),
