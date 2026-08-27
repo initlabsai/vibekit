@@ -52,8 +52,9 @@ described as one:
   for an off-curve address, no `SHA512-256("PQA" || scheme || salt || pubkey)`
   address. Without the `PQK` step the same mnemonic yields a different keypair
   here than in a spec-compliant wallet, so these keys are not portable;
-- post-quantum signatures ship in the v42 consensus upgrade (algod
-  v5.0.0-stable); networks reject them until that upgrade takes effect.
+- post-quantum signatures are live: MainNet and TestNet both run algod
+  5.0.0, which carries the v42 consensus upgrade. The chain is not the
+  blocker; the derivation below is.
 
 **Do not derive an address for it yourself.** `algosdk` 3.7.0 exports
 `addressFromPQKey(scheme, publicKey)`, and it will happily return a
