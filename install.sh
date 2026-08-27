@@ -180,7 +180,7 @@ detect_platform() {
       esac
       ;;
     MINGW*|MSYS*|CYGWIN*)
-      error "Use the PowerShell installer on Windows: irm https://getvibekit.ai/install.ps1 | iex"
+      error "Windows: download the binary from https://github.com/initlabsai/vibekit/releases"
       ;;
     *)
       error "Unsupported operating system: $os"
