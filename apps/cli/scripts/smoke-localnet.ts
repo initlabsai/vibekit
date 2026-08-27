@@ -63,8 +63,9 @@ void (deployment satisfies ResolvedDeployment)
 
 console.log('smoke: network')
 const status = await call<{ latestRound: number; network: string }>('get_network_status', {})
+// A dev-mode LocalNet advances a round per transaction, so an idle one sits at 0.
 check(
-  status.network === 'localnet' && status.latestRound > 0,
+  status.network === 'localnet' && status.latestRound >= 0,
   `localnet at round ${status.latestRound}`,
 )
 
