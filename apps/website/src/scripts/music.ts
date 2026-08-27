@@ -7,11 +7,7 @@ export type Track = { artist: string; title: string; src: string }
 export const TRACKS: Track[] = [
   { artist: 'LNPlusMusic', title: '80s Retro', src: '/music/80s-retro.mp3' },
   { artist: 'Alex Morgan', title: 'Neon Synthwave Drive', src: '/music/neon-drive.mp3' },
-  { artist: 'Alex Morgan', title: 'Midnight Tokyo Drive', src: '/music/tokyo-drive.mp3' },
   { artist: 'Alex Morgan', title: 'Neon Drive Horizon', src: '/music/neon-horizon.mp3' },
-  { artist: 'Alex Morgan', title: 'Arcade Session', src: '/music/arcade-session.mp3' },
-  { artist: 'Alex Morgan', title: 'Pixel Chiptune', src: '/music/pixel-chiptune.mp3' },
-  { artist: 'Alex Morgan', title: 'Snappy Launch Teaser', src: '/music/launch-teaser.mp3' },
   { artist: 'The Mountain', title: 'Retro', src: '/music/retro.mp3' },
 ]
 
