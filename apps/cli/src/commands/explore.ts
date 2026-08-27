@@ -8,7 +8,15 @@ import { dirname, isAbsolute, join, resolve } from 'node:path'
 import pc from 'picocolors'
 
 const TUI_ENTRIES = ['apps/tui/src/index.tsx', 'apps/tui/dist/index.js'] as const
-const SIDECAR_NAMES = ['vibekit-tui', 'vibekit-explore'] as const
+// The .exe variants are what the Windows installer writes; listing them
+// unconditionally avoids a platform branch (a bare `vibekit-tui` never
+// exists on Windows, and `.exe` never exists on POSIX).
+const SIDECAR_NAMES = [
+  'vibekit-tui',
+  'vibekit-tui.exe',
+  'vibekit-explore',
+  'vibekit-explore.exe',
+] as const
 
 export interface ResolveExploreOptions {
   env?: Record<string, string | undefined>

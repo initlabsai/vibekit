@@ -56,3 +56,13 @@ describe('resolveExploreEntry', () => {
     ).toBeUndefined()
   })
 })
+
+test('resolves a Windows .exe sidecar next to the CLI binary', () => {
+  const entry = resolveExploreEntry({
+    env: {},
+    startDirs: ['C:\\Users\\dev\\.vibekit\\bin'],
+    exists: (p) => p.endsWith('vibekit-tui.exe'),
+  })
+  expect(entry).toBeDefined()
+  expect(entry).toContain('vibekit-tui.exe')
+})
