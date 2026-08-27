@@ -105,7 +105,7 @@ export const contractTools: AnyTool[] = [
     }),
     output: applicationStateSchema,
     view: 'application.state',
-    handler: async (ctx, args) => readGlobalState(ctx, await withAppSpecFile(args)),
+    handler: async (ctx, args) => readGlobalState(ctx, await withAppSpecFile(ctx, args)),
   }),
   defineTool({
     name: 'read_local_state',
@@ -117,7 +117,7 @@ export const contractTools: AnyTool[] = [
     }),
     output: applicationStateSchema,
     view: 'application.state',
-    handler: async (ctx, args) => readLocalState(ctx, await withAppSpecFile(args)),
+    handler: async (ctx, args) => readLocalState(ctx, await withAppSpecFile(ctx, args)),
   }),
   defineTool({
     name: 'read_box_state',
@@ -147,7 +147,7 @@ Examples:
     }),
     output: applicationBoxSchema,
     view: 'application.box',
-    handler: async (ctx, args) => readBoxState(ctx, await withAppSpecFile(args)),
+    handler: async (ctx, args) => readBoxState(ctx, await withAppSpecFile(ctx, args)),
   }),
   defineTool({
     name: 'list_application_boxes',
@@ -222,8 +222,8 @@ Examples:
     parameters: z.object(appSpecParams),
     output: appMethodsSchema,
     view: 'table',
-    handler: async (_ctx, args) => {
-      const spec = normalizeAppSpec(requireAppSpec(await withAppSpecFile(args)))
+    handler: async (ctx, args) => {
+      const spec = normalizeAppSpec(requireAppSpec(await withAppSpecFile(ctx, args)))
       return { name: spec.name, methods: spec.methods }
     },
   }),

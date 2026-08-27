@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { readFile } from 'node:fs/promises'
 import { ToolError } from '../../src/core/index.js'
 
 import { contractTools } from '../../src/tools/contracts/index.js'
@@ -9,9 +10,11 @@ const SPEC_PATH = new URL('./fixtures/hello-world.arc56.json', import.meta.url).
 const tool = (name: string) =>
   [...contractTools, ...contractWriteTools].find((t) => t.name === name)!
 
+const readDisk = (path: string) => readFile(path, 'utf8')
+
 describe('appSpecPath', () => {
   test('app_list_methods reads the spec from disk', async () => {
-    const result = (await tool('app_list_methods').handler(fakeContext({}), {
+    const result = (await tool('app_list_methods').handler(fakeContext({ readFile: readDisk }), {
       appSpecPath: SPEC_PATH,
     })) as {
       name: string
@@ -23,12 +26,14 @@ describe('appSpecPath', () => {
 
   test('a missing file and a missing spec are distinct, clear errors', async () => {
     await expect(
-      tool('app_list_methods').handler(fakeContext({}), { appSpecPath: '/nowhere/x.arc56.json' }),
+      tool('app_list_methods').handler(fakeContext({ readFile: readDisk }), {
+        appSpecPath: '/nowhere/x.arc56.json',
+      }),
     ).rejects.toMatchObject({ code: 'APP_SPEC_NOT_FOUND' })
-    const missing = tool('app_deploy').handler(fakeContext({}), { sender: 'A' })
+    const missing = tool('app_deploy').handler(fakeContext({ readFile: readDisk }), { sender: 'A' })
     await expect(missing).rejects.toBeInstanceOf(ToolError)
     await expect(
-      tool('app_deploy').handler(fakeContext({}), { sender: 'A' }),
+      tool('app_deploy').handler(fakeContext({ readFile: readDisk }), { sender: 'A' }),
     ).rejects.toMatchObject({
       code: 'APP_SPEC_REQUIRED',
     })
@@ -47,5 +52,14 @@ describe('appSpecPath', () => {
       const shape = (tool(name).parameters as unknown as { shape: Record<string, unknown> }).shape
       expect(Object.keys(shape)).toContain('appSpecPath')
     }
+  })
+})
+
+describe('appSpecPath on a deployment with no file grant', () => {
+  test('refuses the path form instead of reading the host filesystem', async () => {
+    const tool = contractTools.find((entry) => entry.name === 'app_list_methods')!
+    await expect(
+      tool.handler(fakeContext({}), { appSpecPath: '/etc/hostname' }),
+    ).rejects.toMatchObject({ code: 'APP_SPEC_PATH_UNAVAILABLE' })
   })
 })

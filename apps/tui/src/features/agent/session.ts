@@ -25,6 +25,7 @@ import {
 import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit'
 import { estimateProgramTokens } from '@initlabs/vibekit/tools'
 import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
+import { readLocalFile } from '@initlabs/vibekit/preset'
 import {
   bridgeToolResult,
   unsignedGroupFromToolResult,
@@ -287,6 +288,8 @@ export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession
     mode: 'compose',
     tools,
     plugins: options.tools ? undefined : plugins,
+    // The Explorer runs on the user's machine: app specs may be read by path.
+    readFile: readLocalFile,
     model: options.model,
     approveToolCall: options.approveToolCall,
     maxSteps: 8,

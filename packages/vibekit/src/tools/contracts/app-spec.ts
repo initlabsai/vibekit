@@ -3,9 +3,8 @@
  * local spec discovery. Every format normalizes to the ARC-56 subset the
  * toolkit consumes; TEAL sources are base64 in ARC-56 and ARC-32 alike.
  */
-import { base64ToBytes, ToolError } from '../../core/index.js'
+import { base64ToBytes, ToolError, type ToolContext } from '../../core/index.js'
 import algosdk from 'algosdk'
-import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 
 export type AppSpecFormat = 'arc56' | 'arc32' | 'arc4'
@@ -30,13 +29,24 @@ export const appSpecParams = {
     ),
 }
 
-/** Resolves appSpecPath into appSpec; an explicit appSpec wins. */
+/**
+ * Resolves appSpecPath into appSpec through the host's file grant; an explicit
+ * appSpec wins. A deployment without `readFile` (a remote host) refuses the
+ * path form rather than reading its own filesystem.
+ */
 export async function withAppSpecFile<T extends { appSpec?: string; appSpecPath?: string }>(
+  ctx: Pick<ToolContext, 'readFile'>,
   args: T,
 ): Promise<T> {
   if (args.appSpec !== undefined || args.appSpecPath === undefined) return args
+  if (!ctx.readFile) {
+    throw new ToolError(
+      'APP_SPEC_PATH_UNAVAILABLE',
+      'This deployment cannot read local files; pass appSpec inline.',
+    )
+  }
   try {
-    return { ...args, appSpec: await readFile(args.appSpecPath, 'utf8') }
+    return { ...args, appSpec: await ctx.readFile(args.appSpecPath) }
   } catch (error: unknown) {
     throw new ToolError(
       'APP_SPEC_NOT_FOUND',

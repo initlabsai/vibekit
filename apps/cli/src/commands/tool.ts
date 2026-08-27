@@ -25,6 +25,7 @@ import {
   defaultPlugins,
   defaultTools,
   networksFromEnv,
+  readLocalFile,
   withKeystoreTools,
 } from '@initlabs/vibekit/preset'
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
@@ -48,6 +49,7 @@ async function buildDeployment(): Promise<{
     tools: await withKeystoreTools(defaultTools, signer),
     plugins: defaultPlugins(),
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
+    readFile: readLocalFile,
   })
 
   return { deployment, signer }

@@ -26,13 +26,14 @@ const APP_CALL_TYPES = new Set(['app_call', 'app_opt_in', 'app_close_out', 'app_
 async function populateResources(
   ctx: ToolContext,
   specs: TxnSpec[],
+  suggestedParams: algosdk.SuggestedParams,
 ): Promise<ReadonlyMap<number, GroupResources> | undefined> {
   const appCallIndexes = specs
     .map((spec, i) => (APP_CALL_TYPES.has(spec.type) ? i : -1))
     .filter((i) => i >= 0)
   if (appCallIndexes.length === 0) return undefined
 
-  const probe = await buildGroup({ ...ctx, mode: 'compose' }, specs)
+  const probe = await buildGroup({ ...ctx, mode: 'compose' }, specs, undefined, suggestedParams)
   const request = new algosdk.modelsv2.SimulateRequest({
     txnGroups: [],
     allowEmptySignatures: true,
@@ -86,7 +87,9 @@ export async function composeOrExecute(
   ctx: ToolContext,
   specs: TxnSpec[],
 ): Promise<ComposeOrExecuteResult> {
-  const resources = await populateResources(ctx, specs)
-  const built = await buildGroup(ctx, specs, resources)
+  // One params fetch serves the resource probe and the real build.
+  const suggestedParams = await ctx.algod.getTransactionParams().do()
+  const resources = await populateResources(ctx, specs, suggestedParams)
+  const built = await buildGroup(ctx, specs, resources, suggestedParams)
   return finishGroup(ctx, built, specs)
 }

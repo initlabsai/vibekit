@@ -45,6 +45,10 @@ Pass these fields to the host adapter:
 - `tools` is an array of `ToolDefinition`s.
 - `plugins` is an array of instantiated `ToolPlugin`s.
 - `resolveSigner` is required when `mode` is `execute`.
+- `readFile` grants tools local file reads (the `appSpecPath` parameter). Pass
+  `readLocalFile` from `@initlabs/vibekit/preset` on a local host; leave it
+  unset on a remote one, so a path in a tool call cannot read the server's
+  files (the tool answers `APP_SPEC_PATH_UNAVAILABLE`).
 
 Registry validation happens at startup. Duplicate plugin names, duplicate tool
 names, and execute mode without a signer are configuration errors; do not defer

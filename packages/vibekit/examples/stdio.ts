@@ -9,6 +9,7 @@ import {
   defaultTools,
   networksFromEnv,
   withKeystoreTools,
+  readLocalFile,
 } from '@initlabs/vibekit/preset'
 import { createKeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
@@ -25,6 +26,8 @@ const handle = serveVibekitStdio({
   // signer present → keystore account tools; dispenser token → testnet funding
   tools: await withKeystoreTools(defaultTools, signer),
   plugins: defaultPlugins(),
+  // A local process: tools may read app specs by path.
+  readFile: readLocalFile,
   resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
 })
 

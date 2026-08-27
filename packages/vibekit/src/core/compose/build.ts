@@ -197,6 +197,7 @@ export async function buildGroup(
   ctx: ToolContext,
   specs: TxnSpec[],
   resourcesByIndex?: ReadonlyMap<number, GroupResources>,
+  params?: algosdk.SuggestedParams,
 ): Promise<BuiltGroup> {
   if (specs.length === 0 || specs.length > 16) {
     throw new ToolError(
@@ -205,7 +206,7 @@ export async function buildGroup(
     )
   }
 
-  const suggestedParams = await ctx.algod.getTransactionParams().do()
+  const suggestedParams = params ?? (await ctx.algod.getTransactionParams().do())
   const atc = new AtomicTransactionComposer()
   const methodIndexes: number[] = []
 

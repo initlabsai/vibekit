@@ -14,6 +14,7 @@ import {
   defaultTools,
   networksFromEnv,
   withKeystoreTools,
+  readLocalFile,
 } from '@initlabs/vibekit/preset'
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
@@ -48,6 +49,7 @@ export async function commandMcp(): Promise<void> {
     tools: await withKeystoreTools(defaultTools, signer),
     plugins: defaultPlugins(),
     resolveSigner: signer ? (address) => signer.resolveSigner(address) : undefined,
+    readFile: readLocalFile,
   })
 
   console.error(`vibekit mcp (stdio) up — mode=${mode}`)

@@ -171,3 +171,10 @@ Draft 3–4 options, different angles: one plain statement of the feature, one
 pun/structural gag, one user-benefit framing. Recommend one. Keep each under
 ~200 chars; line breaks are fine, hashtags are not. Match the examples in
 `references/tweets.md` before sending anything.
+
+For lore tweets (the /lore page series), the image is a personnel-record card:
+`references/make-lore-card.sh` (env-var fields -> 1600x900 png), with the
+Prior Art Directorate fox mask in `references/lore-mask.txt`. Everyone in the
+Directorate wears the mask, so one face serves the whole series and the
+character is carried by the name and role. `@` cells in the art become lit
+hero-amber eyes.

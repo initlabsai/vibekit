@@ -23,6 +23,7 @@ export function fakeContext(overrides: {
   indexer?: Record<string, unknown>
   mode?: ToolContext['mode']
   services?: Record<string, unknown>
+  readFile?: ToolContext['readFile']
 }): ToolContext {
   return {
     network: resolveNetwork('localnet'),
@@ -32,5 +33,6 @@ export function fakeContext(overrides: {
     indexer: (overrides.indexer ?? {}) as unknown as ToolContext['indexer'],
     mode: overrides.mode ?? 'compose',
     services: overrides.services ?? {},
+    ...(overrides.readFile ? { readFile: overrides.readFile } : {}),
   }
 }

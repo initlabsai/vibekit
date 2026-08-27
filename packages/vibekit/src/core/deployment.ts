@@ -27,6 +27,8 @@ export interface DeploymentOptions {
   tools?: AnyTool[]
   plugins?: ToolPlugin[]
   resolveSigner?: ToolContext['resolveSigner']
+  /** Grants tools local file reads (appSpecPath); leave unset on remote hosts. */
+  readFile?: ToolContext['readFile']
 }
 
 export interface ResolvedDeployment {
@@ -96,6 +98,7 @@ export function resolveDeployment(options: DeploymentOptions): ResolvedDeploymen
       indexer: clients.indexer,
       mode: options.mode,
       resolveSigner: options.resolveSigner,
+      readFile: options.readFile,
       services,
     })
   }
@@ -141,6 +144,12 @@ export function injectNetworkParam(tool: AnyTool, deployment: ResolvedDeployment
   return tool.parameters.extend({ [NETWORK_PARAM]: networkSchema })
 }
 
+function issuesOf(error: z.ZodError): string {
+  return error.issues
+    .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    .join('; ')
+}
+
 /**
  * Runs one tool call. Throws ToolError; each host maps errors to its own
  * wire shape.
@@ -168,17 +177,20 @@ export async function executeToolCall(
   if (!context) {
     throw new ToolError('UNKNOWN_NETWORK', `Network not served: ${networkId}`)
   }
-  const result = jsonSafe(await tool.handler(context, handlerArgs as never))
+  // Every host validates here, whatever it parsed before: the handler sees
+  // exactly what its schema declares (defaults applied, extras dropped).
+  const args = tool.parameters.safeParse(handlerArgs)
+  if (!args.success) {
+    throw new ToolError('INVALID_ARGS', `Tool ${tool.name}: ${issuesOf(args.error)}`)
+  }
+  const result = jsonSafe(await tool.handler(context, args.data as never))
   if (tool.output) {
     // Validation only: the original result is returned, never a stripped parse.
     const parsed = tool.output.safeParse(result)
     if (!parsed.success) {
-      const issues = parsed.error.issues
-        .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
-        .join('; ')
       throw new ToolError(
         'OUTPUT_MISMATCH',
-        `Tool ${tool.name} returned a result that violates its output schema — ${issues}`,
+        `Tool ${tool.name} returned a result that violates its output schema — ${issuesOf(parsed.error)}`,
       )
     }
   }

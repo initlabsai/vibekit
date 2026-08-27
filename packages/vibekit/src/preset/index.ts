@@ -3,6 +3,8 @@
  * commands, the reference MCP server). One place to add a tool domain or a
  * plugin; hosts that want a different mix keep composing by hand.
  */
+import { readFile } from 'node:fs/promises'
+
 import type { AnyTool, NetworkId, ToolPlugin } from '../core/index.js'
 import { alphaArcadePlugin } from '../plugins/alpha-arcade/index.js'
 import { nfdPlugin } from '../plugins/nfd/index.js'
@@ -58,6 +60,9 @@ export async function withKeystoreTools(
   }
   return tools
 }
+
+/** The file grant a local host passes as `readFile`: tools may read the user's own files (app specs by path). */
+export const readLocalFile = (path: string): Promise<string> => readFile(path, 'utf8')
 
 /** The NETWORK / NETWORKS env convention every stock host reads. */
 export function networksFromEnv(

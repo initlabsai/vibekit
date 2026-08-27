@@ -108,3 +108,27 @@ describe('output schema enforcement', () => {
     expect(result).toEqual({ network: 'localnet' })
   })
 })
+
+describe('parameter validation', () => {
+  const greet = defineTool({
+    name: 'greet',
+    description: 'Greets, with a default.',
+    parameters: z.object({ name: z.string(), loud: z.boolean().default(false) }),
+    handler: async (_ctx, args) => ({ text: args.loud ? args.name.toUpperCase() : args.name }),
+  })
+  const single = () => resolveDeployment({ network: 'localnet', mode: 'compose', tools: [greet] })
+
+  test('applies the schema before the handler, whatever the host parsed', async () => {
+    // A host that skipped parsing still gets the default and loses extra keys.
+    expect(await executeToolCall(single(), greet, { name: 'ann', extra: 1 })).toEqual({
+      text: 'ann',
+    })
+  })
+
+  test('rejects arguments the schema refuses with the field path', async () => {
+    await expect(executeToolCall(single(), greet, { loud: true })).rejects.toMatchObject({
+      code: 'INVALID_ARGS',
+      message: expect.stringContaining('name'),
+    })
+  })
+})

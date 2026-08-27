@@ -57,8 +57,10 @@ Explorer write flow: draft → simulate → inspect → approve → sign → con
 ```
 
 Every host sends calls through `executeToolCall` in
-`packages/vibekit/src/core/deployment.ts`. Resolved contexts are frozen
-before handlers receive them. Tools return structured data and declare a
+`packages/vibekit/src/core/deployment.ts`, which validates the arguments
+against the tool's schema whatever the host parsed. Resolved contexts are
+frozen before handlers receive them. Local file reads are a capability the
+host grants (`readFile`); remote hosts leave it unset. Tools return structured data and declare a
 `view` id; they never return JSX, HTML, or terminal markup.
 
 ## Glossary

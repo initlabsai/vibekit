@@ -18,6 +18,12 @@ export interface ToolContext {
   resolveSigner?: (address: string) => Promise<algosdk.TransactionSigner>
   /** Plugin clients, keyed by plugin name. */
   services: Record<string, unknown>
+  /**
+   * Reads a local file, when the host grants it (the CLI, the TUI). Absent on
+   * remote deployments, so a tool parameter naming a path cannot read the
+   * server's filesystem.
+   */
+  readFile?: (path: string) => Promise<string>
 }
 
 /** What write tools return in compose mode. */

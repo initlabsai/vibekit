@@ -60,7 +60,7 @@ function appTool(
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) =>
-      composeOrExecute(ctx, [{ ...(await withAppSpecFile(args)), type } as TxnSpec]),
+      composeOrExecute(ctx, [{ ...(await withAppSpecFile(ctx, args)), type } as TxnSpec]),
   }) as AnyTool
 }
 
@@ -307,7 +307,7 @@ export const contractWriteTools: AnyTool[] = [
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => {
-      const resolved = await withAppSpecFile(args)
+      const resolved = await withAppSpecFile(ctx, args)
       return deployApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
     },
   }) as AnyTool,
@@ -330,7 +330,7 @@ export const contractWriteTools: AnyTool[] = [
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => {
-      const resolved = await withAppSpecFile(args)
+      const resolved = await withAppSpecFile(ctx, args)
       return updateApp(ctx, { ...resolved, appSpec: requireAppSpec(resolved) })
     },
   }) as AnyTool,

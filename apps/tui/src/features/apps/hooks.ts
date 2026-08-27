@@ -1,5 +1,6 @@
 import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit'
 import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit/agent/config'
+import { readLocalFile } from '@initlabs/vibekit/preset'
 import type { StructuredResult } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
@@ -449,7 +450,12 @@ export function useApps({
       )
       setCallBusy(true)
       setCallError(null)
-      const deployment = resolveDeployment({ network, mode: 'compose', tools: [tool] })
+      const deployment = resolveDeployment({
+        network,
+        mode: 'compose',
+        tools: [tool],
+        readFile: readLocalFile,
+      })
       void executeToolCall(deployment, tool, {
         sender,
         appSpecPath: selected.spec.path,
@@ -527,7 +533,12 @@ export function useApps({
     setCallResult(null)
     // Compose mode for both: reads simulate signerless; writes come back as an
     // unsigned group the approval flow reviews, simulates, and signs.
-    const deployment = resolveDeployment({ network, mode: 'compose', tools: [tool] })
+    const deployment = resolveDeployment({
+      network,
+      mode: 'compose',
+      tools: [tool],
+      readFile: readLocalFile,
+    })
     void executeToolCall(deployment, tool, {
       sender,
       ...toolArgsFor(method, parsed.named),
