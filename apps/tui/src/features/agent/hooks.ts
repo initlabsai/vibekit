@@ -1,4 +1,4 @@
-import { addResult, FIXTURE_ADDRESS_BOOK, type ResultStore } from '@initlabs/vibekit-explorer'
+import { addResult, type ResultStore } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
   listZeroSignalModels,
@@ -12,31 +12,32 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { labelProgramMethods } from '../apps/abi-catalog.js'
 import {
   activeSenderLine,
+  applyToolResultPlan,
   createExplorerAgent,
   explorerContext,
-  networkOfCall,
   planToolResult,
-  programCostLines,
+  programReadApproval,
   runAgentTurn,
 } from './session.js'
 import type { AnyTool } from '@initlabs/vibekit'
 import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
-import type { KeystorePaymentHost } from '../network/keystore-host.js'
 import { shorten } from '../../theme.js'
 import type { Feed } from '../../feed/hooks.js'
 import type { WriteFlow } from '../write-flow/hooks.js'
 
 /**
  * Owns the agent lane: session lifecycle, streaming text/reasoning accretion
- * into the feed, and bridging tool results into trusted views or payments.
+ * into the feed, and handing tool results to the feed, the store, or the
+ * write flow. The session is rebuilt when the network, the extra tools, or
+ * the plugin set change.
  */
 export function useAgentLane({
   feed,
   payment,
-  keystoreHost,
+  network,
   networkRef,
   activeSender,
-  signerReady,
+  accountList,
   commitStore,
   storeRef,
   newId,
@@ -52,10 +53,11 @@ export function useAgentLane({
 }: {
   feed: Feed
   payment: WriteFlow
-  activeSender: string | undefined
-  keystoreHost: KeystorePaymentHost
+  network: LiveNetworkId
   networkRef: { current: LiveNetworkId }
-  signerReady: boolean
+  activeSender: string | undefined
+  /** The keystore address book, or the sample one when no daemon answers. */
+  accountList: ReadonlyArray<{ address: string; name?: string }>
   commitStore: (next: ResultStore) => void
   storeRef: { current: ResultStore }
   newId: (prefix: string) => string
@@ -78,7 +80,8 @@ export function useAgentLane({
   const { flowRef, startFromDraft } = payment
 
   const agentSectionRef = useRef<number | null>(null)
-  const addressBookRef = useRef<ReadonlyArray<{ address: string; name?: string }>>([])
+  const addressBookRef = useRef(accountList)
+  addressBookRef.current = accountList
   const agentRef = useRef<AgentSession | null>(null)
   /** Programs the user already agreed to pay for; further pages don't ask again. */
   const approvedProgramsRef = useRef(new Set<string>())
@@ -89,16 +92,11 @@ export function useAgentLane({
   const extraToolNames = extraTools.map((tool) => tool.name).join(',')
   const disabledPluginNames = [...disabledPlugins].sort().join(',')
 
-  /** Drops the live session, e.g. when the network changes under it. */
-  const reset = useCallback(() => {
-    agentRef.current = null
-  }, [])
-
-  // Spec scan / deployed associations can land after the first turn; plugin
-  // toggles drop the session the same way.
+  // The session is built for one network, tool set, and plugin set; when any
+  // of them changes the next turn builds a fresh one.
   useEffect(() => {
     agentRef.current = null
-  }, [extraToolNames, disabledPluginNames])
+  }, [network, extraToolNames, disabledPluginNames])
 
   const runAgent = useCallback(
     (sectionId: number, input: string) => {
@@ -157,32 +155,20 @@ export function useAgentLane({
             setAgentBusy(false)
             return
           }
-          const addressBook = signerReady
-            ? await keystoreHost.listSigningAccounts().catch(() => [...FIXTURE_ADDRESS_BOOK])
-            : [...FIXTURE_ADDRESS_BOOK]
-          addressBookRef.current = addressBook
           sessionNetworkRef.current = networkRef.current
           agentRef.current = createExplorerAgent({
             model: agentConfig,
-            addressBook,
+            addressBook: addressBookRef.current,
             network: networkRef.current,
             extraTools,
             disabledPlugins,
             labelProgram: (program) => labelProgramMethods(program, specCatalog, specHashCatalog),
-            approveToolCall: async ({ toolName, input }) => {
-              if (toolName !== 'get_application_program') return true
-              const { applicationId, network } = (input ?? {}) as {
-                applicationId?: number
-                network?: string
-              }
-              const target = networkOfCall({ network }, sessionNetworkRef.current)
-              const key = `${target}:${applicationId}`
-              if (approvedProgramsRef.current.has(key)) return true
-              const lines = await programCostLines(applicationId, target, agentConfig)
-              const approved = await askConfirm('EXPLAIN THIS CONTRACT?', lines)
-              if (approved) approvedProgramsRef.current.add(key)
-              return approved
-            },
+            approveToolCall: programReadApproval({
+              sessionNetwork: () => sessionNetworkRef.current,
+              agentConfig,
+              askConfirm,
+              approved: approvedProgramsRef.current,
+            }),
           })
         }
         const context = [
@@ -216,18 +202,13 @@ export function useAgentLane({
               addressBook: addressBookRef.current,
             })
             if (plan.usedNetwork !== networkRef.current) onNetworkUsed(plan.usedNetwork, sectionId)
-            switch (plan.kind) {
-              case 'write':
-                startFromDraft(sectionId, plan.draftRecord, 'agent', "The agent's write failed")
-                return
-              case 'cards':
-                commitStore(addResult(storeRef.current, plan.record))
-                for (const block of plan.blocks) appendBlock(sectionId, block)
-                if (plan.note) appendNote(sectionId, plan.note, 'error')
-                return
-              case 'dropped':
-                appendNote(sectionId, plan.message, 'error')
-            }
+            applyToolResultPlan(plan, {
+              addRecord: (record) => commitStore(addResult(storeRef.current, record)),
+              appendBlock: (block) => appendBlock(sectionId, block),
+              appendNote: (text, tone) => appendNote(sectionId, text, tone),
+              startFromDraft: (draftRecord) =>
+                startFromDraft(sectionId, draftRecord, 'agent', "The agent's write failed"),
+            })
           },
           onError: (message) => {
             spoke = true
@@ -257,28 +238,29 @@ export function useAgentLane({
       agentBusy,
       activeSender,
       agentConfig,
+      askConfirm,
       disabledPlugins,
       extraTools,
       specCatalog,
+      specHashCatalog,
       appendBlock,
       appendItem,
       appendNote,
       commitStore,
       flowRef,
-      keystoreHost,
       networkRef,
       newId,
       newItemId,
+      onNetworkUsed,
       patchSection,
       sectionsRef,
       setAgentBusy,
       setStatus,
-      signerReady,
       startFromDraft,
       storeRef,
       updateItem,
     ],
   )
 
-  return { agentConfig, runAgent, agentSectionRef, reset }
+  return { agentConfig, runAgent, agentSectionRef }
 }

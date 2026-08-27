@@ -31,6 +31,7 @@ import { withAccountNames } from '../src/features/network/keystore-host.js'
 
 import {
   activeSenderLine,
+  applyToolResultPlan,
   createExplorerAgent,
   explorerContext,
   explorerSystemPrompt,
@@ -662,5 +663,48 @@ describe('planToolResult', () => {
     expect(plan.blocks[0]?.kind).toBe('raw')
     expect(plan.note).toContain('application.program')
     expect(plan.note).toContain('programHash')
+  })
+})
+
+describe('applyToolResultPlan', () => {
+  const sinks = () => {
+    const calls: string[] = []
+    return {
+      calls,
+      addRecord: () => calls.push('record'),
+      appendBlock: () => calls.push('block'),
+      appendNote: (text: string) => calls.push(`note ${text}`),
+      startFromDraft: () => calls.push('draft'),
+    }
+  }
+
+  test('a write goes to approval, cards to the store and feed, a drop to a note', () => {
+    const toApproval = sinks()
+    applyToolResultPlan(
+      { kind: 'write', draftRecord: {} as never, usedNetwork: 'localnet' } as never,
+      toApproval,
+    )
+    expect(toApproval.calls).toEqual(['draft'])
+    const toFeed = sinks()
+    applyToolResultPlan(
+      {
+        kind: 'cards',
+        record: {} as never,
+        blocks: [
+          { kind: 'raw', title: 'a', text: '' },
+          { kind: 'raw', title: 'b', text: '' },
+        ],
+        note: 'partial',
+        usedNetwork: 'localnet',
+      } as never,
+      toFeed,
+    )
+    expect(toFeed.calls).toEqual(['record', 'block', 'block', 'note partial'])
+    const dropped = sinks()
+    applyToolResultPlan(
+      { kind: 'dropped', message: 'no', usedNetwork: 'localnet' } as never,
+      dropped,
+    )
+    expect(dropped.calls).toEqual(['note no'])
   })
 })

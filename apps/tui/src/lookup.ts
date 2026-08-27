@@ -12,7 +12,6 @@ import {
   createTransactionCollectionViewModel,
   createTransactionDetailViewModel,
   formatMicroAlgos,
-  FIXTURE_ADDRESS_BOOK,
   lookupAmbiguousEntity,
   EXPLORER_PROTOCOL_VERSION,
   type ResultStore,
@@ -24,7 +23,7 @@ import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
 import { useCallback, useRef } from 'react'
 
-import { withAccountNames, type KeystorePaymentHost } from './features/network/keystore-host.js'
+import { withAccountNames } from './features/network/keystore-host.js'
 import { errorMessage, shorten } from './theme.js'
 import type { Feed } from './feed/hooks.js'
 import { enrichResultWithAbi } from './features/apps/abi-catalog.js'
@@ -74,8 +73,7 @@ function plural(count: number, noun: string): string {
 export function useLookups({
   feed,
   host,
-  keystoreHost,
-  signerReady,
+  accountList,
   commitStore,
   storeRef,
   networkRef,
@@ -87,8 +85,8 @@ export function useLookups({
 }: {
   feed: Feed
   host: () => ExplorerHost
-  keystoreHost: KeystorePaymentHost
-  signerReady: boolean
+  /** The keystore address book, or the sample one when no daemon answers. */
+  accountList: ReadonlyArray<{ address: string; name?: string }>
   commitStore: (next: ResultStore) => void
   storeRef: { current: ResultStore }
   networkRef: { current: LiveNetworkId }
@@ -101,7 +99,7 @@ export function useLookups({
 }) {
   const { appendBlock, appendNote } = feed
 
-  /** The busy/status/error dance around one request; a request while busy is dropped. */
+  /** The busy/status/error dance around one request; a request while busy says so. */
   const withBusy = useCallback(
     (
       sectionId: number,
@@ -109,7 +107,10 @@ export function useLookups({
       failure: string,
       task: () => Promise<void>,
     ): Promise<void> => {
-      if (busyRef.current) return Promise.resolve()
+      if (busyRef.current) {
+        appendNote(sectionId, 'Still working on the last request.', 'error')
+        return Promise.resolve()
+      }
       setBusy(true)
       setStatus(status)
       return task()
@@ -130,7 +131,7 @@ export function useLookups({
       const enriched = enrichResultWithAbi(record, specCatalog)
       commitStore(addResult(storeRef.current, enriched))
       const spec = viewFor(enriched, view)
-      appendBlock(sectionId, { id: 0, kind: 'view', view: spec })
+      appendBlock(sectionId, { kind: 'view', view: spec })
       return spec
     },
     [appendBlock, commitStore, specCatalog, storeRef],
@@ -225,7 +226,7 @@ export function useLookups({
         const nfd = await nfdRef.current.clientFor(network).resolve(name, { view: 'full' })
         const data = nfdRecord(nfd, name)
         if (!data.address) throw new Error('the name has no deposit address')
-        appendBlock(sectionId, { id: 0, kind: 'plugin', view: 'nfd.profile', data, network })
+        appendBlock(sectionId, { kind: 'plugin', view: 'nfd.profile', data, network })
         address = data.address
       }).then(() => {
         // Its own lookup, after the resolve has released busy: from here the
@@ -243,9 +244,7 @@ export function useLookups({
         view: 'account.list',
         failure: "Couldn't list accounts",
         run: async () => {
-          const accounts = signerReady
-            ? await keystoreHost.listSigningAccounts()
-            : [...FIXTURE_ADDRESS_BOOK]
+          const accounts = accountList
           if (accounts.length === 0) {
             appendNote(
               sectionId,
@@ -265,7 +264,7 @@ export function useLookups({
             : undefined
         },
       }),
-    [appendNote, host, keystoreHost, lookupById, networkRef, signerReady, storeRef],
+    [accountList, appendNote, host, lookupById, networkRef, storeRef],
   )
 
   const openAsset = useCallback(

@@ -6,19 +6,18 @@ import type { ViewSpec, WriteFlowState } from '@initlabs/vibekit-explorer'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =
-  | { id: number; kind: 'view'; view: ViewSpec }
-  | { id: number; kind: 'raw'; title: string; text: string }
+  | { kind: 'view'; view: ViewSpec }
+  | { kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
-  | { id: number; kind: 'plugin'; view: string; data: unknown; network: string }
+  | { kind: 'plugin'; view: string; data: unknown; network: string }
   /** A coarse `table` view's result, pre-shaped by tableModel — formatted raw, not trusted. */
   | {
-      id: number
       kind: 'table'
       title: string
       facts: Array<[string, string]>
       rows: Array<Record<string, unknown>>
     }
-  | { id: number; kind: 'write'; flow: WriteFlowState }
+  | { kind: 'write'; flow: WriteFlowState }
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =

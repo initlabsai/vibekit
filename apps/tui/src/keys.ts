@@ -1,12 +1,25 @@
-/** The one keyboard handler. Every action is injected from the composition root. */
+/**
+ * The keyboard, and what each screen shows in its keybar. The one
+ * `useKeyboard`; every action is injected from the composition root, and the
+ * apps screen's keys live with the apps feature.
+ */
+import {
+  createTransactionCollectionViewModel,
+  findResultRecord,
+  nextPageArgs,
+  type ResultStore,
+  type ViewSpec,
+} from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useKeyboard } from '@opentui/react'
 import { useCallback } from 'react'
 
+import { appsKeybar, handleAppsKey, type AppsKeys } from './features/apps/keys.js'
+import type { Feed, Focus, Section } from './feed/hooks.js'
+import { transactionsFilterFor, type OpenTarget } from './result-card.js'
 import type { Screen } from './top-bar.js'
-import type { Feed } from './feed/hooks.js'
 
-/** ^1–^4 as the masthead labels them. */
+/** ^1–^5 as the masthead labels them. */
 const PAGE_KEYS: Record<string, Exclude<Screen, 'chat' | 'wallet'> | undefined> = {
   '1': 'assets',
   '2': 'apps',
@@ -15,10 +28,137 @@ const PAGE_KEYS: Record<string, Exclude<Screen, 'chat' | 'wallet'> | undefined> 
   '5': 'plugins',
 }
 
+/** The cards a key can act on: the highlighted one, else every card in the selected section, newest first. */
+function cardsInReach(sections: Section[], selectedId: number | null, cursorItemId: number | null) {
+  const section = sections.find((candidate) => candidate.id === selectedId)
+  const views = (section?.items ?? [])
+    .flatMap((item) =>
+      item.kind === 'block' && item.block.kind === 'view'
+        ? [{ itemId: item.id, view: item.block.view }]
+        : [],
+    )
+    .filter((card) => cursorItemId === null || card.itemId === cursorItemId)
+    .reverse()
+  return { section, views }
+}
+
+/** The single-key actions the cards in reach offer; presence doubles as the keybar's hint. */
+export interface CardActions {
+  /** A transaction list is in reach: 1-9 opens its rows. */
+  rows?: true
+  t?: () => void
+  e?: () => void
+  m?: () => void
+  a?: () => void
+}
+
+export function cardActionsFor(input: {
+  sections: Section[]
+  selectedId: number | null
+  cursorItemId: number | null
+  store: ResultStore
+  openTarget: (target: OpenTarget) => void
+  loadMore: (sectionId: number, itemId: number, view: ViewSpec) => void
+}): CardActions {
+  const { section, views } = cardsInReach(input.sections, input.selectedId, input.cursorItemId)
+  const actions: CardActions = {}
+  for (const { itemId, view } of views) {
+    if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group'))
+      actions.rows = true
+    if (!actions.t) {
+      const filter = transactionsFilterFor(input.store, view)
+      if (filter) actions.t = () => input.openTarget({ kind: 'transactions', filter })
+    }
+    if (!actions.e && view.view === 'application.detail') {
+      const filter = transactionsFilterFor(input.store, view)
+      if (filter?.applicationId !== undefined) {
+        const { applicationId } = filter
+        actions.e = () => input.openTarget({ kind: 'program', applicationId })
+      }
+    }
+    if (!actions.m && section && nextPageArgs(findResultRecord(input.store, view.source))) {
+      actions.m = () => input.loadMore(section.id, itemId, view)
+    }
+    if (!actions.a && view.view === 'account.portfolio') {
+      const filter = transactionsFilterFor(input.store, view)
+      if (filter?.address) {
+        const { address } = filter
+        actions.a = () => input.openTarget({ kind: 'holdings', address })
+      }
+    }
+  }
+  return actions
+}
+
+/** Row n (1-9) of the transaction list in reach, as a txid to open. */
+export function listRowTxid(input: {
+  sections: Section[]
+  selectedId: number | null
+  cursorItemId: number | null
+  store: ResultStore
+  index: number
+}): string | undefined {
+  const { views } = cardsInReach(input.sections, input.selectedId, input.cursorItemId)
+  const list = views.find(
+    ({ view }) => view.view === 'transaction.list' || view.view === 'transaction.group',
+  )
+  if (!list) return undefined
+  const derived = createTransactionCollectionViewModel(input.store, list.view)
+  return derived.ok ? derived.model.transactions[input.index - 1]?.id : undefined
+}
+
+/**
+ * One grammar everywhere: `key verb`, dots between, no brackets; drawn in
+ * the active pane's bottom frame line. Global keys live in the masthead.
+ */
+export function keybarFor(input: {
+  modalOpen: boolean
+  screen: Screen
+  focus: Focus
+  apps: Parameters<typeof appsKeybar>[0]
+  tailRunning: boolean
+  cardActions: CardActions
+  sectionCount: number
+}): string {
+  const { cardActions } = input
+  if (input.modalOpen) return 'enter approve · esc deny'
+  switch (input.screen) {
+    case 'wallet':
+      return '1-9 select · esc explore'
+    case 'apps':
+      return appsKeybar(input.apps)
+    case 'blocks':
+      return `space ${input.tailRunning ? 'stop' : 'start'} · esc explore`
+    case 'plugins':
+      return '1-9 toggle · esc explore'
+    case 'assets':
+    case 'txns':
+      return '←/→ account · esc explore'
+    case 'chat':
+      if (input.focus === 'content') {
+        return [
+          '↑/↓ scroll',
+          '←/→ cards',
+          cardActions.rows ? '1-9 open row' : null,
+          cardActions.t ? 't txns' : null,
+          cardActions.a ? 'a assets' : null,
+          cardActions.e ? 'e explain' : null,
+          cardActions.m ? 'm more' : null,
+          'x close',
+          'tab/esc composer',
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      }
+      return input.sectionCount > 0
+        ? `enter send · tab feed (${input.sectionCount}) · ^s session · ^n network · ctrl+c quit`
+        : 'enter send · drag copies · ^n network · ctrl+c quit'
+  }
+}
+
 /**
  * Global keyboard dispatch: modal decisions first, then workspace shortcuts,
- * then per-screen and per-focus handling. Pure wiring — every action is
- * injected from the composition root.
+ * then per-screen and per-focus handling.
  */
 export function useExplorerKeys({
   feed,
@@ -32,14 +172,7 @@ export function useExplorerKeys({
   setActiveSender,
   cycleAccount,
   closeSelectedSection,
-  appsDetailOpen,
-  closeAppsDetail,
-  activateAppsEntry,
-  appsMethodOpen,
-  selectAppsMethod,
-  submitAppsCall,
-  openAppsApp,
-  deployAppsApp,
+  apps,
   toggleBlocksTail,
   togglePlugin,
   openListRow,
@@ -57,22 +190,13 @@ export function useExplorerKeys({
   setActiveSender: (address: string) => void
   cycleAccount: (delta: number) => void
   closeSelectedSection: () => void
-  appsDetailOpen: boolean
-  closeAppsDetail: () => void
-  activateAppsEntry: (index: number) => void
-  appsMethodOpen: boolean
-  selectAppsMethod: (index: number) => void
-  submitAppsCall: () => void
-  /** o on an open app card: the application record lane, like opening an asset from the shelf. */
-  openAppsApp: () => void
-  /** d on an open app card: compose a create of its spec (the deploy line first when it has TMPL_* vars). */
-  deployAppsApp: () => void
+  apps: AppsKeys
   toggleBlocksTail: () => void
   /** Flips plugin row n (1-9) on the plugins screen. */
   togglePlugin: (index: number) => void
-  /** Opens row n (1-9) of the newest transaction list in the selected section. */
+  /** Opens row n (1-9) of the transaction list in reach. */
   openListRow: (index: number) => void
-  /** t transactions · e explain · m more, on the newest card in the selected section that offers it. */
+  /** t transactions · e explain · m more · a assets, on the card in reach that offers it. */
   runCardAction: (key: 't' | 'e' | 'm' | 'a') => void
   /** ^s shows or hides the session index. */
   toggleNav: () => void
@@ -113,53 +237,14 @@ export function useExplorerKeys({
           return
         }
         if (screen !== 'chat') {
+          if (screen === 'apps' && handleAppsKey(key, apps)) return
           if (key.name === 'escape') {
-            // The apps detail pane is a layer inside the screen: esc peels it first.
-            if (screen === 'apps' && appsDetailOpen) {
-              closeAppsDetail()
-              return
-            }
             setScreen('chat')
             setFocus('composer')
             return
           }
-          if (screen === 'apps') {
-            if (appsMethodOpen && (key.name === 'return' || key.name === 'enter')) {
-              // The focused args input submits on its own; without this the
-              // call fires twice and the two runs race on callBusy/callResult.
-              key.preventDefault()
-              submitAppsCall()
-              return
-            }
-            if (appsDetailOpen && !appsMethodOpen && key.name === 'o') {
-              openAppsApp()
-              return
-            }
-            if (appsDetailOpen && !appsMethodOpen && key.name === 'd') {
-              deployAppsApp()
-              return
-            }
-            const index = Number.parseInt(key.name, 10)
-            if (Number.isInteger(index)) {
-              if (appsDetailOpen && !appsMethodOpen) selectAppsMethod(index)
-              else if (!appsDetailOpen) activateAppsEntry(index)
-              return
-            }
-            if (!appsDetailOpen && (key.name === '[' || key.name === 'left')) {
-              cycleAccount(-1)
-              return
-            }
-            if (!appsDetailOpen && (key.name === ']' || key.name === 'right')) {
-              cycleAccount(1)
-              return
-            }
-            return
-          }
           if (screen === 'blocks') {
-            if (key.name === 'space') {
-              toggleBlocksTail()
-              return
-            }
+            if (key.name === 'space') toggleBlocksTail()
             return
           }
           if (key.name === '[' || key.name === 'left') {
@@ -170,16 +255,11 @@ export function useExplorerKeys({
             cycleAccount(1)
             return
           }
-          if (screen === 'wallet') {
-            const index = Number.parseInt(key.name, 10)
-            if (Number.isInteger(index) && accountList[index - 1]) {
-              setActiveSender(accountList[index - 1]!.address)
-            }
+          const index = Number.parseInt(key.name, 10)
+          if (screen === 'wallet' && Number.isInteger(index) && accountList[index - 1]) {
+            setActiveSender(accountList[index - 1]!.address)
           }
-          if (screen === 'plugins') {
-            const index = Number.parseInt(key.name, 10)
-            if (Number.isInteger(index)) togglePlugin(index)
-          }
+          if (screen === 'plugins' && Number.isInteger(index)) togglePlugin(index)
           return
         }
         if (focus === 'content') {
@@ -231,12 +311,7 @@ export function useExplorerKeys({
       },
       [
         accountList,
-        activateAppsEntry,
-        appsDetailOpen,
-        appsMethodOpen,
-        closeAppsDetail,
-        selectAppsMethod,
-        submitAppsCall,
+        apps,
         closeSelectedSection,
         contentScrollRef,
         cycleAccount,

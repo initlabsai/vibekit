@@ -249,8 +249,8 @@ export function useApps({
     lookupAccountAppStates(address: string): Promise<StructuredResult>
     callTool(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   }
-  /** A composed write (the tool's unsigned-group wire) for the approval flow: review, simulate, sign. */
-  onDraft: (wire: unknown, toolName: string, label: string) => void
+  /** A composed write (the tool's unsigned-group wire) for the approval flow; returns why it could not start, if it could not. */
+  onDraft: (wire: unknown, toolName: string, label: string) => string | undefined
 }) {
   const [localSpecs, setLocalSpecs] = useState<LocalAppSpec[]>([])
   const [stored, setStored] = useState<readonly StoredAppEntry[]>([])
@@ -458,7 +458,8 @@ export function useApps({
         .then((result) => {
           setCallBusy(false)
           setDeployOpen(false)
-          onDraft(result, tool.name, `${selected.spec.spec.name}.deploy`)
+          const problem = onDraft(result, tool.name, `${selected.spec.spec.name}.deploy`)
+          if (problem) setCallError(problem)
         })
         .catch((error) => {
           setCallBusy(false)
@@ -542,7 +543,8 @@ export function useApps({
           setCallEpoch((epoch) => epoch + 1)
           return
         }
-        onDraft(result, tool.name, `${selected.spec.spec.name}.${method.name}`)
+        const problem = onDraft(result, tool.name, `${selected.spec.spec.name}.${method.name}`)
+        if (problem) setCallError(problem)
       })
       .catch((error) => {
         setCallBusy(false)
@@ -565,7 +567,6 @@ export function useApps({
     deployedLoading,
     deployedError,
     globalState,
-    localSpecs,
     optedInLoading,
     groups,
     catalog,

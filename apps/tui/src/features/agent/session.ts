@@ -378,19 +378,18 @@ export function planToolResult(
       event.view === 'table' && record.state === 'success' ? tableModel(record.data) : undefined
     if (pluginParse?.success) {
       blocks.push({
-        id: 0,
         kind: 'plugin',
         view: event.view!,
         data: pluginParse.data,
         network: usedNetwork,
       })
     } else if (table) {
-      blocks.push({ id: 0, kind: 'table', title: event.toolName, ...table })
+      blocks.push({ kind: 'table', title: event.toolName, ...table })
     } else if (view === undefined) {
       const text = JSON.stringify(record.state === 'success' ? record.data : record.error, null, 2)
-      blocks.push({ id: 0, kind: 'raw', title: event.toolName, text })
+      blocks.push({ kind: 'raw', title: event.toolName, text })
     } else {
-      blocks.push({ id: 0, kind: 'view', view: viewFor(record, view) })
+      blocks.push({ kind: 'view', view: viewFor(record, view) })
       // The program's first page also carries its call surface.
       const program =
         record.state === 'success'
@@ -406,7 +405,7 @@ export function planToolResult(
         program.program === 'approval' &&
         program.analysis?.entrypoints?.length
       ) {
-        blocks.push({ id: 0, kind: 'view', view: viewFor(record, 'application.methods') })
+        blocks.push({ kind: 'view', view: viewFor(record, 'application.methods') })
       }
     }
     // A raw card where a real one was promised is a bug somewhere; name it.
@@ -463,5 +462,53 @@ export async function runAgentTurn(
       default:
         break
     }
+  }
+}
+
+/** Where a tool-result plan lands; the hook wires these to the feed, the store, and the write flow. */
+export interface PlanSinks {
+  addRecord: (record: StructuredResult) => void
+  appendBlock: (block: SectionBlock) => void
+  appendNote: (text: string, tone: 'muted' | 'error') => void
+  startFromDraft: (draftRecord: StructuredResult) => void
+}
+
+/** Lands one planned tool result: a write goes to approval, cards to the feed, a drop to a note. */
+export function applyToolResultPlan(plan: ToolResultPlan, sinks: PlanSinks): void {
+  switch (plan.kind) {
+    case 'write':
+      sinks.startFromDraft(plan.draftRecord)
+      return
+    case 'cards':
+      sinks.addRecord(plan.record)
+      for (const block of plan.blocks) sinks.appendBlock(block)
+      if (plan.note) sinks.appendNote(plan.note, 'error')
+      return
+    case 'dropped':
+      sinks.appendNote(plan.message, 'error')
+  }
+}
+
+/**
+ * The approval gate for get_application_program: the one expensive read.
+ * Asks once per (network, app) with the cost lines, and remembers a yes so
+ * further pages of the same program never ask again.
+ */
+export function programReadApproval(input: {
+  sessionNetwork: () => LiveNetworkId
+  agentConfig: Parameters<typeof programCostLines>[2]
+  askConfirm: (title: string, lines: string[]) => Promise<boolean>
+  approved: Set<string>
+}): NonNullable<ExplorerAgentOptions['approveToolCall']> {
+  return async ({ toolName, input: args }) => {
+    if (toolName !== 'get_application_program') return true
+    const { applicationId, network } = (args ?? {}) as { applicationId?: number; network?: string }
+    const target = networkOfCall({ network }, input.sessionNetwork())
+    const key = `${target}:${applicationId}`
+    if (input.approved.has(key)) return true
+    const lines = await programCostLines(applicationId, target, input.agentConfig)
+    const ok = await input.askConfirm('EXPLAIN THIS CONTRACT?', lines)
+    if (ok) input.approved.add(key)
+    return ok
   }
 }

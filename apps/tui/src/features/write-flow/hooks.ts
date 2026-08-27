@@ -59,7 +59,6 @@ export function useWriteFlow({
   const { appendBlock, appendNote, updateItem } = feed
 
   const [flow, setFlow] = useState<WriteFlowState | null>(null)
-  const [flowMode, setFlowMode] = useState<'live' | 'sample'>('sample')
   /** Who composed the group under review: the agent, or the user's own typed command/method line. */
   const [flowOrigin, setFlowOrigin] = useState<'agent' | 'typed'>('typed')
   const flowRef = useRef<WriteFlowState | null>(flow)
@@ -103,7 +102,7 @@ export function useWriteFlow({
       commitStore(nextStore)
       if (flowSectionRef.current === null) {
         flowSectionRef.current = sectionId
-        flowItemRef.current = appendBlock(sectionId, { id: 0, kind: 'write', flow: nextFlow })
+        flowItemRef.current = appendBlock(sectionId, { kind: 'write', flow: nextFlow })
         flowRef.current = nextFlow
         setFlow(nextFlow)
       } else {
@@ -125,7 +124,6 @@ export function useWriteFlow({
         return
       }
       const useLive = live === true
-      setFlowMode(useLive ? 'live' : 'sample')
       setFlowOrigin('typed')
       setBusy(true)
       setStatus(
@@ -185,7 +183,6 @@ export function useWriteFlow({
       origin: 'agent' | 'typed',
       failurePrefix: string,
     ) => {
-      setFlowMode('live')
       setFlowOrigin(origin)
       void startWriteFlowFromDraft({
         host: keystoreHost,
@@ -246,7 +243,7 @@ export function useWriteFlow({
           finishFlow(outcome.flow, 'Denied — nothing was signed.')
           return
         }
-        setStatus(flowMode === 'live' ? 'signing and submitting…' : 'finishing the sample…')
+        setStatus(live === true ? 'signing and submitting…' : 'finishing the sample…')
         void completeApprovedWriteFlow({
           host: host(),
           store: outcome.store,
@@ -297,8 +294,8 @@ export function useWriteFlow({
       busyRef,
       commitStore,
       finishFlow,
-      flowMode,
       host,
+      live,
       newId,
       setBusy,
       setStatus,
@@ -325,7 +322,6 @@ export function useWriteFlow({
     flow,
     flowRef,
     flowOrigin,
-    setFlowMode,
     setFlowOrigin,
     startPayment,
     startFromDraft,

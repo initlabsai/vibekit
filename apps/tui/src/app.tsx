@@ -1,44 +1,39 @@
 import {
   createFixtureResultStore,
-  createTransactionCollectionViewModel,
-  findResultRecord,
-  nextPageArgs,
   type ResultStore,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent'
 
-import { EXPLORER_PLUGIN_INFO } from './features/agent/session.js'
-import { ApprovalModal, ConfirmModal } from './features/write-flow/approval-modal.js'
-import { AppsScreen } from './features/apps/screen.js'
-import { BlocksScreen } from './features/blocks/screen.js'
-import { Composer } from './feed/feed.js'
-import { PluginsScreen } from './features/plugins/screen.js'
-import { AccountListScreen } from './features/accounts/list-screen.js'
-import { TopBar } from './top-bar.js'
-import { WalletScreen } from './features/accounts/wallet-screen.js'
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'
-import { explainApplicationTool } from './features/agent/explain-tool.js'
-import { ContentPane, NavPane } from './feed/feed.js'
-import { transactionsFilterFor, type OpenTarget } from './result-card.js'
 import { useAccounts } from './features/accounts/hooks.js'
-import { useApps } from './features/apps/hooks.js'
-import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
+import { AccountListScreen } from './features/accounts/list-screen.js'
+import { WalletScreen } from './features/accounts/wallet-screen.js'
+import { explainApplicationTool } from './features/agent/explain-tool.js'
 import { useAgentLane } from './features/agent/hooks.js'
-import { useFeed } from './feed/hooks.js'
-import { useExplorerKeys } from './keys.js'
-import { useLookups } from './lookup.js'
-import { loadNextPage } from './lookup.js'
-import { NETWORKS, useNetwork } from './features/network/hooks.js'
-import { useWriteFlow } from './features/write-flow/hooks.js'
+import { EXPLORER_PLUGIN_INFO } from './features/agent/session.js'
+import { useApps } from './features/apps/hooks.js'
+import type { AppsKeys } from './features/apps/keys.js'
+import { AppsScreen } from './features/apps/screen.js'
 import { useBlockTail } from './features/blocks/hooks.js'
+import { BlocksScreen } from './features/blocks/screen.js'
+import { NETWORKS, useNetwork } from './features/network/hooks.js'
+import { PluginsScreen } from './features/plugins/screen.js'
+import { ApprovalModal, ConfirmModal } from './features/write-flow/approval-modal.js'
+import { useWriteFlow } from './features/write-flow/hooks.js'
+import { Composer, ContentPane, NavPane } from './feed/feed.js'
+import { useFeed } from './feed/hooks.js'
+import { cardActionsFor, keybarFor, listRowTxid, useExplorerKeys } from './keys.js'
+import { loadNextPage, useLookups } from './lookup.js'
+import type { OpenTarget } from './result-card.js'
 import { COLORS, errorMessage, shorten } from './theme.js'
+import { TopBar, type Screen } from './top-bar.js'
 
 const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.algo · paste an id'
 
@@ -46,19 +41,21 @@ const HELP = 'pay 0.5 to <label|address> · blocks · list my accounts · alice.
  * The Explorer as a chat-first transcript plus results feed: a session index
  * on the left (one line per request) and a sticky-bottom feed on the right
  * where each request's narration, cards, and errors accrete as a group.
- * Tab hands focus to the feed; a payment decision is a true modal over
+ * Tab hands focus to the feed; a write approval is a true modal over
  * everything.
  *
  * This component is the composition root: each feature lives under
  * `features/<name>/` (hooks.ts, screen.tsx, cards.tsx), the transcript under
- * `feed/`, and the genuinely shared state (result store, busy flags, status
- * line) stays here and is passed into the hooks as parameters.
+ * `feed/`, and the genuinely shared state (result store, screen, busy flags,
+ * status line) stays here and is passed into the hooks as parameters. Hooks
+ * are called in dependency order; none reaches forward through a ref.
  */
 export function App() {
   const dimensions = useTerminalDimensions()
 
-  // Shared state: the trusted result store plus the cross-lane busy flags.
+  // Shared state: the trusted result store, the screen, and the cross-lane busy flags.
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
+  const [screen, setScreen] = useState<Screen>('chat')
   const [busy, setBusyState] = useState(false)
   // Guards read the ref: a callback created before setBusy(true) must still see it.
   const busyRef = useRef(false)
@@ -104,93 +101,23 @@ export function App() {
     setStatus(`copied ${shorten(text.replace(/\s+/g, ' '), 28)}`),
   )
 
-  const net = useNetwork()
-  const { network, networkRef, keystoreHost, host, live, setNetwork } = net
+  const { network, networkRef, keystoreHost, host, live, setNetwork } = useNetwork()
 
   const feed = useFeed()
   const { focus, setFocus, sections, selectedId, appendNote, createSection } = feed
 
-  const accounts = useAccounts({ keystoreHost, host, network, commitStore, storeRef, setFocus })
-  const {
-    signerReady,
-    activeSender,
-    setActiveSender,
+  const accounts = useAccounts({
+    keystoreHost,
+    host,
+    network,
     screen,
     setScreen,
-    accountList,
-    cycleAccount,
-    openScreen,
-  } = accounts
-
-  // The apps slice mounts before the payment lane; drafts route through a ref.
-  const appsDraftRef = useRef<(wire: unknown, toolName: string, label: string) => void>(() => {})
-  const onAppsDraft = useCallback(
-    (wire: unknown, toolName: string, label: string) => appsDraftRef.current(wire, toolName, label),
-    [],
-  )
-  const apps = useApps({ screen, network, sender: activeSender, live, host, onDraft: onAppsDraft })
-  const agentExtraTools = useMemo(
-    () => [...apps.extraTools, explainApplicationTool],
-    [apps.extraTools],
-  )
-
-  const lookup = useLookups({
-    feed,
-    host,
-    keystoreHost,
-    signerReady,
     commitStore,
     storeRef,
-    networkRef,
-    busyRef,
-    setBusy,
-    setStatus,
-    specCatalog: apps.catalog,
-    disabledPlugins,
+    setFocus,
   })
-  const {
-    openTransaction,
-    openAccount,
-    openAccountName,
-    openMyAccounts,
-    openHoldings,
-    openAsset,
-    openApplication,
-    openGroup,
-    openBlock,
-    openTransactions,
-    openAmbiguous,
-  } = lookup
-  const activateAppsEntry = useCallback(
-    (index: number) => {
-      const group = apps.groups[index - 1]
-      if (!group) return
-      const appId = group.deployed[0]?.appId ?? group.optedIn[0]
-      if (group.spec) {
-        apps.selectSpec({ group, spec: group.spec, ...(appId === undefined ? {} : { appId }) })
-        return
-      }
-      // On-chain only, no spec to render: the same lane as `app <id>`.
-      if (appId === undefined) return
-      setScreen('chat')
-      openApplication(createSection(`app ${appId}`), appId)
-    },
-    [apps, createSection, openApplication, setScreen],
-  )
-  const selectAppsMethod = useCallback(
-    (index: number) => {
-      const method = apps.selected?.spec.spec.methods[index - 1]
-      if (method) apps.selectMethod(method)
-    },
-    [apps],
-  )
-  const closeAppsDetail = useCallback(() => apps.closeDetail(), [apps])
-  const openAppsApp = useCallback(() => {
-    const appId = apps.selected?.appId
-    if (appId === undefined) return
-    setScreen('chat')
-    openApplication(createSection(`app ${appId}`), appId)
-  }, [apps.selected, createSection, openApplication, setScreen])
+  const { signerReady, activeSender, setActiveSender, accountList, cycleAccount, openScreen } =
+    accounts
 
   const payment = useWriteFlow({
     feed,
@@ -213,32 +140,69 @@ export function App() {
     flow,
     flowRef,
     startPayment,
+    startFromDraft,
     decide: decidePayment,
     isFlowSection,
     modalOpen: paymentModalOpen,
     modalModel,
   } = payment
-  appsDraftRef.current = (wire, toolName, label) => {
-    if (flowRef.current !== null) {
-      apps.setCallError('A write is already awaiting approval.')
-      return
-    }
-    // Ids come from the session counter: the store rejects a repeated tool-call id.
-    const draftRecord = draftRecordFromComposeWire(
-      { resultId: newId('result-apps-draft'), toolCallId: newId('tool-call-apps'), network },
-      wire,
-      toolName,
-    )
-    setScreen('chat')
-    payment.startFromDraft(
-      createSection(`call ${label}`),
-      draftRecord,
-      'typed',
-      "Couldn't prepare the call",
-    )
-  }
-  // One modal at a time: the payment approval or an expensive-call confirm.
-  // An agent-composed payment waits for the turn to end, so its one-line
+
+  /** A method-line call or deploy composed a group: review it in the feed. */
+  const onAppsDraft = useCallback(
+    (wire: unknown, toolName: string, label: string) => {
+      if (flowRef.current !== null) return 'A write is already awaiting approval.'
+      // Ids come from the session counter: the store rejects a repeated tool-call id.
+      const draftRecord = draftRecordFromComposeWire(
+        { resultId: newId('result-apps-draft'), toolCallId: newId('tool-call-apps'), network },
+        wire,
+        toolName,
+      )
+      setScreen('chat')
+      startFromDraft(
+        createSection(`call ${label}`),
+        draftRecord,
+        'typed',
+        "Couldn't prepare the call",
+      )
+      return undefined
+    },
+    [createSection, flowRef, network, newId, startFromDraft],
+  )
+  const apps = useApps({ screen, network, sender: activeSender, live, host, onDraft: onAppsDraft })
+  const agentExtraTools = useMemo(
+    () => [...apps.extraTools, explainApplicationTool],
+    [apps.extraTools],
+  )
+
+  const lookup = useLookups({
+    feed,
+    host,
+    accountList,
+    commitStore,
+    storeRef,
+    networkRef,
+    busyRef,
+    setBusy,
+    setStatus,
+    specCatalog: apps.catalog,
+    disabledPlugins,
+  })
+  const {
+    openTransaction,
+    openAccount,
+    openAccountName,
+    openMyAccounts,
+    openHoldings,
+    openAsset,
+    openApplication,
+    openGroup,
+    openBlock,
+    openTransactions,
+    openAmbiguous,
+  } = lookup
+
+  // One modal at a time: the write approval or an expensive-call confirm.
+  // An agent-composed write waits for the turn to end, so its one-line
   // narration lands before the modal takes the keyboard, not after the verdict.
   const approvalOpen = paymentModalOpen && !agentBusy
   const modalOpen = approvalOpen || confirm !== null
@@ -254,24 +218,37 @@ export function App() {
     [confirm, decidePayment],
   )
 
-  const tail = useBlockTail({
-    live,
-    host,
-    network,
-    screen,
-    commitStore,
-    storeRef,
-  })
+  const tail = useBlockTail({ live, host, network, screen, commitStore, storeRef })
 
-  // switchNetwork needs the agent lane's reset; the lane reaches it through this ref.
-  const switchNetworkRef = useRef<(target: LiveNetworkId, sectionId: number) => void>(() => {})
+  const switchNetwork = useCallback(
+    (target?: LiveNetworkId, sectionId?: number) => {
+      const report = (text: string, tone: 'muted' | 'error' = 'muted') => {
+        if (sectionId !== undefined) appendNote(sectionId, text, tone)
+        else setStatus(text)
+      }
+      if (flowRef.current !== null) {
+        report('Finish or deny the write before switching networks.', 'error')
+        return
+      }
+      const current = networkRef.current
+      const next = target ?? NETWORKS[(NETWORKS.indexOf(current) + 1) % NETWORKS.length]!
+      if (next === current) {
+        report(`Already on ${next}.`)
+        return
+      }
+      setNetwork(next)
+      report(`Switched to ${next}. Existing sections keep their original network.`)
+    },
+    [appendNote, flowRef, networkRef, setNetwork],
+  )
+
   const agent = useAgentLane({
     feed,
     payment,
-    keystoreHost,
+    network,
     networkRef,
     activeSender,
-    signerReady,
+    accountList,
     commitStore,
     storeRef,
     newId,
@@ -282,46 +259,21 @@ export function App() {
     specCatalog: apps.catalog,
     specHashCatalog: apps.hashCatalog,
     disabledPlugins,
-    onNetworkUsed: (target, sectionId) => switchNetworkRef.current(target, sectionId),
+    onNetworkUsed: switchNetwork,
     askConfirm,
   })
-  const { agentConfig, runAgent, agentSectionRef, reset: resetAgent } = agent
+  const { agentConfig, runAgent, agentSectionRef } = agent
 
-  /** Flips one plugin, persists the map, and drops the session so the next turn rebuilds. */
+  /** Flips one plugin and persists the map; the agent session rebuilds on its next turn. */
   const togglePlugin = useCallback(
     (name: string) => {
       const next = new Set(disabledPlugins)
       if (!next.delete(name)) next.add(name)
       setDisabledPlugins(next)
       saveStoredPlugins(Object.fromEntries([...next].map((disabled) => [disabled, false])))
-      resetAgent()
     },
-    [disabledPlugins, resetAgent],
+    [disabledPlugins],
   )
-
-  const switchNetwork = useCallback(
-    (target?: LiveNetworkId, sectionId?: number) => {
-      const report = (text: string, tone: 'muted' | 'error' = 'muted') => {
-        if (sectionId !== undefined) appendNote(sectionId, text, tone)
-        else setStatus(text)
-      }
-      if (flowRef.current !== null) {
-        report('Finish or deny the payment before switching networks.', 'error')
-        return
-      }
-      const current = networkRef.current
-      const next = target ?? NETWORKS[(NETWORKS.indexOf(current) + 1) % NETWORKS.length]!
-      if (next === current) {
-        report(`Already on ${next}.`)
-        return
-      }
-      resetAgent()
-      setNetwork(next)
-      report(`Switched to ${next}. Existing sections keep their original network.`)
-    },
-    [appendNote, flowRef, networkRef, resetAgent, setNetwork],
-  )
-  switchNetworkRef.current = switchNetwork
 
   // Drill-in from any card: its own section, same lanes as typed input.
   const openTarget = useCallback(
@@ -374,28 +326,7 @@ export function App() {
       openTransaction,
       openTransactions,
       runAgent,
-      setScreen,
     ],
-  )
-
-  // Keyboard path for table rows: the highlighted list, else the newest one in the selected section.
-  const openListRow = useCallback(
-    (index: number) => {
-      const section = sections.find((candidate) => candidate.id === selectedId)
-      if (!section) return
-      for (let i = section.items.length - 1; i >= 0; i -= 1) {
-        const item = section.items[i]!
-        if (item.kind !== 'block' || item.block.kind !== 'view') continue
-        if (feed.cursorItemId !== null && item.id !== feed.cursorItemId) continue
-        const { view } = item.block
-        if (view.view !== 'transaction.list' && view.view !== 'transaction.group') continue
-        const derived = createTransactionCollectionViewModel(storeRef.current, view)
-        const txid = derived.ok ? derived.model.transactions[index - 1]?.id : undefined
-        if (txid) openTarget({ kind: 'transaction', txid })
-        return
-      }
-    },
-    [feed.cursorItemId, openTarget, sections, selectedId, storeRef],
   )
 
   const [loadingMoreItemId, setLoadingMoreItemId] = useState<number | null>(null)
@@ -417,56 +348,40 @@ export function App() {
     [appendNote, commitStore, feed.replaceBlockView, host, loadingMoreItemId, networkRef, storeRef],
   )
 
-  // Card actions by key act on the highlighted card; with no cursor yet, on
-  // the newest card in the selected section. Presence doubles as the keybar's hint.
-  const cardActions = useMemo(() => {
-    const section = sections.find((candidate) => candidate.id === selectedId)
-    const views = (section?.items ?? [])
-      .flatMap((item) =>
-        item.kind === 'block' && item.block.kind === 'view'
-          ? [{ itemId: item.id, view: item.block.view }]
-          : [],
-      )
-      .filter((card) => feed.cursorItemId === null || card.itemId === feed.cursorItemId)
-      .reverse()
-    const actions: { rows?: true; t?: () => void; e?: () => void; m?: () => void; a?: () => void } =
-      {}
-    for (const { itemId, view } of views) {
-      if (!actions.rows && (view.view === 'transaction.list' || view.view === 'transaction.group'))
-        actions.rows = true
-      if (!actions.t) {
-        const filter = transactionsFilterFor(storeRef.current, view)
-        if (filter) actions.t = () => openTarget({ kind: 'transactions', filter })
-      }
-      if (!actions.e && view.view === 'application.detail') {
-        const filter = transactionsFilterFor(storeRef.current, view)
-        if (filter?.applicationId !== undefined) {
-          const { applicationId } = filter
-          actions.e = () => openTarget({ kind: 'program', applicationId })
-        }
-      }
-      if (!actions.m && section && nextPageArgs(findResultRecord(storeRef.current, view.source))) {
-        actions.m = () => loadMore(section.id, itemId, view)
-      }
-      if (!actions.a && view.view === 'account.portfolio') {
-        const filter = transactionsFilterFor(storeRef.current, view)
-        if (filter?.address) {
-          const { address } = filter
-          actions.a = () => openTarget({ kind: 'holdings', address })
-        }
-      }
-    }
-    return actions
-  }, [feed.cursorItemId, loadMore, openTarget, sections, selectedId, storeRef])
+  const cardActions = useMemo(
+    () =>
+      cardActionsFor({
+        sections,
+        selectedId,
+        cursorItemId: feed.cursorItemId,
+        store,
+        openTarget,
+        loadMore,
+      }),
+    [feed.cursorItemId, loadMore, openTarget, sections, selectedId, store],
+  )
   const runCardAction = useCallback(
     (key: 't' | 'e' | 'm' | 'a') => cardActions[key]?.(),
     [cardActions],
+  )
+  const openListRow = useCallback(
+    (index: number) => {
+      const txid = listRowTxid({
+        sections,
+        selectedId,
+        cursorItemId: feed.cursorItemId,
+        store: storeRef.current,
+        index,
+      })
+      if (txid) openTarget({ kind: 'transaction', txid })
+    },
+    [feed.cursorItemId, openTarget, sections, selectedId, storeRef],
   )
 
   const closeSelectedSection = useCallback(() => {
     feed.closeSelectedSection(
       (sectionId) => !isFlowSection(sectionId),
-      () => setStatus('Finish or deny the payment before closing its section.'),
+      () => setStatus('Finish or deny the write before closing its section.'),
     )
   }, [feed.closeSelectedSection, isFlowSection])
   const closeSection = useCallback(
@@ -475,6 +390,42 @@ export function App() {
       closeSelectedSection()
     },
     [closeSelectedSection, feed.markSection],
+  )
+
+  /** The apps screen's keys: card and method selection, and opening an app's record in the feed. */
+  const appsKeys = useMemo<AppsKeys>(
+    () => ({
+      detailOpen: apps.selected !== null,
+      methodOpen: apps.selectedMethod !== null || apps.deployOpen,
+      close: apps.closeDetail,
+      activate: (index) => {
+        const group = apps.groups[index - 1]
+        if (!group) return
+        const appId = group.deployed[0]?.appId ?? group.optedIn[0]
+        if (group.spec) {
+          apps.selectSpec({ group, spec: group.spec, ...(appId === undefined ? {} : { appId }) })
+          return
+        }
+        // On-chain only, no spec to render: the same lane as `app <id>`.
+        if (appId === undefined) return
+        setScreen('chat')
+        openApplication(createSection(`app ${appId}`), appId)
+      },
+      selectMethod: (index) => {
+        const method = apps.selected?.spec.spec.methods[index - 1]
+        if (method) apps.selectMethod(method)
+      },
+      submit: apps.submitCall,
+      open: () => {
+        const appId = apps.selected?.appId
+        if (appId === undefined) return
+        setScreen('chat')
+        openApplication(createSection(`app ${appId}`), appId)
+      },
+      deploy: apps.startDeploy,
+      cycleAccount,
+    }),
+    [apps, createSection, cycleAccount, openApplication],
   )
 
   const submit = useCallback(
@@ -572,14 +523,7 @@ export function App() {
     setActiveSender,
     cycleAccount,
     closeSelectedSection,
-    appsDetailOpen: apps.selected !== null,
-    closeAppsDetail,
-    activateAppsEntry,
-    appsMethodOpen: apps.selectedMethod !== null || apps.deployOpen,
-    selectAppsMethod,
-    submitAppsCall: apps.submitCall,
-    openAppsApp,
-    deployAppsApp: apps.startDeploy,
+    apps: appsKeys,
     toggleBlocksTail: tail.togglePause,
     togglePlugin: (index) => {
       const info = EXPLORER_PLUGIN_INFO[index - 1]
@@ -606,48 +550,15 @@ export function App() {
       : agentConfig
         ? 'Ask anything, or: ^w wallet · pay 0.5 to <label> · paste an ID or name.algo'
         : '^w wallet · ^1 assets · pay 0.5 to <label> · paste an ID or name.algo'
-
-  // One grammar everywhere: `key verb`, dots between, no brackets; drawn in
-  // the active pane's bottom frame line. Global keys live in the masthead.
-  const keybar = modalOpen
-    ? 'enter approve · esc deny'
-    : screen === 'wallet'
-      ? '1-9 select · esc explore'
-      : screen === 'apps'
-        ? apps.deployOpen
-          ? 'enter deploy · esc back'
-          : apps.selectedMethod
-            ? apps.selectedMethod.readonly
-              ? 'enter simulate · esc method'
-              : 'enter compose · esc method'
-            : apps.selected
-              ? apps.selected.appId === undefined
-                ? '1-9 method · d deploy · esc back'
-                : '1-9 method · o open · d redeploy · esc back'
-              : '1-9 open · ←/→ account · esc explore'
-        : screen === 'blocks'
-          ? `space ${tail.running ? 'stop' : 'start'} · esc explore`
-          : screen === 'plugins'
-            ? '1-9 toggle · esc explore'
-            : screen === 'assets' || screen === 'txns'
-              ? '←/→ account · esc explore'
-              : focus === 'content'
-                ? [
-                    '↑/↓ scroll',
-                    '←/→ cards',
-                    cardActions.rows ? '1-9 open row' : null,
-                    cardActions.t ? 't txns' : null,
-                    cardActions.a ? 'a assets' : null,
-                    cardActions.e ? 'e explain' : null,
-                    cardActions.m ? 'm more' : null,
-                    'x close',
-                    'tab/esc composer',
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                : sections.length > 0
-                  ? `enter send · tab feed (${sections.length}) · ^s session · ^n network · ctrl+c quit`
-                  : 'enter send · drag copies · ^n network · ctrl+c quit'
+  const keybar = keybarFor({
+    modalOpen,
+    screen,
+    focus,
+    apps,
+    tailRunning: tail.running,
+    cardActions,
+    sectionCount: sections.length,
+  })
 
   return (
     <CopyContext.Provider value={copyIdent}>
@@ -701,8 +612,8 @@ export function App() {
             optedInLoading={apps.optedInLoading}
             globalState={apps.globalState}
             width={width}
-            onActivate={activateAppsEntry}
-            onOpenApp={openAppsApp}
+            onActivate={appsKeys.activate}
+            onOpenApp={appsKeys.open}
             onSelectMethod={apps.selectMethod}
             callEpoch={apps.callEpoch}
             callBusy={apps.callBusy}

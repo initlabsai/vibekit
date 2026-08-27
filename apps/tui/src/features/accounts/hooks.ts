@@ -15,13 +15,15 @@ import { loadNextPage, viewFor } from '../../lookup.js'
 import type { ExplorerHost } from '../network/hooks.js'
 
 /**
- * Owns the workspace screens and who is acting: keystore signing accounts,
- * the active sender, the wallet screen, and the per-account shelf views.
+ * Owns who is acting: keystore signing accounts, the active sender, the
+ * wallet screen's balances, and the per-account asset and transaction lists.
  */
 export function useAccounts({
   keystoreHost,
   host,
   network,
+  screen,
+  setScreen,
   commitStore,
   storeRef,
   setFocus,
@@ -29,6 +31,8 @@ export function useAccounts({
   keystoreHost: KeystorePaymentHost
   host: () => ExplorerHost
   network: string
+  screen: Screen
+  setScreen: (screen: Screen) => void
   commitStore: (next: ResultStore) => void
   storeRef: { current: ResultStore }
   setFocus: (focus: Focus) => void
@@ -37,7 +41,6 @@ export function useAccounts({
   const [signer, setSigner] = useState<'down' | 'empty' | 'ready'>('down')
   const signerReady = signer === 'ready'
   const [activeSender, setActiveSender] = useState<string | undefined>(FIXTURE_SENDER)
-  const [screen, setScreen] = useState<Screen>('chat')
   const [shelfView, setShelfView] = useState<ViewSpec | undefined>()
   const [shelfError, setShelfError] = useState<string | undefined>()
   const [shelfLoading, setShelfLoading] = useState(false)
@@ -176,7 +179,7 @@ export function useAccounts({
     [accountList, activeSender],
   )
 
-  // 'apps' is not shelf-shaped — its screen owns its own data (slices/apps.ts).
+  // 'apps' is not list-shaped — its screen owns its own data (features/apps/hooks.ts).
   useEffect(() => {
     if (screen === 'assets' || screen === 'txns') {
       loadShelf(screen, activeSender)
@@ -188,8 +191,6 @@ export function useAccounts({
     signerReady,
     activeSender,
     setActiveSender,
-    screen,
-    setScreen,
     shelfView,
     shelfLoadingMore,
     loadMoreShelf,
