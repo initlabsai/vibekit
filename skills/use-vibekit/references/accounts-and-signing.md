@@ -18,6 +18,46 @@ server does not hold raw key material, and agents never need a mnemonic.
 
 Labels are fixed at creation; do not promise a rename operation.
 
+## Key derivation and post-quantum keys
+
+The daemon is the Algorand Foundation's general-purpose keystore, reached
+through `vibekit keystore <cmd>` — every subcommand except `start`, `stop`,
+`status`, `generate`, `accounts`, and `remove` is passed straight to it.
+`vibekit keystore algorithms` lists its capabilities, which include encryption
+and mnemonic encodings, not only signature schemes. Do not pick a scheme from
+that list; Algorand accounts are Ed25519.
+
+```bash
+vibekit keystore generate seed    [--name <label>]  # BIP39; PRINTS PHRASE ONCE
+vibekit keystore generate root    --seed <id>        # BIP32-Ed25519 root
+vibekit keystore generate account --root <id>        # next Ed25519 account
+vibekit keystore generate ed25519 [--name <label>]   # standalone Ed25519
+vibekit keystore generate falcon  --seed <id>        # Falcon-1024 keypair
+```
+
+**Never run `generate seed` on the user's behalf without saying so first, and
+never echo, log, or screenshot the phrase.** Prefer an existing seed: find it
+with `vibekit keystore list` and pass its id.
+
+`generate falcon` produces a real Falcon-1024 keypair that signs and verifies
+(compressed, variable-length signatures around 1.2 KB against Ed25519's 64
+bytes). It is **not** an Algorand post-quantum account, and must not be
+described as one:
+
+- it has a key id but no address — it never appears in `keystore accounts` or
+  `list_signing_addresses`, so it cannot hold or send anything;
+- the keystore implements none of the account derivation from
+  <https://dev.algorand.co/concepts/accounts/post-quantum/> — no
+  `SHA512-256("PQK" || scheme || entropy)` seed step, no canonical-salt search
+  for an off-curve address, no `SHA512-256("PQA" || scheme || salt || pubkey)`
+  address. Without the `PQK` step the same mnemonic yields a different keypair
+  here than in a spec-compliant wallet, so these keys are not portable;
+- post-quantum signatures ship in the v42 consensus upgrade (algod
+  v5.0.0-stable); networks reject them until that upgrade takes effect.
+
+Treat it as post-quantum signing available in the keystore today, and say so
+in those words.
+
 ## Daemon lifecycle
 
 The MCP server and `vibekit explore` start the daemon in the background when it
