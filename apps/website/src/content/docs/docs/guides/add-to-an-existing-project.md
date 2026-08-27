@@ -23,8 +23,11 @@ that route an agent to the right skill for the task. It preserves unrelated MCP
 servers in supported JSON configurations.
 
 The VibeKit MCP entry invokes your local `vibekit mcp` command over stdio. The
-agent receives the stock tool set for accounts, assets, contracts,
-transactions, and network data.
+agent receives the stock read and write tools for accounts, assets, contracts,
+transactions, and network data, plus the default plugins (NFD, Alpha Arcade,
+Vestige, Pera). It defaults to LocalNet while serving localnet, testnet, and
+mainnet, and signs through the local keystore daemon (`SIGNING=execute`),
+falling back to compose mode when the daemon is not running.
 
 ## Keep your project’s commands
 
@@ -38,7 +41,8 @@ To run without prompts in automation, pass explicit selections:
 vibekit init --yes --agents claude --skills all
 ```
 
-Use `vibekit init --help` for the complete headless flags. Existing agent files
+Use `vibekit --help` for the complete headless flags: `--agents <csv>` (required
+with `--yes`), `--skills all|none|<csv>`, `--mcps none|<csv>`, and `--overwrite`. Existing agent files
 remain in place during headless setup unless you explicitly pass `--overwrite`.
 
 ## Check the setup

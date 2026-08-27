@@ -5,5 +5,16 @@
       "destination": "/docs/tutorials/first-project",
       "permanent": true
     }
+  ],
+  "headers": [
+    {
+      "source": "/install",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        }
+      ]
+    }
   ]
 }

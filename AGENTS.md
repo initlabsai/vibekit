@@ -41,15 +41,17 @@ HTML, or terminal markup.
 - `packages/plugin-*` — third-party tool plugins
 - `packages/signer-keystore` — keystore daemon signing, testnet dispenser
 - `packages/mcp` — ToolDefinition-to-MCP adapter for stdio and HTTP
+- `packages/mcp/examples` — reference stdio and HTTP deployments
 - `packages/agent` — LLM tool loop
 - `packages/explorer` — provisional browser-safe Explorer protocol, fixtures,
   workspace state, and semantic view models
 - Planned packages: `views-react` for selected semantic React composition and
   `sdk`
 - `apps/cli` — the `vibekit` binary
-- `apps/mcp` — reference MCP deployment
 - Private apps: `tui` (OpenTUI) and `web` (Next.js) are fixture-backed
-  renderers; `api` remains planned
+  renderers; `website` (Astro/Starlight) is the public site; `api` remains
+  planned
+- `verify/` — the packed-consumer gate and its fixture (`bun run verify:packed`)
 - `skills/` — canonical vendored skills, compiled into the CLI at build time
   by `bun run --cwd apps/cli bundle-skills`
 - `.agents/skills`, `.claude/skills`, and `.grok/skills` — Git-tracked relative
@@ -119,6 +121,38 @@ HTML, or terminal markup.
   durable rationale and governance into `CONSTITUTION.md`.
 - Do not use "It's not X, it's Y" or other marketing cadence in comments or
   docs.
+
+## Releasing
+
+Versions come from Changesets. The repository is in pre-release mode
+(`.changeset/pre.json`, tag `alpha`), so `changeset version` produces
+`1.0.0-alpha.N` and increments N on each run.
+
+Every non-private package under `packages/` publishes to npm. The CLI, TUI,
+Explorer, and web apps are private: Changesets versions them so
+`vibekit --version` matches the release tag, but never publishes them. They
+ship as GitHub Release binaries.
+
+1. `bunx changeset` — record the change, one bump level per package.
+2. `bunx changeset version` — bumps manifests, rewrites the `@initlabs` peer
+   ranges, writes CHANGELOGs. Never hand-edit a version or a peer range.
+3. `bun install` — required, not optional. `changeset version` leaves
+   `bun.lock` stale and `bun pm pack` resolves `workspace:*` from the
+   lockfile, so skipping this publishes packages whose dependencies point at
+   versions that do not exist.
+4. `bunx turbo run build typecheck test`
+5. `bun run verify:packed` — run before every publish.
+6. Commit, then tag `v<version>` and push the tag.
+   `.github/workflows/release.yml` builds the CLI and the Explorer sidecar for
+   four platforms and attaches them to the release. A tag containing a hyphen
+   is published as a prerelease.
+7. `bunx changeset publish --tag alpha` — needs `npm login` first.
+
+Before the first stable release run `bunx changeset pre exit`, then publish
+with `bunx changeset publish` and no `--tag`.
+
+Each platform's sidecar builds on its own OS. OpenTUI ships a native library
+per platform, so the release matrix does not cross-compile.
 
 ## Docs
 

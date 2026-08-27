@@ -1,0 +1,64 @@
+---
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import Landing from '../layouts/Landing.astro'
+---
+
+<Landing title="VibeKit — lore" description="Where VibeKit came from, why it exists, and what it's for. Some of it is even true.">
+  <Header />
+
+  <main class="lore shell">
+    <header class="lore-head">
+      <p class="eyebrow">TRANSMISSION LOG // ORIGIN</p>
+      <h1>a toolkit from <em>the future.</em></h1>
+      <p class="lede">How VibeKit got here, according to VibeKit. Followed by the parts we can actually prove.</p>
+    </header>
+
+    <article class="story">
+      <p class="stamp"><span>2036-02-11</span><span>ORIGIN UNVERIFIED</span><span>CHECKSUM OK</span></p>
+
+      <p>In the spring of 2036 a cryptographically relevant quantum computer came online, and within a month every signature scheme the world’s money ran on was forgeable. Banks, settlement rails, most blockchains: gone, or frozen, or worse. The record calls it <b>the Great Post-Quantum Collapse</b>. The people living through it just called it the emergency.</p>
+
+      <p>One chain kept producing blocks. Algorand had been moving to post-quantum cryptography for years — Falcon signatures on accounts since v5, a roadmap to full quantum resistance that it actually followed. When the collapse came, its ledger was the only one anyone could still trust.</p>
+
+      <p>It wasn’t enough. Algorand worked, but not enough of the world had been built on it. The rails that survived were an island, and the island was too small.</p>
+
+      <p>So a small team did the one thing left to try. They packaged the tools they wished every builder had been handed in 2026 — current guidance, typed chain operations, a signer that never shows an agent the keys — and sent the whole thing back as far as it would go. The idea was simple: if agents could build on Algorand correctly and quickly, more of the world would be on it when the day came.</p>
+
+      <p>It arrived as a repository with a strange commit history and a wordmark in block glyphs. The README was mostly intact. The music was, unfortunately, also intact.</p>
+
+      <p>They called it VibeKit. By 2036 nobody said “coding” anymore. You vibed the thing into existence, and this was the kit.</p>
+
+      <p class="stamp end"><span>END OF TRANSMISSION</span><span>MAKE IT UBIQUITOUS</span></p>
+    </article>
+
+    <section class="truth">
+      <p class="eyebrow">THE PARTS WE CAN PROVE</p>
+      <h2>what it actually is.</h2>
+      <div class="truth-grid">
+        <div>
+          <h3>the problem</h3>
+          <p>Coding agents write code fast and guess at Algorand badly. On a chain, guessing costs money. And the easiest way to let an agent transact is to hand it a key — the one thing you must never do.</p>
+        </div>
+        <div>
+          <h3>the toolkit</h3>
+          <p>A CLI that scaffolds a project and configures your agent. An MCP server with typed tools for accounts, assets, transactions, and contracts. Maintained skills installed into the project. A keystore that signs locally, so seeds never enter model context.</p>
+        </div>
+        <div>
+          <h3>the explorer</h3>
+          <p>A terminal console for the chain. Ask in English or paste an ID; every card is real chain data. Writes are simulated and shown to you before anything is signed.</p>
+        </div>
+        <div>
+          <h3>the goal</h3>
+          <p>Make Algorand the easiest chain for an agent to build on correctly, so it ends up everywhere. The quantum part isn’t fiction: Algorand accounts already support post-quantum Falcon signatures as of v5, and full resistance is on the roadmap. Open source, by <a href="https://github.com/initlabsai">Init Labs</a>.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
+        <a class="button quiet" href="/docs/">read the field manual</a>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Landing>

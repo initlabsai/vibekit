@@ -39,16 +39,22 @@ vibekit explore
 
 The command starts the local daemon support it needs, then opens the TUI. From
 a source checkout, use the TUI development command described in
-[installation](../reference/installation/).
+[installation](../../reference/installation/).
 
 ## Start with direct lookups
 
-Paste or type an Algorand address, transaction ID, asset ID, application ID,
-block round, or an NFD such as `vibekit.algo`. The Explorer recognizes these
-inputs and opens a structured result without sending them to a language model.
+Paste or type an Algorand address, transaction ID, transaction group ID, or
+an NFD such as `vibekit.algo`; the Explorer opens a structured result without
+sending it to a language model. A bare number could be an asset, an
+application, or a round, so say which: `asset 1042`, `app 1071`, or
+`block 51000000`.
 
-Use the network control to switch among LocalNet, TestNet, and MainNet. The
-result remains tagged with the network that produced it.
+Press `^n` to cycle LocalNet → TestNet → MainNet, or type `network testnet`.
+The result remains tagged with the network that produced it.
+
+Other keys: `^1` assets, `^2` apps, `^3` txns, `^4` blocks, `^5` plugins,
+`^w` wallet, `^s` session, `ctrl+c` quit. Most terminals drop ctrl+digit, so
+alt+digit works too. In the approval modal, `enter` approves and `esc` denies.
 
 ## Use the chat lane when it helps
 

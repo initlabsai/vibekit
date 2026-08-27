@@ -6,7 +6,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'VibeKit',
-      description: 'Real Algorand tools and context for your coding agent.',
+      description: 'The agentic stack for Algorand builders.',
       components: {
         SiteTitle: './src/components/SiteTitle.astro',
       },
@@ -39,6 +39,7 @@ export default defineConfig({
         },
       ],
       head: [
+        { tag: 'link', attrs: { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap' } },
         { tag: 'meta', attrs: { property: 'og:site_name', content: 'VibeKit' } },
         { tag: 'meta', attrs: { name: 'theme-color', content: '#0a0b0e' } },
       ],

@@ -4,7 +4,17 @@
   "commit": false,
   "access": "public",
   "baseBranch": "main",
-  "fixed": [["@initlabs/vibekit-core", "@initlabs/vibekit-mcp", "@initlabs/vibekit-tools"]],
+  "fixed": [
+    [
+      "@initlabs/vibekit-core",
+      "@initlabs/vibekit-mcp",
+      "@initlabs/vibekit-tools"
+    ]
+  ],
   "updateInternalDependencies": "patch",
-  "ignore": ["@initlabs/vibekit-mcp-reference"]
+  "ignore": [],
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  }
 }

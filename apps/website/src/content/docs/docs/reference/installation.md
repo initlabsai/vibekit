@@ -10,7 +10,9 @@ available, run the current CLI from a source checkout with Bun.
 
 ## Requirements
 
-- Bun
+- Bun 1.4 or newer
+- Node.js and npm (the keystore daemon runs under Node; `vibekit keystore`
+  installs the pinned `@algorandfoundation/keystore-node` for you)
 - Docker Compose v2 for LocalNet
 - A Secret Service keychain on Linux when you use the keystore
 
@@ -20,26 +22,30 @@ Clone the repository and install its workspace dependencies:
 bun install
 ```
 
-Run the CLI from the `apps/cli` workspace:
+Run the CLI from the repository root (this builds its workspace dependencies
+first):
 
 ```bash
-bun --cwd apps/cli run dev -- --help
+bun run cli -- --help
 ```
 
 For example, scaffold a project with:
 
 ```bash
-bun --cwd apps/cli run dev -- new my-algorand-app --template contracts
+bun run cli -- new my-algorand-app --template contracts
 ```
 
 ## Run the Explorer from source
 
 The Explorer is a separate terminal application. Start it from the repository
-root after building its package dependencies:
+root:
 
 ```bash
-bun run --filter @initlabs/vibekit-tui dev
+bun run tui
 ```
+
+`bun run cli -- explore` also works; set `VIBEKIT_EXPLORE` to point it at a
+specific TUI entry.
 
 Once a released `vibekit` binary is installed, the equivalent commands are
 `vibekit new`, `vibekit init`, and `vibekit explore`.

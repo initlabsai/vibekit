@@ -6,7 +6,7 @@ draft: false
 
 This tutorial creates a contracts project, configures an agent, and starts a
 local Algorand network. You need Docker for LocalNet and a working `vibekit`
-command. See [installation](../reference/installation/) when working from a
+command. See [installation](../../reference/installation/) when working from a
 source checkout.
 
 ## Create the project
@@ -29,7 +29,6 @@ installed by the CLI rather than baked into the starter.
 ```bash
 vibekit localnet start
 npm run build
-npm test
 ```
 
 LocalNet runs Algod, Indexer, and KMD through Docker. It owns ports 4001, 8980,
@@ -51,5 +50,5 @@ ask you for a mnemonic or paste one into a prompt.
 
 - Use [the Explorer](../explore-with-vibekit/) when you want a focused terminal
   interface for chain data and review.
-- Use [the existing-project guide](../guides/add-to-an-existing-project/)
+- Use [the existing-project guide](../../guides/add-to-an-existing-project/)
   to bring the same setup to a project you already have.

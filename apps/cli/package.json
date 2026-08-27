@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit-cli",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "The vibekit CLI: init, new, localnet, mcp.",
   "type": "module",
   "scripts": {

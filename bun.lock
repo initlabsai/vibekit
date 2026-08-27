@@ -13,7 +13,7 @@
     },
     "apps/cli": {
       "name": "@initlabs/vibekit-cli",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@clack/prompts": "^1.7.0",
         "@initlabs/vibekit-agent": "workspace:*",
@@ -37,7 +37,7 @@
     },
     "apps/tui": {
       "name": "@initlabs/vibekit-tui",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@initlabs/vibekit-agent": "workspace:*",
         "@initlabs/vibekit-core": "workspace:*",
@@ -62,7 +62,7 @@
     },
     "apps/web": {
       "name": "@initlabs/vibekit-web",
-      "version": "0.1.0",
+      "version": "0.1.1-alpha.0",
       "dependencies": {
         "@initlabs/vibekit-explorer": "workspace:*",
         "next": "16.3.2",
@@ -92,7 +92,7 @@
     },
     "packages/agent": {
       "name": "@initlabs/vibekit-agent",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@ai-sdk/anthropic": "^4.0.40",
         "@ai-sdk/openai": "^4.0.45",
@@ -107,14 +107,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/core": {
       "name": "@initlabs/vibekit-core",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "devDependencies": {
         "@types/bun": "^1.4.0",
         "algosdk": "3.7.0",
@@ -127,7 +127,7 @@
     },
     "packages/explorer": {
       "name": "@initlabs/vibekit-explorer",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@initlabs/vibekit-core": "workspace:*",
         "@initlabs/vibekit-tools": "workspace:*",
@@ -141,7 +141,7 @@
     },
     "packages/mcp": {
       "name": "@initlabs/vibekit-mcp",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@modelcontextprotocol/server": "^2.0.0",
       },
@@ -155,14 +155,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/plugin-alpha-arcade": {
       "name": "@initlabs/vibekit-plugin-alpha-arcade",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@alpha-arcade/sdk": "^0.4.11",
       },
@@ -173,14 +173,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/plugin-nfd": {
       "name": "@initlabs/vibekit-plugin-nfd",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@txnlab/nfd-sdk": "^1.1.0",
       },
@@ -191,14 +191,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/plugin-pera": {
       "name": "@initlabs/vibekit-plugin-pera",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.4.0",
@@ -206,14 +206,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/plugin-vestige": {
       "name": "@initlabs/vibekit-plugin-vestige",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.4.0",
@@ -221,14 +221,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/preset": {
       "name": "@initlabs/vibekit-preset",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@initlabs/vibekit-plugin-alpha-arcade": "workspace:*",
         "@initlabs/vibekit-plugin-nfd": "workspace:*",
@@ -244,14 +244,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/signer-keystore": {
       "name": "@initlabs/vibekit-signer-keystore",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "dependencies": {
         "@algorandfoundation/keystore-core": "1.0.0-canary.3",
         "@algorandfoundation/keystore-node": "1.0.0-canary.3",
@@ -265,14 +265,14 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },
     },
     "packages/tools": {
       "name": "@initlabs/vibekit-tools",
-      "version": "0.1.0",
+      "version": "1.0.0-alpha.0",
       "devDependencies": {
         "@initlabs/vibekit-core": "workspace:*",
         "@types/bun": "^1.4.0",
@@ -280,7 +280,7 @@
         "zod": "^4.4.3",
       },
       "peerDependencies": {
-        "@initlabs/vibekit-core": "^0.1.0",
+        "@initlabs/vibekit-core": "^1.0.0-alpha.0",
         "algosdk": ">=3.7.0 <4",
         "zod": "^4.0.0",
       },

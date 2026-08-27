@@ -1,32 +1,31 @@
 ---
-import Mark from '../components/Mark.astro'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
 import Landing from '../layouts/Landing.astro'
+
+const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'AI SIGNS · NEVER SEES KEYS', 'CLI · MCP · EXPLORER', 'LOCALNET IN ONE COMMAND', 'WRITES STOP FOR REVIEW', 'POST-QUANTUM READY', 'STILL STANDING IN 2036', 'FROM THE FUTURE, ALLEGEDLY']
 ---
 
 <Landing>
-  <header class="nav shell">
-    <a class="brand" href="/" aria-label="VibeKit home"><Mark /></a>
-    <nav aria-label="Main navigation">
-      <a href="/docs/">docs <span aria-hidden="true">↗</span></a>
-      <a href="https://github.com/initlabsai/vibekit">github <span aria-hidden="true">↗</span></a>
-    </nav>
-  </header>
+  <Header />
 
   <main>
     <section class="hero shell">
       <div class="hero-copy">
-        <p class="eyebrow"><i class="live-dot" aria-hidden="true"></i> SYSTEMS ONLINE // ALGORAND</p>
-        <h1>talk to the chain.<br /><em>build the thing.</em></h1>
+        <p class="eyebrow"><i class="live-dot" aria-hidden="true"></i>MAINNET <span class="round">// ROUND <b data-round>········</b></span></p>
+        <h1 class="glitch" data-text="from prompt">from prompt<br />to <em>mainnet.</em></h1>
+        <p class="sub">the agentic stack for Algorand builders.</p>
         <p class="lede">
-          Give your coding agent real Algorand tools, current context, and a safe path from idea to transaction. You keep the keys.
+          VibeKit gives your coding agent current Algorand guidance, typed chain tools, LocalNet, and a signer that keeps keys out of the model. One command. You keep the keys.
         </p>
         <div class="actions">
           <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
           <a class="button quiet" href="/docs/tutorials/explore-with-vibekit">open Explorer</a>
         </div>
+        <pre class="install"><span>$</span> npx vibekit new my-app</pre>
       </div>
 
-      <div class="tui" aria-label="A stylized VibeKit Explorer lookup">
+      <div class="tui" aria-label="A stylized VibeKit Explorer lookup" data-tui>
         <div class="tui-top">
           <span>◆ VIBEKIT <b>EXPLORER</b></span>
           <span class="tui-live"><i aria-hidden="true"></i> MAINNET</span>
@@ -37,10 +36,10 @@ import Landing from '../layouts/Landing.astro'
         <div class="tui-feed">
           <div class="tui-query">
             <span aria-hidden="true">›</span>
-            <p>look up vibekit.algo on mainnet</p>
+            <p><span data-typed="look up vibekit.algo on mainnet">look up vibekit.algo on mainnet</span><i class="caret" aria-hidden="true"></i></p>
             <small>DIRECT ROUTE</small>
           </div>
-          <div class="tui-cards">
+          <div class="tui-cards reveal">
             <article class="identity-card">
               <div class="card-kicker"><span>NFD</span><span class="verified">● VERIFIED</span></div>
               <strong>vibekit.algo</strong>
@@ -57,40 +56,100 @@ import Landing from '../layouts/Landing.astro'
               <small>indexer caught up</small>
             </aside>
           </div>
-          <p class="tui-note"><span>↳</span> resolved from chain data · no model call</p>
+          <p class="tui-note reveal"><span>↳</span> resolved from chain data · no model call</p>
         </div>
         <div class="tui-composer"><span>›</span><span>ask anything, or paste an id</span><b>^W wallet</b></div>
       </div>
     </section>
 
-    <section class="signal-band">
-      <div class="shell three-up">
-        <p>ONE TOOL SURFACE</p><span aria-hidden="true">◆</span><p>CLI · MCP · EXPLORER</p><span aria-hidden="true">◆</span><p>SEEDS STAY OFF-LIMITS</p><span class="status" aria-hidden="true">READY</span>
-      </div>
+    <section class="signal-band" aria-label="status ticker">
+      <div class="ticker"><div class="ticker-track">{[...ticker, ...ticker].map((t) => <span>{t}<i aria-hidden="true">◆</i></span>)}</div></div>
     </section>
 
     <section class="paths shell">
       <p class="eyebrow">PICK A HATCH</p>
-      <h2>start where you are.</h2>
+      <h2>compile. deploy. test. debug.<br /><em>one conversation.</em></h2>
       <div class="path-grid">
         <a class="path" href="/docs/tutorials/first-project">
-          <span>01 // NEW PROJECT</span><h3>boot the whole stack</h3><p>Scaffold TypeScript, wire up your agent, and bring up LocalNet. One command and you’re moving.</p><b>start fresh →</b>
+          <span>01 // NEW PROJECT</span><h3>one command, whole stack</h3><p>Scaffold TypeScript, install the skills, configure the agent you already use, bring up LocalNet.</p><b>start fresh →</b>
         </a>
         <a class="path" href="/docs/tutorials/explore-with-vibekit">
-          <span>02 // EXPLORER</span><h3>ask. inspect. decide.</h3><p>Look up real chain data in plain English. Writes stop for review before anything gets signed.</p><b>open the console →</b>
+          <span>02 // EXPLORER</span><h3>ask the chain anything</h3><p>Plain English or a pasted ID. Every card is real chain data; writes stop for review before anything is signed. The chain remembers everything.</p><b>open the console →</b>
         </a>
         <a class="path" href="/docs/guides/create-a-vibekit-plugin">
-          <span>03 // YOUR TOOLS</span><h3>plug in your weird stuff</h3><p>Wrap your own capability in the same tool contract, then use it from every VibeKit host.</p><b>build a plugin →</b>
+          <span>03 // YOUR TOOLS</span><h3>plug in your weird stuff</h3><p>Wrap your own capability in the same tool contract and it shows up in the CLI, MCP, and Explorer.</p><b>build a plugin →</b>
         </a>
       </div>
     </section>
 
+    <section class="deal shell">
+      <div class="deal-grid">
+        <div>
+          <p class="eyebrow">THE DEAL // LESSONS FROM 2036</p>
+          <h2>your agent transacts.<br /><em>it never holds the keys.</em></h2>
+        </div>
+        <ol class="rules">
+          <li><b>01</b><span>The keys stay in the keystore. An agent requests a transaction; it never sees a seed. This is the one that mattered.</span></li>
+          <li><b>02</b><span>Every card is real chain data. The model narrates; it doesn’t invent.</span></li>
+          <li><b>03</b><span>Writes stop at a review screen. You approve, then it signs.</span></li>
+          <li><b>04</b><span>The guidance ships with the tools and stays current. Stale docs are how it went wrong the first time.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="transmission shell">
+      <div class="tx-frame">
+        <dl class="tx-meta">
+          <div><dt>from</dt><dd>2036</dd></div>
+          <div><dt>to</dt><dd>2026</dd></div>
+          <div><dt>priority</dt><dd>high</dd></div>
+          <div><dt>checksum</dt><dd class="ok">ok</dd></div>
+        </dl>
+        <p class="tx-body">i am writing to you from 2036, after the great post-quantum collapse. the global financial system is gone. we are in an emergency.</p>
+        <p class="tx-body">algorand is the only chain still standing. it was not integrated deeply enough to avoid the worst of it.</p>
+        <p class="tx-body">we are sending this toolkit back to you. it is called vibekit. build fast. build everywhere. make it ubiquitous. the future of humanity depends on it.</p>
+        <a class="button quiet" href="/lore/">read the lore <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
     <section class="closing shell">
-      <p class="eyebrow">AGENTS CAN JUST BUILD THINGS</p>
-      <h2>give them tools.<br /><em>review the writes.</em></h2>
+      <p class="eyebrow">8 SKILLS · 57 CHAIN TOOLS · ONE SIGNER</p>
+      <h2>build on it.<br /><em>the future needs you.</em></h2>
       <a class="button primary" href="/docs/">read the field manual <span aria-hidden="true">→</span></a>
     </section>
   </main>
 
-  <footer class="shell"><Mark /><span>tools and context for agents building on Algorand.</span><a href="/docs/">docs</a><a href="https://github.com/initlabsai/vibekit">GitHub</a></footer>
+  <Footer />
 </Landing>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const typed = document.querySelector<HTMLElement>('[data-typed]')!
+  const tui = document.querySelector<HTMLElement>('[data-tui]')!
+
+  const type = (el: HTMLElement, text: string, ms: number) =>
+    new Promise<void>((done) => {
+      let i = 0
+      el.textContent = ''
+      const step = () => { el.textContent = text.slice(0, ++i); i < text.length ? setTimeout(step, ms + Math.random() * ms) : done() }
+      step()
+    })
+
+  if (!reduced) {
+    tui.classList.add('typing')
+    setTimeout(async () => {
+      await type(typed, typed.dataset.typed!, 38)
+      await new Promise((r) => setTimeout(r, 250))
+      tui.classList.remove('typing')
+      tui.classList.add('resolved')
+    }, 500)
+  } else tui.classList.add('resolved')
+
+  // The live round: fetched once, then advanced locally at Algorand's block time.
+  const round = document.querySelector<HTMLElement>('[data-round]')!
+  fetch('https://mainnet-api.algonode.cloud/v2/status').then((r) => r.json()).then(({ 'last-round': n }: { 'last-round': number }) => {
+    const show = () => { round.textContent = n.toLocaleString('en-US'); n++ }
+    show()
+    setInterval(show, 2800)
+  }).catch(() => { round.parentElement!.remove() })
+</script>

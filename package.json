@@ -16,7 +16,7 @@
     "web": "turbo run build --filter=@initlabs/vibekit-web^... && bun run --cwd apps/web dev",
     "website": "bun run --cwd apps/website dev",
     "mcp": "turbo run build --filter=@initlabs/vibekit-preset... && bun packages/mcp/examples/stdio.ts",
-    "verify:packed": "bun scripts/verify-packed.ts",
+    "verify:packed": "bun verify/verify-packed.ts",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "changeset": "changeset"
   },

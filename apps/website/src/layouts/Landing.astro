@@ -6,7 +6,7 @@ interface Props {
   description?: string
 }
 
-const { title = 'VibeKit — talk to the chain. build the thing.', description = 'Real Algorand tools and context for your coding agent. You keep the keys.' } = Astro.props
+const { title = 'VibeKit — from prompt to mainnet.', description = 'The agentic stack for Algorand builders. Skills, chain tools, LocalNet, and a signer that never shows the AI your keys.' } = Astro.props
 ---
 
 <!doctype html>
@@ -19,9 +19,13 @@ const { title = 'VibeKit — talk to the chain. build the thing.', description =
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#0a0b0e" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
     <title>{title}</title>
   </head>
   <body>
+    <div class="crt" aria-hidden="true"></div>
     <slot />
   </body>
 </html>

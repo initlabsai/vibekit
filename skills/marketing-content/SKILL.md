@@ -92,7 +92,12 @@ Lessons that cost time — don't relearn them:
     captions. After the final character, hold the complete card for at least
     ~1s before cutting. Inspect one in-progress frame and one completed frame
     in the encoded master.
-11. **Time state changes to their informational value.** Hold confirmations,
+11. **Use archival/CRT treatment only when the creative direction calls for
+    it.** Keep it on title cards, not the live TUI: hairline frames,
+    deliberately visible low-opacity scanlines, and at most a small piece of
+    non-semantic telemetry outside the copy. Preserve legibility and inspect
+    the effect after final encoding; compression can erase subtle scanlines.
+12. **Time state changes to their informational value.** Hold confirmations,
     approvals, and results long enough to read the decisive status, then cut
     forward. Do not leave a resolved screen on display merely because the
     recording has spare runtime. Music: trim to video length, `afade` in 0.5s

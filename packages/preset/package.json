@@ -1,8 +1,8 @@
 {
   "name": "@initlabs/vibekit-preset",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "VibeKit batteries-included host wiring: the full tool surface, default plugins, keystore signing tools, and the NETWORK env convention.",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": "Init Labs LLC",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,7 +32,7 @@
     "@initlabs/vibekit-tools": "workspace:*"
   },
   "peerDependencies": {
-    "@initlabs/vibekit-core": "^0.1.0",
+    "@initlabs/vibekit-core": "^1.0.0-alpha.0",
     "algosdk": ">=3.7.0 <4",
     "zod": "^4.0.0"
   },

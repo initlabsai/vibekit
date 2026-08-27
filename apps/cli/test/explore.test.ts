@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { resolveExploreEntry } from '../src/commands/explore.js'
 
@@ -37,6 +37,13 @@ describe('resolveExploreEntry', () => {
         exists: (path) => path === sidecar,
       }),
     ).toBe(sidecar)
+  })
+
+  test('defaults reach a sidecar next to the running executable', () => {
+    // The installed layout: binary and sidecar side by side, cwd elsewhere.
+    // Omits startDirs on purpose — the defaults are what ship.
+    const sidecar = join(dirname(process.execPath), 'vibekit-tui')
+    expect(resolveExploreEntry({ env: {}, exists: (path) => path === sidecar })).toBe(sidecar)
   })
 
   test('returns undefined when nothing is present', () => {

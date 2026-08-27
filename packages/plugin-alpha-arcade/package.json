@@ -1,8 +1,8 @@
 {
   "name": "@initlabs/vibekit-plugin-alpha-arcade",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "VibeKit plugin: Alpha Arcade prediction market tools (markets, orderbook, positions, orders).",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": "Init Labs LLC",
   "type": "module",
   "main": "./dist/index.js",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "@initlabs/vibekit-core": "^0.1.0",
+    "@initlabs/vibekit-core": "^1.0.0-alpha.0",
     "algosdk": ">=3.7.0 <4",
     "zod": "^4.0.0"
   },

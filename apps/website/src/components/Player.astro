@@ -1,0 +1,57 @@
+---
+// A cmus-flavored synthwave player. Tracks are procedural (WebAudio), so
+// nothing is shipped or licensed; see ../scripts/synth.ts.
+---
+
+<div class="player" data-player>
+  <button class="pp" type="button" aria-label="Play music" data-toggle>▶</button>
+  <button class="nx" type="button" aria-label="Next track" data-next>⏭</button>
+  <span class="title"><span data-title>music on ›</span></span>
+  <canvas class="viz" width="60" height="16" aria-hidden="true" data-viz></canvas>
+</div>
+
+<style>
+  .player { align-items: center; border-left: 1px solid var(--border-soft); color: var(--muted); display: flex; font-family: var(--font-mono); font-size: .66rem; gap: .5rem; height: 100%; letter-spacing: .04em; padding-inline: .9rem; }
+  button { background: none; border: 1px solid var(--border-soft); color: var(--brass); cursor: pointer; font: inherit; height: 1.5rem; padding: 0; width: 1.65rem; transition: border-color .15s, color .15s, background .15s; }
+  button:hover { border-color: var(--signal); color: var(--signal); }
+  .player.on .pp { background: var(--brass-bright); border-color: var(--brass-bright); color: var(--ground); }
+  .title { display: inline-block; max-width: 8.5rem; overflow: hidden; white-space: nowrap; }
+  .player.on .title span { animation: scroll 9s linear infinite; display: inline-block; padding-left: 100%; }
+  .player.on .title { color: var(--signal); }
+  .viz { display: block; height: 1rem; image-rendering: pixelated; width: 3.75rem; }
+  @keyframes scroll { to { transform: translateX(-100%); } }
+  @media (max-width: 820px) { .title, .viz { display: none; } .player { padding-inline: .6rem; } }
+</style>
+
+<script>
+  import { Synth } from '../scripts/synth'
+
+  const root = document.querySelector('[data-player]') as HTMLElement
+  const title = root.querySelector('[data-title]') as HTMLElement
+  const viz = root.querySelector('[data-viz]') as HTMLCanvasElement
+  const ctx = viz.getContext('2d')!
+  const synth = new Synth()
+  const bins = new Uint8Array(64)
+
+  const draw = () => {
+    ctx.clearRect(0, 0, viz.width, viz.height)
+    if (!synth.playing) return
+    synth.analyser.getByteFrequencyData(bins)
+    for (let i = 0; i < 12; i++) {
+      const h = Math.max(1, Math.round((bins[i * 3 + 1]! / 255) * viz.height))
+      ctx.fillStyle = i > 8 ? '#ffb454' : '#6fd3d3'
+      ctx.fillRect(i * 5, viz.height - h, 4, h)
+    }
+    requestAnimationFrame(draw)
+  }
+
+  const show = () => {
+    root.classList.toggle('on', synth.playing)
+    title.textContent = synth.playing ? `♫ ${synth.track.name}  ·  ${synth.track.bpm}bpm  ·  ` : 'music on ›'
+    root.querySelector('[data-toggle]')!.textContent = synth.playing ? '❚❚' : '▶'
+    draw()
+  }
+
+  root.querySelector('[data-toggle]')!.addEventListener('click', () => { synth.toggle(); show() })
+  root.querySelector('[data-next]')!.addEventListener('click', () => { synth.next(); show() })
+</script>

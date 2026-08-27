@@ -39,7 +39,9 @@ const dependencies: Record<string, string> = {
   zod: '^4.4.3',
 }
 for (const file of readdirSync(TARBALLS).sort()) {
-  const match = /^(initlabs-vibekit-.+)-\d+\.\d+\.\d+\.tgz$/.exec(file)
+  // The version tail must allow a prerelease suffix (1.0.0-alpha.0), or
+  // every packed tarball is skipped and the consumer resolves nothing.
+  const match = /^(initlabs-vibekit-.+)-\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\.tgz$/.exec(file)
   if (!match) continue
   dependencies[`@initlabs/${match[1]!.replace('initlabs-', '')}`] = `file:tarballs/${file}`
 }

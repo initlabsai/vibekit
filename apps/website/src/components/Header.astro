@@ -1,0 +1,15 @@
+---
+import Mark from './Mark.astro'
+import Player from './Player.astro'
+const path = Astro.url.pathname
+---
+
+<header class="nav shell">
+  <a class="brand" href="/" aria-label="VibeKit home"><Mark /></a>
+  <nav aria-label="Main navigation">
+    <a href="/docs/">docs</a>
+    <a href="/lore/" aria-current={path.startsWith('/lore') ? 'page' : undefined}>lore</a>
+    <a href="https://github.com/initlabsai/vibekit">github <span aria-hidden="true">↗</span></a>
+    <Player />
+  </nav>
+</header>

@@ -27,7 +27,14 @@ export function resolveExploreEntry(options: ResolveExploreOptions = {}): string
   const override = env.VIBEKIT_EXPLORE
   if (override && exists(override)) return override
 
-  const startDirs = options.startDirs ?? [process.cwd(), import.meta.dir]
+  // process.execPath is the only start that locates an installed sidecar:
+  // inside a compiled binary import.meta.dir is the virtual /$bunfs root,
+  // and cwd is wherever the user ran the command.
+  const startDirs = options.startDirs ?? [
+    process.cwd(),
+    dirname(process.execPath),
+    import.meta.dir,
+  ]
   for (const start of startDirs) {
     let dir = resolve(start)
     for (let depth = 0; depth < 8; depth += 1) {

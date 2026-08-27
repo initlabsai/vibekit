@@ -1,78 +1,124 @@
-# VibeKit
+```
+█ █ █ █▄▄ █▀▀ █▄▀ █ ▀█▀
+▀▄▀ █ █▄█ ██▄ █ █ █  █
+```
 
-VibeKit gives AI agents both the capabilities and the guidance to build on
-Algorand. Agents can query the chain, inspect accounts and transactions,
-manage assets, deploy and call contracts, and compose or execute transaction
-groups.
+VibeKit gives your AI agent the skills and tools to build on Algorand, and
+gives you a terminal Explorer to watch it work.
 
-The CLI also installs canonical skills into a project. This is the delivery
-mechanism for maintained guidance on writing smart contracts, generating
-clients, building frontend interfaces, and following Algorand conventions
-alongside the raw chain tools.
+Works with **Claude Code**, **Codex**, **Cursor**, **Copilot**, **Grok**,
+**opencode**, and **pi**.
 
-The same tool surface is available through an MCP server, the `vibekit` CLI,
-an agent runtime, and reusable TypeScript packages. Local writes are signed
-through a keystore daemon, so key material never enters the model context.
-Signerless deployments return unsigned groups for a wallet to review and
-sign. The hosted stack is planned to keep the same custody boundary.
+Alpha release — [feedback welcome](https://github.com/initlabsai/vibekit/issues).
 
-## What is here
+## Quick start
 
-- An MCP server library plus stdio and Streamable HTTP reference deployments
-- The `vibekit` CLI for agent setup, project scaffolding, LocalNet, keystore
-  access, diagnostics, and direct tool calls
-- Tool packages for networks, accounts, assets, transactions, and contracts
-- NFD and Alpha Arcade plugins
-- A local keystore signer and authenticated TestNet funding flow
-- A provider-agnostic agent loop, project-installable skills, and acceptance
-  prompts
-- A public Astro/Starlight landing page and Markdown documentation site
+```bash
+curl -fsSL https://getvibekit.ai/install | VIBEKIT_CHANNEL=alpha sh
+```
 
-## Explorer
+Scaffold a project and set up your agent:
 
-The Explorer is a chat-first, agent-first Algorand surface for terminal and
-web. Each request becomes a chronological feed group containing its narration
-and trusted result cards; direct identifiers route deterministically before any
-model call, and writes pause at an explicit approval modal.
+```bash
+vibekit new my-app
+```
 
-The fixture-backed TUI uses React with OpenTUI; the web renderer uses React
-with Next.js. They share the provisional `@initlabs/vibekit-explorer`
-protocol, result store, write-flow machine, fixtures, and semantic view models
-while keeping terminal and browser primitives native to each platform. The
-private apps are independently built deployment units and consume the public
-package surface. The hosted API and SDK remain planned.
+Start a local chain and open the Explorer:
 
-## Status
+```bash
+vibekit localnet start
+vibekit explore
+```
 
-The core engine, tools, plugins, signer, MCP adapters, agent loop, CLI, the
-provisional explorer package, and the fixture-backed TUI/web renderers are
-implemented and tested. The next work is the hosted API/SDK and the 1.0
-publish gate. The `vibekit explore` CLI entry point is implemented; browser
-wallet custody is still pending. The current skill bundle covers VibeKit operation and
-extension plus TypeScript Algorand contracts, clients, testing, frontend
-wallets, standards, migrations, structured security audits, and maintenance of
-the skill set itself.
+Then open your AI tool in the project and start building.
+
+> Windows binaries are attached to each [release](https://github.com/initlabsai/vibekit/releases).
+> The PowerShell installer is not ready yet.
+
+## Platform support
+
+| Platform              | Status |
+| --------------------- | ------ |
+| Linux (x64)           | Alpha  |
+| macOS (Apple Silicon) | Alpha  |
+| macOS (Intel)         | Alpha  |
+| Windows (x64)         | Alpha  |
+
+Development runs on Linux. macOS and Windows binaries are built in CI and are
+less exercised.
+
+## Why VibeKit
+
+AI coding assistants are bad at Algorand. They hallucinate APIs, reach for
+outdated patterns, and cannot actually deploy or test anything.
+
+`vibekit new` and `vibekit init` fix that. They install **skills** that teach
+your agent current Algorand patterns, and wire up **MCP tools** that let it
+touch the chain directly. Your agent can write a contract, deploy it to
+LocalNet, mint test assets, call methods, and check the result. Ask it what
+went wrong and it reads the chain to find out.
+
+Keys never reach the model. Signing goes through a local keystore daemon over
+a socket, and every write pauses for your approval first. Signerless setups
+return an unsigned transaction group for a wallet to review instead.
+
+## The Explorer
+
+`vibekit explore` opens a full-screen terminal Explorer: a chat transcript
+with a live results feed. Type an address, asset id, or transaction id and it
+resolves without a model call. Ask a question and the agent answers alongside
+trusted result cards. Contracts get a card each — creator, state, bare
+actions, live global state — and you can call any ABI method from the line,
+with reads simulated inline and writes routed through an approval modal that
+shows decoded arguments before you sign.
+
+## Documentation
+
+Full documentation at **[getvibekit.ai](https://getvibekit.ai)**
+
+- [Your first project](https://getvibekit.ai/docs/tutorials/first-project)
+- [Explore with VibeKit](https://getvibekit.ai/docs/tutorials/explore-with-vibekit)
+- [Add VibeKit to a project](https://getvibekit.ai/docs/guides/add-to-an-existing-project)
+- [How VibeKit works](https://getvibekit.ai/docs/explanation/how-vibekit-works)
+
+## CLI commands
+
+```bash
+vibekit new [dir]          # Scaffold a project, then set up agents
+vibekit init [dir]         # Set up agents in an existing project
+vibekit explore            # Open the Explorer TUI
+vibekit localnet <cmd>     # Manage the local Algorand network
+vibekit doctor             # Diagnose setup problems (--fix repairs them)
+vibekit keystore <cmd>     # Signing accounts and the keystore daemon
+vibekit dispenser <cmd>    # TestNet dispenser session
+vibekit tool <name> [json] # Call any VibeKit tool from the shell
+vibekit mcp                # Run the MCP server over stdio
+```
+
+Templates for `vibekit new`: `contracts`, `fullstack`, `kitchensink`.
+
+## Packages
+
+The CLI is one host over a shared tool contract. The same tools are available
+as TypeScript packages — `@initlabs/vibekit-core`, `-tools`, `-mcp`, `-agent`,
+`-signer-keystore`, `-preset`, and the plugins — published to npm under the
+`alpha` tag.
 
 ## Development
+
+See [AGENTS.md](./AGENTS.md) for development and release guidance.
 
 ```bash
 bun install
 bun run build
 bun run typecheck
 bun run test
+bun run cli -- --help
 ```
-
-To run only the Explorer apps during development:
-
-```bash
-bun --cwd apps/tui run dev
-bun --cwd apps/web run dev
-bun run website
-```
-
-## Documentation
 
 - [Design](./docs/DESIGN.md) — architecture, current state, gaps, and roadmap
-- [Constitution](./docs/CONSTITUTION.md) — project principles and contribution
-  standards
-- [Website source](./apps/website) — landing page and Markdown documentation
+- [Constitution](./docs/CONSTITUTION.md) — principles and contribution standards
+
+## License
+
+MIT

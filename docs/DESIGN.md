@@ -225,8 +225,7 @@ material). Backlog: TEAL viewer, box browsing polish, asset
 metadata/traits, ASCII QR, custom-network CRUD, ARC-89, NFD reverse
 display beside addresses.
 
-Before the 1.0 publish gate: add the root license file and settle copyright
-metadata; package manifests currently declare Apache-2.0. Decide whether the
+Before the 1.0 publish gate: decide whether the
 keystore canary is acceptable for release. Add an install channel and
 cross-platform binary smoke coverage. Pack the public packages, install them in
 an out-of-workspace consumer fixture with workspace resolution unavailable,
@@ -905,11 +904,10 @@ context. Wallet pairing stays client-side.
     (contract reference, plugin authoring guide, self-hosting guide). If the
     site returns, keep its source as a private app in this monorepo. Decide its
     framework, domain, and hosting before adding it to the target layout.
-11. **License & copyright.** Package manifests currently declare
-    Apache-2.0, but the repository has no root license file. Add it and settle
-    copyright headers/`author` fields before the first npm publish. v1 is MIT
-    © Gabriel Kuettel, so relicensing the ported code remains the copyright
-    holder's call.
+11. ~~License & copyright~~ **Resolved (2026-08-26)**: MIT, `Copyright (c)
+    2026 Init Labs`, root `LICENSE` file added and every package manifest
+    declares `MIT`. v1 was MIT © Gabriel Kuettel, so the ported code keeps its
+    original license and no relicensing decision is owed.
 12. ~~Keystore UX gap~~ **Resolved (2026-08-16)**:
     `vibekit keystore <args>` (managed pinned install) + agent-facing
     `create_signing_account`/`list_signing_addresses`. Mnemonic flows

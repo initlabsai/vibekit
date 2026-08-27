@@ -1,8 +1,8 @@
 {
   "name": "@initlabs/vibekit-agent",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "The VibeKit orchestrator: LLM + tool loop + streaming over ToolDefinition[], with BYOM provider config. One brain for the TUI, the hosted API, and anything else.",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": "Init Labs LLC",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,7 +34,7 @@
     "ai": "^7.0.74"
   },
   "peerDependencies": {
-    "@initlabs/vibekit-core": "^0.1.0",
+    "@initlabs/vibekit-core": "^1.0.0-alpha.0",
     "algosdk": ">=3.7.0 <4",
     "zod": "^4.0.0"
   },

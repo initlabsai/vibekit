@@ -7,8 +7,8 @@ was verified on 2026-08-24 unless marked "decide" or "todo".
 
 - Channels: **npm packages under the `alpha` dist-tag** AND **GitHub Release
   binaries** (CLI + TUI sidecar per platform).
-- License: Apache-2.0, `Copyright 2026 Init Labs`. The manifests already
-  declare `Apache-2.0`; the root `LICENSE` file does not exist yet — add it.
+- License: MIT, `Copyright (c) 2026 Init Labs`. Done: root `LICENSE` added and
+  every manifest declares `MIT`.
 - The repo `initlabsai/vibekit` is (or will be) public.
 - Version string: `0.1.0-alpha.1` (packages are all at `0.1.0`, never published,
   no git tags exist).
@@ -43,8 +43,7 @@ Public (`private: false`): `@initlabs/vibekit-core`, `-tools`, `-agent`,
 
 ## Steps
 
-1. `LICENSE` at the repo root: Apache-2.0 full text, appendix notice with
-   `Copyright 2026 Init Labs`. Commit `chore: add Apache-2.0 license`.
+1. ~~`LICENSE` at the repo root.~~ Done: MIT, `Copyright (c) 2026 Init Labs`.
 2. Changesets pre-release: `bunx changeset pre enter alpha`, then one changeset
    marking every public package `minor` (they are unpublished; the text can be
    the release notes below), then `bunx changeset version` → `0.1.0-alpha.1`.

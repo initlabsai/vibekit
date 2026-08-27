@@ -5,7 +5,7 @@ draft: false
 ---
 
 
-A VibeKit plugin is an npm package that returns a `ToolPlugin`: a name, a tool
+A VibeKit plugin is a workspace package that returns a `ToolPlugin`: a name, a tool
 array, and optionally a service or trusted Explorer view schemas. The host puts
 the plugin service at `ctx.services[plugin.name]` and sends every call through
 the same tool contract as VibeKit’s built-in capabilities.

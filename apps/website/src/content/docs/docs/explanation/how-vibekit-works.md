@@ -39,7 +39,8 @@ write, but it does not receive a mnemonic or private key.
 
 ## The Explorer
 
-The terminal Explorer is a host over the same capabilities. It treats direct
+The terminal Explorer is a host over the same capabilities (a browser renderer
+shares the same protocol and view models). It treats direct
 identifiers deterministically, groups agent requests with their structured
 results, and renders trusted views from tool data. A write pauses at an
 approval screen that shows the actual group and its simulation before the local

@@ -8,7 +8,8 @@ draft: false
 A VibeKit MCP deployment is configuration: select tools, optional plugins,
 networks, and a signing mode, then pass that deployment to a transport adapter.
 Copy the executable examples in `packages/mcp/examples/` when starting a real
-server.
+server. The `@initlabs/vibekit-*` packages are not yet published to npm, so
+build inside the VibeKit monorepo with `workspace:*` dependencies.
 
 ## Start with a focused stdio server
 
@@ -38,6 +39,9 @@ more than one entry point needs it.
 Use `compose` unless the deployment owns a signer and a real approval boundary.
 Compose mode returns unsigned transaction groups for an external signer to
 review. It is the correct default for a new server and for public HTTP use.
+The bundled `vibekit mcp` server is the exception: it defaults to `execute`
+behind the local keystore daemon and degrades to compose when the daemon is
+unreachable.
 
 `execute` requires `resolveSigner`; startup rejects an execute deployment
 without it. A local stdio deployment can use the VibeKit keystore pattern from
