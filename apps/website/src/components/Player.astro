@@ -1,6 +1,6 @@
 ---
-// A cmus-flavored synthwave player. Tracks are procedural (WebAudio), so
-// nothing is shipped or licensed; see ../scripts/synth.ts.
+// A cmus-flavored synthwave player over the tracks in public/music;
+// see ../scripts/music.ts.
 ---
 
 <div class="player" data-player>
@@ -24,19 +24,19 @@
 </style>
 
 <script>
-  import { Synth } from '../scripts/synth'
+  import { Music } from '../scripts/music'
 
   const root = document.querySelector('[data-player]') as HTMLElement
   const title = root.querySelector('[data-title]') as HTMLElement
   const viz = root.querySelector('[data-viz]') as HTMLCanvasElement
   const ctx = viz.getContext('2d')!
-  const synth = new Synth()
+  const music = new Music()
   const bins = new Uint8Array(64)
 
   const draw = () => {
     ctx.clearRect(0, 0, viz.width, viz.height)
-    if (!synth.playing) return
-    synth.analyser.getByteFrequencyData(bins)
+    if (!music.playing) return
+    music.analyser.getByteFrequencyData(bins)
     for (let i = 0; i < 12; i++) {
       const h = Math.max(1, Math.round((bins[i * 3 + 1]! / 255) * viz.height))
       ctx.fillStyle = i > 8 ? '#ffb454' : '#6fd3d3'
@@ -46,12 +46,13 @@
   }
 
   const show = () => {
-    root.classList.toggle('on', synth.playing)
-    title.textContent = synth.playing ? `♫ ${synth.track.name}  ·  ${synth.track.bpm}bpm  ·  ` : 'music on ›'
-    root.querySelector('[data-toggle]')!.textContent = synth.playing ? '❚❚' : '▶'
+    root.classList.toggle('on', music.playing)
+    title.textContent = music.playing ? `♫ ${music.track.artist} - ${music.track.title}  ·  ` : 'music on ›'
+    root.querySelector('[data-toggle]')!.textContent = music.playing ? '❚❚' : '▶'
     draw()
   }
 
-  root.querySelector('[data-toggle]')!.addEventListener('click', () => { synth.toggle(); show() })
-  root.querySelector('[data-next]')!.addEventListener('click', () => { synth.next(); show() })
+  music.onchange = () => show()
+  root.querySelector('[data-toggle]')!.addEventListener('click', () => { music.toggle(); show() })
+  root.querySelector('[data-next]')!.addEventListener('click', () => { music.next(); show() })
 </script>
