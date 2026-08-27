@@ -21,7 +21,7 @@ const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'A
           <a class="button primary" href="/docs/tutorials/first-project">boot a project <span aria-hidden="true">→</span></a>
           <a class="button quiet" href="/lore/">read the lore</a>
         </div>
-        <pre class="install"><span>$</span> curl -fsSL getvibekit.ai/install | sh</pre>
+        <pre class="install"><span>$</span> curl -fsSL getvibekit.ai/install | sh<button type="button" class="copy" data-copy="curl -fsSL getvibekit.ai/install | sh" aria-label="Copy install command">copy</button></pre>
       </div>
 
       <div class="tui" aria-label="A stylized VibeKit Explorer lookup" data-tui>
@@ -233,6 +233,18 @@ const ticker = ['FROM PROMPT TO MAINNET', '8 AGENT SKILLS', '57 CHAIN TOOLS', 'A
       tui.classList.add('resolved')
     }, 500)
   } else tui.classList.add('resolved')
+
+  // Hero install command: copy to clipboard, confirm in place.
+  const copyBtn = document.querySelector<HTMLButtonElement>('[data-copy]')
+  copyBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(copyBtn.dataset.copy!)
+      copyBtn.textContent = 'copied'
+    } catch {
+      copyBtn.textContent = 'failed'
+    }
+    setTimeout(() => { copyBtn.textContent = 'copy' }, 1600)
+  })
 
   // Explorer page tabs: swap the panel, keep the chrome.
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')]
