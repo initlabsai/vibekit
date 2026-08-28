@@ -12,14 +12,13 @@ export function Welcome({ onSubmit, agent }: { onSubmit: (raw: string) => void; 
       </div>
       <p className="hero intro-hero">
         <span className="hero-value">
-          <span>Hi. I read </span>
-          <em>Algorand</em>
-          <span> for you.</span>
+          <span>Hi. I'm </span>
+          <em>qt314</em>
+          <span>.</span>
         </span>
       </p>
       <p className="intro-lede">
-        Ask in plain words, or paste an id. Every card is a real tool result and I only say what it says.
-        I'm early alpha — be explicit, be kind, and I never sign; your wallet does.
+        i read algorand for you. i'm the helpfulest, but plz be specific. i'm in alpha i guess.
       </p>
       <div className="examples intro-examples">
         {EXAMPLES.map((example) => (

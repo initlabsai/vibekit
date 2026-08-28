@@ -7,6 +7,10 @@ import { CompanionFace, moodFor } from '../features/profile/companion'
 import { Button } from '../primitives'
 import type { Section, SectionBlock } from './hooks'
 
+export function plainAgentText(text: string): string {
+  return text.replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1')
+}
+
 export function NavPane({
   sections,
   selectedId,
@@ -125,7 +129,7 @@ export function FeedPane({
                       </span>
                     </p>
                   ) : (
-                    <p className="note-agent-text">{item.text}</p>
+                    <p className="note-agent-text">{plainAgentText(item.text)}</p>
                   )}
                 </div>
               </div>

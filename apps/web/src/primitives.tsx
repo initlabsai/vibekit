@@ -134,7 +134,8 @@ export function Copyable({
     <button
       type="button"
       className={`ident${copied ? ' ident-copied' : ''}${className ? ` ${className}` : ''}`}
-      title={value}
+      aria-label={`Copy ${value}`}
+      title={`Copy ${value}`}
       onClick={(event) => {
         event.stopPropagation()
         void navigator.clipboard?.writeText(value).then(() => {

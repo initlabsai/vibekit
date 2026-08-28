@@ -1,14 +1,15 @@
 'use client'
 
 /** An NFD profile from a pasted name: the deposit address, verified handles, and a line of bio. */
-import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero } from '../../primitives'
+import { Button, Copyable, Fact, Facts, Frame, Header } from '../../primitives'
 import type { NfdProfile } from '../../remote-host'
+import { shorten } from '../../theme'
 
 /** Verified handles and links, in display order; each row copies its value. */
 const LINKS: ReadonlyArray<[key: string, label: string]> = [
   ['twitter', 'twitter'],
-  ['github', 'github'],
   ['discord', 'discord'],
+  ['github', 'github'],
   ['telegram', 'telegram'],
   ['email', 'email'],
   ['website', 'website'],
@@ -16,6 +17,16 @@ const LINKS: ReadonlyArray<[key: string, label: string]> = [
   ['blueskydid', 'bluesky'],
   ['nostrpubkey', 'nostr'],
 ]
+
+/** Row-major facts: common profiles pair app/twitter, then discord/github. */
+export function nfdFactsFor(data: NfdProfile): ReadonlyArray<Readonly<{ label: string; value: string }>> {
+  const props = data.properties ?? {}
+  return [
+    ...(data.appId === undefined ? [] : [{ label: 'app', value: String(data.appId) }]),
+    ...(data.owner && data.owner !== data.address ? [{ label: 'owner', value: data.owner }] : []),
+    ...LINKS.filter(([key]) => props[key]).map(([key, label]) => ({ label, value: props[key]! })),
+  ]
+}
 
 export function NfdCard({
   data,
@@ -27,35 +38,43 @@ export function NfdCard({
   onOpenAccount?: () => void
 }) {
   const props = data.properties ?? {}
-  const links = LINKS.filter(([key]) => props[key]).map(([key, label]) => [label, props[key]!] as const)
+  const facts = nfdFactsFor(data)
   const byline = props.name && props.name !== data.name ? props.name : undefined
   return (
-    <Frame>
+    <Frame className="nfd-card">
       <Header
         kicker="NFD"
         chip={data.state}
         pill={network.toUpperCase()}
         action={onOpenAccount ? <Button label="account ▸" onPress={onOpenAccount} /> : undefined}
       />
-      <p className="hero">
+      <div className="nfd-identity">
         {props.avatar?.startsWith('https://') ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="identity-avatar" src={props.avatar} alt="" width={44} height={44} />
+          <img className="identity-avatar" src={props.avatar} alt="" width={56} height={56} />
         ) : null}
-        <Copyable value={data.name} className="hero-value" />
-        {byline ? <span className="hero-unit">{byline}</span> : null}
-      </p>
-      <Facts>
-        {data.appId === undefined ? null : <Fact label="app" value={String(data.appId)} copy={String(data.appId)} />}
-        {data.address ? <Fact label="address" value={data.address} copy={data.address} /> : null}
-        {data.owner && data.owner !== data.address ? <Fact label="owner" value={data.owner} copy={data.owner} /> : null}
-        {links.map(([label, value]) => (
-          <Fact key={label} label={label}>
-            <Copyable value={value} />
-          </Fact>
-        ))}
-      </Facts>
-      {props.bio ? <FooterNote text={props.bio} /> : null}
+        <div className="nfd-identity-body">
+          <p className="hero nfd-name">
+            <Copyable value={data.name} className="hero-value" />
+            {byline ? <span className="hero-unit">{byline}</span> : null}
+          </p>
+          {data.address ? (
+            <p className="nfd-address">
+              <Copyable value={data.address} display={shorten(data.address, 26)} />
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <div className="nfd-facts">
+        <Facts>
+          {facts.map(({ label, value }) => (
+            <Fact key={label} label={label}>
+              <Copyable value={value} />
+            </Fact>
+          ))}
+        </Facts>
+      </div>
+      {props.bio ? <p className="nfd-bio">{props.bio}</p> : null}
     </Frame>
   )
 }
