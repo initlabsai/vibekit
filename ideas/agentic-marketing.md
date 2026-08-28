@@ -56,6 +56,44 @@ roles, dates, org designations, which numbered drop used which beat. Not a
 database — a list it must not contradict. This is the smallest thing that turns
 a sequence of one-off tweets into a series.
 
+## Reviewers
+
+Every failure mode above is a narrow, checkable question, which is exactly the
+shape an LLM reviewer is good at. Generic "is this good?" reviewers produce
+noise; these four have one job each and a source of truth to check against:
+
+| reviewer | mandate | source of truth |
+| --- | --- | --- |
+| claims | does any sentence make a checkable assertion about VibeKit or Algorand? is it true? | the repo |
+| canon | does this contradict established lore, or reuse a spent beat? | `canon.md` |
+| voice | lowercase, one idea, no hashtags, no begging, at most one emoji | `references/tweets.md` |
+| frame | for video: read the prose in the final frame. promo-safe, or re-roll? | `SKILL.md` lesson 6 |
+
+The claims reviewer is the one that matters. It is the enforcement mechanism for
+the fiction/capabilities line, and it is the difference between a bot that is
+funny and a bot that is a liability. The frame reviewer is what makes the video
+path automatable at all — it turns a documented human procedure into a gate.
+
+Reviewers vote to hold, not to pass. A hold routes back to the generator with
+the reason; anything held twice goes to a human regardless.
+
+## Dashboard and the graph
+
+A LangGraph-shaped flow fits: generate → reviewers fan out in parallel → gate →
+revise or escalate → human approves → post. The one part genuinely hard to
+hand-roll is durable interrupt and resume across a human's approval latency,
+which is precisely what LangGraph's checkpointer is for. Use
+`@langchain/langgraph` (JS) rather than Python — a second runtime and dependency
+tree in a Bun/TypeScript repo is a real, recurring cost for a graph this small.
+
+Sequencing opinion: **reviewers first, as plain functions; graph and dashboard
+when the queue hurts.** The reviewers pay for themselves on drop one. Until
+volume is high, "drafts land in a directory, a human moves one to `approved/`,
+a cron posts what's there" is a filesystem checkpoint that takes an hour and
+answers the send-button question on its own. The dashboard earns its place when
+you want to see *why* a reviewer held something and diff the revisions — that's
+a product, and it should be built when there is something to look at.
+
 ## Named consumers (abstraction-budget rule)
 
 - The director card (personnel 001, Dr. Vera Solano) is the reference
@@ -65,17 +103,15 @@ a sequence of one-off tweets into a series.
 
 ## Do not build
 
-A scheduler, a content calendar, a multi-platform abstraction, an approval UI.
-The interesting claim is one agent that writes and ships; everything else is a
-CMS. If posting stays human-gated, the queue is a directory of pngs and a text
-file.
+A scheduler, a content calendar, a multi-platform abstraction. The interesting
+claim is one agent that writes and ships; everything else is a CMS.
+
+Also: a general-purpose "review this content" agent. Reviewers earn their keep
+by being narrow enough that their verdict is checkable against a file. One that
+judges quality in the abstract will hold everything, or nothing.
 
 ## Open questions
 
-- Does the agent get the send button, or does it queue? Queueing keeps ~90% of
-  the leverage and none of the tail risk, so the answer is probably "queue until
-  the video path is trustworthy," but that is a taste call about how much the
-  bit is worth.
 - Video re-roll budget: how many bad takes before it gives up and asks, versus
   burning mainnet calls and tokens overnight.
 - Whether lore drops post from @getvibekit or a separate in-universe account.
