@@ -432,3 +432,13 @@ a.button-active { text-decoration: underline; }
 .palette-name { color: var(--brass); min-width: 7rem; }
 .palette li.on .palette-name { color: var(--brass-bright); }
 .palette-hint { color: var(--muted); }
+
+/* The wallet menu in the top bar: a native disclosure, its list under the button. */
+.menu { position: relative; }
+.menu summary { cursor: pointer; list-style: none; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu ul { background: var(--ground); border: 1px solid var(--border); list-style: none; margin: .3rem 0 0; min-width: 12rem; padding: .25rem 0; position: absolute; right: 0; z-index: 50; }
+.menu li button, .menu li a { background: none; border: 0; color: var(--text); cursor: pointer; display: block; font: inherit; padding: .35rem .8rem; text-align: left; text-decoration: none; width: 100%; }
+.menu li button:hover, .menu li a:hover { background: var(--card); color: var(--brass-bright); }
+.menu li button.on { color: var(--brass); }
+.menu li.muted { color: var(--faint); padding: .35rem .8rem; }

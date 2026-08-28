@@ -37,6 +37,7 @@ import { Button, CopyContext } from './primitives'
 import type { NfdProfile, RemoteExplorerHost } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
+import { WalletMenu } from './features/wallet/menu'
 import { useWalletLane, WalletRoot, type WalletLane } from './wallet/provider'
 
 /** A tool result with no card of its own: folded to its name; the JSON is one click away. */
@@ -280,9 +281,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
             <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
               {network}
             </button>
-            <Link href="/wallet" className={`button${pathname === '/wallet' ? ' button-active' : ''}`}>
-              {activeAddress ? `▸ ${wallet.activeName ?? shorten(activeAddress, 12)}` : '▸ no wallet'}
-            </Link>
+            <WalletMenu lane={wallet} onError={setStatus} />
           </span>
         </div>
         <nav className="top-row tabs">

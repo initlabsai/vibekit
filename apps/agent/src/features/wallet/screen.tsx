@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero } from '../../primitives'
 import { shorten } from '../../theme'
 import type { WalletLane } from '../../wallet/provider'
+import { connectWallet } from './menu'
 
 export function WalletScreen({
   lane,
@@ -60,15 +61,7 @@ export function WalletScreen({
                       else wallet.setActive()
                       return
                     }
-                    try {
-                      await wallet.connect()
-                    } catch (caught) {
-                      // Pera keeps a WalletConnect session in the browser; a stale one from an
-                      // earlier attempt refuses a second connect. Drop it and try once more.
-                      if (!/session currently connected/i.test(String(caught))) throw caught
-                      await wallet.disconnect().catch(() => undefined)
-                      await wallet.connect()
-                    }
+                    await connectWallet(wallet)
                   })
                 }
               />
