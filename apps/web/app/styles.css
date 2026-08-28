@@ -355,6 +355,9 @@ a.button-active { text-decoration: underline; }
 .note { color: var(--faint); font-family: var(--font-mono); font-size: .76rem; margin: 0; padding-left: .8rem; }
 .note-error { color: var(--red); }
 .note-agent { align-items: flex-start; display: flex; gap: .7rem; padding-left: .2rem; }
+.note-agent-text.pending { color: var(--muted); font-family: var(--font-mono); font-size: .8rem; margin-top: .35rem; }
+.note-agent-text.pending::after { animation: blink 1s steps(2) infinite; content: '▍'; }
+@keyframes blink { 50% { opacity: 0; } }
 .note-agent-text { color: var(--text); font-family: var(--font-sans); font-size: .95rem; line-height: 1.6; margin: .2rem 0 0; white-space: pre-wrap; }
 .prompt-line { align-items: center; background: rgba(17, 19, 24, .85); border-left: 2px solid var(--brass-bright); color: var(--text); cursor: pointer; display: flex; font-family: var(--font-mono); font-size: .84rem; gap: .6rem; margin: 0; padding: .55rem .8rem; text-align: left; transition: background .15s; width: 100%; }
 .prompt-line:hover { background: var(--card-lit); }

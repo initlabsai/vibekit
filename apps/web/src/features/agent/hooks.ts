@@ -80,7 +80,7 @@ export function useAgentLane({
   setStatus: (text: string) => void
   startFromDraft: (sectionId: number, draftRecord: StructuredResult) => void
 }) {
-  const { appendBlock, appendNote, updateItem } = feed
+  const { appendBlock, appendNote, updateItem, removeItem } = feed
   const [status, setAgentStatus] = useState<AgentStatus>({ enabled: false })
   /** The model's view of the conversation; opaque here, sent back each turn. */
   const historyRef = useRef<unknown[]>([])
@@ -122,14 +122,27 @@ export function useAgentLane({
         historyNetwork.current = network
       }
       setBusy(true)
-      setStatus('thinking…')
       setStreamingSection(sectionId)
-      let noteId: number | null = null
+      // She narrates her own progress in the transcript: a pending line becomes her sentence when she speaks.
+      let noteId = feed.appendNoteReturning(sectionId, 'thinking…', 'agent')
+      updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, pending: true } : item))
+      let pending = true
       let spoke = false
+      const setNote = (text: string, isPending: boolean) =>
+        updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, text, pending: isPending } : item))
+      const progress = (text: string) => {
+        if (pending) setNote(text, true)
+        else {
+          noteId = feed.appendNoteReturning(sectionId, text, 'agent')
+          updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, pending: true } : item))
+          pending = true
+        }
+      }
       const say = (delta: string) => {
         spoke = true
-        if (noteId === null) {
-          noteId = feed.appendNoteReturning(sectionId, delta, 'agent')
+        if (pending) {
+          setNote(delta, false)
+          pending = false
           return
         }
         updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, text: item.text + delta } : item))
@@ -158,20 +171,25 @@ export function useAgentLane({
               say(String(event.text))
               break
             case 'tool-call':
-              noteId = null
-              setStatus(`agent → ${String(event.toolName)}…`)
+              progress(`→ ${String(event.toolName)}…`)
               break
             case 'tool-result': {
               spoke = true
-              noteId = null
+              if (pending) removeItem(sectionId, noteId)
               landToolResult(sectionId, event as unknown as AgentToolResult, network)
+              noteId = feed.appendNoteReturning(sectionId, 'thinking…', 'agent')
+              updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, pending: true } : item))
+              pending = true
               break
             }
             case 'draft': {
               spoke = true
-              noteId = null
+              if (pending) removeItem(sectionId, noteId)
               const record = structuredResultSchema.parse(event.record)
               startFromDraft(sectionId, record)
+              noteId = feed.appendNoteReturning(sectionId, 'thinking…', 'agent')
+              updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, pending: true } : item))
+              pending = true
               break
             }
             case 'messages':
@@ -185,16 +203,17 @@ export function useAgentLane({
               break
           }
         }
+        if (pending) removeItem(sectionId, noteId)
         if (!spoke) appendNote(sectionId, 'The agent returned nothing. Try a more specific ask — an id, a round, a name.', 'error')
       } catch (error) {
+        if (pending) removeItem(sectionId, noteId)
         appendNote(sectionId, `Agent failed — ${shorten(error instanceof Error ? error.message : String(error), 160)}`, 'error')
       } finally {
         setBusy(false)
-        setStatus('')
         setStreamingSection(null)
       }
     },
-    [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, setBusy, setStatus, startFromDraft, status.enabled, storeRef, updateItem],
+    [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, removeItem, setBusy, startFromDraft, status.enabled, storeRef, updateItem],
   )
 
   /** A tool result becomes a record and a card, exactly as a direct-lane lookup would. */

@@ -113,7 +113,7 @@ export function FeedPane({
                 <CompanionFace
                   mood={moodFor(section, streamingSection === section.id && index === section.items.length - 1)}
                 />
-                <p className="note-agent-text">{item.text}</p>
+                <p className={`note-agent-text${item.pending ? ' pending' : ''}`}>{item.text}</p>
               </div>
             ) : item.kind === 'note' ? (
               <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>

@@ -13,7 +13,7 @@ export type SectionBlock =
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =
-  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent' }
+  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent'; /** Still being written: 'thinking…', '→ tool…'. */ pending?: boolean }
   | { id: number; kind: 'block'; block: SectionBlock }
 
 /** Everything one request produced, in order. The nav pane is this list's index. */
@@ -140,6 +140,13 @@ export function useFeed() {
     [updateSection],
   )
 
+  const removeItem = useCallback(
+    (sectionId: number, itemId: number) => {
+      updateSection(sectionId, (section) => ({ ...section, items: section.items.filter((item) => item.id !== itemId) }))
+    },
+    [updateSection],
+  )
+
   /** Swaps one rendered block's view (a merged page replaces its first page). */
   const replaceBlockView = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
@@ -159,6 +166,7 @@ export function useFeed() {
     selectSection,
     createSection,
     updateItem,
+    removeItem,
     appendNote,
     appendNoteReturning,
     appendBlock,
