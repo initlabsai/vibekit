@@ -10,7 +10,7 @@ import { lute } from '@txnlab/use-wallet-lute'
 import { pera } from '@txnlab/use-wallet-pera'
 import { useNetwork as useWalletNetwork, useWallet, WalletManager, WalletProvider } from '@txnlab/use-wallet-react'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { WalletAccount } from '../commands'
 import { defaultNetwork } from '../features/network/hooks'
@@ -66,6 +66,13 @@ export function useWalletLane(network: LiveNetworkId) {
   // signDraft (and everything memoised on it) changes only with the account or network.
   const signerRef = useRef(wallet.transactionSigner)
   signerRef.current = wallet.transactionSigner
+  const signTxnsRef = useRef(wallet.signTransactions)
+  signTxnsRef.current = wallet.signTransactions
+  /** Raw group signing for x402: the wallet signs the bytes it is handed. */
+  const signTransactions = useCallback(
+    (txns: Uint8Array[], indexes?: number[]) => signTxnsRef.current(txns, indexes),
+    [],
+  )
   const signDraft = useMemo(
     () =>
       activeAddress
@@ -86,6 +93,7 @@ export function useWalletLane(network: LiveNetworkId) {
     activeAddress,
     activeName: wallet.activeAccount?.name,
     signDraft,
+    signTransactions,
     networkError,
   }
 }

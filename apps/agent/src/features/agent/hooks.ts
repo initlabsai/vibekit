@@ -37,7 +37,7 @@ export interface AgentStatus {
   enabled: boolean
   model?: string
   provider?: string
-  billing?: 'house'
+  billing?: 'house' | 'x402'
 }
 
 const CONTEXT_KEYS = ['id', 'address', 'assetId', 'applicationId', 'round', 'groupId', 'network'] as const
@@ -67,6 +67,7 @@ export function useAgentLane({
   setBusy,
   setStatus,
   startFromDraft,
+  onCredits,
 }: {
   feed: Feed
   storeRef: { current: ResultStore }
@@ -79,6 +80,8 @@ export function useAgentLane({
   setBusy: (busy: boolean) => void
   setStatus: (text: string) => void
   startFromDraft: (sectionId: number, draftRecord: StructuredResult) => void
+  /** The balance the route reports after charging a turn. */
+  onCredits?: (credits: { paid: number; freeLeft: number }) => void
 }) {
   const { appendBlock, appendNote, updateItem, removeItem } = feed
   const [status, setAgentStatus] = useState<AgentStatus>({ enabled: false })
@@ -150,7 +153,7 @@ export function useAgentLane({
       try {
         const response = await fetch('/api/agent', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', ...(activeAddress ? { 'x-payer': activeAddress } : {}) },
           body: JSON.stringify({
             network,
             input,
@@ -195,6 +198,9 @@ export function useAgentLane({
             case 'messages':
               historyRef.current = event.messages as unknown[]
               break
+            case 'credits':
+              onCredits?.(event.credits as { paid: number; freeLeft: number })
+              break
             case 'error':
               spoke = true
               appendNote(sectionId, `Agent error — ${shorten(String(event.message), 160)}`, 'error')
@@ -215,7 +221,7 @@ export function useAgentLane({
         feed.scrollToBottom()
       }
     },
-    [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, removeItem, setBusy, startFromDraft, status.enabled, storeRef, updateItem],
+    [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, onCredits, removeItem, setBusy, startFromDraft, status.enabled, storeRef, updateItem],
   )
 
   /** A tool result becomes a record and a card, exactly as a direct-lane lookup would. */

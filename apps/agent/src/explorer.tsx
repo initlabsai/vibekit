@@ -23,6 +23,7 @@ import { RoundPulse } from './features/network/pulse'
 import { Composer, NavPane } from './feed/feed'
 import { useFeed, type Feed, type SectionBlock } from './feed/hooks'
 import { useAgentLane } from './features/agent/hooks'
+import { useCredits } from './features/credits/hooks'
 import { useComposer } from './features/composer/hooks'
 import { usePanel } from './features/layout/hooks'
 import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
@@ -91,6 +92,14 @@ const TABS = [
   { href: '/blocks', label: 'blocks' },
 ] as const
 
+/** `12 turns · 3 free · /buy 25 for $1.00`, or the offer alone before a wallet connects. */
+function creditsLine(credits: ReturnType<typeof useCredits>): string {
+  const offer = `/buy ${credits.turnsPerPack} for ${credits.price}`
+  if (!credits.credits) return `connect a wallet · ${offer}`
+  const free = credits.credits.freeLeft > 0 ? ` · ${credits.credits.freeLeft} free` : ''
+  return `${credits.credits.paid} turns${free} · ${offer}`
+}
+
 /** The layout mounts this inside the wallet provider, client-only. */
 export function ExplorerShell({ children }: { children: ReactNode }) {
   return (
@@ -133,7 +142,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
+  const credits = useCredits({ activeAddress, signTransactions: wallet.signTransactions })
   const agent = useAgentLane({
+    onCredits: credits.setCredits,
     feed,
     storeRef,
     commitStore,
@@ -157,6 +168,10 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     setNetwork: setNetworkState,
     setStatus,
     runAgent: agent.runAgent,
+    buyCredits: async () => {
+      const next = await credits.buy()
+      return `Paid — ${next.credits?.paid ?? 0} turns on this address.`
+    },
   })
 
   const renderBlock = useCallback(
@@ -227,7 +242,11 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     status ||
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '') ||
-    (agent.status.enabled ? `${agent.status.model} · early alpha` : 'no agent configured · the direct lane still works')
+    (agent.status.enabled
+      ? credits.enabled
+        ? `${agent.status.model} · ${creditsLine(credits)}`
+        : `${agent.status.model} · early alpha`
+      : 'no agent configured · the direct lane still works')
 
   const sheetRef = useRef<HTMLDetailsElement>(null)
   const closeSheet = useCallback(() => sheetRef.current?.removeAttribute('open'), [])

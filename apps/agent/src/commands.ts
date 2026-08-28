@@ -14,6 +14,7 @@ export type ComposerRoute =
   | { status: 'account-list' }
   | { status: 'network'; network?: LiveNetworkId }
   | { status: 'network-status' }
+  | { status: 'buy' }
   | { status: 'help' }
 
 export interface SlashCommand {
@@ -32,6 +33,7 @@ export const COMMANDS: ReadonlyArray<SlashCommand> = [
   { name: 'wallet', hint: 'connect or switch wallets' },
   { name: 'accounts', hint: 'every connected account, with balances' },
   { name: 'status', hint: 'network health' },
+  { name: 'buy', hint: 'buy agent turns with USDC' },
   { name: 'network', hint: 'switch network', template: '/network mainnet' },
   { name: 'pay', hint: 'draft a payment for your wallet to sign', template: '/pay 0.5 to ' },
   { name: 'asset', hint: 'open an asset by id', template: '/asset ' },
@@ -66,6 +68,8 @@ export function routeComposerInput(input: string): ComposerRoute {
       return { status: 'account-list' }
     case 'status':
       return { status: 'network-status' }
+    case 'buy':
+      return { status: 'buy' }
     case 'help':
       return { status: 'help' }
     case 'network':

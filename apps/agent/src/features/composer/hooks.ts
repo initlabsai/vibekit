@@ -23,6 +23,7 @@ export function useComposer({
   setNetwork,
   setStatus,
   runAgent,
+  buyCredits,
 }: {
   pathname: string
   push: (href: string) => void
@@ -34,6 +35,8 @@ export function useComposer({
   setStatus: (text: string) => void
   /** The agent lane; it says so itself when no agent is configured. */
   runAgent: (sectionId: number, input: string) => Promise<void>
+  /** Buys a credit pack through the wallet; resolves to the line to show. */
+  buyCredits: () => Promise<string>
 }) {
   const { createSection, appendNote } = feed
   const goHome = useCallback(() => {
@@ -116,6 +119,12 @@ export function useComposer({
           return appendNote(sectionId, `You're on ${networkRef.current}. Use "/network localnet|testnet|mainnet" or click the chip to switch.`)
         case 'network-status':
           return void lookups.openNetworkStatus(sectionId)
+        case 'buy':
+          appendNote(sectionId, 'Opening your wallet to pay…')
+          return void buyCredits().then(
+            (line) => appendNote(sectionId, line),
+            (error: unknown) => appendNote(sectionId, `Couldn't buy — ${error instanceof Error ? error.message : String(error)}`, 'error'),
+          )
         case 'help':
           return appendNote(sectionId, HELP)
         case 'ambiguous':
@@ -124,7 +133,7 @@ export function useComposer({
           return void runAgent(sectionId, outcome.text)
       }
     },
-    [appendNote, createSection, goHome, lookups, networkRef, payment, push, runAgent, switchNetwork],
+    [appendNote, buyCredits, createSection, goHome, lookups, networkRef, payment, push, runAgent, switchNetwork],
   )
 
   return { submit, openTarget, switchNetwork, goHome }

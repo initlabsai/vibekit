@@ -14,8 +14,11 @@ import {
   networkOfCall,
 } from '@initlabs/vibekit-explorer/live'
 import { unsignedGroupFromToolResult } from '@initlabs/vibekit-explorer'
+import algosdk from 'algosdk'
 import { z } from 'zod'
 
+import { creditsConfig } from '../credits/config'
+import { spend, TURNS_PER_PACK, type Credits } from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -87,7 +90,7 @@ export async function GET(): Promise<Response> {
   const endpoint = config()
   return Response.json({
     enabled: endpoint !== undefined,
-    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: 'house' as const } : {}),
+    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: creditsConfig() ? ('x402' as const) : ('house' as const) } : {}),
     private: false,
   })
 }
@@ -105,9 +108,23 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!parsed.success) return Response.json({ error: 'Invalid agent request' }, { status: 400 })
   const body = parsed.data
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local'
-  const refused = isProduction() ? chargeTurn(ip) : undefined
-  if (refused) return Response.json({ error: refused }, { status: 429 })
+  // Paid mode charges the wallet's address one turn; house mode rate-limits instead.
+  const pack = creditsConfig()
+  let charged: ({ ok: boolean } & Credits) | undefined
+  if (pack) {
+    const payer = request.headers.get('x-payer') ?? ''
+    if (!algosdk.isValidAddress(payer)) {
+      return Response.json({ error: 'Connect a wallet to talk to the agent — turns are bought per address.' }, { status: 402 })
+    }
+    charged = await spend(payer)
+    if (!charged.ok) {
+      return Response.json({ error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`, credits: charged }, { status: 402 })
+    }
+  } else {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local'
+    const refused = isProduction() ? chargeTurn(ip) : undefined
+    if (refused) return Response.json({ error: refused }, { status: 429 })
+  }
 
   // The one expensive tool reads a program a page (~3k tokens) at a time; the house
   // pays for two pages per turn, which explains a contract, and no more.
@@ -131,6 +148,7 @@ export async function POST(request: Request): Promise<Response> {
     async start(controller) {
       const send = (event: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
       try {
+        if (charged) send({ type: 'credits', credits: { paid: charged.paid, freeLeft: charged.freeLeft } })
         for await (const event of session.stream(input)) {
           if (event.type === 'tool-result') {
             const compose = unsignedGroupFromToolResult(event)
