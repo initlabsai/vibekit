@@ -7,7 +7,7 @@ import {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
 } from '@initlabs/vibekit-explorer'
 
-import { resolvePaymentParties, routeComposerInput } from './commands.js'
+import { matchCommands, resolvePaymentParties, routeComposerInput } from './commands.js'
 
 describe('web composer routing', () => {
   test('identifiers route deterministically', () => {
@@ -27,19 +27,32 @@ describe('web composer routing', () => {
     expect(routeComposerInput('alice.algo')).toEqual({ status: 'account-name', name: 'alice.algo' })
   })
 
-  test('app words: nav, network, help, account list', () => {
-    expect(routeComposerInput('wallet')).toEqual({ status: 'nav', screen: 'wallet' })
-    expect(routeComposerInput('my assets')).toEqual({ status: 'nav', screen: 'assets' })
-    expect(routeComposerInput('list my txns')).toEqual({ status: 'nav', screen: 'txns' })
-    expect(routeComposerInput('blocks')).toEqual({ status: 'nav', screen: 'blocks' })
-    expect(routeComposerInput('show me my accounts')).toEqual({ status: 'account-list' })
-    expect(routeComposerInput('network')).toEqual({ status: 'network' })
-    expect(routeComposerInput('NETWORK TestNet')).toEqual({ status: 'network', network: 'testnet' })
-    expect(routeComposerInput('help')).toEqual({ status: 'help' })
-    expect(routeComposerInput("what's my balance?")).toEqual({
-      status: 'text',
-      text: "what's my balance?",
-    })
+  test('slash commands: nav, network, status, help, account list', () => {
+    expect(routeComposerInput('/wallet')).toEqual({ status: 'nav', screen: 'wallet' })
+    expect(routeComposerInput('/assets')).toEqual({ status: 'nav', screen: 'assets' })
+    expect(routeComposerInput('/blocks')).toEqual({ status: 'nav', screen: 'blocks' })
+    expect(routeComposerInput('/accounts')).toEqual({ status: 'account-list' })
+    expect(routeComposerInput('/status')).toEqual({ status: 'network-status' })
+    expect(routeComposerInput('/network')).toEqual({ status: 'network' })
+    expect(routeComposerInput('/NETWORK TestNet')).toEqual({ status: 'network', network: 'testnet' })
+    expect(routeComposerInput('/help')).toEqual({ status: 'help' })
+    expect(routeComposerInput('/asset 1042')).toEqual({ status: 'asset', assetId: 1042 })
+    expect(routeComposerInput('/pay 1.5 to ' + FIXTURE_RECEIVER)).toEqual({ status: 'payment', amountMicroAlgos: 1500000, to: FIXTURE_RECEIVER })
+  })
+
+  test('bare words go to the agent; pasted ids never do', () => {
+    expect(routeComposerInput('apps')).toEqual({ status: 'text', text: 'apps' })
+    expect(routeComposerInput('blocks')).toEqual({ status: 'text', text: 'blocks' })
+    expect(routeComposerInput("what's my balance?")).toEqual({ status: 'text', text: "what's my balance?" })
+    expect(routeComposerInput('/nonsense')).toEqual({ status: 'text', text: 'nonsense' })
+    expect(routeComposerInput('alice.algo')).toEqual({ status: 'account-name', name: 'alice.algo' })
+  })
+
+  test('the palette filters by prefix and closes once arguments start', () => {
+    expect(matchCommands('/').length).toBeGreaterThan(5)
+    expect(matchCommands('/a').map((c) => c.name)).toEqual(['assets', 'apps', 'accounts', 'asset', 'app'])
+    expect(matchCommands('/network ')).toEqual([])
+    expect(matchCommands('apps')).toEqual([])
   })
 
   test('pay routes with or without a receiver', () => {

@@ -7,51 +7,73 @@ import {
   type LiveNetworkId,
 } from '@initlabs/vibekit-explorer'
 
-/** The composer's deterministic lane: the app's own words first, then the shared Explorer routes. */
+/** The composer's deterministic lane: slash commands, then the shared Explorer routes for pasted ids. */
 export type ComposerRoute =
   | ExplorerComposerRoute
   | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: LiveNetworkId }
+  | { status: 'network-status' }
   | { status: 'help' }
 
-function isMineQuery(word: string, noun: string): boolean {
-  const stripped = word.replace(/[?.!]+$/g, '').trim()
-  const alt =
-    noun === 'apps'
-      ? 'applications'
-      : noun === 'txns'
-        ? 'transactions'
-        : noun === 'accounts'
-          ? 'wallets'
-          : noun
-  const names = noun === alt ? noun : `${noun}|${alt}`
-  return (
-    stripped === noun ||
-    stripped === alt ||
-    stripped === `my ${noun}` ||
-    stripped === `my ${alt}` ||
-    new RegExp(`^(show|list|see)(\\s+me)?(\\s+(my|the))?\\s+(${names})$`).test(stripped)
-  )
+export interface SlashCommand {
+  name: string
+  hint: string
+  /** What Enter puts in the composer when the command wants arguments; absent means run at once. */
+  template?: string
+}
+
+/** Every `/` command, in palette order; `/help` lists the same array. */
+export const COMMANDS: ReadonlyArray<SlashCommand> = [
+  { name: 'assets', hint: 'your assets' },
+  { name: 'apps', hint: 'your applications' },
+  { name: 'txns', hint: 'your transactions' },
+  { name: 'blocks', hint: 'follow the chain' },
+  { name: 'wallet', hint: 'connect or switch wallets' },
+  { name: 'accounts', hint: 'every connected account, with balances' },
+  { name: 'status', hint: 'network health' },
+  { name: 'network', hint: 'switch network', template: '/network mainnet' },
+  { name: 'pay', hint: 'draft a payment for your wallet to sign', template: '/pay 0.5 to ' },
+  { name: 'asset', hint: 'open an asset by id', template: '/asset ' },
+  { name: 'app', hint: 'open an application by id', template: '/app ' },
+  { name: 'block', hint: 'open a block by round', template: '/block ' },
+  { name: 'help', hint: 'this list' },
+]
+
+/** Commands whose name starts with what follows the slash; everything while the input is just `/`. */
+export function matchCommands(input: string): ReadonlyArray<SlashCommand> {
+  if (!input.startsWith('/') || /\s/.test(input)) return []
+  const prefix = input.slice(1).toLowerCase()
+  return COMMANDS.filter((command) => command.name.startsWith(prefix))
 }
 
 export function routeComposerInput(input: string): ComposerRoute {
   const trimmed = input.trim()
-  const shared = routeExplorerComposerInput(trimmed)
-  if (shared.status !== 'text') return shared
-  const word = trimmed.toLowerCase()
-  if (word === 'accounts' || word === 'wallet') return { status: 'nav', screen: 'wallet' }
-  if (isMineQuery(word, 'assets')) return { status: 'nav', screen: 'assets' }
-  if (isMineQuery(word, 'apps')) return { status: 'nav', screen: 'apps' }
-  if (isMineQuery(word, 'txns')) return { status: 'nav', screen: 'txns' }
-  if (word === 'blocks' || word === 'live' || word === 'tail')
-    return { status: 'nav', screen: 'blocks' }
-  if (isMineQuery(word, 'accounts')) return { status: 'account-list' }
-  if (word === 'network') return { status: 'network' }
-  const networkMatch = /^network\s+(localnet|testnet|mainnet)$/.exec(word)
-  if (networkMatch) return { status: 'network', network: networkMatch[1] as LiveNetworkId }
-  if (word === 'help' || word === '?') return { status: 'help' }
-  return shared
+  if (!trimmed.startsWith('/')) {
+    // Pasted ids, names, and `pay …` stay deterministic; any other words go to the agent.
+    return routeExplorerComposerInput(trimmed)
+  }
+  const [word = '', ...rest] = trimmed.slice(1).toLowerCase().split(/\s+/)
+  const arg = rest.join(' ')
+  switch (word) {
+    case 'assets':
+    case 'apps':
+    case 'txns':
+    case 'blocks':
+    case 'wallet':
+      return { status: 'nav', screen: word }
+    case 'accounts':
+      return { status: 'account-list' }
+    case 'status':
+      return { status: 'network-status' }
+    case 'help':
+      return { status: 'help' }
+    case 'network':
+      return arg === 'localnet' || arg === 'testnet' || arg === 'mainnet' ? { status: 'network', network: arg } : { status: 'network' }
+    default:
+      // `/pay …`, `/asset 31566704`, `/app …`, `/block …` are the shared routes without the slash.
+      return routeExplorerComposerInput(trimmed.slice(1))
+  }
 }
 
 /** A connected wallet account as the composer can name it. */
@@ -91,5 +113,4 @@ export function resolvePaymentParties(args: {
   return { error: `No connected account named "${to}" — use a wallet label or an address` }
 }
 
-export const HELP =
-  'pay 0.5 to <address> · asset 31566704 · app 1002541853 · block 1000 · network testnet · paste a txid or address'
+export const HELP = `${COMMANDS.map((command) => `/${command.name} — ${command.hint}`).join('\n')}\npaste a txid, address, name.algo, or numeric id to open it; anything else goes to the agent`

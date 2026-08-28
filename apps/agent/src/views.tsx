@@ -1,7 +1,7 @@
 /** The empty feed: the companion says hello, as one of her own messages. */
 import { CompanionFace } from './features/profile/companion'
 
-const EXAMPLES = ['what is asset 31566704?', 'who is algorand.algo?', 'blocks', 'pay 0.5 to <address>']
+const EXAMPLES = ['what is asset 31566704?', 'who is algorand.algo?', '/status', '/pay 0.5 to <address>']
 
 export function Welcome({ onSubmit }: { onSubmit: (raw: string) => void }) {
   return (

@@ -18,7 +18,7 @@ export function FeedScreen() {
         <Welcome
           onSubmit={(raw) =>
             raw.includes('<address>')
-              ? setStatus('Type pay 0.5 to <an address or wallet label> — a connected wallet signs it.')
+              ? setStatus('Type /pay 0.5 to <an address or wallet label> — a connected wallet signs it.')
               : submit(raw)
           }
         />

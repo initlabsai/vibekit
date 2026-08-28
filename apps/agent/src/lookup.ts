@@ -287,6 +287,16 @@ export function useLookups({
     [host, lookupById, storeRef],
   )
 
+  const openNetworkStatus = useCallback(
+    (sectionId: number) =>
+      lookupById(sectionId, {
+        label: 'network status',
+        view: 'network.status',
+        run: () => host().callTool('get_network_status', {}),
+      }),
+    [host, lookupById],
+  )
+
   const openTransactions = useCallback(
     (sectionId: number, filter: TransactionSearchFilter) => {
       const label = filter.address
@@ -375,6 +385,7 @@ export function useLookups({
     openApplication,
     openGroup,
     openBlock,
+    openNetworkStatus,
     openTransactions,
     openAmbiguous,
   }

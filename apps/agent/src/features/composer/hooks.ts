@@ -111,7 +111,9 @@ export function useComposer({
           return void lookups.openBlock(sectionId, outcome.round)
         case 'network':
           if (outcome.network) return switchNetwork(outcome.network, sectionId)
-          return appendNote(sectionId, `You're on ${networkRef.current}. Use "network localnet|testnet|mainnet" or click the chip to switch.`)
+          return appendNote(sectionId, `You're on ${networkRef.current}. Use "/network localnet|testnet|mainnet" or click the chip to switch.`)
+        case 'network-status':
+          return void lookups.openNetworkStatus(sectionId)
         case 'help':
           return appendNote(sectionId, HELP)
         case 'ambiguous':

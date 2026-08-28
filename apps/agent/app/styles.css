@@ -340,7 +340,7 @@ a.button-active { text-decoration: underline; }
   .nfd-facts .fact:nth-child(odd), .nfd-facts .fact:nth-child(even) { border-left: 0; padding-left: 0; padding-right: 0; }
 }
 
-.note { color: var(--faint); font-family: var(--font-mono); font-size: .76rem; margin: 0; padding-left: .8rem; }
+.note { color: var(--faint); font-family: var(--font-mono); font-size: .76rem; margin: 0; padding-left: .8rem; white-space: pre-line; }
 .note-error { color: var(--red); }
 /* Her reply sits in the transcript as prose; the face alone marks the speaker. */
 .note-agent { align-items: flex-start; display: flex; gap: 1.1rem; margin: .65rem 0 .9rem; padding: .85rem .45rem 1rem; }
@@ -424,3 +424,11 @@ a.button-active { text-decoration: underline; }
 .net-foot { color: var(--muted); display: flex; font-family: var(--font-mono); font-size: .72rem; gap: 1rem; justify-content: space-between; margin: .8rem 0 0; }
 .net-foot b { color: var(--text); font-weight: 500; }
 .net-version { color: var(--faint); }
+
+/* The slash palette: commands above the composer, the active one in brass. */
+.palette { background: var(--card); border: 1px solid var(--border-soft); border-bottom: 0; list-style: none; margin-bottom: 0; max-height: 14rem; overflow-y: auto; padding: .3rem 0; }
+.palette li { cursor: pointer; display: flex; font-family: var(--font-mono); font-size: .8rem; gap: 1rem; padding: .3rem .9rem; }
+.palette li.on { background: color-mix(in srgb, var(--brass) 12%, transparent); }
+.palette-name { color: var(--brass); min-width: 7rem; }
+.palette li.on .palette-name { color: var(--brass-bright); }
+.palette-hint { color: var(--muted); }

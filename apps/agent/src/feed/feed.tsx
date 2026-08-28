@@ -1,9 +1,10 @@
 'use client'
 
 /** The transcript as DOM: the session nav, the feed of sections, and the composer. */
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 
 import { CompanionFace, moodFor } from '../features/profile/companion'
+import { matchCommands } from '../commands'
 import { Button } from '../primitives'
 import type { Section, SectionBlock } from './hooks'
 
@@ -159,22 +160,70 @@ export function Composer({
   placeholder: string
 }) {
   const [input, setInput] = useState('')
+  const [cursor, setCursor] = useState(0)
+  const matches = matchCommands(input)
+  const active = matches[Math.min(cursor, matches.length - 1)]
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (input.trim() === '') return
     onSubmit(input)
     setInput('')
   }
+  /** Enter on a listed command runs it, or fills its template and keeps typing. */
+  const pick = (command: (typeof matches)[number]) => {
+    if (command.template) {
+      setInput(command.template)
+      return
+    }
+    onSubmit(`/${command.name}`)
+    setInput('')
+  }
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (matches.length === 0) return
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      setCursor((current) => (current + (event.key === 'ArrowDown' ? 1 : matches.length - 1)) % matches.length)
+    } else if ((event.key === 'Enter' || event.key === 'Tab') && active) {
+      event.preventDefault()
+      pick(active)
+    } else if (event.key === 'Escape') {
+      setInput('')
+    }
+  }
   return (
     <footer className="composer-wrap">
+      {matches.length > 0 ? (
+        <ul className="palette" role="listbox" aria-label="Commands">
+          {matches.map((command) => (
+            <li
+              key={command.name}
+              role="option"
+              aria-selected={command === active}
+              className={command === active ? 'on' : undefined}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                pick(command)
+              }}
+            >
+              <span className="palette-name">/{command.name}</span>
+              <span className="palette-hint">{command.hint}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <form className="composer" onSubmit={submit}>
         <span>›</span>
         <input
           autoFocus
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={(event) => {
+            setInput(event.target.value)
+            setCursor(0)
+          }}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label="Explorer composer"
+          aria-expanded={matches.length > 0}
           autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other"
         />
         <Button type="submit" label="send" />
