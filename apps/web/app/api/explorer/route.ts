@@ -19,7 +19,7 @@ import {
 } from '@initlabs/vibekit-explorer/live'
 import { z } from 'zod'
 
-import { isProduction, MissingEndpointsError, networkConfigFromEnv } from './endpoints'
+import { MissingEndpointsError, networkConfigFromEnv } from './endpoints'
 
 export const runtime = 'nodejs'
 export const maxDuration = 15
@@ -122,8 +122,10 @@ function enrichmentFor(network: LiveNetworkId): EnrichmentHost {
   return host
 }
 
+/** The probe's network when the query names none: the same default the page opens on. */
 function defaultNetwork(): LiveNetworkId {
-  return isProduction() ? 'testnet' : 'localnet'
+  const configured = process.env.NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK
+  return configured === 'localnet' || configured === 'testnet' ? configured : 'mainnet'
 }
 
 function fail(status: number, error: string): Response {

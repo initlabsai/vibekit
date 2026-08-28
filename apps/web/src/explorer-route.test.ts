@@ -77,18 +77,20 @@ afterEach(() => {
 })
 
 describe('explorer route', () => {
-  test('probes with GET and defaults to localnet outside production', async () => {
+  test('probes with GET and defaults to mainnet', async () => {
     const response = await GET(new Request('http://x/api/explorer'))
-    expect(await response.json()).toEqual({ network: 'localnet', live: true, round: 7 })
+    expect(await response.json()).toEqual({ network: 'mainnet', live: true, round: 7 })
   })
 
   test('one host per network; localnet and mainnet do not share one', async () => {
     await post({ action: 'status-round', network: 'localnet' })
     await post({ action: 'status-round', network: 'mainnet' })
     await post({ action: 'status-round', network: 'mainnet' })
-    expect(created.filter((c) => c === 'localnet').length).toBeGreaterThanOrEqual(0)
-    const mainnetHosts = created.filter((c) => c === 'mainnet' || (c as { id?: string })?.id === 'mainnet')
-    expect(mainnetHosts).toHaveLength(1)
+    // The GET probe above may already have built mainnet; three calls never build more than one per network.
+    const byNetwork = (network: string) =>
+      created.filter((c) => c === network || (c as { id?: string })?.id === network).length
+    expect(byNetwork('localnet')).toBe(1)
+    expect(byNetwork('mainnet')).toBeLessThanOrEqual(1)
   })
 
   test('unknown tool names are 400, not 502', async () => {
