@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
+import { ShellMount } from '../src/shell-mount'
 import './styles.css'
 
 export const metadata: Metadata = {
   title: 'VibeKit Explorer',
-  description: 'Algorand Explorer: sample-backed reads, a compose-only live write flow',
+  description: 'Algorand Explorer: live reads, a compose-only write flow, your wallet signs',
 }
 
-/** Fonts and tokens only; the Explorer itself mounts from `page.tsx`. */
+/** Fonts and tokens; the shell (top bar, session nav, composer) persists across every route. */
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ShellMount>{children}</ShellMount>
+      </body>
     </html>
   )
 }

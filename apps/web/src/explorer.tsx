@@ -1,50 +1,92 @@
 'use client'
 
 /**
- * The web Explorer as a chat-first transcript: a session index on the left,
- * a feed on the right where each request's cards and notes accrete, and the
- * composer below. This component is the composition root — the feed, the
- * network, lookups, and the write flow each live in their own hook; the
- * genuinely shared state (result store, busy flag, status line) stays here.
+ * The web Explorer's shell: top bar, session index, the route's screen, and
+ * the composer, persisting across every URL. `/` is the transcript; the
+ * other routes are screens over the same store. This component is the
+ * composition root — the feed, the network, lookups, and the write flow
+ * each live in their own hook; the genuinely shared state (result store,
+ * busy flag, status line) stays here and reaches screens through
+ * `useExplorer`.
  */
 import {
   createFixtureResultStore,
   createWriteFlowViewModel,
   type ResultStore,
 } from '@initlabs/vibekit-explorer'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { HELP, routeComposerInput } from './commands'
 import { EnrichmentProvider } from './enrich'
 import { RoundPulse } from './features/network/pulse'
-import { Composer, FeedPane, NavPane } from './feed/feed'
-import { useFeed, type SectionBlock } from './feed/hooks'
-import { defaultNetwork, NETWORKS, useNetwork } from './features/network/hooks'
+import { Composer, NavPane } from './feed/feed'
+import { useFeed, type Feed, type SectionBlock } from './feed/hooks'
+import { defaultNetwork, NETWORKS, useNetwork, type ExplorerHost } from './features/network/hooks'
 import { NfdCard } from './features/plugins/nfd-card'
-import { WalletScreen } from './features/wallet/screen'
 import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
 import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
+import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
 import { Button, CopyContext } from './primitives'
-import type { NfdProfile } from './remote-host'
+import type { NfdProfile, RemoteExplorerHost } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
-import { Welcome } from './views'
-import { useWalletLane, WalletRoot } from './wallet/provider'
+import { useWalletLane, WalletRoot, type WalletLane } from './wallet/provider'
 
-type Screen = 'chat' | 'wallet'
+/** What a screen can reach: the store, the hosts, the wallet, the transcript, and the lanes. */
+export interface ExplorerContextValue {
+  store: Store
+  storeRef: { current: Store }
+  commitStore: (next: Store) => void
+  host: () => ExplorerHost
+  remoteHost: RemoteExplorerHost
+  live: 'probing' | boolean
+  network: LiveNetworkId
+  latestRound: number | undefined
+  wallet: WalletLane
+  activeAddress: string | undefined
+  feed: Feed
+  busy: boolean
+  openTarget: (target: OpenTarget) => void
+  submit: (raw: string) => void
+  setStatus: (text: string) => void
+  renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
+}
 
-/** The page mounts this inside the wallet provider, client-only. */
-export function Explorer() {
+const ExplorerContext = createContext<ExplorerContextValue | null>(null)
+
+export function useExplorer(): ExplorerContextValue {
+  const value = useContext(ExplorerContext)
+  if (!value) throw new Error('useExplorer needs the Explorer shell above it')
+  return value
+}
+
+const TABS = [
+  { href: '/', label: 'explore' },
+  { href: '/assets', label: 'assets' },
+  { href: '/apps', label: 'apps' },
+  { href: '/txns', label: 'txns' },
+  { href: '/blocks', label: 'blocks' },
+] as const
+
+/** The layout mounts this inside the wallet provider, client-only. */
+export function ExplorerShell({ children }: { children: ReactNode }) {
   return (
     <WalletRoot>
-      <ExplorerApp />
+      <ExplorerApp>{children}</ExplorerApp>
     </WalletRoot>
   )
 }
 
-function ExplorerApp() {
+function ExplorerApp({ children }: { children: ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const goHome = useCallback(() => {
+    if (pathname !== '/') router.push('/')
+  }, [pathname, router])
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
   const storeRef = useRef(store)
   storeRef.current = store
@@ -59,17 +101,19 @@ function ExplorerApp() {
     setBusyState(next)
   }, [])
   const [status, setStatus] = useState('')
-  const [screen, setScreen] = useState<Screen>('chat')
   const newId = useCallback((prefix: string) => `${prefix}-${crypto.randomUUID()}`, [])
 
   const [network, setNetworkState] = useState(defaultNetwork)
   const wallet = useWalletLane(network)
   const { accounts, activeAddress, signDraft } = wallet
-  const [tailing, setTailing] = useState(false)
-  const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({ signDraft, network, tailing })
+  const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({
+    signDraft,
+    network,
+    tailing: pathname === '/blocks',
+  })
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed()
-  const { sections, selectedId, selectSection, createSection, appendNote, toggleCollapsed } = feed
+  const { sections, selectedId, selectSection, createSection, appendNote } = feed
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
@@ -96,7 +140,7 @@ function ExplorerApp() {
 
   const openTarget = useCallback(
     (target: OpenTarget) => {
-      setScreen('chat')
+      goHome()
       switch (target.kind) {
         case 'transaction':
           return void lookups.openTransaction(createSection(target.txid), target.txid)
@@ -114,22 +158,15 @@ function ExplorerApp() {
           return void lookups.openTransactions(createSection('transactions'), target.filter)
       }
     },
-    [createSection, lookups],
+    [createSection, goHome, lookups],
   )
 
   const submit = useCallback(
     (raw: string) => {
       const outcome = routeComposerInput(raw)
-      setScreen('chat')
-      if (outcome.status === 'nav') {
-        if (outcome.screen === 'wallet') return setScreen('wallet')
-        const sectionId = createSection(raw.trim())
-        if (outcome.screen === 'blocks') return void lookups.openRecentBlocks(sectionId)
-        if (!activeAddress) return appendNote(sectionId, 'Connect a wallet to see its assets, apps, and transactions.')
-        if (outcome.screen === 'assets') return void lookups.openHoldings(sectionId, activeAddress)
-        if (outcome.screen === 'txns') return void lookups.openTransactions(sectionId, { address: activeAddress })
-        return appendNote(sectionId, 'App lookups take an id: `app 1002541853`.')
-      }
+      // A screen's name is a route; everything else lands in the transcript.
+      if (outcome.status === 'nav') return router.push(`/${outcome.screen}`)
+      goHome()
       const sectionId = createSection(raw.trim())
       switch (outcome.status) {
         case 'payment':
@@ -161,7 +198,7 @@ function ExplorerApp() {
           return appendNote(sectionId, 'No agent configured. Paste an id, or `pay 0.5 to <address>`.', 'error')
       }
     },
-    [activeAddress, appendNote, createSection, lookups, networkRef, payment, switchNetwork],
+    [appendNote, createSection, goHome, lookups, networkRef, payment, router, switchNetwork],
   )
 
   const renderBlock = useCallback(
@@ -175,7 +212,6 @@ function ExplorerApp() {
               onOpen={openTarget}
               onMore={() => lookups.loadMore(sectionId, itemId, block.view)}
               loadingMore={lookups.loadingMore === itemId}
-              tailing={lookups.isTailing(itemId) && live === true}
             />
           )
         case 'write': {
@@ -212,11 +248,6 @@ function ExplorerApp() {
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
     payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
-  useEffect(() => setTailing(lookups.tailing), [lookups.tailing])
-  // The blocks tail follows the round chip.
-  useEffect(() => {
-    if (latestRound !== undefined && live === true) void lookups.tailBlocks(latestRound)
-  }, [latestRound, live, lookups])
   const announceCopy = useCallback((text: string) => setStatus(`copied ${shorten(text, 28)}`), [])
   // `/` jumps to the composer from anywhere; Esc returns to the feed.
   useEffect(() => {
@@ -227,21 +258,44 @@ function ExplorerApp() {
         event.preventDefault()
         document.querySelector<HTMLInputElement>('.composer input')?.focus()
       } else if (event.key === 'Escape' && !approval) {
-        setScreen('chat')
+        goHome()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [approval])
+  }, [approval, goHome])
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
   const statusLine =
     status ||
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
 
+  const context = useMemo<ExplorerContextValue>(
+    () => ({
+      store,
+      storeRef,
+      commitStore,
+      host,
+      remoteHost,
+      live,
+      network,
+      latestRound,
+      wallet,
+      activeAddress,
+      feed,
+      busy,
+      openTarget,
+      submit,
+      setStatus,
+      renderBlock,
+    }),
+    [activeAddress, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
+  )
+
   return (
     <EnrichmentProvider host={remoteHost} live={live === true}>
     <CopyContext.Provider value={announceCopy}>
+    <ExplorerContext.Provider value={context}>
     <main className="shell">
       <header className="top">
         <div className="top-row">
@@ -263,39 +317,29 @@ function ExplorerApp() {
             <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
               {network}
             </button>
-            <Button
-              label={activeAddress ? `▸ ${wallet.activeName ?? shorten(activeAddress, 12)}` : '▸ no wallet'}
-              active={screen === 'wallet'}
-              onPress={() => setScreen('wallet')}
-            />
+            <Link href="/wallet" className={`button${pathname === '/wallet' ? ' button-active' : ''}`}>
+              {activeAddress ? `▸ ${wallet.activeName ?? shorten(activeAddress, 12)}` : '▸ no wallet'}
+            </Link>
           </span>
         </div>
         <nav className="top-row tabs">
-          <Button label="explore" active={screen === 'chat'} onPress={() => setScreen('chat')} />
-          {(['assets', 'apps', 'txns', 'blocks'] as const).map((tab) => (
-            <Button key={tab} label={tab} onPress={() => submit(tab)} />
+          {TABS.map((tab) => (
+            <Link key={tab.href} href={tab.href} className={`button${pathname === tab.href ? ' button-active' : ''}`}>
+              {tab.label}
+            </Link>
           ))}
         </nav>
       </header>
       <div className="body">
-        <NavPane sections={sections} selectedId={selectedId} onSelect={selectSection} />
-        {screen === 'wallet' ? (
-          <WalletScreen
-            lane={wallet}
-            network={network}
-            onOpenAccount={(address) => openTarget({ kind: 'account', address })}
-            onListAccounts={() => submit('list my accounts')}
-            onError={setStatus}
-          />
-        ) : (
-          <FeedPane
-            sections={sections}
-            selectedId={selectedId}
-            renderBlock={renderBlock}
-            onToggle={toggleCollapsed}
-            empty={<Welcome onSubmit={(raw) => (raw.includes('<address>') ? setStatus('Type pay 0.5 to <an address or wallet label> — a connected wallet signs it.') : submit(raw))} />}
-          />
-        )}
+        <NavPane
+          sections={sections}
+          selectedId={selectedId}
+          onSelect={(id) => {
+            goHome()
+            selectSection(id)
+          }}
+        />
+        {children}
       </div>
       <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
       {approval ? (
@@ -308,6 +352,7 @@ function ExplorerApp() {
         />
       ) : null}
     </main>
+    </ExplorerContext.Provider>
     </CopyContext.Provider>
     </EnrichmentProvider>
   )

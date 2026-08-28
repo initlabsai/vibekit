@@ -1,0 +1,65 @@
+/** One record a screen owns outside the transcript: fetched on demand, paged in place. */
+import {
+  addResult,
+  loadNextPage,
+  type StructuredResult,
+  type TrustedViewId,
+  type ViewSpec,
+} from '@initlabs/vibekit-explorer'
+import { useCallback, useState } from 'react'
+
+import { useExplorer } from './explorer'
+import { viewFor } from './lookup'
+import { errorMessage } from './theme'
+
+export function useScreenRecord() {
+  const { storeRef, commitStore, host, network } = useExplorer()
+  const [view, setView] = useState<ViewSpec | undefined>(undefined)
+  const [error, setError] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const run = useCallback(
+    async (viewId: TrustedViewId, fetch: () => Promise<StructuredResult>) => {
+      setLoading(true)
+      setError(undefined)
+      try {
+        const record = await fetch()
+        commitStore(addResult(storeRef.current, record))
+        setView(viewFor(record, viewId))
+      } catch (caught) {
+        setView(undefined)
+        setError(errorMessage(caught))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [commitStore, storeRef],
+  )
+
+  const more = useCallback(async () => {
+    if (!view || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const merged = await loadNextPage({
+        host: host(),
+        current: storeRef.current.find((record) => record.resultId === view.source.id),
+        view: view.view,
+        identity: {
+          resultId: `result-page-${crypto.randomUUID()}`,
+          toolCallId: `tool-call-page-${crypto.randomUUID()}`,
+          network,
+        },
+      })
+      if (!merged) return
+      commitStore(addResult(storeRef.current, merged))
+      setView(viewFor(merged, view.view))
+    } catch (caught) {
+      setError(errorMessage(caught))
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [commitStore, host, loadingMore, network, storeRef, view])
+
+  return { view, error, loading, loadingMore, run, more, clear: () => setView(undefined) }
+}
