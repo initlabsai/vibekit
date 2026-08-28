@@ -44,18 +44,37 @@ export function useWalletLane(network: LiveNetworkId) {
   const { activeNetwork, setActiveNetwork } = useWalletNetwork()
   const [networkError, setNetworkError] = useState<string | undefined>(undefined)
 
+  // A purchase pins the wallet to the pack's chain for its duration; the chip never moves.
+  const pinnedRef = useRef<LiveNetworkId | undefined>(undefined)
+  const wanted = pinnedRef.current ?? network
+
   // The Explorer's network is the source of truth; the wallet follows it or says why not.
   useEffect(() => {
-    if (!wallet.isReady || activeNetwork === network) {
+    if (!wallet.isReady || activeNetwork === wanted) {
       setNetworkError(undefined)
       return
     }
-    setActiveNetwork(network).then(
+    setActiveNetwork(wanted).then(
       () => setNetworkError(undefined),
       (error: unknown) =>
         setNetworkError(`Wallet is on ${activeNetwork}; Explorer is on ${network} — ${error instanceof Error ? error.message : String(error)}`),
     )
-  }, [activeNetwork, network, setActiveNetwork, wallet.isReady])
+  }, [activeNetwork, wanted, setActiveNetwork, wallet.isReady])
+
+  /** Runs `task` with the wallet on `chain`, then returns it to the Explorer's network. */
+  const withWalletNetwork = useCallback(
+    async <T,>(chain: LiveNetworkId, task: () => Promise<T>): Promise<T> => {
+      pinnedRef.current = chain
+      try {
+        if (manager.activeNetwork !== chain) await setActiveNetwork(chain)
+        return await task()
+      } finally {
+        pinnedRef.current = undefined
+        if (manager.activeNetwork !== network) await setActiveNetwork(network).catch(() => undefined)
+      }
+    },
+    [network, setActiveNetwork],
+  )
 
   // One wallet at a time. Sessions persist in the browser, so a second one connected before
   // that rule existed would still be here; the active wallet stays, the rest are dropped.
@@ -103,6 +122,7 @@ export function useWalletLane(network: LiveNetworkId) {
     activeName: wallet.activeAccount?.name,
     signDraft,
     signTransactions,
+    withWalletNetwork,
     networkError,
   }
 }

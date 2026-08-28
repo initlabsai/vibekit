@@ -141,7 +141,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
-  const credits = useCredits({ activeAddress, network, signTransactions: wallet.signTransactions })
+  const credits = useCredits({ activeAddress, signTransactions: wallet.signTransactions, withWalletNetwork: wallet.withWalletNetwork })
   const agent = useAgentLane({
     onCredits: credits.setCredits,
     feed,
