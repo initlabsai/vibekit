@@ -89,3 +89,20 @@ in `AGENTS.md`.
   redeploy, check `GET /api/credits` with the bearer). Cross-device access to
   an address's turns (the bearer token is per browser) is deferred until there
   is a real session backend.
+
+- **Agent: a credit can be lost between settlement and the ledger.** The
+  facilitator settles the USDC transfer inside the same Vercel invocation that
+  credits the payer; if the function dies in between, the money moved and the
+  turns did not. Seen once on 2026-08-28 at the default 10s timeout (Safari:
+  "Load failed" after Pera signed). `maxDuration = 60` on the credits route
+  and a client that keeps its token and re-reads the balance make it rare;
+  they do not make it impossible.
+
+  Before mainnet, add `POST /api/credits/claim { txid }`: look the transaction
+  up on the house's own indexer, require an asset transfer of the configured
+  asset and a whole number of per-turn amounts to `X402_PAY_TO` with the
+  `x402-payment-v2-` note, refuse a txid already claimed (KV `claimed:<txid>`),
+  then credit the sender and bind the caller's `x-credit-token`. The receipt
+  txid the wallet shows is then always enough to recover. About sixty lines
+  and one test; the pieces (`ipOf`, `bindToken`, `credit`, the indexer host)
+  already exist.
