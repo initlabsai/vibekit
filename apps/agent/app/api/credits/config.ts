@@ -1,5 +1,5 @@
 /** Where a credit pack is paid: the house USDC address, the price, and the chain — mainnet in production, testnet in `next dev`. */
-import { ALGORAND_MAINNET_CAIP2, ALGORAND_TESTNET_CAIP2, USDC_DECIMALS, USDC_MAINNET_ASA_ID, USDC_TESTNET_ASA_ID } from '@x402/avm'
+import { ALGORAND_MAINNET_GENESIS_HASH, ALGORAND_TESTNET_GENESIS_HASH, USDC_DECIMALS, USDC_MAINNET_ASA_ID, USDC_TESTNET_ASA_ID } from '@x402/avm'
 import type { Network } from '@x402/next'
 
 import { isProduction } from '../explorer/endpoints'
@@ -38,6 +38,8 @@ export function creditsConfig(): CreditsConfig | undefined {
     price: formatUsdc(priceMicroUsdc),
     asset: /^\d+$/.test(process.env.X402_ASSET_ID ?? '') ? process.env.X402_ASSET_ID! : chain === 'mainnet' ? USDC_MAINNET_ASA_ID : USDC_TESTNET_ASA_ID,
     chain,
-    network: (chain === 'mainnet' ? ALGORAND_MAINNET_CAIP2 : ALGORAND_TESTNET_CAIP2) as Network,
+    // The facilitator advertises `algorand:<full genesis hash>`, and core matches that string
+    // exactly; the AVM schemes accept either form, so the long one is the one that works end to end.
+    network: `algorand:${chain === 'mainnet' ? ALGORAND_MAINNET_GENESIS_HASH : ALGORAND_TESTNET_GENESIS_HASH}` as Network,
   }
 }

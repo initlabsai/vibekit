@@ -39,7 +39,7 @@ describe('credits route', () => {
     process.env.AGENT_BILLING = 'x402'
     const body = await (await credits.GET(new NextRequest(`http://local/api/credits?payer=${FIXTURE_SENDER}`))).json()
     expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, credits: { paid: 0, freeLeft: ledger.FREE_TURNS } })
-    expect(body.network).toMatch(/^algorand:/)
+    expect(body.network).toBe('algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=')
   })
 })
 
