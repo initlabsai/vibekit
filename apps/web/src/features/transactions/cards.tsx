@@ -308,7 +308,8 @@ export function TransactionListCard({
             .filter(Boolean)
             .join(' ')
         }
-        onOpen={onOpen ? ({ row }) => row.id && onOpen(row.id) : undefined}
+        // Inner rows carry no id of their own; opening one opens the transaction it lives in.
+        onOpen={onOpen ? ({ row, parent }) => onOpen(row.id ?? parent.id ?? '') : undefined}
       />
       {viaInner > 0 && innerType ? (
         <FooterNote text={`* ${viaInner} app call${viaInner === 1 ? '' : 's'} matched through inner ${formatBlockTxnType(innerType)} txns`} />

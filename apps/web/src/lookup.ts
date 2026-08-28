@@ -134,7 +134,9 @@ export function useLookups({
 
   const openTransaction = useCallback(
     (sectionId: number, txid: string) =>
-      lookupById(sectionId, {
+      txid === ''
+        ? (appendNote(sectionId, 'That row has no transaction id of its own.', 'error'), Promise.resolve())
+        : lookupById(sectionId, {
         label: txid.slice(0, 8),
         view: 'transaction.detail',
         failure: "Couldn't find that transaction",
@@ -146,7 +148,7 @@ export function useLookups({
             : undefined
         },
       }),
-    [host, lookupById, storeRef],
+    [appendNote, host, lookupById, storeRef],
   )
 
   const openAccount = useCallback(
@@ -163,7 +165,7 @@ export function useLookups({
             : undefined
         },
       }),
-    [host, lookupById, storeRef],
+    [appendNote, host, lookupById, storeRef],
   )
 
   const openAccountName = useCallback(
