@@ -21,6 +21,8 @@ export interface Section {
   id: number
   prompt: string
   items: SectionItem[]
+  /** Folded by its bar; the nav still lists it. */
+  collapsed?: boolean
 }
 
 export function useFeed() {
@@ -123,6 +125,13 @@ export function useFeed() {
     [appendItem],
   )
 
+  const toggleCollapsed = useCallback(
+    (sectionId: number) => {
+      updateSection(sectionId, (section) => ({ ...section, collapsed: !section.collapsed }))
+    },
+    [updateSection],
+  )
+
   /** Swaps one rendered block's view (a merged page replaces its first page). */
   const replaceBlockView = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
@@ -145,6 +154,7 @@ export function useFeed() {
     appendNote,
     appendBlock,
     replaceBlockView,
+    toggleCollapsed,
   }
 }
 

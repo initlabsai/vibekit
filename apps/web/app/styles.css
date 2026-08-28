@@ -128,8 +128,11 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .footnote { color: var(--faint); font-family: var(--font-mono); font-size: .72rem; margin: .8rem 0 0; }
 .note { color: var(--faint); font-family: var(--font-mono); font-size: .76rem; margin: 0; padding-left: .8rem; }
 .note-error { color: var(--red); }
-.prompt-line { align-items: center; background: rgba(17, 19, 24, .85); border-left: 2px solid var(--brass-bright); color: var(--text); display: flex; font-family: var(--font-mono); font-size: .84rem; gap: .6rem; margin: 0; padding: .55rem .8rem; }
-.prompt-line::before { color: var(--brass-bright); content: '›'; font-size: 1.1rem; }
+.prompt-line { align-items: center; background: rgba(17, 19, 24, .85); border-left: 2px solid var(--brass-bright); color: var(--text); cursor: pointer; display: flex; font-family: var(--font-mono); font-size: .84rem; gap: .6rem; margin: 0; padding: .55rem .8rem; text-align: left; transition: background .15s; width: 100%; }
+.prompt-line:hover { background: var(--card-lit); }
+.prompt-line::before { color: var(--brass-bright); content: '›'; display: inline-block; font-size: 1.1rem; transition: transform .15s; }
+.section:not(.collapsed) > .prompt-line::before { transform: rotate(90deg); }
+.prompt-count { color: var(--faint); font-size: .72rem; margin-left: auto; }
 
 /* Enrichment: NFD names beside addresses, asset marks, Pera tiers. */
 .ident-name { color: var(--brass-bright); }

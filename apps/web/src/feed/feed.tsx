@@ -41,11 +41,14 @@ export function FeedPane({
   selectedId,
   renderBlock,
   empty,
+  onToggle,
 }: {
   sections: Section[]
   selectedId: number | null
   renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
   empty: ReactNode
+  /** The bar folds and unfolds its section. */
+  onToggle: (id: number) => void
 }) {
   return (
     <section className="feed">
@@ -54,10 +57,23 @@ export function FeedPane({
         <article
           key={section.id}
           data-section={section.id}
-          className={`section${section.id === selectedId ? ' on' : ''}`}
+          className={`section${section.id === selectedId ? ' on' : ''}${section.collapsed ? ' collapsed' : ''}`}
         >
-          <p className="prompt-line">{section.prompt}</p>
-          {section.items.map((item) =>
+          <button
+            type="button"
+            className="prompt-line"
+            onClick={() => onToggle(section.id)}
+            aria-expanded={!section.collapsed}
+            title={section.collapsed ? 'expand' : 'collapse'}
+          >
+            {section.prompt}
+            {section.collapsed ? (
+              <span className="prompt-count">
+                {section.items.filter((item) => item.kind === 'block').length || section.items.length} hidden
+              </span>
+            ) : null}
+          </button>
+          {section.collapsed ? null : section.items.map((item) =>
             item.kind === 'note' ? (
               <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>
                 {item.text}

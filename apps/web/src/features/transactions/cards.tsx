@@ -67,7 +67,9 @@ function detailFacts(model: TransactionDetailViewModel): FactRow[] {
     address(model.clawbackFrom, 'clawback'),
     address(model.receiver, 'to'),
     model.assetId === undefined ? undefined : { label: 'asset', value: assetLabel(model), copy: String(model.assetId) },
-    id(model.applicationId, 'app'),
+    model.applicationId !== undefined && Number(model.applicationId) === 0 && model.createdApplicationId !== undefined
+      ? { label: 'created app', value: String(model.createdApplicationId), copy: String(model.createdApplicationId) }
+      : id(model.applicationId, 'app'),
     model.methodName ? { label: 'method', value: model.methodName } : undefined,
     ...(model.methodArgs ?? []).map((arg) => ({ label: arg.name ?? arg.type, value: formatAbiValue(arg.value) })),
     model.methodReturn === undefined ? undefined : { label: 'return', value: formatAbiValue(model.methodReturn) },

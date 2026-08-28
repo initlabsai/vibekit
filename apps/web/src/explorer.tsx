@@ -68,7 +68,7 @@ function ExplorerApp() {
   const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({ signDraft, network })
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed()
-  const { sections, selectedId, selectSection, createSection, appendNote } = feed
+  const { sections, selectedId, selectSection, createSection, appendNote, toggleCollapsed } = feed
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
@@ -290,6 +290,7 @@ function ExplorerApp() {
             sections={sections}
             selectedId={selectedId}
             renderBlock={renderBlock}
+            onToggle={toggleCollapsed}
             empty={<Welcome onSubmit={(raw) => (raw.includes('<address>') ? setStatus('Type pay 0.5 to <an address or wallet label> — a connected wallet signs it.') : submit(raw))} />}
           />
         )}
