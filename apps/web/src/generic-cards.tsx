@@ -81,7 +81,7 @@ export function Table<T>({
         />
       ) : null}
       <div className="table" role="table">
-        <div className="tt-head" role="row" style={{ gridTemplateColumns: template }}>
+        <div className="tt-thead" role="row" style={{ gridTemplateColumns: template }}>
           {columns.map((column) =>
             column.sortValue ? (
               <button

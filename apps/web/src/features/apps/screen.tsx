@@ -28,7 +28,7 @@ export function AppsScreen() {
   }
   return (
     <section className="screen">
-      <header className="screen-head">
+      <header className="screen-title">
         <span className="kicker">applications</span>
         <span className="muted"> · {network}</span>
       </header>

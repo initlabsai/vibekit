@@ -28,7 +28,7 @@ export function TransactionsScreen() {
   }, [address, host, live, run, txType])
   return (
     <section className="screen">
-      <header className="screen-head">
+      <header className="screen-title">
         <span className="kicker">transactions</span>
         <span className="muted"> · {network}</span>
         <span className="screen-filters">

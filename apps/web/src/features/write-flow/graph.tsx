@@ -19,7 +19,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 
 import { CopyContext } from '../../primitives'
 import { COLORS, shorten } from '../../theme'
-import { HEAD, layoutGraph, marker, type RowGeometry } from './graph-layout'
+import { TOP, layoutGraph, marker, type RowGeometry } from './graph-layout'
 
 /** Below this width the lanes are unreadable; rows become a list. */
 const LANES_MIN_WIDTH = 600
@@ -115,7 +115,7 @@ export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
             )
           })}
           {geometry.centers.map((x, i) => (
-            <line key={`g${i}`} x1={x} x2={x} y1={HEAD - 8} y2={geometry.height - 4} stroke={COLORS.borderSoft} strokeDasharray="2 4" />
+            <line key={`g${i}`} x1={x} x2={x} y1={TOP - 8} y2={geometry.height - 4} stroke={COLORS.borderSoft} strokeDasharray="2 4" />
           ))}
           {graph.horizontals.map((row, r) => (
             <Row key={r} row={row} geometry={geometry.rows[r]!} onCopy={copy} />
@@ -148,7 +148,7 @@ function Row({ row, geometry, onCopy }: { row: GraphHorizontal; geometry: RowGeo
         <title>{row.transactionId}</title>
         <circle cx={g.x} cy={g.y - 9} r={3.5} fill={color} />
         <path d={d} fill="none" stroke={color} strokeWidth={1.25} />
-        <Head x={g.x + 8} y={g.y + 9} dir="left" color={color} />
+        <ArrowHead x={g.x + 8} y={g.y + 9} dir="left" color={color} />
         <text x={g.captionX} y={g.y + 4} fill={color} className="graph-caption">{caption} {g.tags}</text>
       </g>
     )
@@ -159,7 +159,7 @@ function Row({ row, geometry, onCopy }: { row: GraphHorizontal; geometry: RowGeo
       <title>{row.transactionId}</title>
       <line x1={g.a} x2={g.b} y1={g.y} y2={g.y} stroke={color} strokeWidth={1.25} />
       <circle cx={g.origin} cy={g.y} r={3.5} fill={color} />
-      <Head x={g.target} y={g.y} dir={g.dir} color={color} />
+      <ArrowHead x={g.target} y={g.y} dir={g.dir} color={color} />
       {g.leftTag ? <text x={g.a + 8} y={g.y - 6} fill={COLORS.brass} className="graph-tag">{g.leftTag}</text> : null}
       {g.rightTag ? <text x={g.b - 8} y={g.y - 6} fill={COLORS.brass} className="graph-tag" textAnchor="end">{g.rightTag}</text> : null}
       {g.captionInline ? <rect x={g.captionX - captionW / 2} y={g.y - 9} width={captionW} height={18} fill={COLORS.card} rx={2} /> : null}
@@ -177,7 +177,7 @@ function Row({ row, geometry, onCopy }: { row: GraphHorizontal; geometry: RowGeo
   )
 }
 
-function Head({ x, y, dir, color }: { x: number; y: number; dir: 'left' | 'right'; color: string }) {
+function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: 'left' | 'right'; color: string }) {
   const s = dir === 'right' ? 1 : -1
   return <path d={`M ${x} ${y} l ${-8 * s} -4.5 v 9 z`} fill={color} />
 }

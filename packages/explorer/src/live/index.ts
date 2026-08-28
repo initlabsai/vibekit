@@ -415,3 +415,13 @@ export {
 export { nfdRecordSchema, resolveNfdName, type NfdRecord } from './nfd.js'
 
 export { createEnrichmentHost, type EnrichmentHost } from './enrich.js'
+export {
+  activeSenderLine,
+  createExplorerAgent,
+  explorerContext,
+  explorerPlugins,
+  explorerSystemPrompt,
+  explorerTools,
+  networkOfCall,
+  type ExplorerAgentOptions,
+} from './agent.js'

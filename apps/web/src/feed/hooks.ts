@@ -13,7 +13,7 @@ export type SectionBlock =
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =
-  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' }
+  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent' }
   | { id: number; kind: 'block'; block: SectionBlock }
 
 /** Everything one request produced, in order. The nav pane is this list's index. */
@@ -107,12 +107,20 @@ export function useFeed() {
     [scrollToBottom, updateSection],
   )
 
-  const appendNote = useCallback(
-    (sectionId: number, text: string, tone: 'muted' | 'error' = 'muted') => {
+  const appendNoteReturning = useCallback(
+    (sectionId: number, text: string, tone: 'muted' | 'error' | 'agent' = 'muted'): number => {
       itemSeq.current += 1
       appendItem(sectionId, { id: itemSeq.current, kind: 'note', text, tone })
+      return itemSeq.current
     },
     [appendItem],
+  )
+
+  const appendNote = useCallback(
+    (sectionId: number, text: string, tone: 'muted' | 'error' | 'agent' = 'muted') => {
+      appendNoteReturning(sectionId, text, tone)
+    },
+    [appendNoteReturning],
   )
 
   const appendBlock = useCallback(
@@ -152,6 +160,7 @@ export function useFeed() {
     createSection,
     updateItem,
     appendNote,
+    appendNoteReturning,
     appendBlock,
     replaceBlockView,
     toggleCollapsed,

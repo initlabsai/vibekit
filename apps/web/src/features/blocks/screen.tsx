@@ -10,7 +10,7 @@ export function BlocksScreen() {
   const { rows, error } = useBlockTail({ host, live, latestRound })
   return (
     <section className="screen">
-      <header className="screen-head">
+      <header className="screen-title">
         <span className="kicker">blocks</span>
         <span className="muted"> · {network}</span>
       </header>

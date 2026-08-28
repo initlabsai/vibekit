@@ -44,7 +44,7 @@ export function NavPane({
   }
   return (
     <aside className="nav">
-      <span className="nav-head">
+      <span className="nav-title">
         <span className="kicker">session</span>
         <button type="button" className="rail-arrow" onClick={onToggle} title="fold the session">
           ◂
@@ -105,7 +105,7 @@ export function FeedPane({
           </button>
           {section.collapsed ? null : section.items.map((item) =>
             item.kind === 'note' ? (
-              <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>
+              <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : item.tone === 'agent' ? ' note-agent' : ''}`}>
                 {item.text}
               </p>
             ) : (

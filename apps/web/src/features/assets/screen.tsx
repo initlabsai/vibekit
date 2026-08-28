@@ -19,7 +19,7 @@ export function AssetsScreen() {
   }, [address, host, live, run])
   return (
     <section className="screen">
-      <header className="screen-head">
+      <header className="screen-title">
         <span className="kicker">assets</span>
         <span className="muted"> · {network}</span>
       </header>

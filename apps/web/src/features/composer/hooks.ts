@@ -22,6 +22,7 @@ export function useComposer({
   networkRef,
   setNetwork,
   setStatus,
+  runAgent,
 }: {
   pathname: string
   push: (href: string) => void
@@ -31,6 +32,8 @@ export function useComposer({
   networkRef: { current: LiveNetworkId }
   setNetwork: (network: LiveNetworkId) => void
   setStatus: (text: string) => void
+  /** The agent lane; it says so itself when no agent is configured. */
+  runAgent: (sectionId: number, input: string) => Promise<void>
 }) {
   const { createSection, appendNote } = feed
   const goHome = useCallback(() => {
@@ -114,10 +117,10 @@ export function useComposer({
         case 'ambiguous':
           return void lookups.openAmbiguous(sectionId, outcome.value)
         case 'text':
-          return appendNote(sectionId, 'No agent configured. Paste an id, or `pay 0.5 to <address>`.', 'error')
+          return void runAgent(sectionId, outcome.text)
       }
     },
-    [appendNote, createSection, goHome, lookups, networkRef, payment, push, switchNetwork],
+    [appendNote, createSection, goHome, lookups, networkRef, payment, push, runAgent, switchNetwork],
   )
 
   return { submit, openTarget, switchNetwork, goHome }

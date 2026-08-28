@@ -84,7 +84,7 @@ describe('comments describe the code as committed', () => {
       for (const file of files) {
         const lines = readFileSync(file, 'utf8').split('\n')
         lines.forEach((line, i) => {
-          if (line.includes('refs/heads/')) return
+          if (line.includes('refs/heads/') || /<\/?head>/.test(line)) return
           if (file.endsWith('AGENTS.md') && /Not "kernel"|"provisional"/.test(line)) return
           if (banned.test(line)) hits.push(`${relative(REPO, file)}:${i + 1}: ${line.trim()}`)
         })

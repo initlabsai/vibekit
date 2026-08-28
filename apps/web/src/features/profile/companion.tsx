@@ -39,7 +39,7 @@ export function moodFor(args: { sections: Section[]; busy: boolean; roundTick: b
   return args.roundTick ? 'bright' : 'calm'
 }
 
-export function Companion({ sections, busy, latestRound, danger }: { sections: Section[]; busy: boolean; latestRound: number | undefined; danger: boolean }) {
+export function Companion({ sections, busy, latestRound, danger, voice }: { sections: Section[]; busy: boolean; latestRound: number | undefined; danger: boolean; voice?: string }) {
   const [roundTick, setRoundTick] = useState(false)
   const [blink, setBlink] = useState(false)
   useEffect(() => {
@@ -60,7 +60,8 @@ export function Companion({ sections, busy, latestRound, danger }: { sections: S
   const lines = LINES[mood]
   // A stable pick per situation: the same section keeps the same line.
   const seed = (sections.at(-1)?.id ?? 0) + (latestRound ?? 0)
-  const line = lines[seed % lines.length]!
+  // When the agent has spoken, its words outrank the stock lines.
+  const line = voice && !busy ? voice : lines[seed % lines.length]!
   return (
     <div className={`companion companion-${mood}`}>
       <pre className="companion-face" aria-hidden="true">{face.join('\n')}</pre>

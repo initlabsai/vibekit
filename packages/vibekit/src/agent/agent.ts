@@ -43,6 +43,12 @@ export interface VibekitAgentOptions extends DeploymentOptions {
    * result and the loop continues). Other read tools are never gated.
    */
   approveToolCall?: (call: { toolName: string; input: unknown }) => Promise<boolean>
+  /**
+   * Prior turns to continue from. A stateless host (one request per turn)
+   * hands back what `messages` held after the last turn; the session owns
+   * nothing across requests.
+   */
+  history?: readonly ModelMessage[]
 }
 
 export interface AgentSession {
@@ -112,7 +118,7 @@ export function createAgent(options: VibekitAgentOptions): AgentSession {
     })
   }
 
-  const messages: ModelMessage[] = []
+  const messages: ModelMessage[] = [...(options.history ?? [])]
 
   async function* stream(input: string): AsyncIterable<AgentEvent> {
     messages.push({ role: 'user', content: input })

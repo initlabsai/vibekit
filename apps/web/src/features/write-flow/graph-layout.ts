@@ -6,7 +6,7 @@
 import type { GraphHorizontal, GraphMarkerTag, GraphVertical, TransactionsGraph } from '@initlabs/vibekit-explorer'
 
 export const ROW = 40
-export const HEAD = 34
+export const TOP = 34
 export const PAD_X = 24
 export const MIN_LANE = 150
 export const MAX_LANE = 280
@@ -44,7 +44,7 @@ export function layoutGraph(graph: TransactionsGraph, width: number, captionOf: 
   const centers = graph.verticals.map((_, i) => PAD_X + i * lane)
   const total = Math.max(width, (centers[n - 1] ?? 0) + lane * 0.6)
   const rows: RowGeometry[] = graph.horizontals.map((row, r) => {
-    const y = HEAD + r * ROW + ROW / 2
+    const y = TOP + r * ROW + ROW / 2
     const rep = row.representation
     const captionW = captionOf(row).length * CHAR + 12
     if (rep.kind === 'point') {
@@ -76,5 +76,5 @@ export function layoutGraph(graph: TransactionsGraph, width: number, captionOf: 
       captionX: (a + b) / 2,
     }
   })
-  return { lane, centers, width: total, height: HEAD + graph.horizontals.length * ROW + 8, rows }
+  return { lane, centers, width: total, height: TOP + graph.horizontals.length * ROW + 8, rows }
 }

@@ -4,6 +4,8 @@ import {
   createWriteFlowViewModel,
   performWriteFlowStep,
   startWriteFlow,
+  startWriteFlowFromDraft,
+  type StructuredResult,
   type LiveNetworkId,
   type ResultStore,
   type WriteFlowState,
@@ -121,6 +123,39 @@ export function useWriteFlow({
     [accounts, activeAddress, appendNote, busyRef, closeFlow, commitFlow, commitStore, host, live, networkRef, newId, setBusy, setStatus, storeRef, trackStep],
   )
 
+  /** A draft composed elsewhere (the agent) joins the same flow at simulate. */
+  const startFromDraft = useCallback(
+    (sectionId: number, draftRecord: StructuredResult) => {
+      if (flowRef.current !== null) {
+        appendNote(sectionId, 'A write is already awaiting approval; decide that one first.', 'error')
+        return
+      }
+      const current = host()
+      flowHostRef.current = current
+      setBusy(true)
+      setStatus(`simulating on ${networkRef.current}…`)
+      void startWriteFlowFromDraft({
+        host: current,
+        store: storeRef.current,
+        draftRecord,
+        newId,
+        onStep: trackStep(sectionId),
+      }).then((run) => {
+        commitStore(run.store)
+        setBusy(false)
+        setStatus('')
+        if (!run.ok) {
+          appendNote(sectionId, `The agent's write failed — ${run.message}`, 'error')
+          if (run.flow) commitFlow(run.flow)
+          closeFlow()
+          return
+        }
+        if (run.flow) commitFlow(run.flow)
+      })
+    },
+    [appendNote, closeFlow, commitFlow, commitStore, host, networkRef, newId, setBusy, setStatus, storeRef, trackStep],
+  )
+
   const decide = useCallback(
     (decision: 'approve' | 'deny') => {
       const current = flowRef.current
@@ -179,5 +214,5 @@ export function useWriteFlow({
     [appendNote, busyRef, closeFlow, commitFlow, commitStore, newId, setBusy, setStatus, storeRef],
   )
 
-  return { flow, flowRef, startPayment, decide, closeFlow }
+  return { flow, flowRef, startPayment, startFromDraft, decide, closeFlow }
 }

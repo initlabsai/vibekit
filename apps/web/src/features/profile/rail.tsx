@@ -40,7 +40,7 @@ function lastOpenedAccount(store: ResultStore): string | undefined {
 }
 
 export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, latestRound, openTarget, network } = useExplorer()
+  const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, latestRound, openTarget, network, agent } = useExplorer()
   const [tab, setTab] = useState<Tab>('account')
   const focus = activeAddress ?? lastOpenedAccount(store)
   const [portfolio, setPortfolio] = useState<ViewSpec | undefined>(undefined)
@@ -116,7 +116,7 @@ export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () =>
         </button>
       </div>
       {tab === 'companion' ? (
-        <Companion sections={feed.sections} busy={busy} latestRound={latestRound} danger={squint} />
+        <Companion sections={feed.sections} busy={busy} latestRound={latestRound} danger={squint} voice={agent.lastLine} />
       ) : !focus ? (
         <p className="rail-empty">Connect a wallet or open an account and it lives here.</p>
       ) : (

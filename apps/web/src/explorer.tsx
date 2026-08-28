@@ -22,6 +22,7 @@ import { EnrichmentProvider } from './enrich'
 import { RoundPulse } from './features/network/pulse'
 import { Composer, NavPane } from './feed/feed'
 import { useFeed, type Feed, type SectionBlock } from './feed/hooks'
+import { useAgentLane } from './features/agent/hooks'
 import { useComposer } from './features/composer/hooks'
 import { usePanel } from './features/layout/hooks'
 import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
@@ -56,6 +57,8 @@ export interface ExplorerContextValue {
   submit: (raw: string) => void
   setStatus: (text: string) => void
   renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
+  /** The agent lane's status and its latest line, for the composer and the companion. */
+  agent: { enabled: boolean; model?: string; lastLine?: string }
 }
 
 const ExplorerContext = createContext<ExplorerContextValue | null>(null)
@@ -116,6 +119,19 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
+  const agent = useAgentLane({
+    feed,
+    storeRef,
+    commitStore,
+    networkRef,
+    accounts,
+    activeAddress,
+    live,
+    busyRef,
+    setBusy,
+    setStatus,
+    startFromDraft: payment.startFromDraft,
+  })
 
   const { submit, openTarget, switchNetwork, goHome } = useComposer({
     pathname,
@@ -126,6 +142,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     networkRef,
     setNetwork: setNetworkState,
     setStatus,
+    runAgent: agent.runAgent,
   })
 
   const renderBlock = useCallback(
@@ -219,8 +236,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       submit,
       setStatus,
       renderBlock,
+      agent: { enabled: agent.status.enabled, model: agent.status.model, lastLine: agent.lastLine },
     }),
-    [activeAddress, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
+    [activeAddress, agent.lastLine, agent.status.enabled, agent.status.model, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
   )
 
   return (
@@ -275,7 +293,11 @@ function ExplorerApp({ children }: { children: ReactNode }) {
         {children}
         <ProfileRail open={railOpen} onToggle={toggleRail} />
       </div>
-      <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
+      <Composer
+        onSubmit={submit}
+        status={statusLine}
+        placeholder={agent.status.enabled ? `ask anything, paste an id, or \`pay 0.5 to <address>\` · ${agent.status.model} via Together, not private` : 'paste an id, `asset 31566704`, or `pay 0.5 to <address>`'}
+      />
       {approval ? (
         <ApprovalModal
           model={approval.ok ? approval.model : undefined}

@@ -35,7 +35,7 @@ export function WalletScreen({
   const active = lane.activeWallet
   return (
     <section className="screen">
-      <header className="screen-head">
+      <header className="screen-title">
         <span className="kicker">wallet</span>
         <span className="muted"> · {network}</span>
       </header>
