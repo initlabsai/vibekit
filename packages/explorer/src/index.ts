@@ -134,6 +134,7 @@ export { lookupAmbiguousEntity } from './entity-lookup.js'
 export { FIXTURE_ADDRESS_BOOK } from './sample/account.js'
 export {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
+  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   createSampleHost,
@@ -155,6 +156,7 @@ export type {
   BlockLookupHost,
   EntityLookupHost,
   ExplorerReadHost,
+  LiveNetworkId,
   ToolCallHost,
   TransactionLookupHost,
 } from './host.js'

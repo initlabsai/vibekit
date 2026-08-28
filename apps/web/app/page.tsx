@@ -2,9 +2,9 @@
 
 /**
  * The web Explorer: one page holding the result store, the open view, and the
- * write flow. Reads and the flow run against the app's compose-only route
- * when localnet answers, and against the sample host when it does not; the
- * browser never holds a key, so a live flow rests at `approved`.
+ * write flow. Reads and the flow run against `/api/explorer` when localnet
+ * answers, and against the sample host when it does not; the browser holds
+ * no key, so a live flow rests at `approved` until a signer is injected.
  */
 import {
   addResult,
@@ -30,13 +30,13 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { routeComposerInput } from '../src/commands'
-import { createRemoteFlowHost, probeRemoteFlowHost } from '../src/remote-host'
+import { createRemoteExplorerHost } from '../src/remote-host'
 import { Button } from '../src/primitives'
 import { AccountsLanding, AccountView, TransactionDetail, Welcome } from '../src/views'
 import { WriteFlowView } from '../src/write-flow'
 
 export default function Page() {
-  const remoteHost = useMemo(() => createRemoteFlowHost(), [])
+  const remoteHost = useMemo(() => createRemoteExplorerHost({ network: 'localnet' }), [])
   const sampleHost = useMemo(() => createSampleHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
@@ -53,13 +53,13 @@ export default function Page() {
 
   useEffect(() => {
     let cancelled = false
-    probeRemoteFlowHost().then((reachable) => {
+    remoteHost.probe().then((reachable) => {
       if (!cancelled) setLive(reachable)
     })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [remoteHost])
 
   const startPayment = useCallback(
     (amountMicroAlgos?: number) => {

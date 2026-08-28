@@ -11,6 +11,7 @@ import {
   executeToolCall,
   resolveDeployment,
   type AnyTool,
+  type NetworkConfig,
   type ResolvedDeployment,
 } from '@initlabs/vibekit'
 import {
@@ -23,7 +24,7 @@ import {
 } from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../bridge.js'
-import type { ExplorerReadHost } from '../host.js'
+import type { ExplorerReadHost, LiveNetworkId } from '../host.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
@@ -191,6 +192,10 @@ export interface LiveHost extends ExplorerReadHost {
    * custody: it can only broadcast bytes some signer produced elsewhere.
    */
   submitSigned(signedRecord: StructuredResult): Promise<StructuredResult>
+  /** Broadcasts a signed group and returns at once; pair with `confirmation` to poll. */
+  broadcastSigned(signedRecord: StructuredResult): Promise<{ txid: string }>
+  /** The confirmation record once algod reports the transaction in a round; undefined while pending. */
+  confirmation(txid: string): Promise<StructuredResult | undefined>
   /** Current algod lastRound. */
   statusRound(): Promise<{ lastRound: number }>
   /** Resolves when lastRound is greater than `round` (algod wait-for-block). */
@@ -209,17 +214,18 @@ function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`
 }
 
-/** The named networks the live host can serve (core ships their endpoints). */
-export type LiveNetworkId = 'localnet' | 'testnet' | 'mainnet'
+export type { LiveNetworkId }
 
 /**
  * Creates the shared live host: a compose-only (signerless) deployment over
- * the transaction write tools on one named network. No signing, submission,
- * or key material is reachable from here by construction.
+ * the transaction write tools on one network — a named id, or a NetworkConfig
+ * carrying the caller's own endpoints. No signing or key material is
+ * reachable from here by construction.
  */
-export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
+export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet'): LiveHost {
+  const network = typeof config === 'string' ? config : config.id
   const deployment = resolveDeployment({
-    network,
+    network: config,
     mode: 'compose',
     // Every read tool, so callTool can page any list an agent or a lane fetched.
     tools: [
@@ -269,6 +275,17 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
     ).record
   }
 
+  /** Broadcast only; confirmation is a separate poll so a caller need not hold a connection. */
+  const broadcastSigned = async (signedRecord: StructuredResult): Promise<{ txid: string }> => {
+    if (signedRecord.state !== 'success') {
+      throw new Error('Cannot submit a failed signed record')
+    }
+    const signed = signedGroupDataSchema.parse(signedRecord.data)
+    const bytes = signed.transactions.map((txn) => base64ToBytes(txn))
+    const { txid } = await context.algod.sendRawTransaction(bytes).do()
+    return { txid }
+  }
+
   return {
     network,
     async probe(timeoutMs = 1500) {
@@ -307,13 +324,19 @@ export function createLiveHost(network: LiveNetworkId = 'localnet'): LiveHost {
         decoded,
       )
     },
+    broadcastSigned,
+    async confirmation(txid) {
+      const pending = await context.algod.pendingTransactionInformation(txid).do()
+      if (pending.poolError) throw new Error(pending.poolError)
+      const round = pending.confirmedRound
+      if (round === undefined || Number(round) === 0) return undefined
+      return buildConfirmationRecord(identity('payment-confirmation'), {
+        transactionId: txid,
+        confirmedRound: Number(round),
+      })
+    },
     async submitSigned(signedRecord) {
-      if (signedRecord.state !== 'success') {
-        throw new Error('Cannot submit a failed signed record')
-      }
-      const signed = signedGroupDataSchema.parse(signedRecord.data)
-      const bytes = signed.transactions.map((txn) => base64ToBytes(txn))
-      const { txid } = await context.algod.sendRawTransaction(bytes).do()
+      const { txid } = await broadcastSigned(signedRecord)
       const confirmation = await algosdk.waitForConfirmation(context.algod, txid, 4)
       return buildConfirmationRecord(
         identity('payment-confirmation', { network: signedRecord.network }),

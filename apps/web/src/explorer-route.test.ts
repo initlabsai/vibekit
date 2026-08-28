@@ -1,0 +1,164 @@
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+
+import {
+  createSampleHost,
+  FIXTURE_RECEIVER,
+  FIXTURE_SENDER,
+  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
+  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
+  type StructuredResult,
+} from '@initlabs/vibekit-explorer'
+
+const live = await import('@initlabs/vibekit-explorer/live')
+
+/** Every createLiveHost call is recorded; the host answers with fixture records and a broadcast stub. */
+const created: unknown[] = []
+const broadcasts: StructuredResult[] = []
+const sample = createSampleHost()
+mock.module('@initlabs/vibekit-explorer/live', () => ({
+  ...live,
+  createLiveHost: (config: unknown) => {
+    created.push(config)
+    const network = typeof config === 'string' ? config : (config as { id: string }).id
+    return {
+      ...sample,
+      network,
+      probe: async () => true,
+      statusRound: async () => ({ lastRound: 7 }),
+      callTool: async (toolName: string) => {
+        if (toolName !== 'lookup_asset') throw new Error(`This host has no tool named ${toolName}`)
+        return sample.lookupAsset(1)
+      },
+      broadcastSigned: async (record: StructuredResult) => {
+        broadcasts.push(record)
+        return { txid: 'TXID' }
+      },
+      confirmation: async () => undefined,
+    }
+  },
+}))
+
+const { GET, POST } = await import('../app/api/explorer/route.js')
+
+const post = (body: unknown) =>
+  POST(new Request('http://x/api/explorer', { method: 'POST', body: JSON.stringify(body) }))
+
+async function fixtureDraft(): Promise<StructuredResult> {
+  return sample.draftPayment({
+    sender: FIXTURE_SENDER,
+    receiver: FIXTURE_RECEIVER,
+    amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
+  })
+}
+
+const env = { ...process.env }
+beforeEach(() => {
+  created.length = 0
+  broadcasts.length = 0
+})
+afterEach(() => {
+  for (const key of Object.keys(process.env)) if (!(key in env)) delete process.env[key]
+  Object.assign(process.env, env)
+})
+
+describe('explorer route', () => {
+  test('probes with GET and defaults to localnet outside production', async () => {
+    const response = await GET(new Request('http://x/api/explorer'))
+    expect(await response.json()).toEqual({ network: 'localnet', live: true, round: 7 })
+  })
+
+  test('one host per network; localnet and mainnet do not share one', async () => {
+    await post({ action: 'status-round', network: 'localnet' })
+    await post({ action: 'status-round', network: 'mainnet' })
+    await post({ action: 'status-round', network: 'mainnet' })
+    expect(created.filter((c) => c === 'localnet').length).toBeGreaterThanOrEqual(0)
+    const mainnetHosts = created.filter((c) => c === 'mainnet' || (c as { id?: string })?.id === 'mainnet')
+    expect(mainnetHosts).toHaveLength(1)
+  })
+
+  test('unknown tool names are 400, not 502', async () => {
+    const response = await post({ action: 'call-tool', network: 'localnet', toolName: 'nope', args: {} })
+    expect(response.status).toBe(400)
+  })
+
+  test('production without BYO endpoints is 503 naming the variables', async () => {
+    process.env.VERCEL = '1'
+    delete process.env.VIBEKIT_ALGOD_TESTNET_URL
+    delete process.env.VIBEKIT_INDEXER_TESTNET_URL
+    // testnet has no cached host yet, so this request builds one and hits the env check.
+    const response = await post({ action: 'status-round', network: 'testnet' })
+    expect(response.status).toBe(503)
+    expect((await response.json()).error).toContain('VIBEKIT_ALGOD_TESTNET_URL')
+  })
+
+  test('record-signed verifies the bytes wrap the draft; a mutated draft is refused', async () => {
+    const draftRecord = await fixtureDraft()
+    if (draftRecord.state !== 'success') throw new Error('fixture draft failed')
+    const ok = await post({
+      action: 'record-signed',
+      network: 'localnet',
+      draftRecord,
+      signedTransactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION],
+    })
+    expect(ok.status).toBe(200)
+    const { record } = (await ok.json()) as { record: StructuredResult }
+    expect(record.toolName).toBe('sign_group')
+
+    const mutated = {
+      ...draftRecord,
+      data: {
+        ...(draftRecord.data as object),
+        unsignedGroup: { transactions: ['aGVsbG8='], summary: 'tampered' },
+      },
+    }
+    const refused = await post({
+      action: 'record-signed',
+      network: 'localnet',
+      draftRecord: mutated,
+      signedTransactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION],
+    })
+    expect(refused.status).toBe(400)
+  })
+
+  test('submit-signed without the draft is invalid', async () => {
+    const response = await post({
+      action: 'submit-signed',
+      network: 'localnet',
+      signedTransactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION],
+    })
+    expect(response.status).toBe(400)
+    expect(broadcasts).toHaveLength(0)
+  })
+
+  test('submit-signed re-verifies, broadcasts, and returns pending rather than waiting', async () => {
+    const draftRecord = await fixtureDraft()
+    const response = await post({
+      action: 'submit-signed',
+      network: 'localnet',
+      draftRecord,
+      signedTransactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION],
+    })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ txid: 'TXID', pending: true })
+    expect(broadcasts).toHaveLength(1)
+
+    const mismatch = await post({
+      action: 'submit-signed',
+      network: 'localnet',
+      draftRecord,
+      signedTransactions: [PAYMENT_FIXTURE_SIGNED_TRANSACTION, PAYMENT_FIXTURE_SIGNED_TRANSACTION],
+    })
+    expect(mismatch.status).toBe(400)
+    expect(broadcasts).toHaveLength(1)
+  })
+
+  test('await-confirmation answers pending while the round is unknown', async () => {
+    const response = await post({ action: 'await-confirmation', network: 'localnet', txid: 'TXID' })
+    expect(await response.json()).toEqual({ pending: true })
+  })
+
+  test('oversized bodies are 413', async () => {
+    const response = await post({ action: 'probe', network: 'localnet', pad: 'x'.repeat(300 * 1024) })
+    expect(response.status).toBe(413)
+  })
+})

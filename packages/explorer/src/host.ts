@@ -7,6 +7,9 @@
 import type { StructuredResult } from './core/results.js'
 import type { TransactionSearchFilter } from './views/transaction.js'
 
+/** The named networks a live host can serve; core ships their endpoints. */
+export type LiveNetworkId = 'localnet' | 'testnet' | 'mainnet'
+
 export interface ExplorerReadHost {
   /** Looks an account's portfolio up as an authoritative record. */
   lookupAccount(address: string): Promise<StructuredResult>
