@@ -241,19 +241,26 @@ export function AssetMark({
   )
 }
 
+/** The round mark for an account: its NFD avatar, or two letters of its name or address. */
+export function Avatar({ address, size = 44 }: { address: string; size?: number }) {
+  const profile = useProfile(address)
+  const style = { width: size, height: size }
+  return profile?.avatar ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="identity-avatar" src={profile.avatar} alt="" width={size} height={size} style={style} />
+  ) : (
+    <span className="identity-avatar identity-avatar-empty" aria-hidden="true" style={style}>
+      {(profile?.name ?? address).slice(0, 2)}
+    </span>
+  )
+}
+
 /** An account's face: NFD avatar and name over the address, when it has one. */
 export function Identity({ address }: { address: string }) {
   const profile = useProfile(address)
   return (
     <span className="identity">
-      {profile?.avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="identity-avatar" src={profile.avatar} alt="" width={44} height={44} />
-      ) : (
-        <span className="identity-avatar identity-avatar-empty" aria-hidden="true">
-          {(profile?.name ?? address).slice(0, 2)}
-        </span>
-      )}
+      <Avatar address={address} />
       <span className="identity-text">
         {profile?.name ? <span className="identity-name">{profile.name}</span> : null}
         <Copyable value={address} display={shorten(address, 22)} />

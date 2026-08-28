@@ -316,7 +316,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     <EnrichmentProvider host={remoteHost} live={live === true}>
     <CopyContext.Provider value={announceCopy}>
     <ExplorerContext.Provider value={context}>
-    <main className={`shell${railOpen ? ' rail-open' : ''}`}>
+    <main className={`shell${railOpen ? ' rail-open' : ' rail-folded'}`}>
       <header className="top">
         <div className="top-row">
           <span className="brand">
@@ -336,9 +336,6 @@ function ExplorerApp({ children }: { children: ReactNode }) {
             </span>
             <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
               {network}
-            </button>
-            <button type="button" className={`button rail-toggle${railOpen ? ' button-active' : ''}`} onClick={toggleRail} title="account rail">
-              {railOpen ? '▸ rail' : '◂ rail'}
             </button>
             <Link href="/wallet" className={`button${pathname === '/wallet' ? ' button-active' : ''}`}>
               {activeAddress ? `▸ ${wallet.activeName ?? shorten(activeAddress, 12)}` : '▸ no wallet'}
@@ -363,7 +360,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
           }}
         />
         {children}
-        {railOpen ? <ProfileRail onCollapse={toggleRail} /> : null}
+        <ProfileRail open={railOpen} onToggle={toggleRail} />
       </div>
       <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
       {approval ? (

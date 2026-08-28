@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatUsd, useAlgoPrice } from '../../enrich'
 import { useExplorer } from '../../explorer'
 import { viewFor } from '../../lookup'
-import { AssetMark, Button, Copyable, Identity } from '../../primitives'
+import { AssetMark, Avatar, Button, Copyable, Identity } from '../../primitives'
 import { shorten } from '../../theme'
 import { rowAmount, rowType } from '../transactions/cards'
 import { Companion } from './companion'
@@ -39,7 +39,7 @@ function lastOpenedAccount(store: ResultStore): string | undefined {
   return undefined
 }
 
-export function ProfileRail({ onCollapse }: { onCollapse: () => void }) {
+export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, latestRound, openTarget, network } = useExplorer()
   const [tab, setTab] = useState<Tab>('account')
   const focus = activeAddress ?? lastOpenedAccount(store)
@@ -85,12 +85,33 @@ export function ProfileRail({ onCollapse }: { onCollapse: () => void }) {
   const lastError = feed.sections.at(-1)?.items.at(-1)
   const squint = lastError?.kind === 'note' && lastError.tone === 'error'
 
+  // Folded: an app bar — the account's mark, the companion's mood, and the arrow that opens it.
+  if (!open) {
+    return (
+      <aside className="rail rail-mini" aria-label="Account at a glance, folded">
+        <button type="button" className="rail-arrow" onClick={onToggle} title="open the rail">
+          ◂
+        </button>
+        {focus ? (
+          <button type="button" className="rail-mini-avatar" onClick={onToggle} title={focus}>
+            <Avatar address={focus} size={32} />
+          </button>
+        ) : (
+          <span className="rail-mini-dot" aria-hidden="true" />
+        )}
+        <span className={`rail-mood${squint ? ' squint' : busy ? ' curious' : ''}`} aria-hidden="true">
+          {squint ? '¬¬' : busy ? '◉◠' : '◠◠'}
+        </span>
+      </aside>
+    )
+  }
+
   return (
     <aside className="rail" aria-label="Account at a glance">
       <div className="rail-tabs">
         <Button label="account" active={tab === 'account'} onPress={() => setTab('account')} />
         <Button label="companion" active={tab === 'companion'} onPress={() => setTab('companion')} />
-        <button type="button" className="button rail-collapse" onClick={onCollapse} title="collapse the rail">
+        <button type="button" className="rail-arrow rail-collapse" onClick={onToggle} title="fold the rail">
           ▸
         </button>
       </div>
