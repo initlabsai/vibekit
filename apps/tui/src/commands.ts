@@ -1,9 +1,8 @@
 import algosdk from 'algosdk'
 import {
-  classifyExplorerInput,
   FIXTURE_SENDER,
-  parseEntityComposerCommand,
-  parsePaymentComposerCommand,
+  routeExplorerComposerInput,
+  type ExplorerComposerRoute,
 } from '@initlabs/vibekit-explorer'
 
 /**
@@ -11,20 +10,11 @@ import {
  * commands, then recognized identifiers; everything else is conversation.
  */
 export type ComposerRoute =
-  | { status: 'payment'; amountMicroAlgos: number; to?: string }
-  | { status: 'transaction'; txid: string }
-  | { status: 'group'; groupId: string }
-  | { status: 'account'; address: string }
-  | { status: 'account-name'; name: string }
-  | { status: 'asset'; assetId: number }
-  | { status: 'application'; applicationId: number }
-  | { status: 'block'; round: number }
+  | ExplorerComposerRoute
   | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: 'localnet' | 'testnet' | 'mainnet' }
   | { status: 'help' }
-  | { status: 'ambiguous'; value: string }
-  | { status: 'text'; text: string }
 
 /**
  * Parties for a typed `pay`: the sender is the wallet's active account (the
@@ -67,17 +57,11 @@ function isMineQuery(word: string, noun: string): boolean {
   )
 }
 
-/** Routes one composer submission. */
+/** Routes one composer submission: the TUI's own words first, then the shared lane. */
 export function routeComposerInput(input: string): ComposerRoute {
   const trimmed = input.trim()
-  const payment = parsePaymentComposerCommand(trimmed)
-  if (payment) return { status: 'payment', ...payment }
-  const directed = parseEntityComposerCommand(trimmed)
-  if (directed?.entity === 'asset') return { status: 'asset', assetId: directed.id }
-  if (directed?.entity === 'application')
-    return { status: 'application', applicationId: directed.id }
-  if (directed?.entity === 'block') return { status: 'block', round: directed.id }
-  if (directed?.entity === 'group') return { status: 'group', groupId: directed.id }
+  const shared = routeExplorerComposerInput(trimmed)
+  if (shared.status !== 'text') return shared
   const word = trimmed.toLowerCase()
   if (word === 'accounts' || word === 'wallet') return { status: 'nav', screen: 'wallet' }
   if (isMineQuery(word, 'assets')) return { status: 'nav', screen: 'assets' }
@@ -93,21 +77,5 @@ export function routeComposerInput(input: string): ComposerRoute {
     return { status: 'network', network: networkMatch[1] as 'localnet' | 'testnet' | 'mainnet' }
   }
   if (word === 'help' || word === '?') return { status: 'help' }
-  const classified = classifyExplorerInput(trimmed)
-  if (classified.kind === 'entity' && classified.entity === 'transaction') {
-    return { status: 'transaction', txid: classified.value }
-  }
-  if (classified.kind === 'entity' && classified.entity === 'account') {
-    return { status: 'account', address: classified.value }
-  }
-  if (classified.kind === 'entity' && classified.entity === 'account-name') {
-    return { status: 'account-name', name: classified.value }
-  }
-  if (classified.kind === 'entity' && classified.entity === 'group') {
-    return { status: 'group', groupId: classified.value }
-  }
-  if (classified.kind === 'ambiguous-entity') {
-    return { status: 'ambiguous', value: classified.value }
-  }
-  return { status: 'text', text: trimmed }
+  return shared
 }

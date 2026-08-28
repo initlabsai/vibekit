@@ -1,0 +1,347 @@
+/** The direct lane: entity lookups by id that need no model, each landing as a card in the feed. */
+import {
+  addResult,
+  createAccountListViewModel,
+  createAccountPortfolioViewModel,
+  createApplicationDetailViewModel,
+  createAssetDetailViewModel,
+  createBlockDetailViewModel,
+  createTransactionCollectionViewModel,
+  createTransactionDetailViewModel,
+  EXPLORER_PROTOCOL_VERSION,
+  formatMicroAlgos,
+  lookupAmbiguousEntity,
+  type LiveNetworkId,
+  type ResultStore,
+  type StructuredResult,
+  type TransactionSearchFilter,
+  type TrustedViewId,
+  type ViewSpec,
+} from '@initlabs/vibekit-explorer'
+import { useCallback } from 'react'
+
+import type { WalletAccount } from './commands'
+import type { Feed } from './feed/hooks'
+import type { ExplorerHost } from './features/network/hooks'
+import { errorMessage, shorten } from './theme'
+
+/** Wraps a stored record in a trusted view spec. */
+export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
+  return {
+    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    type: 'view',
+    view,
+    source: { source: 'result', id: record.resultId },
+  } as ViewSpec
+}
+
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
+export function useLookups({
+  feed,
+  host,
+  live,
+  accounts,
+  commitStore,
+  storeRef,
+  networkRef,
+  busyRef,
+  setBusy,
+  setStatus,
+}: {
+  feed: Feed
+  host: () => ExplorerHost
+  live: 'probing' | boolean
+  /** The connected wallet's accounts; empty until one connects. */
+  accounts: ReadonlyArray<WalletAccount>
+  commitStore: (next: ResultStore) => void
+  storeRef: { current: ResultStore }
+  networkRef: { current: LiveNetworkId }
+  busyRef: { current: boolean }
+  setBusy: (busy: boolean) => void
+  setStatus: (status: string) => void
+}) {
+  const { appendBlock, appendNote } = feed
+
+  /** The busy/status/error dance around one request; a request while busy says so. */
+  const withBusy = useCallback(
+    (sectionId: number, status: string, failure: string, task: () => Promise<void>) => {
+      if (busyRef.current) {
+        appendNote(sectionId, 'Still working on the last request.', 'error')
+        return Promise.resolve()
+      }
+      setBusy(true)
+      setStatus(live === true ? status : `${status} (sample data — ${networkRef.current} is unreachable)`)
+      return task()
+        .catch((error: unknown) =>
+          appendNote(sectionId, `${failure} — ${errorMessage(error)}`, 'error'),
+        )
+        .finally(() => {
+          setBusy(false)
+          setStatus('')
+        })
+    },
+    [appendNote, busyRef, live, networkRef, setBusy, setStatus],
+  )
+
+  const presentRecord = useCallback(
+    (sectionId: number, record: StructuredResult, view: TrustedViewId): ViewSpec => {
+      commitStore(addResult(storeRef.current, record))
+      const spec = viewFor(record, view)
+      appendBlock(sectionId, { kind: 'view', view: spec })
+      return spec
+    },
+    [appendBlock, commitStore, storeRef],
+  )
+
+  const lookupById = useCallback(
+    (
+      sectionId: number,
+      lookup: {
+        label: string
+        view: TrustedViewId
+        run: () => Promise<StructuredResult | undefined>
+        summary?: (view: ViewSpec) => string | undefined
+        failure?: string
+      },
+    ) =>
+      withBusy(
+        sectionId,
+        `looking up ${lookup.label}…`,
+        lookup.failure ?? `Couldn't open ${lookup.label}`,
+        async () => {
+          const record = await lookup.run()
+          if (!record) return
+          const view = presentRecord(sectionId, record, lookup.view)
+          const line = lookup.summary?.(view)
+          if (line) appendNote(sectionId, line)
+        },
+      ),
+    [appendNote, presentRecord, withBusy],
+  )
+
+  const openTransaction = useCallback(
+    (sectionId: number, txid: string) =>
+      lookupById(sectionId, {
+        label: txid.slice(0, 8),
+        view: 'transaction.detail',
+        failure: "Couldn't find that transaction",
+        run: () => host().lookupTransaction(txid),
+        summary: (view) => {
+          const derived = createTransactionDetailViewModel(storeRef.current, view)
+          return derived.ok && derived.model.paymentAmountMicroAlgos !== undefined
+            ? `${formatMicroAlgos(derived.model.paymentAmountMicroAlgos)} ALGO from ${shorten(derived.model.sender, 12)} to ${shorten(derived.model.receiver ?? '—', 12)}, ${derived.model.status}.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openAccount = useCallback(
+    (sectionId: number, address: string) =>
+      lookupById(sectionId, {
+        label: address.slice(0, 8),
+        view: 'account.portfolio',
+        failure: "Couldn't open the account",
+        run: () => host().lookupAccount(address),
+        summary: (view) => {
+          const derived = createAccountPortfolioViewModel(storeRef.current, view)
+          return derived.ok
+            ? `Holds ${formatMicroAlgos(derived.model.balanceMicroAlgos)} ALGO and ${plural(derived.model.assets.length, 'asset')}.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openAccountName = useCallback(
+    (sectionId: number, name: string) => {
+      appendNote(sectionId, `NFD lookup is not enabled — paste ${name}'s address instead.`, 'error')
+    },
+    [appendNote],
+  )
+
+  const openMyAccounts = useCallback(
+    (sectionId: number) =>
+      lookupById(sectionId, {
+        label: 'your accounts',
+        view: 'account.list',
+        failure: "Couldn't list accounts",
+        run: async () => {
+          if (accounts.length === 0) {
+            appendNote(sectionId, 'No wallet connected — connect one, or paste an address.')
+            return undefined
+          }
+          return host().lookupAccounts(accounts.map((account) => account.address))
+        },
+        summary: (view) => {
+          const derived = createAccountListViewModel(storeRef.current, view)
+          return derived.ok
+            ? `${plural(derived.model.accounts.length, 'account')} on ${networkRef.current}.`
+            : undefined
+        },
+      }),
+    [accounts, appendNote, host, lookupById, networkRef, storeRef],
+  )
+
+  const openAsset = useCallback(
+    (sectionId: number, assetId: number) =>
+      lookupById(sectionId, {
+        label: `asset ${assetId}`,
+        view: 'asset.detail',
+        run: () => host().lookupAsset(assetId),
+        summary: (view) => {
+          const derived = createAssetDetailViewModel(storeRef.current, view)
+          return derived.ok
+            ? `${derived.model.name ?? 'Asset'} · ${derived.model.decimals} decimals · supply ${derived.model.totalSupply}.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openHoldings = useCallback(
+    (sectionId: number, address: string) =>
+      lookupById(sectionId, {
+        label: `assets of ${address.slice(0, 8)}…`,
+        view: 'asset.holdings',
+        run: () => host().lookupAccountAssets(address),
+      }),
+    [host, lookupById],
+  )
+
+  const openApplication = useCallback(
+    (sectionId: number, applicationId: number) =>
+      lookupById(sectionId, {
+        label: `application ${applicationId}`,
+        view: 'application.detail',
+        run: () => host().lookupApplication(applicationId),
+        summary: (view) => {
+          const derived = createApplicationDetailViewModel(storeRef.current, view)
+          return derived.ok
+            ? `App ${derived.model.applicationId} · ${plural(derived.model.globalStateCount, 'global state key')}.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openGroup = useCallback(
+    (sectionId: number, groupId: string) =>
+      lookupById(sectionId, {
+        label: `group ${groupId.slice(0, 8)}…`,
+        view: 'transaction.group',
+        run: () => host().lookupTransactionGroup(groupId),
+        summary: (view) => {
+          const derived = createTransactionCollectionViewModel(storeRef.current, view)
+          return derived.ok
+            ? `${plural(derived.model.transactions.length, 'transaction')} in the group.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openBlock = useCallback(
+    (sectionId: number, round: number) =>
+      lookupById(sectionId, {
+        label: `block ${round}`,
+        view: 'block.detail',
+        run: () => host().lookupBlock(round),
+        summary: (view) => {
+          const derived = createBlockDetailViewModel(storeRef.current, view)
+          return derived.ok
+            ? `Round ${derived.model.round} · ${plural(derived.model.transactionCount, 'transaction')}.`
+            : undefined
+        },
+      }),
+    [host, lookupById, storeRef],
+  )
+
+  const openTransactions = useCallback(
+    (sectionId: number, filter: TransactionSearchFilter) => {
+      const label = filter.address
+        ? `transactions of ${filter.address.slice(0, 8)}…`
+        : filter.assetId !== undefined
+          ? `transactions of asset ${filter.assetId}`
+          : filter.applicationId !== undefined
+            ? `transactions of app ${filter.applicationId}`
+            : `transactions in round ${filter.round}`
+      return lookupById(sectionId, {
+        label,
+        view: 'transaction.list',
+        run: () => host().searchTransactions(filter),
+        summary: (view) => {
+          const derived = createTransactionCollectionViewModel(storeRef.current, view)
+          return derived.ok
+            ? `${plural(derived.model.transactions.length, 'transaction')}${derived.model.nextToken ? ', more available' : ''}.`
+            : undefined
+        },
+      })
+    },
+    [host, lookupById, storeRef],
+  )
+
+  const openAmbiguous = useCallback(
+    (sectionId: number, raw: string) => {
+      const id = Number(raw)
+      if (!Number.isSafeInteger(id)) return Promise.resolve()
+      return withBusy(
+        sectionId,
+        `looking up ${raw} as asset, application, and block…`,
+        `Couldn't look up ${raw}`,
+        async () => {
+          const outcome = await lookupAmbiguousEntity(host(), id)
+          for (const match of outcome.matches) {
+            const view: TrustedViewId =
+              match.entity === 'asset'
+                ? 'asset.detail'
+                : match.entity === 'application'
+                  ? 'application.detail'
+                  : 'block.detail'
+            presentRecord(sectionId, match.record, view)
+          }
+          if (outcome.matches.length === 0) {
+            appendNote(sectionId, `No asset, application, or block ${raw} on ${networkRef.current}.`, 'error')
+            return
+          }
+          if (outcome.misses.length > 0) {
+            appendNote(
+              sectionId,
+              `Also checked: ${outcome.misses.map((miss) => miss.entity).join(', ')} — no match.`,
+            )
+          }
+        },
+      )
+    },
+    [appendNote, host, networkRef, presentRecord, withBusy],
+  )
+
+  /** The latest round as a block card; the blocks tab in the composer. */
+  const openLatestBlock = useCallback(
+    (sectionId: number) =>
+      withBusy(sectionId, 'reading the latest round…', "Couldn't read the latest block", async () => {
+        const { lastRound } = await host().statusRound()
+        const record = await host().lookupBlock(lastRound)
+        presentRecord(sectionId, record, 'block.detail')
+      }),
+    [host, presentRecord, withBusy],
+  )
+
+  return {
+    openTransaction,
+    openAccount,
+    openAccountName,
+    openMyAccounts,
+    openHoldings,
+    openAsset,
+    openApplication,
+    openGroup,
+    openBlock,
+    openTransactions,
+    openAmbiguous,
+    openLatestBlock,
+  }
+}

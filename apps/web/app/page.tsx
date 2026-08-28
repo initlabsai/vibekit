@@ -1,256 +1,186 @@
 'use client'
 
 /**
- * The web Explorer: one page holding the result store, the open view, and the
- * write flow. Reads and the flow run against `/api/explorer` when localnet
- * answers, and against the sample host when it does not; the browser holds
- * no key, so a live flow rests at `approved` until a signer is injected.
+ * The web Explorer as a chat-first transcript: a session index on the left,
+ * a feed on the right where each request's cards and notes accrete, and the
+ * composer below. This component is the composition root — the feed, the
+ * network, lookups, and the write flow each live in their own hook; the
+ * genuinely shared state (result store, busy flag, status line) stays here.
  */
 import {
-  addResult,
-  completeApprovedWriteFlow,
-  createAccountOpenView,
-  createAccountPortfolioViewModel,
   createFixtureResultStore,
-  createSampleHost,
-  createTransactionDetailViewModel,
   createWriteFlowViewModel,
   FIXTURE_ADDRESS_BOOK,
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
-  formatMicroAlgos,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performWriteFlowStep,
-  startWriteFlow,
-  type OpenView,
   type ResultStore,
-  type WriteFlowState,
 } from '@initlabs/vibekit-explorer'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
-import { routeComposerInput } from '../src/commands'
-import { createRemoteExplorerHost } from '../src/remote-host'
+import { HELP, routeComposerInput, type WalletAccount } from '../src/commands'
+import { Composer, FeedPane, NavPane } from '../src/feed/feed'
+import { useFeed, type SectionBlock } from '../src/feed/hooks'
+import { NETWORKS, useNetwork } from '../src/features/network/hooks'
+import { useWriteFlow } from '../src/features/write-flow/hooks'
+import { useLookups } from '../src/lookup'
 import { Button } from '../src/primitives'
-import { AccountsLanding, AccountView, TransactionDetail, Welcome } from '../src/views'
+import { ResultCard, type OpenTarget } from '../src/result-card'
+import { AccountsLanding, Welcome } from '../src/views'
 import { WriteFlowView } from '../src/write-flow'
 
+type Screen = 'chat' | 'wallet'
+
 export default function Page() {
-  const remoteHost = useMemo(() => createRemoteExplorerHost({ network: 'localnet' }), [])
-  const sampleHost = useMemo(() => createSampleHost(), [])
-  const [live, setLive] = useState<'probing' | boolean>('probing')
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
-  const [openView, setOpenView] = useState<OpenView | null>(null)
-  const [flow, setFlow] = useState<WriteFlowState | null>(null)
-  /** The host the open flow started on; a flow finishes where it began even if reachability flips. */
-  const [flowHost, setFlowHost] = useState<typeof remoteHost | typeof sampleHost | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [accountsOpen, setAccountsOpen] = useState(false)
-  const [input, setInput] = useState('')
-  const [status, setStatus] = useState('Ready')
+  const storeRef = useRef(store)
+  storeRef.current = store
+  const commitStore = useCallback((next: ResultStore) => {
+    storeRef.current = next
+    setStore(next)
+  }, [])
+  const [busy, setBusyState] = useState(false)
+  const busyRef = useRef(false)
+  const setBusy = useCallback((next: boolean) => {
+    busyRef.current = next
+    setBusyState(next)
+  }, [])
+  const [status, setStatus] = useState('')
+  const [screen, setScreen] = useState<Screen>('chat')
   const newId = useCallback((prefix: string) => `${prefix}-${crypto.randomUUID()}`, [])
-  const host = live === true ? remoteHost : sampleHost
 
-  useEffect(() => {
-    let cancelled = false
-    remoteHost.probe().then((reachable) => {
-      if (!cancelled) setLive(reachable)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [remoteHost])
+  // No wallet is connected yet: the address book is the sample one.
+  const accounts: ReadonlyArray<WalletAccount> = []
+  const activeAddress: string | undefined = undefined
 
-  const startPayment = useCallback(
-    (amountMicroAlgos?: number) => {
-      if (busy) return
-      if (flow !== null) {
-        setStatus('A payment is already open — close it to start another')
+  const { network, setNetwork, networkRef, host, live, latestRound } = useNetwork()
+  const feed = useFeed()
+  const { sections, selectedId, selectSection, createSection, appendNote } = feed
+  const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
+  const lookups = useLookups({ ...shared, accounts })
+  const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
+
+  const switchNetwork = useCallback(
+    (target: (typeof NETWORKS)[number] | undefined, sectionId?: number) => {
+      const report = (text: string, tone: 'muted' | 'error' = 'muted') =>
+        sectionId === undefined ? setStatus(text) : appendNote(sectionId, text, tone)
+      if (payment.flowRef.current !== null) {
+        report('Finish or deny the write before switching networks.', 'error')
         return
       }
-      setFlowHost(host)
-      setBusy(true)
-      setStatus(
-        host === remoteHost
-          ? 'Preparing the payment on localnet…'
-          : `Preparing a sample payment (always ${formatMicroAlgos(PAYMENT_FIXTURE_AMOUNT_MICROALGOS)} ALGO — localnet is offline)…`,
-      )
-      void startWriteFlow({
-        host,
-        store,
-        draftParams: {
-          sender: FIXTURE_SENDER,
-          receiver: FIXTURE_RECEIVER,
-          amountMicroAlgos: amountMicroAlgos ?? PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-          note: 'Explorer live payment',
-        },
-        newId,
-        onStep: (nextStore, nextFlow) => {
-          setStore(nextStore)
-          setFlow(nextFlow)
-        },
-      }).then((run) => {
-        setBusy(false)
-        setStore(run.store)
-        if (run.flow) setFlow(run.flow)
-        setStatus(
-          run.ok
-            ? 'Review the payment, then approve or deny'
-            : `Couldn't prepare the payment — ${run.message}`,
-        )
-      })
+      const current = networkRef.current
+      const next = target ?? NETWORKS[(NETWORKS.indexOf(current) + 1) % NETWORKS.length]!
+      if (next === current) {
+        report(`Already on ${next}.`)
+        return
+      }
+      setNetwork(next)
+      report(`Switched to ${next}. Existing sections keep their original network.`)
     },
-    [busy, flow, host, newId, remoteHost, store],
+    [appendNote, networkRef, payment.flowRef, setNetwork],
   )
 
-  const decide = useCallback(
-    (decision: 'approve' | 'deny') => {
-      if (busy || !flow || !flowHost || flow.stage !== 'awaiting-approval') return
-      setBusy(true)
-      void (async () => {
-        const outcome = await performWriteFlowStep({
-          host: flowHost,
-          store,
-          flow,
-          kind: decision,
-          newId,
-        })
-        if (!outcome.ok) {
-          setBusy(false)
-          setStatus(`Couldn't ${decision} — ${outcome.message}`)
-          return
-        }
-        setStore(outcome.store)
-        setFlow(outcome.flow)
-        if (decision === 'deny') {
-          setBusy(false)
-          setStatus('Denied — nothing was signed')
-          return
-        }
-        setStatus(flowHost === remoteHost ? 'Approved' : 'Approved · finishing the sample…')
-        const run = await completeApprovedWriteFlow({
-          host: flowHost,
-          store: outcome.store,
-          flow: outcome.flow,
-          newId,
-          onStep: (nextStore, nextFlow) => {
-            setStore(nextStore)
-            setFlow(nextFlow)
-          },
-        })
-        setBusy(false)
-        setStore(run.store)
-        if (run.flow) setFlow(run.flow)
-        setStatus(
-          !run.ok
-            ? `Approved, but completion failed — ${run.message}`
-            : run.pausedForSigner
-              ? 'Approved — signing lands with wallet integration'
-              : 'Payment confirmed on-chain',
-        )
-      })()
+  const openTarget = useCallback(
+    (target: OpenTarget) => {
+      setScreen('chat')
+      switch (target.kind) {
+        case 'transaction':
+          return void lookups.openTransaction(createSection(target.txid), target.txid)
+        case 'account':
+          return void lookups.openAccount(createSection(target.address), target.address)
+        case 'asset':
+          return void lookups.openAsset(createSection(`asset ${target.assetId}`), target.assetId)
+        case 'application':
+          return void lookups.openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
+        case 'block':
+          return void lookups.openBlock(createSection(`block ${target.round}`), target.round)
+        case 'holdings':
+          return void lookups.openHoldings(createSection(`assets of ${target.address.slice(0, 8)}…`), target.address)
+        case 'transactions':
+          return void lookups.openTransactions(createSection('transactions'), target.filter)
+      }
     },
-    [busy, flow, flowHost, newId, remoteHost, store],
+    [createSection, lookups],
   )
 
-  const openAccount = useCallback(
-    (address: string) => {
-      if (busy) return
-      setBusy(true)
-      setStatus(`Looking up ${address.slice(0, 8)}…`)
-      void host
-        .lookupAccount(address)
-        .then((record) => {
-          setBusy(false)
-          setStore((current) => addResult(current, record))
-          setOpenView(createAccountOpenView(record))
-          setAccountsOpen(false)
-          setStatus('Account opened')
-        })
-        .catch((error: unknown) => {
-          setBusy(false)
-          setStatus(
-            `Couldn't open the account — ${error instanceof Error ? error.message : String(error)}`,
+  const submit = useCallback(
+    (raw: string) => {
+      const outcome = routeComposerInput(raw)
+      setScreen('chat')
+      if (outcome.status === 'nav') {
+        if (outcome.screen === 'wallet') return setScreen('wallet')
+        const sectionId = createSection(raw.trim())
+        if (outcome.screen === 'blocks') return void lookups.openLatestBlock(sectionId)
+        if (!activeAddress) return appendNote(sectionId, 'Connect a wallet to see its assets, apps, and transactions.')
+        if (outcome.screen === 'assets') return void lookups.openHoldings(sectionId, activeAddress)
+        if (outcome.screen === 'txns') return void lookups.openTransactions(sectionId, { address: activeAddress })
+        return appendNote(sectionId, 'App lookups take an id: `app 1002541853`.')
+      }
+      const sectionId = createSection(raw.trim())
+      switch (outcome.status) {
+        case 'payment':
+          return payment.startPayment(sectionId, outcome.amountMicroAlgos, outcome.to)
+        case 'transaction':
+          return void lookups.openTransaction(sectionId, outcome.txid)
+        case 'group':
+          return void lookups.openGroup(sectionId, outcome.groupId)
+        case 'account':
+          return void lookups.openAccount(sectionId, outcome.address)
+        case 'account-name':
+          return lookups.openAccountName(sectionId, outcome.name)
+        case 'account-list':
+          return void lookups.openMyAccounts(sectionId)
+        case 'asset':
+          return void lookups.openAsset(sectionId, outcome.assetId)
+        case 'application':
+          return void lookups.openApplication(sectionId, outcome.applicationId)
+        case 'block':
+          return void lookups.openBlock(sectionId, outcome.round)
+        case 'network':
+          if (outcome.network) return switchNetwork(outcome.network, sectionId)
+          return appendNote(sectionId, `You're on ${networkRef.current}. Use "network localnet|testnet|mainnet" or click the chip to switch.`)
+        case 'help':
+          return appendNote(sectionId, HELP)
+        case 'ambiguous':
+          return void lookups.openAmbiguous(sectionId, outcome.value)
+        case 'text':
+          return appendNote(sectionId, 'No agent configured. Paste an id, or `pay 0.5 to <address>`.', 'error')
+      }
+    },
+    [activeAddress, appendNote, createSection, lookups, networkRef, payment, switchNetwork],
+  )
+
+  const renderBlock = useCallback(
+    (block: SectionBlock) => {
+      switch (block.kind) {
+        case 'view':
+          return <ResultCard store={store} view={block.view} onOpen={openTarget} />
+        case 'write': {
+          const derived = createWriteFlowViewModel(store, block.flow)
+          const isOpen = payment.flowRef.current?.flowId === block.flow.flowId
+          return (
+            <WriteFlowView
+              model={derived.ok ? derived.model : undefined}
+              errorMessage={derived.ok ? undefined : derived.error.message}
+              canSign={live !== true}
+              terminalNote={undefined}
+              busy={busy && isOpen}
+              onApprove={() => payment.decide('approve')}
+              onDeny={() => payment.decide('deny')}
+              onClose={payment.closeFlow}
+            />
           )
-        })
+        }
+        case 'raw':
+          return <pre className="note">{block.text}</pre>
+        case 'plugin':
+          return <pre className="note">{JSON.stringify(block.data, null, 2)}</pre>
+      }
     },
-    [busy, host],
+    [busy, live, openTarget, payment, store],
   )
 
-  const submit = (raw: string) => {
-    const outcome = routeComposerInput(raw)
-    setInput('')
-    if (outcome.status === 'payment') {
-      startPayment(outcome.amountMicroAlgos)
-    } else if (outcome.status === 'account') {
-      openAccount(outcome.address)
-    } else if (outcome.status === 'resolved') {
-      setOpenView(outcome.artifact)
-      setStatus(
-        flow !== null
-          ? 'Transaction opened in the background — close the payment flow to view it'
-          : 'Transaction opened',
-      )
-    } else if (outcome.status === 'ambiguous') {
-      setStatus(
-        `${outcome.classification.value} could be an asset, app, or block — those views are coming soon`,
-      )
-    } else {
-      setStatus('No match — enter a 52-character transaction ID or `pay 0.5`')
-    }
-  }
-
-  const viewId = openView?.view.view
-  const transaction =
-    openView && viewId === 'transaction.detail'
-      ? createTransactionDetailViewModel(store, openView.view)
-      : undefined
-  const account =
-    openView && viewId === 'account.portfolio'
-      ? createAccountPortfolioViewModel(store, openView.view)
-      : undefined
-  const flowView = flow ? createWriteFlowViewModel(store, flow) : undefined
-  const flowModel = flowView?.ok ? flowView.model : undefined
-  // The browser holds no custody: a live flow waits for wallet integration after approval.
-  const terminalNote =
-    flowHost === remoteHost && flowModel?.stage === 'approved' && !busy
-      ? 'Approved · signing lands with wallet integration — nothing was signed'
-      : flowModel?.stage === 'denied'
-        ? 'Nothing was signed'
-        : undefined
-  const modeLabel =
-    live === 'probing' ? 'probing localnet…' : live ? 'live · compose-only' : 'sample data'
-  const canvas = accountsOpen && !flowView ? (
-    <AccountsLanding
-      accounts={FIXTURE_ADDRESS_BOOK}
-      note="Wallet accounts arrive with wallet integration — these are the sample accounts."
-      onOpen={openAccount}
-    />
-  ) : flowView ? (
-    <WriteFlowView
-      model={flowModel}
-      errorMessage={flowView.ok ? undefined : flowView.error.message}
-      canSign={flowHost === sampleHost}
-      terminalNote={terminalNote}
-      busy={busy}
-      onApprove={() => decide('approve')}
-      onDeny={() => decide('deny')}
-      onClose={() => {
-        setFlow(null)
-        setFlowHost(null)
-        setStatus('Payment panel closed')
-      }}
-    />
-  ) : viewId === 'account.portfolio' ? (
-    <AccountView model={account?.ok ? account.model : undefined} />
-  ) : openView ? (
-    <TransactionDetail
-      model={transaction?.ok ? transaction.model : undefined}
-      onOpenAccount={openAccount}
-    />
-  ) : (
-    <Welcome onOpenSample={() => submit(FIXTURE_TRANSACTION_ID)} />
-  )
+  const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
+  const statusLine =
+    status || (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
 
   return (
     <main className="shell">
@@ -263,55 +193,46 @@ export default function Page() {
             <span>
               <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span>{' '}
               {modeLabel}
+              {latestRound === undefined ? null : (
+                <>
+                  {' '}
+                  <span className="round" key={latestRound}>{latestRound}</span>
+                </>
+              )}
             </span>
-            <span className="net net-localnet">localnet</span>
-            <span className="muted">no wallet</span>
+            <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
+              {network}
+            </button>
+            <Button label="no wallet" active={screen === 'wallet'} onPress={() => setScreen('wallet')} />
           </span>
         </div>
         <nav className="top-row tabs">
-          <Button label="explore" active={!accountsOpen} onPress={() => setAccountsOpen(false)} />
-          <Button label="accounts" active={accountsOpen} onPress={() => setAccountsOpen(true)} />
+          <Button label="explore" active={screen === 'chat'} onPress={() => setScreen('chat')} />
+          {(['assets', 'apps', 'txns', 'blocks'] as const).map((tab) => (
+            <Button key={tab} label={tab} onPress={() => submit(tab)} />
+          ))}
         </nav>
       </header>
       <div className="body">
-        <aside className="nav">
-          <span className="kicker">session</span>
-          <button className={`nav-item${!accountsOpen && !flow ? ' on' : ''}`} onClick={() => setAccountsOpen(false)}>
-            {openView?.title ?? 'explore'}
-          </button>
-          {flow ? <span className="nav-item on">payment</span> : null}
-          <span className="kicker nav-gap">write</span>
-          <button className="nav-item" onClick={() => startPayment()} disabled={flow !== null || busy}>
-            send payment
-          </button>
-        </aside>
-        <section className="feed">
-          {canvas}
-          {flow && openView ? <p className="note">{openView.title} · in background</p> : null}
-        </section>
-      </div>
-      <footer className="composer-wrap">
-        <form
-          className="composer"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submit(input)
-          }}
-        >
-          <span>›</span>
-          <input
-            autoFocus
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder="transaction id, address, or `pay 0.5`"
-            aria-label="Explorer composer"
+        <NavPane sections={sections} selectedId={selectedId} onSelect={selectSection} />
+        {screen === 'wallet' ? (
+          <section className="feed">
+            <AccountsLanding
+              accounts={FIXTURE_ADDRESS_BOOK}
+              note="No wallet is connected. These are the sample accounts; paste any address into the composer."
+              onOpen={(address) => openTarget({ kind: 'account', address })}
+            />
+          </section>
+        ) : (
+          <FeedPane
+            sections={sections}
+            selectedId={selectedId}
+            renderBlock={renderBlock}
+            empty={<Welcome onOpenSample={() => submit(FIXTURE_TRANSACTION_ID)} />}
           />
-          <Button type="submit" label="open" />
-        </form>
-        <div className="status-line" role="status" aria-live="polite">
-          {status}
-        </div>
-      </footer>
+        )}
+      </div>
+      <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
     </main>
   )
 }

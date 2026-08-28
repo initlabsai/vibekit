@@ -1,4 +1,3 @@
-import { parseAlgosToMicroAlgos } from '../format.js'
 import type { AccountLookupHost } from '../views/account.js'
 import type { TransactionLookupHost } from '../views/transaction.js'
 import { createFixtureEntityLookup } from './entities.js'
@@ -344,22 +343,4 @@ export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEv
   }
 }
 
-/**
- * Parses the deterministic composer command that begins a payment: `pay`,
- * `draft payment`, or `pay <algos>` with up to six decimal places. The
- * default amount matches the fixture payment.
- */
-export function parsePaymentComposerCommand(
-  raw: string,
-): { amountMicroAlgos: number; to?: string } | undefined {
-  const input = raw.trim()
-  if (/^(pay|draft payment)$/i.test(input)) {
-    return { amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS }
-  }
-  // `pay 0.5 to alice` — the receiver is a keystore label or an address; hosts resolve it.
-  const withAmount = /^pay\s+(\S+)(?:\s+to\s+(\S+))?$/i.exec(input)
-  if (!withAmount) return undefined
-  const amountMicroAlgos = parseAlgosToMicroAlgos(withAmount[1]!)
-  if (amountMicroAlgos === undefined || amountMicroAlgos <= 0) return undefined
-  return withAmount[2] ? { amountMicroAlgos, to: withAmount[2] } : { amountMicroAlgos }
-}
+export { parsePaymentComposerCommand } from '../input.js'

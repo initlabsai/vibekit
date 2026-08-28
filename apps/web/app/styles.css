@@ -55,6 +55,11 @@ code { font-family: var(--font-mono); color: var(--brass); }
 .nav-item::before { color: var(--brass); content: '› '; }
 .nav-item:hover, .nav-item.on { background: var(--card); color: var(--text); }
 .nav-gap { margin-top: 1rem; }
+.nav-empty { color: var(--faint); }
+.nav-empty::before { content: ''; }
+.section { display: flex; flex-direction: column; gap: .6rem; padding-bottom: .6rem; }
+.section + .section { border-top: 1px solid var(--border-soft); padding-top: .8rem; }
+.net { background: none; cursor: pointer; }
 .feed { display: flex; flex-direction: column; gap: .75rem; overflow-y: auto; padding: 1rem 1.25rem; }
 .feed > :first-child { margin-top: auto; }
 .composer-wrap { border-top: 1px solid var(--brass); padding: .5rem 1.25rem .6rem; }

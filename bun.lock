@@ -50,6 +50,7 @@
       "version": "0.1.1-alpha.2",
       "dependencies": {
         "@initlabs/vibekit-explorer": "workspace:*",
+        "algosdk": "3.7.0",
         "next": "16.3.2",
         "react": "19.2.8",
         "react-dom": "19.2.8",

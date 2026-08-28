@@ -1,0 +1,70 @@
+/** The active network: the remote host for it, the sample fallback, the reachability probe, and the round poll. */
+import { createSampleHost, type LiveNetworkId } from '@initlabs/vibekit-explorer'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+import { createRemoteExplorerHost, type RemoteExplorerHost } from '../../remote-host'
+
+export const NETWORKS: LiveNetworkId[] = ['localnet', 'testnet', 'mainnet']
+
+/** Where the Explorer starts: the Vercel project sets testnet; `next dev` is localnet. */
+export function defaultNetwork(): LiveNetworkId {
+  const configured = process.env.NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK
+  return configured === 'testnet' || configured === 'mainnet' ? configured : 'localnet'
+}
+
+export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHost>
+
+const ROUND_POLL_MS = 4000
+
+export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft'] } = {}) {
+  const [network, setNetwork] = useState<LiveNetworkId>(defaultNetwork)
+  const networkRef = useRef(network)
+  networkRef.current = network
+  const { signDraft } = args
+  const remoteHost = useMemo(
+    () => createRemoteExplorerHost({ network, ...(signDraft ? { signDraft } : {}) }),
+    [network, signDraft],
+  )
+  const sampleHost = useMemo(() => createSampleHost(), [])
+  const [live, setLive] = useState<'probing' | boolean>('probing')
+  const [latestRound, setLatestRound] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    let cancelled = false
+    setLive('probing')
+    setLatestRound(undefined)
+    remoteHost.probe().then((reachable) => {
+      if (!cancelled) setLive(reachable)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [remoteHost])
+
+  useEffect(() => {
+    if (live !== true) return
+    let cancelled = false
+    const tick = () =>
+      remoteHost.statusRound().then(
+        ({ lastRound }) => {
+          if (!cancelled) setLatestRound(lastRound)
+        },
+        () => undefined,
+      )
+    void tick()
+    const id = setInterval(tick, ROUND_POLL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [live, remoteHost])
+
+  const host = useCallback(
+    (): ExplorerHost => (live === true ? remoteHost : sampleHost),
+    [live, remoteHost, sampleHost],
+  )
+
+  return { network, setNetwork, networkRef, remoteHost, sampleHost, host, live, latestRound }
+}
+
+export type NetworkLane = ReturnType<typeof useNetwork>

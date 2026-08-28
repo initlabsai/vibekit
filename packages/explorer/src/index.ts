@@ -55,7 +55,12 @@ export type {
   WriteStageEvent,
 } from './core/protocol.js'
 export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
-export { classifyExplorerInput, parseEntityComposerCommand } from './input.js'
+export {
+  classifyExplorerInput,
+  parseEntityComposerCommand,
+  routeExplorerComposerInput,
+} from './input.js'
+export type { ExplorerComposerRoute } from './input.js'
 export { mergePages, nextPageArgs } from './views/pages.js'
 export {
   createAccountListViewModel,

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { parseAlgosToMicroAlgos } from './format.js'
+
 const TRANSACTION_ID_PATTERN = /^[A-Z2-7]{51}[AQ]$/
 const ADDRESS_PATTERN = /^[A-Z2-7]{57}[AEIMQUY4]$/
 const NUMERIC_ID_PATTERN = /^(0|[1-9]\d*)$/
@@ -123,4 +125,73 @@ export function parseEntityComposerCommand(raw: string): DirectedEntityCommand |
   if (kind === 'asset' || kind === 'asa') return { entity: 'asset', id }
   if (kind === 'app' || kind === 'application') return { entity: 'application', id }
   return { entity: 'block', id }
+}
+
+/** The amount a bare `pay` drafts; the same figure as the fixture payment. */
+const DEFAULT_PAYMENT_MICROALGOS = 250_000
+
+/**
+ * Parses the deterministic composer command that begins a payment: `pay`,
+ * `draft payment`, or `pay <algos>` with up to six decimal places, optionally
+ * `to <label | address>`; hosts resolve the receiver.
+ */
+export function parsePaymentComposerCommand(
+  raw: string,
+): { amountMicroAlgos: number; to?: string } | undefined {
+  const input = raw.trim()
+  if (/^(pay|draft payment)$/i.test(input)) {
+    return { amountMicroAlgos: DEFAULT_PAYMENT_MICROALGOS }
+  }
+  const withAmount = /^pay\s+(\S+)(?:\s+to\s+(\S+))?$/i.exec(input)
+  if (!withAmount) return undefined
+  const amountMicroAlgos = parseAlgosToMicroAlgos(withAmount[1]!)
+  if (amountMicroAlgos === undefined || amountMicroAlgos <= 0) return undefined
+  return withAmount[2] ? { amountMicroAlgos, to: withAmount[2] } : { amountMicroAlgos }
+}
+
+/**
+ * The deterministic composer lane both Explorer apps share: a typed payment,
+ * a directed entity command, then a recognized identifier; anything else is
+ * text. Navigation, help, and network commands are the app's own words and
+ * are matched before this.
+ */
+export type ExplorerComposerRoute =
+  | { status: 'payment'; amountMicroAlgos: number; to?: string }
+  | { status: 'transaction'; txid: string }
+  | { status: 'group'; groupId: string }
+  | { status: 'account'; address: string }
+  | { status: 'account-name'; name: string }
+  | { status: 'asset'; assetId: number }
+  | { status: 'application'; applicationId: number }
+  | { status: 'block'; round: number }
+  | { status: 'ambiguous'; value: string }
+  | { status: 'text'; text: string }
+
+export function routeExplorerComposerInput(input: string): ExplorerComposerRoute {
+  const trimmed = input.trim()
+  const payment = parsePaymentComposerCommand(trimmed)
+  if (payment) return { status: 'payment', ...payment }
+  const directed = parseEntityComposerCommand(trimmed)
+  if (directed?.entity === 'asset') return { status: 'asset', assetId: directed.id }
+  if (directed?.entity === 'application')
+    return { status: 'application', applicationId: directed.id }
+  if (directed?.entity === 'block') return { status: 'block', round: directed.id }
+  if (directed?.entity === 'group') return { status: 'group', groupId: directed.id }
+  const classified = classifyExplorerInput(trimmed)
+  if (classified.kind === 'entity' && classified.entity === 'transaction') {
+    return { status: 'transaction', txid: classified.value }
+  }
+  if (classified.kind === 'entity' && classified.entity === 'account') {
+    return { status: 'account', address: classified.value }
+  }
+  if (classified.kind === 'entity' && classified.entity === 'account-name') {
+    return { status: 'account-name', name: classified.value }
+  }
+  if (classified.kind === 'entity' && classified.entity === 'group') {
+    return { status: 'group', groupId: classified.value }
+  }
+  if (classified.kind === 'ambiguous-entity') {
+    return { status: 'ambiguous', value: classified.value }
+  }
+  return { status: 'text', text: trimmed }
 }
