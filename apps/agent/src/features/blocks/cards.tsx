@@ -93,7 +93,7 @@ export function BlockListCard({
   const columns: Column<BlockRow>[] = [
     { key: 'round', label: 'round', width: 'minmax(6rem, .7fr)', sortValue: (b) => b.round, cell: (b) => <span className="tt-kind">{b.round}</span> },
     { key: 'age', label: 'age', width: 'minmax(4rem, .5fr)', cell: (b) => <Age timestamp={b.timestamp} /> },
-    { key: 'time', label: 'time', sortValue: (b) => b.timestamp, cell: (b) => formatExplorerTime(b.timestamp) },
+    { key: 'time', label: 'time', width: 'minmax(12rem, 1fr)', sortValue: (b) => b.timestamp, cell: (b) => formatExplorerTime(b.timestamp) },
     { key: 'txns', label: 'txns', width: 'minmax(9rem, 1.2fr)', sortValue: (b) => b.transactionCount, cell: (b) => <TxnTags row={b} /> },
     {
       key: 'proposer',

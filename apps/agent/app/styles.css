@@ -459,3 +459,31 @@ a.button-active { text-decoration: underline; }
 .txn-tags { display: inline-flex; flex-wrap: wrap; gap: .3rem; vertical-align: middle; }
 .txn-tags .kind b { color: var(--muted); font-weight: 400; margin-left: .3rem; }
 .faint { color: var(--faint); }
+
+/* Phones: one tight top row, tabs flush left, the composer spans the whole width. */
+@media (max-width: 720px) {
+  .top-row { flex-wrap: nowrap; gap: .6rem; min-height: 2.6rem; }
+  .shell { overflow-x: hidden; }
+  .brand { font-size: .66rem; letter-spacing: .06em; white-space: nowrap; }
+  .top-state { flex: 1; gap: .5rem; justify-content: flex-end; min-width: 0; }
+  .top-state .live-dot, .top-state .live-label { display: none; }
+  .menu { min-width: 0; }
+  .menu summary { display: block; }
+  .pulse { display: none; }
+  .net, .top-state .button, .menu summary { padding: .2rem .45rem; white-space: nowrap; }
+  .menu summary { max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; }
+  .top { box-sizing: border-box; overflow: hidden; }
+  .top-state { font-size: .68rem; }
+  .tabs { gap: 1.1rem; min-height: 2.2rem; overflow-x: auto; padding-left: 0; scrollbar-width: none; }
+  .tabs .button { flex: none; }
+  .composer-wrap { grid-template-columns: 1fr; padding: .6rem .9rem; }
+  .composer-wrap > * { grid-column: 1; width: 100%; }
+  .composer { gap: .5rem; padding: .25rem .5rem .25rem .6rem; }
+  .status-line { padding-left: 3rem; }
+  .note-agent { gap: .7rem; padding: .7rem 0 .8rem; }
+  .companion { min-width: 3.6rem; }
+}
+@media (max-width: 720px) {
+  .fact { gap: .15rem; grid-template-columns: 1fr; }
+  .fact dt { padding-top: 0; }
+}

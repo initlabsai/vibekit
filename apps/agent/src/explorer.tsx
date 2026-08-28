@@ -270,7 +270,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
           <span className="top-state">
             <span>
               <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span>{' '}
-              {modeLabel}
+              <span className="live-label">{modeLabel}</span>
               {latestRound === undefined ? null : (
                 <>
                   {' '}

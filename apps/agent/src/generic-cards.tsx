@@ -68,7 +68,8 @@ export function Table<T>({
   const { sorted, sort, cycle } = useTableSort(filtered, (row, key) =>
     columns.find((column) => column.key === key)?.sortValue?.(row),
   )
-  const template = columns.map((column) => column.width ?? 'minmax(0, 1fr)').join(' ')
+  // Every track keeps a floor so narrow screens scroll the table instead of crushing a column.
+  const template = columns.map((column) => column.width ?? 'minmax(7rem, 1fr)').join(' ')
   return (
     <div className="table-wrap">
       {filterable ? (
