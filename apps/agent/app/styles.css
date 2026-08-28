@@ -491,6 +491,8 @@ a.button-active { text-decoration: underline; }
   .composer-wrap { grid-template-columns: 1fr; padding: .6rem .9rem; }
   .composer-wrap > * { grid-column: 1; width: 100%; }
   .composer { gap: .5rem; padding: .25rem .5rem .25rem .6rem; }
+  /* iOS zooms into any input under 16px on focus; every field on a phone is 16px */
+  .composer input, .table-filter, .picker-form input { font-size: 16px; }
   .status-line { font-size: .62rem; padding-left: .2rem; }
   /* phones: her face sits above her line, both flush left */
   .note-agent { flex-direction: column; gap: .3rem; padding: .7rem 0 .8rem; }
