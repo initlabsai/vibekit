@@ -35,8 +35,8 @@ export function useComposer({
   setStatus: (text: string) => void
   /** The agent lane; it says so itself when no agent is configured. */
   runAgent: (sectionId: number, input: string) => Promise<void>
-  /** Buys a credit pack through the wallet; resolves to the line to show and the settled txid. */
-  buyCredits: () => Promise<{ line: string; txid?: string }>
+  /** Buys turns through the wallet (the pack size by default); resolves to the line to show and the settled txid. */
+  buyCredits: (turns?: number) => Promise<{ line: string; txid?: string }>
 }) {
   const { createSection, appendNote } = feed
   const goHome = useCallback(() => {
@@ -121,7 +121,7 @@ export function useComposer({
           return void lookups.openNetworkStatus(sectionId)
         case 'buy':
           appendNote(sectionId, 'Opening your wallet to pay…')
-          return void buyCredits().then(
+          return void buyCredits(outcome.turns).then(
             ({ line, txid }) => appendNote(sectionId, line, 'muted', txid),
             (error: unknown) => appendNote(sectionId, `Couldn't buy — ${error instanceof Error ? error.message : String(error)}`, 'error'),
           )

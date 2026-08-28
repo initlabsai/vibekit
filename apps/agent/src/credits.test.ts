@@ -20,8 +20,10 @@ describe('credit ledger', () => {
   test('paid turns spend down to zero and refuse, untouched, after', async () => {
     expect(await ledger.spend(FIXTURE_SENDER)).toBeUndefined()
     expect(await ledger.credit(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK)
-    expect(await ledger.spend(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK - 1)
-    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK - 1)
+    expect(await ledger.credit(FIXTURE_SENDER, 5)).toBe(ledger.TURNS_PER_PACK + 5)
+    expect(await ledger.spend(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK + 4)
+    expect(await ledger.spend(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK + 3)
+    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK + 3)
   })
 
   test('free turns are per IP per day', async () => {
@@ -65,7 +67,7 @@ describe('credits route', () => {
     await ledger.bindToken(TOKEN, FIXTURE_SENDER)
     await ledger.credit(FIXTURE_SENDER)
     const body = await (await credits.GET(new NextRequest('http://local/api/credits', { headers: { authorization: `Bearer ${TOKEN}` } }))).json()
-    expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, payer: FIXTURE_SENDER, paid: ledger.TURNS_PER_PACK })
+    expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, pricePerTurnMicroUsdc: 40_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, payer: FIXTURE_SENDER, paid: ledger.TURNS_PER_PACK })
     expect(body.network).toBe('algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=')
   })
 })
@@ -81,6 +83,15 @@ describe('credits price', () => {
     expect(formatUsdc(1_000_000)).toBe('$1.00')
     process.env.X402_ASSET_ID = '31566704'
     expect(creditsConfig()?.asset).toBe('31566704')
+  })
+
+  test('turns requested clamp to the pack by default and to the cap at most', async () => {
+    const { turnsRequested, MAX_TURNS_PER_BUY } = await import('../app/api/credits/config.js')
+    expect(turnsRequested(null)).toBe(ledger.TURNS_PER_PACK)
+    expect(turnsRequested('50')).toBe(50)
+    expect(turnsRequested('0')).toBe(ledger.TURNS_PER_PACK)
+    expect(turnsRequested('2.5')).toBe(ledger.TURNS_PER_PACK)
+    expect(turnsRequested(String(MAX_TURNS_PER_BUY * 3))).toBe(MAX_TURNS_PER_BUY)
   })
 })
 

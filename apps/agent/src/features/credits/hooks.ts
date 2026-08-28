@@ -15,6 +15,7 @@ export interface CreditsState {
   chain?: 'mainnet' | 'testnet'
   network?: string
   turnsPerPack: number
+  pricePerTurnMicroUsdc?: number
   freeTurns: number
   /** Today's free turns left for this connection. */
   freeLeft?: number
@@ -69,8 +70,8 @@ export function useCredits({
     [],
   )
 
-  /** Pays for one pack through the connected wallet; resolves to the refreshed balance and the settled txid. */
-  const buy = useCallback(async (): Promise<{ state: CreditsState; txid?: string }> => {
+  /** Pays for `turns` (the pack size by default) through the connected wallet; resolves to the refreshed balance and the settled txid. */
+  const buy = useCallback(async (turns?: number): Promise<{ state: CreditsState; txid?: string }> => {
     if (!state.enabled || !state.network) throw new Error('Credits are not for sale here; the house pays.')
     if (!activeAddress) throw new Error('connect a wallet to pay')
     // The payment stack rides in only when someone buys; it is not part of the page.
@@ -78,7 +79,7 @@ export function useCredits({
     const client = new x402Client().register(state.network as `${string}:${string}`, new ExactAvmScheme({ address: activeAddress, signTransactions }))
     // A fresh secret travels with the payment; the server binds it to the payer once settled.
     const token = newToken()
-    const response = await wrapFetchWithPayment(fetch, client)('/api/credits', { method: 'POST', headers: { 'x-credit-token': token } })
+    const response = await wrapFetchWithPayment(fetch, client)(`/api/credits${turns ? `?turns=${turns}` : ''}`, { method: 'POST', headers: { 'x-credit-token': token } })
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as { error?: string }
       throw new Error(body.error ?? `payment failed (${response.status})`)

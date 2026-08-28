@@ -37,9 +37,9 @@ export async function balance(payer: string): Promise<number> {
   return Math.max(0, await readNumber(`credits:${payer}`))
 }
 
-/** Adds packs to the payer's paid turns; returns the new paid balance. */
-export async function credit(payer: string, packs = 1): Promise<number> {
-  return incrBy(`credits:${payer}`, packs * TURNS_PER_PACK)
+/** Adds turns to the payer's paid balance; returns the new balance. */
+export async function credit(payer: string, turns = TURNS_PER_PACK): Promise<number> {
+  return incrBy(`credits:${payer}`, turns)
 }
 
 /** Takes one paid turn; `undefined` when the address is dry, with nothing changed. */

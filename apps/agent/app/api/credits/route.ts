@@ -11,7 +11,7 @@ import { withX402, x402ResourceServer } from '@x402/next'
 import algosdk from 'algosdk'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { creditsConfig, FACILITATOR_URL } from './config'
+import { creditsConfig, FACILITATOR_URL, MAX_TURNS_PER_BUY, turnsRequested } from './config'
 import { balance, bearerOf, bindToken, credit, freeLeft, FREE_TURNS, ipOf, payerForToken, TOKEN_PATTERN, TURNS_PER_PACK } from './ledger'
 
 export const runtime = 'nodejs'
@@ -38,18 +38,24 @@ function paidRoute(): Handler | undefined {
   const config = creditsConfig()
   if (!config) return undefined
   const server = new x402ResourceServer(new HTTPFacilitatorClient({ url: FACILITATOR_URL })).register(config.network, new ExactAvmScheme())
-  server.onAfterSettle(async ({ result, transportContext }) => {
+  server.onAfterSettle(async ({ result, requirements, transportContext }) => {
     if (!result.success || !result.payer) return
-    await credit(result.payer)
+    // Turns follow the amount actually required and settled, never a number the caller sent separately.
+    await credit(result.payer, Math.floor(Number(requirements.amount) / config.pricePerTurnMicroUsdc))
     const token = creditTokenOf(transportContext)
     if (token) await bindToken(token, result.payer)
   })
   paid = withX402(
-    async () => NextResponse.json({ ok: true, turns: TURNS_PER_PACK }),
+    async (request) => NextResponse.json({ ok: true, turns: turnsRequested(request.nextUrl.searchParams.get('turns')) }),
     {
-      // An atomic amount, not a money string: nothing between the env and the requirement rounds.
-      accepts: { scheme: 'exact', network: config.network, payTo: config.payTo, price: { asset: config.asset, amount: String(config.priceMicroUsdc) } },
-      description: `${TURNS_PER_PACK} VibeKit Agent turns`,
+      // An atomic amount, not a money string, sized by `?turns=`: nothing between the env and the requirement rounds.
+      accepts: {
+        scheme: 'exact',
+        network: config.network,
+        payTo: config.payTo,
+        price: (context) => ({ asset: config.asset, amount: String(turnsRequested(context.adapter.getQueryParam?.('turns')) * config.pricePerTurnMicroUsdc) }),
+      },
+      description: `VibeKit Agent turns, ${TURNS_PER_PACK} by default, up to ${MAX_TURNS_PER_BUY}`,
     },
     server,
   )
@@ -62,7 +68,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const [paid, free] = await Promise.all([payer ? balance(payer) : Promise.resolve(undefined), freeLeft(ipOf(request))])
   return NextResponse.json({
     enabled: config !== undefined,
-    ...(config ? { price: config.price, priceMicroUsdc: config.priceMicroUsdc, asset: config.asset, chain: config.chain, network: config.network, payTo: config.payTo } : {}),
+    ...(config ? { price: config.price, priceMicroUsdc: config.priceMicroUsdc, pricePerTurnMicroUsdc: config.pricePerTurnMicroUsdc, asset: config.asset, chain: config.chain, network: config.network, payTo: config.payTo } : {}),
     turnsPerPack: TURNS_PER_PACK,
     freeTurns: FREE_TURNS,
     freeLeft: free,
