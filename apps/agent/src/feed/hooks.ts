@@ -41,12 +41,17 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
     setSections(next)
   }, [])
 
-  /** Brings a section's header into view once React has committed it. */
+  /**
+   * Brings a section's header into view once React has committed it — by
+   * scrolling the feed itself. `scrollIntoView` would do, except iOS Safari
+   * answers it with a zoom while the keyboard is up.
+   */
   const scrollToSection = useCallback((id: number) => {
     setTimeout(() => {
-      document
-        .querySelector(`[data-section="${id}"]`)
-        ?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      const feed = document.querySelector<HTMLElement>('.feed')
+      const section = document.querySelector<HTMLElement>(`[data-section="${id}"]`)
+      if (!feed || !section) return
+      feed.scrollTo({ top: section.offsetTop - feed.offsetTop, behavior: 'smooth' })
     }, 0)
   }, [])
 

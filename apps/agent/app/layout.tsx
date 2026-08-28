@@ -19,7 +19,8 @@ export const metadata: Metadata = {
 }
 
 /** The keyboard resizes the layout rather than covering it, so the composer stays in view and Safari has nothing to pan to. */
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, interactiveWidget: 'resizes-content', themeColor: '#0a0b0e' }
+// maximumScale stops iOS's automatic zoom-to-element; Safari still honours pinch-zoom regardless.
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, maximumScale: 1, interactiveWidget: 'resizes-content', themeColor: '#0a0b0e' }
 
 /** Fonts and tokens; the shell (top bar, session nav, composer) persists across every route. */
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
