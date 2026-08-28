@@ -279,6 +279,23 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       return true
     }
   })
+  const [navOpen, setNavOpen] = useState(() => {
+    try {
+      return window.localStorage.getItem('vibekit.nav') !== 'closed'
+    } catch {
+      return true
+    }
+  })
+  const toggleNav = useCallback(() => {
+    setNavOpen((open) => {
+      try {
+        window.localStorage.setItem('vibekit.nav', open ? 'closed' : 'open')
+      } catch {
+        // storage may be unavailable; the toggle still works for the session
+      }
+      return !open
+    })
+  }, [])
   const toggleRail = useCallback(() => {
     setRailOpen((open) => {
       try {
@@ -316,7 +333,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     <EnrichmentProvider host={remoteHost} live={live === true}>
     <CopyContext.Provider value={announceCopy}>
     <ExplorerContext.Provider value={context}>
-    <main className={`shell${railOpen ? ' rail-open' : ' rail-folded'}`}>
+    <main className={`shell${railOpen ? ' rail-open' : ' rail-folded'}${navOpen ? '' : ' nav-folded'}`}>
       <header className="top">
         <div className="top-row">
           <span className="brand">
@@ -358,6 +375,8 @@ function ExplorerApp({ children }: { children: ReactNode }) {
             goHome()
             selectSection(id)
           }}
+          open={navOpen}
+          onToggle={toggleNav}
         />
         {children}
         <ProfileRail open={railOpen} onToggle={toggleRail} />

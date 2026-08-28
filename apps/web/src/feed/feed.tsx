@@ -10,16 +10,46 @@ export function NavPane({
   sections,
   selectedId,
   onSelect,
+  open,
+  onToggle,
   children,
 }: {
   sections: Section[]
   selectedId: number | null
   onSelect: (id: number) => void
+  open: boolean
+  onToggle: () => void
   children?: ReactNode
 }) {
+  // Folded: a slim bar with the arrow and one tick per request; click a tick to jump.
+  if (!open) {
+    return (
+      <aside className="nav nav-mini" aria-label="Session, folded">
+        <button type="button" className="rail-arrow" onClick={onToggle} title="open the session">
+          ▸
+        </button>
+        <span className="nav-mini-ticks" aria-hidden="true">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              className={`nav-tick${section.id === selectedId ? ' on' : ''}`}
+              title={section.prompt}
+              onClick={() => onSelect(section.id)}
+            />
+          ))}
+        </span>
+      </aside>
+    )
+  }
   return (
     <aside className="nav">
-      <span className="kicker">session</span>
+      <span className="nav-head">
+        <span className="kicker">session</span>
+        <button type="button" className="rail-arrow" onClick={onToggle} title="fold the session">
+          ◂
+        </button>
+      </span>
       {sections.length === 0 ? <span className="nav-item nav-empty">nothing yet</span> : null}
       {sections.map((section) => (
         <button
