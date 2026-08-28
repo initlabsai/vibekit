@@ -33,7 +33,8 @@ export function AppsScreen() {
         <span className="muted"> · {network}</span>
       </header>
       <form className="picker-form" onSubmit={lookup}>
-        <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="app id, e.g. 1002541853" aria-label="Application id" inputMode="numeric" />
+        <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="app id, e.g. 1002541853" aria-label="Application id"
+          autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other" inputMode="numeric" />
         <Button type="submit" label="open app" />
       </form>
       <AddressPicker address={address} onChange={setAddress} noun="opted-in apps" />

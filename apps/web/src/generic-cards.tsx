@@ -78,6 +78,7 @@ export function Table<T>({
           onChange={(event) => setFilter(event.target.value)}
           placeholder="filter…"
           aria-label="Filter rows on this page"
+          autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other"
         />
       ) : null}
       <div className="table" role="table">

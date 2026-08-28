@@ -155,6 +155,7 @@ export function Composer({
           onChange={(event) => setInput(event.target.value)}
           placeholder={placeholder}
           aria-label="Explorer composer"
+          autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other"
         />
         <Button type="submit" label="send" />
       </form>

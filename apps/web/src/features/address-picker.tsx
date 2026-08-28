@@ -58,6 +58,7 @@ export function AddressPicker({
           onChange={(event) => setDraft(event.target.value)}
           placeholder="paste another address…"
           aria-label={`Address whose ${noun} to show`}
+          autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other"
         />
         <Button type="submit" label="show" />
       </form>
