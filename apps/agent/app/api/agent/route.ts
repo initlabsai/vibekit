@@ -133,15 +133,16 @@ export async function POST(request: Request): Promise<Response> {
     if (refused) return Response.json({ error: refused }, { status: 429 })
   }
 
-  // The one expensive tool reads a program a page (~3k tokens) at a time; the house
-  // pays for two pages per turn, which explains a contract, and no more.
+  // The gate sees every write and expensive call. Writes compose only — the wallet decides —
+  // so they always pass. The one expensive tool reads a program a page (~3k tokens) at a
+  // time; the house pays for two pages per turn, which explains a contract, and no more.
   let programPages = 0
   const session = createExplorerAgent({
     model: { provider: 'openai-compatible', baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model: endpoint.model },
     addressBook: body.accounts,
     network: body.network,
     history: body.history as never,
-    approveToolCall: async ({ toolName }) => toolName === 'get_application_program' && ++programPages <= PROGRAM_PAGES_PER_TURN,
+    approveToolCall: async ({ toolName }) => toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
   })
   const context = [activeSenderLine(body.activeAddress, body.accounts), body.context ?? '']
     .filter(Boolean)
