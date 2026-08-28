@@ -92,12 +92,11 @@ const TABS = [
   { href: '/blocks', label: 'blocks' },
 ] as const
 
-/** `12 turns · 3 free · /buy 25 for $1.00`, or the offer alone before a wallet connects. */
+/** `12 turns · 2 free today · /buy 25 for $1.00`; before any pack, just the free count and the offer. */
 function creditsLine(credits: ReturnType<typeof useCredits>): string {
   const offer = `/buy ${credits.turnsPerPack} for ${credits.price}`
-  if (!credits.credits) return `connect a wallet · ${offer}`
-  const free = credits.credits.freeLeft > 0 ? ` · ${credits.credits.freeLeft} free` : ''
-  return `${credits.credits.paid} turns${free} · ${offer}`
+  const free = `${credits.freeLeft ?? credits.freeTurns} free today`
+  return credits.paid === undefined ? `${free} · ${offer}` : `${credits.paid} turns · ${free} · ${offer}`
 }
 
 /** The layout mounts this inside the wallet provider, client-only. */
@@ -171,7 +170,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     buyCredits: async () => {
       // The receipt is a line with the txid; the pack is paid on the pack's chain, which need not be the one on screen.
       const { state: next, txid } = await credits.buy()
-      return { line: `Paid — ${next.credits?.paid ?? 0} turns on this address${txid ? ' · txn' : ''}`, txid }
+      return { line: `Paid — ${next.paid ?? 0} turns on this address${txid ? ' · txn' : ''}`, txid }
     },
   })
 

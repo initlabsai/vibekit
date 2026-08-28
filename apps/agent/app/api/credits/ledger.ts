@@ -1,36 +1,40 @@
 /**
- * The credit ledger: turns bought per payer address, spent one per agent
- * turn, plus a small free allowance so a visitor can try her before paying.
- * Vercel KV when its env is set; a per-process map otherwise (next dev).
+ * The credit ledger. Paid turns live per payer address and are reached only
+ * through a bearer token minted when that address paid; free turns live per
+ * IP per day and need nothing. Vercel KV when its env is set; a per-process
+ * map otherwise (next dev).
  */
 import { kv } from '@vercel/kv'
 
 export const TURNS_PER_PACK = Number(process.env.AGENT_TURNS_PER_PACK ?? 25)
 export const FREE_TURNS = Number(process.env.AGENT_FREE_TURNS ?? 3)
+const DAY_SECONDS = 24 * 60 * 60
 
-const memory = new Map<string, number>()
+/** A token is 32 random bytes as hex; the browser makes it, the settle hook binds it. */
+export const TOKEN_PATTERN = /^[0-9a-f]{64}$/
+
+const memory = new Map<string, number | string>()
 const remote = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN ? kv : undefined
 
-async function incrBy(key: string, by: number): Promise<number> {
-  if (remote) return remote.incrby(key, by)
-  const next = (memory.get(key) ?? 0) + by
+async function incrBy(key: string, by: number, ttlSeconds?: number): Promise<number> {
+  if (remote) {
+    const next = await remote.incrby(key, by)
+    if (ttlSeconds && next === by) await remote.expire(key, ttlSeconds)
+    return next
+  }
+  const next = Number(memory.get(key) ?? 0) + by
   memory.set(key, next)
   return next
 }
 
-async function read(key: string): Promise<number> {
+async function readNumber(key: string): Promise<number> {
   if (remote) return Number((await remote.get<number>(key)) ?? 0)
-  return memory.get(key) ?? 0
+  return Number(memory.get(key) ?? 0)
 }
 
-export interface Credits {
-  paid: number
-  freeLeft: number
-}
-
-export async function balance(payer: string): Promise<Credits> {
-  const [paid, freeUsed] = await Promise.all([read(`credits:${payer}`), read(`free:${payer}`)])
-  return { paid: Math.max(0, paid), freeLeft: Math.max(0, FREE_TURNS - freeUsed) }
+/** Paid turns left on an address. */
+export async function balance(payer: string): Promise<number> {
+  return Math.max(0, await readNumber(`credits:${payer}`))
 }
 
 /** Adds packs to the payer's paid turns; returns the new paid balance. */
@@ -38,15 +42,51 @@ export async function credit(payer: string, packs = 1): Promise<number> {
   return incrBy(`credits:${payer}`, packs * TURNS_PER_PACK)
 }
 
-/** Takes one turn: paid credit first, then the free allowance. `ok: false` leaves both untouched. */
-export async function spend(payer: string): Promise<{ ok: boolean } & Credits> {
+/** Takes one paid turn; `undefined` when the address is dry, with nothing changed. */
+export async function spend(payer: string): Promise<number | undefined> {
   const paid = await incrBy(`credits:${payer}`, -1)
-  if (paid >= 0) return { ok: true, paid, freeLeft: (await balance(payer)).freeLeft }
+  if (paid >= 0) return paid
   await incrBy(`credits:${payer}`, 1)
-  const freeUsed = await incrBy(`free:${payer}`, 1)
-  if (freeUsed <= FREE_TURNS) return { ok: true, paid: 0, freeLeft: FREE_TURNS - freeUsed }
-  await incrBy(`free:${payer}`, -1)
-  return { ok: false, paid: 0, freeLeft: 0 }
+  return undefined
+}
+
+function dayKey(ip: string, now: Date): string {
+  return `free:${ip}:${now.toISOString().slice(0, 10)}`
+}
+
+/** Takes one of today's free turns for an IP; `undefined` when they are gone. */
+export async function freeTurn(ip: string, now = new Date()): Promise<number | undefined> {
+  const used = await incrBy(dayKey(ip, now), 1, DAY_SECONDS)
+  if (used <= FREE_TURNS) return FREE_TURNS - used
+  await incrBy(dayKey(ip, now), -1)
+  return undefined
+}
+
+export async function freeLeft(ip: string, now = new Date()): Promise<number> {
+  return Math.max(0, FREE_TURNS - (await readNumber(dayKey(ip, now))))
+}
+
+/** Binds a token to the address that just paid. Many tokens may name one address. */
+export async function bindToken(token: string, payer: string): Promise<void> {
+  if (remote) await remote.set(`token:${token}`, payer)
+  else memory.set(`token:${token}`, payer)
+}
+
+export async function payerForToken(token: string | undefined): Promise<string | undefined> {
+  if (!token || !TOKEN_PATTERN.test(token)) return undefined
+  const payer = remote ? await remote.get<string>(`token:${token}`) : memory.get(`token:${token}`)
+  return typeof payer === 'string' ? payer : undefined
+}
+
+/** The bearer token on a request, when it has one. */
+export function bearerOf(request: Request): string | undefined {
+  const header = request.headers.get('authorization') ?? ''
+  return header.startsWith('Bearer ') ? header.slice(7).trim() : undefined
+}
+
+/** The caller's IP as the platform reports it; `local` in development. */
+export function ipOf(request: Request): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
 }
 
 /** Test seam: forget the in-process ledger. */

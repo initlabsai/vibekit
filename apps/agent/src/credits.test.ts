@@ -13,16 +13,32 @@ const ledger = await import('../app/api/credits/ledger.js')
 const credits = await import('../app/api/credits/route.js')
 const agent = await import('../app/api/agent/route.js')
 
+const TOKEN = 'a'.repeat(64)
 beforeEach(() => ledger.resetMemoryLedger())
 
 describe('credit ledger', () => {
-  test('free turns go first, then a pack, then nothing', async () => {
-    const free = ledger.FREE_TURNS
-    for (let i = 0; i < free; i++) expect((await ledger.spend(FIXTURE_SENDER)).ok).toBe(true)
-    expect(await ledger.spend(FIXTURE_SENDER)).toEqual({ ok: false, paid: 0, freeLeft: 0 })
+  test('paid turns spend down to zero and refuse, untouched, after', async () => {
+    expect(await ledger.spend(FIXTURE_SENDER)).toBeUndefined()
     expect(await ledger.credit(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK)
-    expect(await ledger.spend(FIXTURE_SENDER)).toEqual({ ok: true, paid: ledger.TURNS_PER_PACK - 1, freeLeft: 0 })
-    expect(await ledger.balance(FIXTURE_SENDER)).toEqual({ paid: ledger.TURNS_PER_PACK - 1, freeLeft: 0 })
+    expect(await ledger.spend(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK - 1)
+    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK - 1)
+  })
+
+  test('free turns are per IP per day', async () => {
+    const day = new Date('2026-08-28T10:00:00Z')
+    for (let i = ledger.FREE_TURNS - 1; i >= 0; i--) expect(await ledger.freeTurn('1.2.3.4', day)).toBe(i)
+    expect(await ledger.freeTurn('1.2.3.4', day)).toBeUndefined()
+    expect(await ledger.freeLeft('1.2.3.4', day)).toBe(0)
+    expect(await ledger.freeTurn('5.6.7.8', day)).toBe(ledger.FREE_TURNS - 1)
+    expect(await ledger.freeTurn('1.2.3.4', new Date('2026-08-29T10:00:00Z'))).toBe(ledger.FREE_TURNS - 1)
+  })
+
+  test('a token names the address that paid; anything else names nobody', async () => {
+    await ledger.bindToken(TOKEN, FIXTURE_SENDER)
+    expect(await ledger.payerForToken(TOKEN)).toBe(FIXTURE_SENDER)
+    expect(await ledger.payerForToken('b'.repeat(64))).toBeUndefined()
+    expect(await ledger.payerForToken('not-hex')).toBeUndefined()
+    expect(ledger.bearerOf(new Request('http://x', { headers: { authorization: `Bearer ${TOKEN}` } }))).toBe(TOKEN)
   })
 })
 
@@ -30,15 +46,18 @@ describe('credits route', () => {
   test('is off without a house address', async () => {
     delete process.env.X402_PAY_TO
     const body = await (await credits.GET(new NextRequest('http://local/api/credits'))).json()
-    expect(body).toMatchObject({ enabled: false, turnsPerPack: ledger.TURNS_PER_PACK, freeTurns: ledger.FREE_TURNS })
+    expect(body).toMatchObject({ enabled: false, turnsPerPack: ledger.TURNS_PER_PACK, freeTurns: ledger.FREE_TURNS, freeLeft: ledger.FREE_TURNS })
+    expect(body.payer).toBeUndefined()
     expect((await credits.POST(new NextRequest('http://local/api/credits', { method: 'POST' }))).status).toBe(404)
   })
 
-  test('names the pack and a payer balance when on', async () => {
+  test('names the pack, and the bearer balance when a token is bound', async () => {
     process.env.X402_PAY_TO = FIXTURE_SENDER
     process.env.AGENT_BILLING = 'x402'
-    const body = await (await credits.GET(new NextRequest(`http://local/api/credits?payer=${FIXTURE_SENDER}`))).json()
-    expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, credits: { paid: 0, freeLeft: ledger.FREE_TURNS } })
+    await ledger.bindToken(TOKEN, FIXTURE_SENDER)
+    await ledger.credit(FIXTURE_SENDER)
+    const body = await (await credits.GET(new NextRequest('http://local/api/credits', { headers: { authorization: `Bearer ${TOKEN}` } }))).json()
+    expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, payer: FIXTURE_SENDER, paid: ledger.TURNS_PER_PACK })
     expect(body.network).toBe('algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=')
   })
 })
@@ -58,24 +77,26 @@ describe('credits price', () => {
 })
 
 describe('agent route billing', () => {
-  test('paid mode refuses a turn without a wallet, and once the address is dry', async () => {
+  test('paid mode: free turns by IP, then 402; a stranger cannot spend an address', async () => {
     process.env.AGENT_API_KEY = 'test'
     process.env.X402_PAY_TO = FIXTURE_SENDER
+    await ledger.credit(FIXTURE_SENDER)
     const post = (headers: Record<string, string>) =>
       agent.POST(
         new Request('http://local/api/agent', {
           method: 'POST',
-          headers: { 'content-type': 'application/json', ...headers },
+          headers: { 'content-type': 'application/json', 'x-forwarded-for': '9.9.9.9', ...headers },
           body: JSON.stringify({ network: 'localnet', input: 'hi' }),
         }),
       )
     expect((await (await agent.GET()).json()).billing).toBe('x402')
-    const noWallet = await post({})
-    expect(noWallet.status).toBe(402)
-    expect((await noWallet.json()).error).toMatch(/connect a wallet/i)
-    for (let i = 0; i < ledger.FREE_TURNS; i++) await ledger.spend(FIXTURE_SENDER)
+    for (let i = 0; i < ledger.FREE_TURNS; i++) await ledger.freeTurn('9.9.9.9')
     const dry = await post({ 'x-payer': FIXTURE_SENDER })
     expect(dry.status).toBe(402)
     expect((await dry.json()).error).toMatch(/\/buy/)
+    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK)
+    const forged = await post({ authorization: `Bearer ${'c'.repeat(64)}` })
+    expect(forged.status).toBe(402)
+    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK)
   })
 })

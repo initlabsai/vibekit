@@ -21,6 +21,7 @@ import type { Feed } from '../../feed/hooks'
 import { viewFor } from '../../lookup'
 import { nfdProfileSchema } from '../../remote-host'
 import { shorten } from '../../theme'
+import { creditsHeaders } from '../credits/hooks'
 import { readEvents } from './stream'
 
 /** A tool-result event as the route streams it: the AI SDK's shape plus the tool's view id. */
@@ -81,7 +82,7 @@ export function useAgentLane({
   setStatus: (text: string) => void
   startFromDraft: (sectionId: number, draftRecord: StructuredResult) => void
   /** The balance the route reports after charging a turn. */
-  onCredits?: (credits: { paid: number; freeLeft: number }) => void
+  onCredits?: (credits: { paid?: number; freeLeft?: number }) => void
 }) {
   const { appendBlock, appendNote, updateItem, removeItem } = feed
   const [status, setAgentStatus] = useState<AgentStatus>({ enabled: false })
@@ -153,7 +154,7 @@ export function useAgentLane({
       try {
         const response = await fetch('/api/agent', {
           method: 'POST',
-          headers: { 'content-type': 'application/json', ...(activeAddress ? { 'x-payer': activeAddress } : {}) },
+          headers: { 'content-type': 'application/json', ...creditsHeaders() },
           body: JSON.stringify({
             network,
             input,
@@ -199,7 +200,7 @@ export function useAgentLane({
               historyRef.current = event.messages as unknown[]
               break
             case 'credits':
-              onCredits?.(event.credits as { paid: number; freeLeft: number })
+              onCredits?.(event.credits as { paid?: number; freeLeft?: number })
               break
             case 'error':
               spoke = true

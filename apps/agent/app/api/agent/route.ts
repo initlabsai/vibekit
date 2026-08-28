@@ -18,7 +18,7 @@ import algosdk from 'algosdk'
 import { z } from 'zod'
 
 import { creditsConfig } from '../credits/config'
-import { spend, TURNS_PER_PACK, type Credits } from '../credits/ledger'
+import { bearerOf, freeTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -108,21 +108,23 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!parsed.success) return Response.json({ error: 'Invalid agent request' }, { status: 400 })
   const body = parsed.data
-  // Paid mode charges the wallet's address one turn; house mode rate-limits instead.
+  // Paid mode: a bearer token spends its address's paid turns, else today's free turns for
+  // the IP, else 402. House mode rate-limits instead. Nothing here trusts a caller-chosen address.
   const pack = creditsConfig()
-  let charged: ({ ok: boolean } & Credits) | undefined
+  let charged: { paid?: number; freeLeft?: number } | undefined
   if (pack) {
-    const payer = request.headers.get('x-payer') ?? ''
-    if (!algosdk.isValidAddress(payer)) {
-      return Response.json({ error: 'Connect a wallet to talk to the agent — turns are bought per address.' }, { status: 402 })
-    }
-    charged = await spend(payer)
-    if (!charged.ok) {
-      return Response.json({ error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`, credits: charged }, { status: 402 })
+    const payer = await payerForToken(bearerOf(request))
+    const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
+    if (paid !== undefined) charged = { paid }
+    else {
+      const free = await freeTurn(ipOf(request))
+      if (free === undefined) {
+        return Response.json({ error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).` }, { status: 402 })
+      }
+      charged = { paid: payer ? 0 : undefined, freeLeft: free }
     }
   } else {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local'
-    const refused = isProduction() ? chargeTurn(ip) : undefined
+    const refused = isProduction() ? chargeTurn(ipOf(request)) : undefined
     if (refused) return Response.json({ error: refused }, { status: 429 })
   }
 
@@ -148,7 +150,7 @@ export async function POST(request: Request): Promise<Response> {
     async start(controller) {
       const send = (event: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
       try {
-        if (charged) send({ type: 'credits', credits: { paid: charged.paid, freeLeft: charged.freeLeft } })
+        if (charged) send({ type: 'credits', credits: charged })
         for await (const event of session.stream(input)) {
           if (event.type === 'tool-result') {
             const compose = unsignedGroupFromToolResult(event)
