@@ -173,10 +173,14 @@ export function FeedPane({
 export function Composer({
   onSubmit,
   status,
+  idle,
   placeholder,
 }: {
   onSubmit: (raw: string) => void
+  /** Something happening now: a copy, an error, sample data. Shown wherever there is room. */
   status: string
+  /** The standing line — turns and the offer. Phones keep it in the sheet instead. */
+  idle: string
   placeholder: string
 }) {
   const [input, setInput] = useState('')
@@ -232,8 +236,8 @@ export function Composer({
           ))}
         </ul>
       ) : null}
-      <div className="status-line" role="status" aria-live="polite">
-        {status}
+      <div className={`status-line${status ? '' : ' status-idle'}`} role="status" aria-live="polite">
+        {status || idle}
       </div>
       <form className="composer" onSubmit={submit}>
         <span>›</span>

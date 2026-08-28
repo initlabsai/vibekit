@@ -238,15 +238,13 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [approval, goHome])
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
-  const statusLine =
-    status ||
-    wallet.networkError ||
-    (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '') ||
-    (agent.status.enabled
-      ? credits.enabled
-        ? creditsLine(credits)
-        : 'early alpha'
-      : 'no agent configured · the direct lane still works')
+  // Two lines share one slot: something happening (a copy, an error, sample data), else the standing offer.
+  const transient = status || wallet.networkError || (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
+  const idleLine = agent.status.enabled
+    ? credits.enabled
+      ? creditsLine(credits)
+      : 'early alpha'
+    : 'no agent configured · the direct lane still works'
 
   const sheetRef = useRef<HTMLDetailsElement>(null)
   const closeSheet = useCallback(() => sheetRef.current?.removeAttribute('open'), [])
@@ -317,6 +315,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
                   </Link>
                 ))}
               </nav>
+              <p className="sheet-idle">{idleLine}</p>
               <div className="sheet-row">
                 <span>
                   <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span> {modeLabel}
@@ -364,7 +363,8 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       </div>
       <Composer
         onSubmit={submit}
-        status={statusLine}
+        status={transient}
+        idle={idleLine}
         placeholder="ask anything, paste an id, or / for commands"
       />
       {approval ? (
