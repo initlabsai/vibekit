@@ -454,9 +454,16 @@ a.button-active { text-decoration: underline; }
 
 /* The wallet menu in the top bar: a native disclosure, its list under the button. */
 .menu { position: relative; }
-.menu summary { cursor: pointer; list-style: none; }
+.menu summary { align-items: center; cursor: pointer; display: inline-flex; gap: .5rem; list-style: none; }
+.menu summary .identity-avatar { border-color: var(--border); height: 22px; width: 22px; }
+.menu summary .identity-avatar-empty { font-size: .6rem; }
+.menu-glyph { color: var(--brass); font-size: 1rem; line-height: 1; }
+.menu-id { border-bottom: 1px solid var(--border-soft); margin-bottom: .25rem; padding: .6rem .8rem .7rem; }
+.menu-id .identity-name { font-size: .9rem; }
+.menu li .menu-danger { color: var(--red); }
+.menu li .menu-danger:hover { color: var(--red); }
 .menu summary::-webkit-details-marker { display: none; }
-.menu ul { background: var(--ground); border: 1px solid var(--border); list-style: none; margin: .3rem 0 0; min-width: 12rem; padding: .25rem 0; position: absolute; right: 0; z-index: 50; }
+.menu ul { background: var(--ground); border: 1px solid var(--border); list-style: none; margin: .3rem 0 0; min-width: 16rem; padding: .25rem 0; position: absolute; right: 0; z-index: 50; }
 .menu li button, .menu li a { background: none; border: 0; color: var(--text); cursor: pointer; display: block; font: inherit; padding: .35rem .8rem; text-align: left; text-decoration: none; width: 100%; }
 .menu li button:hover, .menu li a:hover { background: var(--card); color: var(--brass-bright); }
 .menu li button.on { color: var(--brass); }
@@ -474,11 +481,8 @@ a.button-active { text-decoration: underline; }
   .brand { font-size: .66rem; letter-spacing: .06em; white-space: nowrap; }
   .top-state { flex: 1; gap: .5rem; justify-content: flex-end; min-width: 0; }
   .top-state .live-dot, .top-state .live-label { display: none; }
-  .menu { min-width: 0; }
-  .menu summary { display: block; }
   .pulse { display: none; }
   .net, .top-state .button, .menu summary { padding: .2rem .45rem; white-space: nowrap; }
-  .menu summary { max-width: 5.5rem; overflow: hidden; text-overflow: ellipsis; }
   .top { box-sizing: border-box; overflow: hidden; }
   .top-state { font-size: .68rem; }
   .tabs { gap: 1.1rem; min-height: 2.2rem; overflow-x: auto; padding-left: 0; scrollbar-width: none; }
@@ -509,11 +513,12 @@ a.button-active { text-decoration: underline; }
   .sheet-body { background: var(--ground); bottom: 0; display: flex; flex-direction: column; gap: 1.1rem; left: 0; overflow-y: auto; padding: 1rem .9rem 1.5rem; position: fixed; right: 0; top: 2.75rem; z-index: 60; }
   .sheet-body .tabs { flex-wrap: wrap; gap: .4rem 1.2rem; min-height: 0; overflow: visible; padding: 0; }
   .sheet-row { align-items: center; display: flex; font-family: var(--font-mono); font-size: .8rem; gap: .8rem; justify-content: space-between; }
-  .sheet-row .menu ul { left: 0; right: auto; }
-  .sheet-row .menu summary { max-width: none; }
   .sheet-body .nav { border: 0; padding: 0; }
   .sheet-body .nav .nav-title button { display: none; }
-  .top > .tabs, .top-state > *:not(.sheet) { display: none; }
+  .top > .tabs, .top-state > *:not(.sheet):not(.menu) { display: none; }
+  .menu summary { border: 0; padding: .15rem; }
+  .menu-name { display: none; }
+  .menu ul { right: -2.4rem; }
   .top-row { min-height: 2.75rem; }
   .brand { font-size: .72rem; }
   .rail-open .body, .rail-folded .body { grid-template-columns: 1fr; }

@@ -327,7 +327,6 @@ function ExplorerApp({ children }: { children: ReactNode }) {
                 </button>
               </div>
               <div className="sheet-row">
-                <WalletMenu lane={wallet} onError={setStatus} />
                 <Button label="account ▸" onPress={() => { toggleRail(); closeSheet() }} />
               </div>
               <NavPane
