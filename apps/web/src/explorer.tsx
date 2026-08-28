@@ -39,6 +39,19 @@ import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
 import { useWalletLane, WalletRoot, type WalletLane } from './wallet/provider'
 
+/** A tool result with no card of its own: folded to its name; the JSON is one click away. */
+function RawBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <details className="raw-block">
+      <summary>
+        <span className="kicker">{title}</span>
+        <span className="muted"> · raw result</span>
+      </summary>
+      <pre className="raw">{text}</pre>
+    </details>
+  )
+}
+
 /** What a screen can reach: the store, the hosts, the wallet, the transcript, and the lanes. */
 export interface ExplorerContextValue {
   store: Store
@@ -172,9 +185,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
           )
         }
         case 'raw':
-          return <pre className="note">{block.text}</pre>
+          return <RawBlock title={block.title} text={block.text} />
         case 'plugin': {
-          if (block.view !== 'nfd.profile') return <pre className="raw">{JSON.stringify(block.data, null, 2)}</pre>
+          if (block.view !== 'nfd.profile') return <RawBlock title={block.view} text={JSON.stringify(block.data, null, 2)} />
           const data = block.data as NfdProfile
           return (
             <NfdCard

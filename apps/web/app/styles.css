@@ -184,6 +184,11 @@ a.button-active { text-decoration: underline; }
 .tt-row.touchable:hover { background: var(--card-lit); border-left-color: var(--brass-bright); color: var(--text); }
 .tt-kind { color: var(--signal); }
 .prose { color: var(--text); font-family: var(--font-sans); font-size: .85rem; line-height: 1.6; margin: .8rem 0 0; white-space: pre-wrap; }
+.raw-block { border-left: 2px solid var(--border-soft); padding-left: .8rem; }
+.raw-block > summary { cursor: pointer; font-family: var(--font-mono); font-size: .74rem; list-style: none; padding: .2rem 0; }
+.raw-block > summary::before { color: var(--brass); content: '▸ '; display: inline-block; transition: transform .15s; }
+.raw-block[open] > summary::before { transform: rotate(90deg); }
+.raw-block > summary::-webkit-details-marker { display: none; }
 .raw { color: var(--muted); font-family: var(--font-mono); font-size: .7rem; margin: .8rem 0 0; max-height: 20rem; overflow: auto; white-space: pre-wrap; }
 
 /* Write flow stage rail. */
