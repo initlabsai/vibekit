@@ -113,6 +113,23 @@ code { font-family: var(--font-mono); color: var(--brass); }
 .button-danger { box-shadow: inset 0 0 0 1px var(--red); color: var(--red); padding: .4rem .8rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
 
+/* Tables: the density target. Sortable heads, a faint filter, touchable rows. */
+.table-wrap { margin-top: .8rem; }
+.table-filter { background: transparent; border: 0; border-bottom: 1px solid var(--border-soft); color: var(--text); font-family: var(--font-mono); font-size: .72rem; margin-bottom: .3rem; outline: 0; padding: .25rem 0; width: 12rem; }
+.table-filter::placeholder { color: var(--faint); }
+.table { display: grid; gap: 1px; overflow-x: auto; }
+.tt-head, .tt-row { align-items: center; display: grid; font-family: var(--font-mono); font-size: .72rem; gap: .8rem; padding: .4rem .6rem; }
+.tt-head { color: var(--faint); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+.tt-head .right, .tt-row .right { text-align: right; }
+.tt-sort { color: var(--faint); font: inherit; letter-spacing: inherit; text-align: left; text-transform: inherit; }
+.tt-sort:hover, .tt-sort.on { color: var(--brass-bright); }
+.tt-row { background: rgba(17, 19, 24, .92); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tt-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-row.touchable { cursor: pointer; }
+.tt-row.touchable:hover { background: var(--card-lit); color: var(--text); }
+.tt-kind { color: var(--signal); }
+.raw { color: var(--muted); font-family: var(--font-mono); font-size: .7rem; margin: .8rem 0 0; max-height: 20rem; overflow: auto; white-space: pre-wrap; }
+
 /* Write flow stage rail. */
 .flow-steps { color: var(--faint); display: flex; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10.5px; gap: .5rem; letter-spacing: .1em; list-style: none; margin: .8rem 0 0; padding: 0; text-transform: uppercase; }
 .flow-steps li:not(:first-child)::before { content: '→ '; }

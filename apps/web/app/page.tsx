@@ -149,10 +149,18 @@ export default function Page() {
   )
 
   const renderBlock = useCallback(
-    (block: SectionBlock) => {
+    (block: SectionBlock, sectionId: number, itemId: number) => {
       switch (block.kind) {
         case 'view':
-          return <ResultCard store={store} view={block.view} onOpen={openTarget} />
+          return (
+            <ResultCard
+              store={store}
+              view={block.view}
+              onOpen={openTarget}
+              onMore={() => lookups.loadMore(sectionId, itemId, block.view)}
+              loadingMore={lookups.loadingMore === itemId}
+            />
+          )
         case 'write': {
           const derived = createWriteFlowViewModel(store, block.flow)
           const isOpen = payment.flowRef.current?.flowId === block.flow.flowId
@@ -175,7 +183,7 @@ export default function Page() {
           return <pre className="note">{JSON.stringify(block.data, null, 2)}</pre>
       }
     },
-    [busy, live, openTarget, payment, store],
+    [busy, live, lookups, openTarget, payment, store],
   )
 
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'

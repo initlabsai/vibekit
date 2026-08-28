@@ -61,14 +61,18 @@ export {
   routeExplorerComposerInput,
 } from './input.js'
 export type { ExplorerComposerRoute } from './input.js'
-export { mergePages, nextPageArgs } from './views/pages.js'
+export { loadNextPage, mergePages, nextPageArgs } from './views/pages.js'
 export {
   createAccountListViewModel,
   createAccountOpenView,
   createAccountPortfolioViewModel,
   createAccountSummaryViewModel,
 } from './views/account.js'
-export type { AccountPortfolioViewModel } from './views/account.js'
+export type {
+  AccountListViewModel,
+  AccountPortfolioViewModel,
+  AccountSummaryViewModel,
+} from './views/account.js'
 export {
   applicationExplanationDataSchema,
   createApplicationBoxViewModel,

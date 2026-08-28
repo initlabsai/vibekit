@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { buildAssetHoldingsRecord, mergePages, nextPageArgs } from '../src/index.js'
+import { buildAssetHoldingsRecord, loadNextPage, mergePages, nextPageArgs } from '../src/index.js'
 import { buildTransactionListRecord } from '../src/views/transaction.js'
 
 const SENDER = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'
@@ -71,5 +71,27 @@ describe('paged records', () => {
     expect(() => mergePages('transaction.detail', first, next, identity(4))).toThrow(
       /not a paged list/,
     )
+  })
+
+  test('loadNextPage re-runs the record\'s own call with its token and merges the page', async () => {
+    const first = buildTransactionListRecord(identity(1, { address: SENDER }), {
+      transactions: [row('A')],
+      nextToken: 'one',
+    })
+    const calls: Array<[string, Record<string, unknown>]> = []
+    const host = {
+      callTool: async (toolName: string, args: Record<string, unknown>) => {
+        calls.push([toolName, args])
+        return buildTransactionListRecord(identity(2, { address: SENDER, nextToken: 'one' }), {
+          transactions: [row('B')],
+        })
+      },
+    }
+    const merged = await loadNextPage({ host, current: first, view: 'transaction.list', identity: identity(3) })
+    expect(calls).toEqual([[first.toolName, { address: SENDER, nextToken: 'one' }]])
+    expect(merged?.state === 'success' && (merged.data as { transactions: unknown[] }).transactions).toHaveLength(2)
+    // A final page fetches nothing.
+    expect(await loadNextPage({ host, current: merged, view: 'transaction.list', identity: identity(4) })).toBeUndefined()
+    expect(calls).toHaveLength(1)
   })
 })

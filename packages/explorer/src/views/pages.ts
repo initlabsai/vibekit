@@ -1,5 +1,6 @@
 import type { TrustedViewId } from '../core/protocol.js'
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
+import type { ToolCallHost } from '../host.js'
 import { record } from './derive.js'
 
 /** The array a paged list view renders; the next page's rows append to it. */
@@ -58,6 +59,23 @@ export function mergePages(
       ...(typeof b.nextToken === 'string' && b.nextToken ? { nextToken: b.nextToken } : {}),
     },
   )
+}
+
+/**
+ * Fetches the page after `current` — the record's own call with its
+ * nextToken, through the host — and returns one record holding both pages,
+ * or undefined when the record is final. Any paged list, any tool.
+ */
+export async function loadNextPage(args: {
+  host: ToolCallHost
+  current: StructuredResult | undefined
+  view: TrustedViewId
+  identity: ResultIdentity
+}): Promise<StructuredResult | undefined> {
+  const next = nextPageArgs(args.current)
+  if (!args.current || !next) return undefined
+  const page = await args.host.callTool(args.current.toolName, next)
+  return mergePages(args.view, args.current, page, args.identity)
 }
 
 export type { ToolCallHost } from '../host.js'

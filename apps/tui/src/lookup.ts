@@ -1,7 +1,6 @@
 /** The direct lane: entity lookups by id that bypass the model, each landing as a card in the feed. */
 import {
-  mergePages,
-  nextPageArgs,
+  loadNextPage as loadNextPageRecord,
   type TransactionSearchFilter,
   addResult,
   createAccountListViewModel,
@@ -42,15 +41,17 @@ export async function loadNextPage(args: {
   network: string
   view: ViewSpec
 }): Promise<ViewSpec | undefined> {
-  const current = args.storeRef.current.find((record) => record.resultId === args.view.source.id)
-  const next = nextPageArgs(current)
-  if (!current || !next) return undefined
-  const page = await args.host.callTool(current.toolName, next)
-  const merged = mergePages(args.view.view, current, page, {
-    resultId: `result-page-${crypto.randomUUID()}`,
-    toolCallId: `tool-call-page-${crypto.randomUUID()}`,
-    network: args.network,
+  const merged = await loadNextPageRecord({
+    host: args.host,
+    current: args.storeRef.current.find((record) => record.resultId === args.view.source.id),
+    view: args.view.view,
+    identity: {
+      resultId: `result-page-${crypto.randomUUID()}`,
+      toolCallId: `tool-call-page-${crypto.randomUUID()}`,
+      network: args.network,
+    },
   })
+  if (!merged) return undefined
   args.commitStore(addResult(args.storeRef.current, merged))
   return viewFor(merged, args.view.view)
 }

@@ -10,6 +10,7 @@ import {
   createTransactionDetailViewModel,
   EXPLORER_PROTOCOL_VERSION,
   formatMicroAlgos,
+  loadNextPage,
   lookupAmbiguousEntity,
   type LiveNetworkId,
   type ResultStore,
@@ -18,7 +19,7 @@ import {
   type TrustedViewId,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
 import type { WalletAccount } from './commands'
 import type { Feed } from './feed/hooks'
@@ -63,7 +64,8 @@ export function useLookups({
   setBusy: (busy: boolean) => void
   setStatus: (status: string) => void
 }) {
-  const { appendBlock, appendNote } = feed
+  const { appendBlock, appendNote, replaceBlockView } = feed
+  const [loadingMore, setLoadingMore] = useState<number | null>(null)
 
   /** The busy/status/error dance around one request; a request while busy says so. */
   const withBusy = useCallback(
@@ -330,7 +332,35 @@ export function useLookups({
     [host, presentRecord, withBusy],
   )
 
+  /** Fetches the next page of a list card into the same card. */
+  const loadMore = useCallback(
+    (sectionId: number, itemId: number, view: ViewSpec) => {
+      if (loadingMore !== null) return
+      setLoadingMore(itemId)
+      loadNextPage({
+        host: host(),
+        current: storeRef.current.find((record) => record.resultId === view.source.id),
+        view: view.view,
+        identity: {
+          resultId: `result-page-${crypto.randomUUID()}`,
+          toolCallId: `tool-call-page-${crypto.randomUUID()}`,
+          network: networkRef.current,
+        },
+      })
+        .then((merged) => {
+          if (!merged) return
+          commitStore(addResult(storeRef.current, merged))
+          replaceBlockView(sectionId, itemId, viewFor(merged, view.view))
+        })
+        .catch((error: unknown) => appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'))
+        .finally(() => setLoadingMore(null))
+    },
+    [appendNote, commitStore, host, loadingMore, networkRef, replaceBlockView, storeRef],
+  )
+
   return {
+    loadMore,
+    loadingMore,
     openTransaction,
     openAccount,
     openAccountName,
