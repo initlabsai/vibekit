@@ -45,9 +45,12 @@ export function creditsHeaders(): Record<string, string> {
 
 export function useCredits({
   activeAddress,
+  network,
   signTransactions,
 }: {
   activeAddress: string | undefined
+  /** The explorer's network; the wallet follows it, so a pack can only be paid while it matches the pack's chain. */
+  network: string
   signTransactions: (txns: Uint8Array[], indexes?: number[]) => Promise<(Uint8Array | null)[]>
 }) {
   const [state, setState] = useState<CreditsState>({ enabled: false, turnsPerPack: 0, freeTurns: 0 })
@@ -74,6 +77,9 @@ export function useCredits({
   const buy = useCallback(async (turns?: number): Promise<{ state: CreditsState; txid?: string }> => {
     if (!state.enabled || !state.network) throw new Error('Credits are not for sale here; the house pays.')
     if (!activeAddress) throw new Error('connect a wallet to pay')
+    if (state.chain && state.chain !== network) {
+      throw new Error(`packs are paid in ${state.chain} USDC — switch the network chip to ${state.chain} first, then /buy`)
+    }
     // The payment stack rides in only when someone buys; it is not part of the page.
     const [{ wrapFetchWithPayment, x402Client, decodePaymentResponseHeader }, { ExactAvmScheme }] = await Promise.all([import('@x402/fetch'), import('@x402/avm/exact/client')])
     const client = new x402Client().register(state.network as `${string}:${string}`, new ExactAvmScheme({ address: activeAddress, signTransactions }))
@@ -81,8 +87,16 @@ export function useCredits({
     const token = newToken()
     const response = await wrapFetchWithPayment(fetch, client)(`/api/credits${turns ? `?turns=${turns}` : ''}`, { method: 'POST', headers: { 'x-credit-token': token } })
     if (!response.ok) {
+      // A 402 after paying carries the facilitator's reason in the PAYMENT-REQUIRED header.
+      const required = response.headers.get('payment-required')
+      let reason: string | undefined
+      try {
+        reason = required ? (JSON.parse(atob(required)) as { error?: string }).error : undefined
+      } catch {
+        // an unreadable header still leaves the status
+      }
       const body = (await response.json().catch(() => ({}))) as { error?: string }
-      throw new Error(body.error ?? `payment failed (${response.status})`)
+      throw new Error(body.error ?? (reason && reason !== 'Payment required' ? reason : `payment failed (${response.status})`))
     }
     try {
       localStorage.setItem(TOKEN_KEY, token)
@@ -97,7 +111,7 @@ export function useCredits({
       // The pack is paid either way; the receipt line is a courtesy.
     }
     return { state: await refresh(), txid }
-  }, [activeAddress, refresh, signTransactions, state.enabled, state.network])
+  }, [activeAddress, network, refresh, signTransactions, state.chain, state.enabled, state.network])
 
   return { ...state, refresh, buy, setCredits }
 }
