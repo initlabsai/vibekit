@@ -78,8 +78,7 @@ export function WalletScreen({
                     <span className="chip chip-ok">active</span>
                   ) : (
                     <Button label="set active" onPress={() => active.setActiveAccount(account.address)} />
-                  )}{' '}
-                  <Button label="open" onPress={() => onOpenAccount(account.address)} />
+                  )}
                 </Fact>
               ))}
             </Facts>

@@ -127,7 +127,7 @@ export function AccountSummaryCard({ model }: { model: AccountSummaryViewModel }
         <Fact label="opted" value={`${model.totalAssetsOptedIn ?? 0} asa · ${model.totalAppsOptedIn ?? 0} apps`} />
         <Fact label="created" value={`${model.totalCreatedAssets ?? 0} asa · ${model.totalCreatedApps ?? 0} apps`} />
         {model.createdAtRound === undefined ? null : (
-          <Fact label="since" value={`round ${model.createdAtRound}`} copy={String(model.createdAtRound)} />
+          <Fact label="since" value={`round ${model.createdAtRound}`} copy={String(model.createdAtRound)} open={{ kind: 'block', round: Number(model.createdAtRound) }} />
         )}
       </Facts>
     </Frame>

@@ -5,6 +5,7 @@ import type { NetworkStatusViewModel } from '@initlabs/vibekit-explorer'
 import { useState } from 'react'
 
 import { Copyable, Frame, Header, Unavailable } from '../../primitives'
+import type { OpenTarget } from '../../result-card'
 import { chartGeometry, compact } from './chart'
 
 const W = 400
@@ -48,11 +49,11 @@ function TpsChart({ blocks }: { blocks: ReadonlyArray<BlockDetail> }) {
   )
 }
 
-function Metric({ label, value, copy }: { label: string; value: string; copy?: string }) {
+function Metric({ label, value, copy, open }: { label: string; value: string; copy?: string; open?: OpenTarget }) {
   return (
     <div className="metric">
       <span className="metric-label">{label}</span>
-      {copy ? <Copyable value={copy} display={value} className="metric-value" /> : <span className="metric-value">{value}</span>}
+      {copy ? <Copyable value={copy} display={value} className="metric-value" open={open} /> : <span className="metric-value">{value}</span>}
     </div>
   )
 }
@@ -73,7 +74,7 @@ export function NetworkCard({ model }: { model: NetworkStatusViewModel | undefin
       </p>
       {model.blockDetails && model.blockDetails.length > 1 ? <TpsChart blocks={model.blockDetails} /> : null}
       <div className="metrics">
-        <Metric label="round" value={model.latestRound.toLocaleString()} copy={String(model.latestRound)} />
+        <Metric label="round" value={model.latestRound.toLocaleString()} copy={String(model.latestRound)} open={{ kind: 'block', round: model.latestRound }} />
         <Metric label="last block" value={model.timeSinceLastRound === undefined ? `${model.avgBlockTime}s avg` : `${model.timeSinceLastRound}s ago`} />
         {model.avgTxnPerBlock === undefined ? <Metric label="block time" value={`${model.avgBlockTime}s`} /> : <Metric label="txn / block" value={String(model.avgTxnPerBlock)} />}
         <Metric label="participation" value={`${model.participation}%`} />

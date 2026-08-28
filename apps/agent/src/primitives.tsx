@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import { useAssetMeta, useName, useOnScreen, useProfile, type Tier } from './enrich'
+import type { OpenTarget } from './result-card'
 import { shorten } from './theme'
 
 /** Where a copy is announced (the status line); no-op without a provider. */
@@ -73,7 +74,7 @@ export function Header({
 export function Hero({ value, unit, copy }: { value: string; unit?: string; copy?: string }) {
   return (
     <p className="hero">
-      {copy ? <Copyable value={copy} display={value} className="hero-value" /> : <span className="hero-value">{value}</span>}
+      {copy ? <Copyable value={copy} display={value} className="hero-value" open={false} /> : <span className="hero-value">{value}</span>}
       {unit ? <span className="hero-unit">{unit}</span> : null}
     </p>
   )
@@ -107,20 +108,39 @@ export function Button({
   )
 }
 
-/** Copies `value` on click and shows a brief signal check; `title` carries the full value. */
+/** Where an identifier opens (the transcript); no-op without a provider. */
+export const OpenContext = createContext<((target: OpenTarget) => void) | undefined>(undefined)
+
+const TXID = /^[A-Z2-7]{52}$/
+
+/** The open target an identifier implies by its shape: an address or a transaction id. Numbers are ambiguous. */
+function impliedTarget(value: string): OpenTarget | undefined {
+  if (ADDRESS.test(value)) return { kind: 'account', address: value }
+  if (TXID.test(value)) return { kind: 'transaction', txid: value }
+  return undefined
+}
+
+/**
+ * An identifier. Clicking the text opens it — an account or transaction by
+ * shape, or the `open` target given — and a trailing glyph copies it.
+ * `open={false}` keeps the text inert (the entity the card already is).
+ */
 export function Copyable({
   value,
   display,
   width,
   className,
+  open,
 }: {
   value: string
   display?: string
   width?: number
   className?: string
+  open?: OpenTarget | false
 }) {
   const [copied, setCopied] = useState(false)
   const announce = useContext(CopyContext)
+  const openTarget = useContext(OpenContext)
   // An address wears its NFD name once the enrichment answers; the address still copies.
   const name = useName(ADDRESS.test(value) ? value : undefined)
   useEffect(() => {
@@ -130,29 +150,46 @@ export function Copyable({
   }, [copied])
   const shown = display ?? value
   const text = width ? shorten(shown, width) : shown
+  const target = open === false ? undefined : (open ?? impliedTarget(value))
+  const label = name ? (
+    <>
+      <span className="ident-name">{name}</span>
+      <span className="ident-sub">{display && display !== value ? text : shorten(value, 12)}</span>
+    </>
+  ) : (
+    text
+  )
   return (
-    <button
-      type="button"
-      className={`ident${copied ? ' ident-copied' : ''}${className ? ` ${className}` : ''}`}
-      aria-label={`Copy ${value}`}
-      title={`Copy ${value}`}
-      onClick={(event) => {
-        event.stopPropagation()
-        void navigator.clipboard?.writeText(value).then(() => {
-          setCopied(true)
-          announce(value)
-        })
-      }}
-    >
-      {name ? (
-        <>
-          <span className="ident-name">{name}</span>
-          <span className="ident-sub">{display && display !== value ? text : shorten(value, 12)}</span>
-        </>
+    <span className={`ident${className ? ` ${className}` : ''}`} title={value}>
+      {target && openTarget ? (
+        <button
+          type="button"
+          className="open"
+          onClick={(event) => {
+            event.stopPropagation()
+            openTarget(target)
+          }}
+        >
+          {label}
+        </button>
       ) : (
-        text
+        <span className="plain">{label}</span>
       )}
-    </button>
+      <button
+        type="button"
+        className={`copy${copied ? ' copied' : ''}`}
+        aria-label={`Copy ${value}`}
+        onClick={(event) => {
+          event.stopPropagation()
+          void navigator.clipboard?.writeText(value).then(() => {
+            setCopied(true)
+            announce(value)
+          })
+        }}
+      >
+        {copied ? '✓' : '⧉'}
+      </button>
+    </span>
   )
 }
 
@@ -161,19 +198,22 @@ export function Fact({
   label,
   value,
   copy,
+  open,
   tone,
   children,
 }: {
   label: string
   value?: string
   copy?: string
+  /** Where the identifier opens when its shape does not say. */
+  open?: OpenTarget | false
   tone?: 'danger' | 'ok'
   children?: ReactNode
 }) {
   return (
     <div className={`fact${tone ? ` fact-${tone}` : ''}`}>
       <dt>{label}</dt>
-      <dd>{children ?? (copy ? <Copyable value={copy} display={value} /> : value)}</dd>
+      <dd>{children ?? (copy ? <Copyable value={copy} display={value} open={open} /> : value)}</dd>
     </div>
   )
 }

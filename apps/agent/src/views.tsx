@@ -16,7 +16,7 @@ export function Welcome({ onSubmit }: { onSubmit: (raw: string) => void }) {
           {EXAMPLES.map((example, i) => (
             <span key={example}>
               {i > 0 ? ' · ' : ''}
-              <button type="button" className="intro-link" onClick={() => onSubmit(example)}>{example}</button>
+              <button type="button" className="send" onClick={() => onSubmit(example)}>{example}</button>
             </span>
           ))}
         </p>

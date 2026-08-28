@@ -17,7 +17,8 @@ import {
 } from '@initlabs/vibekit-explorer'
 import { useContext, useEffect, useRef, useState } from 'react'
 
-import { CopyContext } from '../../primitives'
+import { OpenContext } from '../../primitives'
+import type { OpenTarget } from '../../result-card'
 import { COLORS, shorten } from '../../theme'
 import { TOP, layoutGraph, marker, type RowGeometry } from './graph-layout'
 
@@ -50,18 +51,18 @@ function labelText(label: GraphLabel, isRemainder: boolean): string {
   return parts.join(' ') || label.type
 }
 
-function heading(vertical: GraphVertical): { badge?: string; text: string; copy?: string; muted?: boolean } {
+function heading(vertical: GraphVertical): { badge?: string; text: string; open?: OpenTarget; muted?: boolean } {
   switch (vertical.type) {
     case 'account':
-      return { badge: `(${vertical.accountNumber})`, text: shorten(vertical.address, 11), copy: vertical.address }
+      return { badge: `(${vertical.accountNumber})`, text: shorten(vertical.address, 11), open: { kind: 'account', address: vertical.address } }
     case 'application':
       return {
         text: `app ${vertical.applicationId}`,
-        copy: String(vertical.applicationId),
+        open: { kind: 'application', applicationId: Number(vertical.applicationId) },
         ...(vertical.linkedAccount ? { badge: `(${vertical.linkedAccount.accountNumber})` } : {}),
       }
     case 'asset':
-      return { text: `asa ${vertical.assetId}`, copy: String(vertical.assetId) }
+      return { text: `asa ${vertical.assetId}`, open: { kind: 'asset', assetId: Number(vertical.assetId) } }
     case 'opUp':
       return { text: 'OpUp', muted: true }
   }
@@ -84,15 +85,13 @@ function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] 
 
 export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
   const [ref, width] = useWidth<HTMLDivElement>()
-  const announce = useContext(CopyContext)
+  const openTarget = useContext(OpenContext)
   const n = graph.verticals.length
   if (n === 0) return null
   if (width > 0 && width < LANES_MIN_WIDTH) return <GraphList graph={graph} />
 
   const geometry = layoutGraph(graph, width, (row) => labelText(row.label, row.isRemainder))
-  const copy = (value: string) => {
-    void navigator.clipboard?.writeText(value).then(() => announce(value))
-  }
+  const open = (target: OpenTarget) => openTarget?.(target)
 
   return (
     <div ref={ref} className="graph">
@@ -106,8 +105,8 @@ export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
                 {h.badge ? <tspan fill={COLORS.brass}>{h.badge} </tspan> : null}
                 <tspan
                   fill={h.muted ? COLORS.muted : COLORS.signal}
-                  className={h.copy ? 'graph-copy' : undefined}
-                  onClick={h.copy ? () => copy(h.copy!) : undefined}
+                  className={h.open && openTarget ? 'graph-open' : undefined}
+                  onClick={h.open ? () => open(h.open!) : undefined}
                 >
                   {h.text}
                 </tspan>
@@ -118,7 +117,7 @@ export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
             <line key={`g${i}`} x1={x} x2={x} y1={TOP - 8} y2={geometry.height - 4} stroke={COLORS.borderSoft} strokeDasharray="2 4" />
           ))}
           {graph.horizontals.map((row, r) => (
-            <Row key={r} row={row} geometry={geometry.rows[r]!} onCopy={copy} />
+            <Row key={r} row={row} geometry={geometry.rows[r]!} onOpen={openTarget ? open : undefined} />
           ))}
         </svg>
       )}
@@ -126,10 +125,10 @@ export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
   )
 }
 
-function Row({ row, geometry, onCopy }: { row: GraphHorizontal; geometry: RowGeometry; onCopy: (value: string) => void }) {
+function Row({ row, geometry, onOpen }: { row: GraphHorizontal; geometry: RowGeometry; onOpen?: (target: OpenTarget) => void }) {
   const color = row.isRemainder || row.label.type.endsWith('Remainder') ? COLORS.faint : labelColor(row.label.type)
   const caption = labelText(row.label, row.isRemainder)
-  const captionCopy = row.label.assetId === undefined ? undefined : String(row.label.assetId)
+  const captionOpen: OpenTarget | undefined = row.label.assetId === undefined || !onOpen ? undefined : { kind: 'asset', assetId: Number(row.label.assetId) }
   const opacity = row.isRemainder ? 0.7 : 1
   const g = geometry
   if (g.kind === 'point') {
@@ -168,8 +167,8 @@ function Row({ row, geometry, onCopy }: { row: GraphHorizontal; geometry: RowGeo
         y={g.captionInline ? g.y + 4 : g.y - 7}
         fill={color}
         textAnchor="middle"
-        className={`graph-caption${captionCopy ? ' graph-copy' : ''}`}
-        onClick={captionCopy ? () => onCopy(captionCopy) : undefined}
+        className={`graph-caption${captionOpen ? ' graph-open' : ''}`}
+        onClick={captionOpen ? () => onOpen!(captionOpen) : undefined}
       >
         {caption}
       </text>

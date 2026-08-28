@@ -53,7 +53,7 @@ export function AssetCard({
         {address('freeze', model.freeze)}
         {address('clawback', model.clawback)}
         {project?.name ? <Fact label="project" value={project.name} /> : null}
-        {project?.url ? <Fact label="site"><a className="ident" href={project.url} target="_blank" rel="noreferrer">{project.url}</a></Fact> : null}
+        {project?.url ? <Fact label="site"><a className="ident-link" href={project.url} target="_blank" rel="noreferrer">{project.url}</a></Fact> : null}
         {project?.twitter ? <Fact label="twitter" value={`@${project.twitter}`} copy={project.twitter} /> : null}
       </Facts>
       {project?.description ? <FooterNote text={project.description} /> : null}

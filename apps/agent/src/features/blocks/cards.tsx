@@ -10,15 +10,12 @@ import { shorten } from '../../theme'
 export function BlockCard({
   model,
   onTransactions,
-  onOpenBlock,
 }: {
   model: BlockDetailViewModel | undefined
   onTransactions?: () => void
-  onOpenBlock?: (round: number) => void
 }) {
   if (!model) return <Unavailable title="BLOCK" />
-  const roundLink = (round: number) =>
-    onOpenBlock ? <Button label={String(round)} onPress={() => onOpenBlock(round)} /> : <Copyable value={String(round)} />
+  const roundLink = (round: number) => <Copyable value={String(round)} open={{ kind: 'block', round }} />
   return (
     <Frame>
       <Header

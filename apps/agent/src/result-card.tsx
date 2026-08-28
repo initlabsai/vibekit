@@ -221,7 +221,6 @@ export function ResultCard({
         <BlockCard
           model={derived.model}
           onTransactions={onTransactions}
-          onOpenBlock={onOpen ? (round) => onOpen({ kind: 'block', round }) : undefined}
         />
       )
     }

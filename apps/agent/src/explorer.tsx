@@ -33,7 +33,7 @@ import { useWriteFlow } from './features/write-flow/hooks'
 import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
 import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
-import { Button, CopyContext } from './primitives'
+import { Button, CopyContext, OpenContext } from './primitives'
 import type { NfdProfile, RemoteExplorerHost } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
@@ -259,6 +259,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   return (
     <EnrichmentProvider host={remoteHost} live={live === true}>
     <CopyContext.Provider value={announceCopy}>
+    <OpenContext.Provider value={openTarget}>
     <ExplorerContext.Provider value={context}>
     <main className={`shell${railOpen ? ' rail-open' : ' rail-folded'}${navOpen ? '' : ' nav-folded'}`}>
       <header className="top">
@@ -322,6 +323,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       ) : null}
     </main>
     </ExplorerContext.Provider>
+    </OpenContext.Provider>
     </CopyContext.Provider>
     </EnrichmentProvider>
   )

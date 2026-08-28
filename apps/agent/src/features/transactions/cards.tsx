@@ -127,12 +127,6 @@ export function TransactionCard({
         {detailFacts(model).map((row, index) => (
           <Fact key={`${row.label}-${index}`} label={row.label}>
             {row.copy ? <Copyable value={row.copy} display={row.value} /> : <span className={row.faint ? 'muted' : undefined}>{row.value}</span>}
-            {onOpen && (row.label === 'from' || row.label === 'to') && row.copy && row.copy.length === 58 ? (
-              <>
-                {' '}
-                <Button label="open" onPress={() => onOpen({ kind: 'account', address: row.copy! })} />
-              </>
-            ) : null}
           </Fact>
         ))}
       </Facts>

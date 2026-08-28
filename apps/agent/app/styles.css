@@ -154,9 +154,19 @@ a.button-active { text-decoration: underline; }
 .kind-keyreg, .kind-stpf, .kind-hb, .kind-txn { color: var(--muted); }
 
 /* Touchables: identifiers copy; buttons are words in the touchable color. */
-.ident { color: var(--signal); cursor: copy; font-family: var(--font-mono); font-size: inherit; overflow-wrap: anywhere; text-align: left; text-decoration: none; transition: color .15s, text-shadow .15s; }
-.ident:hover { color: var(--brass-bright); text-shadow: 0 0 .55rem rgba(255, 180, 84, .28); }
-.ident-copied::after { color: var(--signal); content: ' ✓'; }
+/* Identifiers: the text opens (teal), the trailing glyph copies. Only the glyph gets the copy cursor. */
+.ident { align-items: baseline; display: inline-flex; font-family: var(--font-mono); font-size: inherit; gap: .35em; max-width: 100%; }
+.ident .open, .ident .plain, .ident .copy { background: none; border: 0; font: inherit; overflow-wrap: anywhere; padding: 0; text-align: left; }
+.ident .open { color: var(--signal); cursor: pointer; transition: color .15s, text-shadow .15s; }
+.ident .open:hover { color: var(--brass-bright); text-shadow: 0 0 .55rem rgba(255, 180, 84, .28); }
+.ident .plain { color: var(--text); }
+.ident .copy { color: var(--muted); cursor: copy; font-size: .85em; opacity: 0; transition: opacity .12s, color .12s; }
+.ident:hover .copy, .ident .copy:focus-visible, .ident .copy.copied { opacity: 1; }
+.ident .copy:hover { color: var(--brass-bright); }
+.ident .copy.copied { color: var(--signal); }
+@media (hover: none) { .ident .copy { opacity: 1; } }
+.ident-link { color: var(--signal); font-family: var(--font-mono); overflow-wrap: anywhere; text-decoration: none; }
+.ident-link:hover { color: var(--brass-bright); }
 .button { color: var(--signal); font-family: var(--font-mono); font-size: .76rem; padding: .2rem .4rem; }
 .button:hover { color: var(--brass-bright); }
 .button-active { color: var(--brass-bright); text-decoration: underline; text-underline-offset: .25em; }
@@ -213,8 +223,8 @@ a.button-active { text-decoration: underline; }
 .graph-heading { font-size: 11.5px; letter-spacing: .02em; }
 .graph-caption { font-size: 11.5px; }
 .graph-tag { font-size: 10px; }
-.graph-copy { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
-.graph-copy:hover { fill: var(--brass-bright); }
+.graph-open { cursor: pointer; }
+.graph-open:hover { fill: var(--brass-bright); }
 .graph-row:hover line, .graph-row:hover path { stroke-width: 2; }
 .graph-row:hover circle { r: 4.5; }
 .graph-list { color: var(--muted); font-family: var(--font-mono); font-size: .74rem; margin: .8rem 0 0; padding-left: 1.2rem; }
@@ -299,6 +309,7 @@ a.button-active { text-decoration: underline; }
 .pill-danger { background: var(--red); color: var(--text); }
 .pill-idle { background: var(--surface); color: var(--muted); }
 .hero { align-items: baseline; display: flex; flex-wrap: wrap; gap: .7rem; margin: 1.1rem 0 0; }
+.hero-value .plain { color: var(--brass-bright); }
 .hero-value { color: var(--brass-bright); font-family: var(--font-mono); font-size: clamp(1.7rem, 2.6vw, 2.4rem); font-weight: 500; letter-spacing: -.05em; line-height: 1; overflow-wrap: anywhere; }
 .hero-unit { color: var(--muted); font-family: var(--font-mono); font-size: .85rem; letter-spacing: .1em; }
 .welcome .hero-value { font-size: clamp(2.2rem, 3.4vw, 3rem); letter-spacing: -.06em; }
@@ -403,8 +414,9 @@ a.button-active { text-decoration: underline; }
 .intro { box-sizing: border-box; max-width: var(--card-max); width: 100%; }
 .intro .note-agent-text em { color: var(--brass-bright); font-style: normal; }
 .intro-examples { color: var(--faint); font-family: var(--font-mono); font-size: .78rem; line-height: 1.7; margin: .5rem 0 0; }
-.intro-link { background: none; border: 0; color: var(--brass); cursor: pointer; font: inherit; padding: 0; text-decoration: underline dotted; text-underline-offset: .25em; transition: color .12s; }
-.intro-link:hover { color: var(--brass-bright); }
+/* Text you can send as input: brass, dotted. The only thing a dotted underline means. */
+.send { background: none; border: 0; color: var(--brass); cursor: pointer; font: inherit; padding: 0; text-decoration: underline dotted; text-underline-offset: .25em; transition: color .12s; }
+.send:hover { color: var(--brass-bright); }
 
 /* Network health: the TPS line over sampled blocks, then a strip of metrics. */
 .hero-aside { color: var(--faint); font-family: var(--font-mono); font-size: .78rem; letter-spacing: .04em; }

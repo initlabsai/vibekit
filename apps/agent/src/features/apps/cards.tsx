@@ -255,13 +255,7 @@ export function ApplicationLocalsCard({
       {apps.map((app) => (
         <Facts key={String(app.applicationId)}>
           <Fact label="app">
-            <Copyable value={String(app.applicationId)} />
-            {onOpen ? (
-              <>
-                {' '}
-                <Button label="open" onPress={() => onOpen(Number(app.applicationId))} />
-              </>
-            ) : null}
+            <Copyable value={String(app.applicationId)} open={{ kind: 'application', applicationId: Number(app.applicationId) }} />
           </Fact>
           <StateFacts entries={app.entries} max={6} />
         </Facts>
@@ -294,12 +288,6 @@ export function ApplicationLogsCard({
         <Facts key={row.txid}>
           <Fact label="txn">
             <Copyable value={row.txid} display={shorten(row.txid, 20)} />
-            {onOpen ? (
-              <>
-                {' '}
-                <Button label="open" onPress={() => onOpen(row.txid)} />
-              </>
-            ) : null}
           </Fact>
           {row.logs.slice(0, 3).map((line, index) => (
             <Fact key={index} label={`log ${index}`} value={bytesDisplay(line)} />
