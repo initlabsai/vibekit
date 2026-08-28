@@ -79,9 +79,9 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .feed:has(> .welcome:only-child) { justify-content: center; }
 .feed > .welcome:only-child { margin-top: 0; max-width: 52rem; }
 .feed > :first-child { margin-top: auto; }
-.composer-wrap { background: var(--ground); border-top: 1px solid var(--brass); padding: .7rem clamp(1rem, 3vw, 2.5rem); }
-/* The composer and its status line sit under the feed column, offset by the nav. */
-.composer-wrap > * { margin-left: max(0px, calc(var(--nav-w) + (100% - var(--nav-w) - var(--rail-w) - var(--card-max)) / 2)); max-width: min(var(--card-max), calc(100% - var(--nav-w) - var(--rail-w))); }
+.composer-wrap { background: var(--ground); border-top: 1px solid var(--brass); display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--rail-w); padding: .7rem 0; }
+/* The composer and its status line take the middle column, with the feed's own gutters and width. */
+.composer-wrap > * { grid-column: 2; margin: 0 auto; max-width: var(--card-max); width: calc(100% - 2 * clamp(1rem, 3vw, 2.5rem)); }
 .composer { align-items: center; background: var(--card); border-left: 2px solid var(--brass-bright); display: grid; gap: .7rem; grid-template-columns: auto 1fr auto; max-width: var(--card-max); padding: .3rem .6rem .3rem .8rem; }
 .composer > span { color: var(--brass-bright); font-size: 1.25rem; text-shadow: 0 0 .6rem rgba(255, 180, 84, .45); }
 .composer input { background: transparent; border: 0; color: var(--text); font-family: var(--font-mono); font-size: .92rem; min-width: 0; outline: 0; padding: .5rem 0; }
@@ -276,7 +276,6 @@ a.button-active { text-decoration: underline; }
   .body { grid-template-columns: 1fr; }
   .nav { display: none; }
   .top, .composer-wrap { padding-left: .9rem; padding-right: .9rem; }
-  .composer-wrap > * { margin-left: 0; }
   .feed { padding: 1rem .9rem 1.5rem; }
   .card { padding: 1rem 1rem 1.1rem; }
   .top-row { gap: .75rem; }
