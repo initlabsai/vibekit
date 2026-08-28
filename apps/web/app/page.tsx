@@ -31,7 +31,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { routeComposerInput } from '../src/commands'
 import { createRemoteFlowHost, probeRemoteFlowHost } from '../src/remote-host'
-import { AccountsLanding, AccountView, TransactionDetail } from '../src/views'
+import { Button } from '../src/primitives'
+import { AccountsLanding, AccountView, TransactionDetail, Welcome } from '../src/views'
 import { WriteFlowView } from '../src/write-flow'
 
 export default function Page() {
@@ -218,66 +219,76 @@ export default function Page() {
         ? 'Nothing was signed'
         : undefined
   const modeLabel =
-    live === 'probing' ? 'probing localnet…' : live ? 'live compose-only' : 'sample data'
+    live === 'probing' ? 'probing localnet…' : live ? 'live · compose-only' : 'sample data'
+  const canvas = accountsOpen && !flowView ? (
+    <AccountsLanding
+      accounts={FIXTURE_ADDRESS_BOOK}
+      note="Wallet accounts arrive with wallet integration — these are the sample accounts."
+      onOpen={openAccount}
+    />
+  ) : flowView ? (
+    <WriteFlowView
+      model={flowModel}
+      errorMessage={flowView.ok ? undefined : flowView.error.message}
+      canSign={flowHost === sampleHost}
+      terminalNote={terminalNote}
+      busy={busy}
+      onApprove={() => decide('approve')}
+      onDeny={() => decide('deny')}
+      onClose={() => {
+        setFlow(null)
+        setFlowHost(null)
+        setStatus('Payment panel closed')
+      }}
+    />
+  ) : viewId === 'account.portfolio' ? (
+    <AccountView model={account?.ok ? account.model : undefined} />
+  ) : openView ? (
+    <TransactionDetail
+      model={transaction?.ok ? transaction.model : undefined}
+      onOpenAccount={openAccount}
+    />
+  ) : (
+    <Welcome onOpenSample={() => submit(FIXTURE_TRANSACTION_ID)} />
+  )
 
   return (
     <main className="shell">
-      <header className="chrome">
-        <div>
-          <strong>VIBEKIT EXPLORER</strong>
-          <span> · localnet · {modeLabel}</span>
+      <header className="top">
+        <div className="top-row">
+          <span className="brand">
+            VIBEKIT <b>EXPLORER</b>
+          </span>
+          <span className="top-state">
+            <span>
+              <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span>{' '}
+              {modeLabel}
+            </span>
+            <span className="net net-localnet">localnet</span>
+            <span className="muted">no wallet</span>
+          </span>
         </div>
-        <div className="signer">signer: none</div>
+        <nav className="top-row tabs">
+          <Button label="explore" active={!accountsOpen} onPress={() => setAccountsOpen(false)} />
+          <Button label="accounts" active={accountsOpen} onPress={() => setAccountsOpen(true)} />
+        </nav>
       </header>
-      <nav className="tabs">
-        <span className="active">{flow ? 'Payment' : (openView?.title ?? 'Explorer')}</span>
-        {flow && openView ? <span>{openView.title} · in background</span> : null}
-      </nav>
       <div className="body">
-        <aside className="sidebar">
-          <p className="kicker">NAVIGATION</p>
-          <span className="nav-item nav-active">Explorer</span>
-          <button className="nav-button" onClick={() => setAccountsOpen(true)}>
-            Accounts
+        <aside className="nav">
+          <span className="kicker">session</span>
+          <button className={`nav-item${!accountsOpen && !flow ? ' on' : ''}`} onClick={() => setAccountsOpen(false)}>
+            {openView?.title ?? 'explore'}
           </button>
-          <span className="nav-item nav-soon">Assets · soon</span>
-          <span className="nav-item nav-soon">Apps · soon</span>
-          <span className="nav-item nav-soon">Blocks · soon</span>
-          <p className="kicker sidebar-gap">WRITE</p>
-          <button onClick={() => startPayment()} disabled={flow !== null || busy}>
-            Send payment
+          {flow ? <span className="nav-item on">payment</span> : null}
+          <span className="kicker nav-gap">write</span>
+          <button className="nav-item" onClick={() => startPayment()} disabled={flow !== null || busy}>
+            send payment
           </button>
         </aside>
-        {accountsOpen && !flowView ? (
-          <AccountsLanding
-            accounts={FIXTURE_ADDRESS_BOOK}
-            note="Wallet accounts arrive with wallet integration — these are the sample accounts."
-            onOpen={openAccount}
-          />
-        ) : flowView ? (
-          <WriteFlowView
-            model={flowModel}
-            errorMessage={flowView.ok ? undefined : flowView.error.message}
-            canSign={flowHost === sampleHost}
-            terminalNote={terminalNote}
-            busy={busy}
-            onApprove={() => decide('approve')}
-            onDeny={() => decide('deny')}
-            onClose={() => {
-              setFlow(null)
-              setFlowHost(null)
-              setStatus('Payment panel closed')
-            }}
-          />
-        ) : viewId === 'account.portfolio' ? (
-          <AccountView model={account?.ok ? account.model : undefined} />
-        ) : (
-          <TransactionDetail
-            model={transaction?.ok ? transaction.model : undefined}
-            onOpenSample={() => submit(FIXTURE_TRANSACTION_ID)}
-            onOpenAccount={openAccount}
-          />
-        )}
+        <section className="feed">
+          {canvas}
+          {flow && openView ? <p className="note">{openView.title} · in background</p> : null}
+        </section>
       </div>
       <footer className="composer-wrap">
         <form
@@ -292,10 +303,10 @@ export default function Page() {
             autoFocus
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="Transaction ID, address, or `pay [algos]`"
+            placeholder="transaction id, address, or `pay 0.5`"
             aria-label="Explorer composer"
           />
-          <button type="submit">Open</button>
+          <Button type="submit" label="open" />
         </form>
         <div className="status-line" role="status" aria-live="polite">
           {status}
