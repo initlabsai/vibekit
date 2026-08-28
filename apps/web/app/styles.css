@@ -387,4 +387,8 @@ a.button-active { text-decoration: underline; }
 .intro-hero { justify-content: center; margin: 0; }
 .intro-lede { color: var(--muted); font-size: 1rem; line-height: 1.75; margin: 1.1rem 0 0; max-width: 34rem; }
 .intro-examples { justify-content: center; margin-top: 1.8rem; }
+.intro-moods { display: flex; flex-wrap: wrap; gap: .4rem 1.6rem; justify-content: center; list-style: none; margin: 2rem 0 0; padding: 0; }
+.intro-moods li { align-items: center; display: flex; flex-direction: column; gap: .15rem; }
+.intro-moods .companion { font-size: .95rem; min-width: 0; }
+.intro-moods span { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; letter-spacing: .06em; }
 .intro-foot { color: var(--faint); font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; margin: 1.8rem 0 0; }
