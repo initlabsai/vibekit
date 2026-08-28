@@ -109,18 +109,33 @@ export function FeedPane({
           </button>
           {section.collapsed ? null : section.items.map((item, index) =>
             item.kind === 'note' && item.tone === 'agent' ? (
-              <div key={item.id} className="note-agent">
+              <div key={item.id} className={`note-agent${item.pending ? ' pending' : ''}`}>
                 <CompanionFace
                   mood={moodFor(section, streamingSection === section.id && index === section.items.length - 1)}
                 />
-                <p className={`note-agent-text${item.pending ? ' pending' : ''}`}>{item.text}</p>
+                <div className="note-agent-body">
+                  {item.pending ? (
+                    <p className="note-agent-pending">
+                      {item.text.replace(/…$/, '')}
+                      <span className="dots" aria-hidden="true">
+                        <i>·</i>
+                        <i>·</i>
+                        <i>·</i>
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="note-agent-text">{item.text}</p>
+                  )}
+                </div>
               </div>
             ) : item.kind === 'note' ? (
               <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>
                 {item.text}
               </p>
             ) : (
-              <div key={item.id}>{renderBlock(item.block, section.id, item.id)}</div>
+              <div key={item.id} className="block">
+                {renderBlock(item.block, section.id, item.id)}
+              </div>
             ),
           )}
         </article>
