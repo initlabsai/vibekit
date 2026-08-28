@@ -6,7 +6,7 @@ import { Welcome } from '../views'
 import { FeedPane } from './feed'
 
 export function FeedScreen() {
-  const { feed, renderBlock, submit, setStatus, agent } = useExplorer()
+  const { feed, renderBlock, submit, setStatus, agent, network } = useExplorer()
   return (
     <FeedPane
       sections={feed.sections}
@@ -16,6 +16,7 @@ export function FeedScreen() {
       streamingSection={agent.streamingSection}
       empty={
         <Welcome
+          network={network}
           onSubmit={(raw) =>
             raw.includes('<address>')
               ? setStatus('Type /pay 0.5 to <an address or wallet label> — a connected wallet signs it.')

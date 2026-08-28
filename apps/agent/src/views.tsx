@@ -1,9 +1,16 @@
 /** The empty feed: the companion says hello, as one of her own messages. */
 import { CompanionFace } from './features/profile/companion'
 
-const EXAMPLES = ['what is asset 31566704?', 'who is algorand.algo?', '/status', '/pay 0.5 to <address>']
+/** USDC where it lives; localnet has no well-known asset, so it gets the block tail instead. */
+const USDC: Record<string, string | undefined> = { mainnet: '31566704', testnet: '10458941' }
 
-export function Welcome({ onSubmit }: { onSubmit: (raw: string) => void }) {
+function examples(network: string): string[] {
+  const usdc = USDC[network]
+  return [usdc ? `what is asset ${usdc}?` : '/blocks', 'who is algorand.algo?', '/status', '/pay 0.5 to <address>']
+}
+
+export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void; network: string }) {
+  const EXAMPLES = examples(network)
   return (
     <div className="note-agent intro">
       <CompanionFace mood="calm" seed={0} />
