@@ -57,7 +57,8 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .net-localnet { color: var(--signal); }
 .net-testnet { color: var(--brass); }
 .net-mainnet { border-color: var(--red-dim); color: var(--red); }
-.tabs { display: flex; gap: 1.6rem; justify-content: flex-start; min-height: 2.4rem; }
+/* The tabs start where the feed column does: just past the nav's edge, folded or open. */
+.tabs { display: flex; gap: 1.6rem; justify-content: flex-start; min-height: 2.4rem; padding-left: calc(var(--nav-w) - 1.5rem + 1rem); transition: padding-left .15s; }
 .tabs .button { border-bottom: 1px solid transparent; letter-spacing: .08em; padding: .6rem 0 .5rem; }
 .tabs .button-active { border-bottom-color: var(--brass-bright); text-decoration: none; }
 .body { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); min-height: 0; }
