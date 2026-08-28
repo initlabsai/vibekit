@@ -12,7 +12,7 @@ export interface CreditsConfig {
   priceMicroUsdc: number
   /** `$1.00` — what people see. */
   price: string
-  /** The USDC ASA the payment moves. */
+  /** The ASA the payment moves: X402_ASSET_ID, else USDC for the chain. */
   asset: string
   chain: 'mainnet' | 'testnet'
   network: Network
@@ -36,7 +36,7 @@ export function creditsConfig(): CreditsConfig | undefined {
     payTo,
     priceMicroUsdc,
     price: formatUsdc(priceMicroUsdc),
-    asset: chain === 'mainnet' ? USDC_MAINNET_ASA_ID : USDC_TESTNET_ASA_ID,
+    asset: /^\d+$/.test(process.env.X402_ASSET_ID ?? '') ? process.env.X402_ASSET_ID! : chain === 'mainnet' ? USDC_MAINNET_ASA_ID : USDC_TESTNET_ASA_ID,
     chain,
     network: (chain === 'mainnet' ? ALGORAND_MAINNET_CAIP2 : ALGORAND_TESTNET_CAIP2) as Network,
   }

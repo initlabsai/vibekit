@@ -52,6 +52,8 @@ describe('credits price', () => {
     process.env.X402_PRICE_MICROUSDC = '1.5'
     expect(creditsConfig()?.priceMicroUsdc).toBe(1_000_000)
     expect(formatUsdc(1_000_000)).toBe('$1.00')
+    process.env.X402_ASSET_ID = '31566704'
+    expect(creditsConfig()?.asset).toBe('31566704')
   })
 })
 
