@@ -16,6 +16,7 @@ export function FeedScreen() {
       streamingSection={agent.streamingSection}
       empty={
         <Welcome
+          agent={agent}
           onSubmit={(raw) =>
             raw.includes('<address>')
               ? setStatus('Type pay 0.5 to <an address or wallet label> — a connected wallet signs it.')
