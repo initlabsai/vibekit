@@ -72,6 +72,18 @@ export function NavPane({
   )
 }
 
+/** The section and item ids of her most recent line, if any. */
+export function latestAgentNote(sections: ReadonlyArray<Section>): { sectionId: number; itemId: number } | undefined {
+  for (let s = sections.length - 1; s >= 0; s--) {
+    const section = sections[s]!
+    for (let i = section.items.length - 1; i >= 0; i--) {
+      const item = section.items[i]!
+      if (item.kind === 'note' && item.tone === 'agent') return { sectionId: section.id, itemId: item.id }
+    }
+  }
+  return undefined
+}
+
 export function FeedPane({
   sections,
   selectedId,
@@ -89,6 +101,8 @@ export function FeedPane({
   /** The section the agent is still speaking into, if any. */
   streamingSection?: number | null
 }) {
+  // Only her newest line wears a live face; every earlier one is a still.
+  const latest = latestAgentNote(sections)
   return (
     <section className="feed">
       {sections.length === 0 ? empty : null}
@@ -118,6 +132,7 @@ export function FeedPane({
                 <CompanionFace
                   mood={moodFor(section, item, streamingSection === section.id && index === section.items.length - 1)}
                   seed={item.id}
+                  still={!(latest?.sectionId === section.id && latest.itemId === item.id)}
                 />
                 <div className="note-agent-body">
                   {item.pending ? (

@@ -42,10 +42,11 @@ export function faceFor(mood: Mood, seed: number): string {
   return faces[Math.abs(seed) % faces.length]!
 }
 
-export function CompanionFace({ mood, seed }: { mood: Mood; seed: number }) {
+/** `still`: a past line — the default face, no blink, no glitch, dimmed. Only her latest line is alive. */
+export function CompanionFace({ mood, seed, still = false }: { mood: Mood; seed: number; still?: boolean }) {
   const [blink, setBlink] = useState(false)
   useEffect(() => {
-    if (mood !== 'calm') return
+    if (mood !== 'calm' || still) return
     let timeout: ReturnType<typeof setTimeout> | undefined
     const interval = setInterval(() => {
       setBlink(true)
@@ -55,7 +56,15 @@ export function CompanionFace({ mood, seed }: { mood: Mood; seed: number }) {
       clearInterval(interval)
       if (timeout) clearTimeout(timeout)
     }
-  }, [mood])
+  }, [mood, still])
+  if (still) {
+    const face = faceFor('calm', 0)
+    return (
+      <span className="companion companion-still" aria-hidden="true">
+        {face}
+      </span>
+    )
+  }
   const face = blink && mood === 'calm' ? BLINK : faceFor(mood, seed)
   return (
     <span className={`companion companion-${mood} glitch`} data-text={face} aria-hidden="true">

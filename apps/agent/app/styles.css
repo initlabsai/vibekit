@@ -382,6 +382,7 @@ a.button-active { text-decoration: underline; }
 .companion-thinking, .companion-working { --neon: var(--signal); }
 .companion-bright { --neon: var(--brass-bright); text-shadow: 0 0 .8rem rgba(255, 180, 84, .75); }
 .companion-squint { --neon: var(--red); }
+.companion-still { color: var(--faint); text-shadow: none; }
 .companion.glitch::before, .companion.glitch::after { content: attr(data-text); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
 .companion.glitch::before { animation: glitch-a 7s steps(1) infinite; color: var(--signal); }
 .companion.glitch::after { animation: glitch-b 7s steps(1) infinite; color: var(--brass-bright); }
