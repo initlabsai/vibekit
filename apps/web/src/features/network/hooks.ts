@@ -14,9 +14,11 @@ export function defaultNetwork(): LiveNetworkId {
 
 export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHost>
 
-const ROUND_POLL_MS = 5000
+/** The round chip alone is fine a little stale; a block tail wants every round. */
+const ROUND_POLL_IDLE_MS = 12000
+const ROUND_POLL_TAIL_MS = 4000
 
-export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; network?: LiveNetworkId } = {}) {
+export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; network?: LiveNetworkId; tailing?: boolean } = {}) {
   const [network, setNetwork] = useState<LiveNetworkId>(args.network ?? defaultNetwork)
   const networkRef = useRef(network)
   networkRef.current = network
@@ -54,12 +56,12 @@ export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; 
         () => undefined,
       )
     void tick()
-    const id = setInterval(tick, ROUND_POLL_MS)
+    const id = setInterval(tick, args.tailing ? ROUND_POLL_TAIL_MS : ROUND_POLL_IDLE_MS)
     return () => {
       cancelled = true
       clearInterval(id)
     }
-  }, [live, remoteHost])
+  }, [args.tailing, live, remoteHost])
 
   const host = useCallback(
     (): ExplorerHost => (live === true ? remoteHost : sampleHost),

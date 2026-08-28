@@ -65,7 +65,8 @@ function ExplorerApp() {
   const [network, setNetworkState] = useState(defaultNetwork)
   const wallet = useWalletLane(network)
   const { accounts, activeAddress, signDraft } = wallet
-  const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({ signDraft, network })
+  const [tailing, setTailing] = useState(false)
+  const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({ signDraft, network, tailing })
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed()
   const { sections, selectedId, selectSection, createSection, appendNote, toggleCollapsed } = feed
@@ -211,6 +212,7 @@ function ExplorerApp() {
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
     payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
+  useEffect(() => setTailing(lookups.tailing), [lookups.tailing])
   // The blocks tail follows the round chip.
   useEffect(() => {
     if (latestRound !== undefined && live === true) void lookups.tailBlocks(latestRound)

@@ -350,6 +350,7 @@ export function useLookups({
 
   /** The live tail: which block-list card follows the round, and the newest round it holds. */
   const tailRef = useRef<{ sectionId: number; itemId: number; view: ViewSpec; round: number } | null>(null)
+  const [tailing, setTailing] = useState(false)
 
   /** The recent rounds as one list card that then follows the chain; the blocks tab. */
   const openRecentBlocks = useCallback(
@@ -368,6 +369,7 @@ export function useLookups({
         const view = viewFor(record, 'block.list')
         const itemId = appendBlock(sectionId, { kind: 'view', view })
         tailRef.current = { sectionId, itemId, view, round: newest[0]?.round ?? 0 }
+        setTailing(true)
         appendNote(sectionId, `Following the chain — new rounds land at the top.`)
       }),
     [appendBlock, appendNote, commitStore, host, storeRef, withBusy],
@@ -462,5 +464,6 @@ export function useLookups({
     openRecentBlocks,
     tailBlocks,
     isTailing,
+    tailing,
   }
 }
