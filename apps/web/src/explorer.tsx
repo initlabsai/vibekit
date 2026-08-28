@@ -58,7 +58,7 @@ export interface ExplorerContextValue {
   setStatus: (text: string) => void
   renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
   /** The agent lane's status and its latest line, for the composer and the companion. */
-  agent: { enabled: boolean; model?: string; lastLine?: string }
+  agent: { enabled: boolean; model?: string; streamingSection: number | null }
 }
 
 const ExplorerContext = createContext<ExplorerContextValue | null>(null)
@@ -236,9 +236,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       submit,
       setStatus,
       renderBlock,
-      agent: { enabled: agent.status.enabled, model: agent.status.model, lastLine: agent.lastLine },
+      agent: { enabled: agent.status.enabled, model: agent.status.model, streamingSection: agent.streamingSection },
     }),
-    [activeAddress, agent.lastLine, agent.status.enabled, agent.status.model, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
+    [activeAddress, agent.streamingSection, agent.status.enabled, agent.status.model, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
   )
 
   return (

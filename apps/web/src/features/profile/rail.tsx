@@ -24,9 +24,6 @@ import { viewFor } from '../../lookup'
 import { AssetMark, Avatar, Button, Copyable, Identity } from '../../primitives'
 import { shorten } from '../../theme'
 import { rowAmount, rowType } from '../transactions/cards'
-import { Companion } from './companion'
-
-type Tab = 'account' | 'companion'
 
 /** The newest portfolio record in the store, when no wallet is connected. */
 function lastOpenedAccount(store: ResultStore): string | undefined {
@@ -40,8 +37,7 @@ function lastOpenedAccount(store: ResultStore): string | undefined {
 }
 
 export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () => void }) {
-  const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, latestRound, openTarget, network, agent } = useExplorer()
-  const [tab, setTab] = useState<Tab>('account')
+  const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, openTarget, network } = useExplorer()
   const focus = activeAddress ?? lastOpenedAccount(store)
   const [portfolio, setPortfolio] = useState<ViewSpec | undefined>(undefined)
   const [recent, setRecent] = useState<ViewSpec | undefined>(undefined)
@@ -109,15 +105,12 @@ export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () =>
   return (
     <aside className="rail" aria-label="Account at a glance">
       <div className="rail-tabs">
-        <Button label="account" active={tab === 'account'} onPress={() => setTab('account')} />
-        <Button label="companion" active={tab === 'companion'} onPress={() => setTab('companion')} />
+        <span className="kicker">account</span>
         <button type="button" className="rail-arrow rail-collapse" onClick={onToggle} title="fold the rail">
           ▸
         </button>
       </div>
-      {tab === 'companion' ? (
-        <Companion sections={feed.sections} busy={busy} latestRound={latestRound} danger={squint} voice={agent.lastLine} />
-      ) : !focus ? (
+      {!focus ? (
         <p className="rail-empty">Connect a wallet or open an account and it lives here.</p>
       ) : (
         <div className="rail-body">

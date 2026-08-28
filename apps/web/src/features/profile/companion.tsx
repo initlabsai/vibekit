@@ -1,9 +1,9 @@
 'use client'
 
 /**
- * The companion: a phosphor face that reacts to what the Explorer is doing.
- * Deterministic — moods come from the store and the feed, never from a
- * model — so it is honest about exactly as much as the cards are.
+ * The companion: a small phosphor face beside what the agent says. Its mood
+ * is deterministic — from the feed and the store, never from a model — so it
+ * is honest about exactly as much as the cards are.
  */
 import { useEffect, useState } from 'react'
 
@@ -12,60 +12,40 @@ import type { Section } from '../../feed/hooks'
 export type Mood = 'calm' | 'curious' | 'bright' | 'squint' | 'blink'
 
 const FACES: Record<Mood, string[]> = {
-  calm: ['  ╭──────╮  ', '  │ ◠  ◠ │  ', '  │   ‿  │  ', '  ╰──────╯  '],
-  blink: ['  ╭──────╮  ', '  │ ─  ─ │  ', '  │   ‿  │  ', '  ╰──────╯  '],
-  curious: ['  ╭──────╮  ', '  │ ◉  ◠ │  ', '  │   ˘  │  ', '  ╰──────╯  '],
-  bright: ['  ╭──────╮  ', '  │ ✦  ✦ │  ', '  │  ‿‿  │  ', '  ╰──────╯  '],
-  squint: ['  ╭──────╮  ', '  │ ¬  ¬ │  ', '  │   ︵ │  ', '  ╰──────╯  '],
+  calm: ['╭────╮', '│◠  ◠│', '│  ‿ │', '╰────╯'],
+  blink: ['╭────╮', '│─  ─│', '│  ‿ │', '╰────╯'],
+  curious: ['╭────╮', '│◉  ◠│', '│  ˘ │', '╰────╯'],
+  bright: ['╭────╮', '│✦  ✦│', '│ ‿‿ │', '╰────╯'],
+  squint: ['╭────╮', '│¬  ¬│', '│  ︵│', '╰────╯'],
 }
 
-const LINES: Record<Exclude<Mood, 'blink'>, string[]> = {
-  calm: ['watching the chain.', 'paste something.', 'every card is a tool result.', 'i only say what the bytes say.'],
-  curious: ['looking…', 'asking the node.', 'one moment.'],
-  bright: ['new round.', 'confirmed.', 'that landed.'],
-  squint: ['that would fail.', 'hm. check that.', 'suspicious, per pera.', 'no.'],
-}
-
-/** The newest note or card decides the tone; errors and failed simulations squint. */
-export function moodFor(args: { sections: Section[]; busy: boolean; roundTick: boolean }): Exclude<Mood, 'blink'> {
-  if (args.busy) return 'curious'
-  const last = args.sections.at(-1)?.items.at(-1)
+/** The mood the newest thing in a section calls for. */
+export function moodFor(section: Section | undefined, streaming: boolean): Exclude<Mood, 'blink'> {
+  if (streaming) return 'curious'
+  const last = section?.items.at(-1)
   if (last?.kind === 'note' && last.tone === 'error') return 'squint'
   if (last?.kind === 'block' && last.block.kind === 'write') {
     const stage = last.block.flow.stage
     if (stage === 'denied') return 'squint'
     if (stage === 'confirmed') return 'bright'
   }
-  return args.roundTick ? 'bright' : 'calm'
+  return 'calm'
 }
 
-export function Companion({ sections, busy, latestRound, danger, voice }: { sections: Section[]; busy: boolean; latestRound: number | undefined; danger: boolean; voice?: string }) {
-  const [roundTick, setRoundTick] = useState(false)
+export function CompanionFace({ mood }: { mood: Exclude<Mood, 'blink'> }) {
   const [blink, setBlink] = useState(false)
   useEffect(() => {
-    if (latestRound === undefined) return
-    setRoundTick(true)
-    const id = setTimeout(() => setRoundTick(false), 900)
-    return () => clearTimeout(id)
-  }, [latestRound])
-  useEffect(() => {
+    if (mood !== 'calm') return
     const id = setInterval(() => {
       setBlink(true)
       setTimeout(() => setBlink(false), 140)
-    }, 4200)
+    }, 4200 + Math.floor(Math.random() * 1500))
     return () => clearInterval(id)
-  }, [])
-  const mood = danger ? 'squint' : moodFor({ sections, busy, roundTick })
+  }, [mood])
   const face = FACES[blink && mood === 'calm' ? 'blink' : mood]
-  const lines = LINES[mood]
-  // A stable pick per situation: the same section keeps the same line.
-  const seed = (sections.at(-1)?.id ?? 0) + (latestRound ?? 0)
-  // When the agent has spoken, its words outrank the stock lines.
-  const line = voice && !busy ? voice : lines[seed % lines.length]!
   return (
-    <div className={`companion companion-${mood}`}>
-      <pre className="companion-face" aria-hidden="true">{face.join('\n')}</pre>
-      <p className="companion-line">{line}</p>
-    </div>
+    <pre className={`companion-face companion-${mood}`} aria-hidden="true">
+      {face.join('\n')}
+    </pre>
   )
 }

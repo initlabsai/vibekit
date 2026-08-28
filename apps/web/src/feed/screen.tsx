@@ -6,13 +6,14 @@ import { Welcome } from '../views'
 import { FeedPane } from './feed'
 
 export function FeedScreen() {
-  const { feed, renderBlock, submit, setStatus } = useExplorer()
+  const { feed, renderBlock, submit, setStatus, agent } = useExplorer()
   return (
     <FeedPane
       sections={feed.sections}
       selectedId={feed.selectedId}
       renderBlock={renderBlock}
       onToggle={feed.toggleCollapsed}
+      streamingSection={agent.streamingSection}
       empty={
         <Welcome
           onSubmit={(raw) =>

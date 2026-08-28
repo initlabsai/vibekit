@@ -83,7 +83,7 @@ export function useAgentLane({
   const [status, setAgentStatus] = useState<AgentStatus>({ enabled: false })
   /** The model's view of the conversation; opaque here, sent back each turn. */
   const historyRef = useRef<unknown[]>([])
-  const [lastLine, setLastLine] = useState<string | undefined>(undefined)
+  const [streamingSection, setStreamingSection] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -122,6 +122,7 @@ export function useAgentLane({
       }
       setBusy(true)
       setStatus('thinking…')
+      setStreamingSection(sectionId)
       let noteId: number | null = null
       let spoke = false
       const say = (delta: string) => {
@@ -189,6 +190,7 @@ export function useAgentLane({
       } finally {
         setBusy(false)
         setStatus('')
+        setStreamingSection(null)
       }
     },
     [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, setBusy, setStatus, startFromDraft, status.enabled, storeRef, updateItem],
@@ -225,11 +227,5 @@ export function useAgentLane({
     [appendBlock, appendNote, commitStore, storeRef],
   )
 
-  useEffect(() => {
-    // The companion speaks the agent's latest sentence.
-    const last = feed.sections.at(-1)?.items.filter((item) => item.kind === 'note' && item.tone === 'agent').at(-1)
-    setLastLine(last && last.kind === 'note' ? last.text : undefined)
-  }, [feed.sections])
-
-  return { status, runAgent, lastLine }
+  return { status, runAgent, streamingSection }
 }

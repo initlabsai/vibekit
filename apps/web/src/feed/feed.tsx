@@ -3,6 +3,7 @@
 /** The transcript as DOM: the session nav, the feed of sections, and the composer. */
 import { useState, type FormEvent, type ReactNode } from 'react'
 
+import { CompanionFace, moodFor } from '../features/profile/companion'
 import { Button } from '../primitives'
 import type { Section, SectionBlock } from './hooks'
 
@@ -72,6 +73,7 @@ export function FeedPane({
   renderBlock,
   empty,
   onToggle,
+  streamingSection,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -79,6 +81,8 @@ export function FeedPane({
   empty: ReactNode
   /** The bar folds and unfolds its section. */
   onToggle: (id: number) => void
+  /** The section the agent is still speaking into, if any. */
+  streamingSection?: number | null
 }) {
   return (
     <section className="feed">
@@ -103,9 +107,16 @@ export function FeedPane({
               </span>
             ) : null}
           </button>
-          {section.collapsed ? null : section.items.map((item) =>
-            item.kind === 'note' ? (
-              <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : item.tone === 'agent' ? ' note-agent' : ''}`}>
+          {section.collapsed ? null : section.items.map((item, index) =>
+            item.kind === 'note' && item.tone === 'agent' ? (
+              <div key={item.id} className="note-agent">
+                <CompanionFace
+                  mood={moodFor(section, streamingSection === section.id && index === section.items.length - 1)}
+                />
+                <p className="note-agent-text">{item.text}</p>
+              </div>
+            ) : item.kind === 'note' ? (
+              <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>
                 {item.text}
               </p>
             ) : (
