@@ -69,6 +69,7 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .nav-empty { color: var(--faint); }
 .nav-empty::before { content: ''; }
 .section { display: flex; flex-direction: column; gap: .75rem; }
+.section > div { display: flex; flex-direction: column; gap: .75rem; }
 .section + .section { border-top: 1px solid var(--border-soft); padding-top: 1.2rem; }
 .net { background: none; cursor: pointer; }
 .feed { background-image: linear-gradient(rgba(42, 39, 35, .18) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 39, 35, .18) 1px, transparent 1px); background-size: 2.75rem 2.75rem; display: flex; flex-direction: column; gap: 1.4rem; overflow-y: auto; padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 2rem; }

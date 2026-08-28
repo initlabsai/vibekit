@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 /** The one place a view id becomes UI: every trusted view spec renders through this exhaustive switch. */
 import {
   createAccountListViewModel,
@@ -48,7 +50,8 @@ import { AssetCard, AssetHoldersCard, AssetHoldingsCard, AssetListCard } from '.
 import { BlockCard, BlockListCard } from './features/blocks/cards'
 import { NetworkCard } from './features/network/cards'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
-import { Facts, Fact, Frame, Header, Unavailable } from './primitives'
+import { buildGroupGraph, TransactionGraphCard } from './features/transactions/graph'
+import { Button, Facts, Fact, Frame, Header, Unavailable } from './primitives'
 
 /** Where a card's touchable can take the feed; UI routing, not protocol. */
 export type OpenTarget =
@@ -124,6 +127,8 @@ export function ResultCard({
   /** A block list that follows the chain. */
   tailing?: boolean
 }) {
+  // A group shows its flow first; the table is one click away.
+  const [flow, setFlow] = useState<'graph' | 'table'>('graph')
   const filter = onOpen ? transactionsFilterFor(store, view) : undefined
   const onTransactions = onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
   const more = onMore && nextPageArgs(findResultRecord(store, view.source)) ? onMore : undefined
@@ -131,16 +136,44 @@ export function ResultCard({
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
       if (!derived.ok) return <RawCard store={store} view={view} />
-      return <TransactionCard model={derived.model} onOpen={onOpen} />
+      const model = derived.model
+      // Every detail gets the flow graph a group does (inner txns included).
+      const graph = buildGroupGraph([model])
+      return (
+        <>
+          <TransactionCard model={model} onOpen={onOpen} />
+          {graph ? (
+            <TransactionGraphCard
+              graph={graph}
+              kicker={model.innerTxns?.length ? 'INNER TRANSACTIONS' : 'TRANSACTION'}
+              transactionCount={1 + (model.innerTxns?.length ?? 0)}
+            />
+          ) : null}
+        </>
+      )
     }
     case 'transaction.list':
     case 'transaction.group': {
       const derived = createTransactionCollectionViewModel(store, view)
       const title = view.view === 'transaction.group' ? 'TRANSACTION GROUP' : 'TRANSACTIONS'
       if (!derived.ok) return <RawCard store={store} view={view} />
+      if (view.view === 'transaction.group' && flow === 'graph') {
+        const graph = buildGroupGraph(derived.model.transactions)
+        if (graph) {
+          return (
+            <TransactionGraphCard
+              graph={graph}
+              groupId={derived.model.groupId}
+              transactionCount={derived.model.transactions.length}
+              action={<Button label="table" onPress={() => setFlow('table')} />}
+            />
+          )
+        }
+      }
       return (
         <TransactionListCard
           title={title}
+          action={view.view === 'transaction.group' ? <Button label="graph" onPress={() => setFlow('graph')} /> : undefined}
           groupId={derived.model.groupId}
           transactions={derived.model.transactions}
           nextToken={derived.model.nextToken}
