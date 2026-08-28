@@ -526,4 +526,6 @@ a.button-active { text-decoration: underline; }
   .rail-open .body, .rail-folded .body { grid-template-columns: 1fr; }
   .rail-mini { display: none; }
   .composer-wrap { padding-bottom: .5rem; }
+  /* phones: no custom-address form on the assets/apps/txns pages; the wallet's account is the subject */
+  .picker-form { display: none; }
 }

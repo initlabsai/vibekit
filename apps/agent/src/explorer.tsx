@@ -326,9 +326,6 @@ function ExplorerApp({ children }: { children: ReactNode }) {
                   {network}
                 </button>
               </div>
-              <div className="sheet-row">
-                <Button label="account ▸" onPress={() => { toggleRail(); closeSheet() }} />
-              </div>
               <NavPane
                 sections={sections}
                 selectedId={selectedId}
