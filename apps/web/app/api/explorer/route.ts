@@ -11,6 +11,7 @@ import {
 } from '@initlabs/vibekit-explorer'
 import {
   createLiveHost,
+  resolveNfdName,
   signedGroupRecordFor,
   type LiveHost,
 } from '@initlabs/vibekit-explorer/live'
@@ -82,6 +83,7 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('submit-signed'), ...signedBody }),
   z.object({ action: z.literal('await-confirmation'), network: networkSchema, txid: z.string().min(1) }),
   z.object({ action: z.literal('status-round'), network: networkSchema }),
+  z.object({ action: z.literal('resolve-nfd'), network: networkSchema, name: z.string().min(1).max(128) }),
 ])
 
 export type ExplorerRequest = z.infer<typeof explorerRequestSchema>
@@ -162,6 +164,14 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ network: body.network, live: await host.probe() })
       case 'status-round':
         return Response.json(await host.statusRound())
+      case 'resolve-nfd': {
+        // The nfd plugin's own client, beside the live host; the host itself carries no plugins.
+        if (body.network === 'localnet') {
+          status = 400
+          return fail(400, 'NFD names resolve on mainnet and testnet only')
+        }
+        return Response.json({ nfd: await resolveNfdName(body.network, body.name) })
+      }
       case 'call-tool':
         return await record(host.callTool(body.toolName, body.args))
       case 'lookup-account':

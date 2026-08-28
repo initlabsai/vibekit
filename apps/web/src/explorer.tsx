@@ -19,12 +19,14 @@ import { HELP, routeComposerInput } from './commands'
 import { Composer, FeedPane, NavPane } from './feed/feed'
 import { useFeed, type SectionBlock } from './feed/hooks'
 import { defaultNetwork, NETWORKS, useNetwork } from './features/network/hooks'
+import { NfdCard } from './features/plugins/nfd-card'
 import { WalletScreen } from './features/wallet/screen'
 import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
 import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
 import { Button } from './primitives'
+import type { NfdProfile } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
 import { Welcome } from './views'
@@ -62,12 +64,12 @@ function ExplorerApp() {
   const [network, setNetworkState] = useState(defaultNetwork)
   const wallet = useWalletLane(network)
   const { accounts, activeAddress, signDraft } = wallet
-  const { setNetwork, networkRef, host, live, latestRound } = useNetwork({ signDraft, network })
+  const { setNetwork, networkRef, host, remoteHost, live, latestRound } = useNetwork({ signDraft, network })
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed()
   const { sections, selectedId, selectSection, createSection, appendNote } = feed
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
-  const lookups = useLookups({ ...shared, accounts })
+  const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
 
   const switchNetwork = useCallback(
@@ -188,8 +190,17 @@ function ExplorerApp() {
         }
         case 'raw':
           return <pre className="note">{block.text}</pre>
-        case 'plugin':
-          return <pre className="note">{JSON.stringify(block.data, null, 2)}</pre>
+        case 'plugin': {
+          if (block.view !== 'nfd.profile') return <pre className="raw">{JSON.stringify(block.data, null, 2)}</pre>
+          const data = block.data as NfdProfile
+          return (
+            <NfdCard
+              data={data}
+              network={block.network}
+              onOpenAccount={data.address ? () => openTarget({ kind: 'account', address: data.address! }) : undefined}
+            />
+          )
+        }
       }
     },
     [busy, lookups, network, openTarget, payment, store],

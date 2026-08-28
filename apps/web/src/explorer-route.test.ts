@@ -17,6 +17,12 @@ const broadcasts: StructuredResult[] = []
 const sample = createSampleHost()
 mock.module('@initlabs/vibekit-explorer/live', () => ({
   ...live,
+  resolveNfdName: async (network: string, name: string) => ({
+    name,
+    address: FIXTURE_SENDER,
+    state: 'owned',
+    properties: { network },
+  }),
   createLiveHost: (config: unknown) => {
     created.push(config)
     const network = typeof config === 'string' ? config : (config as { id: string }).id
@@ -160,5 +166,14 @@ describe('explorer route', () => {
   test('oversized bodies are 413', async () => {
     const response = await post({ action: 'probe', network: 'localnet', pad: 'x'.repeat(300 * 1024) })
     expect(response.status).toBe(413)
+  })
+
+  test('resolve-nfd answers on mainnet and testnet only', async () => {
+    const ok = await post({ action: 'resolve-nfd', network: 'mainnet', name: 'alice.algo' })
+    expect(await ok.json()).toEqual({
+      nfd: { name: 'alice.algo', address: FIXTURE_SENDER, state: 'owned', properties: { network: 'mainnet' } },
+    })
+    const local = await post({ action: 'resolve-nfd', network: 'localnet', name: 'alice.algo' })
+    expect(local.status).toBe(400)
   })
 })

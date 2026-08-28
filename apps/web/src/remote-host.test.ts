@@ -46,6 +46,13 @@ describe('remote explorer host', () => {
     })
   })
 
+  test('resolveName carries the network and validates the profile', async () => {
+    const bodies = stubFetch(() => ({ nfd: { name: 'alice.algo', address: FIXTURE_SENDER } }))
+    const host = createRemoteExplorerHost({ network: 'testnet' })
+    expect(await host.resolveName('alice.algo')).toEqual({ name: 'alice.algo', address: FIXTURE_SENDER })
+    expect(bodies[0]).toEqual({ action: 'resolve-nfd', network: 'testnet', name: 'alice.algo' })
+  })
+
   test('records are parsed against the protocol schema before use', async () => {
     stubFetch(() => ({ record: { nonsense: true } }))
     const host = createRemoteExplorerHost({ network: 'localnet' })

@@ -24,6 +24,7 @@ import { useCallback, useState } from 'react'
 import type { WalletAccount } from './commands'
 import type { Feed } from './feed/hooks'
 import type { ExplorerHost } from './features/network/hooks'
+import type { RemoteExplorerHost } from './remote-host'
 import { errorMessage, shorten } from './theme'
 
 /** Wraps a stored record in a trusted view spec. */
@@ -43,6 +44,7 @@ function plural(count: number, noun: string): string {
 export function useLookups({
   feed,
   host,
+  remoteHost,
   live,
   accounts,
   commitStore,
@@ -54,6 +56,8 @@ export function useLookups({
 }: {
   feed: Feed
   host: () => ExplorerHost
+  /** Names resolve through the route even when reads fall back to sample data. */
+  remoteHost: RemoteExplorerHost
   live: 'probing' | boolean
   /** The connected wallet's accounts; empty until one connects. */
   accounts: ReadonlyArray<WalletAccount>
@@ -160,9 +164,24 @@ export function useLookups({
 
   const openAccountName = useCallback(
     (sectionId: number, name: string) => {
-      appendNote(sectionId, `NFD lookup is not enabled — paste ${name}'s address instead.`, 'error')
+      const network = networkRef.current
+      if (network !== 'mainnet' && network !== 'testnet') {
+        appendNote(sectionId, `NFD names resolve on mainnet and testnet only — you're on ${network}. Paste an address instead.`, 'error')
+        return Promise.resolve()
+      }
+      let address: string | undefined
+      return withBusy(sectionId, `resolving ${name}…`, `Couldn't resolve ${name}`, async () => {
+        const data = await remoteHost.resolveName(name)
+        if (!data.address) throw new Error('the name has no deposit address')
+        appendBlock(sectionId, { kind: 'plugin', view: 'nfd.profile', data, network })
+        address = data.address
+      }).then(() => {
+        // Its own lookup, after the resolve has released busy: from here the
+        // name behaves exactly like a pasted address.
+        if (address) return openAccount(sectionId, address)
+      })
     },
-    [appendNote],
+    [appendBlock, appendNote, networkRef, openAccount, remoteHost, withBusy],
   )
 
   const openMyAccounts = useCallback(

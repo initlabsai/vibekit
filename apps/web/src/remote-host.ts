@@ -4,6 +4,7 @@
  * request body. Signing is injected only when a wallet is connected; the
  * server verifies and broadcasts, and the browser polls for confirmation.
  */
+import { z } from 'zod'
 import {
   structuredResultSchema,
   type ExplorerReadHost,
@@ -18,11 +19,24 @@ const ROUTE = '/api/explorer'
 const CONFIRMATION_POLL_MS = 1000
 const CONFIRMATION_ATTEMPTS = 30
 
+/** The nfd plugin's resolve_nfd record, as the browser validates it. */
+export const nfdProfileSchema = z.object({
+  name: z.string(),
+  address: z.string().optional(),
+  owner: z.string().optional(),
+  appId: z.number().optional(),
+  state: z.string().optional(),
+  properties: z.record(z.string(), z.string()).optional(),
+})
+export type NfdProfile = z.infer<typeof nfdProfileSchema>
+
 export type RemoteExplorerHost = ExplorerReadHost &
   WriteFlowHost & {
     network: LiveNetworkId
     probe(): Promise<boolean>
     statusRound(): Promise<{ lastRound: number }>
+    /** `alice.algo` to its NFD profile; mainnet and testnet only. */
+    resolveName(name: string): Promise<NfdProfile>
   }
 
 async function post<T = { record?: unknown }>(body: Record<string, unknown>): Promise<T> {
@@ -66,6 +80,10 @@ export function createRemoteExplorerHost(args: {
       }
     },
     statusRound: () => post<{ lastRound: number }>({ action: 'status-round', network }),
+    async resolveName(name) {
+      const payload = await post<{ nfd?: unknown }>({ action: 'resolve-nfd', network, name })
+      return nfdProfileSchema.parse(payload.nfd)
+    },
     draftPayment: (params: PaymentDraftParams) => call('draft-payment', { params }),
     simulateDraft: (draftRecord) => call('simulate-draft', { draftRecord }),
     ...(signDraft

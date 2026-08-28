@@ -412,3 +412,4 @@ export {
   type BlockTailTick,
   type BlockTailWatch,
 } from './block-tail.js'
+export { nfdRecordSchema, resolveNfdName, type NfdRecord } from './nfd.js'
