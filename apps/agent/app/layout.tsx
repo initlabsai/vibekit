@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 
 import { ShellMount } from '../src/shell-mount'
@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', title: 'VibeKit Agent — qt314', description: 'She reads Algorand for you.' },
 }
+
+/** The keyboard resizes the layout rather than covering it, so the composer stays in view and Safari has nothing to pan to. */
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, interactiveWidget: 'resizes-content', themeColor: '#0a0b0e' }
 
 /** Fonts and tokens; the shell (top bar, session nav, composer) persists across every route. */
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
