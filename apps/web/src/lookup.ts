@@ -86,7 +86,11 @@ export function useLookups({
       setStatus(live === true ? status : `${status} (sample data — ${networkRef.current} is unreachable)`)
       return task()
         .catch((error: unknown) =>
-          appendNote(sectionId, `${failure} — ${errorMessage(error)}`, 'error'),
+          appendNote(
+            sectionId,
+            `${failure} — ${errorMessage(error)}${live === true ? '' : ` Switch to testnet or mainnet for live data.`}`,
+            'error',
+          ),
         )
         .finally(() => {
           setBusy(false)

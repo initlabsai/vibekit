@@ -6,10 +6,10 @@ import { createRemoteExplorerHost, type RemoteExplorerHost } from '../../remote-
 
 export const NETWORKS: LiveNetworkId[] = ['localnet', 'testnet', 'mainnet']
 
-/** Where the Explorer starts: the Vercel project sets testnet; `next dev` is localnet. */
+/** Where the Explorer starts: testnet, so a connected wallet is on a live chain; localnet is one chip away. */
 export function defaultNetwork(): LiveNetworkId {
   const configured = process.env.NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK
-  return configured === 'testnet' || configured === 'mainnet' ? configured : 'localnet'
+  return configured === 'localnet' || configured === 'mainnet' ? configured : 'testnet'
 }
 
 export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHost>

@@ -10,7 +10,7 @@ import { lute } from '@txnlab/use-wallet-lute'
 import { pera } from '@txnlab/use-wallet-pera'
 import { useNetwork as useWalletNetwork, useWallet, WalletManager, WalletProvider } from '@txnlab/use-wallet-react'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { WalletAccount } from '../commands'
 import { defaultNetwork } from '../features/network/hooks'
@@ -51,17 +51,20 @@ export function useWalletLane(network: LiveNetworkId) {
     [wallet.activeWalletAccounts],
   )
   const activeAddress = wallet.activeAddress ?? undefined
-  const { transactionSigner } = wallet
+  // use-wallet hands out a fresh transactionSigner each render; read it through a ref so
+  // signDraft (and everything memoised on it) changes only with the account or network.
+  const signerRef = useRef(wallet.transactionSigner)
+  signerRef.current = wallet.transactionSigner
   const signDraft = useMemo(
     () =>
       activeAddress
         ? createWalletSignDraft({
             network,
             walletNetwork: () => manager.activeNetwork,
-            transactionSigner,
+            transactionSigner: (txns, indexes) => signerRef.current(txns, indexes),
           })
         : undefined,
-    [activeAddress, network, transactionSigner],
+    [activeAddress, network],
   )
 
   return {
