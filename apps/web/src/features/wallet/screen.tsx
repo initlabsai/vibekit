@@ -3,6 +3,8 @@
 /** The wallet screen: a branded connect menu over `useWallet().wallets`, and the connected accounts. */
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
 
+import { useState } from 'react'
+
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero } from '../../primitives'
 import { shorten } from '../../theme'
 import type { WalletLane } from '../../wallet/provider'
@@ -21,15 +23,27 @@ export function WalletScreen({
   onListAccounts: () => void
   onError: (message: string) => void
 }) {
-  const run = (task: () => Promise<unknown>) =>
-    void task().catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)))
+  const [error, setError] = useState<string | undefined>(undefined)
+  const run = (task: () => Promise<unknown>) => {
+    setError(undefined)
+    void task().catch((caught: unknown) => {
+      const message = caught instanceof Error ? caught.message : String(caught)
+      setError(message)
+      onError(message)
+    })
+  }
   const active = lane.activeWallet
   return (
-    <section className="feed">
+    <section className="screen">
+      <header className="screen-head">
+        <span className="kicker">wallet</span>
+        <span className="muted"> · {network}</span>
+      </header>
       <Frame>
         <Header kicker="WALLET" chip={network} pill={active ? 'CONNECTED' : 'NO WALLET'} tone={active ? 'ok' : 'idle'} />
         <Hero value={lane.activeAddress ? (lane.activeName ?? shorten(lane.activeAddress, 16)) : 'Connect a wallet'} />
         {lane.networkError ? <p className="note note-error">{lane.networkError}</p> : null}
+        {error ? <p className="note note-error">{error}</p> : null}
         {!lane.isReady ? (
           <FooterNote text="wallet adapters loading…" />
         ) : (
