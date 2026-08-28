@@ -2,20 +2,51 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "bin/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "bin/**"
+      ]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": [
+        "build"
+      ]
     },
     "clean": {
       "cache": false
     },
     "@initlabs/vibekit-website#typecheck": {
-      "dependsOn": ["^build", "build"]
+      "dependsOn": [
+        "^build",
+        "build"
+      ]
+    },
+    "@initlabs/vibekit-agent#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**"
+      ],
+      "env": [
+        "AGENT_*",
+        "X402_*",
+        "KV_*",
+        "REDIS_URL",
+        "VIBEKIT_ALGOD_*",
+        "VIBEKIT_INDEXER_*",
+        "TOGETHER_*",
+        "VERCEL"
+      ]
     }
   }
 }
