@@ -39,7 +39,7 @@ function lastOpenedAccount(store: ResultStore): string | undefined {
   return undefined
 }
 
-export function ProfileRail() {
+export function ProfileRail({ onCollapse }: { onCollapse: () => void }) {
   const { store, storeRef, commitStore, host, live, activeAddress, feed, busy, latestRound, openTarget, network } = useExplorer()
   const [tab, setTab] = useState<Tab>('account')
   const focus = activeAddress ?? lastOpenedAccount(store)
@@ -90,6 +90,9 @@ export function ProfileRail() {
       <div className="rail-tabs">
         <Button label="account" active={tab === 'account'} onPress={() => setTab('account')} />
         <Button label="companion" active={tab === 'companion'} onPress={() => setTab('companion')} />
+        <button type="button" className="button rail-collapse" onClick={onCollapse} title="collapse the rail">
+          ▸
+        </button>
       </div>
       {tab === 'companion' ? (
         <Companion sections={feed.sections} busy={busy} latestRound={latestRound} danger={squint} />

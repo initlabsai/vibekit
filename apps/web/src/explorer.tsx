@@ -363,7 +363,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
           }}
         />
         {children}
-        {railOpen ? <ProfileRail /> : null}
+        {railOpen ? <ProfileRail onCollapse={toggleRail} /> : null}
       </div>
       <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
       {approval ? (
