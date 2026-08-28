@@ -29,7 +29,8 @@ function paidRoute(): Handler | undefined {
   paid = withX402(
     async () => NextResponse.json({ ok: true, turns: TURNS_PER_PACK }),
     {
-      accepts: { scheme: 'exact', network: config.network, payTo: config.payTo, price: config.price },
+      // An atomic amount, not a money string: nothing between the env and the requirement rounds.
+      accepts: { scheme: 'exact', network: config.network, payTo: config.payTo, price: { asset: config.asset, amount: String(config.priceMicroUsdc) } },
       description: `${TURNS_PER_PACK} VibeKit Agent turns`,
     },
     server,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const credits = payer && algosdk.isValidAddress(payer) ? await balance(payer) : undefined
   return NextResponse.json({
     enabled: config !== undefined,
-    ...(config ? { price: config.price, chain: config.chain, network: config.network, payTo: config.payTo } : {}),
+    ...(config ? { price: config.price, priceMicroUsdc: config.priceMicroUsdc, asset: config.asset, chain: config.chain, network: config.network, payTo: config.payTo } : {}),
     turnsPerPack: TURNS_PER_PACK,
     freeTurns: FREE_TURNS,
     ...(credits ? { credits } : {}),

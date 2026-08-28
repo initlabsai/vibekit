@@ -38,8 +38,20 @@ describe('credits route', () => {
     process.env.X402_PAY_TO = FIXTURE_SENDER
     process.env.AGENT_BILLING = 'x402'
     const body = await (await credits.GET(new NextRequest(`http://local/api/credits?payer=${FIXTURE_SENDER}`))).json()
-    expect(body).toMatchObject({ enabled: true, price: '$1.00', chain: 'testnet', payTo: FIXTURE_SENDER, credits: { paid: 0, freeLeft: ledger.FREE_TURNS } })
+    expect(body).toMatchObject({ enabled: true, price: '$1.00', priceMicroUsdc: 1_000_000, asset: '10458941', chain: 'testnet', payTo: FIXTURE_SENDER, credits: { paid: 0, freeLeft: ledger.FREE_TURNS } })
     expect(body.network).toMatch(/^algorand:/)
+  })
+})
+
+describe('credits price', () => {
+  test('is an integer in USDC base units, formatted for people', async () => {
+    const { creditsConfig, formatUsdc } = await import('../app/api/credits/config.js')
+    process.env.X402_PAY_TO = FIXTURE_SENDER
+    process.env.X402_PRICE_MICROUSDC = '250000'
+    expect(creditsConfig()).toMatchObject({ priceMicroUsdc: 250_000, price: '$0.25' })
+    process.env.X402_PRICE_MICROUSDC = '1.5'
+    expect(creditsConfig()?.priceMicroUsdc).toBe(1_000_000)
+    expect(formatUsdc(1_000_000)).toBe('$1.00')
   })
 })
 
