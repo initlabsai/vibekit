@@ -105,7 +105,7 @@ export function FeedPane({
             aria-expanded={!section.collapsed}
             title={section.collapsed ? 'expand' : 'collapse'}
           >
-            {section.prompt}
+            <span className="prompt-text">{section.prompt}</span>
             {section.collapsed ? (
               <span className="prompt-count">
                 {section.items.filter((item) => item.kind === 'block').length || section.items.length} hidden

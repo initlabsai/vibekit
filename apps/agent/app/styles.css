@@ -284,7 +284,7 @@ a.button-active { text-decoration: underline; }
 
 @media (max-width: 720px) {
   .body { grid-template-columns: 1fr; }
-  .nav { display: none; }
+  .body > .nav { display: none; }
   .top, .composer-wrap { padding-left: .9rem; padding-right: .9rem; }
   .feed { padding: 1rem .9rem 1.5rem; }
   .card { padding: 1rem 1rem 1.1rem; }
@@ -486,4 +486,30 @@ a.button-active { text-decoration: underline; }
 @media (max-width: 720px) {
   .fact { gap: .15rem; grid-template-columns: 1fr; }
   .fact dt { padding-top: 0; }
+}
+
+/* Section titles never widen the feed: the request text ellipsizes. */
+.prompt-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feed, .screen { overflow-x: hidden; }
+
+/* The phone sheet: ☰ in the top row; behind it the tabs, state, wallet, account, and session. */
+.sheet { display: none; }
+@media (max-width: 720px) {
+  .sheet { display: block; flex: none; }
+  .sheet > summary { border: 1px solid var(--border-soft); cursor: pointer; font-size: 1rem; line-height: 1; list-style: none; padding: .3rem .55rem; }
+  .sheet > summary::-webkit-details-marker { display: none; }
+  .sheet[open] > summary { border-color: var(--brass); color: var(--brass-bright); }
+  .sheet-body { background: var(--ground); bottom: 0; display: flex; flex-direction: column; gap: 1.1rem; left: 0; overflow-y: auto; padding: 1rem .9rem 1.5rem; position: fixed; right: 0; top: 2.75rem; z-index: 60; }
+  .sheet-body .tabs { flex-wrap: wrap; gap: .4rem 1.2rem; min-height: 0; overflow: visible; padding: 0; }
+  .sheet-row { align-items: center; display: flex; font-family: var(--font-mono); font-size: .8rem; gap: .8rem; justify-content: space-between; }
+  .sheet-row .menu ul { left: 0; right: auto; }
+  .sheet-row .menu summary { max-width: none; }
+  .sheet-body .nav { border: 0; padding: 0; }
+  .sheet-body .nav .nav-title button { display: none; }
+  .top > .tabs, .top-state > *:not(.sheet) { display: none; }
+  .top-row { min-height: 2.75rem; }
+  .brand { font-size: .72rem; }
+  .rail-open .body, .rail-folded .body { grid-template-columns: 1fr; }
+  .rail-mini { display: none; }
+  .composer-wrap { padding-bottom: .5rem; }
 }

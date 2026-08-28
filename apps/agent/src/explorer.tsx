@@ -229,6 +229,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '') ||
     (agent.status.enabled ? `${agent.status.model} · early alpha` : 'no agent configured · the direct lane still works')
 
+  const sheetRef = useRef<HTMLDetailsElement>(null)
+  const closeSheet = useCallback(() => sheetRef.current?.removeAttribute('open'), [])
+
   // Both side panels fold; the viewer's choice is remembered per browser.
   const [railOpen, toggleRail] = usePanel('vibekit.rail')
   const [navOpen, toggleNav] = usePanel('vibekit.nav')
@@ -284,6 +287,43 @@ function ExplorerApp({ children }: { children: ReactNode }) {
             </button>
             <WalletMenu lane={wallet} onError={setStatus} />
           </span>
+          {/* Phones: everything above folds into one sheet behind ☰. */}
+          <details className="sheet" ref={sheetRef}>
+            <summary className="button" aria-label="menu">☰</summary>
+            <div className="sheet-body">
+              <nav className="tabs">
+                {TABS.map((tab) => (
+                  <Link key={tab.href} href={tab.href} className={`button${pathname === tab.href ? ' button-active' : ''}`} onClick={closeSheet}>
+                    {tab.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="sheet-row">
+                <span>
+                  <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span> {modeLabel}
+                  {latestRound === undefined ? null : <span className="round"> {latestRound}</span>}
+                </span>
+                <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
+                  {network}
+                </button>
+              </div>
+              <div className="sheet-row">
+                <WalletMenu lane={wallet} onError={setStatus} />
+                <Button label="account ▸" onPress={() => { toggleRail(); closeSheet() }} />
+              </div>
+              <NavPane
+                sections={sections}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  goHome()
+                  selectSection(id)
+                  closeSheet()
+                }}
+                open
+                onToggle={closeSheet}
+              />
+            </div>
+          </details>
         </div>
         <nav className="top-row tabs">
           {TABS.map((tab) => (
