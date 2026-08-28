@@ -200,6 +200,7 @@ export function Composer({
               role="option"
               aria-selected={command === active}
               className={command === active ? 'on' : undefined}
+              ref={command === active ? (node) => node?.scrollIntoView({ block: 'nearest' }) : undefined}
               onMouseDown={(event) => {
                 event.preventDefault()
                 pick(command)
