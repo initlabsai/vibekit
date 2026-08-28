@@ -45,6 +45,16 @@ export function useFeed() {
     }, 0)
   }, [])
 
+  /** Pins the feed to its newest content once React has committed it (new request, new card). */
+  const scrollToBottom = useCallback(() => {
+    const go = () => {
+      const feed = document.querySelector<HTMLElement>('.feed')
+      if (feed) feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' })
+    }
+    setTimeout(go, 0)
+    setTimeout(go, 80)
+  }, [])
+
   const selectSection = useCallback(
     (id: number) => {
       setSelectedId(id)
@@ -59,10 +69,10 @@ export function useFeed() {
       const id = sectionSeq.current
       commitSections([...sectionsRef.current, { id, prompt, items: [] }])
       setSelectedId(id)
-      scrollToSection(id)
+      scrollToBottom()
       return id
     },
-    [commitSections, scrollToSection],
+    [commitSections, scrollToBottom],
   )
 
   const updateSection = useCallback(
@@ -89,9 +99,10 @@ export function useFeed() {
   const appendItem = useCallback(
     (sectionId: number, item: SectionItem) => {
       updateSection(sectionId, (section) => ({ ...section, items: [...section.items, item] }))
-      if (item.kind === 'block') scrollToSection(sectionId)
+      // New content lands at the bottom; the nav is the way back up.
+      scrollToBottom()
     },
-    [scrollToSection, updateSection],
+    [scrollToBottom, updateSection],
   )
 
   const appendNote = useCallback(
