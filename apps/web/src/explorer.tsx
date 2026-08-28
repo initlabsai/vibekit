@@ -58,7 +58,7 @@ export interface ExplorerContextValue {
   setStatus: (text: string) => void
   renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
   /** The agent lane's status and its latest line, for the composer and the companion. */
-  agent: { enabled: boolean; model?: string; streamingSection: number | null }
+  agent: { enabled: boolean; model?: string; provider?: string; streamingSection: number | null }
 }
 
 const ExplorerContext = createContext<ExplorerContextValue | null>(null)
@@ -236,9 +236,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       submit,
       setStatus,
       renderBlock,
-      agent: { enabled: agent.status.enabled, model: agent.status.model, streamingSection: agent.streamingSection },
+      agent: { enabled: agent.status.enabled, model: agent.status.model, provider: agent.status.provider, streamingSection: agent.streamingSection },
     }),
-    [activeAddress, agent.streamingSection, agent.status.enabled, agent.status.model, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
+    [activeAddress, agent.streamingSection, agent.status.enabled, agent.status.model, agent.status.provider, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
   )
 
   return (
@@ -296,7 +296,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       <Composer
         onSubmit={submit}
         status={statusLine}
-        placeholder={agent.status.enabled ? `ask anything, paste an id, or \`pay 0.5 to <address>\` · ${agent.status.model} via Together, not private` : 'paste an id, `asset 31566704`, or `pay 0.5 to <address>`'}
+        placeholder={agent.status.enabled ? `ask anything, paste an id, or \`pay 0.5 to <address>\` · ${agent.status.model} via ${agent.status.provider}, not private` : 'paste an id, `asset 31566704`, or `pay 0.5 to <address>`'}
       />
       {approval ? (
         <ApprovalModal

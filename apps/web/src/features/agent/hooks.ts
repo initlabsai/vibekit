@@ -36,6 +36,7 @@ interface AgentToolResult {
 export interface AgentStatus {
   enabled: boolean
   model?: string
+  provider?: string
   billing?: 'house'
 }
 

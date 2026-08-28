@@ -73,7 +73,7 @@ describe('agent route', () => {
   test('a turn streams narration, drafts a composed group, bridges a read, and returns the new history', async () => {
     process.env.TOGETHER_API_KEY = 'test-key'
     process.env.TOGETHER_MODEL = 'test/model'
-    expect(await (await GET()).json()).toEqual({ enabled: true, model: 'test/model', billing: 'house', private: false })
+    expect(await (await GET()).json()).toEqual({ enabled: true, model: 'test/model', provider: 'together', billing: 'house', private: false })
     const response = await POST(
       new Request('http://x', {
         method: 'POST',
@@ -103,5 +103,14 @@ describe('agent route', () => {
     // The public host never approves an expensive read.
     const approve = (created[0] as { approveToolCall: (call: unknown) => Promise<boolean> }).approveToolCall
     expect(await approve({ toolName: 'get_application_program', input: {} })).toBe(false)
+  })
+
+  test('any OpenAI-compatible endpoint: OpenRouter by env', async () => {
+    process.env.AGENT_API_KEY = 'or-key'
+    process.env.AGENT_BASE_URL = 'https://openrouter.ai/api/v1'
+    process.env.AGENT_MODEL = 'z-ai/glm-5.3-flash'
+    expect(await (await GET()).json()).toMatchObject({ enabled: true, model: 'z-ai/glm-5.3-flash', provider: 'openrouter' })
+    await POST(new Request('http://x', { method: 'POST', body: JSON.stringify({ network: 'mainnet', input: 'hi' }) }))
+    expect((created.at(-1) as { model: { baseUrl: string; model: string } }).model).toMatchObject({ baseUrl: 'https://openrouter.ai/api/v1', model: 'z-ai/glm-5.3-flash' })
   })
 })

@@ -2,8 +2,9 @@
  * The web Explorer's agent lane: one createAgent per request over the same
  * compose-only deployment the TUI uses, streamed back as NDJSON events. The
  * browser sends the prior turns; nothing is cached. Composed groups leave
- * here as draft records for the write flow's approval modal. Prompts go to
- * Together's API, which is not private; the UI says so.
+ * here as draft records for the write flow's approval modal. The model is any
+ * OpenAI-compatible endpoint (Together, OpenRouter, …) named by env; prompts
+ * go there, which is not private, and the UI says so.
  */
 import { structuredResultSchema, type LiveNetworkId } from '@initlabs/vibekit-explorer'
 import {
@@ -20,7 +21,7 @@ import { isProduction } from '../explorer/endpoints'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const TOGETHER_BASE_URL = 'https://api.together.xyz/v1'
+const DEFAULT_BASE_URL = 'https://api.together.xyz/v1'
 const DEFAULT_MODEL = 'Qwen/Qwen2.5-72B-Instruct-Turbo'
 const MAX_BODY_BYTES = 256 * 1024
 const MAX_HISTORY = 40
@@ -38,8 +39,8 @@ const requestSchema = z.object({
 })
 
 /** The house-billed caps: per isolate, so they are a floor on abuse, not a ledger. */
-const DAILY_CAP = Number(process.env.TOGETHER_DAILY_CAP_TURNS ?? 300)
-const IP_HOURLY_CAP = Number(process.env.TOGETHER_IP_HOURLY_CAP ?? 30)
+const DAILY_CAP = Number(process.env.AGENT_DAILY_CAP_TURNS ?? 300)
+const IP_HOURLY_CAP = Number(process.env.AGENT_IP_HOURLY_CAP ?? 30)
 const usage = { day: '', turns: 0, byIp: new Map<string, { hour: number; turns: number }>() }
 
 function chargeTurn(ip: string): string | undefined {
@@ -61,24 +62,38 @@ function chargeTurn(ip: string): string | undefined {
   return undefined
 }
 
-function config(): { apiKey: string; model: string } | undefined {
-  const apiKey = process.env.TOGETHER_API_KEY
-  return apiKey ? { apiKey, model: process.env.TOGETHER_MODEL ?? DEFAULT_MODEL } : undefined
+/**
+ * AGENT_API_KEY + AGENT_BASE_URL + AGENT_MODEL name the endpoint; TOGETHER_API_KEY
+ * alone still works as the shortest setup. The provider shown to the user is the
+ * endpoint's host.
+ */
+function config(): { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
+  const apiKey = process.env.AGENT_API_KEY ?? process.env.TOGETHER_API_KEY
+  if (!apiKey) return undefined
+  const baseUrl = process.env.AGENT_BASE_URL ?? DEFAULT_BASE_URL
+  const model = process.env.AGENT_MODEL ?? process.env.TOGETHER_MODEL ?? DEFAULT_MODEL
+  let provider = baseUrl
+  try {
+    provider = new URL(baseUrl).hostname.replace(/^api\./, '').replace(/\.(com|ai|xyz)$/, '')
+  } catch {
+    // an unparsable URL still names itself
+  }
+  return { apiKey, baseUrl, model, provider }
 }
 
 /** Whether the lane is on, and which model answers; the composer reads this once. */
 export async function GET(): Promise<Response> {
-  const together = config()
+  const endpoint = config()
   return Response.json({
-    enabled: together !== undefined,
-    ...(together ? { model: together.model, billing: 'house' as const } : {}),
+    enabled: endpoint !== undefined,
+    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: 'house' as const } : {}),
     private: false,
   })
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const together = config()
-  if (!together) return Response.json({ error: 'No agent configured' }, { status: 404 })
+  const endpoint = config()
+  if (!endpoint) return Response.json({ error: 'No agent configured' }, { status: 404 })
   const text = await request.text()
   if (Buffer.byteLength(text) > MAX_BODY_BYTES) return Response.json({ error: 'Request body is too large' }, { status: 413 })
   let parsed
@@ -94,7 +109,7 @@ export async function POST(request: Request): Promise<Response> {
   if (refused) return Response.json({ error: refused }, { status: 429 })
 
   const session = createExplorerAgent({
-    model: { provider: 'openai-compatible', baseUrl: TOGETHER_BASE_URL, apiKey: together.apiKey, model: together.model },
+    model: { provider: 'openai-compatible', baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model: endpoint.model },
     addressBook: body.accounts,
     network: body.network,
     history: body.history as never,
