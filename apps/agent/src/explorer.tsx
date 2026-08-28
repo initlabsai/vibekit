@@ -158,6 +158,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     startFromDraft: payment.startFromDraft,
   })
 
+  const openTargetRef = useRef<(target: OpenTarget) => void>(() => undefined)
   const { submit, openTarget, switchNetwork, goHome } = useComposer({
     pathname,
     push: router.push,
@@ -169,10 +170,13 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     setStatus,
     runAgent: agent.runAgent,
     buyCredits: async () => {
-      const next = await credits.buy()
+      const { state: next, txid } = await credits.buy()
+      // The receipt: the settled transfer as a card, once the indexer has it.
+      if (txid) setTimeout(() => openTargetRef.current({ kind: 'transaction', txid }), 2500)
       return `Paid — ${next.credits?.paid ?? 0} turns on this address.`
     },
   })
+  openTargetRef.current = openTarget
 
   const renderBlock = useCallback(
     (block: SectionBlock, sectionId: number, itemId: number) => {
