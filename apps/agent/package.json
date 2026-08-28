@@ -1,5 +1,5 @@
 {
-  "name": "@initlabs/vibekit-web",
+  "name": "@initlabs/vibekit-agent",
   "private": true,
   "version": "0.1.1-alpha.2",
   "type": "module",

@@ -11,6 +11,28 @@
         "typescript": "^5.9.3",
       },
     },
+    "apps/agent": {
+      "name": "@initlabs/vibekit-agent",
+      "version": "0.1.1-alpha.2",
+      "dependencies": {
+        "@initlabs/vibekit-explorer": "workspace:*",
+        "@txnlab/use-wallet-lute": "5.0.0",
+        "@txnlab/use-wallet-pera": "5.0.0",
+        "@txnlab/use-wallet-react": "5.0.0",
+        "algosdk": "3.7.0",
+        "next": "16.3.2",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.4.0",
+        "@types/node": "^26.2.0",
+        "@types/react": "^19.2.18",
+        "@types/react-dom": "^19.2.4",
+        "typescript": "^5.9.3",
+      },
+    },
     "apps/cli": {
       "name": "@initlabs/vibekit-cli",
       "version": "1.0.0-alpha.2",
@@ -42,28 +64,6 @@
         "@types/bun": "^1.4.0",
         "@types/react": "^19.2.18",
         "ai": "^7.0.74",
-        "typescript": "^5.9.3",
-      },
-    },
-    "apps/web": {
-      "name": "@initlabs/vibekit-web",
-      "version": "0.1.1-alpha.2",
-      "dependencies": {
-        "@initlabs/vibekit-explorer": "workspace:*",
-        "@txnlab/use-wallet-lute": "5.0.0",
-        "@txnlab/use-wallet-pera": "5.0.0",
-        "@txnlab/use-wallet-react": "5.0.0",
-        "algosdk": "3.7.0",
-        "next": "16.3.2",
-        "react": "19.2.8",
-        "react-dom": "19.2.8",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@types/bun": "^1.4.0",
-        "@types/node": "^26.2.0",
-        "@types/react": "^19.2.18",
-        "@types/react-dom": "^19.2.4",
         "typescript": "^5.9.3",
       },
     },
@@ -378,13 +378,13 @@
 
     "@initlabs/vibekit": ["@initlabs/vibekit@workspace:packages/vibekit"],
 
+    "@initlabs/vibekit-agent": ["@initlabs/vibekit-agent@workspace:apps/agent"],
+
     "@initlabs/vibekit-cli": ["@initlabs/vibekit-cli@workspace:apps/cli"],
 
     "@initlabs/vibekit-explorer": ["@initlabs/vibekit-explorer@workspace:packages/explorer"],
 
     "@initlabs/vibekit-tui": ["@initlabs/vibekit-tui@workspace:apps/tui"],
-
-    "@initlabs/vibekit-web": ["@initlabs/vibekit-web@workspace:apps/web"],
 
     "@initlabs/vibekit-website": ["@initlabs/vibekit-website@workspace:apps/website"],
 

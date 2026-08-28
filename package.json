@@ -13,7 +13,7 @@
     "clean": "turbo run clean",
     "cli": "turbo run build --filter=@initlabs/vibekit-cli^... && bun run --cwd apps/cli dev",
     "tui": "turbo run build --filter=@initlabs/vibekit-tui^... && bun run --cwd apps/tui dev",
-    "web": "turbo run build --filter=@initlabs/vibekit-web^... && bun run --cwd apps/web dev",
+    "agent": "turbo run build --filter=@initlabs/vibekit-agent^... && bun run --cwd apps/agent dev",
     "website": "bun run --cwd apps/website dev",
     "build:website": "turbo run build --filter=@initlabs/vibekit-website",
     "mcp": "turbo run build --filter=@initlabs/vibekit... && bun packages/vibekit/examples/stdio.ts",

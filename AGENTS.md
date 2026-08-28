@@ -23,7 +23,7 @@ renders what those tools return.
 | `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the write flow (`src/flows`), the tool-result bridge (`src/bridge.ts`), input classification (`src/input.ts`), formatting (`src/format.ts`), recorded sample data (`src/sample`), and the live host (`src/live`). Not a UI. `src/index.ts` lists what the apps use; everything else is internal. |
 | `apps/cli` | The `vibekit` binary: `new`, `init`, `localnet`, `keystore`, `dispenser`, `doctor`, `tool`, `mcp`, `explore`. Host: `commands/tool.ts` and `commands/mcp.ts`. |
 | `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. `features/<name>/` holds one feature's hooks, screen, and cards; `feed/` is the transcript; `app.tsx` composes them. |
-| `apps/web` | The web Explorer (Next.js). Sample-backed reads plus a compose-only flow route. |
+| `apps/agent` | The web Explorer with its agent (Next.js). Sample-backed reads plus a compose-only flow route. |
 | `apps/website` | The public site (Astro/Starlight). |
 | `skills/` | Canonical skills, compiled into the CLI by `bun run --cwd apps/cli bundle-skills`. `.agents/skills`, `.claude/skills`, `.grok/skills` are symlinks into it. |
 | `verify/` | The packed-consumer gate (`bun run verify:packed`). The LocalNet smoke is `apps/cli/scripts/smoke-localnet.ts` (`bun run smoke:localnet`, needs `vibekit localnet start`; CI runs it). |

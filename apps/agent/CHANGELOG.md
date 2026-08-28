@@ -1,4 +1,4 @@
-# @initlabs/vibekit-web
+# @initlabs/vibekit-agent
 
 ## 0.1.1-alpha.2
 
