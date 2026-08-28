@@ -10,7 +10,7 @@ import { AddressPicker, useScreenAddress } from '../address-picker'
 import { ScreenCard } from '../assets/screen'
 
 export function AppsScreen() {
-  const { host, live, openTarget, network } = useExplorer()
+  const { host, live, openTarget } = useExplorer()
   const [address, setAddress] = useScreenAddress()
   const [draft, setDraft] = useState('')
   const record = useScreenRecord()
@@ -28,16 +28,12 @@ export function AppsScreen() {
   }
   return (
     <section className="screen">
-      <header className="screen-title">
-        <span className="kicker">applications</span>
-        <span className="muted"> · {network}</span>
-      </header>
+      <AddressPicker address={address} onChange={setAddress} noun="applications" />
       <form className="picker-form" onSubmit={lookup}>
         <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="app id, e.g. 1002541853" aria-label="Application id"
           autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other" inputMode="numeric" />
         <Button type="submit" label="open app" />
       </form>
-      <AddressPicker address={address} onChange={setAddress} noun="opted-in apps" />
       {record.loading ? <p className="note">loading…</p> : null}
       {record.error ? <p className="note note-error">{record.error}</p> : null}
       <ScreenCard record={record} onOpen={openTarget} />

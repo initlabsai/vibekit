@@ -2,7 +2,7 @@
 
 /** Which account a screen is about: the connected wallet's, or one you paste. */
 import algosdk from 'algosdk'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 
 import { useExplorer } from '../explorer'
 import { Button, Copyable } from '../primitives'
@@ -14,16 +14,24 @@ export function useScreenAddress(): [string | undefined, (address: string | unde
   return [pasted ?? activeAddress, setPasted]
 }
 
+/**
+ * The header of an account-scoped screen: the kicker, the subject address,
+ * a way back to the connected wallet when looking elsewhere, an optional
+ * filter row, and the form that changes the subject.
+ */
 export function AddressPicker({
   address,
   onChange,
   noun,
+  children,
 }: {
   address: string | undefined
   onChange: (address: string | undefined) => void
   noun: string
+  /** Filters for the list, as their own row under the title. */
+  children?: ReactNode
 }) {
-  const { activeAddress, wallet } = useExplorer()
+  const { activeAddress } = useExplorer()
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | undefined>(undefined)
   useEffect(() => setError(undefined), [address])
@@ -39,19 +47,18 @@ export function AddressPicker({
   }
   return (
     <div className="picker">
-      {address ? (
-        <p className="picker-current">
-          <span className="kicker">{noun} of</span>{' '}
-          <Copyable value={address} />
-          {address === activeAddress ? (
-            <span className="chip chip-ok">{wallet.activeName ?? 'connected wallet'}</span>
-          ) : activeAddress ? (
-            <Button label="back to my wallet" onPress={() => onChange(undefined)} />
-          ) : null}
-        </p>
-      ) : (
-        <p className="picker-current muted">No wallet connected — paste an address, or connect one on the wallet tab.</p>
-      )}
+      <header className="screen-title">
+        <span className="kicker">{noun}</span>
+        {address ? (
+          <>
+            <Copyable value={address} width={18} />
+            {activeAddress && address !== activeAddress ? <Button label="my wallet" onPress={() => onChange(undefined)} /> : null}
+          </>
+        ) : (
+          <span className="muted">no wallet connected — connect one, or paste an address</span>
+        )}
+      </header>
+      {children ? <div className="screen-filters">{children}</div> : null}
       <form className="picker-form" onSubmit={submit}>
         <input
           value={draft}

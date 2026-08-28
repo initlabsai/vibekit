@@ -9,7 +9,7 @@ import { useScreenRecord } from '../../screen-record'
 import { AddressPicker, useScreenAddress } from '../address-picker'
 
 export function AssetsScreen() {
-  const { host, live, openTarget, network } = useExplorer()
+  const { host, live, openTarget } = useExplorer()
   const [address, setAddress] = useScreenAddress()
   const record = useScreenRecord()
   const { run } = record
@@ -19,10 +19,6 @@ export function AssetsScreen() {
   }, [address, host, live, run])
   return (
     <section className="screen">
-      <header className="screen-title">
-        <span className="kicker">assets</span>
-        <span className="muted"> · {network}</span>
-      </header>
       <AddressPicker address={address} onChange={setAddress} noun="assets" />
       {record.loading ? <p className="note">loading…</p> : null}
       {record.error ? <p className="note note-error">{record.error}</p> : null}

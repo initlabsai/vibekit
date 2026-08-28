@@ -17,7 +17,7 @@ const TYPES: ReadonlyArray<{ id: string | undefined; label: string }> = [
 ]
 
 export function TransactionsScreen() {
-  const { host, live, openTarget, network } = useExplorer()
+  const { host, live, openTarget } = useExplorer()
   const [address, setAddress] = useScreenAddress()
   const [txType, setTxType] = useState<string | undefined>(undefined)
   const record = useScreenRecord()
@@ -28,16 +28,11 @@ export function TransactionsScreen() {
   }, [address, host, live, run, txType])
   return (
     <section className="screen">
-      <header className="screen-title">
-        <span className="kicker">transactions</span>
-        <span className="muted"> · {network}</span>
-        <span className="screen-filters">
-          {TYPES.map((type) => (
-            <Button key={type.label} label={type.label} active={type.id === txType} onPress={() => setTxType(type.id)} />
-          ))}
-        </span>
-      </header>
-      <AddressPicker address={address} onChange={setAddress} noun="transactions" />
+      <AddressPicker address={address} onChange={setAddress} noun="transactions">
+        {TYPES.map((type) => (
+          <Button key={type.label} label={type.label} active={type.id === txType} onPress={() => setTxType(type.id)} />
+        ))}
+      </AddressPicker>
       {record.loading ? <p className="note">loading…</p> : null}
       {record.error ? <p className="note note-error">{record.error}</p> : null}
       <ScreenCard record={record} onOpen={openTarget} />

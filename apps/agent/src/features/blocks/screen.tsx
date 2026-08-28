@@ -12,7 +12,6 @@ export function BlocksScreen() {
     <section className="screen">
       <header className="screen-title">
         <span className="kicker">blocks</span>
-        <span className="muted"> · {network}</span>
       </header>
       {live !== true ? (
         <p className="note">The tail needs a reachable network — {network} is {live === 'probing' ? 'still probing' : 'unreachable'}.</p>
