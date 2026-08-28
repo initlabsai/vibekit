@@ -154,7 +154,7 @@ a.button-active { text-decoration: underline; }
 .kind-keyreg, .kind-stpf, .kind-hb, .kind-txn { color: var(--muted); }
 
 /* Touchables: identifiers copy; buttons are words in the touchable color. */
-/* Identifiers do one thing: teal text opens; plain text carries a glyph that copies. */
+/* Identifiers: teal text opens; the glyph button beside it copies. */
 .ident { align-items: baseline; display: inline-flex; font-family: var(--font-mono); font-size: inherit; gap: .35em; max-width: 100%; }
 .ident .open, .ident .plain, .ident .copy { background: none; border: 0; font: inherit; overflow-wrap: anywhere; padding: 0; text-align: left; }
 .ident .open { color: var(--signal); cursor: pointer; transition: color .15s, text-shadow .15s; }
