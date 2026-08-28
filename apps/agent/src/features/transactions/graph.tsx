@@ -67,7 +67,7 @@ export function TransactionGraphCard({
       <Header kicker={kicker} chip="FLOW" pill={String(transactionCount)} tone="idle" action={action} />
       {groupId ? (
         <Facts>
-          <Fact label="group" value={groupId} copy={groupId} />
+          <Fact label="group" value={groupId} copy={groupId} open={false} />
         </Facts>
       ) : null}
       <TransactionsGraphView graph={graph} />

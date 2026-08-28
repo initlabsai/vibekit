@@ -108,6 +108,9 @@ export function Button({
   )
 }
 
+/** True inside a clickable table row: the row is the one target, so identifiers in it are inert. */
+export const InertContext = createContext(false)
+
 /** Where an identifier opens (the transcript); no-op without a provider. */
 export const OpenContext = createContext<((target: OpenTarget) => void) | undefined>(undefined)
 
@@ -141,6 +144,7 @@ export function Copyable({
   const [copied, setCopied] = useState(false)
   const announce = useContext(CopyContext)
   const openTarget = useContext(OpenContext)
+  const inert = useContext(InertContext)
   // An address wears its NFD name once the enrichment answers; the address still copies.
   const name = useName(ADDRESS.test(value) ? value : undefined)
   useEffect(() => {
@@ -159,6 +163,13 @@ export function Copyable({
   ) : (
     text
   )
+  if (inert) {
+    return (
+      <span className={`ident ident-inert${className ? ` ${className}` : ''}`} title={value}>
+        <span className="plain">{label}</span>
+      </span>
+    )
+  }
   return (
     <span className={`ident${className ? ` ${className}` : ''}`} title={value}>
       {target && openTarget ? (
@@ -297,14 +308,14 @@ export function Avatar({ address, size = 44 }: { address: string; size?: number 
 }
 
 /** An account's face: NFD avatar and name over the address, when it has one. */
-export function Identity({ address }: { address: string }) {
+export function Identity({ address, open }: { address: string; open?: false }) {
   const profile = useProfile(address)
   return (
     <span className="identity">
       <Avatar address={address} />
       <span className="identity-text">
         {profile?.name ? <span className="identity-name">{profile.name}</span> : null}
-        <Copyable value={address} display={shorten(address, 22)} />
+        <Copyable value={address} display={shorten(address, 22)} open={open} />
       </span>
     </span>
   )

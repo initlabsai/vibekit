@@ -86,7 +86,7 @@ export function AccountCard({
         }
       />
       <div className="identity-row">
-        <Identity address={model.address} />
+        <Identity address={model.address} open={false} />
       </div>
       <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit={algoUsd === undefined ? 'ALGO' : `ALGO · ≈ ${formatUsd(algoUsd)}`} />
       <Facts>
@@ -121,7 +121,7 @@ export function AccountSummaryCard({ model }: { model: AccountSummaryViewModel }
       <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit="ALGO" />
       <Facts>
         {model.name ? <Fact label="name" value={model.name} /> : null}
-        <Fact label="address" value={model.address} copy={model.address} />
+        <Fact label="address" value={model.address} copy={model.address} open={false} />
         {model.minBalanceMicroAlgos === undefined ? null : <Fact label="min bal" value={algo(model.minBalanceMicroAlgos)} />}
         {model.rekeyedTo ? <Fact label="rekeyed" value={model.rekeyedTo} copy={model.rekeyedTo} /> : null}
         <Fact label="opted" value={`${model.totalAssetsOptedIn ?? 0} asa · ${model.totalAppsOptedIn ?? 0} apps`} />

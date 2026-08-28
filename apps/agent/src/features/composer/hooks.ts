@@ -67,6 +67,8 @@ export function useComposer({
       switch (target.kind) {
         case 'transaction':
           return void lookups.openTransaction(createSection(target.txid), target.txid)
+        case 'group':
+          return void lookups.openGroup(createSection(`group ${target.groupId.slice(0, 8)}…`), target.groupId)
         case 'account':
           return void lookups.openAccount(createSection(target.address), target.address)
         case 'asset':

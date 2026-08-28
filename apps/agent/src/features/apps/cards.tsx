@@ -219,7 +219,7 @@ export function ApplicationStateCard({
     <Frame>
       <Header kicker="APP STATE" pill={scope.toUpperCase()} tone="idle" />
       <Facts>
-        <Fact label="app" value={String(applicationId)} copy={String(applicationId)} />
+        <Fact label="app" value={String(applicationId)} copy={String(applicationId)} open={{ kind: 'application', applicationId: Number(applicationId) }} />
         {address ? <Fact label="address" value={address} copy={address} /> : null}
         {optedIn === undefined ? null : <Fact label="opted" value={optedIn ? 'yes' : 'no'} />}
         <Fact label="keys" value={`${entries.length} key${entries.length === 1 ? '' : 's'}`} />
@@ -318,7 +318,7 @@ export function ApplicationBoxCard({
     <Frame>
       <Header kicker="APP BOX" pill={exists ? 'EXISTS' : 'MISSING'} tone={exists ? 'ok' : 'idle'} />
       <Facts>
-        <Fact label="app" value={String(applicationId)} copy={String(applicationId)} />
+        <Fact label="app" value={String(applicationId)} copy={String(applicationId)} open={{ kind: 'application', applicationId: Number(applicationId) }} />
         <Fact label="name" value={boxName} />
         {exists && size !== undefined ? <Fact label="size" value={`${size} bytes`} /> : null}
         {exists ? <Fact label="value" value={value ?? ''} /> : null}

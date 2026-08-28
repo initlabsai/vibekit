@@ -5,7 +5,7 @@ import algosdk from 'algosdk'
 import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
 import { useState, type ReactNode } from 'react'
 
-import { Button, FooterNote } from './primitives'
+import { Button, FooterNote, InertContext } from './primitives'
 import { filterRows, useTableSort, type SortValue } from './tables'
 
 function base64ToBytes(base64: string): Uint8Array {
@@ -110,11 +110,13 @@ export function Table<T>({
             style={{ gridTemplateColumns: template }}
             onClick={onOpen ? () => onOpen(row) : undefined}
           >
-            {columns.map((column) => (
-              <span key={column.key} role="cell" className={column.align === 'right' ? 'right' : undefined}>
-                {column.cell(row)}
-              </span>
-            ))}
+            <InertContext.Provider value={onOpen !== undefined}>
+              {columns.map((column) => (
+                <span key={column.key} role="cell" className={column.align === 'right' ? 'right' : undefined}>
+                  {column.cell(row)}
+                </span>
+              ))}
+            </InertContext.Provider>
           </div>
         ))}
         {sorted.length === 0 && rows.length > 0 ? (

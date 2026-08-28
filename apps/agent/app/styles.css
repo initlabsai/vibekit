@@ -165,6 +165,7 @@ a.button-active { text-decoration: underline; }
 .ident .copy:hover { color: var(--brass-bright); }
 .ident .copy.copied { color: var(--signal); }
 @media (hover: none) { .ident .copy { opacity: 1; } }
+.ident-inert .plain { color: inherit; }
 .ident-link { color: var(--signal); font-family: var(--font-mono); overflow-wrap: anywhere; text-decoration: none; }
 .ident-link:hover { color: var(--brass-bright); }
 .button { color: var(--signal); font-family: var(--font-mono); font-size: .76rem; padding: .2rem .4rem; }

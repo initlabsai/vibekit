@@ -56,6 +56,7 @@ import { Button, Facts, Fact, Frame, Header, Unavailable } from './primitives'
 /** Where a card's touchable can take the feed; UI routing, not protocol. */
 export type OpenTarget =
   | { kind: 'transaction'; txid: string }
+  | { kind: 'group'; groupId: string }
   | { kind: 'account'; address: string }
   | { kind: 'asset'; assetId: number }
   | { kind: 'application'; applicationId: number }

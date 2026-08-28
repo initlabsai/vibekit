@@ -13,6 +13,7 @@ import {
 
 import { algo, bytesDisplay, MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable, type Tone } from '../../primitives'
+import type { OpenTarget } from '../../result-card'
 import { shorten } from '../../theme'
 
 const MAX_DELTAS = 6
@@ -39,12 +40,12 @@ function assetLabel(row: { assetId?: number | string; assetName?: string }): str
   return row.assetName ? `${row.assetId} · ${row.assetName}` : String(row.assetId)
 }
 
-type FactRow = { label: string; value: string; copy?: string; faint?: boolean }
+type FactRow = { label: string; value: string; copy?: string; faint?: boolean; open?: OpenTarget | false }
 
 /** The detail card's rows, in reading order; absent fields produce no row. */
 function detailFacts(model: TransactionDetailViewModel): FactRow[] {
-  const id = (value: number | string | undefined, label: string) =>
-    value === undefined ? undefined : { label, value: String(value), copy: String(value) }
+  const id = (value: number | string | undefined, label: string, open?: OpenTarget) =>
+    value === undefined ? undefined : { label, value: String(value), copy: String(value), open }
   const address = (value: string | undefined, label: string) => (value ? { label, value, copy: value } : undefined)
   const deltas = [
     ...(model.globalStateDelta ?? []).map((entry) => ({
@@ -59,17 +60,17 @@ function detailFacts(model: TransactionDetailViewModel): FactRow[] {
     ),
   ]
   const rows: Array<FactRow | undefined> = [
-    { label: 'id', value: model.id, copy: model.id },
+    { label: 'id', value: model.id, copy: model.id, open: false },
     model.roundTime === undefined ? undefined : { label: 'time', value: formatExplorerTime(model.roundTime) },
-    id(model.confirmedRound, 'block'),
+    id(model.confirmedRound, 'block', model.confirmedRound === undefined ? undefined : { kind: 'block', round: Number(model.confirmedRound) }),
     { label: 'fee', value: algo(model.feeMicroAlgos) },
     address(model.sender, 'from'),
     address(model.clawbackFrom, 'clawback'),
     address(model.receiver, 'to'),
-    model.assetId === undefined ? undefined : { label: 'asset', value: assetLabel(model), copy: String(model.assetId) },
+    model.assetId === undefined ? undefined : { label: 'asset', value: assetLabel(model), copy: String(model.assetId), open: { kind: 'asset', assetId: Number(model.assetId) } },
     model.applicationId !== undefined && Number(model.applicationId) === 0 && model.createdApplicationId !== undefined
-      ? { label: 'created app', value: String(model.createdApplicationId), copy: String(model.createdApplicationId) }
-      : id(model.applicationId, 'app'),
+      ? { label: 'created app', value: String(model.createdApplicationId), copy: String(model.createdApplicationId), open: { kind: 'application', applicationId: Number(model.createdApplicationId) } }
+      : id(model.applicationId, 'app', model.applicationId === undefined ? undefined : { kind: 'application', applicationId: Number(model.applicationId) }),
     model.methodName ? { label: 'method', value: model.methodName } : undefined,
     ...(model.methodArgs ?? []).map((arg) => ({ label: arg.name ?? arg.type, value: formatAbiValue(arg.value) })),
     model.methodReturn === undefined ? undefined : { label: 'return', value: formatAbiValue(model.methodReturn) },
@@ -126,7 +127,7 @@ export function TransactionCard({
       <Facts>
         {detailFacts(model).map((row, index) => (
           <Fact key={`${row.label}-${index}`} label={row.label}>
-            {row.copy ? <Copyable value={row.copy} display={row.value} /> : <span className={row.faint ? 'muted' : undefined}>{row.value}</span>}
+            {row.copy ? <Copyable value={row.copy} display={row.value} open={row.open} /> : <span className={row.faint ? 'muted' : undefined}>{row.value}</span>}
           </Fact>
         ))}
       </Facts>
@@ -290,7 +291,7 @@ export function TransactionListCard({
       <Header kicker={title} chip={filter} pill={String(transactions.length)} tone="idle" action={action} />
       {groupId ? (
         <Facts>
-          <Fact label="group" value={groupId} copy={groupId} />
+          <Fact label="group" value={groupId} copy={groupId} open={{ kind: 'group', groupId }} />
         </Facts>
       ) : null}
       <Table
