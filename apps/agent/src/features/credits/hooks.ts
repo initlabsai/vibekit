@@ -83,9 +83,27 @@ export function useCredits({
     // A fresh secret travels with the payment; the server binds it to the payer once settled.
     const token = newToken()
     const chain = state.chain ?? 'testnet'
-    const response = await withWalletNetwork(chain, () =>
-      wrapFetchWithPayment(fetch, client)(`/api/credits${turns ? `?turns=${turns}` : ''}`, { method: 'POST', headers: { 'x-credit-token': token } }),
-    )
+    let response: Response
+    try {
+      response = await withWalletNetwork(chain, () =>
+        wrapFetchWithPayment(fetch, client)(`/api/credits${turns ? `?turns=${turns}` : ''}`, { method: 'POST', headers: { 'x-credit-token': token } }),
+      )
+    } catch (caught) {
+      // The connection dropped after the wallet signed: the transfer may well have settled. Keep the
+      // token, since the server binds it once the payment lands, and read the balance back.
+      try {
+        localStorage.setItem(TOKEN_KEY, token)
+      } catch {
+        // private mode
+      }
+      const after = await refresh().catch(() => undefined)
+      const paid = after?.paid ?? 0
+      throw new Error(
+        paid > 0
+          ? `the reply got lost but the payment landed — ${paid} turns on this address`
+          : `the reply got lost (${caught instanceof Error ? caught.message : String(caught)}). if your wallet signed, the turns arrive once the transfer settles; reload in a moment`,
+      )
+    }
     if (!response.ok) {
       // A 402 after paying carries the facilitator's reason in the PAYMENT-REQUIRED header.
       const required = response.headers.get('payment-required')

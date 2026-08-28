@@ -15,6 +15,9 @@ import { creditsConfig, FACILITATOR_URL, MAX_TURNS_PER_BUY, turnsRequested } fro
 import { balance, bearerOf, bindToken, credit, freeLeft, FREE_TURNS, ipOf, payerForToken, TOKEN_PATTERN, TURNS_PER_PACK } from './ledger'
 
 export const runtime = 'nodejs'
+// The paid retry waits for the facilitator to verify, submit, and see the transfer confirmed
+// before it can credit anyone; the platform default (10s) is not enough for that.
+export const maxDuration = 60
 
 type HeaderSource = { getHeader(name: string): string | undefined }
 
