@@ -138,9 +138,41 @@ code { font-family: var(--font-mono); color: var(--brass); }
 .flow-steps .current { color: var(--brass-bright); }
 .flow-warning { color: var(--red); font-family: var(--font-mono); font-size: .76rem; margin: .8rem 0 0; }
 
+/* Approval modal: centered, owns input; breathes amber, or red when money is on the line. */
+.modal-backdrop { align-items: center; background: rgba(10, 11, 14, .72); display: flex; inset: 0; justify-content: center; padding: 1rem; position: fixed; z-index: 100; }
+.modal { animation: breathe-frame 2.4s ease-in-out infinite; background: var(--surface); box-shadow: 0 0 0 2px var(--brass); max-height: calc(100vh - 2rem); max-width: 44rem; overflow-y: auto; padding: .9rem 1.1rem 1rem; width: 100%; }
+.modal-danger { --frame: var(--red); animation-name: breathe-frame-red; box-shadow: 0 0 0 2px var(--red); }
+.modal-title { color: var(--brass-bright); font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; margin: 0 0 .6rem; }
+.modal-actions { align-items: center; }
+.modal-keys { margin: 0 0 0 auto; }
+@keyframes breathe-frame { 50% { box-shadow: 0 0 0 2px var(--brass-bright); } }
+@keyframes breathe-frame-red { 50% { box-shadow: 0 0 0 2px var(--red-dim); } }
+
+/* Flow graph: lanes per entity, one row per transaction. */
+.graph { font-family: var(--font-mono); font-size: .72rem; margin-top: .8rem; overflow-x: auto; }
+.graph-head, .graph-row { display: grid; gap: 0; }
+.graph-head { border-bottom: 1px solid var(--border-soft); padding-bottom: .3rem; }
+.graph-vertical { color: var(--text); display: flex; flex-direction: column; min-width: 0; padding: 0 .3rem; text-align: center; }
+.graph-assoc { color: var(--faint); font-size: .62rem; }
+.graph-row { min-height: 2.2rem; position: relative; }
+.graph-row.remainder { opacity: .7; }
+.graph-lane { border-left: 1px solid var(--border-soft); min-height: 2.2rem; }
+.graph-lane:last-child { border-right: 1px solid var(--border-soft); }
+.graph-edge { align-items: center; display: flex; flex-direction: column; grid-row: 1; justify-content: center; padding: 0 .3rem; position: relative; }
+.graph-edge-line { border-top: 1px solid var(--brass); display: block; position: relative; width: 100%; }
+.graph-edge-line::after { border: .28rem solid transparent; border-left-color: var(--brass); content: ''; position: absolute; right: -.1rem; top: -.3rem; }
+.graph-edge.rtl .graph-edge-line::after { border-left-color: transparent; border-right-color: var(--brass); left: -.1rem; right: auto; }
+.graph-edge.loop .graph-edge-line { border: 1px solid var(--brass); border-top: 0; height: .6rem; width: 1.6rem; }
+.graph-edge.loop .graph-edge-line::after { display: none; }
+.graph-edge.point .graph-edge-line { border: 0; height: .5rem; width: .5rem; background: var(--brass); border-radius: 50%; }
+.graph-edge.point .graph-edge-line::after { display: none; }
+.graph-label { color: var(--brass-bright); font-size: .68rem; white-space: nowrap; }
+.graph-list { color: var(--muted); font-family: var(--font-mono); font-size: .74rem; margin: .8rem 0 0; padding-left: 1.2rem; }
+.graph-list li { padding: .15rem 0; }
+
 /* Motion off: no breath, no flash. */
 @media (prefers-reduced-motion: reduce) {
-  .live-dot.on { animation: none; }
+  .live-dot.on, .modal { animation: none; }
   .round.hot { color: var(--signal); }
 }
 @keyframes breathe { 50% { opacity: .35; } }

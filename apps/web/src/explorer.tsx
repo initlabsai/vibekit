@@ -20,14 +20,15 @@ import { Composer, FeedPane, NavPane } from './feed/feed'
 import { useFeed, type SectionBlock } from './feed/hooks'
 import { defaultNetwork, NETWORKS, useNetwork } from './features/network/hooks'
 import { WalletScreen } from './features/wallet/screen'
+import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
+import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
 import { Button } from './primitives'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
 import { Welcome } from './views'
 import { useWalletLane, WalletRoot } from './wallet/provider'
-import { WriteFlowView } from './write-flow'
 
 type Screen = 'chat' | 'wallet'
 
@@ -176,15 +177,12 @@ function ExplorerApp() {
           const derived = createWriteFlowViewModel(store, block.flow)
           const isOpen = payment.flowRef.current?.flowId === block.flow.flowId
           return (
-            <WriteFlowView
+            <WriteFlowCard
               model={derived.ok ? derived.model : undefined}
               errorMessage={derived.ok ? undefined : derived.error.message}
-              canSign={live !== true}
-              terminalNote={undefined}
+              network={block.flow.draft ? (derived.ok ? derived.model.network : network) : network}
               busy={busy && isOpen}
-              onApprove={() => payment.decide('approve')}
-              onDeny={() => payment.decide('deny')}
-              onClose={payment.closeFlow}
+              onClose={isOpen ? payment.closeFlow : undefined}
             />
           )
         }
@@ -194,9 +192,12 @@ function ExplorerApp() {
           return <pre className="note">{JSON.stringify(block.data, null, 2)}</pre>
       }
     },
-    [busy, live, lookups, openTarget, payment, store],
+    [busy, lookups, network, openTarget, payment, store],
   )
 
+  // The one moment the UI waits on a human: a true modal over everything.
+  const approval =
+    payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
   const statusLine =
     status ||
@@ -258,6 +259,15 @@ function ExplorerApp() {
         )}
       </div>
       <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
+      {approval ? (
+        <ApprovalModal
+          model={approval.ok ? approval.model : undefined}
+          network={network}
+          busy={busy}
+          onApprove={() => payment.decide('approve')}
+          onDeny={() => payment.decide('deny')}
+        />
+      ) : null}
     </main>
   )
 }
