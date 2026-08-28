@@ -5,8 +5,17 @@ import { ShellMount } from '../src/shell-mount'
 import './styles.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://agent.getvibekit.ai'),
   title: 'VibeKit Agent',
-  description: 'Algorand Explorer: live reads, a compose-only write flow, your wallet signs',
+  description: 'qt314 reads Algorand for you: live chain data as cards, a compose-only write flow, your wallet signs.',
+  openGraph: {
+    title: 'VibeKit Agent — qt314',
+    description: 'She reads Algorand for you. Ask anything, paste an id, or / for commands.',
+    url: 'https://agent.getvibekit.ai',
+    siteName: 'VibeKit Agent',
+    type: 'website',
+  },
+  twitter: { card: 'summary_large_image', title: 'VibeKit Agent — qt314', description: 'She reads Algorand for you.' },
 }
 
 /** Fonts and tokens; the shell (top bar, session nav, composer) persists across every route. */
