@@ -7,8 +7,15 @@ import Link from 'next/link'
 import { shorten } from '../../theme'
 import { warmWallets, type WalletLane } from '../../wallet/provider'
 
-/** Connects, dropping a stale Pera WalletConnect session that refuses a second connect. */
-export async function connectWallet(wallet: Wallet): Promise<void> {
+/**
+ * Connects one wallet and only one: any other connected wallet is disconnected
+ * first, so signing never fans out to two. A stale Pera WalletConnect session
+ * that refuses a second connect is dropped and retried.
+ */
+export async function connectWallet(wallet: Wallet, wallets: ReadonlyArray<Wallet> = []): Promise<void> {
+  for (const other of wallets) {
+    if (other.id !== wallet.id && other.isConnected) await other.disconnect().catch(() => undefined)
+  }
   try {
     await wallet.connect()
   } catch (caught) {
@@ -46,7 +53,7 @@ export function WalletMenu({ lane, onError }: { lane: WalletLane; onError: (mess
         ) : lane.isReady ? (
           lane.wallets.map((wallet) => (
             <li key={wallet.id}>
-              <button type="button" onClick={() => run(() => connectWallet(wallet))}>{wallet.metadata.name}</button>
+              <button type="button" onClick={() => run(() => connectWallet(wallet, lane.wallets))}>{wallet.metadata.name}</button>
             </li>
           ))
         ) : (

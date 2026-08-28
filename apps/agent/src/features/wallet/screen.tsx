@@ -61,7 +61,7 @@ export function WalletScreen({
                       else wallet.setActive()
                       return
                     }
-                    await connectWallet(wallet)
+                    await connectWallet(wallet, lane.wallets)
                   })
                 }
               />
