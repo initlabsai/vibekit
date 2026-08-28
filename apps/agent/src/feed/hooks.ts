@@ -172,6 +172,7 @@ export function useFeed() {
     appendBlock,
     replaceBlockView,
     toggleCollapsed,
+    scrollToBottom,
   }
 }
 

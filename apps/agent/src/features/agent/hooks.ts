@@ -211,6 +211,8 @@ export function useAgentLane({
       } finally {
         setBusy(false)
         setStreamingSection(null)
+        // The reply landed above the fold while it streamed; end on its last line.
+        feed.scrollToBottom()
       }
     },
     [accounts, activeAddress, appendNote, busyRef, feed, live, networkRef, removeItem, setBusy, startFromDraft, status.enabled, storeRef, updateItem],
