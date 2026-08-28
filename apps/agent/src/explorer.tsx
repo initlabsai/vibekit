@@ -94,7 +94,7 @@ const TABS = [
 
 /** `12 turns · 2 free today · /buy 25 for $1.00`; before any pack, just the free count and the offer. */
 function creditsLine(credits: ReturnType<typeof useCredits>): string {
-  const offer = `/buy ${credits.turnsPerPack} for ${credits.price}`
+  const offer = `/buy ${credits.turnsPerPack} for ${credits.price}${credits.chain === 'testnet' ? ' testnet USDC' : ''}`
   const free = `${credits.freeLeft ?? credits.freeTurns} free today`
   return credits.paid === undefined ? `${free} · ${offer}` : `${credits.paid} turns · ${free} · ${offer}`
 }

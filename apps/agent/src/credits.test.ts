@@ -85,6 +85,15 @@ describe('credits price', () => {
     expect(creditsConfig()?.asset).toBe('31566704')
   })
 
+  test('X402_NETWORK picks the chain even in production', async () => {
+    const { creditsConfig } = await import('../app/api/credits/config.js')
+    process.env.X402_PAY_TO = FIXTURE_SENDER
+    process.env.VERCEL = '1'
+    expect(creditsConfig()?.chain).toBe('mainnet')
+    process.env.X402_NETWORK = 'testnet'
+    expect(creditsConfig()).toMatchObject({ chain: 'testnet', asset: '10458941' })
+  })
+
   test('turns requested clamp to the pack by default and to the cap at most', async () => {
     const { turnsRequested, MAX_TURNS_PER_BUY } = await import('../app/api/credits/config.js')
     expect(turnsRequested(null)).toBe(ledger.TURNS_PER_PACK)

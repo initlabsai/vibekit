@@ -33,7 +33,14 @@ export function formatUsdc(microUsdc: number): string {
 export function creditsConfig(): CreditsConfig | undefined {
   const payTo = process.env.X402_PAY_TO
   if (!payTo || process.env.AGENT_BILLING === 'house') return undefined
-  const chain = isProduction() || process.env.X402_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'
+  // X402_NETWORK names the chain outright (an alpha can sell packs for testnet USDC in production);
+  // otherwise production means mainnet and `next dev` means testnet.
+  const chain =
+    process.env.X402_NETWORK === 'testnet' || process.env.X402_NETWORK === 'mainnet'
+      ? process.env.X402_NETWORK
+      : isProduction()
+        ? 'mainnet'
+        : 'testnet'
   const configured = Number(process.env.X402_PRICE_MICROUSDC)
   const priceMicroUsdc = Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_PRICE_MICROUSDC
   // Whole base units per turn, so N turns always cost exactly N times the same figure.
