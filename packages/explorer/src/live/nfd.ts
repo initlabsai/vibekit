@@ -18,8 +18,15 @@ export async function resolveNfdName(network: LiveNetworkId, name: string): Prom
   const full = lower.includes('.') ? lower : `${lower}.algo`
   // The plugin's service is its client cache; built once per process.
   service ??= nfdPlugin().service as NfdService
-  const nfd = await service.clientFor(network).resolve(full, { view: 'full' })
-  return nfdRecord(nfd, full)
+  try {
+    const nfd = await service.clientFor(network).resolve(full, { view: 'full' })
+    return nfdRecord(nfd, full)
+  } catch (error: unknown) {
+    // The NFD SDK rejects with a plain { name, message } object, not an Error.
+    if (error instanceof Error) throw error
+    const { message } = (error ?? {}) as { message?: string }
+    throw new Error(message ? `NFD: ${message}` : `NFD could not resolve ${full}`)
+  }
 }
 
 export { nfdRecordSchema, type NfdRecord } from '@initlabs/vibekit/plugins/nfd'

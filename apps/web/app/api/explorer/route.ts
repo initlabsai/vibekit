@@ -86,10 +86,11 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('await-confirmation'), network: networkSchema, txid: z.string().min(1) }),
   z.object({ action: z.literal('status-round'), network: networkSchema }),
   z.object({ action: z.literal('resolve-nfd'), network: networkSchema, name: z.string().min(1).max(128) }),
+  // The enrichment host owns its tool list (the three plugins' read tools); an unknown name is a 400 there.
   z.object({
     action: z.literal('plugin-tool'),
     network: networkSchema,
-    toolName: z.enum(['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices']),
+    toolName: z.string().min(1),
     args: z.record(z.string(), z.unknown()),
   }),
 ])
@@ -154,9 +155,12 @@ export async function GET(request: Request): Promise<Response> {
   if (!parsed.success) return fail(400, 'Unknown network')
   try {
     const host = hostFor(parsed.data)
-    const live = await host.probe()
-    const round = live ? (await host.statusRound()).lastRound : undefined
-    return Response.json({ network: parsed.data, live, ...(round === undefined ? {} : { round }) })
+    // One status call answers both questions; the probe's timeout still bounds it.
+    const status = await Promise.race([
+      host.statusRound(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+    ]).catch(() => null)
+    return Response.json(status ? { network: parsed.data, live: true, round: status.lastRound } : { network: parsed.data, live: false })
   } catch (error) {
     if (error instanceof MissingEndpointsError) return fail(503, error.message)
     return Response.json({ network: parsed.data, live: false })
@@ -165,7 +169,7 @@ export async function GET(request: Request): Promise<Response> {
 
 export async function POST(request: Request): Promise<Response> {
   const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) return fail(413, 'Request body is too large')
+  if (Buffer.byteLength(text) > MAX_BODY_BYTES) return fail(413, 'Request body is too large')
   let json: unknown
   try {
     json = JSON.parse(text)

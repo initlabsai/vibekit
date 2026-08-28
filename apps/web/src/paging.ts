@@ -9,9 +9,14 @@ export function nextPageOf(args: {
   view: ViewSpec
   network: string
 }): Promise<StructuredResult | undefined> {
+  const current = args.store.find((record) => record.resultId === args.view.source.id)
+  // A page token belongs to the indexer that issued it; the card keeps its own network.
+  if (current && current.network !== args.network) {
+    return Promise.reject(new Error(`this list is from ${current.network}; switch back to page it`))
+  }
   return loadNextPage({
     host: args.host,
-    current: args.store.find((record) => record.resultId === args.view.source.id),
+    current,
     view: args.view.view,
     identity: {
       resultId: `result-page-${crypto.randomUUID()}`,

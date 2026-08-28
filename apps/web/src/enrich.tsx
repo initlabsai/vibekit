@@ -109,16 +109,19 @@ export function createEnrichment(host: RemoteExplorerHost, isLive: () => boolean
     }
     if (ids.length > 0) {
       for (const id of ids) if (!assets.has(id)) assets.set(id, {})
-      host
-        .pluginTool('get_asset_prices', { assetIds: ids.slice(0, 50) })
-        .then((output) => {
-          for (const row of pricesSchema.parse(output).prices) {
-            if (row.confidence < 0.5) continue
-            assets.set(row.assetId, { ...(assets.get(row.assetId) ?? {}), priceUsd: Number(row.priceUsd) })
-          }
-        })
-        .catch(() => undefined)
-        .finally(notify)
+      // Vestige prices at most 50 ids per call; every queued id gets its call.
+      for (let i = 0; i < ids.length; i += 50) {
+        host
+          .pluginTool('get_asset_prices', { assetIds: ids.slice(i, i + 50) })
+          .then((output) => {
+            for (const row of pricesSchema.parse(output).prices) {
+              if (row.confidence < 0.5) continue
+              assets.set(row.assetId, { ...(assets.get(row.assetId) ?? {}), priceUsd: Number(row.priceUsd) })
+            }
+          })
+          .catch(() => undefined)
+          .finally(notify)
+      }
     }
     if (profiles.length > 0) {
       let cursor = 0

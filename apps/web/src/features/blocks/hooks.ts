@@ -59,22 +59,32 @@ export function useBlockTail({
   // Then follow the round chip.
   useEffect(() => {
     if (live !== true || latestRound === undefined || newest.current === undefined || latestRound <= newest.current) return
-    const from = Math.max(newest.current + 1, latestRound - TAIL_CATCHUP + 1)
+    const previous = newest.current
+    const from = Math.max(previous + 1, latestRound - TAIL_CATCHUP + 1)
     const rounds = Array.from({ length: latestRound - from + 1 }, (_, i) => latestRound - i)
     newest.current = latestRound
     let cancelled = false
-    void Promise.all(
+    // The indexer trails algod by a round or two; a round it does not have yet is retried next tick.
+    void Promise.allSettled(
       rounds.map(async (round) => {
         const record = await hostRef.current().lookupBlock(round)
         if (record.state !== 'success') throw new Error(`round ${round} unavailable`)
         const { round: r, timestamp, transactionCount, proposer } = record.data as unknown as TailRow
         return { round: r, timestamp, transactionCount, ...(proposer ? { proposer } : {}) }
       }),
-    )
-      .then((fresh) => {
-        if (!cancelled) setRows((current) => [...fresh, ...current].slice(0, TAIL_KEEP))
-      })
-      .catch(() => undefined)
+    ).then((settled) => {
+      if (cancelled) return
+      const fresh = settled.flatMap((entry) => (entry.status === 'fulfilled' ? [entry.value] : []))
+      const missed = settled.filter((entry) => entry.status === 'rejected').length
+      if (fresh.length > 0) {
+        setRows((current) => {
+          const seen = new Set(current.map((row) => row.round))
+          return [...fresh.filter((row) => !seen.has(row.round)), ...current].sort((a, b) => b.round - a.round).slice(0, TAIL_KEEP)
+        })
+      }
+      // Anything missed is asked for again from the oldest missed round.
+      if (missed > 0) newest.current = Math.min(...settled.map((entry, i) => (entry.status === 'rejected' ? rounds[i]! - 1 : latestRound)))
+    })
     return () => {
       cancelled = true
     }

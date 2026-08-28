@@ -22,6 +22,9 @@ mock.module('@initlabs/vibekit-explorer/live', () => ({
     network: typeof config === 'string' ? config : (config as { id: string }).id,
     toolNames: ['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices'],
     callTool: async (toolName: string, args: unknown) => {
+      if (!['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices'].includes(toolName)) {
+        throw new Error(`This host has no tool named ${toolName}`)
+      }
       pluginCalls.push([toolName, args])
       return { results: [] }
     },

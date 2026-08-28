@@ -10,3 +10,6 @@ bin/
 .env
 .env.*
 !.env.example
+
+# Next.js regenerates this on every dev/build
+apps/web/next-env.d.ts

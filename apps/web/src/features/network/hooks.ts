@@ -22,10 +22,20 @@ export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; 
   const [network, setNetwork] = useState<LiveNetworkId>(args.network ?? defaultNetwork)
   const networkRef = useRef(network)
   networkRef.current = network
-  const { signDraft } = args
+  // The wallet's signer comes and goes; the host (and everything cached on it) stays.
+  const signDraftRef = useRef(args.signDraft)
+  signDraftRef.current = args.signDraft
   const remoteHost = useMemo(
-    () => createRemoteExplorerHost({ network, ...(signDraft ? { signDraft } : {}) }),
-    [network, signDraft],
+    () =>
+      createRemoteExplorerHost({
+        network,
+        signDraft: (draftRecord) => {
+          const sign = signDraftRef.current
+          if (!sign) throw new Error('connect a wallet to sign')
+          return sign(draftRecord)
+        },
+      }),
+    [network],
   )
   const sampleHost = useMemo(() => createSampleHost(), [])
   const [live, setLive] = useState<'probing' | boolean>('probing')
