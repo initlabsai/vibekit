@@ -9,6 +9,15 @@ const SENDER = 'L2MGM6VDPH7HME2IVMKLUYCLH5HWSZY7RQIMD5UCCTFNJ4M4DCBRXPSFJE'
 const APP_ADDR = 'WPR5O4HW43WM3R3RIGE7XT5QH3TSNER4VYJIGIT2CGS2SKX7P2Y724JCSQ'
 
 describe('transaction.detail records', () => {
+  test('an empty application arg is a legal arg, not a schema failure', () => {
+    const record = buildTransactionDetailRecord(
+      { resultId: 'r-empty-arg', toolCallId: 'c-empty-arg', network: 'mainnet' },
+      { id: 'XSFDXI4LEWSNF2HVVUVZPS5O75GJNRNGXAD2PBVWIXLAXFUONHZA', type: 'appl', sender: SENDER, feeMicroAlgos: 1000, applicationId: 1, applicationArgs: ['Ar7OEQ==', ''], logs: [''] },
+    )
+    expect(record.state).toBe('success')
+    expect(transactionDetailDataSchema.parse((record as { data: unknown }).data).applicationArgs).toEqual(['Ar7OEQ==', ''])
+  })
+
   test('keep raw app-call evidence: args, logs, state deltas, inner rows', () => {
     const record = buildTransactionDetailRecord(
       { resultId: 'r-appl', toolCallId: 'c-appl', network: 'localnet' },

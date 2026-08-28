@@ -114,8 +114,8 @@ export const transactionRowSchema: z.ZodType<TransactionRowData> = z.object({
   assetConfig: transactionAssetConfigDataSchema.optional(),
   createdAssetId: uint64JsonSchema.optional(),
   createdApplicationId: uint64JsonSchema.optional(),
-  logs: z.array(z.string().min(1)).optional(),
-  applicationArgs: z.array(z.string().min(1)).optional(),
+  logs: z.array(z.string()).optional(),
+  applicationArgs: z.array(z.string()).optional(),
   methodName: z.string().min(1).optional(),
   methodArgs: z
     .array(
@@ -166,8 +166,8 @@ export const transactionDetailDataSchema = z.object({
   createdAssetId: uint64JsonSchema.optional(),
   createdApplicationId: uint64JsonSchema.optional(),
   signer: algorandAddressCandidateSchema.optional(),
-  logs: z.array(z.string().min(1)).optional(),
-  applicationArgs: z.array(z.string().min(1)).optional(),
+  logs: z.array(z.string()).optional(),
+  applicationArgs: z.array(z.string()).optional(),
   methodName: z.string().min(1).optional(),
   methodArgs: z
     .array(

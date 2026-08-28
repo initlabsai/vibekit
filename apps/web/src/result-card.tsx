@@ -137,7 +137,7 @@ export function ResultCard({
     case 'transaction.group': {
       const derived = createTransactionCollectionViewModel(store, view)
       const title = view.view === 'transaction.group' ? 'TRANSACTION GROUP' : 'TRANSACTIONS'
-      if (!derived.ok) return <Unavailable title={title} />
+      if (!derived.ok) return <RawCard store={store} view={view} />
       return (
         <TransactionListCard
           title={title}
