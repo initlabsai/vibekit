@@ -522,7 +522,10 @@ a.button-active { text-decoration: underline; }
   .menu summary, .sheet > summary { align-items: center; border: 1px solid var(--border-soft); display: inline-flex; height: 2rem; justify-content: center; min-width: 2rem; padding: 0 .4rem; }
   .menu summary .identity-avatar { height: 18px; width: 18px; }
   .menu-name { display: none; }
-  .menu ul { right: -2.4rem; }
+  /* the wallet menu is a sheet too: same box as ☰, fixed under the top row */
+  .menu ul { border: 0; border-top: 1px solid var(--border-soft); bottom: 0; font-size: .95rem; left: 0; margin: 0; padding: .6rem 0 1.5rem; position: fixed; right: 0; top: 2.75rem; z-index: 60; }
+  .menu li button, .menu li a { padding: .7rem .9rem; }
+  .menu-id { padding: .8rem .9rem 1rem; }
   .top-row { min-height: 2.75rem; }
   .brand { font-size: .72rem; }
   .rail-open .body, .rail-folded .body { grid-template-columns: 1fr; }
