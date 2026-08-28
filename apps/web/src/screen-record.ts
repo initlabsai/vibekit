@@ -1,15 +1,10 @@
 /** One record a screen owns outside the transcript: fetched on demand, paged in place. */
-import {
-  addResult,
-  loadNextPage,
-  type StructuredResult,
-  type TrustedViewId,
-  type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+import { addResult, type StructuredResult, type TrustedViewId, type ViewSpec } from '@initlabs/vibekit-explorer'
 import { useCallback, useState } from 'react'
 
 import { useExplorer } from './explorer'
 import { viewFor } from './lookup'
+import { nextPageOf } from './paging'
 import { errorMessage } from './theme'
 
 export function useScreenRecord() {
@@ -41,16 +36,7 @@ export function useScreenRecord() {
     if (!view || loadingMore) return
     setLoadingMore(true)
     try {
-      const merged = await loadNextPage({
-        host: host(),
-        current: storeRef.current.find((record) => record.resultId === view.source.id),
-        view: view.view,
-        identity: {
-          resultId: `result-page-${crypto.randomUUID()}`,
-          toolCallId: `tool-call-page-${crypto.randomUUID()}`,
-          network,
-        },
-      })
+      const merged = await nextPageOf({ host: host(), store: storeRef.current, view, network })
       if (!merged) return
       commitStore(addResult(storeRef.current, merged))
       setView(viewFor(merged, view.view))

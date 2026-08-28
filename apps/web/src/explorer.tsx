@@ -18,12 +18,13 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
-import { HELP, routeComposerInput } from './commands'
 import { EnrichmentProvider } from './enrich'
 import { RoundPulse } from './features/network/pulse'
 import { Composer, NavPane } from './feed/feed'
 import { useFeed, type Feed, type SectionBlock } from './feed/hooks'
-import { defaultNetwork, NETWORKS, useNetwork, type ExplorerHost } from './features/network/hooks'
+import { useComposer } from './features/composer/hooks'
+import { usePanel } from './features/layout/hooks'
+import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
 import { NfdCard } from './features/plugins/nfd-card'
 import { ProfileRail } from './features/profile/rail'
 import { WriteFlowCard } from './features/write-flow/cards'
@@ -85,9 +86,6 @@ export function ExplorerShell({ children }: { children: ReactNode }) {
 function ExplorerApp({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const goHome = useCallback(() => {
-    if (pathname !== '/') router.push('/')
-  }, [pathname, router])
   const [store, setStore] = useState<ResultStore>(createFixtureResultStore)
   const storeRef = useRef(store)
   storeRef.current = store
@@ -114,93 +112,21 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   })
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed()
-  const { sections, selectedId, selectSection, createSection, appendNote } = feed
+  const { sections, selectedId, selectSection } = feed
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
 
-  const switchNetwork = useCallback(
-    (target: (typeof NETWORKS)[number] | undefined, sectionId?: number) => {
-      const report = (text: string, tone: 'muted' | 'error' = 'muted') =>
-        sectionId === undefined ? setStatus(text) : appendNote(sectionId, text, tone)
-      if (payment.flowRef.current !== null) {
-        report('Finish or deny the write before switching networks.', 'error')
-        return
-      }
-      const current = networkRef.current
-      const next = target ?? NETWORKS[(NETWORKS.indexOf(current) + 1) % NETWORKS.length]!
-      if (next === current) {
-        report(`Already on ${next}.`)
-        return
-      }
-      setNetworkState(next)
-      report(`Switched to ${next}. Existing sections keep their original network.`)
-    },
-    [appendNote, networkRef, payment.flowRef, setNetwork],
-  )
-
-  const openTarget = useCallback(
-    (target: OpenTarget) => {
-      goHome()
-      switch (target.kind) {
-        case 'transaction':
-          return void lookups.openTransaction(createSection(target.txid), target.txid)
-        case 'account':
-          return void lookups.openAccount(createSection(target.address), target.address)
-        case 'asset':
-          return void lookups.openAsset(createSection(`asset ${target.assetId}`), target.assetId)
-        case 'application':
-          return void lookups.openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
-        case 'block':
-          return void lookups.openBlock(createSection(`block ${target.round}`), target.round)
-        case 'holdings':
-          return void lookups.openHoldings(createSection(`assets of ${target.address.slice(0, 8)}…`), target.address)
-        case 'transactions':
-          return void lookups.openTransactions(createSection('transactions'), target.filter)
-      }
-    },
-    [createSection, goHome, lookups],
-  )
-
-  const submit = useCallback(
-    (raw: string) => {
-      const outcome = routeComposerInput(raw)
-      // A screen's name is a route; everything else lands in the transcript.
-      if (outcome.status === 'nav') return router.push(`/${outcome.screen}`)
-      goHome()
-      const sectionId = createSection(raw.trim())
-      switch (outcome.status) {
-        case 'payment':
-          return payment.startPayment(sectionId, outcome.amountMicroAlgos, outcome.to)
-        case 'transaction':
-          return void lookups.openTransaction(sectionId, outcome.txid)
-        case 'group':
-          return void lookups.openGroup(sectionId, outcome.groupId)
-        case 'account':
-          return void lookups.openAccount(sectionId, outcome.address)
-        case 'account-name':
-          return lookups.openAccountName(sectionId, outcome.name)
-        case 'account-list':
-          return void lookups.openMyAccounts(sectionId)
-        case 'asset':
-          return void lookups.openAsset(sectionId, outcome.assetId)
-        case 'application':
-          return void lookups.openApplication(sectionId, outcome.applicationId)
-        case 'block':
-          return void lookups.openBlock(sectionId, outcome.round)
-        case 'network':
-          if (outcome.network) return switchNetwork(outcome.network, sectionId)
-          return appendNote(sectionId, `You're on ${networkRef.current}. Use "network localnet|testnet|mainnet" or click the chip to switch.`)
-        case 'help':
-          return appendNote(sectionId, HELP)
-        case 'ambiguous':
-          return void lookups.openAmbiguous(sectionId, outcome.value)
-        case 'text':
-          return appendNote(sectionId, 'No agent configured. Paste an id, or `pay 0.5 to <address>`.', 'error')
-      }
-    },
-    [appendNote, createSection, goHome, lookups, networkRef, payment, router, switchNetwork],
-  )
+  const { submit, openTarget, switchNetwork, goHome } = useComposer({
+    pathname,
+    push: router.push,
+    feed,
+    lookups,
+    payment,
+    networkRef,
+    setNetwork: setNetworkState,
+    setStatus,
+  })
 
   const renderBlock = useCallback(
     (block: SectionBlock, sectionId: number, itemId: number) => {
@@ -271,41 +197,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
 
-  // The rail folds below 1400px; its state is the viewer's, remembered per browser.
-  const [railOpen, setRailOpen] = useState(() => {
-    try {
-      return window.localStorage.getItem('vibekit.rail') !== 'closed'
-    } catch {
-      return true
-    }
-  })
-  const [navOpen, setNavOpen] = useState(() => {
-    try {
-      return window.localStorage.getItem('vibekit.nav') !== 'closed'
-    } catch {
-      return true
-    }
-  })
-  const toggleNav = useCallback(() => {
-    setNavOpen((open) => {
-      try {
-        window.localStorage.setItem('vibekit.nav', open ? 'closed' : 'open')
-      } catch {
-        // storage may be unavailable; the toggle still works for the session
-      }
-      return !open
-    })
-  }, [])
-  const toggleRail = useCallback(() => {
-    setRailOpen((open) => {
-      try {
-        window.localStorage.setItem('vibekit.rail', open ? 'closed' : 'open')
-      } catch {
-        // storage may be unavailable; the toggle still works for the session
-      }
-      return !open
-    })
-  }, [])
+  // Both side panels fold; the viewer's choice is remembered per browser.
+  const [railOpen, toggleRail] = usePanel('vibekit.rail')
+  const [navOpen, toggleNav] = usePanel('vibekit.nav')
 
   const context = useMemo<ExplorerContextValue>(
     () => ({

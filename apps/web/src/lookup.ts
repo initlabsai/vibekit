@@ -10,7 +10,6 @@ import {
   createTransactionDetailViewModel,
   EXPLORER_PROTOCOL_VERSION,
   formatMicroAlgos,
-  loadNextPage,
   lookupAmbiguousEntity,
   type LiveNetworkId,
   type ResultStore,
@@ -25,6 +24,7 @@ import type { WalletAccount } from './commands'
 import type { Feed } from './feed/hooks'
 import type { ExplorerHost } from './features/network/hooks'
 import type { RemoteExplorerHost } from './remote-host'
+import { nextPageOf } from './paging'
 import { errorMessage, shorten } from './theme'
 
 /** Wraps a stored record in a trusted view spec. */
@@ -351,16 +351,7 @@ export function useLookups({
     (sectionId: number, itemId: number, view: ViewSpec) => {
       if (loadingMore !== null) return
       setLoadingMore(itemId)
-      loadNextPage({
-        host: host(),
-        current: storeRef.current.find((record) => record.resultId === view.source.id),
-        view: view.view,
-        identity: {
-          resultId: `result-page-${crypto.randomUUID()}`,
-          toolCallId: `tool-call-page-${crypto.randomUUID()}`,
-          network: networkRef.current,
-        },
-      })
+      nextPageOf({ host: host(), store: storeRef.current, view, network: networkRef.current })
         .then((merged) => {
           if (!merged) return
           commitStore(addResult(storeRef.current, merged))
