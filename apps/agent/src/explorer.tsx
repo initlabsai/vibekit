@@ -245,8 +245,8 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '') ||
     (agent.status.enabled
       ? credits.enabled
-        ? `${agent.status.model} · ${creditsLine(credits)}`
-        : `${agent.status.model} · early alpha`
+        ? creditsLine(credits)
+        : 'early alpha'
       : 'no agent configured · the direct lane still works')
 
   const sheetRef = useRef<HTMLDetailsElement>(null)
@@ -370,7 +370,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       <Composer
         onSubmit={submit}
         status={statusLine}
-        placeholder={agent.status.enabled ? `ask anything, paste an id, or / for commands · ${agent.status.model} via ${agent.status.provider}, not private` : 'paste an id, or / for commands'}
+        placeholder={agent.status.enabled ? 'ask anything, paste an id, or / for commands · not private' : 'paste an id, or / for commands'}
       />
       {approval ? (
         <ApprovalModal
