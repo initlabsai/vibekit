@@ -100,9 +100,12 @@ describe('agent route', () => {
     expect(options.history).toHaveLength(1)
     expect(options.network).toBe('localnet')
     expect(options.model).toMatchObject({ provider: 'openai-compatible', baseUrl: 'https://api.together.xyz/v1' })
-    // The public host never approves an expensive read.
+    // The house pays for two program pages a turn; a third, or any other expensive call, is declined.
     const approve = (created[0] as { approveToolCall: (call: unknown) => Promise<boolean> }).approveToolCall
+    expect(await approve({ toolName: 'get_application_program', input: {} })).toBe(true)
+    expect(await approve({ toolName: 'get_application_program', input: {} })).toBe(true)
     expect(await approve({ toolName: 'get_application_program', input: {} })).toBe(false)
+    expect(await approve({ toolName: 'something_else', input: {} })).toBe(false)
   })
 
   test('any OpenAI-compatible endpoint: OpenRouter by env', async () => {

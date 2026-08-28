@@ -219,6 +219,13 @@ export function useAgentLane({
   /** A tool result becomes a record and a card, exactly as a direct-lane lookup would. */
   const landToolResult = useCallback(
     (sectionId: number, event: AgentToolResult, network: LiveNetworkId) => {
+      // A tool that failed is one line, not a JSON block; she reads the same line and says why.
+      if (event.isError) {
+        const error = (event.output as { error?: { code?: string; message?: string } })?.error
+        const declined = error?.code === 'DENIED'
+        appendNote(sectionId, `${event.toolName} — ${declined ? 'declined by the house cap' : (error?.message ?? 'failed')}`, declined ? 'muted' : 'error')
+        return
+      }
       const { network: _network, ...input } =
         event.input !== null && typeof event.input === 'object' && !Array.isArray(event.input) ? (event.input as Record<string, unknown>) : {}
       try {

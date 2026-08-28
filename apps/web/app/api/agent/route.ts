@@ -25,6 +25,7 @@ const DEFAULT_BASE_URL = 'https://api.together.xyz/v1'
 const DEFAULT_MODEL = 'Qwen/Qwen2.5-72B-Instruct-Turbo'
 const MAX_BODY_BYTES = 256 * 1024
 const MAX_HISTORY = 40
+const PROGRAM_PAGES_PER_TURN = 2
 
 const requestSchema = z.object({
   network: z.enum(['localnet', 'testnet', 'mainnet']),
@@ -108,13 +109,15 @@ export async function POST(request: Request): Promise<Response> {
   const refused = isProduction() ? chargeTurn(ip) : undefined
   if (refused) return Response.json({ error: refused }, { status: 429 })
 
+  // The one expensive tool reads a program a page (~3k tokens) at a time; the house
+  // pays for two pages per turn, which explains a contract, and no more.
+  let programPages = 0
   const session = createExplorerAgent({
     model: { provider: 'openai-compatible', baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model: endpoint.model },
     addressBook: body.accounts,
     network: body.network,
     history: body.history as never,
-    // A public host pays for nothing expensive on a visitor's say-so.
-    approveToolCall: async () => false,
+    approveToolCall: async ({ toolName }) => toolName === 'get_application_program' && ++programPages <= PROGRAM_PAGES_PER_TURN,
   })
   const context = [activeSenderLine(body.activeAddress, body.accounts), body.context ?? '']
     .filter(Boolean)
