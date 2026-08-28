@@ -25,6 +25,9 @@
 * { box-sizing: border-box; }
 html { background: var(--ground); color: var(--text); }
 body { margin: 0; font: 15px/1.55 var(--font-sans); -webkit-font-smoothing: antialiased; }
+/* iOS paints its own rounded, outlined field over ours unless appearance is off */
+input, button, textarea { -webkit-appearance: none; appearance: none; border-radius: 0; }
+input { -webkit-text-size-adjust: 100%; }
 button:focus-visible, input:focus-visible { outline: 1px solid var(--brass-bright); outline-offset: 2px; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--ground); }
