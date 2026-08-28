@@ -55,9 +55,20 @@ export function WalletScreen({
                 active={wallet.isActive}
                 onPress={() =>
                   run(async () => {
-                    if (!wallet.isConnected) await wallet.connect()
-                    else if (wallet.isActive) await wallet.disconnect()
-                    else wallet.setActive()
+                    if (wallet.isConnected) {
+                      if (wallet.isActive) await wallet.disconnect()
+                      else wallet.setActive()
+                      return
+                    }
+                    try {
+                      await wallet.connect()
+                    } catch (caught) {
+                      // Pera keeps a WalletConnect session in the browser; a stale one from an
+                      // earlier attempt refuses a second connect. Drop it and try once more.
+                      if (!/session currently connected/i.test(String(caught))) throw caught
+                      await wallet.disconnect().catch(() => undefined)
+                      await wallet.connect()
+                    }
                   })
                 }
               />
