@@ -25,3 +25,13 @@ describe('her latest line', () => {
     ).toEqual({ sectionId: 2, itemId: 2 })
   })
 })
+
+describe('out of turns', () => {
+  test('she names the offer and varies the line', async () => {
+    const { outOfTurnsLine } = await import('../features/agent/hooks')
+    const lines = [0, 1, 2, 3].map((seed) => outOfTurnsLine(seed, { price: '$1.00', turns: 25 }))
+    expect(new Set(lines).size).toBe(4)
+    for (const line of lines) expect(line).toContain('/buy 25 for $1.00')
+    expect(outOfTurnsLine(0)).toContain('/buy a pack')
+  })
+})

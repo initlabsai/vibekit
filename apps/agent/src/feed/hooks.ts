@@ -13,7 +13,7 @@ export type SectionBlock =
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =
-  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent'; /** Still being written: 'thinking…', '→ tool…'. */ pending?: boolean; /** An identifier shown after the text, with its copy glyph. */ copy?: string }
+  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent'; /** Still being written: 'thinking…', '→ tool…'. */ pending?: boolean; /** An identifier shown after the text, with its copy glyph. */ copy?: string; /** A face she insists on for this line. */ mood?: 'squint' | 'bright' }
   | { id: number; kind: 'block'; block: SectionBlock }
 
 /** Everything one request produced, in order. The nav pane is this list's index. */

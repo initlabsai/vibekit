@@ -56,6 +56,19 @@ export function explorerContext(store: ResultStore, network: string, limit = 3):
   return lines.length === 0 ? '' : `Cards on screen (oldest first):\n${lines.join('\n')}`
 }
 
+const OUT_OF_TURNS = [
+  (offer: string) => `no. i'm out of turns. ${offer} and i'll be nice again.`,
+  (offer: string) => `hmph. free ones are gone for today. ${offer} or come back tomorrow.`,
+  (offer: string) => `i read algorand for you, not for free forever. ${offer}.`,
+  (offer: string) => `turns: zero. patience: also zero. ${offer}.`,
+]
+
+/** Her line when the route says 402 — picked by section so she doesn't repeat herself. */
+export function outOfTurnsLine(seed: number, offer?: { price: string; turns: number }): string {
+  const ask = offer ? `/buy ${offer.turns} for ${offer.price}` : '/buy a pack'
+  return OUT_OF_TURNS[Math.abs(seed) % OUT_OF_TURNS.length]!(ask)
+}
+
 export function useAgentLane({
   feed,
   storeRef,
@@ -164,6 +177,16 @@ export function useAgentLane({
             history: historyRef.current,
           }),
         })
+        if (response.status === 402) {
+          // Her, not the model: she is out of turns and says so, cross.
+          const payload = (await response.json().catch(() => ({}))) as { offer?: { price: string; turns: number } }
+          updateItem(sectionId, noteId, (item) =>
+            item.kind === 'note' ? { ...item, text: outOfTurnsLine(sectionId, payload.offer), pending: false, mood: 'squint' } : item,
+          )
+          pending = false
+          spoke = true
+          return
+        }
         if (!response.ok || !response.body) {
           const payload = (await response.json().catch(() => ({}))) as { error?: string }
           throw new Error(payload.error ?? `agent route failed (${response.status})`)

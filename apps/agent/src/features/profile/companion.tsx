@@ -24,7 +24,8 @@ const FACES: Record<Mood, readonly string[]> = {
 const BLINK = '(-‿-)'
 
 /** The mood a section's agent row calls for. */
-export function moodFor(section: Section | undefined, item: { pending?: boolean; text: string }, streaming: boolean): Mood {
+export function moodFor(section: Section | undefined, item: { pending?: boolean; text: string; mood?: Mood }, streaming: boolean): Mood {
+  if (item.mood) return item.mood
   if (item.pending) return item.text.startsWith('→') ? 'working' : 'thinking'
   if (streaming) return 'thinking'
   const last = section?.items.at(-1)

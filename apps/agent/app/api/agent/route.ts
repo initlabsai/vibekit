@@ -121,7 +121,10 @@ export async function POST(request: Request): Promise<Response> {
     } else {
       const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
       if (paid === undefined) {
-        return Response.json({ error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).` }, { status: 402 })
+        return Response.json(
+          { error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`, offer: { price: pack.price, turns: TURNS_PER_PACK } },
+          { status: 402 },
+        )
       }
       charged = { paid, freeLeft: 0 }
     }
