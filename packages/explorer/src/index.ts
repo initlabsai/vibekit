@@ -128,7 +128,7 @@ export type {
   GraphVertical,
   TransactionsGraph,
 } from './views/transaction-graph.js'
-export { createWriteFlowViewModel } from './flows/write-flow.js'
+export { createWriteFlowViewModel, writeDraftDataSchema } from './flows/write-flow.js'
 export type { WriteFlowViewModel, WriteFlowState } from './flows/write-flow.js'
 export {
   completeApprovedWriteFlow,

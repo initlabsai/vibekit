@@ -16,8 +16,8 @@ export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHo
 
 const ROUND_POLL_MS = 4000
 
-export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft'] } = {}) {
-  const [network, setNetwork] = useState<LiveNetworkId>(defaultNetwork)
+export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; network?: LiveNetworkId } = {}) {
+  const [network, setNetwork] = useState<LiveNetworkId>(args.network ?? defaultNetwork)
   const networkRef = useRef(network)
   networkRef.current = network
   const { signDraft } = args

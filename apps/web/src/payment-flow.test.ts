@@ -3,6 +3,8 @@ import { describe, expect, test } from 'bun:test'
 import {
   completeApprovedWriteFlow,
   createSampleHost,
+  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
+  PAYMENT_FIXTURE_TRANSACTION_ID as SIGNED_FIXTURE_TXID,
   createFixtureResultStore,
   createWriteFlowViewModel,
   FIXTURE_RECEIVER,
@@ -15,6 +17,8 @@ import {
 } from '@initlabs/vibekit-explorer'
 
 import { resolvePaymentParties, routeComposerInput } from './commands.js'
+import { createRemoteExplorerHost } from './remote-host.js'
+import { createWalletSignDraft, unsignedTransactionsForDraft } from './wallet/sign-draft.js'
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
@@ -176,5 +180,87 @@ describe('web payment wiring', () => {
     expect(done).toMatchObject({ ok: true, pausedForSigner: true })
     expect(done.flow?.stage).toBe('approved')
     expect(done.flow?.signed).toBeUndefined()
+  })
+
+  test('a connected wallet signs on approval, the server verifies, and the client polls to confirmed', async () => {
+    const fixture = createSampleHost()
+    const draft = await fixture.draftPayment(DRAFT_PARAMS)
+    if (draft.state !== 'success') throw new Error('fixture draft failed')
+    const signedBytes = new Uint8Array(Buffer.from(PAYMENT_FIXTURE_SIGNED_TRANSACTION, 'base64'))
+    // The wallet's signer: the fixture's real signature over the fixture's real bytes.
+    const transactionSigner = async (txns: unknown[]) => txns.map(() => signedBytes)
+    const actions: string[] = []
+    let polls = 0
+    const originalFetch = globalThis.fetch
+    globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as Record<string, unknown>
+      actions.push(String(body.action))
+      expect(body.network).toBe('localnet')
+      switch (body.action) {
+        case 'draft-payment':
+          return Response.json({ record: draft })
+        case 'simulate-draft':
+          return Response.json({ record: await fixture.simulateDraft(draft) })
+        case 'record-signed': {
+          // What the server does: refuse unless the bytes wrap the drafted group.
+          const sent = body.signedTransactions as string[]
+          const unsigned = unsignedTransactionsForDraft(body.draftRecord as typeof draft)
+          if (sent.length !== unsigned.length || sent[0] !== PAYMENT_FIXTURE_SIGNED_TRANSACTION) {
+            return Response.json({ error: 'Signed transaction 0 does not wrap the drafted bytes' }, { status: 400 })
+          }
+          return Response.json({ record: await fixture.signDraft!(draft) })
+        }
+        case 'submit-signed':
+          expect(body.draftRecord).toBeDefined()
+          return Response.json({ txid: SIGNED_FIXTURE_TXID, pending: true })
+        case 'await-confirmation':
+          polls += 1
+          return polls < 2
+            ? Response.json({ pending: true })
+            : Response.json({ record: await fixture.submitSigned!(await fixture.signDraft!(draft)) })
+        default:
+          return Response.json({ error: `unexpected ${body.action}` }, { status: 400 })
+      }
+    }) as typeof fetch
+    try {
+      const host = createRemoteExplorerHost({
+        network: 'localnet',
+        signDraft: createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'localnet', transactionSigner }),
+      })
+      const prepared = await startWriteFlow({ host, store: createFixtureResultStore(), draftParams: DRAFT_PARAMS, newId })
+      if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
+      const approved = await performWriteFlowStep({ host, store: prepared.store, flow: prepared.flow, kind: 'approve', newId })
+      if (!approved.ok) throw new Error(approved.message)
+      const done = await completeApprovedWriteFlow({ host, store: approved.store, flow: approved.flow, newId })
+      expect(done.ok).toBe(true)
+      expect(done.flow?.stage).toBe('confirmed')
+      expect(actions).toEqual([
+        'draft-payment',
+        'simulate-draft',
+        'record-signed',
+        'submit-signed',
+        'await-confirmation',
+        'await-confirmation',
+      ])
+
+      // A wallet on another network never signs.
+      const mismatched = createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'mainnet', transactionSigner })
+      await expect(mismatched(draft)).rejects.toThrow('Wallet is on mainnet; Explorer is on localnet')
+
+      // A signature over other bytes is refused by the server, and the flow reports it.
+      const tampered = createRemoteExplorerHost({
+        network: 'localnet',
+        signDraft: createWalletSignDraft({
+          network: 'localnet',
+          walletNetwork: () => 'localnet',
+          transactionSigner: async (txns: unknown[]) => txns.map(() => new Uint8Array([1, 2, 3])),
+        }),
+      })
+      const refused = await completeApprovedWriteFlow({ host: tampered, store: approved.store, flow: approved.flow, newId })
+      expect(refused.ok).toBe(false)
+      expect(refused.message).toContain('does not wrap the drafted bytes')
+    } finally {
+      globalThis.fetch = originalFetch
+    }
   })
 })

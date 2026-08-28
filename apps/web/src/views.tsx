@@ -1,5 +1,5 @@
-/** The screens that are not cards: the welcome and the accounts landing. */
-import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero } from './primitives'
+/** The welcome card an empty feed shows. */
+import { Button, Frame, Header, Hero } from './primitives'
 
 export function Welcome({ onOpenSample }: { onOpenSample: () => void }) {
   return (
@@ -13,31 +13,6 @@ export function Welcome({ onOpenSample }: { onOpenSample: () => void }) {
       <div className="actions">
         <Button label="open the sample transaction" onPress={onOpenSample} />
       </div>
-    </Frame>
-  )
-}
-
-export function AccountsLanding({
-  accounts,
-  note,
-  onOpen,
-}: {
-  accounts: ReadonlyArray<{ address: string; name?: string }>
-  note: string
-  onOpen: (address: string) => void
-}) {
-  return (
-    <Frame>
-      <Header kicker="ACCOUNTS" />
-      <Facts>
-        {accounts.map((account) => (
-          <Fact key={account.address} label={account.name ?? 'account'}>
-            <Copyable value={account.address} width={24} />{' '}
-            <Button label="open" onPress={() => onOpen(account.address)} />
-          </Fact>
-        ))}
-      </Facts>
-      <FooterNote text={note} />
     </Frame>
   )
 }
