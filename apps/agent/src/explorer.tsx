@@ -369,7 +369,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       <Composer
         onSubmit={submit}
         status={statusLine}
-        placeholder={agent.status.enabled ? 'ask anything, paste an id, or / for commands · not private' : 'paste an id, or / for commands'}
+        placeholder="ask anything, paste an id, or / for commands"
       />
       {approval ? (
         <ApprovalModal
