@@ -57,6 +57,15 @@ export function useWalletLane(network: LiveNetworkId) {
     )
   }, [activeNetwork, network, setActiveNetwork, wallet.isReady])
 
+  // One wallet at a time. Sessions persist in the browser, so a second one connected before
+  // that rule existed would still be here; the active wallet stays, the rest are dropped.
+  useEffect(() => {
+    if (!wallet.isReady) return
+    for (const other of wallet.wallets) {
+      if (other.isConnected && !other.isActive) void other.disconnect().catch(() => undefined)
+    }
+  }, [wallet.isReady, wallet.wallets])
+
   const accounts: ReadonlyArray<WalletAccount> = useMemo(
     () => (wallet.activeWalletAccounts ?? []).map((account) => ({ address: account.address, name: account.name })),
     [wallet.activeWalletAccounts],
