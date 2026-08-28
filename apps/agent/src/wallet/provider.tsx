@@ -21,6 +21,17 @@ const manager = new WalletManager({
   defaultNetwork: defaultNetwork(),
 })
 
+/**
+ * Loads each adapter's client ahead of the click that connects. Lute's
+ * extension opens its panel only inside the click's user activation, and the
+ * adapter's first connect would otherwise spend that on a lazy import.
+ */
+export function warmWallets(): void {
+  for (const wallet of manager.wallets) {
+    void (wallet as { initializeClient?: () => Promise<unknown> }).initializeClient?.().catch(() => undefined)
+  }
+}
+
 export function WalletRoot({ children }: { children: ReactNode }) {
   return <WalletProvider manager={manager}>{children}</WalletProvider>
 }

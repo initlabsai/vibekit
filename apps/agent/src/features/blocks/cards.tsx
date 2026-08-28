@@ -51,7 +51,28 @@ export function BlockCard({
   )
 }
 
-type BlockRow = { round: number; timestamp: number; transactionCount: number; proposer?: string }
+type BlockRow = {
+  round: number
+  timestamp: number
+  transactionCount: number
+  proposer?: string
+  transactionTypes?: ReadonlyArray<{ type: string; count: number }>
+}
+
+/** The txns cell: one tag per type with its count, or the bare count when the row has no breakdown. */
+function TxnTags({ row }: { row: BlockRow }) {
+  if (!row.transactionTypes?.length) return <span className={row.transactionCount === 0 ? 'faint' : undefined}>{row.transactionCount}</span>
+  return (
+    <span className="txn-tags">
+      {row.transactionTypes.map((entry) => (
+        <span key={entry.type} className={`kind kind-${entry.type}`} title={formatBlockTxnType(entry.type)}>
+          {entry.type}
+          {entry.count > 1 ? <b>{entry.count}</b> : null}
+        </span>
+      ))}
+    </span>
+  )
+}
 
 /** Seconds or minutes since the block, refreshed each second while the card is mounted. */
 function Age({ timestamp }: { timestamp: number }) {
@@ -83,7 +104,7 @@ export function BlockListCard({
     { key: 'round', label: 'round', width: 'minmax(6rem, .7fr)', sortValue: (b) => b.round, cell: (b) => <span className="tt-kind">{b.round}</span> },
     { key: 'age', label: 'age', width: 'minmax(4rem, .5fr)', cell: (b) => <Age timestamp={b.timestamp} /> },
     { key: 'time', label: 'time', sortValue: (b) => b.timestamp, cell: (b) => formatExplorerTime(b.timestamp) },
-    { key: 'txns', label: 'txns', align: 'right', width: 'minmax(4rem, .5fr)', sortValue: (b) => b.transactionCount, cell: (b) => String(b.transactionCount) },
+    { key: 'txns', label: 'txns', width: 'minmax(9rem, 1.2fr)', sortValue: (b) => b.transactionCount, cell: (b) => <TxnTags row={b} /> },
     {
       key: 'proposer',
       label: 'proposer',

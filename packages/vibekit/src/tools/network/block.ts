@@ -5,7 +5,8 @@ type IndexerTxn = {
   txType?: string
 }
 
-function typeCounts(raw: IndexerTxn[]): Array<{ type: string; count: number }> {
+/** Transaction types in first-seen order with their counts. */
+export function typeCounts(raw: IndexerTxn[]): Array<{ type: string; count: number }> {
   const counts = new Map<string, number>()
   const order: string[] = []
   for (const tx of raw) {

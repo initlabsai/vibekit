@@ -5,7 +5,7 @@ import type { Wallet } from '@txnlab/use-wallet-react'
 import Link from 'next/link'
 
 import { shorten } from '../../theme'
-import type { WalletLane } from '../../wallet/provider'
+import { warmWallets, type WalletLane } from '../../wallet/provider'
 
 /** Connects, dropping a stale Pera WalletConnect session that refuses a second connect. */
 export async function connectWallet(wallet: Wallet): Promise<void> {
@@ -24,7 +24,7 @@ export function WalletMenu({ lane, onError }: { lane: WalletLane; onError: (mess
   }
   const active = lane.activeWallet
   return (
-    <details className="menu">
+    <details className="menu" onToggle={(event) => event.currentTarget.open && warmWallets()}>
       <summary className="button">{lane.activeAddress ? `▸ ${lane.activeName ?? shorten(lane.activeAddress, 12)}` : '▸ no wallet'}</summary>
       <ul>
         {active ? (

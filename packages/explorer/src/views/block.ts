@@ -38,6 +38,7 @@ export const blockRowSchema = z.object({
   timestamp: z.number().int().nonnegative(),
   transactionCount: z.number().int().nonnegative(),
   proposer: optionalAddress,
+  transactionTypes: z.array(blockTransactionTypeCountSchema).optional(),
 })
 
 /** A page of block headers. */

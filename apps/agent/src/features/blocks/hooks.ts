@@ -8,6 +8,7 @@ export interface TailRow {
   timestamp: number
   transactionCount: number
   proposer?: string
+  transactionTypes?: ReadonlyArray<{ type: string; count: number }>
 }
 
 const TAIL_LENGTH = 20
@@ -69,8 +70,8 @@ export function useBlockTail({
       rounds.map(async (round) => {
         const record = await hostRef.current().lookupBlock(round)
         if (record.state !== 'success') throw new Error(`round ${round} unavailable`)
-        const { round: r, timestamp, transactionCount, proposer } = record.data as unknown as TailRow
-        return { round: r, timestamp, transactionCount, ...(proposer ? { proposer } : {}) }
+        const { round: r, timestamp, transactionCount, proposer, transactionTypes } = record.data as unknown as TailRow
+        return { round: r, timestamp, transactionCount, ...(proposer ? { proposer } : {}), ...(transactionTypes ? { transactionTypes } : {}) }
       }),
     ).then((settled) => {
       if (cancelled) return

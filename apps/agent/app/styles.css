@@ -442,3 +442,8 @@ a.button-active { text-decoration: underline; }
 .menu li button:hover, .menu li a:hover { background: var(--card); color: var(--brass-bright); }
 .menu li button.on { color: var(--brass); }
 .menu li.muted { color: var(--faint); padding: .35rem .8rem; }
+
+/* Block rows: transaction types as tags, count beside the label when more than one. */
+.txn-tags { display: inline-flex; flex-wrap: wrap; gap: .25rem; }
+.txn-tags .kind b { color: var(--muted); font-weight: 400; margin-left: .3rem; }
+.faint { color: var(--faint); }
