@@ -5,7 +5,7 @@ import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 're
 
 import { CompanionFace, moodFor } from '../features/profile/companion'
 import { matchCommands } from '../commands'
-import { Button } from '../primitives'
+import { Button, Copyable } from '../primitives'
 import type { Section, SectionBlock } from './hooks'
 
 export function plainAgentText(text: string): string {
@@ -137,6 +137,7 @@ export function FeedPane({
             ) : item.kind === 'note' ? (
               <p key={item.id} className={`note${item.tone === 'error' ? ' note-error' : ''}`}>
                 {item.text}
+                {item.copy ? <> <Copyable value={item.copy} width={20} open={false} /></> : null}
               </p>
             ) : (
               <div key={item.id} className="block">
