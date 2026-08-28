@@ -18,7 +18,7 @@ import algosdk from 'algosdk'
 import { z } from 'zod'
 
 import { creditsConfig } from '../credits/config'
-import { bearerOf, freeTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
+import { balance, bearerOf, freeTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -108,20 +108,22 @@ export async function POST(request: Request): Promise<Response> {
   }
   if (!parsed.success) return Response.json({ error: 'Invalid agent request' }, { status: 400 })
   const body = parsed.data
-  // Paid mode: a bearer token spends its address's paid turns, else today's free turns for
-  // the IP, else 402. House mode rate-limits instead. Nothing here trusts a caller-chosen address.
+  // Paid mode: today's free turns for the IP go first (they expire; paid ones keep), then the
+  // bearer token's paid turns, else 402. House mode rate-limits instead. Nothing here trusts a
+  // caller-chosen address.
   const pack = creditsConfig()
   let charged: { paid?: number; freeLeft?: number } | undefined
   if (pack) {
     const payer = await payerForToken(bearerOf(request))
-    const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
-    if (paid !== undefined) charged = { paid }
-    else {
-      const free = await freeTurn(ipOf(request))
-      if (free === undefined) {
+    const free = await freeTurn(ipOf(request))
+    if (free !== undefined) {
+      charged = { freeLeft: free, ...(payer ? { paid: await balance(payer) } : {}) }
+    } else {
+      const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
+      if (paid === undefined) {
         return Response.json({ error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).` }, { status: 402 })
       }
-      charged = { paid: payer ? 0 : undefined, freeLeft: free }
+      charged = { paid, freeLeft: 0 }
     }
   } else {
     const refused = isProduction() ? chargeTurn(ipOf(request)) : undefined

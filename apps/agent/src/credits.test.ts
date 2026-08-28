@@ -87,6 +87,8 @@ describe('credits price', () => {
 describe('agent route billing', () => {
   test('paid mode: free turns by IP, then 402; a stranger cannot spend an address', async () => {
     process.env.AGENT_API_KEY = 'test'
+    // The stream a 200 opens would call the model; a dead port makes that a fast, quiet failure.
+    process.env.AGENT_BASE_URL = 'http://127.0.0.1:9/v1'
     process.env.X402_PAY_TO = FIXTURE_SENDER
     await ledger.credit(FIXTURE_SENDER)
     const post = (headers: Record<string, string>) =>
@@ -98,6 +100,12 @@ describe('agent route billing', () => {
         }),
       )
     expect((await (await agent.GET()).json()).billing).toBe('x402')
+    // A bound token with free turns left still spends the free one first.
+    await ledger.bindToken(TOKEN, FIXTURE_SENDER)
+    const first = await post({ authorization: `Bearer ${TOKEN}` })
+    expect(first.status).toBe(200)
+    expect(await ledger.balance(FIXTURE_SENDER)).toBe(ledger.TURNS_PER_PACK)
+    expect(await ledger.freeLeft('9.9.9.9')).toBe(ledger.FREE_TURNS - 1)
     for (let i = 0; i < ledger.FREE_TURNS; i++) await ledger.freeTurn('9.9.9.9')
     const dry = await post({ 'x-payer': FIXTURE_SENDER })
     expect(dry.status).toBe(402)
