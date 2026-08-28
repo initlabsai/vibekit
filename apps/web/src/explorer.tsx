@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { HELP, routeComposerInput } from './commands'
 import { EnrichmentProvider } from './enrich'
+import { RoundPulse } from './features/network/pulse'
 import { Composer, FeedPane, NavPane } from './feed/feed'
 import { useFeed, type SectionBlock } from './feed/hooks'
 import { defaultNetwork, NETWORKS, useNetwork } from './features/network/hooks'
@@ -247,6 +248,7 @@ function ExplorerApp() {
               {latestRound === undefined ? null : (
                 <>
                   {' '}
+                  <RoundPulse round={latestRound} />
                   <span className="round" key={latestRound}>{latestRound}</span>
                 </>
               )}

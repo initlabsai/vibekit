@@ -261,15 +261,15 @@ export function TransactionListCard({
       cell: ({ row }) => {
         const to = rowCounterparty(row)
         return (
-          <>
-            <Copyable value={row.sender} display={shorten(row.sender, 10)} />
+          <span className="party">
+            <Copyable value={row.sender} display={shorten(row.sender, 12)} />
             {to ? (
-              <>
-                {' → '}
-                {row.receiver ? <Copyable value={row.receiver} display={shorten(row.receiver, 10)} /> : to}
-              </>
+              <span className="party-to">
+                <span className="party-arrow">→</span>
+                {row.receiver ? <Copyable value={row.receiver} display={shorten(row.receiver, 12)} /> : to}
+              </span>
             ) : null}
-          </>
+          </span>
         )
       },
     },

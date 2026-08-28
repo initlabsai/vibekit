@@ -23,20 +23,20 @@ describe('enrichment cache', () => {
   test('names batch into one reverse lookup and settle to a name or null', async () => {
     const { host, calls } = fakeHost('mainnet', () => ({
       results: [
-        { address: FIXTURE_SENDER, name: 'alice.algo' },
+        { address: FIXTURE_SENDER, name: 'alice.algo', avatar: 'https://x/a.png' },
         { address: FIXTURE_RECEIVER, name: null },
       ],
     }))
     const enrichment = createEnrichment(host, true)
     let wakes = 0
     enrichment.subscribe(() => (wakes += 1))
-    expect(enrichment.name(FIXTURE_SENDER)).toBeUndefined()
-    expect(enrichment.name(FIXTURE_RECEIVER)).toBeUndefined()
-    expect(enrichment.name(FIXTURE_SENDER)).toBeUndefined()
+    expect(enrichment.profile(FIXTURE_SENDER)).toBeUndefined()
+    expect(enrichment.profile(FIXTURE_RECEIVER)).toBeUndefined()
+    expect(enrichment.profile(FIXTURE_SENDER)).toBeUndefined()
     await tick()
     expect(calls).toEqual([['batch_reverse_resolve_nfd', { addresses: [FIXTURE_SENDER, FIXTURE_RECEIVER] }]])
-    expect(enrichment.name(FIXTURE_SENDER)).toBe('alice.algo')
-    expect(enrichment.name(FIXTURE_RECEIVER)).toBeNull()
+    expect(enrichment.profile(FIXTURE_SENDER)).toEqual({ name: 'alice.algo', avatar: 'https://x/a.png' })
+    expect(enrichment.profile(FIXTURE_RECEIVER)).toBeNull()
     expect(wakes).toBeGreaterThan(0)
   })
 
@@ -56,7 +56,7 @@ describe('enrichment cache', () => {
     const testnet = fakeHost('testnet', () => ({}))
     expect(createEnrichment(testnet.host, true).asset(1)).toBeUndefined()
     const offline = fakeHost('mainnet', () => ({}))
-    expect(createEnrichment(offline.host, false).name(FIXTURE_SENDER)).toBeUndefined()
+    expect(createEnrichment(offline.host, false).profile(FIXTURE_SENDER)).toBeUndefined()
     await tick()
     expect(testnet.calls).toEqual([])
     expect(offline.calls).toEqual([])

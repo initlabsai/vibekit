@@ -7,9 +7,9 @@ import {
   type AccountSummaryViewModel,
 } from '@initlabs/vibekit-explorer'
 
-import { formatUsd, useAssetMeta } from '../../enrich'
+import { formatUsd, useAlgoPrice, useAssetMeta } from '../../enrich'
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'
-import { AssetMark } from '../../primitives'
+import { AssetMark, Identity } from '../../primitives'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'
 import { shorten } from '../../theme'
 
@@ -34,7 +34,9 @@ export function AccountCard({
   onAssets?: () => void
   onOpenAsset?: (assetId: number) => void
 }) {
+  const algoPrice = useAlgoPrice()
   if (!model) return <Unavailable title="ACCOUNT" />
+  const algoUsd = algoPrice === undefined ? undefined : (Number(model.balanceMicroAlgos) / 1e6) * algoPrice
   const columns: Column<Holding>[] = [
     {
       key: 'name',
@@ -72,9 +74,11 @@ export function AccountCard({
           </>
         }
       />
-      <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit="ALGO" />
+      <div className="identity-row">
+        <Identity address={model.address} />
+      </div>
+      <Hero value={formatMicroAlgos(model.balanceMicroAlgos)} unit={algoUsd === undefined ? 'ALGO' : `ALGO · ≈ ${formatUsd(algoUsd)}`} />
       <Facts>
-        <Fact label="address" value={model.address} copy={model.address} />
         <Fact label="holdings" value={String(model.totalAssets)} />
       </Facts>
       {model.assets.length === 0 ? (

@@ -149,6 +149,27 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .kind-acfg, .kind-afrz { background: rgba(196, 160, 106, .1); color: var(--brass); }
 .kind-keyreg, .kind-stpf, .kind-hb, .kind-txn { background: rgba(142, 132, 118, .12); color: var(--muted); }
 
+/* Identity: avatar + name over the address. */
+.identity-row { margin-top: 1rem; }
+.identity { align-items: center; display: inline-flex; gap: .75rem; }
+.identity-avatar { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 50%; flex: none; height: 44px; object-fit: cover; width: 44px; }
+.identity-avatar-empty { align-items: center; color: var(--brass); display: inline-flex; font-family: var(--font-mono); font-size: .8rem; font-weight: 700; justify-content: center; letter-spacing: .05em; }
+.identity-text { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+.identity-name { color: var(--brass-bright); font-family: var(--font-mono); font-size: 1rem; font-weight: 500; }
+.identity .ident-name { display: none; }
+.identity .ident-sub { margin-left: 0; }
+.party { display: flex; flex-direction: column; gap: .1rem; line-height: 1.3; }
+.party-to { display: flex; gap: .4rem; }
+.party-arrow { color: var(--brass); }
+.tt-row .party > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Round pulse: the website's round-signal bars, live. */
+.pulse { align-items: flex-end; display: inline-flex; gap: 2px; height: .8rem; margin-right: .5rem; vertical-align: -.1rem; }
+.pulse i { background: var(--signal-dim); display: block; transition: height .3s ease; width: 3px; }
+.pulse i:last-child { background: var(--signal); }
+.pulse i.empty { background: var(--border-soft); }
+.pulse.hot i:last-child { background: var(--brass-bright); }
+
 /* Touchables: identifiers copy; buttons are words in the touchable color. */
 .ident { color: var(--signal); font-family: var(--font-mono); font-size: inherit; overflow-wrap: anywhere; text-align: left; text-decoration: underline dotted; text-underline-offset: .18em; }
 .ident:hover { color: var(--brass-bright); }
@@ -175,6 +196,7 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .tt-row { background: rgba(17, 19, 24, .92); border-left: 2px solid transparent; color: var(--muted); font-variant-numeric: tabular-nums; padding-left: calc(.6rem - 2px); }
 .tt-row:nth-child(even) { background: rgba(24, 28, 36, .6); }
 .tt-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-row > span:has(.party) { white-space: normal; }
 .tt-row.touchable { cursor: pointer; }
 .tt-row.touchable:hover { background: var(--card-lit); border-left-color: var(--brass-bright); color: var(--text); }
 .tt-kind { color: var(--signal); }

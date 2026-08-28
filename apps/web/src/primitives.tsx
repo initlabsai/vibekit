@@ -3,7 +3,7 @@
 /** The DOM primitives every card and screen is built from: Frame, Header, Hero, Fact, Chip, Button, Copyable. */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-import { useAssetMeta, useName, type Tier } from './enrich'
+import { useAssetMeta, useName, useProfile, type Tier } from './enrich'
 import { shorten } from './theme'
 
 /** Where a copy is announced (the status line); no-op without a provider. */
@@ -236,6 +236,27 @@ export function AssetMark({
       )}
       <span className="asset-name">{label}</span>
       <TierBadge tier={meta?.tier} />
+    </span>
+  )
+}
+
+/** An account's face: NFD avatar and name over the address, when it has one. */
+export function Identity({ address }: { address: string }) {
+  const profile = useProfile(address)
+  return (
+    <span className="identity">
+      {profile?.avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="identity-avatar" src={profile.avatar} alt="" width={44} height={44} />
+      ) : (
+        <span className="identity-avatar identity-avatar-empty" aria-hidden="true">
+          {(profile?.name ?? address).slice(0, 2)}
+        </span>
+      )}
+      <span className="identity-text">
+        {profile?.name ? <span className="identity-name">{profile.name}</span> : null}
+        <Copyable value={address} display={shorten(address, 22)} />
+      </span>
     </span>
   )
 }

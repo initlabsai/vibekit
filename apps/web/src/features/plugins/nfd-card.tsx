@@ -37,7 +37,14 @@ export function NfdCard({
         pill={network.toUpperCase()}
         action={onOpenAccount ? <Button label="account ▸" onPress={onOpenAccount} /> : undefined}
       />
-      <Hero value={data.name} copy={data.name} unit={byline} />
+      <p className="hero">
+        {props.avatar?.startsWith('https://') ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="identity-avatar" src={props.avatar} alt="" width={44} height={44} />
+        ) : null}
+        <Copyable value={data.name} className="hero-value" />
+        {byline ? <span className="hero-unit">{byline}</span> : null}
+      </p>
       <Facts>
         {data.appId === undefined ? null : <Fact label="app" value={String(data.appId)} copy={String(data.appId)} />}
         {data.address ? <Fact label="address" value={data.address} copy={data.address} /> : null}

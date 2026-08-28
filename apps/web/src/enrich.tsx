@@ -25,8 +25,15 @@ export interface AssetMeta {
 }
 
 const namesSchema = z.object({
-  results: z.array(z.object({ address: z.string(), name: z.string().nullable() })),
+  results: z.array(z.object({ address: z.string(), name: z.string().nullable(), avatar: z.string().optional() })),
 })
+
+/** An address's NFD identity: null when it has none. */
+export interface Profile {
+  name: string
+  /** https URL; NFD's `assetid:` avatars are skipped. */
+  avatar?: string
+}
 const profileSchema = z.object({
   verificationTier: z.string(),
   logoUrl: z.string().url().optional(),
@@ -57,18 +64,18 @@ const PROFILE_CONCURRENCY = 4
 export const ALGO_ID = 0
 
 export interface Enrichment {
-  name(address: string): string | null | undefined
+  profile(address: string): Profile | null | undefined
   asset(assetId: number): AssetMeta | null | undefined
   subscribe(listener: () => void): () => void
 }
 
-const NONE: Enrichment = { name: () => undefined, asset: () => undefined, subscribe: () => () => undefined }
+const NONE: Enrichment = { profile: () => undefined, asset: () => undefined, subscribe: () => () => undefined }
 
 export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enrichment {
   const network = host.network as LiveNetworkId
   const namesOn = live && (network === 'mainnet' || network === 'testnet')
   const assetsOn = live && network === 'mainnet'
-  const names = new Map<string, string | null>()
+  const names = new Map<string, Profile | null>()
   const assets = new Map<number, AssetMeta | null>()
   const listeners = new Set<() => void>()
   const notify = () => listeners.forEach((listener) => listener())
@@ -87,7 +94,10 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
       host
         .pluginTool('batch_reverse_resolve_nfd', { addresses: chunk })
         .then((output) => {
-          for (const row of namesSchema.parse(output).results) names.set(row.address, row.name)
+          for (const row of namesSchema.parse(output).results) {
+            const avatar = row.avatar?.startsWith('https://') ? row.avatar : undefined
+            names.set(row.address, row.name ? { name: row.name, ...(avatar ? { avatar } : {}) } : null)
+          }
         })
         .catch(() => chunk.forEach((address) => names.set(address, null)))
         .finally(notify)
@@ -128,7 +138,7 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
         }
       }
       for (let i = 0; i < PROFILE_CONCURRENCY; i++) void worker()
-      for (const id of profiles) if (!assets.has(id)) assets.set(id, {})
+      for (const id of ids) if (!assets.has(id)) assets.set(id, {})
     }
   }
   const schedule = () => {
@@ -138,7 +148,7 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
   }
 
   return {
-    name(address) {
+    profile(address) {
       if (!namesOn) return undefined
       if (names.has(address)) return names.get(address)
       if (!nameQueue.has(address)) {
@@ -179,13 +189,24 @@ function useEnrichmentValue<T>(read: (enrichment: Enrichment) => T): T {
   )
 }
 
-/** The NFD name for an address: a string once known, null when it has none, undefined while unknown or off. */
+/** The NFD identity for an address: known, null when it has none, undefined while unknown or off. */
+export function useProfile(address: string | undefined): Profile | null | undefined {
+  return useEnrichmentValue((enrichment) => (address ? enrichment.profile(address) : undefined))
+}
+
 export function useName(address: string | undefined): string | null | undefined {
-  return useEnrichmentValue((enrichment) => (address ? enrichment.name(address) : undefined))
+  const profile = useProfile(address)
+  return profile === undefined ? undefined : profile === null ? null : profile.name
 }
 
 export function useAssetMeta(assetId: number | string | undefined): AssetMeta | null | undefined {
   return useEnrichmentValue((enrichment) => (assetId === undefined ? undefined : enrichment.asset(Number(assetId))))
+}
+
+/** ALGO's USD price (Vestige asset 0), or undefined while unknown or off. */
+export function useAlgoPrice(): number | undefined {
+  const meta = useAssetMeta(ALGO_ID)
+  return meta?.priceUsd
 }
 
 export function formatUsd(value: number): string {
