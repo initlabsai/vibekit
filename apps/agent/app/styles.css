@@ -346,7 +346,7 @@ a.button-active { text-decoration: underline; }
 .note-agent { align-items: flex-start; display: flex; gap: 1.1rem; margin: .65rem 0 .9rem; padding: .85rem .45rem 1rem; }
 .note-agent.pending { margin-bottom: .55rem; }
 .note-agent-body { flex: 1; min-width: 0; }
-.note-agent-text { color: var(--text); font-family: var(--font-mono); font-size: 1rem; line-height: 1.65; margin: 0; max-width: 68ch; white-space: pre-wrap; }
+.note-agent-text { color: var(--text); font-family: var(--font-mono); font-size: .86rem; line-height: 1.65; margin: 0; max-width: 68ch; white-space: pre-wrap; }
 .note-agent-pending { color: var(--signal); font-family: var(--font-mono); font-size: .78rem; letter-spacing: .04em; line-height: 1.52rem; margin: 0; }
 .dots i { animation: dot 1.2s infinite; display: inline-block; font-style: normal; margin-left: .05em; }
 .dots i:nth-child(2) { animation-delay: .2s; }
@@ -399,15 +399,9 @@ a.button-active { text-decoration: underline; }
   75% { opacity: 0; }
 }
 
-/* Her introduction: the empty feed. Centered, sparse, the face first. */
-.intro { align-items: center; display: flex; flex-direction: column; padding: 3rem 2.5rem 2.6rem; text-align: center; }
-.intro-face { margin: 0 0 1.4rem; }
-.intro-face .companion { font-size: 3rem; letter-spacing: 0; line-height: 1; min-width: 0; text-shadow: 0 0 1.2rem rgba(196, 160, 106, .6); }
-.intro-hero { justify-content: center; margin: 0; }
-.intro-lede { color: var(--muted); font-size: 1rem; line-height: 1.75; margin: 1.1rem 0 0; max-width: 34rem; }
-.intro-examples { justify-content: center; margin-top: 1.8rem; }
-.intro-moods { display: flex; flex-wrap: wrap; gap: .4rem 1.6rem; justify-content: center; list-style: none; margin: 2rem 0 0; padding: 0; }
-.intro-moods li { align-items: center; display: flex; flex-direction: column; gap: .15rem; }
-.intro-moods .companion { font-size: .95rem; min-width: 0; }
-.intro-moods span { color: var(--faint); font-family: var(--font-mono); font-size: .66rem; letter-spacing: .06em; }
-.intro-foot { color: var(--faint); font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; margin: 1.8rem 0 0; }
+/* Her introduction: the empty feed, as one of her messages. */
+.intro { box-sizing: border-box; max-width: var(--card-max); width: 100%; }
+.intro .note-agent-text em { color: var(--brass-bright); font-style: normal; }
+.intro-examples { color: var(--faint); font-family: var(--font-mono); font-size: .78rem; line-height: 1.7; margin: .5rem 0 0; }
+.intro-link { background: none; border: 0; color: var(--brass); cursor: pointer; font: inherit; padding: 0; text-decoration: underline dotted; text-underline-offset: .25em; transition: color .12s; }
+.intro-link:hover { color: var(--brass-bright); }

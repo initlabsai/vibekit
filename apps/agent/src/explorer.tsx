@@ -225,7 +225,8 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   const statusLine =
     status ||
     wallet.networkError ||
-    (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
+    (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '') ||
+    (agent.status.enabled ? `${agent.status.model} · early alpha` : 'no agent configured · the direct lane still works')
 
   // Both side panels fold; the viewer's choice is remembered per browser.
   const [railOpen, toggleRail] = usePanel('vibekit.rail')
