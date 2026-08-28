@@ -160,10 +160,10 @@ a.button-active { text-decoration: underline; }
 .ident .open { color: var(--signal); cursor: pointer; transition: color .15s, text-shadow .15s; }
 .ident .open:hover { color: var(--brass-bright); text-shadow: 0 0 .55rem rgba(255, 180, 84, .28); }
 .ident .plain { color: var(--text); }
-.ident .copy { align-self: center; border: 1px solid transparent; display: inline-grid; min-height: 1.5rem; min-width: 1.5rem; place-items: center; border-radius: 2px; color: var(--muted); cursor: copy; font-size: 1em; line-height: 1; margin: -.2em 0; opacity: .5; padding: .2em .35em; transition: opacity .12s, color .12s, border-color .12s; }
+.ident .copy { align-self: center; border: 1px solid transparent; border-radius: 2px; color: var(--muted); cursor: copy; display: inline-grid; font-size: 1.35rem; height: 1.5rem; line-height: 1; margin: -.2em 0; opacity: .55; padding: 0; place-items: center; width: 1.5rem; transition: opacity .12s, color .12s, border-color .12s; }
 .ident:hover .copy, .ident .copy:focus-visible, .ident .copy.copied { opacity: 1; }
 .ident .copy:hover { border-color: var(--border-soft); color: var(--brass-bright); }
-.hero-value .copy { font-size: .45em; }
+.hero-value .copy { font-size: 1.6rem; height: 1.9rem; width: 1.9rem; }
 .ident .copy.copied { color: var(--signal); }
 .ident-inert .plain { color: inherit; }
 .ident-link { color: var(--signal); font-family: var(--font-mono); overflow-wrap: anywhere; text-decoration: none; }
