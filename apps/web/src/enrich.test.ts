@@ -27,7 +27,7 @@ describe('enrichment cache', () => {
         { address: FIXTURE_RECEIVER, name: null },
       ],
     }))
-    const enrichment = createEnrichment(host, true)
+    const enrichment = createEnrichment(host, () => true)
     let wakes = 0
     enrichment.subscribe(() => (wakes += 1))
     expect(enrichment.profile(FIXTURE_SENDER)).toBeUndefined()
@@ -46,19 +46,35 @@ describe('enrichment cache', () => {
         ? { prices: [{ assetId: 31566704, priceUsd: '1.0', confidence: 0.99 }] }
         : { verificationTier: 'trusted', logoUrl: 'https://x/usdc.png', name: 'USDC' },
     )
-    const enrichment = createEnrichment(host, true)
-    expect(enrichment.asset(31566704)).toBeUndefined()
+    const enrichment = createEnrichment(host, () => true)
+    expect(enrichment.asset(31566704, true)).toBeUndefined()
     await tick()
     await tick()
     expect(enrichment.asset(31566704)).toEqual({ priceUsd: 1, tier: 'trusted', logoUrl: 'https://x/usdc.png', name: 'USDC' })
     expect(calls.map(([tool]) => tool).sort()).toEqual(['get_asset_prices', 'get_asset_profile'])
 
     const testnet = fakeHost('testnet', () => ({}))
-    expect(createEnrichment(testnet.host, true).asset(1)).toBeUndefined()
+    expect(createEnrichment(testnet.host, () => true).asset(1, true)).toBeUndefined()
     const offline = fakeHost('mainnet', () => ({}))
-    expect(createEnrichment(offline.host, false).profile(FIXTURE_SENDER)).toBeUndefined()
+    expect(createEnrichment(offline.host, () => false).profile(FIXTURE_SENDER)).toBeUndefined()
     await tick()
     expect(testnet.calls).toEqual([])
     expect(offline.calls).toEqual([])
+  })
+
+  test('a price-only ask never calls get_asset_profile; a profile ask calls it once', async () => {
+    const { host, calls } = fakeHost('mainnet', (tool) =>
+      tool === 'get_asset_prices' ? { prices: [] } : { verificationTier: 'verified' },
+    )
+    const enrichment = createEnrichment(host, () => true)
+    enrichment.asset(1)
+    enrichment.asset(2)
+    await tick()
+    expect(calls.map(([tool]) => tool)).toEqual(['get_asset_prices'])
+    enrichment.asset(1, true)
+    enrichment.asset(1, true)
+    await tick()
+    await tick()
+    expect(calls.filter(([tool]) => tool === 'get_asset_profile')).toHaveLength(1)
   })
 })

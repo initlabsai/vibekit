@@ -3,7 +3,7 @@
 /** The DOM primitives every card and screen is built from: Frame, Header, Hero, Fact, Chip, Button, Copyable. */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-import { useAssetMeta, useName, useProfile, type Tier } from './enrich'
+import { useAssetMeta, useName, useOnScreen, useProfile, type Tier } from './enrich'
 import { shorten } from './theme'
 
 /** Where a copy is announced (the status line); no-op without a provider. */
@@ -222,10 +222,11 @@ export function AssetMark({
   name?: string
   unitName?: string
 }) {
-  const meta = useAssetMeta(assetId)
+  const [ref, seen] = useOnScreen<HTMLSpanElement>()
+  const meta = useAssetMeta(assetId, seen)
   const label = name ?? meta?.name ?? unitName ?? meta?.unitName ?? `asset ${assetId}`
   return (
-    <span className="asset-mark">
+    <span className="asset-mark" ref={ref}>
       {meta?.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="asset-logo" src={meta.logoUrl} alt="" width={18} height={18} loading="lazy" />

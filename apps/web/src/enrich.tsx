@@ -8,7 +8,7 @@
  */
 import { z } from 'zod'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
-import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 
 import type { RemoteExplorerHost } from './remote-host'
 
@@ -58,37 +58,42 @@ const pricesSchema = z.object({
 
 const TIERS: Tier[] = ['trusted', 'verified', 'unverified', 'suspicious']
 const NAME_BATCH = 20
-const PROFILE_CONCURRENCY = 4
+const PROFILE_CONCURRENCY = 2
 
 /** ALGO's own row: no profile, priced as asset 0. */
 export const ALGO_ID = 0
 
 export interface Enrichment {
   profile(address: string): Profile | null | undefined
-  asset(assetId: number): AssetMeta | null | undefined
+  /** Price only by default; `withProfile` also asks Pera for tier, logo, and project — one call per asset, so only for what is on screen. */
+  asset(assetId: number, withProfile?: boolean): AssetMeta | null | undefined
   subscribe(listener: () => void): () => void
 }
 
 const NONE: Enrichment = { profile: () => undefined, asset: () => undefined, subscribe: () => () => undefined }
 
-export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enrichment {
+export function createEnrichment(host: RemoteExplorerHost, isLive: () => boolean): Enrichment {
   const network = host.network as LiveNetworkId
-  const namesOn = live && (network === 'mainnet' || network === 'testnet')
-  const assetsOn = live && network === 'mainnet'
+  const namesOn = () => isLive() && (network === 'mainnet' || network === 'testnet')
+  const assetsOn = () => isLive() && network === 'mainnet'
   const names = new Map<string, Profile | null>()
   const assets = new Map<number, AssetMeta | null>()
   const listeners = new Set<() => void>()
   const notify = () => listeners.forEach((listener) => listener())
   let nameQueue = new Set<string>()
   let assetQueue = new Set<number>()
+  let profileQueue = new Set<number>()
+  const profiled = new Set<number>()
   let scheduled = false
 
   const flush = () => {
     scheduled = false
     const addresses = [...nameQueue]
     const ids = [...assetQueue]
+    const profiles = [...profileQueue]
     nameQueue = new Set()
     assetQueue = new Set()
+    profileQueue = new Set()
     for (let i = 0; i < addresses.length; i += NAME_BATCH) {
       const chunk = addresses.slice(i, i + NAME_BATCH)
       host
@@ -103,6 +108,7 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
         .finally(notify)
     }
     if (ids.length > 0) {
+      for (const id of ids) if (!assets.has(id)) assets.set(id, {})
       host
         .pluginTool('get_asset_prices', { assetIds: ids.slice(0, 50) })
         .then((output) => {
@@ -113,7 +119,8 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
         })
         .catch(() => undefined)
         .finally(notify)
-      const profiles = ids.filter((id) => id !== ALGO_ID)
+    }
+    if (profiles.length > 0) {
       let cursor = 0
       const worker = async () => {
         while (cursor < profiles.length) {
@@ -138,7 +145,6 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
         }
       }
       for (let i = 0; i < PROFILE_CONCURRENCY; i++) void worker()
-      for (const id of ids) if (!assets.has(id)) assets.set(id, {})
     }
   }
   const schedule = () => {
@@ -149,7 +155,7 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
 
   return {
     profile(address) {
-      if (!namesOn) return undefined
+      if (!namesOn()) return undefined
       if (names.has(address)) return names.get(address)
       if (!nameQueue.has(address)) {
         nameQueue.add(address)
@@ -157,8 +163,13 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
       }
       return undefined
     },
-    asset(assetId) {
-      if (!assetsOn) return undefined
+    asset(assetId, withProfile = false) {
+      if (!assetsOn()) return undefined
+      if (withProfile && assetId !== ALGO_ID && !profiled.has(assetId)) {
+        profiled.add(assetId)
+        profileQueue.add(assetId)
+        schedule()
+      }
       if (assets.has(assetId)) return assets.get(assetId)
       if (!assetQueue.has(assetId)) {
         assetQueue.add(assetId)
@@ -176,7 +187,10 @@ export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enric
 const EnrichmentContext = createContext<Enrichment>(NONE)
 
 export function EnrichmentProvider({ host, live, children }: { host: RemoteExplorerHost; live: boolean; children: ReactNode }) {
-  const value = useMemo(() => createEnrichment(host, live), [host, live])
+  const liveRef = useRef(live)
+  liveRef.current = live
+  // One cache per host (network); flipping between live and sample keeps what was learned.
+  const value = useMemo(() => createEnrichment(host, () => liveRef.current), [host])
   return <EnrichmentContext.Provider value={value}>{children}</EnrichmentContext.Provider>
 }
 
@@ -199,8 +213,33 @@ export function useName(address: string | undefined): string | null | undefined 
   return profile === undefined ? undefined : profile === null ? null : profile.name
 }
 
-export function useAssetMeta(assetId: number | string | undefined): AssetMeta | null | undefined {
-  return useEnrichmentValue((enrichment) => (assetId === undefined ? undefined : enrichment.asset(Number(assetId))))
+export function useAssetMeta(assetId: number | string | undefined, withProfile = false): AssetMeta | null | undefined {
+  return useEnrichmentValue((enrichment) =>
+    assetId === undefined ? undefined : enrichment.asset(Number(assetId), withProfile),
+  )
+}
+
+/** True once the element has been scrolled into view; profiles are fetched only for rows a person can see. */
+export function useOnScreen<T extends Element>(): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T | null>(null)
+  const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    const element = ref.current
+    if (!element || seen) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setSeen(true)
+      return
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setSeen(true)
+        observer.disconnect()
+      }
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [seen])
+  return [ref, seen]
 }
 
 /** ALGO's USD price (Vestige asset 0), or undefined while unknown or off. */

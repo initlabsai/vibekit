@@ -14,7 +14,7 @@ export function AssetCard({
   model: AssetDetailViewModel | undefined
   onTransactions?: () => void
 }) {
-  const meta = useAssetMeta(model?.assetId)
+  const meta = useAssetMeta(model?.assetId, true)
   if (!model) return <Unavailable title="ASSET" />
   const title = model.name ?? model.unitName ?? `Asset #${model.assetId}`
   const address = (label: string, value: string | undefined) =>

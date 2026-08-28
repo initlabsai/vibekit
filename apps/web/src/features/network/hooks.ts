@@ -14,7 +14,7 @@ export function defaultNetwork(): LiveNetworkId {
 
 export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHost>
 
-const ROUND_POLL_MS = 4000
+const ROUND_POLL_MS = 5000
 
 export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; network?: LiveNetworkId } = {}) {
   const [network, setNetwork] = useState<LiveNetworkId>(args.network ?? defaultNetwork)
@@ -45,7 +45,9 @@ export function useNetwork(args: { signDraft?: RemoteExplorerHost['signDraft']; 
     if (live !== true) return
     let cancelled = false
     const tick = () =>
-      remoteHost.statusRound().then(
+      document.visibilityState === 'hidden'
+        ? Promise.resolve()
+        : remoteHost.statusRound().then(
         ({ lastRound }) => {
           if (!cancelled) setLatestRound(lastRound)
         },
