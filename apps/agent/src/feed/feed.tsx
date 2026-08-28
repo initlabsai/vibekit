@@ -232,6 +232,9 @@ export function Composer({
           ))}
         </ul>
       ) : null}
+      <div className="status-line" role="status" aria-live="polite">
+        {status}
+      </div>
       <form className="composer" onSubmit={submit}>
         <span>›</span>
         <input
@@ -247,11 +250,8 @@ export function Composer({
           aria-expanded={matches.length > 0}
           autoComplete="off" autoCorrect="off" spellCheck={false} data-1p-ignore data-lpignore="true" data-form-type="other"
         />
-        <Button type="submit" label="send" />
+        <button type="submit" className="button send-button" aria-label="send">↑</button>
       </form>
-      <div className="status-line" role="status" aria-live="polite">
-        {status}
-      </div>
     </footer>
   )
 }
