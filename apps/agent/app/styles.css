@@ -405,3 +405,22 @@ a.button-active { text-decoration: underline; }
 .intro-examples { color: var(--faint); font-family: var(--font-mono); font-size: .78rem; line-height: 1.7; margin: .5rem 0 0; }
 .intro-link { background: none; border: 0; color: var(--brass); cursor: pointer; font: inherit; padding: 0; text-decoration: underline dotted; text-underline-offset: .25em; transition: color .12s; }
 .intro-link:hover { color: var(--brass-bright); }
+
+/* Network health: the TPS line over sampled blocks, then a strip of metrics. */
+.hero-aside { color: var(--faint); font-family: var(--font-mono); font-size: .78rem; letter-spacing: .04em; }
+.tps { margin: 1rem 0 0; }
+.tps-caption { color: var(--faint); display: flex; font-family: var(--font-mono); font-size: .68rem; justify-content: space-between; letter-spacing: .06em; margin: 0 0 .35rem; min-height: 1rem; text-transform: uppercase; }
+.tps-caption b { color: var(--text); font-weight: 500; }
+.tps-svg { cursor: crosshair; display: block; height: 80px; width: 100%; }
+.tps-fill { fill: color-mix(in srgb, var(--signal) 18%, transparent); }
+.tps-line { fill: none; stroke: var(--signal); stroke-linejoin: round; stroke-width: 1.5px; }
+.tps-cursor { stroke: var(--signal); stroke-dasharray: 2 3; stroke-width: 1px; }
+.tps-dot { fill: var(--brass-bright); }
+.metrics { border-top: 1px solid var(--border-soft); display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); margin-top: 1rem; }
+.metric { border-bottom: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: .25rem; padding: .7rem 0; }
+.metric + .metric { border-left: 1px solid var(--border-soft); padding-left: 1rem; }
+.metric-label { color: var(--faint); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; }
+.metric-value { color: var(--text); font-family: var(--font-mono); font-size: .95rem; }
+.net-foot { color: var(--muted); display: flex; font-family: var(--font-mono); font-size: .72rem; gap: 1rem; justify-content: space-between; margin: .8rem 0 0; }
+.net-foot b { color: var(--text); font-weight: 500; }
+.net-version { color: var(--faint); }

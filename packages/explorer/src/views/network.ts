@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { uint64JsonSchema } from '../format.js'
+
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
@@ -13,6 +15,16 @@ export const networkStatusDataSchema = z.object({
   avgTps: z.number().finite().nonnegative(),
   avgBlockTime: z.number().finite().nonnegative(),
   participation: z.number().finite().nonnegative(),
+  // Present when the tool sampled recent blocks; the card draws them when it can.
+  peakTps: z.number().finite().nonnegative().optional(),
+  avgTxnPerBlock: z.number().finite().nonnegative().optional(),
+  timeSinceLastRound: z.number().finite().nonnegative().optional(),
+  totalSupplyMicroAlgos: uint64JsonSchema.optional(),
+  onlineStakeMicroAlgos: uint64JsonSchema.optional(),
+  consensusVersion: z.string().optional(),
+  blockDetails: z
+    .array(z.object({ round: z.number().int(), txnCount: z.number().int().nonnegative(), blockTime: z.number().finite(), tps: z.number().finite() }))
+    .optional(),
 })
 
 /** Authoritative network snapshot required by the trusted network status view. */
