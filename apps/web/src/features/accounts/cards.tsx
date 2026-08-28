@@ -15,10 +15,13 @@ import { shorten } from '../../theme'
 
 type Holding = AccountPortfolioViewModel['assets'][number]
 
+/** The portfolio card shows this many holdings; `assets ▸` pages through all of them. */
+const MAX_HOLDINGS = 20
+
 /** Base units × decimals × USD price, when Pera or Vestige price the asset. */
 function HoldingUsd({ asset }: { asset: Holding }) {
   const meta = useAssetMeta(asset.assetId)
-  if (meta?.priceUsd === undefined) return <span className="faint">—</span>
+  if (meta?.priceUsd === undefined || asset.amount === '0' || Number(asset.amount) === 0) return <span className="faint">—</span>
   const units = Number(asset.amount) / 10 ** (asset.decimals ?? 0)
   return <>{formatUsd(units * meta.priceUsd)}</>
 }
@@ -37,6 +40,14 @@ export function AccountCard({
   const algoPrice = useAlgoPrice()
   if (!model) return <Unavailable title="ACCOUNT" />
   const algoUsd = algoPrice === undefined ? undefined : (Number(model.balanceMicroAlgos) / 1e6) * algoPrice
+  // Holdings with a balance first, then the rest by id; the card shows the head of that list.
+  const ordered = [...model.assets].sort((a, b) => {
+    const aHeld = Number(a.amount) > 0 ? 0 : 1
+    const bHeld = Number(b.amount) > 0 ? 0 : 1
+    return aHeld - bHeld || Number(a.assetId) - Number(b.assetId)
+  })
+  const shown = ordered.slice(0, MAX_HOLDINGS)
+  const hidden = model.totalAssets - shown.length
   const columns: Column<Holding>[] = [
     {
       key: 'name',
@@ -86,14 +97,17 @@ export function AccountCard({
       ) : (
         <Table
           columns={columns}
-          rows={model.assets}
+          rows={shown}
           keyOf={(asset) => String(asset.assetId)}
           searchText={(asset) => `${asset.name ?? ''} ${asset.unitName ?? ''} ${asset.assetId}`}
           onOpen={onOpenAsset ? (asset) => onOpenAsset(Number(asset.assetId)) : undefined}
         />
       )}
-      {model.totalAssets > model.assets.length ? (
-        <FooterNote text={`${model.totalAssets - model.assets.length} more${onAssets ? ' — assets ▸ lists them all' : ''}`} />
+      {hidden > 0 ? (
+        <div className="actions">
+          <span className="footnote" style={{ margin: 0 }}>{`${hidden} more holding${hidden === 1 ? '' : 's'}`}</span>
+          {onAssets ? <Button label="assets ▸ all of them, paged" onPress={onAssets} /> : null}
+        </div>
       ) : null}
     </Frame>
   )
