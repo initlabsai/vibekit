@@ -113,6 +113,7 @@ export function ResultCard({
   onOpen,
   onMore,
   loadingMore,
+  tailing = false,
 }: {
   store: ResultStore
   view: ViewSpec
@@ -120,6 +121,8 @@ export function ResultCard({
   /** Fetches the next page into this card. */
   onMore?: () => void
   loadingMore?: boolean
+  /** A block list that follows the chain. */
+  tailing?: boolean
 }) {
   const filter = onOpen ? transactionsFilterFor(store, view) : undefined
   const onTransactions = onOpen && filter ? () => onOpen({ kind: 'transactions', filter }) : undefined
@@ -196,6 +199,7 @@ export function ResultCard({
         <BlockListCard
           blocks={derived.model.blocks}
           nextToken={derived.model.nextToken}
+          tailing={tailing}
           onMore={more}
           loadingMore={loadingMore}
           onOpen={onOpen ? (round) => onOpen({ kind: 'block', round }) : undefined}

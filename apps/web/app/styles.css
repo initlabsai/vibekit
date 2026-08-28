@@ -99,6 +99,8 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .chip-danger { color: var(--red); }
 .pill { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .12em; padding: .2rem .5rem; text-transform: uppercase; }
 .pill-ok { background: var(--signal); color: var(--ink); }
+.card:has(.tt-row) .pill-ok:only-child { animation: pill-breathe 1.8s ease-in-out infinite; }
+@keyframes pill-breathe { 50% { opacity: .55; } }
 .pill-warn { background: var(--brass); color: var(--ink); }
 .pill-bad { background: var(--brass-bright); color: var(--ink); }
 .pill-danger { background: var(--red); color: var(--text); }
@@ -193,7 +195,7 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .tt-head .right, .tt-row .right { text-align: right; }
 .tt-sort { color: var(--faint); font: inherit; letter-spacing: inherit; text-align: left; text-transform: inherit; }
 .tt-sort:hover, .tt-sort.on { color: var(--brass-bright); }
-.tt-row { background: rgba(17, 19, 24, .92); border-left: 2px solid transparent; color: var(--muted); font-variant-numeric: tabular-nums; padding-left: calc(.6rem - 2px); }
+.tt-row { animation: card-in .25s ease-out both; background: rgba(17, 19, 24, .92); border-left: 2px solid transparent; color: var(--muted); font-variant-numeric: tabular-nums; padding-left: calc(.6rem - 2px); }
 .tt-row:nth-child(even) { background: rgba(24, 28, 36, .6); }
 .tt-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tt-row > span:has(.party) { white-space: normal; }
@@ -244,7 +246,7 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 
 /* Motion off: no breath, no flash. */
 @media (prefers-reduced-motion: reduce) {
-  .live-dot.on, .modal, .card { animation: none; }
+  .live-dot.on, .modal, .card, .pill-ok { animation: none; }
   .shell::after { display: none; }
   .round.hot { color: var(--signal); }
 }

@@ -12,6 +12,7 @@ import {
   formatMicroAlgos,
   loadNextPage,
   lookupAmbiguousEntity,
+  structuredResultSchema,
   type LiveNetworkId,
   type ResultStore,
   type StructuredResult,
@@ -19,7 +20,7 @@ import {
   type TrustedViewId,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import type { WalletAccount } from './commands'
 import type { Feed } from './feed/hooks'
@@ -36,6 +37,9 @@ export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec
     source: { source: 'result', id: record.resultId },
   } as ViewSpec
 }
+
+const TAIL_LENGTH = 15
+const TAIL_CATCHUP = 5
 
 function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
@@ -340,16 +344,76 @@ export function useLookups({
     [appendNote, host, networkRef, presentRecord, withBusy],
   )
 
-  /** The latest round as a block card; the blocks tab in the composer. */
-  const openLatestBlock = useCallback(
+  /** The live tail: which block-list card follows the round, and the newest round it holds. */
+  const tailRef = useRef<{ sectionId: number; itemId: number; view: ViewSpec; round: number } | null>(null)
+
+  /** The recent rounds as one list card that then follows the chain; the blocks tab. */
+  const openRecentBlocks = useCallback(
     (sectionId: number) =>
-      withBusy(sectionId, 'reading the latest round…', "Couldn't read the latest block", async () => {
+      withBusy(sectionId, 'reading recent blocks…', "Couldn't read recent blocks", async () => {
         const { lastRound } = await host().statusRound()
-        const record = await host().lookupBlock(lastRound)
-        presentRecord(sectionId, record, 'block.detail')
+        const page = await host().callTool('search_block_headers', {
+          limit: TAIL_LENGTH,
+          minRound: Math.max(0, lastRound - TAIL_LENGTH + 1),
+        })
+        if (page.state !== 'success') throw new Error('block headers unavailable')
+        const data = page.data as { blocks: Array<{ round: number }> }
+        const newest = [...data.blocks].sort((a, b) => b.round - a.round)
+        const record = structuredResultSchema.parse({ ...page, data: { ...data, blocks: newest } })
+        commitStore(addResult(storeRef.current, record))
+        const view = viewFor(record, 'block.list')
+        const itemId = appendBlock(sectionId, { kind: 'view', view })
+        tailRef.current = { sectionId, itemId, view, round: newest[0]?.round ?? 0 }
+        appendNote(sectionId, `Following the chain — new rounds land at the top.`)
       }),
-    [host, presentRecord, withBusy],
+    [appendBlock, appendNote, commitStore, host, storeRef, withBusy],
   )
+
+  /** Called on each round tick: fetches rounds the tail has not seen and prepends them to its card. */
+  const tailBlocks = useCallback(
+    async (latestRound: number) => {
+      const tail = tailRef.current
+      if (!tail || latestRound <= tail.round || busyRef.current) return
+      // A long gap (tab hidden) is caught up from the newest side; older rounds stay reachable by id.
+      const from = Math.max(tail.round + 1, latestRound - TAIL_CATCHUP + 1)
+      const rounds = Array.from({ length: latestRound - from + 1 }, (_, i) => latestRound - i)
+      tail.round = latestRound
+      try {
+        const rows = await Promise.all(
+          rounds.map(async (round) => {
+            const record = await host().lookupBlock(round)
+            if (record.state !== 'success') throw new Error(`round ${round} unavailable`)
+            const { round: r, timestamp, transactionCount, proposer } = record.data as {
+              round: number
+              timestamp: number
+              transactionCount: number
+              proposer?: string
+            }
+            return { round: r, timestamp, transactionCount, ...(proposer ? { proposer } : {}) }
+          }),
+        )
+        const current = storeRef.current.find((record) => record.resultId === tail.view.source.id)
+        if (!current || current.state !== 'success') return
+        const data = current.data as { blocks: Array<{ round: number }> }
+        const merged = structuredResultSchema.parse({
+          ...current,
+          resultId: `result-tail-${crypto.randomUUID()}`,
+          toolCallId: `tool-call-tail-${crypto.randomUUID()}`,
+          data: { ...data, blocks: [...rows, ...data.blocks].slice(0, TAIL_LENGTH * 2) },
+        })
+        commitStore(addResult(storeRef.current, merged))
+        const view = viewFor(merged, 'block.list')
+        tail.view = view
+        replaceBlockView(tail.sectionId, tail.itemId, view)
+      } catch {
+        // The next tick tries again from wherever the chain is.
+      }
+    },
+    [busyRef, commitStore, host, replaceBlockView, storeRef],
+  )
+
+  /** True while a block-list card is following the chain. */
+  const isTailing = useCallback((itemId: number) => tailRef.current?.itemId === itemId, [])
 
   /** Fetches the next page of a list card into the same card. */
   const loadMore = useCallback(
@@ -391,6 +455,8 @@ export function useLookups({
     openBlock,
     openTransactions,
     openAmbiguous,
-    openLatestBlock,
+    openRecentBlocks,
+    tailBlocks,
+    isTailing,
   }
 }

@@ -123,7 +123,7 @@ function ExplorerApp() {
       if (outcome.status === 'nav') {
         if (outcome.screen === 'wallet') return setScreen('wallet')
         const sectionId = createSection(raw.trim())
-        if (outcome.screen === 'blocks') return void lookups.openLatestBlock(sectionId)
+        if (outcome.screen === 'blocks') return void lookups.openRecentBlocks(sectionId)
         if (!activeAddress) return appendNote(sectionId, 'Connect a wallet to see its assets, apps, and transactions.')
         if (outcome.screen === 'assets') return void lookups.openHoldings(sectionId, activeAddress)
         if (outcome.screen === 'txns') return void lookups.openTransactions(sectionId, { address: activeAddress })
@@ -174,6 +174,7 @@ function ExplorerApp() {
               onOpen={openTarget}
               onMore={() => lookups.loadMore(sectionId, itemId, block.view)}
               loadingMore={lookups.loadingMore === itemId}
+              tailing={lookups.isTailing(itemId) && live === true}
             />
           )
         case 'write': {
@@ -210,6 +211,10 @@ function ExplorerApp() {
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
     payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
+  // The blocks tail follows the round chip.
+  useEffect(() => {
+    if (latestRound !== undefined && live === true) void lookups.tailBlocks(latestRound)
+  }, [latestRound, live, lookups])
   const announceCopy = useCallback((text: string) => setStatus(`copied ${shorten(text, 28)}`), [])
   // `/` jumps to the composer from anywhere; Esc returns to the feed.
   useEffect(() => {

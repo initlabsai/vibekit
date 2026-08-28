@@ -1,6 +1,7 @@
 'use client'
 
 import { formatBlockTxnType, formatExplorerTime, type BlockDetailViewModel } from '@initlabs/vibekit-explorer'
+import { useEffect, useState } from 'react'
 
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Chip, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'
@@ -52,21 +53,35 @@ export function BlockCard({
 
 type BlockRow = { round: number; timestamp: number; transactionCount: number; proposer?: string }
 
+/** Seconds or minutes since the block, refreshed each second while the card is mounted. */
+function Age({ timestamp }: { timestamp: number }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const seconds = Math.max(0, Math.round(now / 1000 - timestamp))
+  return <span className="muted">{seconds < 90 ? `${seconds}s` : seconds < 5400 ? `${Math.round(seconds / 60)}m` : `${Math.round(seconds / 3600)}h`}</span>
+}
+
 export function BlockListCard({
   blocks,
   nextToken,
+  tailing = false,
   onMore,
   loadingMore,
   onOpen,
 }: {
   blocks: ReadonlyArray<BlockRow>
   nextToken?: string
+  tailing?: boolean
   onMore?: () => void
   loadingMore?: boolean
   onOpen?: (round: number) => void
 }) {
   const columns: Column<BlockRow>[] = [
     { key: 'round', label: 'round', width: 'minmax(6rem, .7fr)', sortValue: (b) => b.round, cell: (b) => <span className="tt-kind">{b.round}</span> },
+    { key: 'age', label: 'age', width: 'minmax(4rem, .5fr)', cell: (b) => <Age timestamp={b.timestamp} /> },
     { key: 'time', label: 'time', sortValue: (b) => b.timestamp, cell: (b) => formatExplorerTime(b.timestamp) },
     { key: 'txns', label: 'txns', align: 'right', width: 'minmax(4rem, .5fr)', sortValue: (b) => b.transactionCount, cell: (b) => String(b.transactionCount) },
     {
@@ -78,7 +93,12 @@ export function BlockListCard({
   ]
   return (
     <Frame>
-      <Header kicker="BLOCKS" pill={String(blocks.length)} tone="idle" />
+      <Header
+        kicker="BLOCKS"
+        chip={tailing ? 'following the chain' : undefined}
+        pill={tailing ? 'LIVE' : String(blocks.length)}
+        tone={tailing ? 'ok' : 'idle'}
+      />
       {blocks.length === 0 ? (
         <FooterNote text="No blocks." />
       ) : (
