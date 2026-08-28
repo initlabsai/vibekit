@@ -463,7 +463,7 @@ a.button-active { text-decoration: underline; }
 .menu li .menu-danger { color: var(--red); }
 .menu li .menu-danger:hover { color: var(--red); }
 .menu summary::-webkit-details-marker { display: none; }
-.menu ul { background: var(--ground); border: 1px solid var(--border); list-style: none; margin: .3rem 0 0; min-width: 16rem; padding: .25rem 0; position: absolute; right: 0; z-index: 50; }
+.menu ul { background: var(--ground); border: 1px solid var(--border); list-style: none; margin: .3rem 0 0; min-width: 16rem; padding: .25rem 0; position: absolute; right: 0; z-index: 80; }
 .menu li button, .menu li a { background: none; border: 0; color: var(--text); cursor: pointer; display: block; font: inherit; padding: .35rem .8rem; text-align: left; text-decoration: none; width: 100%; }
 .menu li button:hover, .menu li a:hover { background: var(--card); color: var(--brass-bright); }
 .menu li button.on { color: var(--brass); }
@@ -483,7 +483,7 @@ a.button-active { text-decoration: underline; }
   .top-state .live-dot, .top-state .live-label { display: none; }
   .pulse { display: none; }
   .net, .top-state .button, .menu summary { padding: .2rem .45rem; white-space: nowrap; }
-  .top { box-sizing: border-box; overflow: hidden; }
+  .top { box-sizing: border-box; }
   .top-state { font-size: .68rem; }
   .tabs { gap: 1.1rem; min-height: 2.2rem; overflow-x: auto; padding-left: 0; scrollbar-width: none; }
   .tabs .button { flex: none; }
