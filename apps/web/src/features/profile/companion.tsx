@@ -86,7 +86,7 @@ export function CompanionFace({ mood }: { mood: Mood }) {
   }, [mood])
   return (
     <span className={`companion companion-${mood}`} aria-hidden="true">
-      <svg className="companion-svg" viewBox="0 0 32 32" width="30" height="30">
+      <svg className="companion-svg" viewBox="0 0 32 32" width="24" height="24">
         {/* the ghosts: the same face split into teal and brass, offset, sliced by the glitch */}
         <g className="companion-ghost companion-ghost-a">
           <circle cx="16" cy="16" r="13" />
