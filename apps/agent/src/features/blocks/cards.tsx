@@ -4,7 +4,7 @@ import { formatBlockTxnType, formatExplorerTime, type BlockDetailViewModel } fro
 import { useEffect, useState } from 'react'
 
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'
-import { Button, Chip, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'
+import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'
 import { shorten } from '../../theme'
 
 export function BlockCard({
@@ -31,14 +31,7 @@ export function BlockCard({
       <Facts>
         <Fact label="time" value={formatExplorerTime(model.timestamp)} />
         <Fact label="txns">
-          {model.transactionTypes.length === 0
-            ? String(model.transactionCount)
-            : model.transactionTypes.map((entry) => (
-                <Chip
-                  key={entry.type}
-                  label={entry.count === 1 ? formatBlockTxnType(entry.type) : `${formatBlockTxnType(entry.type)} ${entry.count}`}
-                />
-              ))}
+          <TxnTags row={model} />
           {model.transactionTypes.length === 0 ? null : <span className="muted"> · {model.transactionCount} total</span>}
         </Fact>
         <Fact label="proposer" value={model.proposer ?? '—'} copy={model.proposer} />
