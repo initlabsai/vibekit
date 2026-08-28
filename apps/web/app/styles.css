@@ -276,7 +276,7 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .screen-filters { display: flex; gap: .2rem; margin-left: auto; }
 .picker { display: flex; flex-direction: column; gap: .5rem; }
 .picker-current { align-items: center; display: flex; flex-wrap: wrap; font-family: var(--font-mono); font-size: .82rem; gap: .6rem; margin: 0; }
-.picker-form { align-items: center; background: var(--card); border-left: 2px solid var(--border); display: grid; gap: .6rem; grid-template-columns: 1fr auto; max-width: 40rem; padding: .2rem .5rem .2rem .8rem; }
+.picker-form { align-items: center; background: var(--card); border-left: 2px solid var(--border); display: grid; gap: .6rem; grid-template-columns: 1fr auto; padding: .2rem .5rem .2rem .8rem; }
 .picker-form input { background: transparent; border: 0; color: var(--text); font-family: var(--font-mono); font-size: .82rem; min-width: 0; outline: 0; padding: .45rem 0; }
 .picker-form input::placeholder { color: var(--faint); }
 a.button { text-decoration: none; }
