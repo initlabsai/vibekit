@@ -144,6 +144,25 @@ configured agent provider (zs-proxy for zerosignal — probe its `/v1/models`).
 Good demo IDs: asset `31566704` (USDC), app `1002541853` (Tinyman v2),
 txns from `packages/explorer/test/recorded/mainnet-graph-corpus.json`.
 
+## qt314 pieces (no TUI footage)
+
+Her promos are rendered, not recorded: one HTML page per frame, drawn from a
+timeline in Python, screenshotted by headless chromium, joined by ffmpeg. Same
+CSS vocabulary as the site (ground, grid, brass rule, scanlines, JetBrains
+Mono), so it cuts against real footage without a seam.
+
+- `references/qt314-boot.py` — the 20s "boot sequence" (Aug 2026): the
+  transmission types in, the wordmark resolves out of `░▒▓`, her face
+  assembles from kaomoji static, first words, one question, end card.
+  `python3 qt314-boot.py <framesdir>` then encode at 24fps with `retro` from 0.
+- `references/qt314-loop.py` — the 9s tweet loop, 1200x675 at 12fps; GIF via
+  palettegen/paletteuse, MP4 for X.
+
+Lessons: wide faces (`(>'-')>`, `\(^▽^)/`) need a smaller size or they run
+into the copy; the kaomoji are in the mono font, so measure with a frame, not
+by eye; put the wordmark in the header row, never beside prose; check the
+right edge of every typed line at its longest frame.
+
 ## Music
 
 The four site tracks live in `apps/website/public/music/` and are already
