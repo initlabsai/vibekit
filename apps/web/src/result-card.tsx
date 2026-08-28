@@ -5,8 +5,20 @@ import {
   createAccountListViewModel,
   createAccountPortfolioViewModel,
   createAccountSummaryViewModel,
+  createApplicationBoxViewModel,
+  createApplicationBoxesViewModel,
   createApplicationDetailViewModel,
+  createApplicationExplanationViewModel,
+  createApplicationListViewModel,
+  createApplicationLocalsViewModel,
+  createApplicationLogsViewModel,
+  createApplicationMethodsViewModel,
+  createApplicationProgramViewModel,
+  createApplicationStateViewModel,
   createAssetDetailViewModel,
+  createAssetHoldersViewModel,
+  createAssetHoldingsViewModel,
+  createAssetListViewModel,
   createBlockDetailViewModel,
   createBlockListViewModel,
   createNetworkStatusViewModel,
@@ -20,6 +32,19 @@ import {
 } from '@initlabs/vibekit-explorer'
 
 import { AccountCard, AccountListCard, AccountSummaryCard } from './features/accounts/cards'
+import {
+  ApplicationBoxCard,
+  ApplicationBoxesCard,
+  ApplicationCard,
+  ApplicationExplanationCard,
+  ApplicationListCard,
+  ApplicationLocalsCard,
+  ApplicationLogsCard,
+  ApplicationMethodsCard,
+  ApplicationProgramCard,
+  ApplicationStateCard,
+} from './features/apps/cards'
+import { AssetCard, AssetHoldersCard, AssetHoldingsCard, AssetListCard } from './features/assets/cards'
 import { BlockCard, BlockListCard } from './features/blocks/cards'
 import { NetworkCard } from './features/network/cards'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
@@ -59,7 +84,7 @@ export function transactionsFilterFor(store: ResultStore, view: ViewSpec): Trans
   }
 }
 
-/** A record whose view has no card of its own: its top-level scalars as facts, then the first list. */
+/** A degraded record — the view could not derive — shown as its top-level scalars, then the first list. */
 export function RawCard({ store, view }: { store: ResultStore; view: ViewSpec }) {
   const record = findResultRecord(store, view.source)
   if (!record) return <Unavailable title={view.view.toUpperCase()} />
@@ -102,7 +127,8 @@ export function ResultCard({
   switch (view.view) {
     case 'transaction.detail': {
       const derived = createTransactionDetailViewModel(store, view)
-      return <TransactionCard model={derived.ok ? derived.model : undefined} onOpen={onOpen} />
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <TransactionCard model={derived.model} onOpen={onOpen} />
     }
     case 'transaction.list':
     case 'transaction.group': {
@@ -124,9 +150,10 @@ export function ResultCard({
     }
     case 'account.portfolio': {
       const derived = createAccountPortfolioViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
       return (
         <AccountCard
-          model={derived.ok ? derived.model : undefined}
+          model={derived.model}
           onTransactions={onTransactions}
           onAssets={onOpen && filter?.address ? () => onOpen({ kind: 'holdings', address: filter.address! }) : undefined}
           onOpenAsset={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
@@ -135,11 +162,11 @@ export function ResultCard({
     }
     case 'account.summary': {
       const derived = createAccountSummaryViewModel(store, view)
-      return derived.ok ? <AccountSummaryCard model={derived.model} /> : <Unavailable title="ACCOUNT" />
+      return derived.ok ? <AccountSummaryCard model={derived.model} /> : <RawCard store={store} view={view} />
     }
     case 'account.list': {
       const derived = createAccountListViewModel(store, view)
-      if (!derived.ok) return <Unavailable title="ACCOUNTS" />
+      if (!derived.ok) return <RawCard store={store} view={view} />
       return (
         <AccountListCard
           accounts={derived.model.accounts}
@@ -153,9 +180,10 @@ export function ResultCard({
     }
     case 'block.detail': {
       const derived = createBlockDetailViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
       return (
         <BlockCard
-          model={derived.ok ? derived.model : undefined}
+          model={derived.model}
           onTransactions={onTransactions}
           onOpenBlock={onOpen ? (round) => onOpen({ kind: 'block', round }) : undefined}
         />
@@ -163,7 +191,7 @@ export function ResultCard({
     }
     case 'block.list': {
       const derived = createBlockListViewModel(store, view)
-      if (!derived.ok) return <Unavailable title="BLOCKS" />
+      if (!derived.ok) return <RawCard store={store} view={view} />
       return (
         <BlockListCard
           blocks={derived.model.blocks}
@@ -176,22 +204,126 @@ export function ResultCard({
     }
     case 'network.status': {
       const derived = createNetworkStatusViewModel(store, view)
-      return <NetworkCard model={derived.ok ? derived.model : undefined} />
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <NetworkCard model={derived.model} />
     }
-    case 'asset.detail':
-    case 'asset.list':
-    case 'asset.holdings':
-    case 'asset.holders':
-    case 'application.detail':
-    case 'application.list':
-    case 'application.state':
-    case 'application.locals':
-    case 'application.logs':
-    case 'application.box':
-    case 'application.boxes':
-    case 'application.program':
-    case 'application.methods':
-    case 'application.explanation':
-      return <RawCard store={store} view={view} />
+    case 'asset.detail': {
+      const derived = createAssetDetailViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <AssetCard model={derived.model} onTransactions={onTransactions} />
+    }
+    case 'asset.list': {
+      const derived = createAssetListViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <AssetListCard
+          assets={derived.model.assets}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'asset.holdings': {
+      const derived = createAssetHoldingsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <AssetHoldingsCard
+          assets={derived.model.assets}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'asset.holders': {
+      const derived = createAssetHoldersViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <AssetHoldersCard
+          balances={derived.model.balances}
+          decimals={derived.model.decimals}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (address) => onOpen({ kind: 'account', address }) : undefined}
+        />
+      )
+    }
+    case 'application.detail': {
+      const derived = createApplicationDetailViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <ApplicationCard model={derived.model} onTransactions={onTransactions} />
+    }
+    case 'application.list': {
+      const derived = createApplicationListViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <ApplicationListCard
+          applications={derived.model.applications}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined}
+        />
+      )
+    }
+    case 'application.state': {
+      const derived = createApplicationStateViewModel(store, view)
+      return derived.ok ? <ApplicationStateCard {...derived.model} /> : <RawCard store={store} view={view} />
+    }
+    case 'application.locals': {
+      const derived = createApplicationLocalsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <ApplicationLocalsCard
+          address={derived.model.address}
+          apps={derived.model.apps}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined}
+        />
+      )
+    }
+    case 'application.logs': {
+      const derived = createApplicationLogsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <ApplicationLogsCard
+          applicationId={derived.model.applicationId}
+          logData={derived.model.logData}
+          nextToken={derived.model.nextToken}
+          onMore={more}
+          loadingMore={loadingMore}
+          onOpen={onOpen ? (txid) => onOpen({ kind: 'transaction', txid }) : undefined}
+        />
+      )
+    }
+    case 'application.box': {
+      const derived = createApplicationBoxViewModel(store, view)
+      return derived.ok ? <ApplicationBoxCard {...derived.model} /> : <RawCard store={store} view={view} />
+    }
+    case 'application.boxes': {
+      const derived = createApplicationBoxesViewModel(store, view)
+      return derived.ok ? <ApplicationBoxesCard {...derived.model} /> : <RawCard store={store} view={view} />
+    }
+    case 'application.program': {
+      const derived = createApplicationProgramViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <ApplicationProgramCard model={derived.model} />
+    }
+    case 'application.methods': {
+      const derived = createApplicationMethodsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <ApplicationMethodsCard model={derived.model} />
+    }
+    case 'application.explanation': {
+      const derived = createApplicationExplanationViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <ApplicationExplanationCard model={derived.model} />
+    }
   }
 }

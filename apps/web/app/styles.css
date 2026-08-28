@@ -128,6 +128,7 @@ code { font-family: var(--font-mono); color: var(--brass); }
 .tt-row.touchable { cursor: pointer; }
 .tt-row.touchable:hover { background: var(--card-lit); color: var(--text); }
 .tt-kind { color: var(--signal); }
+.prose { color: var(--text); font-family: var(--font-sans); font-size: .85rem; line-height: 1.6; margin: .8rem 0 0; white-space: pre-wrap; }
 .raw { color: var(--muted); font-family: var(--font-mono); font-size: .7rem; margin: .8rem 0 0; max-height: 20rem; overflow: auto; white-space: pre-wrap; }
 
 /* Write flow stage rail. */
