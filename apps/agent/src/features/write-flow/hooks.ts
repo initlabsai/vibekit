@@ -205,8 +205,14 @@ export function useWriteFlow({
           appendNote(block.sectionId, 'Approved — connect a wallet to sign; nothing was signed.')
         } else {
           const derived = run.flow ? createWriteFlowViewModel(run.store, run.flow) : undefined
-          const round = derived?.ok ? derived.model.confirmation?.confirmedRound : undefined
-          appendNote(block.sectionId, `Payment confirmed on-chain${round === undefined ? '' : ` in round ${round}`}.`)
+          const confirmation = derived?.ok ? derived.model.confirmation : undefined
+          // Her line, bright-faced: the round and the transaction id, which copies.
+          appendNote(
+            block.sectionId,
+            `confirmed${confirmation ? ` in round ${confirmation.confirmedRound}` : ''} — it's on-chain.${confirmation ? ' txn' : ''}`,
+            'agent',
+            { mood: 'bright', ...(confirmation ? { copy: confirmation.transactionId } : {}) },
+          )
         }
         closeFlow()
       })()

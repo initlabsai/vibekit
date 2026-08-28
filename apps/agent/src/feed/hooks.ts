@@ -120,9 +120,9 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
   )
 
   const appendNote = useCallback(
-    (sectionId: number, text: string, tone: 'muted' | 'error' | 'agent' = 'muted', copy?: string) => {
+    (sectionId: number, text: string, tone: 'muted' | 'error' | 'agent' = 'muted', extra?: { copy?: string; mood?: 'squint' | 'bright' }) => {
       const id = appendNoteReturning(sectionId, text, tone)
-      if (copy) updateItem(sectionId, id, (item) => (item.kind === 'note' ? { ...item, copy } : item))
+      if (extra) updateItem(sectionId, id, (item) => (item.kind === 'note' ? { ...item, ...extra } : item))
     },
     [appendNoteReturning, updateItem],
   )

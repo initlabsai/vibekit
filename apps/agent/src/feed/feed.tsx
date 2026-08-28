@@ -146,7 +146,10 @@ export function FeedPane({
                       </span>
                     </p>
                   ) : (
-                    <p className="note-agent-text">{plainAgentText(item.text)}</p>
+                    <p className="note-agent-text">
+                      {plainAgentText(item.text)}
+                      {item.copy ? <> <Copyable value={item.copy} width={20} open={false} /></> : null}
+                    </p>
                   )}
                 </div>
               </div>

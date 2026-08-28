@@ -122,7 +122,7 @@ export function useComposer({
         case 'buy':
           appendNote(sectionId, 'Opening your wallet to pay…')
           return void buyCredits(outcome.turns).then(
-            ({ line, txid }) => appendNote(sectionId, line, 'muted', txid),
+            ({ line, txid }) => appendNote(sectionId, line, 'muted', { copy: txid }),
             (error: unknown) => appendNote(sectionId, `Couldn't buy — ${error instanceof Error ? error.message : String(error)}`, 'error'),
           )
         case 'help':

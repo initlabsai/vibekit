@@ -210,8 +210,12 @@ a.button-active { text-decoration: underline; }
 
 /* Approval modal: centered, owns input; breathes amber, or red when money is on the line. */
 .modal-backdrop { align-items: center; backdrop-filter: blur(3px); background: rgba(10, 11, 14, .78); display: flex; inset: 0; justify-content: center; padding: 1rem; position: fixed; z-index: 100; }
-.modal { animation: breathe-frame 2.4s ease-in-out infinite; background: var(--surface); box-shadow: 0 0 0 2px var(--brass); max-height: calc(100vh - 2rem); max-width: 44rem; overflow-y: auto; padding: .9rem 1.1rem 1rem; width: 100%; }
-.modal-danger { --frame: var(--red); animation-name: breathe-frame-red; box-shadow: 0 0 0 2px var(--red); }
+/* The modal is a card that happens to float: solid ground, one brass line; red on mainnet or a failing simulation. */
+.modal { background: var(--ground); border: 1px solid var(--brass); max-height: calc(100vh - 2rem); max-width: 40rem; overflow-y: auto; padding: 1.1rem 1.4rem 1.2rem; width: 100%; }
+.modal-danger { border-color: var(--red); }
+.modal .hero { margin-top: 1rem; }
+.modal .facts { margin-top: 1rem; }
+.modal .footnote { margin-top: 1rem; }
 .modal-title { color: var(--brass-bright); font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; margin: 0 0 .6rem; }
 .modal-actions { align-items: center; }
 .modal-keys { margin: 0 0 0 auto; }
@@ -276,7 +280,7 @@ a.button-active { text-decoration: underline; }
 
 /* Motion off: no breath, no flash. */
 @media (prefers-reduced-motion: reduce) {
-  .live-dot.on, .modal, .card, .pill-ok, .companion.glitch::before, .companion.glitch::after, .dots i { animation: none; }
+  .live-dot.on, .card, .pill-ok, .companion.glitch::before, .companion.glitch::after, .dots i { animation: none; }
   .shell::after { display: none; }
   .round.hot { color: var(--signal); }
 }
