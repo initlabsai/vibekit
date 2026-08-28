@@ -163,7 +163,6 @@ a.button-active { text-decoration: underline; }
 .ident .copy { align-self: center; border: 1px solid transparent; border-radius: 2px; color: var(--muted); cursor: copy; display: inline-grid; font-size: 1.35rem; height: 1.5rem; line-height: 1; margin: -.2em 0; opacity: .55; padding: 0; place-items: center; width: 1.5rem; transition: opacity .12s, color .12s, border-color .12s; }
 .ident .copy:hover, .ident .copy:focus-visible, .ident .copy.copied { opacity: 1; }
 .ident .copy:hover { border-color: var(--border-soft); color: var(--brass-bright); }
-.hero-value .copy { font-size: 1.6rem; height: 1.9rem; width: 1.9rem; }
 .ident .copy.copied { color: var(--signal); }
 .ident-inert .plain { color: inherit; }
 .ident-link { color: var(--signal); font-family: var(--font-mono); overflow-wrap: anywhere; text-decoration: none; }
@@ -310,7 +309,6 @@ a.button-active { text-decoration: underline; }
 .pill-danger { background: var(--red); color: var(--text); }
 .pill-idle { background: var(--surface); color: var(--muted); }
 .hero { align-items: baseline; display: flex; flex-wrap: wrap; gap: .7rem; margin: 1.1rem 0 0; }
-.hero-value .plain { color: var(--brass-bright); }
 .hero-value { color: var(--brass-bright); font-family: var(--font-mono); font-size: clamp(1.7rem, 2.6vw, 2.4rem); font-weight: 500; letter-spacing: -.05em; line-height: 1; overflow-wrap: anywhere; }
 .hero-unit { color: var(--muted); font-family: var(--font-mono); font-size: .85rem; letter-spacing: .1em; }
 .welcome .hero-value { font-size: clamp(2.2rem, 3.4vw, 3rem); letter-spacing: -.06em; }

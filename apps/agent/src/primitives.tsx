@@ -71,10 +71,11 @@ export function Header({
 }
 
 /** Large primary figure — amount, round, asset name — with a muted unit. */
+/** The card's headline value. It is the entity itself: no link, no glyph; `copy` only fills the tooltip. */
 export function Hero({ value, unit, copy }: { value: string; unit?: string; copy?: string }) {
   return (
     <p className="hero">
-      {copy ? <Copyable value={copy} display={value} className="hero-value" open={false} /> : <span className="hero-value">{value}</span>}
+      <span className="hero-value" title={copy}>{value}</span>
       {unit ? <span className="hero-unit">{unit}</span> : null}
     </p>
   )

@@ -55,7 +55,7 @@ export function NfdCard({
         ) : null}
         <div className="nfd-identity-body">
           <p className="hero nfd-name">
-            <Copyable value={data.name} className="hero-value" />
+            <span className="hero-value">{data.name}</span>
             {byline ? <span className="hero-unit">{byline}</span> : null}
           </p>
           {data.address ? (
