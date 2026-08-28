@@ -96,7 +96,7 @@ export function ProfileRail({ open, onToggle }: { open: boolean; onToggle: () =>
           <span className="rail-mini-dot" aria-hidden="true" />
         )}
         <span className={`rail-mood${squint ? ' squint' : busy ? ' curious' : ''}`} aria-hidden="true">
-          {squint ? '¬¬' : busy ? '◉◠' : '◠◠'}
+          {squint ? '(¬_¬)' : busy ? '(・・?)' : '(^‿^)'}
         </span>
       </aside>
     )

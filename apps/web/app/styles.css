@@ -238,7 +238,7 @@ a.button-active { text-decoration: underline; }
 .rail-mini-avatar { border-radius: 50%; display: inline-flex; }
 .rail-mini-avatar .identity-avatar { font-size: .62rem; }
 .rail-mini-dot { background: var(--border-soft); border-radius: 50%; display: block; height: 10px; width: 10px; }
-.rail-mood { color: var(--brass); font-family: var(--font-mono); font-size: .8rem; letter-spacing: .05em; margin-top: auto; }
+.rail-mood { color: var(--brass); font-family: var(--font-mono); font-size: .62rem; margin-top: auto; writing-mode: vertical-rl; }
 .rail-mood.curious { color: var(--signal); }
 .rail-mood.squint { color: var(--red); }
 .rail-body { display: flex; flex-direction: column; gap: 1rem; }
@@ -253,113 +253,38 @@ a.button-active { text-decoration: underline; }
 .rail-row .asset-mark { min-width: 0; }
 .rail-amount { flex: none; font-variant-numeric: tabular-nums; }
 .rail .identity-avatar { height: 36px; width: 36px; }
-/* The companion: dark body, neon features, a split ghost that glitches like the website's title. */
-/* The face is as tall as one line of her text, so it sits on the first line. */
-.companion { --neon: var(--brass); align-items: center; display: inline-flex; flex: none; height: 1.52rem; position: relative; }
-.companion-svg { display: block; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--neon) 55%, transparent)); overflow: visible; }
-.companion-body circle { fill: #14161c; stroke: var(--neon); stroke-width: 1.4; }
-.companion-features { fill: var(--neon); stroke: var(--neon); }
-.companion-ghost { opacity: 0; }
-.companion-ghost circle { fill: #14161c; stroke: none; }
-.companion-ghost-a { fill: var(--signal); stroke: var(--signal); transform: translate(-2px, 0); }
-.companion-ghost-b { fill: var(--brass-bright); stroke: var(--brass-bright); transform: translate(2px, 0); }
-.companion-ghost-a { animation: companion-glitch-a 7s steps(1) infinite; }
-.companion-ghost-b { animation: companion-glitch-b 7s steps(1) infinite; }
-.companion-curious { --neon: var(--signal); }
-.companion-bright { --neon: var(--brass-bright); }
-.companion-bright .companion-svg { filter: drop-shadow(0 0 7px rgba(255, 180, 84, .75)); }
+/* The companion: a kaomoji in the id font, glowing, with the website's glitch behind it. */
+.companion { --neon: var(--brass); color: var(--neon); display: inline-block; flex: none; font-family: var(--font-mono); font-size: .86rem; letter-spacing: -.02em; line-height: 1.52rem; min-width: 4.6rem; position: relative; text-align: center; text-shadow: 0 0 .55rem color-mix(in srgb, var(--neon) 55%, transparent); transition: color .2s; white-space: nowrap; }
+.companion-thinking, .companion-working { --neon: var(--signal); }
+.companion-bright { --neon: var(--brass-bright); text-shadow: 0 0 .8rem rgba(255, 180, 84, .75); }
 .companion-squint { --neon: var(--red); }
-.companion-squint .companion-ghost-a, .companion-squint .companion-ghost-b { animation-duration: 2.2s; }
-@keyframes companion-glitch-a {
+.companion.glitch::before, .companion.glitch::after { content: attr(data-text); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.companion.glitch::before { animation: glitch-a 7s steps(1) infinite; color: var(--signal); }
+.companion.glitch::after { animation: glitch-b 7s steps(1) infinite; color: var(--brass-bright); }
+.companion-working.glitch::before, .companion-working.glitch::after { animation-duration: 1.6s; }
+.companion-squint.glitch::before, .companion-squint.glitch::after { animation-duration: 2.4s; }
+@keyframes glitch-a {
   0%, 100% { opacity: 0; }
-  2% { clip-path: inset(20% 0 55% 0); opacity: .9; transform: translate(-3px, 0); }
-  4% { clip-path: inset(60% 0 10% 0); transform: translate(2px, .5px); }
+  2% { clip-path: inset(20% 0 55% 0); opacity: 1; transform: translate(-.2rem, 0); }
+  4% { clip-path: inset(60% 0 10% 0); transform: translate(.15rem, .05rem); }
   6% { opacity: 0; }
-  41% { clip-path: inset(5% 0 80% 0); opacity: .9; transform: translate(-2px, 0); }
-  43% { opacity: 0; }
-  72% { clip-path: inset(45% 0 30% 0); opacity: .9; transform: translate(3px, .5px); }
-  74% { opacity: 0; }
+  40% { clip-path: inset(5% 0 80% 0); opacity: 1; transform: translate(.15rem, 0); }
+  42% { opacity: 0; }
+  71% { clip-path: inset(45% 0 30% 0); opacity: 1; transform: translate(-.25rem, .05rem); }
+  73% { clip-path: inset(70% 0 5% 0); transform: translate(.1rem, 0); }
+  75% { opacity: 0; }
 }
-@keyframes companion-glitch-b {
+@keyframes glitch-b {
   0%, 100% { opacity: 0; }
-  2% { clip-path: inset(50% 0 20% 0); opacity: .9; transform: translate(3px, 0); }
-  4% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, -.5px); }
+  2% { clip-path: inset(50% 0 20% 0); opacity: 1; transform: translate(.2rem, 0); }
+  4% { clip-path: inset(10% 0 70% 0); transform: translate(-.15rem, -.05rem); }
   6% { opacity: 0; }
-  41% { clip-path: inset(65% 0 5% 0); opacity: .9; transform: translate(2px, 0); }
-  43% { opacity: 0; }
-  72% { clip-path: inset(15% 0 60% 0); opacity: .9; transform: translate(-3px, -.5px); }
-  74% { opacity: 0; }
+  40% { clip-path: inset(65% 0 5% 0); opacity: 1; transform: translate(-.15rem, 0); }
+  42% { opacity: 0; }
+  71% { clip-path: inset(15% 0 60% 0); opacity: 1; transform: translate(.25rem, -.05rem); }
+  73% { clip-path: inset(35% 0 40% 0); transform: translate(-.1rem, 0); }
+  75% { opacity: 0; }
 }
-@media (max-width: 1399px) {
-  .rail-open { --rail-w: 3rem; }
-  .rail-open .body { grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--rail-w); }
-  .rail:not(.rail-mini) { background: var(--ground); border-left: 1px solid var(--border); bottom: 0; box-shadow: -1rem 0 3rem rgba(0, 0, 0, .5); position: fixed; right: 0; top: 5.2rem; width: min(22rem, 90vw); z-index: 40; }
-}
-@media (max-width: 720px) {
-  .shell { --nav-w: 0rem; }
-  .rail-open .body, .rail-folded .body { grid-template-columns: 1fr 3rem; }
-  .rail:not(.rail-mini) { top: 5.2rem; }
-}
-
-/* Motion off: no breath, no flash. */
-@media (prefers-reduced-motion: reduce) {
-  .live-dot.on, .modal, .card, .pill-ok, .companion-ghost, .dots i { animation: none; }
-  .shell::after { display: none; }
-  .round.hot { color: var(--signal); }
-}
-@keyframes breathe { 50% { opacity: .35; } }
-
-@media (max-width: 720px) {
-  .body { grid-template-columns: 1fr; }
-  .nav { display: none; }
-  .top, .composer-wrap { padding-left: .9rem; padding-right: .9rem; }
-  .composer-wrap > * { margin-left: 0; }
-  .feed { padding: 1rem .9rem 1.5rem; }
-  .card { padding: 1rem 1rem 1.1rem; }
-  .top-row { gap: .75rem; }
-  .fact { grid-template-columns: 1fr; gap: .1rem; }
-}
-
-/* The website's CRT: scanlines so faint they read as paper grain. */
-.shell::after { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, .07) 3px); content: ''; inset: 0; pointer-events: none; position: fixed; z-index: 90; }
-.card:hover { background: linear-gradient(180deg, rgba(28, 33, 42, .95), rgba(19, 22, 28, .98)); }
-.card-danger { border-top-color: var(--red); box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, .35), inset 0 0 0 1px var(--red-dim); }
-.card-header { align-items: center; display: flex; gap: .75rem; justify-content: space-between; }
-.card-header-end { align-items: center; display: flex; gap: .6rem; }
-.kicker { color: var(--brass); font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.chip { color: var(--muted); font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; margin-left: .6rem; }
-.chip-ok { color: var(--signal); }
-.chip-danger { color: var(--red); }
-.pill { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .12em; padding: .2rem .5rem; text-transform: uppercase; }
-.pill-ok { background: var(--signal); color: var(--ink); }
-.card:has(.tt-row) .pill-ok:only-child { animation: pill-breathe 1.8s ease-in-out infinite; }
-@keyframes pill-breathe { 50% { opacity: .55; } }
-.pill-warn { background: var(--brass); color: var(--ink); }
-.pill-bad { background: var(--brass-bright); color: var(--ink); }
-.pill-danger { background: var(--red); color: var(--text); }
-.pill-idle { background: var(--surface); color: var(--muted); }
-.hero { align-items: baseline; display: flex; flex-wrap: wrap; gap: .7rem; margin: 1.1rem 0 0; }
-.hero-value { color: var(--brass-bright); font-family: var(--font-mono); font-size: clamp(1.7rem, 2.6vw, 2.4rem); font-weight: 500; letter-spacing: -.05em; line-height: 1; overflow-wrap: anywhere; }
-.hero-unit { color: var(--muted); font-family: var(--font-mono); font-size: .85rem; letter-spacing: .1em; }
-.welcome .hero-value { font-size: clamp(2.2rem, 3.4vw, 3rem); letter-spacing: -.06em; }
-.welcome .hero-value em { color: var(--brass-bright); font-style: normal; }
-.welcome .hero-value span { color: var(--text); }
-.welcome-sub { color: var(--signal); font-family: var(--font-mono); font-size: .8rem; margin: .6rem 0 0; }
-.welcome-lede { color: var(--muted); font-size: .95rem; line-height: 1.7; margin: 1rem 0 0; max-width: 36rem; }
-.examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
-.examples .button { border: 1px solid var(--border-soft); color: var(--brass); padding: .4rem .7rem; }
-.examples .button:hover { background: var(--card-lit); border-color: var(--brass); color: var(--brass-bright); }
-.facts { margin: 1rem 0 0; }
-.fact { border-top: 1px solid var(--border-soft); display: grid; gap: 1.2rem; grid-template-columns: 8rem minmax(0, 1fr); padding: .55rem 0; }
-.fact:last-child { border-bottom: 1px solid var(--border-soft); }
-.fact dt { color: var(--faint); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .12em; padding-top: .2rem; text-transform: uppercase; }
-.fact dd { font-family: var(--font-mono); font-size: .84rem; margin: 0; overflow-wrap: anywhere; }
-.fact-danger dd { color: var(--red); }
-.fact-ok dd { color: var(--signal); }
-.fact .line { display: block; }
-.footnote { color: var(--faint); font-family: var(--font-mono); font-size: .72rem; margin: .8rem 0 0; }
-.note { color: var(--faint); font-family: var(--font-mono); font-size: .76rem; margin: 0; padding-left: .8rem; }
-.note-error { color: var(--red); }
 /* Her reply: the face on the first line, a soft brass band behind the words. */
 .note-agent { align-items: flex-start; background: linear-gradient(90deg, rgba(196, 160, 106, .07), rgba(196, 160, 106, 0) 70%); border-left: 2px solid rgba(196, 160, 106, .35); display: flex; gap: .85rem; padding: .55rem .9rem .55rem .8rem; }
 .note-agent.pending { background: linear-gradient(90deg, rgba(111, 211, 211, .05), transparent 60%); border-left-color: rgba(111, 211, 211, .3); }
