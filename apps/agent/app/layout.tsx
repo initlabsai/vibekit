@@ -5,7 +5,7 @@ import { ShellMount } from '../src/shell-mount'
 import './styles.css'
 
 export const metadata: Metadata = {
-  title: 'VibeKit Explorer',
+  title: 'VibeKit Agent',
   description: 'Algorand Explorer: live reads, a compose-only write flow, your wallet signs',
 }
 

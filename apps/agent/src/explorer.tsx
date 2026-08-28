@@ -265,7 +265,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       <header className="top">
         <div className="top-row">
           <span className="brand">
-            VIBEKIT <b>EXPLORER</b>
+            VIBEKIT <b>AGENT</b>
           </span>
           <span className="top-state">
             <span>
