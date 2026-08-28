@@ -25,6 +25,7 @@ import { Composer, NavPane } from './feed/feed'
 import { useFeed, type Feed, type SectionBlock } from './feed/hooks'
 import { defaultNetwork, NETWORKS, useNetwork, type ExplorerHost } from './features/network/hooks'
 import { NfdCard } from './features/plugins/nfd-card'
+import { ProfileRail } from './features/profile/rail'
 import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
 import { ApprovalModal } from './features/write-flow/modal'
@@ -270,6 +271,25 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
 
+  // The rail folds below 1400px; its state is the viewer's, remembered per browser.
+  const [railOpen, setRailOpen] = useState(() => {
+    try {
+      return window.localStorage.getItem('vibekit.rail') !== 'closed'
+    } catch {
+      return true
+    }
+  })
+  const toggleRail = useCallback(() => {
+    setRailOpen((open) => {
+      try {
+        window.localStorage.setItem('vibekit.rail', open ? 'closed' : 'open')
+      } catch {
+        // storage may be unavailable; the toggle still works for the session
+      }
+      return !open
+    })
+  }, [])
+
   const context = useMemo<ExplorerContextValue>(
     () => ({
       store,
@@ -296,7 +316,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     <EnrichmentProvider host={remoteHost} live={live === true}>
     <CopyContext.Provider value={announceCopy}>
     <ExplorerContext.Provider value={context}>
-    <main className="shell">
+    <main className={`shell${railOpen ? ' rail-open' : ''}`}>
       <header className="top">
         <div className="top-row">
           <span className="brand">
@@ -316,6 +336,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
             </span>
             <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
               {network}
+            </button>
+            <button type="button" className={`button rail-toggle${railOpen ? ' button-active' : ''}`} onClick={toggleRail} title="account rail">
+              {railOpen ? '▸ rail' : '◂ rail'}
             </button>
             <Link href="/wallet" className={`button${pathname === '/wallet' ? ' button-active' : ''}`}>
               {activeAddress ? `▸ ${wallet.activeName ?? shorten(activeAddress, 12)}` : '▸ no wallet'}
@@ -340,6 +363,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
           }}
         />
         {children}
+        {railOpen ? <ProfileRail /> : null}
       </div>
       <Composer onSubmit={submit} status={statusLine} placeholder="paste an id, `asset 31566704`, or `pay 0.5 to <address>`" />
       {approval ? (
