@@ -31,6 +31,9 @@ export const applicationDetailDataSchema = z.object({
   globalState: z.array(applicationGlobalEntrySchema).optional(),
   localStateSchema: stateSchema.optional(),
   globalStateSchema: stateSchema.optional(),
+  createdAtRound: z.number().int().nonnegative().optional(),
+  deleted: z.boolean().optional(),
+  deletedAtRound: z.number().int().nonnegative().optional(),
 })
 
 /** Authoritative application data required by the trusted application detail view. */

@@ -38,13 +38,25 @@ export function ApplicationCard({
     <Frame>
       <Header
         kicker="APPLICATION"
-        pill={model.network.toUpperCase()}
-        tone="idle"
+        chip={model.deleted ? 'deleted' : undefined}
+        pill={model.deleted ? 'DELETED' : model.network.toUpperCase()}
+        tone={model.deleted ? 'danger' : 'idle'}
         action={onTransactions ? <Button label="transactions ▸" onPress={onTransactions} /> : undefined}
       />
       <Hero value={`#${model.applicationId}`} copy={String(model.applicationId)} />
       <Facts>
         <Fact label="creator" value={model.creator ?? '—'} copy={model.creator} />
+        {model.createdAtRound === undefined ? null : (
+          <Fact label="created" value={`round ${model.createdAtRound}`} copy={String(model.createdAtRound)} open={{ kind: 'block', round: model.createdAtRound }} />
+        )}
+        {model.deleted ? (
+          <Fact
+            label="deleted"
+            tone="danger"
+            value={model.deletedAtRound === undefined ? 'yes' : `round ${model.deletedAtRound}`}
+            {...(model.deletedAtRound === undefined ? {} : { copy: String(model.deletedAtRound), open: { kind: 'block' as const, round: model.deletedAtRound } })}
+          />
+        ) : null}
         {model.account ? <Fact label="account" value={model.account} copy={model.account} /> : null}
         <Fact label="keys" value={String(model.globalStateCount)} />
         {global ? <Fact label="global schema" value={`${global.numByteSlice} bytes · ${global.numUint} uint`} /> : null}

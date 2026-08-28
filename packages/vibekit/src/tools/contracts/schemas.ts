@@ -13,6 +13,9 @@ export const formattedApplicationSchema = z.object({
     .optional()
     .describe('Known protocol contract; absent means unknown — say so, never guess'),
   creator: z.string().optional(),
+  createdAtRound: z.number().optional(),
+  deleted: z.boolean().optional().describe('The app no longer exists on chain; deletedAtRound says when'),
+  deletedAtRound: z.number().optional(),
   globalState: z
     .array(
       z.object({

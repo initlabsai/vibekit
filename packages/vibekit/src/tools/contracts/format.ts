@@ -23,6 +23,10 @@ export interface FormattedApplication {
   }>
   localStateSchema?: { numByteSlice: number; numUint: number }
   globalStateSchema?: { numByteSlice: number; numUint: number }
+  createdAtRound?: number
+  /** Present only once the app is gone; the round it was deleted in. */
+  deleted?: boolean
+  deletedAtRound?: number
 }
 
 export function formatApplication(app: IndexerApplication): FormattedApplication {
@@ -31,6 +35,8 @@ export function formatApplication(app: IndexerApplication): FormattedApplication
     applicationId: Number(app.id),
     applicationLabel: knownAppLabel(Number(app.id)),
     creator: params.creator ? String(params.creator) : undefined,
+    createdAtRound: app.createdAtRound === undefined ? undefined : Number(app.createdAtRound),
+    ...(app.deleted ? { deleted: true, deletedAtRound: app.deletedAtRound === undefined ? undefined : Number(app.deletedAtRound) } : {}),
     globalState: params.globalState?.map((kv: algosdk.indexerModels.TealKeyValue) => ({
       key: bytesToBase64(kv.key),
       value: {

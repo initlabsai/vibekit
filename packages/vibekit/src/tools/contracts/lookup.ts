@@ -5,7 +5,8 @@ export async function lookupApplication(
   ctx: ToolContext,
   args: { applicationId: number },
 ): Promise<FormattedApplication> {
-  const response = await ctx.indexer.lookupApplications(args.applicationId).do()
+  // Deleted apps are hidden by default; ask for them so the answer is "deleted at round N", not "not found".
+  const response = await ctx.indexer.lookupApplications(args.applicationId).includeAll(true).do()
   if (!response.application) {
     throw new ToolError('APP_NOT_FOUND', `Application not found: ${args.applicationId}`)
   }
