@@ -124,9 +124,10 @@ function impliedTarget(value: string): OpenTarget | undefined {
 }
 
 /**
- * An identifier. Clicking the text opens it — an account or transaction by
- * shape, or the `open` target given — and a trailing glyph copies it.
- * `open={false}` keeps the text inert (the entity the card already is).
+ * An identifier does one thing. With a target — an account or transaction by
+ * shape, or the `open` given — the text opens it and nothing copies; copy it
+ * from its own card. Without one (`open={false}`, or a bare number) the text
+ * is plain and a trailing glyph copies it.
  */
 export function Copyable({
   value,
@@ -186,7 +187,7 @@ export function Copyable({
       ) : (
         <span className="plain">{label}</span>
       )}
-      <button
+      {target && openTarget ? null : <button
         type="button"
         className={`copy${copied ? ' copied' : ''}`}
         aria-label={`Copy ${value}`}
@@ -199,7 +200,7 @@ export function Copyable({
         }}
       >
         {copied ? '✓' : '⧉'}
-      </button>
+      </button>}
     </span>
   )
 }
