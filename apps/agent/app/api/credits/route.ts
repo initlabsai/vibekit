@@ -16,6 +16,19 @@ import { balance, bearerOf, bindToken, credit, freeLeft, FREE_TURNS, ipOf, payer
 
 export const runtime = 'nodejs'
 
+type HeaderSource = { getHeader(name: string): string | undefined }
+
+/**
+ * The `x-credit-token` on the request that paid. The Next adapter arrives
+ * wrapped as `{ request: { adapter } }` at settle time; accept it bare too.
+ */
+export function creditTokenOf(transportContext: unknown): string | undefined {
+  const context = transportContext as { adapter?: HeaderSource; request?: { adapter?: HeaderSource } } | undefined
+  const adapter = context?.request?.adapter ?? context?.adapter
+  const token = adapter?.getHeader('x-credit-token')
+  return token && TOKEN_PATTERN.test(token) ? token : undefined
+}
+
 type Handler = (request: NextRequest) => Promise<NextResponse>
 let paid: Handler | undefined
 
@@ -28,9 +41,8 @@ function paidRoute(): Handler | undefined {
   server.onAfterSettle(async ({ result, transportContext }) => {
     if (!result.success || !result.payer) return
     await credit(result.payer)
-    const adapter = (transportContext as { adapter?: { getHeader(name: string): string | undefined } } | undefined)?.adapter
-    const token = adapter?.getHeader('x-credit-token')
-    if (token && TOKEN_PATTERN.test(token)) await bindToken(token, result.payer)
+    const token = creditTokenOf(transportContext)
+    if (token) await bindToken(token, result.payer)
   })
   paid = withX402(
     async () => NextResponse.json({ ok: true, turns: TURNS_PER_PACK }),

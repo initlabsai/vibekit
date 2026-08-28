@@ -43,6 +43,14 @@ describe('credit ledger', () => {
 })
 
 describe('credits route', () => {
+  test('reads the buyer token from the settle context, wrapped or bare', () => {
+    const adapter = { getHeader: (name: string) => (name === 'x-credit-token' ? TOKEN : undefined) }
+    expect(credits.creditTokenOf({ request: { adapter }, responseBody: '', responseHeaders: {} })).toBe(TOKEN)
+    expect(credits.creditTokenOf({ adapter })).toBe(TOKEN)
+    expect(credits.creditTokenOf({ request: { adapter: { getHeader: () => 'nope' } } })).toBeUndefined()
+    expect(credits.creditTokenOf(undefined)).toBeUndefined()
+  })
+
   test('is off without a house address', async () => {
     delete process.env.X402_PAY_TO
     const body = await (await credits.GET(new NextRequest('http://local/api/credits'))).json()
