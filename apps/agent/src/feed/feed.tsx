@@ -120,6 +120,7 @@ export function FeedPane({
             title={section.collapsed ? 'expand' : 'collapse'}
           >
             <span className="prompt-text">{section.prompt}</span>
+            <span className={`prompt-net net-${section.network}`}>{section.network}</span>
             {section.collapsed ? (
               <span className="prompt-count">
                 {section.items.filter((item) => item.kind === 'block').length || section.items.length} hidden

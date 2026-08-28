@@ -367,7 +367,9 @@ a.button-active { text-decoration: underline; }
 .prompt-line:hover { background: var(--card-lit); }
 .prompt-line::before { color: var(--brass-bright); content: '›'; display: inline-block; font-size: 1.1rem; transition: transform .15s; }
 .section:not(.collapsed) > .prompt-line::before { transform: rotate(90deg); }
-.prompt-count { color: var(--faint); font-size: .72rem; margin-left: auto; }
+.prompt-count { color: var(--faint); font-size: .72rem; }
+.prompt-net { flex: none; font-size: .64rem; letter-spacing: .12em; margin-left: auto; text-transform: uppercase; }
+.prompt-count + .prompt-net, .prompt-net + .prompt-count { margin-left: .8rem; }
 
 /* Round pulse: the website's round-signal bars, live. */
 .pulse { align-items: flex-end; display: inline-flex; gap: 2px; height: .8rem; margin-right: .5rem; vertical-align: -.1rem; }

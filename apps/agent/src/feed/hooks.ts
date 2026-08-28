@@ -1,4 +1,5 @@
 /** The transcript's state: sections, their items (notes and cards), and the selection. */
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
 import { useCallback, useRef, useState } from 'react'
 
 import type { ViewSpec, WriteFlowState } from '@initlabs/vibekit-explorer'
@@ -20,12 +21,14 @@ export type SectionItem =
 export interface Section {
   id: number
   prompt: string
+  /** The network the request was made on; sections keep it when the chip switches. */
+  network: LiveNetworkId
   items: SectionItem[]
   /** Folded by its bar; the nav still lists it. */
   collapsed?: boolean
 }
 
-export function useFeed() {
+export function useFeed(networkRef: { current: LiveNetworkId }) {
   const [sections, setSections] = useState<Section[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const sectionSeq = useRef(0)
@@ -69,12 +72,12 @@ export function useFeed() {
     (prompt: string): number => {
       sectionSeq.current += 1
       const id = sectionSeq.current
-      commitSections([...sectionsRef.current, { id, prompt, items: [] }])
+      commitSections([...sectionsRef.current, { id, prompt, network: networkRef.current, items: [] }])
       setSelectedId(id)
       scrollToBottom()
       return id
     },
-    [commitSections, scrollToBottom],
+    [commitSections, networkRef, scrollToBottom],
   )
 
   const updateSection = useCallback(

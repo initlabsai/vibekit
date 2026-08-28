@@ -136,7 +136,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     tailing: pathname === '/blocks',
   })
   useEffect(() => setNetwork(network), [network, setNetwork])
-  const feed = useFeed()
+  const feed = useFeed(networkRef)
   const { sections, selectedId, selectSection } = feed
   const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
