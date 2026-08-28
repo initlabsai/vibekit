@@ -1,17 +1,28 @@
-/** The welcome card an empty feed shows. */
-import { Button, Frame, Header, Hero } from './primitives'
+/** The welcome card an empty feed shows: the website's hero, with examples that run when clicked. */
+import { Button, Frame, Header } from './primitives'
 
-export function Welcome({ onOpenSample }: { onOpenSample: () => void }) {
+const EXAMPLES = ['asset 31566704', 'app 1002541853', 'blocks', 'algorand.algo', 'pay 0.5 to <address>']
+
+export function Welcome({ onSubmit }: { onSubmit: (raw: string) => void }) {
   return (
-    <Frame>
-      <Header kicker="EXPLORER" />
-      <Hero value="Explore Algorand" />
-      <p className="muted">
-        Paste a transaction id or an address, or type <code>pay 0.5</code> to walk a payment
-        from draft to approval.
+    <Frame className="welcome">
+      <Header kicker="EXPLORER" chip="direct lane · no AI required" />
+      <p className="hero">
+        <span className="hero-value">
+          <span>Explore </span>
+          <em>Algorand</em>
+          <span>.</span>
+        </span>
       </p>
-      <div className="actions">
-        <Button label="open the sample transaction" onPress={onOpenSample} />
+      <p className="welcome-sub">paste an id · name an asset, app, or block · pay from a connected wallet</p>
+      <p className="welcome-lede">
+        Every card is a tool result you can trust; every write walks draft → simulate → inspect →
+        approve → sign → confirm, and your wallet holds the keys.
+      </p>
+      <div className="examples">
+        {EXAMPLES.map((example) => (
+          <Button key={example} label={example} onPress={() => onSubmit(example)} />
+        ))}
       </div>
     </Frame>
   )

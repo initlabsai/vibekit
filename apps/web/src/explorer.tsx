@@ -10,7 +10,6 @@
 import {
   createFixtureResultStore,
   createWriteFlowViewModel,
-  FIXTURE_TRANSACTION_ID,
   type ResultStore,
 } from '@initlabs/vibekit-explorer'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -265,7 +264,7 @@ function ExplorerApp() {
             sections={sections}
             selectedId={selectedId}
             renderBlock={renderBlock}
-            empty={<Welcome onOpenSample={() => submit(FIXTURE_TRANSACTION_ID)} />}
+            empty={<Welcome onSubmit={(raw) => (raw.includes('<address>') ? setStatus('Type pay 0.5 to <an address or wallet label> — a connected wallet signs it.') : submit(raw))} />}
           />
         )}
       </div>
