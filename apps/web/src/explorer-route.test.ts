@@ -15,8 +15,17 @@ const live = await import('@initlabs/vibekit-explorer/live')
 const created: unknown[] = []
 const broadcasts: StructuredResult[] = []
 const sample = createSampleHost()
+const pluginCalls: Array<[string, unknown]> = []
 mock.module('@initlabs/vibekit-explorer/live', () => ({
   ...live,
+  createEnrichmentHost: (config: unknown) => ({
+    network: typeof config === 'string' ? config : (config as { id: string }).id,
+    toolNames: ['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices'],
+    callTool: async (toolName: string, args: unknown) => {
+      pluginCalls.push([toolName, args])
+      return { results: [] }
+    },
+  }),
   resolveNfdName: async (network: string, name: string) => ({
     name,
     address: FIXTURE_SENDER,
@@ -175,5 +184,13 @@ describe('explorer route', () => {
     })
     const local = await post({ action: 'resolve-nfd', network: 'localnet', name: 'alice.algo' })
     expect(local.status).toBe(400)
+  })
+
+  test('plugin-tool runs only the enrichment plugins\' tools', async () => {
+    const ok = await post({ action: 'plugin-tool', network: 'mainnet', toolName: 'batch_reverse_resolve_nfd', args: { addresses: [FIXTURE_SENDER] } })
+    expect(await ok.json()).toEqual({ output: { results: [] } })
+    expect(pluginCalls).toEqual([['batch_reverse_resolve_nfd', { addresses: [FIXTURE_SENDER] }]])
+    const refused = await post({ action: 'plugin-tool', network: 'mainnet', toolName: 'send_payment', args: {} })
+    expect(refused.status).toBe(400)
   })
 })

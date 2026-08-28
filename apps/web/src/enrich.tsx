@@ -1,0 +1,194 @@
+'use client'
+
+/**
+ * What the plugins add to a card once it is on screen: NFD names for
+ * addresses, Pera verification tiers and logos, Vestige USD prices. Requests
+ * batch per tick and cache per network; a card subscribes to one key and
+ * re-renders when its answer lands. Nothing here blocks a card from showing.
+ */
+import { z } from 'zod'
+import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from 'react'
+
+import type { RemoteExplorerHost } from './remote-host'
+
+export type Tier = 'trusted' | 'verified' | 'unverified' | 'suspicious'
+
+export interface AssetMeta {
+  tier?: Tier
+  logoUrl?: string
+  priceUsd?: number
+  name?: string
+  unitName?: string
+  url?: string
+  project?: { name?: string; url?: string; twitter?: string; discord?: string; telegram?: string; description?: string }
+}
+
+const namesSchema = z.object({
+  results: z.array(z.object({ address: z.string(), name: z.string().nullable() })),
+})
+const profileSchema = z.object({
+  verificationTier: z.string(),
+  logoUrl: z.string().url().optional(),
+  priceUsd: z.string().optional(),
+  name: z.string().optional(),
+  unitName: z.string().optional(),
+  url: z.string().optional(),
+  project: z
+    .object({
+      name: z.string().optional(),
+      url: z.string().optional(),
+      description: z.string().optional(),
+      twitter: z.string().optional(),
+      discord: z.string().optional(),
+      telegram: z.string().optional(),
+    })
+    .optional(),
+})
+const pricesSchema = z.object({
+  prices: z.array(z.object({ assetId: z.number(), priceUsd: z.string(), confidence: z.number() })),
+})
+
+const TIERS: Tier[] = ['trusted', 'verified', 'unverified', 'suspicious']
+const NAME_BATCH = 20
+const PROFILE_CONCURRENCY = 4
+
+/** ALGO's own row: no profile, priced as asset 0. */
+export const ALGO_ID = 0
+
+export interface Enrichment {
+  name(address: string): string | null | undefined
+  asset(assetId: number): AssetMeta | null | undefined
+  subscribe(listener: () => void): () => void
+}
+
+const NONE: Enrichment = { name: () => undefined, asset: () => undefined, subscribe: () => () => undefined }
+
+export function createEnrichment(host: RemoteExplorerHost, live: boolean): Enrichment {
+  const network = host.network as LiveNetworkId
+  const namesOn = live && (network === 'mainnet' || network === 'testnet')
+  const assetsOn = live && network === 'mainnet'
+  const names = new Map<string, string | null>()
+  const assets = new Map<number, AssetMeta | null>()
+  const listeners = new Set<() => void>()
+  const notify = () => listeners.forEach((listener) => listener())
+  let nameQueue = new Set<string>()
+  let assetQueue = new Set<number>()
+  let scheduled = false
+
+  const flush = () => {
+    scheduled = false
+    const addresses = [...nameQueue]
+    const ids = [...assetQueue]
+    nameQueue = new Set()
+    assetQueue = new Set()
+    for (let i = 0; i < addresses.length; i += NAME_BATCH) {
+      const chunk = addresses.slice(i, i + NAME_BATCH)
+      host
+        .pluginTool('batch_reverse_resolve_nfd', { addresses: chunk })
+        .then((output) => {
+          for (const row of namesSchema.parse(output).results) names.set(row.address, row.name)
+        })
+        .catch(() => chunk.forEach((address) => names.set(address, null)))
+        .finally(notify)
+    }
+    if (ids.length > 0) {
+      host
+        .pluginTool('get_asset_prices', { assetIds: ids.slice(0, 50) })
+        .then((output) => {
+          for (const row of pricesSchema.parse(output).prices) {
+            if (row.confidence < 0.5) continue
+            assets.set(row.assetId, { ...(assets.get(row.assetId) ?? {}), priceUsd: Number(row.priceUsd) })
+          }
+        })
+        .catch(() => undefined)
+        .finally(notify)
+      const profiles = ids.filter((id) => id !== ALGO_ID)
+      let cursor = 0
+      const worker = async () => {
+        while (cursor < profiles.length) {
+          const id = profiles[cursor++]!
+          try {
+            const profile = profileSchema.parse(await host.pluginTool('get_asset_profile', { assetId: id }))
+            const tier = TIERS.find((candidate) => candidate === profile.verificationTier)
+            assets.set(id, {
+              ...(assets.get(id) ?? {}),
+              ...(tier ? { tier } : {}),
+              ...(profile.logoUrl ? { logoUrl: profile.logoUrl } : {}),
+              ...(profile.priceUsd && assets.get(id)?.priceUsd === undefined ? { priceUsd: Number(profile.priceUsd) } : {}),
+              ...(profile.name ? { name: profile.name } : {}),
+              ...(profile.unitName ? { unitName: profile.unitName } : {}),
+              ...(profile.url ? { url: profile.url } : {}),
+              ...(profile.project ? { project: profile.project } : {}),
+            })
+          } catch {
+            if (!assets.has(id)) assets.set(id, null)
+          }
+          notify()
+        }
+      }
+      for (let i = 0; i < PROFILE_CONCURRENCY; i++) void worker()
+      for (const id of profiles) if (!assets.has(id)) assets.set(id, {})
+    }
+  }
+  const schedule = () => {
+    if (scheduled) return
+    scheduled = true
+    setTimeout(flush, 0)
+  }
+
+  return {
+    name(address) {
+      if (!namesOn) return undefined
+      if (names.has(address)) return names.get(address)
+      if (!nameQueue.has(address)) {
+        nameQueue.add(address)
+        schedule()
+      }
+      return undefined
+    },
+    asset(assetId) {
+      if (!assetsOn) return undefined
+      if (assets.has(assetId)) return assets.get(assetId)
+      if (!assetQueue.has(assetId)) {
+        assetQueue.add(assetId)
+        schedule()
+      }
+      return undefined
+    },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+  }
+}
+
+const EnrichmentContext = createContext<Enrichment>(NONE)
+
+export function EnrichmentProvider({ host, live, children }: { host: RemoteExplorerHost; live: boolean; children: ReactNode }) {
+  const value = useMemo(() => createEnrichment(host, live), [host, live])
+  return <EnrichmentContext.Provider value={value}>{children}</EnrichmentContext.Provider>
+}
+
+function useEnrichmentValue<T>(read: (enrichment: Enrichment) => T): T {
+  const enrichment = useContext(EnrichmentContext)
+  return useSyncExternalStore(
+    enrichment.subscribe,
+    () => read(enrichment),
+    () => undefined as T,
+  )
+}
+
+/** The NFD name for an address: a string once known, null when it has none, undefined while unknown or off. */
+export function useName(address: string | undefined): string | null | undefined {
+  return useEnrichmentValue((enrichment) => (address ? enrichment.name(address) : undefined))
+}
+
+export function useAssetMeta(assetId: number | string | undefined): AssetMeta | null | undefined {
+  return useEnrichmentValue((enrichment) => (assetId === undefined ? undefined : enrichment.asset(Number(assetId))))
+}
+
+export function formatUsd(value: number): string {
+  if (value >= 1) return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `$${value.toLocaleString(undefined, { maximumSignificantDigits: 3 })}`
+}

@@ -10,9 +10,11 @@ import {
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
 import {
+  createEnrichmentHost,
   createLiveHost,
   resolveNfdName,
   signedGroupRecordFor,
+  type EnrichmentHost,
   type LiveHost,
 } from '@initlabs/vibekit-explorer/live'
 import { z } from 'zod'
@@ -84,6 +86,12 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('await-confirmation'), network: networkSchema, txid: z.string().min(1) }),
   z.object({ action: z.literal('status-round'), network: networkSchema }),
   z.object({ action: z.literal('resolve-nfd'), network: networkSchema, name: z.string().min(1).max(128) }),
+  z.object({
+    action: z.literal('plugin-tool'),
+    network: networkSchema,
+    toolName: z.enum(['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices']),
+    args: z.record(z.string(), z.unknown()),
+  }),
 ])
 
 export type ExplorerRequest = z.infer<typeof explorerRequestSchema>
@@ -99,6 +107,17 @@ function hostFor(network: LiveNetworkId): LiveHost {
   if (!host) {
     host = createLiveHost(networkConfigFromEnv(network))
     hosts.set(network, host)
+  }
+  return host
+}
+
+/** Same rule as `hosts`: signerless, stock plugin list, per isolate. */
+const enrichments = new Map<LiveNetworkId, EnrichmentHost>()
+function enrichmentFor(network: LiveNetworkId): EnrichmentHost {
+  let host = enrichments.get(network)
+  if (!host) {
+    host = createEnrichmentHost(networkConfigFromEnv(network))
+    enrichments.set(network, host)
   }
   return host
 }
@@ -164,6 +183,8 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ network: body.network, live: await host.probe() })
       case 'status-round':
         return Response.json(await host.statusRound())
+      case 'plugin-tool':
+        return Response.json({ output: await enrichmentFor(body.network).callTool(body.toolName, body.args) })
       case 'resolve-nfd': {
         // The nfd plugin's own client, beside the live host; the host itself carries no plugins.
         if (body.network === 'localnet') {

@@ -85,7 +85,10 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .status-line { color: var(--muted); font-family: var(--font-mono); font-size: .7rem; min-height: 1.2rem; padding: .35rem .2rem 0; }
 
 /* Card anatomy: kicker, hero, facts, chips, pills. */
-.card { background: linear-gradient(180deg, rgba(24, 28, 36, .9), rgba(17, 19, 24, .96)); border-top: 2px solid var(--brass); box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, .35); padding: 1.1rem 1.4rem 1.3rem; transition: background .15s; }
+.card { animation: card-in .22s ease-out both; background: linear-gradient(180deg, rgba(24, 28, 36, .9), rgba(17, 19, 24, .96)); border-top: 2px solid var(--brass); box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, .35); padding: 1.1rem 1.4rem 1.3rem; transition: background .15s; }
+@keyframes card-in { from { opacity: 0; transform: translateY(.4rem); } }
+/* The website's CRT: scanlines so faint they read as paper grain. */
+.shell::after { background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0) 0 2px, rgba(0, 0, 0, .07) 3px); content: ''; inset: 0; pointer-events: none; position: fixed; z-index: 90; }
 .card:hover { background: linear-gradient(180deg, rgba(28, 33, 42, .95), rgba(19, 22, 28, .98)); }
 .card-danger { border-top-color: var(--red); box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, .35), inset 0 0 0 1px var(--red-dim); }
 .card-header { align-items: center; display: flex; gap: .75rem; justify-content: space-between; }
@@ -124,6 +127,27 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .note-error { color: var(--red); }
 .prompt-line { align-items: center; background: rgba(17, 19, 24, .85); border-left: 2px solid var(--brass-bright); color: var(--text); display: flex; font-family: var(--font-mono); font-size: .84rem; gap: .6rem; margin: 0; padding: .55rem .8rem; }
 .prompt-line::before { color: var(--brass-bright); content: '›'; font-size: 1.1rem; }
+
+/* Enrichment: NFD names beside addresses, asset marks, Pera tiers. */
+.ident-name { color: var(--brass-bright); }
+.ident-sub { color: var(--muted); font-size: .9em; margin-left: .45em; }
+.asset-mark { align-items: center; display: inline-flex; gap: .45rem; min-width: 0; }
+.asset-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asset-logo { background: var(--surface); border-radius: 50%; flex: none; height: 18px; object-fit: cover; width: 18px; }
+.asset-logo-empty { align-items: center; color: var(--faint); display: inline-flex; font-size: .6rem; font-weight: 700; justify-content: center; }
+.asset-logo-lg { height: 40px; vertical-align: -.2em; width: 40px; }
+.asset-hero { align-items: center; display: inline-flex; gap: .7rem; }
+.tier { border-radius: 50%; display: inline-flex; flex: none; font-family: var(--font-mono); font-size: .6rem; font-weight: 700; height: 1rem; justify-content: center; line-height: 1rem; width: 1rem; }
+.tier-trusted { background: var(--signal); color: var(--ink); }
+.tier-verified { background: var(--signal-dim); color: var(--text); }
+.tier-suspicious { background: var(--red); color: var(--ink); }
+.faint { color: var(--faint); }
+.kind { border-radius: 2px; font-size: .7rem; letter-spacing: .02em; padding: .1rem .4rem; }
+.kind-pay { background: rgba(196, 160, 106, .18); color: var(--brass-bright); }
+.kind-axfer { background: rgba(111, 211, 211, .14); color: var(--signal); }
+.kind-appl { background: rgba(233, 225, 212, .08); color: var(--text); }
+.kind-acfg, .kind-afrz { background: rgba(196, 160, 106, .1); color: var(--brass); }
+.kind-keyreg, .kind-stpf, .kind-hb, .kind-txn { background: rgba(142, 132, 118, .12); color: var(--muted); }
 
 /* Touchables: identifiers copy; buttons are words in the touchable color. */
 .ident { color: var(--signal); font-family: var(--font-mono); font-size: inherit; overflow-wrap: anywhere; text-align: left; text-decoration: underline dotted; text-underline-offset: .18em; }
@@ -198,7 +222,8 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 
 /* Motion off: no breath, no flash. */
 @media (prefers-reduced-motion: reduce) {
-  .live-dot.on, .modal { animation: none; }
+  .live-dot.on, .modal, .card { animation: none; }
+  .shell::after { display: none; }
   .round.hot { color: var(--signal); }
 }
 @keyframes breathe { 50% { opacity: .35; } }

@@ -239,9 +239,9 @@ export function TransactionListCard({
       width: 'minmax(7rem, .9fr)',
       sortValue: ({ parent }) => rowType(parent),
       cell: ({ row, depth }) => (
-        <span className={depth > 0 ? 'muted' : 'tt-kind'}>
+        <span className={depth > 0 ? 'muted' : undefined}>
           {depth > 0 ? `${'  '.repeat(depth - 1)}└ ` : ''}
-          {rowType(row)}
+          <span className={`kind kind-${row.type ?? 'txn'}`}>{rowType(row)}</span>
           {innerType && row.type !== undefined && row.type !== innerType ? '*' : ''}
         </span>
       ),

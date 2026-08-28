@@ -1,9 +1,15 @@
 'use client'
 
 /** The DOM primitives every card and screen is built from: Frame, Header, Hero, Fact, Chip, Button, Copyable. */
-import { useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
+import { useAssetMeta, useName, type Tier } from './enrich'
 import { shorten } from './theme'
+
+/** Where a copy is announced (the status line); no-op without a provider. */
+export const CopyContext = createContext<(text: string) => void>(() => undefined)
+
+const ADDRESS = /^[A-Z2-7]{58}$/
 
 /** Status color for pills and accents: ok is alive (teal), bad is a wrong fact (bright amber), danger is the only red. */
 export type Tone = 'ok' | 'warn' | 'bad' | 'danger' | 'idle'
@@ -114,12 +120,16 @@ export function Copyable({
   className?: string
 }) {
   const [copied, setCopied] = useState(false)
+  const announce = useContext(CopyContext)
+  // An address wears its NFD name once the enrichment answers; the address still copies.
+  const name = useName(ADDRESS.test(value) ? value : undefined)
   useEffect(() => {
     if (!copied) return
     const id = setTimeout(() => setCopied(false), 1200)
     return () => clearTimeout(id)
   }, [copied])
   const shown = display ?? value
+  const text = width ? shorten(shown, width) : shown
   return (
     <button
       type="button"
@@ -127,10 +137,20 @@ export function Copyable({
       title={value}
       onClick={(event) => {
         event.stopPropagation()
-        void navigator.clipboard?.writeText(value).then(() => setCopied(true))
+        void navigator.clipboard?.writeText(value).then(() => {
+          setCopied(true)
+          announce(value)
+        })
       }}
     >
-      {width ? shorten(shown, width) : shown}
+      {name ? (
+        <>
+          <span className="ident-name">{name}</span>
+          <span className="ident-sub">{display && display !== value ? text : shorten(value, 12)}</span>
+        </>
+      ) : (
+        text
+      )}
     </button>
   )
 }
@@ -172,5 +192,50 @@ export function Unavailable({ title, message }: { title: string; message?: strin
       <Header kicker={title} pill="UNAVAILABLE" tone="bad" />
       <p className="muted">{message ?? 'The record could not be derived.'}</p>
     </Frame>
+  )
+}
+
+const TIER_LABEL: Record<Tier, string> = {
+  trusted: 'trusted',
+  verified: 'verified',
+  unverified: 'unverified',
+  suspicious: 'suspicious',
+}
+
+/** Pera's verification tier as a small mark; suspicious is the one red. */
+export function TierBadge({ tier }: { tier: Tier | undefined }) {
+  if (!tier || tier === 'unverified') return null
+  return (
+    <span className={`tier tier-${tier}`} title={`Pera: ${TIER_LABEL[tier]}`}>
+      {tier === 'suspicious' ? '!' : '✓'}
+    </span>
+  )
+}
+
+/** An asset's name with its logo and tier when Pera knows it. */
+export function AssetMark({
+  assetId,
+  name,
+  unitName,
+}: {
+  assetId: number | string
+  name?: string
+  unitName?: string
+}) {
+  const meta = useAssetMeta(assetId)
+  const label = name ?? meta?.name ?? unitName ?? meta?.unitName ?? `asset ${assetId}`
+  return (
+    <span className="asset-mark">
+      {meta?.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="asset-logo" src={meta.logoUrl} alt="" width={18} height={18} loading="lazy" />
+      ) : (
+        <span className="asset-logo asset-logo-empty" aria-hidden="true">
+          {label.slice(0, 1).toUpperCase()}
+        </span>
+      )}
+      <span className="asset-name">{label}</span>
+      <TierBadge tier={meta?.tier} />
+    </span>
   )
 }

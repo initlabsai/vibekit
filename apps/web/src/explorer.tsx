@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { HELP, routeComposerInput } from './commands'
+import { EnrichmentProvider } from './enrich'
 import { Composer, FeedPane, NavPane } from './feed/feed'
 import { useFeed, type SectionBlock } from './feed/hooks'
 import { defaultNetwork, NETWORKS, useNetwork } from './features/network/hooks'
@@ -24,7 +25,7 @@ import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
 import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
-import { Button } from './primitives'
+import { Button, CopyContext } from './primitives'
 import type { NfdProfile } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
@@ -208,6 +209,22 @@ function ExplorerApp() {
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
     payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
+  const announceCopy = useCallback((text: string) => setStatus(`copied ${shorten(text, 28)}`), [])
+  // `/` jumps to the composer from anywhere; Esc returns to the feed.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const typing = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA'
+      if (event.key === '/' && !typing) {
+        event.preventDefault()
+        document.querySelector<HTMLInputElement>('.composer input')?.focus()
+      } else if (event.key === 'Escape' && !approval) {
+        setScreen('chat')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [approval])
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
   const statusLine =
     status ||
@@ -215,6 +232,8 @@ function ExplorerApp() {
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
 
   return (
+    <EnrichmentProvider host={remoteHost} live={live === true}>
+    <CopyContext.Provider value={announceCopy}>
     <main className="shell">
       <header className="top">
         <div className="top-row">
@@ -279,5 +298,7 @@ function ExplorerApp() {
         />
       ) : null}
     </main>
+    </CopyContext.Provider>
+    </EnrichmentProvider>
   )
 }

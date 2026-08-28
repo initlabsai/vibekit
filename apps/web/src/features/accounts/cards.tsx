@@ -7,11 +7,21 @@ import {
   type AccountSummaryViewModel,
 } from '@initlabs/vibekit-explorer'
 
+import { formatUsd, useAssetMeta } from '../../enrich'
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'
+import { AssetMark } from '../../primitives'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'
 import { shorten } from '../../theme'
 
 type Holding = AccountPortfolioViewModel['assets'][number]
+
+/** Base units × decimals × USD price, when Pera or Vestige price the asset. */
+function HoldingUsd({ asset }: { asset: Holding }) {
+  const meta = useAssetMeta(asset.assetId)
+  if (meta?.priceUsd === undefined) return <span className="faint">—</span>
+  const units = Number(asset.amount) / 10 ** (asset.decimals ?? 0)
+  return <>{formatUsd(units * meta.priceUsd)}</>
+}
 
 export function AccountCard({
   model,
@@ -30,7 +40,7 @@ export function AccountCard({
       key: 'name',
       label: 'name',
       sortValue: (asset) => asset.name ?? asset.unitName ?? `asset ${asset.assetId}`,
-      cell: (asset) => asset.name ?? asset.unitName ?? `asset ${asset.assetId}`,
+      cell: (asset) => <AssetMark assetId={asset.assetId} name={asset.name} unitName={asset.unitName} />,
     },
     {
       key: 'amount',
@@ -39,6 +49,7 @@ export function AccountCard({
       sortValue: (asset) => BigInt(asset.amount),
       cell: (asset) => `${formatAssetAmount(asset.amount, asset.decimals, asset.unitName)}${asset.isFrozen ? ' ❄' : ''}`,
     },
+    { key: 'usd', label: 'usd', align: 'right', width: 'minmax(5rem, .6fr)', cell: (asset) => <HoldingUsd asset={asset} /> },
     {
       key: 'id',
       label: 'id',

@@ -413,3 +413,5 @@ export {
   type BlockTailWatch,
 } from './block-tail.js'
 export { nfdRecordSchema, resolveNfdName, type NfdRecord } from './nfd.js'
+
+export { createEnrichmentHost, type EnrichmentHost } from './enrich.js'
