@@ -6,7 +6,12 @@ const USDC: Record<string, string | undefined> = { mainnet: '31566704', testnet:
 
 function examples(network: string): string[] {
   const usdc = USDC[network]
-  return [usdc ? `what is asset ${usdc}?` : '/blocks', 'who is algorand.algo?', '/status', '/pay 0.5 to <address>']
+  return [
+    usdc ? `what is asset ${usdc}?` : '/blocks',
+    'who is algorand.algo?',
+    ...(network === 'mainnet' ? ['/price ALGO 30d', 'quote 10 ALGO to USDC', 'what prediction markets are live?'] : ['/status']),
+    '/pay 0.5 to <address>',
+  ]
 }
 
 export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void; network: string }) {
