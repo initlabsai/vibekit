@@ -44,8 +44,16 @@ vibekit init --yes --agents claude --skills all
 ```
 
 Use `vibekit --help` for the complete headless flags: `--agents <csv>` (required
-with `--yes`), `--skills all|none|<csv>`, `--mcps none|<csv>`, and `--overwrite`. Existing agent files
-remain in place during headless setup unless you explicitly pass `--overwrite`.
+with `--yes`), `--skills all|none|<csv>`, `--mcps none|<csv>`, `--overwrite`, and
+`--global`. Existing agent files remain in place during headless setup unless you
+explicitly pass `--overwrite`.
+
+For MCP servers and skills on every project on this machine (not only the
+current directory):
+
+```bash
+vibekit init --global --yes --agents claude --skills all
+```
 
 ## Check the setup
 

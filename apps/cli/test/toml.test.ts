@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { serializeToml } from '../src/utils/toml.js'
+import { mergeTomlMcpServers, serializeToml } from '../src/utils/toml.js'
 
 describe('serializeToml', () => {
   test('serializes nested MCP server sections', () => {
@@ -32,5 +32,32 @@ describe('serializeToml', () => {
 
   test('rejects unsupported value types', () => {
     expect(() => serializeToml({ bad: undefined })).toThrow()
+  })
+})
+
+describe('mergeTomlMcpServers', () => {
+  test('replaces owned servers and keeps foreign sections', () => {
+    const existing = [
+      'model = "o3"',
+      '',
+      '[mcp_servers.vibekit]',
+      'command = "old"',
+      '',
+      '[mcp_servers.vibekit.env]',
+      'NETWORK = "mainnet"',
+      '',
+      '[mcp_servers.keep]',
+      'url = "https://example.com"',
+      '',
+    ].join('\n')
+
+    const merged = mergeTomlMcpServers(existing, {
+      vibekit: { command: 'new', args: ['mcp'] },
+    })
+    expect(merged).toContain('model = "o3"')
+    expect(merged).toContain('[mcp_servers.keep]')
+    expect(merged).toContain('command = "new"')
+    expect(merged).not.toContain('command = "old"')
+    expect(merged).not.toContain('NETWORK = "mainnet"')
   })
 })
