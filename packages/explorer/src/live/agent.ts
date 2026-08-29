@@ -196,6 +196,12 @@ export interface ExplorerAgentOptions {
   wrapTools?: (tools: AnyTool[]) => AnyTool[]
 }
 
+/** Alpha Arcade's API needs a key (ALPHA_API_KEY, from the platform's Account page); without one, markets come from a slow on-chain scan. */
+function alphaOptions() {
+  const apiKey = process.env.ALPHA_API_KEY
+  return apiKey ? { apiKey } : {}
+}
+
 /** Exa answers keyless; a key (EXA_API_KEY) only raises the rate limit. */
 function webOptions() {
   const apiKey = process.env.EXA_API_KEY
@@ -208,7 +214,7 @@ export function explorerPlugins(disabled?: ReadonlySet<string>, extra: readonly 
     nfdPlugin(),
     vestigePlugin(),
     peraPlugin(),
-    alphaArcadePlugin(),
+    alphaArcadePlugin(alphaOptions()),
     webPlugin(webOptions()),
     ...extra,
   ].filter((plugin) => !disabled?.has(plugin.name))

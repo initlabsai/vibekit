@@ -13,7 +13,7 @@ import {
   type ToolPlugin,
   type UnsignedGroupResult,
 } from '../../core/index.js'
-import { AlphaClient, type Position } from '@alpha-arcade/sdk'
+import { AlphaClient, type Market, type Position } from '@alpha-arcade/sdk'
 import algosdk from 'algosdk'
 import { z } from 'zod'
 import { formatMarket, formatOpenOrder, formatOrderbook, formatPosition } from './format.js'
@@ -67,17 +67,36 @@ function clientWith(
 export interface AlphaService {
   read: AlphaClient
   trading(activeAddress: string, signer: algosdk.TransactionSigner): AlphaClient
+  /** Every market, from the API when keyed, else the on-chain scan — which is slow, so it is kept a minute. */
+  markets(): Promise<Market[]>
 }
+
+const MARKETS_TTL_MS = 60_000
 
 function createAlphaService(options: AlphaArcadeOptions): AlphaService {
   const dummySigner: algosdk.TransactionSigner = async () => []
+  const read = clientWith(
+    options,
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+    dummySigner,
+  )
+  let cached: { at: number; markets: Promise<Market[]> } | undefined
   return {
-    read: clientWith(
-      options,
-      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
-      dummySigner,
-    ),
+    read,
     trading: (activeAddress, signer) => clientWith(options, activeAddress, signer),
+    markets() {
+      if (options.apiKey) return read.getLiveMarketsFromApi()
+      // ponytail: the keyless path scans every market app through the indexer (~1900 and
+      // counting); one scan a minute per process is the ceiling until a key is set.
+      if (!cached || Date.now() - cached.at > MARKETS_TTL_MS) {
+        const markets = read.getLiveMarkets().catch((error: unknown) => {
+          cached = undefined
+          throw error
+        })
+        cached = { at: Date.now(), markets }
+      }
+      return cached.markets
+    },
   }
 }
 
@@ -177,12 +196,12 @@ export const alphaArcadeTools: AnyTool[] = [
     output: marketsSchema,
     view: 'arcade.markets',
     handler: async (ctx, args) => {
-      const client = getAlphaClient(ctx)
-      let markets = await client.getLiveMarketsFromApi().catch(() => null)
-      if (!markets) markets = await client.getLiveMarkets()
+      const markets = await getAlphaService(ctx).markets()
       const wanted = args.category?.toLowerCase()
       const rows = markets
         .map(formatMarket)
+        // The on-chain list is every market ever; live means activated and unresolved.
+        .filter((m) => m.isLive !== false && !m.isResolved)
         .filter((m) => !wanted || m.categories?.some((c) => c.toLowerCase() === wanted))
         .sort((a, b) => (b.volumeUsd ?? 0) - (a.volumeUsd ?? 0))
       return { markets: rows.slice(0, Math.min(args.limit ?? 20, 100)), total: rows.length }
