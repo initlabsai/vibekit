@@ -1,14 +1,15 @@
 import { describe, expect, test } from 'bun:test'
-import { mkdtempSync, readFileSync } from 'fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
 import { generateConfigs, parseInitArgs, runInitAt } from '../src/commands/init.js'
 import { resolveVibekitPath } from '../src/utils/paths.js'
 import { getAllSkillNames, getSkillNames } from '../src/skills/index.js'
+import { mergeTomlMcpServers } from '../src/utils/toml.js'
 
-function makeDir(): string {
-  return mkdtempSync(join(tmpdir(), 'vibekit-init-test-'))
+function makeDir(prefix = 'vibekit-init-test-'): string {
+  return mkdtempSync(join(tmpdir(), prefix))
 }
 
 describe('parseInitArgs', () => {
@@ -25,7 +26,18 @@ describe('parseInitArgs', () => {
       overwrite: true,
       agents: ['claude', 'codex'],
       mcps: ['vibekit'],
+      scope: 'project',
     })
+  })
+
+  test('--global sets scope and rejects a project directory', () => {
+    expect(parseInitArgs(['--global', '--yes', '--agents', 'claude'])).toEqual({
+      yes: true,
+      overwrite: false,
+      agents: ['claude'],
+      scope: 'global',
+    })
+    expect(() => parseInitArgs(['proj', '--global'])).toThrow(/cannot be combined/)
   })
 
   test('--skills all expands to bundled plus catalog skills; none empties', () => {
@@ -75,7 +87,6 @@ describe('headless runInitAt', () => {
 
   test('headless keeps existing AGENTS.md unless --overwrite', async () => {
     const dir = makeDir()
-    const { writeFileSync } = await import('fs')
     writeFileSync(join(dir, 'AGENTS.md'), 'CUSTOMIZED')
 
     await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none']))
@@ -86,6 +97,49 @@ describe('headless runInitAt', () => {
       parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none', '--overwrite']),
     )
     expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).not.toBe('CUSTOMIZED')
+  })
+
+  test('--global writes user-scoped MCP and skills under a fake home', async () => {
+    const home = makeDir('vibekit-global-home-')
+    const project = makeDir()
+    const skillNames = getSkillNames()
+
+    await runInitAt(project, {
+      ...parseInitArgs([
+        '--global',
+        '--yes',
+        '--agents',
+        'claude',
+        '--skills',
+        skillNames.join(','),
+      ]),
+      homeDir: home,
+    })
+
+    const claudeJson = JSON.parse(readFileSync(join(home, '.claude.json'), 'utf-8')) as {
+      mcpServers: Record<string, unknown>
+    }
+    expect(Object.keys(claudeJson.mcpServers).sort()).toEqual(['kapa', 'vibekit'])
+    expect(existsSync(join(project, '.mcp.json'))).toBe(false)
+    expect(existsSync(join(project, 'AGENTS.md'))).toBe(false)
+    expect(readFileSync(join(home, '.claude', 'CLAUDE.md'), 'utf-8')).toContain('VibeKit')
+    expect(
+      readFileSync(join(home, '.claude', 'skills', skillNames[0]!, 'SKILL.md'), 'utf-8'),
+    ).toBeTruthy()
+  })
+
+  test('generateConfigs global writes codex under fake home', async () => {
+    const home = makeDir('vibekit-global-codex-')
+    await generateConfigs({
+      agents: ['codex'],
+      mcps: ['vibekit', 'kapa'],
+      installPath: makeDir(),
+      selectedSkills: [],
+      scope: 'global',
+      homeDir: home,
+    })
+    const codexToml = readFileSync(join(home, '.codex', 'config.toml'), 'utf-8')
+    expect(codexToml).toContain('[mcp_servers.vibekit]')
   })
 })
 
@@ -134,6 +188,31 @@ describe('generateConfigs', () => {
     expect(toml).toContain('NETWORK = "localnet"')
   })
 
+  test('global toml merge preserves non-mcp sections', async () => {
+    const home = makeDir('vibekit-toml-home-')
+    mkdirSync(join(home, '.codex'), { recursive: true })
+    const configPath = join(home, '.codex', 'config.toml')
+    writeFileSync(
+      configPath,
+      ['model = "gpt-5"', '', '[mcp_servers.other]', 'command = "keep-me"', ''].join('\n'),
+    )
+
+    await generateConfigs({
+      agents: ['codex'],
+      mcps: ['vibekit'],
+      installPath: makeDir(),
+      selectedSkills: [],
+      scope: 'global',
+      homeDir: home,
+    })
+
+    const toml = readFileSync(configPath, 'utf-8')
+    expect(toml).toContain('model = "gpt-5"')
+    expect(toml).toContain('[mcp_servers.other]')
+    expect(toml).toContain('command = "keep-me"')
+    expect(toml).toContain('[mcp_servers.vibekit]')
+  })
+
   test('writes opencode config with command array', async () => {
     const dir = makeDir()
     await generateConfigs({
@@ -158,6 +237,33 @@ describe('generateConfigs', () => {
     const dir = makeDir()
     await generateConfigs({ agents: ['claude'], mcps: [], installPath: dir, selectedSkills: [] })
     expect(() => readFileSync(join(dir, '.mcp.json'))).toThrow()
+  })
+})
+
+describe('mergeTomlMcpServers', () => {
+  test('replaces owned servers and keeps foreign sections', () => {
+    const existing = [
+      'model = "o3"',
+      '',
+      '[mcp_servers.vibekit]',
+      'command = "old"',
+      '',
+      '[mcp_servers.vibekit.env]',
+      'NETWORK = "mainnet"',
+      '',
+      '[mcp_servers.keep]',
+      'url = "https://example.com"',
+      '',
+    ].join('\n')
+
+    const merged = mergeTomlMcpServers(existing, {
+      vibekit: { command: 'new', args: ['mcp'] },
+    })
+    expect(merged).toContain('model = "o3"')
+    expect(merged).toContain('[mcp_servers.keep]')
+    expect(merged).toContain('command = "new"')
+    expect(merged).not.toContain('command = "old"')
+    expect(merged).not.toContain('NETWORK = "mainnet"')
   })
 })
 

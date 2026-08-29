@@ -121,6 +121,7 @@ Full documentation at **[getvibekit.ai](https://getvibekit.ai)**
 ```bash
 vibekit new [dir]          # Scaffold a project, then set up agents
 vibekit init [dir]         # Set up agents in an existing project
+vibekit init --global       # User-scoped MCP + skills (all projects)
 vibekit explore            # Open the Explorer TUI
 vibekit localnet <cmd>     # Manage the local Algorand network
 vibekit doctor             # Diagnose setup problems (--fix repairs them)

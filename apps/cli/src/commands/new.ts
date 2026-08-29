@@ -99,7 +99,9 @@ export function parseNewArgs(args: string[]): NewArgs {
     const arg = args[i]!
     if (arg === '--template' || arg === '-t') template = args[++i]
     else if (arg === '--no-init') noInit = true
-    else rest.push(arg)
+    else if (arg === '--global' || arg === '-g') {
+      throw new Error('vibekit new always scaffolds a project; use `vibekit init --global` for user-scoped setup')
+    } else rest.push(arg)
   }
   const init = parseInitArgs(rest)
   return { dir: init.dir, template, noInit, init }
@@ -174,7 +176,7 @@ export async function commandNew(args: string[]): Promise<void> {
   if (parsed.noInit) {
     p.log.info('Skipped agent setup (--no-init) — run `vibekit init` inside the project any time.')
   } else if (headless || (await confirm('Set up AI coding agents in this project?', true))) {
-    await runInitAt(targetDir, parsed.init)
+    await runInitAt(targetDir, { ...parsed.init, scope: 'project' })
   } else {
     p.log.info('Skipped — run `vibekit init` inside the project any time.')
   }

@@ -13,6 +13,12 @@ banner:
 It asks which supported agent harnesses to configure, then preserves unrelated
 MCP entries where the harness’s JSON format supports merging.
 
+Pass `--global` (or choose “All projects” in the interactive wizard) to write
+each harness’s **user-scoped** MCP config and skills instead — for example
+`~/.claude.json` and `~/.claude/skills` for Claude Code, `~/.cursor/mcp.json`
+and `~/.cursor/skills` for Cursor. Global setup does not write a project
+`AGENTS.md`. Do not combine `--global` with a project directory argument.
+
 The Explorer’s optional model configuration lives at
 `${XDG_CONFIG_HOME:-~/.config}/vibekit/config.json` (mode `0600`). It stores a
 provider, model, and optional base URL. API keys are never written there.

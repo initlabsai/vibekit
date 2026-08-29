@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { lstatSync, readlinkSync } from 'fs'
-import { resolve } from 'path'
+import { join, resolve } from 'path'
 
-import { HARNESSES, HARNESS_IDS, type HarnessDefinition } from '../src/config/harnesses.js'
+import { HARNESSES, HARNESS_IDS, resolveHarnessInstallPaths, type HarnessDefinition } from '../src/config/harnesses.js'
 import { MCPS, MCP_IDS, getMCPsByCategory } from '../src/config/mcps.js'
 import { getSkillNames } from '../src/skills/index.js'
 
@@ -39,6 +39,21 @@ describe('agent registry', () => {
         (id) => (HARNESSES[id] as HarnessDefinition).configFormat === 'toml',
       ).sort(),
     ).toEqual(['codex', 'grok'])
+  })
+
+  test('every harness declares global MCP and skills paths', () => {
+    for (const id of HARNESS_IDS) {
+      const agent = HARNESSES[id] as HarnessDefinition
+      expect(agent.globalConfigFile, `${id} globalConfigFile`).toBeTruthy()
+      expect(agent.globalSkillsDir, `${id} globalSkillsDir`).toBeTruthy()
+    }
+  })
+
+  test('resolveHarnessInstallPaths maps global claude to ~/.claude.json', () => {
+    const paths = resolveHarnessInstallPaths(HARNESSES.claude, 'global', '/proj', '/home/dev')
+    expect(paths.configFile).toBe(join('/home/dev', '.claude.json'))
+    expect(paths.skillsDir).toBe(join('/home/dev', '.claude', 'skills'))
+    expect(paths.templateFile).toBe(join('/home/dev', '.claude', 'CLAUDE.md'))
   })
 })
 

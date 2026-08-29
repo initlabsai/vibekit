@@ -3,21 +3,28 @@
  * servers, then writes each harness's config, skills, and AGENTS.md. Keys live
  * in the keystore daemon and localnet is `vibekit localnet`, so no provider,
  * PAT, or AlgoKit setup happens here.
+ *
+ * Default scope is the project directory. `--global` (or the interactive
+ * "all projects" choice) writes each harness's user-scoped MCP config and
+ * skills instead, so they apply across projects.
  */
 
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { amber, teal } from '../brand.js'
-import { basename, dirname, extname, join } from 'path'
+import { dirname, join } from 'path'
 import { existsSync, readFileSync } from 'fs'
+import { homedir } from 'os'
 
 import {
   HARNESSES,
   HARNESS_IDS,
   enabledHarnesses,
   getAgentSkillsDirs,
+  resolveHarnessInstallPaths,
   type HarnessId,
   type HarnessSelection,
+  type InstallScope,
 } from '../config/harnesses.js'
 import {
   getMCPsByCategory,
@@ -37,7 +44,7 @@ import {
 } from '../skills/index.js'
 import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/catalogs.js'
 import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
-import { writeTomlFile } from '../utils/toml.js'
+import { mergeTomlMcpServers, writeTomlFile } from '../utils/toml.js'
 import { expandPath, resolveVibekitPath } from '../utils/paths.js'
 import { confirm, handleCancel, multiselect, select, text } from '../utils/prompts.js'
 import { LOGO } from '../logo.js'
@@ -45,8 +52,12 @@ import { LOGO } from '../logo.js'
 export interface SetupContext {
   agents: HarnessSelection
   mcps: MCPSelection
+  /** Project root for project scope; unused for path resolution when global. */
   installPath: string
   selectedSkills: string[]
+  scope?: InstallScope
+  /** Override home for tests; defaults to os.homedir(). */
+  homeDir?: string
 }
 
 // --- Headless flags ---
@@ -65,6 +76,13 @@ export interface InitFlags {
   mcps?: MCPSelection
   yes: boolean
   overwrite: boolean
+  /**
+   * Install scope. `--global` sets `'global'`; a project `dir` or `--yes`
+   * without `--global` implies `'project'`. When unset, the wizard asks.
+   */
+  scope?: InstallScope
+  /** Test-only override for the home directory used by global paths. */
+  homeDir?: string
 }
 
 const HEADLESS_DEFAULT_MCPS: MCPSelection = ['kapa', 'vibekit']
@@ -90,10 +108,12 @@ function assertKnown(values: string[], known: readonly string[], flag: string): 
 
 export function parseInitArgs(args: string[]): InitFlags {
   const flags: InitFlags = { yes: false, overwrite: false }
+  let globalFlag = false
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]!
     if (arg === '--yes' || arg === '-y') flags.yes = true
     else if (arg === '--overwrite') flags.overwrite = true
+    else if (arg === '--global' || arg === '-g') globalFlag = true
     else if (arg === '--agents') {
       const values = parseCsv(args[++i], '--agents')
       assertKnown(values, HARNESS_IDS, '--agents')
@@ -124,6 +144,11 @@ export function parseInitArgs(args: string[]): InitFlags {
   if (flags.yes && !flags.agents) {
     throw new Error(`--yes requires --agents <csv> (available: ${HARNESS_IDS.join(', ')})`)
   }
+  if (globalFlag && flags.dir !== undefined) {
+    throw new Error('--global cannot be combined with a project directory')
+  }
+  if (globalFlag) flags.scope = 'global'
+  else if (flags.dir !== undefined || flags.yes) flags.scope = 'project'
   return flags
 }
 
@@ -198,6 +223,25 @@ async function selectSkillsStep(): Promise<string[]> {
   )
 }
 
+async function selectScopeStep(): Promise<InstallScope> {
+  return (await select({
+    message: 'Install for this project only, or for all projects?',
+    options: [
+      {
+        value: 'project',
+        label: 'This project',
+        hint: 'configs and skills in the project directory (committable)',
+      },
+      {
+        value: 'global',
+        label: 'All projects (global)',
+        hint: 'user-scoped MCP + skills for every project on this machine',
+      },
+    ],
+    initialValue: 'project',
+  })) as InstallScope
+}
+
 async function selectInstallPathStep(): Promise<string> {
   const cwd = process.cwd()
   const inputPath = await text({
@@ -264,14 +308,36 @@ function resolveTemplate(value: unknown): unknown {
   return value
 }
 
+function homeOf(context: SetupContext): string {
+  return context.homeDir ?? homedir()
+}
+
+function scopeOf(context: SetupContext): InstallScope {
+  return context.scope ?? 'project'
+}
+
 export async function generateConfigs(context: SetupContext): Promise<void> {
+  const home = homeOf(context)
+  const scope = scopeOf(context)
   for (const agent of enabledHarnesses(context.agents)) {
-    const outputPath = join(context.installPath, agent.configFile)
+    if (scope === 'global' && !agent.globalConfigFile) continue
+
+    const { configFile: outputPath } = resolveHarnessInstallPaths(
+      agent,
+      scope,
+      context.installPath,
+      home,
+    )
 
     // Merge into an existing JSON config: foreign MCP servers survive, and
-    // v1's 'vibekit-mcp' entry is migrated out. (TOML configs are rewritten
-    // wholesale — we don't parse TOML.)
+    // v1's 'vibekit-mcp' entry is migrated out. Global TOML configs merge
+    // surgically; project TOML is still rewritten wholesale (we don't parse TOML).
     let config = structuredClone(agent.baseConfigTemplate) as Record<string, unknown>
+    const existingToml =
+      agent.configFormat === 'toml' && existsSync(outputPath)
+        ? readFileSync(outputPath, 'utf-8')
+        : null
+
     if (agent.configFormat !== 'toml' && existsSync(outputPath)) {
       try {
         config = JSON.parse(readFileSync(outputPath, 'utf-8')) as Record<string, unknown>
@@ -279,22 +345,42 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
         // unparseable existing config: fall back to the fresh template
       }
     }
+
     const serversSection = (config[agent.mcpServersKey] as Record<string, unknown>) ?? {}
     delete serversSection[LEGACY_SERVER_KEY]
 
+    const writtenServers: Record<string, Record<string, unknown>> = {}
     for (const mcp of getSelectedMCPs(context.mcps)) {
       const agentConfig = mcp.getAgentConfig(agent.id as HarnessId)
       if (agentConfig) {
         serversSection[agentConfig.serverKey] = agentConfig.config
+        writtenServers[agentConfig.serverKey] = agentConfig.config as Record<string, unknown>
       }
     }
 
-    if (Object.keys(serversSection).length === 0) continue
+    if (Object.keys(serversSection).length === 0 && Object.keys(writtenServers).length === 0) {
+      continue
+    }
     config[agent.mcpServersKey] = serversSection
 
     const resolved = resolveTemplate(config) as Record<string, unknown>
     if (agent.configFormat === 'toml') {
-      await writeTomlFile(outputPath, resolved)
+      const resolvedServers = (resolved[agent.mcpServersKey] ?? {}) as Record<
+        string,
+        Record<string, unknown>
+      >
+      // Global: merge mcp_servers into the existing user config. Project: same
+      // merge when a file already exists so we do not wipe sibling TOML keys.
+      if (existingToml !== null) {
+        const merged = mergeTomlMcpServers(existingToml, resolvedServers, [
+          ...Object.keys(resolvedServers),
+          LEGACY_SERVER_KEY,
+        ])
+        await ensureDir(dirname(outputPath))
+        await writeTextFile(outputPath, merged)
+      } else {
+        await writeTomlFile(outputPath, resolved)
+      }
     } else {
       await writeJsonFile(outputPath, resolved)
     }
@@ -328,8 +414,14 @@ async function installSkills(
   remoteSkills: SkillDirectory[],
 ): Promise<number> {
   const skills = [...getSkillsByNames(context.selectedSkills), ...remoteSkills]
+  const home = homeOf(context)
 
-  for (const targetDir of getAgentSkillsDirs(context.installPath, context.agents)) {
+  for (const targetDir of getAgentSkillsDirs(
+    context.installPath,
+    context.agents,
+    scopeOf(context),
+    home,
+  )) {
     for (const skill of skills) {
       for (const file of skill.files) {
         await writeTextFile(join(targetDir, skill.name, file.path), file.content)
@@ -346,20 +438,26 @@ interface TemplateFile {
 }
 
 async function installAgentFiles(context: SetupContext, flags?: InitFlags): Promise<void> {
-  const templates: TemplateFile[] = [{ path: 'AGENTS.md', content: agentsMdContent }]
+  const home = homeOf(context)
+  const scope = scopeOf(context)
+  const templates: TemplateFile[] = []
+
+  if (scope === 'project') {
+    templates.push({ path: join(context.installPath, 'AGENTS.md'), content: agentsMdContent })
+  }
+
   for (const agent of enabledHarnesses(context.agents)) {
-    if (agent.templateFile && agent.templateContent) {
-      templates.push({ path: agent.templateFile, content: agent.templateContent })
+    const paths = resolveHarnessInstallPaths(agent, scope, context.installPath, home)
+    if (paths.templateFile && paths.templateContent) {
+      templates.push({ path: paths.templateFile, content: paths.templateContent })
     }
   }
 
-  const existingFiles = templates
-    .map((t) => t.path)
-    .filter((path) => existsSync(join(context.installPath, path)))
+  const existingFiles = templates.filter((t) => existsSync(t.path))
 
   let action: 'skip' | 'overwrite' = 'overwrite'
   if (existingFiles.length > 0) {
-    p.log.warn(`Found existing files: ${existingFiles.map((f) => teal(f)).join(', ')}`)
+    p.log.warn(`Found existing files: ${existingFiles.map((f) => teal(f.path)).join(', ')}`)
     if (flags?.yes) {
       // Headless: never destroy customizations unless --overwrite says so.
       action = flags.overwrite ? 'overwrite' : 'skip'
@@ -374,48 +472,69 @@ async function installAgentFiles(context: SetupContext, flags?: InitFlags): Prom
     }
   }
 
+  const existingPaths = new Set(existingFiles.map((f) => f.path))
   for (const template of templates) {
-    const filePath = join(context.installPath, template.path)
-    if (existingFiles.includes(template.path) && action === 'skip') {
+    if (existingPaths.has(template.path) && action === 'skip') {
       p.log.info(`Skipped ${pc.dim(template.path)}`)
       continue
     }
-    await ensureDir(dirname(filePath))
-    await writeTextFile(filePath, template.content)
+    await ensureDir(dirname(template.path))
+    await writeTextFile(template.path, template.content)
   }
 }
 
 // --- Preview & summary ---
 
 function buildFilePreview(context: SetupContext): string[] {
+  const home = homeOf(context)
+  const scope = scopeOf(context)
   const lines: string[] = []
   for (const agent of enabledHarnesses(context.agents)) {
-    lines.push(`  ${pc.dim(join(context.installPath, agent.configFile))}`)
-    if (agent.skillsDir) {
+    const paths = resolveHarnessInstallPaths(agent, scope, context.installPath, home)
+    if (scope === 'global' && !agent.globalConfigFile && !agent.globalSkillsDir) {
+      lines.push(`  ${pc.dim(agent.displayName)} ${amber('(no global paths — skipped)')}`)
+      continue
+    }
+    if (agent.globalConfigFile || scope === 'project') {
+      lines.push(`  ${pc.dim(paths.configFile)}`)
+    }
+    if (paths.skillsDir) {
       lines.push(
-        `  ${pc.dim(join(context.installPath, agent.skillsDir))} ${teal(`(${context.selectedSkills.length} skills)`)}`,
+        `  ${pc.dim(paths.skillsDir)} ${teal(`(${context.selectedSkills.length} skills)`)}`,
       )
     }
-    if (agent.templateFile) {
-      lines.push(`  ${pc.dim(join(context.installPath, agent.templateFile))}`)
+    if (paths.templateFile) {
+      lines.push(`  ${pc.dim(paths.templateFile)}`)
     }
   }
-  lines.push(`  ${pc.dim(join(context.installPath, 'AGENTS.md'))}`)
+  if (scope === 'project') {
+    lines.push(`  ${pc.dim(join(context.installPath, 'AGENTS.md'))}`)
+  }
   return lines
 }
 
 function showSummary(context: SetupContext): void {
   const enabledAgents = enabledHarnesses(context.agents)
   const mcpNames = getSelectedMCPs(context.mcps).map((mcp) => mcp.displayName)
+  const scope = scopeOf(context)
 
   const lines = [
     `${pc.bold('Configured:')}`,
+    `  Scope:   ${teal(scope === 'global' ? 'global (all projects)' : 'this project')}`,
     `  Agents:  ${teal(enabledAgents.map((a) => a.displayName).join(', '))}`,
     `  MCPs:    ${mcpNames.length > 0 ? teal(mcpNames.join(', ')) : amber('none')}`,
     `  Skills:  ${teal(String(context.selectedSkills.length))}`,
   ]
 
-  lines.push('', `${pc.bold('Next Steps:')}`, `  ${teal('cd')} ${context.installPath}`)
+  if (scope === 'project') {
+    lines.push('', `${pc.bold('Next Steps:')}`, `  ${teal('cd')} ${context.installPath}`)
+  } else {
+    lines.push(
+      '',
+      `${pc.bold('Next Steps:')}`,
+      `  Open any project in a configured agent — MCP and skills apply globally`,
+    )
+  }
 
   const commands = enabledAgents.map((a) => a.cliCommand).filter((cmd): cmd is string => !!cmd)
   if (commands.length > 0) {
@@ -468,11 +587,22 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
   const selectedSkills =
     flags?.skills ?? (flags?.yes ? getAllSkillNames() : await selectSkillsStep())
   const mcps = flags?.mcps ?? (flags?.yes ? HEADLESS_DEFAULT_MCPS : await selectMCPsStep())
+  const scope: InstallScope = flags?.scope ?? (await selectScopeStep())
 
-  const context: SetupContext = { agents, mcps, installPath, selectedSkills }
+  const context: SetupContext = {
+    agents,
+    mcps,
+    installPath,
+    selectedSkills,
+    scope,
+    homeDir: flags?.homeDir,
+  }
 
   p.note(buildFilePreview(context).join('\n'), 'Files to create')
-  if (!flags?.yes && !(await confirm('Create project?', true))) {
+  if (
+    !flags?.yes &&
+    !(await confirm(scope === 'global' ? 'Apply global setup?' : 'Create project?', true))
+  ) {
     p.cancel('Setup cancelled.')
     process.exit(0)
   }
@@ -480,7 +610,7 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
   const remoteSkills = await fetchRemoteSkills(context.selectedSkills)
 
   const s = p.spinner()
-  s.start('Creating project files...')
+  s.start(scope === 'global' ? 'Writing global agent files...' : 'Creating project files...')
   try {
     await generateConfigs(context)
     const skillsCount = await installSkills(context, remoteSkills)
@@ -488,7 +618,7 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
     // may prompt about existing files, so runs outside the spinner
     await installAgentFiles(context, flags)
   } catch (error) {
-    s.stop('Failed to create project')
+    s.stop(scope === 'global' ? 'Failed to write global files' : 'Failed to create project')
     throw error
   }
 
@@ -506,12 +636,21 @@ export async function runInitAt(installPath: string, flags?: InitFlags): Promise
 export async function runSetupWizard(flags: InitFlags): Promise<void> {
   const headless = flags.yes
   if (!headless) welcome()
-  const installPath = flags.dir
-    ? expandPath(flags.dir)
-    : headless
+
+  let scope = flags.scope
+  if (!scope && !headless) scope = await selectScopeStep()
+  if (!scope) scope = 'project'
+
+  const installPath =
+    scope === 'global'
       ? process.cwd()
-      : await selectInstallPathStep()
-  await runInitAt(installPath, flags)
+      : flags.dir
+        ? expandPath(flags.dir)
+        : headless
+          ? process.cwd()
+          : await selectInstallPathStep()
+
+  await runInitAt(installPath, { ...flags, scope })
   p.outro(teal('The vibes are immaculate 😎'))
 }
 

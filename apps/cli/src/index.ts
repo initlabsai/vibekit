@@ -14,6 +14,7 @@ ${pc.bold('VibeKit')} — Deploy contracts. Manage assets. Query the chain. All 
 
 ${pc.bold('Usage:')}
   vibekit init [dir]          Set up AI coding agents (skills, MCP config)
+                              Use --global for user-scoped MCP + skills
   vibekit new [dir]           Scaffold a project from a starter template
   vibekit localnet <cmd>      Manage the local Algorand network (Docker)
   vibekit explore             Open the full-screen Explorer TUI
@@ -37,10 +38,12 @@ ${pc.bold('Templates:')}
 
 ${pc.bold('Headless setup (no prompts — agents/CI):')}
   vibekit init [dir] --yes --agents claude              Explicit agents; defaults: all skills, kapa+vibekit MCPs
+  vibekit init --global --yes --agents claude           User-scoped MCP + skills (all projects)
   vibekit new <dir> -t contracts --yes --agents claude  Scaffold + agent setup
-  Flags: --agents <csv> (required with --yes)  --skills all|none|<csv>  --mcps none|<csv>  --overwrite  --no-init (new only)
+  Flags: --agents <csv> (required with --yes)  --skills all|none|<csv>  --mcps none|<csv>  --overwrite  --global  --no-init (new only)
   Any flag pre-answers its wizard step; --yes fills the rest with defaults and skips confirms.
   Existing AGENTS.md/template files are kept in headless runs unless --overwrite.
+  --global writes each harness's user config/skills instead of the project directory.
 
 ${pc.bold('Accounts:')}
   Keys live in the OS keystore behind the keystore daemon (managed install, no global needed):

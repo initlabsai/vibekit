@@ -65,6 +65,15 @@ directory. It merges supported configuration rather than replacing unrelated
 MCP servers. Read the preview or prompt before allowing overwrites of existing
 agent instruction files.
 
+For user-scoped MCP and skills that apply to every project on the machine:
+
+```bash
+vibekit init --global
+```
+
+Do not pass a project directory with `--global`. `vibekit new` always scaffolds
+a project; use `vibekit init --global` when you want the global scope.
+
 ## Manage LocalNet
 
 VibeKit owns the Docker-based local network lifecycle:
