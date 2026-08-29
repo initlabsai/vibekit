@@ -152,6 +152,7 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'block.list': buildBlockListRecord,
   'network.status': buildNetworkStatusRecord,
   'nfd.profile': pluginRecordBuilder('nfd.profile'),
+  'nfd.list': pluginRecordBuilder('nfd.list'),
   'vestige.prices': pluginRecordBuilder('vestige.prices'),
   'vestige.markets': pluginRecordBuilder('vestige.markets'),
   'vestige.history': pluginRecordBuilder('vestige.history'),

@@ -90,6 +90,12 @@ in `AGENTS.md`.
   an address's turns (the bearer token is per browser) is deferred until there
   is a real session backend.
 
+- **Agent: web search is keyless.** `web_search` / `read_page` go through Exa's
+  hosted MCP (`https://mcp.exa.ai/mcp`) with no key; the free plan covers
+  casual use and answers 429 past it. `EXA_API_KEY` raises the limit when that
+  day comes. The house gate allows three web calls per turn (`WEB_CALLS_PER_TURN`
+  in the agent route), so one turn cannot loop searches.
+
 - **Agent: swaps need a router key.** `HAYSTACK_API_KEY` registers the
   haystack plugin (`get_swap_quote`, `swap`); without it the agent has no swap
   tools and says so. txnlab publishes a free-tier key in the SDK README (60

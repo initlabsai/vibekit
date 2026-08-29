@@ -1,6 +1,8 @@
-import type { NfdRecord } from '@initlabs/vibekit/plugins/nfd'
+import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
+import type { NfdList, NfdRecord } from '@initlabs/vibekit/plugins/nfd'
 
-import { COLORS, wrapLines } from '../../theme.js'
+import { ListCard } from '../../generic-cards.js'
+import { COLORS, shorten, wrapLines } from '../../theme.js'
 import { Button, Fact, Frame, Header, Ident, innerWidth, Rule } from '../../primitives.js'
 
 /** NFD's notched-square logomark, in blocks. */
@@ -68,5 +70,38 @@ export function NfdCard({
         {bio.length > 0 ? <text fg={COLORS.muted} marginTop={1} content={bio.join('\n')} /> : null}
       </box>
     </Frame>
+  )
+}
+
+/** Names matching a fragment (the `nfd.list` view). */
+export function NfdListCard({
+  data,
+  network,
+  width,
+  onOpen,
+}: {
+  data: NfdList
+  network: string
+  width: number
+  onOpen?: (name: string) => void
+}) {
+  return (
+    <ListCard
+      kicker="NAMES"
+      chip="NFD"
+      pill={network.toUpperCase()}
+      rows={data.nfds}
+      keyOf={(n) => n.name}
+      lead={(n) => ({ label: 'name', value: n.name, copy: n.name })}
+      onOpen={onOpen && ((n) => onOpen(n.name))}
+      facts={(n, body) => (
+        <Fact
+          label="state"
+          value={`${n.state ?? '—'}${n.owner ? ` · ${shorten(n.owner, 12)}` : ''}${n.sellAmountMicroAlgos ? ` · asks ${formatMicroAlgos(n.sellAmountMicroAlgos)} ALGO` : ''}`}
+          width={body}
+        />
+      )}
+      width={width}
+    />
   )
 }

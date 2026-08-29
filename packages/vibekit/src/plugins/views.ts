@@ -13,7 +13,7 @@ import {
   positionsSchema,
 } from './alpha-arcade/schemas.js'
 import { swapQuoteSchema } from './haystack/schemas.js'
-import { nfdRecordSchema } from './nfd/schemas.js'
+import { nfdListSchema, nfdRecordSchema } from './nfd/schemas.js'
 import { assetProfileSchema } from './pera/schemas.js'
 import {
   assetHistorySchema,
@@ -32,12 +32,13 @@ export type {
   Positions,
 } from './alpha-arcade/schemas.js'
 export type { SwapQuote } from './haystack/schemas.js'
-export type { NfdRecord } from './nfd/schemas.js'
+export type { NfdList, NfdRecord } from './nfd/schemas.js'
 export type { AssetProfile } from './pera/schemas.js'
 export type { AssetHistory, AssetPrices, DefiProtocols, RankedAssets } from './vestige/schemas.js'
 
 export const PLUGIN_VIEW_IDS = [
   'nfd.profile',
+  'nfd.list',
   'vestige.prices',
   'vestige.markets',
   'vestige.history',
@@ -57,6 +58,7 @@ export type PluginViewId = (typeof PLUGIN_VIEW_IDS)[number]
 
 export const pluginViewSchemas = {
   'nfd.profile': nfdRecordSchema,
+  'nfd.list': nfdListSchema,
   'vestige.prices': assetPricesSchema,
   'vestige.markets': rankedAssetsSchema,
   'vestige.history': assetHistorySchema,

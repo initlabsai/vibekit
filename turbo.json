@@ -24,6 +24,7 @@
         "AGENT_*",
         "X402_*",
         "HAYSTACK_*",
+        "EXA_*",
         "KV_*",
         "REDIS_URL",
         "VIBEKIT_ALGOD_*",

@@ -13,9 +13,15 @@ import {
 import { NfdApiClient } from '@txnlab/nfd-sdk'
 import { z } from 'zod'
 
-import { nfdRecordSchema, propertiesSchema, type NfdRecord } from './schemas.js'
+import {
+  nfdListSchema,
+  nfdRecordSchema,
+  propertiesSchema,
+  type NfdList,
+  type NfdRecord,
+} from './schemas.js'
 
-export { nfdRecordSchema, type NfdRecord }
+export { nfdListSchema, nfdRecordSchema, type NfdList, type NfdRecord }
 
 export const PLUGIN_NAME = 'nfd'
 
@@ -224,6 +230,42 @@ export const nfdTools: AnyTool[] = [
   }),
 ]
 
+nfdTools.push(
+  defineTool({
+    name: 'search_nfds',
+    description:
+      'Search NFD names by fragment (mainnet/testnet): owner, state, and asking price when for sale. For "names like X" or "is X.algo taken".',
+    parameters: z.object({
+      query: z.string().min(1).describe('Name fragment; matches anywhere in the name'),
+      limit: z.number().optional().describe('Max results (default 10, max 50)'),
+      forSale: z.boolean().optional().describe('Only names listed for sale'),
+    }),
+    output: nfdListSchema,
+    view: 'nfd.list',
+    handler: async (ctx, args) => {
+      const result = await nfdCall(
+        getNfdClient(ctx).search({
+          substring: args.query.toLowerCase().replace(/\.algo$/, ''),
+          limit: Math.min(args.limit ?? 10, 50),
+          view: 'thumbnail',
+          sort: 'nameAsc',
+          ...(args.forSale ? { state: ['forSale'] } : {}),
+        }),
+      )
+      return {
+        query: args.query,
+        total: result.total,
+        nfds: result.nfds.map((nfd) => ({
+          ...nfdRecord(nfd, nfd.name ?? args.query),
+          ...(nfd.sellAmount !== undefined && nfd.sellAmount !== null
+            ? { sellAmountMicroAlgos: Number(nfd.sellAmount) }
+            : {}),
+        })),
+      }
+    },
+  }),
+)
+
 /** The plugin factory — `plugins: [nfdPlugin()]` in createVibekitMcp options. */
 export function nfdPlugin(): ToolPlugin {
   return {
@@ -231,6 +273,6 @@ export function nfdPlugin(): ToolPlugin {
     description: 'NFD name resolution — name.algo ↔ address, profiles (mainnet/testnet)',
     tools: nfdTools,
     service: createNfdService(),
-    views: { 'nfd.profile': nfdRecordSchema },
+    views: { 'nfd.profile': nfdRecordSchema, 'nfd.list': nfdListSchema },
   }
 }

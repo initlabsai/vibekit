@@ -20,6 +20,7 @@ export type {
   AssetPrices,
   AssetProfile,
   DefiProtocols,
+  NfdList,
   NfdRecord,
   RankedAssets,
 } from '@initlabs/vibekit/plugins/views'
@@ -104,6 +105,11 @@ export const createWebPageViewModel = viewModelFor(
   pluginViewSchemas['web.page'],
   'web.page',
   'Web page',
+)
+export const createNfdListViewModel = viewModelFor(
+  pluginViewSchemas['nfd.list'],
+  'nfd.list',
+  'NFD names',
 )
 export const createPeraAssetViewModel = viewModelFor(
   pluginViewSchemas['pera.asset'],

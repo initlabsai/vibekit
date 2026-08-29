@@ -30,6 +30,7 @@ import {
   createArcadeOrdersViewModel,
   createArcadePositionsViewModel,
   createDefiProtocolsViewModel,
+  createNfdListViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
   createWebPageViewModel,
@@ -86,7 +87,7 @@ import {
   OrdersCard,
   PositionsCard,
 } from './features/plugins/arcade.js'
-import { NfdCard } from './features/plugins/nfd.js'
+import { NfdCard, NfdListCard } from './features/plugins/nfd.js'
 import { SwapQuoteCard } from './features/plugins/swap.js'
 import { WebPageCard, WebResultsCard } from './features/plugins/web.js'
 import { PeraAssetCard } from './features/plugins/pera.js'
@@ -404,6 +405,11 @@ export function ResultCard({
           }
         />
       )
+    }
+    case 'nfd.list': {
+      const derived = createNfdListViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="NAMES" width={width} />
+      return <NfdListCard data={derived.model} network={derived.model.network} width={width} />
     }
     case 'vestige.prices': {
       const derived = createVestigePricesViewModel(store, view)

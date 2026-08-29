@@ -11,6 +11,7 @@ import {
   createArcadeOrdersViewModel,
   createArcadePositionsViewModel,
   createDefiProtocolsViewModel,
+  createNfdListViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
   createWebPageViewModel,
@@ -82,6 +83,7 @@ import { PriceHistoryCard } from './features/plugins/price-history-card'
 import { SwapQuoteCard } from './features/plugins/swap-quote-card'
 import { WebPageCard, WebResultsCard } from './features/plugins/web-cards'
 import { NfdCard } from './features/plugins/nfd-card'
+import { NfdListCard } from './features/plugins/nfd-list-card'
 import { PeraAssetCard } from './features/plugins/pera-card'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
 import { buildGroupGraph, TransactionGraphCard } from './features/transactions/graph'
@@ -310,6 +312,17 @@ export function ResultCard({
               ? () => onOpen({ kind: 'account', address: nfd.address! })
               : undefined
           }
+        />
+      )
+    }
+    case 'nfd.list': {
+      const derived = createNfdListViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <NfdListCard
+          data={derived.model}
+          network={derived.model.network}
+          onOpen={onInput ? (name) => onInput(name) : undefined}
         />
       )
     }

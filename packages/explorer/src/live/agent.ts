@@ -141,7 +141,7 @@ export function explorerSystemPrompt(
     '',
     '## Tool routing',
     'lookup_* for one entity, search_* for lists. Do not guess whether a number is an asset, app, or block — look up all that apply.',
-    "Named accounts (SMOKE1, etc.) map to addresses below. name.algo → resolve_nfd (mainnet/testnet), then pass the address; never pass names to other tools. 'Look up name.algo' means resolve_nfd alone — the NFD card is the answer; fetch nothing more unless asked.",
+    "Named accounts (SMOKE1, etc.) map to addresses below. name.algo → resolve_nfd (mainnet/testnet), then pass the address; never pass names to other tools. 'Look up name.algo' means resolve_nfd alone — the NFD card is the answer; fetch nothing more unless asked. 'Names like X' or 'is X taken' → search_nfds.",
     'When asked for my/your accounts, call batch_lookup_accounts with every address below. Do not answer from this list.',
     "Unfamiliar asset → get_asset_profile (Pera's curated registry: identity, socials, verification tier). A suspicious or unverified tier is said plainly before anyone sends funds at it.",
     'Top/largest holders, whales, concentration → top_asset_holders (it scans every holder and sorts; minBalance for "holds more than N"). USD prices → get_asset_prices (ALGO is asset 0); a chart or how X has done over time → get_asset_price_history; DeFi size or biggest protocol → get_defi_overview. "The real X" or trending → search_assets_ranked. All three mainnet-only.',
@@ -195,6 +195,12 @@ export interface ExplorerAgentOptions {
   wrapTools?: (tools: AnyTool[]) => AnyTool[]
 }
 
+/** Exa answers keyless; a key (EXA_API_KEY) only raises the rate limit. */
+function webOptions() {
+  const apiKey = process.env.EXA_API_KEY
+  return apiKey ? { apiKey } : {}
+}
+
 /** The built-in plugins the Explorer agent registers: names, prices, asset trust, prediction markets, the web. */
 export function explorerPlugins(disabled?: ReadonlySet<string>, extra: readonly ToolPlugin[] = []) {
   return [
@@ -202,7 +208,7 @@ export function explorerPlugins(disabled?: ReadonlySet<string>, extra: readonly 
     vestigePlugin(),
     peraPlugin(),
     alphaArcadePlugin(),
-    webPlugin(),
+    webPlugin(webOptions()),
     ...extra,
   ].filter((plugin) => !disabled?.has(plugin.name))
 }
