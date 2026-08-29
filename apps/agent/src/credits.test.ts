@@ -44,6 +44,20 @@ describe('credit ledger', () => {
   })
 })
 
+describe('house caps', () => {
+  test('a day cap across everyone, an hour cap per ip, refused turns not counted', async () => {
+    const at = new Date('2026-08-29T10:00:00Z')
+    const caps = { daily: 3, hourly: 2 }
+    expect(await ledger.houseTurn('a', caps, at)).toBe('ok')
+    expect(await ledger.houseTurn('a', caps, at)).toBe('ok')
+    expect(await ledger.houseTurn('a', caps, at)).toBe('hourly')
+    expect(await ledger.houseTurn('b', caps, at)).toBe('ok')
+    expect(await ledger.houseTurn('b', caps, at)).toBe('daily')
+    expect(await ledger.houseTurn('a', caps, new Date('2026-08-29T11:00:00Z'))).toBe('daily')
+    expect(await ledger.houseTurn('a', caps, new Date('2026-08-30T00:00:00Z'))).toBe('ok')
+  })
+})
+
 describe('credits route', () => {
   test('reads the buyer token from the settle context, wrapped or bare', () => {
     const adapter = { getHeader: (name: string) => (name === 'x-credit-token' ? TOKEN : undefined) }

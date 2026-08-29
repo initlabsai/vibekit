@@ -18,7 +18,7 @@ import algosdk from 'algosdk'
 import { z } from 'zod'
 
 import { creditsConfig } from '../credits/config'
-import { balance, bearerOf, freeTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
+import { balance, bearerOf, freeTurn, houseTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -42,27 +42,14 @@ const requestSchema = z.object({
   history: z.array(z.unknown()).max(MAX_HISTORY).default([]),
 })
 
-/** The house-billed caps: per isolate, so they are a floor on abuse, not a ledger. */
+/** The house-billed caps, kept on the ledger's store so they hold across isolates and cold starts. */
 const DAILY_CAP = Number(process.env.AGENT_DAILY_CAP_TURNS ?? 300)
 const IP_HOURLY_CAP = Number(process.env.AGENT_IP_HOURLY_CAP ?? 30)
-const usage = { day: '', turns: 0, byIp: new Map<string, { hour: number; turns: number }>() }
 
-function chargeTurn(ip: string): string | undefined {
-  const now = new Date()
-  const day = now.toISOString().slice(0, 10)
-  if (usage.day !== day) {
-    usage.day = day
-    usage.turns = 0
-    usage.byIp.clear()
-  }
-  if (usage.turns >= DAILY_CAP) return "the house is out of turns for today. i'll be here tomorrow."
-  const hour = now.getUTCHours()
-  const entry = usage.byIp.get(ip) ?? { hour, turns: 0 }
-  if (entry.hour !== hour) Object.assign(entry, { hour, turns: 0 })
-  if (entry.turns >= IP_HOURLY_CAP) return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
-  entry.turns += 1
-  usage.byIp.set(ip, entry)
-  usage.turns += 1
+async function chargeTurn(ip: string): Promise<string | undefined> {
+  const verdict = await houseTurn(ip, { daily: DAILY_CAP, hourly: IP_HOURLY_CAP })
+  if (verdict === 'daily') return "the house is out of turns for today. i'll be here tomorrow."
+  if (verdict === 'hourly') return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
   return undefined
 }
 
@@ -129,7 +116,7 @@ export async function POST(request: Request): Promise<Response> {
       charged = { paid, freeLeft: 0 }
     }
   } else {
-    const refused = isProduction() ? chargeTurn(ipOf(request)) : undefined
+    const refused = isProduction() ? await chargeTurn(ipOf(request)) : undefined
     if (refused) return Response.json({ error: refused }, { status: 429 })
   }
 
