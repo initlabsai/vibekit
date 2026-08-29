@@ -8,6 +8,7 @@ import { z } from 'zod'
 
 import {
   defineTool,
+  RATE_LIMITED,
   ToolError,
   type AnyTool,
   type ToolContext,
@@ -55,7 +56,7 @@ function createWebService(options: WebOptions): WebService {
       })
       if (!response.ok) {
         throw new ToolError(
-          response.status === 429 ? 'WEB_RATE_LIMITED' : 'WEB_ERROR',
+          response.status === 429 ? RATE_LIMITED : 'WEB_ERROR',
           `Web search answered ${response.status}`,
         )
       }
@@ -85,7 +86,7 @@ function createWebService(options: WebOptions): WebService {
       if (message.result?.isError) {
         const limited = /rate limit/i.test(text)
         throw new ToolError(
-          limited ? 'WEB_RATE_LIMITED' : 'WEB_ERROR',
+          limited ? RATE_LIMITED : 'WEB_ERROR',
           limited
             ? 'Web search is rate-limited right now — try again later'
             : text || 'Web search failed',

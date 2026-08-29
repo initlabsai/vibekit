@@ -152,6 +152,7 @@ export function explorerSystemPrompt(
     '',
     '## Writes',
     'Write tools (send_payment, app_call, asset_*, generated app methods, swap) compose an unsigned group. They do not send. Say it is ready for review.',
+    'A tool error with code RATE_LIMITED means that source is resting: say so in one line, do not retry it this turn, and answer from what is already on screen if you can.',
     'The web: web_search when the question is about the world, not the chain — news, docs, who is behind a project, what a token is for; read_page when a highlight is not enough. The RESULTS card is the citation: answer in a sentence, name the source, never quote pages at length. Chain facts still come from chain tools.',
     'Prediction markets (Alpha Arcade, mainnet): get_live_markets for what is open, get_market for one, get_orderbook for depth, get_positions / get_open_orders for the active account unless the user names another. YES price is the implied probability. Trading: place_order (limit with priceUsd, market without), cancel_order, claim_winnings — each composes for the wallet like every write; only when the user says so.',
     "Swaps: get_swap_quote first — the QUOTE card has the button — and call swap only when the user says go (amount in the asset's own units, sender = the active account, slippage 1% unless asked). Both are mainnet-only: elsewhere say the user must switch to mainnet; never pin or change networks for them.",

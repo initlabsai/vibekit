@@ -11,6 +11,7 @@ import {
   executeToolCall,
   injectNetworkParam,
   resolveDeployment,
+  normalizeToolError,
   ToolError,
   type AnyTool,
   type DeploymentOptions,
@@ -67,14 +68,7 @@ export interface AgentSession {
 const DEFAULT_MAX_STEPS = 12
 
 function toToolErrorOutput(err: unknown): ToolErrorOutput {
-  if (err instanceof ToolError) {
-    return { error: { code: err.code, message: err.message } }
-  }
-  // Some SDKs reject with plain objects; take their message before falling back to String().
-  const message = (err as { message?: unknown } | null)?.message
-  return {
-    error: { code: 'TOOL_ERROR', message: typeof message === 'string' ? message : String(err) },
-  }
+  return { error: normalizeToolError(err) }
 }
 
 export function createAgent(options: VibekitAgentOptions): AgentSession {

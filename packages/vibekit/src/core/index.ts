@@ -6,7 +6,7 @@ export {
   type ToolPlugin,
   type UnsignedGroupResult,
 } from './contract.js'
-export { ToolError } from './errors.js'
+export { ToolError, isRateLimited, normalizeToolError, RATE_LIMITED } from './errors.js'
 export { base64ToBytes, bytesToBase64, jsonSafe } from './codec.js'
 export { DEFAULT_LIMIT, indexerSemaphore, Semaphore, stripFinalToken } from './util.js'
 export * from './compose/index.js'

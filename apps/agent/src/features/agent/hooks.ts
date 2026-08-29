@@ -315,10 +315,11 @@ export function useAgentLane({
       if (event.isError) {
         const error = (event.output as { error?: { code?: string; message?: string } })?.error
         const declined = error?.code === 'DENIED'
+        const resting = error?.code === 'RATE_LIMITED'
         appendNote(
           sectionId,
-          `${event.toolName} — ${declined ? 'declined by the house cap' : (error?.message ?? 'failed')}`,
-          declined ? 'muted' : 'error',
+          `${event.toolName} — ${declined ? 'declined by the house cap' : resting ? 'resting (rate-limited) — try again in a minute' : (error?.message ?? 'failed')}`,
+          declined || resting ? 'muted' : 'error',
         )
         return
       }
