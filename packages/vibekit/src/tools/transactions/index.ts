@@ -27,7 +27,7 @@ export const transactionTools: AnyTool[] = [
   defineTool({
     name: 'search_transactions',
     description:
-      'Search transactions and render a transaction list card. Results come oldest first; nextToken walks forward in time. To list a block, set minRound and maxRound to that round. To filter by kind, set txType (pay, axfer, appl, …). For one account use search_account_transactions. Do not recap results as markdown — the list card is the answer.',
+      'Search transactions and render a transaction list card. Results come newest first; nextToken walks back in time. To list a block, set minRound and maxRound to that round. To filter by kind, set txType (pay, axfer, appl, …). For one account use search_account_transactions. Do not recap results as markdown — the list card is the answer.',
     parameters: z.object({
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
