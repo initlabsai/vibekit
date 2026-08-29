@@ -96,11 +96,11 @@ in `AGENTS.md`.
   day comes. The house gate allows three web calls per turn (`WEB_CALLS_PER_TURN`
   in the agent route), so one turn cannot loop searches.
 
-- **Agent: swaps need a router key.** `HAYSTACK_API_KEY` registers the
-  haystack plugin (`get_swap_quote`, `swap`); without it the agent has no swap
-  tools and says so. txnlab publishes a free-tier key in the SDK README (60
+- **Agent: swaps run on txnlab's free-tier key until we set our own.** The
+  haystack plugin (`get_swap_quote`, `swap`) always registers; without
+  `HAYSTACK_API_KEY` it uses the key txnlab publishes in the SDK README (60
   requests a minute, shared by everyone who copies it) — fine for a laptop,
-  not for production: ask support@txnlab.dev for our own. `HAYSTACK_REFERRER`
+  not for production: ask support@txnlab.dev for our own and set the env. `HAYSTACK_REFERRER`
   is the address that earns the referrer share of the router fee on every
   swap; the house address is
   `ST5CPUODRQLSIUIXE75GTH6YGX3L4NYHFATN4IKX7SDY3MENYIA2WXEO7A` (2026-08-29).

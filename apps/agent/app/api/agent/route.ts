@@ -57,10 +57,12 @@ const OMITTED_TOOLS = new Set([
   'batch_lookup_accounts',
 ])
 
-/** Swaps register only with a router key; without one the agent simply has no swap tools. */
+// txnlab publishes this free-tier key in the SDK README (60 requests a minute, shared by
+// everyone who copies it). Fine for a laptop; production sets HAYSTACK_API_KEY to its own.
+const HAYSTACK_FREE_TIER_KEY = '1b72df7e-1131-4449-8ce1-29b79dd3f51e'
+
 function haystackPlugins() {
-  const apiKey = process.env.HAYSTACK_API_KEY
-  if (!apiKey) return []
+  const apiKey = process.env.HAYSTACK_API_KEY ?? HAYSTACK_FREE_TIER_KEY
   const referrerAddress = process.env.HAYSTACK_REFERRER
   return [haystackPlugin({ apiKey, ...(referrerAddress ? { referrerAddress } : {}) })]
 }
