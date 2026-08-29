@@ -8,8 +8,14 @@ import { matchCommands } from '../commands'
 import { Button, Copyable } from '../primitives'
 import type { Section, SectionBlock } from './hooks'
 
+/** A provider that fails to parse DeepSeek's native tool markup streams it as text; that is wiring, not words. */
+const TOOL_MARKUP = /<｜DSML｜tool_calls>[\s\S]*?(<\/｜DSML｜tool_calls>|$)|<\/?｜DSML｜[^>]*>/g
+
+/** Her line as she meant it: stray markdown styling removed, leaked tool markup removed. */
 export function plainAgentText(text: string): string {
-  return text.replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1')
+  const spoken = text.replace(TOOL_MARKUP, '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1').trim()
+  if (spoken === '' && TOOL_MARKUP.test(text)) return 'my tools slipped on that one — the provider garbled the call. ask me again?'
+  return spoken
 }
 
 export function NavPane({
