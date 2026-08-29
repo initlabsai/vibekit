@@ -14,6 +14,15 @@ import { AlphaClient } from '@alpha-arcade/sdk'
 import algosdk from 'algosdk'
 import { z } from 'zod'
 import { formatMarket, formatOpenOrder, formatOrderbook, formatPosition } from './format.js'
+import {
+  marketSchema,
+  marketsSchema,
+  openOrdersSchema,
+  orderbookSchema,
+  positionsSchema,
+} from './schemas.js'
+
+export * from './schemas.js'
 
 export { microToShares, microToUsd } from './format.js'
 export type {
@@ -61,24 +70,33 @@ export const alphaArcadeTools: AnyTool[] = [
   defineTool({
     name: 'get_live_markets',
     description:
-      'Get all live prediction markets on Alpha Arcade (Algorand mainnet). Prices are raw numbers: yesPriceUsd=0.65 means $0.65 = 65% implied probability. All Usd-suffixed fields are already USD — never convert them.',
-    parameters: z.object({}),
-    view: 'table',
-    handler: async (ctx) => {
+      'Live prediction markets on Alpha Arcade (mainnet): title, YES/NO price = implied probability, volume, close time. Filter by category, cap with limit.',
+    parameters: z.object({
+      category: z.string().optional().describe('Only markets in this category (case-insensitive)'),
+      limit: z.number().optional().describe('Max markets (default 20, max 100)'),
+    }),
+    output: marketsSchema,
+    view: 'arcade.markets',
+    handler: async (ctx, args) => {
       const client = getAlphaClient(ctx)
       let markets = await client.getLiveMarketsFromApi().catch(() => null)
       if (!markets) markets = await client.getLiveMarkets()
-      return { markets: markets.map(formatMarket) }
+      const wanted = args.category?.toLowerCase()
+      const rows = markets
+        .map(formatMarket)
+        .filter((m) => !wanted || m.categories?.some((c) => c.toLowerCase() === wanted))
+        .sort((a, b) => (b.volumeUsd ?? 0) - (a.volumeUsd ?? 0))
+      return { markets: rows.slice(0, Math.min(args.limit ?? 20, 100)), total: rows.length }
     },
   }),
   defineTool({
     name: 'get_market',
-    description:
-      'Get one prediction market by ID (app ID as string, or UUID). Prices raw USD numbers (yesPriceUsd/yesProb).',
+    description: 'One Alpha Arcade market by app id or UUID: prices, volume, close time, options.',
     parameters: z.object({
       marketId: z.string().describe('Market ID — app ID as string or UUID'),
     }),
-    view: 'json',
+    output: marketSchema,
+    view: 'arcade.market',
     handler: async (ctx, args) => {
       const client = getAlphaClient(ctx)
       let market = await client.getMarketFromApi(args.marketId).catch(() => null)
@@ -94,36 +112,44 @@ export const alphaArcadeTools: AnyTool[] = [
   defineTool({
     name: 'get_orderbook',
     description:
-      'Get the on-chain orderbook for a prediction market: YES/NO bids and asks, priceUsd + share quantities.',
+      'The on-chain orderbook of an Alpha Arcade market: YES and NO bids and asks in USD and shares.',
     parameters: z.object({
       marketAppId: z.number().describe('The market app ID'),
     }),
-    view: 'table',
-    handler: async (ctx, args) =>
-      formatOrderbook(await getAlphaClient(ctx).getOrderbook(args.marketAppId)),
+    output: orderbookSchema,
+    view: 'arcade.orderbook',
+    handler: async (ctx, args) => ({
+      marketAppId: args.marketAppId,
+      ...formatOrderbook(await getAlphaClient(ctx).getOrderbook(args.marketAppId)),
+    }),
   }),
   defineTool({
     name: 'get_positions',
     description:
-      'Get all prediction-market positions (YES/NO share balances) for a wallet address.',
+      "An account's Alpha Arcade positions — YES/NO share balances per market. Default to the active account.",
     parameters: z.object({
       walletAddress: z.string().describe('Algorand wallet address'),
     }),
-    view: 'table',
+    output: positionsSchema,
+    view: 'arcade.positions',
     handler: async (ctx, args) => ({
+      walletAddress: args.walletAddress,
       positions: (await getAlphaClient(ctx).getPositions(args.walletAddress)).map(formatPosition),
     }),
   }),
   defineTool({
     name: 'get_open_orders',
     description:
-      'Get open orders for a wallet on a prediction market (priceUsd, quantities, slippageUsd).',
+      "An account's open orders on one Alpha Arcade market. Default to the active account.",
     parameters: z.object({
       marketAppId: z.number().describe('The market app ID'),
       walletAddress: z.string().describe('Algorand wallet address'),
     }),
-    view: 'table',
+    output: openOrdersSchema,
+    view: 'arcade.orders',
     handler: async (ctx, args) => ({
+      marketAppId: args.marketAppId,
+      walletAddress: args.walletAddress,
       orders: (await getAlphaClient(ctx).getOpenOrders(args.marketAppId, args.walletAddress)).map(
         formatOpenOrder,
       ),
@@ -135,7 +161,15 @@ export const alphaArcadeTools: AnyTool[] = [
 export function alphaArcadePlugin(options: AlphaArcadeOptions = {}): ToolPlugin {
   return {
     name: PLUGIN_NAME,
+    description: 'Alpha Arcade prediction markets — prices, orderbooks, positions (mainnet)',
     tools: alphaArcadeTools,
     service: createAlphaClient(options),
+    views: {
+      'arcade.markets': marketsSchema,
+      'arcade.market': marketSchema,
+      'arcade.orderbook': orderbookSchema,
+      'arcade.positions': positionsSchema,
+      'arcade.orders': openOrdersSchema,
+    },
   }
 }

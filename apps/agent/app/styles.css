@@ -567,3 +567,32 @@ a.button-active { text-decoration: underline; }
 .route-seg-1 { background: var(--brass); }
 .route-seg-2 { background: var(--signal-dim, #2e5c5e); color: var(--text); }
 .route-seg-3 { background: var(--muted); }
+
+/* Alpha Arcade. */
+.arcade-thumb { border-radius: 4px; display: inline-block; flex: none; height: 28px; margin-right: .5rem; object-fit: cover; vertical-align: middle; width: 28px; }
+.arcade-thumb-empty { background: var(--border-soft); }
+.arcade-title { align-items: center; display: inline-flex; min-width: 0; }
+.arcade-hero { align-items: center; }
+.arcade-hero .arcade-thumb { height: 40px; width: 40px; }
+.prob { align-items: center; display: inline-flex; gap: .5rem; justify-content: flex-end; min-width: 5rem; position: relative; }
+.prob-bar { background: color-mix(in srgb, var(--signal) 28%, transparent); display: inline-block; height: 8px; max-width: 3.5rem; }
+.prob-value { font-family: var(--font-mono); }
+.arcade-sides { display: grid; gap: .6rem; grid-template-columns: 1fr 1fr; margin-top: 1rem; }
+.arcade-side { border: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: .35rem; padding: .7rem .8rem; }
+.arcade-yes { border-color: color-mix(in srgb, var(--signal) 45%, var(--border-soft)); }
+.arcade-no { border-color: color-mix(in srgb, var(--brass) 45%, var(--border-soft)); }
+.arcade-side-label { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em; }
+.arcade-side-price { font-family: var(--font-mono); font-size: 1.5rem; }
+.arcade-yes .arcade-side-price { color: var(--signal); }
+.arcade-no .arcade-side-price { color: var(--brass); }
+.arcade-options { list-style: none; margin: .8rem 0 0; padding: 0; }
+.arcade-option { border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; padding: .35rem 0; }
+.books { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; margin-top: 1rem; }
+.book-label { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em; margin: 0 0 .3rem; }
+.book-row { align-items: center; display: grid; font-family: var(--font-mono); font-size: .8rem; gap: .5rem; grid-template-columns: 3.5rem 1fr; padding: .15rem 0; position: relative; }
+.book-depth { bottom: 0; left: 0; opacity: .18; position: absolute; top: 0; }
+.book-ask .book-depth { background: var(--brass); }
+.book-bid .book-depth { background: var(--signal); }
+.book-price { position: relative; }
+.book-qty { position: relative; text-align: right; }
+@media (max-width: 600px) { .books { grid-template-columns: 1fr; } }

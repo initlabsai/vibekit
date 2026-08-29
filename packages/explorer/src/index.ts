@@ -111,6 +111,11 @@ export type { BlockDetailViewModel } from './views/block.js'
 export { createNetworkStatusViewModel } from './views/network.js'
 export {
   buildPluginRecord,
+  createArcadeMarketViewModel,
+  createArcadeMarketsViewModel,
+  createArcadeOrderbookViewModel,
+  createArcadeOrdersViewModel,
+  createArcadePositionsViewModel,
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createVestigeHistoryViewModel,
@@ -124,7 +129,12 @@ export type {
   AssetPrices,
   AssetProfile,
   DefiProtocols,
+  MarketRow,
+  Markets,
   NfdRecord,
+  OpenOrders,
+  OrderbookView,
+  Positions,
   RankedAssets,
   SwapQuote,
 } from './views/plugins.js'

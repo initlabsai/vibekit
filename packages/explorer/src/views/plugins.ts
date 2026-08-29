@@ -8,6 +8,11 @@ import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
 export type {
+  MarketRow,
+  Markets,
+  OpenOrders,
+  OrderbookView,
+  Positions,
   SwapQuote,
   AssetHistory,
   AssetPrices,
@@ -62,6 +67,31 @@ export const createSwapQuoteViewModel = viewModelFor(
   pluginViewSchemas['haystack.quote'],
   'haystack.quote',
   'Swap quote',
+)
+export const createArcadeMarketsViewModel = viewModelFor(
+  pluginViewSchemas['arcade.markets'],
+  'arcade.markets',
+  'Markets',
+)
+export const createArcadeMarketViewModel = viewModelFor(
+  pluginViewSchemas['arcade.market'],
+  'arcade.market',
+  'Market',
+)
+export const createArcadeOrderbookViewModel = viewModelFor(
+  pluginViewSchemas['arcade.orderbook'],
+  'arcade.orderbook',
+  'Orderbook',
+)
+export const createArcadePositionsViewModel = viewModelFor(
+  pluginViewSchemas['arcade.positions'],
+  'arcade.positions',
+  'Positions',
+)
+export const createArcadeOrdersViewModel = viewModelFor(
+  pluginViewSchemas['arcade.orders'],
+  'arcade.orders',
+  'Open orders',
 )
 export const createPeraAssetViewModel = viewModelFor(
   pluginViewSchemas['pera.asset'],

@@ -86,4 +86,14 @@ describe('plugin shape', () => {
     ])
     for (const tool of alphaArcadeTools) expect(tool.requiresSigner ?? false).toBe(false)
   })
+
+  test('every tool declares an arcade view with a schema', () => {
+    const plugin = alphaArcadePlugin()
+    for (const tool of alphaArcadeTools) {
+      expect(tool.view?.startsWith('arcade.')).toBe(true)
+      expect(plugin.views?.[tool.view!]).toBeDefined()
+      expect(tool.output).toBeDefined()
+      expect(tool.description.length).toBeLessThanOrEqual(200)
+    }
+  })
 })

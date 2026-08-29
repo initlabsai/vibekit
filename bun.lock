@@ -90,6 +90,7 @@
       "name": "@initlabs/vibekit-explorer",
       "version": "1.0.0-alpha.2",
       "dependencies": {
+        "@alpha-arcade/sdk": "0.4.11",
         "@initlabs/vibekit": "workspace:*",
         "algosdk": "3.7.0",
         "zod": "^4.4.3",

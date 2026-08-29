@@ -5,6 +5,11 @@ import { useState } from 'react'
 /** The one place a view id becomes UI: every trusted view spec renders through this exhaustive switch. */
 import {
   formatBaseUnits,
+  createArcadeMarketViewModel,
+  createArcadeMarketsViewModel,
+  createArcadeOrderbookViewModel,
+  createArcadeOrdersViewModel,
+  createArcadePositionsViewModel,
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
@@ -62,6 +67,13 @@ import {
 } from './features/assets/cards'
 import { BlockCard, BlockListCard } from './features/blocks/cards'
 import { NetworkCard } from './features/network/cards'
+import {
+  MarketCard,
+  MarketsCard,
+  OrderbookCard,
+  OrdersCard,
+  PositionsCard,
+} from './features/plugins/arcade-cards'
 import { DefiOverviewCard } from './features/plugins/defi-card'
 import { MarketPricesCard, MarketRankedCard } from './features/plugins/market-cards'
 import { PriceHistoryCard } from './features/plugins/price-history-card'
@@ -354,6 +366,71 @@ export function ResultCard({
                   onInput(
                     `swap ${amount} ${quote.fromUnit} (asset ${quote.fromAssetId}) to ${quote.toUnit} (asset ${quote.toAssetId})`,
                   )
+              : undefined
+          }
+        />
+      )
+    }
+    case 'arcade.markets': {
+      const derived = createArcadeMarketsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <MarketsCard
+          data={derived.model}
+          network={derived.model.network}
+          onOpen={onInput ? (id) => onInput(`show market ${id}`) : undefined}
+        />
+      )
+    }
+    case 'arcade.market': {
+      const derived = createArcadeMarketViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      const market = derived.model
+      return (
+        <MarketCard
+          data={market}
+          network={market.network}
+          onBuy={
+            onInput
+              ? (side) => onInput(`buy ${side} on market ${market.marketAppId} (${market.title})`)
+              : undefined
+          }
+          onOrderbook={
+            onInput ? () => onInput(`orderbook for market ${market.marketAppId}`) : undefined
+          }
+        />
+      )
+    }
+    case 'arcade.orderbook': {
+      const derived = createArcadeOrderbookViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <OrderbookCard
+          data={derived.model}
+          onMarket={onInput ? () => onInput(`show market ${derived.model.marketAppId}`) : undefined}
+        />
+      )
+    }
+    case 'arcade.positions': {
+      const derived = createArcadePositionsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <PositionsCard
+          data={derived.model}
+          onOpen={onInput ? (id) => onInput(`show market ${id}`) : undefined}
+        />
+      )
+    }
+    case 'arcade.orders': {
+      const derived = createArcadeOrdersViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <OrdersCard
+          data={derived.model}
+          onCancel={
+            onInput
+              ? (escrowAppId) =>
+                  onInput(`cancel order ${escrowAppId} on market ${derived.model.marketAppId}`)
               : undefined
           }
         />

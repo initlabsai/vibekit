@@ -24,6 +24,11 @@ import {
   createBlockDetailViewModel,
   createBlockListViewModel,
   createNetworkStatusViewModel,
+  createArcadeMarketViewModel,
+  createArcadeMarketsViewModel,
+  createArcadeOrderbookViewModel,
+  createArcadeOrdersViewModel,
+  createArcadePositionsViewModel,
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
@@ -72,6 +77,13 @@ import {
   MarketRankedCard,
   PriceHistoryCard,
 } from './features/plugins/market.js'
+import {
+  MarketCard,
+  MarketsCard,
+  OrderbookCard,
+  OrdersCard,
+  PositionsCard,
+} from './features/plugins/arcade.js'
 import { NfdCard } from './features/plugins/nfd.js'
 import { SwapQuoteCard } from './features/plugins/swap.js'
 import { PeraAssetCard } from './features/plugins/pera.js'
@@ -435,6 +447,48 @@ export function ResultCard({
       const derived = createSwapQuoteViewModel(store, view)
       if (!derived.ok) return <Unavailable title="QUOTE" width={width} />
       return <SwapQuoteCard data={derived.model} network={derived.model.network} width={width} />
+    }
+    case 'arcade.markets': {
+      const derived = createArcadeMarketsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="MARKETS" width={width} />
+      return (
+        <MarketsCard
+          data={derived.model}
+          network={derived.model.network}
+          width={width}
+          onOpen={
+            onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined
+          }
+        />
+      )
+    }
+    case 'arcade.market': {
+      const derived = createArcadeMarketViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="MARKET" width={width} />
+      return <MarketCard data={derived.model} network={derived.model.network} width={width} />
+    }
+    case 'arcade.orderbook': {
+      const derived = createArcadeOrderbookViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="ORDERBOOK" width={width} />
+      return <OrderbookCard data={derived.model} width={width} />
+    }
+    case 'arcade.positions': {
+      const derived = createArcadePositionsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="POSITIONS" width={width} />
+      return (
+        <PositionsCard
+          data={derived.model}
+          width={width}
+          onOpen={
+            onOpen ? (applicationId) => onOpen({ kind: 'application', applicationId }) : undefined
+          }
+        />
+      )
+    }
+    case 'arcade.orders': {
+      const derived = createArcadeOrdersViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="OPEN ORDERS" width={width} />
+      return <OrdersCard data={derived.model} width={width} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

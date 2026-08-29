@@ -158,6 +158,11 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'vestige.protocols': pluginRecordBuilder('vestige.protocols'),
   'pera.asset': pluginRecordBuilder('pera.asset'),
   'haystack.quote': pluginRecordBuilder('haystack.quote'),
+  'arcade.markets': pluginRecordBuilder('arcade.markets'),
+  'arcade.market': pluginRecordBuilder('arcade.market'),
+  'arcade.orderbook': pluginRecordBuilder('arcade.orderbook'),
+  'arcade.positions': pluginRecordBuilder('arcade.positions'),
+  'arcade.orders': pluginRecordBuilder('arcade.orders'),
 }
 
 /**

@@ -5,6 +5,13 @@
  */
 import type { z } from 'zod'
 
+import {
+  marketSchema,
+  marketsSchema,
+  openOrdersSchema,
+  orderbookSchema,
+  positionsSchema,
+} from './alpha-arcade/schemas.js'
 import { swapQuoteSchema } from './haystack/schemas.js'
 import { nfdRecordSchema } from './nfd/schemas.js'
 import { assetProfileSchema } from './pera/schemas.js'
@@ -15,6 +22,13 @@ import {
   rankedAssetsSchema,
 } from './vestige/schemas.js'
 
+export type {
+  MarketRow,
+  Markets,
+  OpenOrders,
+  OrderbookView,
+  Positions,
+} from './alpha-arcade/schemas.js'
 export type { SwapQuote } from './haystack/schemas.js'
 export type { NfdRecord } from './nfd/schemas.js'
 export type { AssetProfile } from './pera/schemas.js'
@@ -28,6 +42,11 @@ export const PLUGIN_VIEW_IDS = [
   'vestige.protocols',
   'pera.asset',
   'haystack.quote',
+  'arcade.markets',
+  'arcade.market',
+  'arcade.orderbook',
+  'arcade.positions',
+  'arcade.orders',
 ] as const
 
 export type PluginViewId = (typeof PLUGIN_VIEW_IDS)[number]
@@ -40,4 +59,9 @@ export const pluginViewSchemas = {
   'vestige.protocols': defiProtocolsSchema,
   'pera.asset': assetProfileSchema,
   'haystack.quote': swapQuoteSchema,
+  'arcade.markets': marketsSchema,
+  'arcade.market': marketSchema,
+  'arcade.orderbook': orderbookSchema,
+  'arcade.positions': positionsSchema,
+  'arcade.orders': openOrdersSchema,
 } as const satisfies Record<PluginViewId, z.ZodType>
