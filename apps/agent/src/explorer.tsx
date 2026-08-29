@@ -271,7 +271,8 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   const closeSheet = useCallback(() => sheetRef.current?.removeAttribute('open'), [])
 
   // Both side panels fold; the viewer's choice is remembered per browser.
-  const [railOpen, toggleRail] = usePanel('vibekit.rail')
+  // The account rail starts folded so the feed is the first thing a new visitor sees.
+  const [railOpen, toggleRail] = usePanel('vibekit.rail', false)
   const [navOpen, toggleNav] = usePanel('vibekit.nav')
 
   const context = useMemo<ExplorerContextValue>(

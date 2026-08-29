@@ -4,15 +4,23 @@ import { CompanionFace } from './features/profile/companion'
 /** USDC where it lives; localnet has no well-known asset, so it gets the block tail instead. */
 const USDC: Record<string, string | undefined> = { mainnet: '31566704', testnet: '10458941' }
 
-function examples(network: string): string[] {
-  if (network === 'mainnet')
-    return ["show algorand's chart (wince)", 'who is vibekit.algo?', 'quote 10 ALGO to USDC', 'what prediction markets are live?']
+/** Intro chips: mainnet can name ecosystem reads; other nets only things that resolve there. */
+export function welcomeExamples(network: string): string[] {
+  if (network === 'mainnet') {
+    return [
+      "show algorand's chart (wince)",
+      'who is vibekit.algo?',
+      'quote 10 ALGO to USDC',
+      'what prediction markets are live?',
+    ]
+  }
   const usdc = USDC[network]
-  return [usdc ? `what is asset ${usdc}?` : '/blocks', 'who is vibekit.algo?', '/status']
+  if (usdc) return [`what is asset ${usdc}?`, '/blocks', '/status']
+  return ['/blocks', '/status']
 }
 
 export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void; network: string }) {
-  const EXAMPLES = examples(network)
+  const EXAMPLES = welcomeExamples(network)
   return (
     <div className="note-agent intro">
       <CompanionFace mood="calm" seed={0} />

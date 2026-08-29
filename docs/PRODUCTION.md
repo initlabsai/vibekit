@@ -70,14 +70,14 @@ in `AGENTS.md`.
   Until then, describe the capability as post-quantum *signing*, never as an
   account -- `skills/use-vibekit/references/accounts-and-signing.md` says so.
 
-- **Agent: flipping paid turns to mainnet.** `agent.getvibekit.ai` sells
-  turns in testnet USDC for the alpha (`X402_NETWORK=testnet`). Going live is
-  an env change and a redeploy, nothing in code: set `X402_NETWORK=mainnet`
-  (or delete it -- production defaults to mainnet), point `X402_PAY_TO` at the
-  house mainnet address opted in to USDC `31566704`, leave `X402_ASSET_ID`
-  empty, and delete `NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK` so the chip starts
-  on mainnet. The offer's "testnet USDC" suffix and the intro's example asset
-  follow the chain the route reports.
+- **Agent: flipping paid turns to mainnet.** The chip already starts on
+  mainnet. `agent.getvibekit.ai` still sells turns in testnet USDC for the
+  alpha (`X402_NETWORK=testnet`). Going live is an env change and a redeploy,
+  nothing in code: set `X402_NETWORK=mainnet` (or delete it -- production
+  defaults to mainnet), point `X402_PAY_TO` at the house mainnet address opted
+  in to USDC `31566704`, and leave `X402_ASSET_ID` empty. The offer's
+  "testnet USDC" suffix follows the chain the route reports. `NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK`
+  no longer selects the chip — delete it from Vercel if it is still set.
 
   Remove `withWalletNetwork` in `apps/agent/src/wallet/provider.tsx` at the
   same time (2026-08-28). It pins the wallet to the pack's chain for the

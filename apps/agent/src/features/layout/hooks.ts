@@ -4,15 +4,17 @@ import { useCallback, useState } from 'react'
 /** Below this width a panel is a drawer over the feed, so it starts closed unless the viewer opened it. */
 const PHONE = '(max-width: 720px)'
 
-export function usePanel(key: string): [open: boolean, toggle: () => void] {
+/** `startOpen` is the unsaved desktop default. A phone starts closed. */
+export function usePanel(key: string, startOpen = true): [open: boolean, toggle: () => void] {
   const [open, setOpen] = useState(() => {
     try {
       const saved = window.localStorage.getItem(key)
       if (saved === 'closed') return false
       if (saved === 'open') return true
-      return !window.matchMedia(PHONE).matches
+      if (window.matchMedia(PHONE).matches) return false
+      return startOpen
     } catch {
-      return true
+      return startOpen
     }
   })
   const toggle = useCallback(() => {

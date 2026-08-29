@@ -6,10 +6,9 @@ import { createRemoteExplorerHost, type RemoteExplorerHost } from '../../remote-
 
 export const NETWORKS: LiveNetworkId[] = ['localnet', 'testnet', 'mainnet']
 
-/** Where the Explorer starts: mainnet; `NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK` picks testnet or localnet. */
+/** Where the Explorer starts. The chip is mainnet; click it to leave. */
 export function defaultNetwork(): LiveNetworkId {
-  const configured = process.env.NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK
-  return configured === 'localnet' || configured === 'testnet' ? configured : 'mainnet'
+  return 'mainnet'
 }
 
 export type ExplorerHost = RemoteExplorerHost | ReturnType<typeof createSampleHost>

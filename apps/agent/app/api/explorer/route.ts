@@ -167,8 +167,7 @@ function enrichmentFor(network: LiveNetworkId): EnrichmentHost {
 
 /** The probe's network when the query names none: the same default the page opens on. */
 function defaultNetwork(): LiveNetworkId {
-  const configured = process.env.NEXT_PUBLIC_EXPLORER_DEFAULT_NETWORK
-  return configured === 'localnet' || configured === 'testnet' ? configured : 'mainnet'
+  return 'mainnet'
 }
 
 function fail(status: number, error: string): Response {
