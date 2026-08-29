@@ -55,11 +55,11 @@ function chargeTurn(ip: string): string | undefined {
     usage.turns = 0
     usage.byIp.clear()
   }
-  if (usage.turns >= DAILY_CAP) return 'The house has spent its daily budget on the agent; try again tomorrow.'
+  if (usage.turns >= DAILY_CAP) return "the house is out of turns for today. i'll be here tomorrow."
   const hour = now.getUTCHours()
   const entry = usage.byIp.get(ip) ?? { hour, turns: 0 }
   if (entry.hour !== hour) Object.assign(entry, { hour, turns: 0 })
-  if (entry.turns >= IP_HOURLY_CAP) return 'That is a lot of questions for one hour; try again later.'
+  if (entry.turns >= IP_HOURLY_CAP) return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
   entry.turns += 1
   usage.byIp.set(ip, entry)
   usage.turns += 1

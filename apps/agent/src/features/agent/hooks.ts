@@ -177,12 +177,11 @@ export function useAgentLane({
             history: historyRef.current,
           }),
         })
-        if (response.status === 402) {
-          // Her, not the model: she is out of turns and says so, cross.
-          const payload = (await response.json().catch(() => ({}))) as { offer?: { price: string; turns: number } }
-          updateItem(sectionId, noteId, (item) =>
-            item.kind === 'note' ? { ...item, text: outOfTurnsLine(sectionId, payload.offer), pending: false, mood: 'squint' } : item,
-          )
+        if (response.status === 402 || response.status === 429) {
+          // Her, not the model: out of turns, or the house's cap — she says so, cross.
+          const payload = (await response.json().catch(() => ({}))) as { error?: string; offer?: { price: string; turns: number } }
+          const text = response.status === 402 ? outOfTurnsLine(sectionId, payload.offer) : (payload.error ?? 'the house is busy. give me a minute.')
+          updateItem(sectionId, noteId, (item) => (item.kind === 'note' ? { ...item, text, pending: false, mood: 'squint' } : item))
           pending = false
           spoke = true
           return
