@@ -232,8 +232,8 @@ const marketIdArg = z.string().describe('Market app ID as a string, or its UUID'
 
 async function marketFor(ctx: ToolContext, marketId: string) {
   // The list we already hold has prices, images, and volume; the per-market routes often do not.
-  const listed = await getAlphaService(ctx)
-    .markets()
+  const listed = await Promise.resolve()
+    .then(() => getAlphaService(ctx).markets())
     .then((markets) =>
       markets.find(
         (m) =>
