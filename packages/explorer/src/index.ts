@@ -120,6 +120,8 @@ export {
   createNfdProfileViewModel,
   createVestigeHistoryViewModel,
   createPeraAssetViewModel,
+  createWebPageViewModel,
+  createWebResultsViewModel,
   createSwapQuoteViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
@@ -137,6 +139,8 @@ export type {
   Positions,
   RankedAssets,
   SwapQuote,
+  WebPage,
+  WebResults,
 } from './views/plugins.js'
 export type { NetworkStatusViewModel } from './views/network.js'
 export {

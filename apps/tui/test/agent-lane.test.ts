@@ -704,4 +704,15 @@ describe('applyToolResultPlan', () => {
     )
     expect(dropped.calls).toEqual(['note no'])
   })
+
+  test('the explorer agent registers every built-in plugin', async () => {
+    const { explorerPlugins } = await import('@initlabs/vibekit-explorer/live')
+    expect(explorerPlugins().map((plugin) => plugin.name)).toEqual([
+      'nfd',
+      'vestige',
+      'pera',
+      'alpha-arcade',
+      'web',
+    ])
+  })
 })

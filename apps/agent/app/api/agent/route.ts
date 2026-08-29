@@ -39,6 +39,8 @@ const DEFAULT_MODEL = 'Qwen/Qwen2.5-72B-Instruct-Turbo'
 const MAX_BODY_BYTES = 256 * 1024
 const MAX_HISTORY = 40
 const PROGRAM_PAGES_PER_TURN = 2
+const WEB_CALLS_PER_TURN = 3
+const WEB_TOOLS = new Set(['web_search', 'read_page'])
 // Not for a chat window: spec-path deploys (no file grant here), the admin writes
 // of assets and apps you created, and algod twins of indexer lookups.
 const OMITTED_TOOLS = new Set([
@@ -172,6 +174,7 @@ export async function POST(request: Request): Promise<Response> {
   // so they always pass. The one expensive tool reads a program a page (~3k tokens) at a
   // time; the house pays for two pages per turn, which explains a contract, and no more.
   let programPages = 0
+  let webCalls = 0
   const session = createExplorerAgent({
     model: {
       provider: 'openai-compatible',
@@ -185,7 +188,9 @@ export async function POST(request: Request): Promise<Response> {
     omitTools: OMITTED_TOOLS,
     extraPlugins: haystackPlugins(),
     approveToolCall: async ({ toolName }) =>
-      toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
+      WEB_TOOLS.has(toolName)
+        ? ++webCalls <= WEB_CALLS_PER_TURN
+        : toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
   })
   const context = [activeSenderLine(body.activeAddress, body.accounts), body.context ?? '']
     .filter(Boolean)

@@ -72,6 +72,10 @@
       "types": "./dist/plugins/alpha-arcade/index.d.ts",
       "import": "./dist/plugins/alpha-arcade/index.js"
     },
+    "./plugins/web": {
+      "types": "./dist/plugins/web/index.d.ts",
+      "import": "./dist/plugins/web/index.js"
+    },
     "./plugins/haystack": {
       "types": "./dist/plugins/haystack/index.d.ts",
       "import": "./dist/plugins/haystack/index.js"
@@ -141,13 +145,14 @@
     "@ai-sdk/anthropic": "^4.0.40",
     "@ai-sdk/openai": "^4.0.45",
     "@ai-sdk/openai-compatible": "^3.0.34",
+    "@algorandfoundation/algokit-utils": "9.2.0",
     "@algorandfoundation/keystore-core": "1.0.0-canary.3",
     "@algorandfoundation/keystore-node": "1.0.0-canary.3",
     "@alpha-arcade/sdk": "^0.4.11",
-    "@txnlab/haystack-router": "2.0.5",
     "@modelcontextprotocol/client": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
     "@tanstack/store": "0.9.3",
+    "@txnlab/haystack-router": "2.0.5",
     "@txnlab/nfd-sdk": "^1.1.0",
     "@types/bun": "^1.4.0",
     "ai": "^7.0.74",

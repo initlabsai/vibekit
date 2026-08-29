@@ -10,6 +10,7 @@ import { alphaArcadePlugin } from '../plugins/alpha-arcade/index.js'
 import { nfdPlugin } from '../plugins/nfd/index.js'
 import { peraPlugin } from '../plugins/pera/index.js'
 import { vestigePlugin } from '../plugins/vestige/index.js'
+import { webPlugin } from '../plugins/web/index.js'
 import {
   createFundTestnetTool,
   createSigningAccountTool,
@@ -42,7 +43,7 @@ export const defaultTools: AnyTool[] = [
 
 /** The default plugin set — names, market data, asset trust. Fresh instances per call. */
 export function defaultPlugins(): ToolPlugin[] {
-  return [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin()]
+  return [nfdPlugin(), alphaArcadePlugin(), vestigePlugin(), peraPlugin(), webPlugin()]
 }
 
 /**

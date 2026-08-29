@@ -90,6 +90,7 @@
       "name": "@initlabs/vibekit-explorer",
       "version": "1.0.0-alpha.2",
       "dependencies": {
+        "@algorandfoundation/algokit-utils": "9.2.0",
         "@alpha-arcade/sdk": "0.4.11",
         "@initlabs/vibekit": "workspace:*",
         "algosdk": "3.7.0",
@@ -107,6 +108,7 @@
         "@ai-sdk/anthropic": "^4.0.40",
         "@ai-sdk/openai": "^4.0.45",
         "@ai-sdk/openai-compatible": "^3.0.34",
+        "@algorandfoundation/algokit-utils": "9.2.0",
         "@algorandfoundation/keystore-core": "1.0.0-canary.3",
         "@algorandfoundation/keystore-node": "1.0.0-canary.3",
         "@alpha-arcade/sdk": "^0.4.11",
@@ -167,7 +169,7 @@
 
     "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@5.0.28", "", { "dependencies": { "@ai-sdk/provider": "4.0.7", "@standard-schema/spec": "^1.1.0", "@workflow/serde": "4.1.0", "eventsource-parser": "^3.0.8", "undici": "^7.28.0" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-TnHUyd/rCYQqHg5RuiOaz/hUql6U+kbUaBW0Rp+0N5UhnAInA9CzzV0HXvuAAPwppDsK6fAx9Rd+tRawpJ/3pg=="],
 
-    "@algorandfoundation/algokit-utils": ["@algorandfoundation/algokit-utils@10.0.0-alpha.46", "", { "dependencies": { "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@noble/curves": "^2.0.1", "@noble/ed25519": "^3.0.0", "@noble/hashes": "^2.0.1", "algorand-msgpack": "^1.1.0", "buffer": "^6.0.3", "dotenv": "^16.4.5", "hi-base32": "^0.5.1", "json-bigint": "^1.0.0", "tweetnacl": "^1.0.3", "vlq": "^2.0.4" } }, "sha512-Lx56ET6RmrDCFGwx6qyIr7YRX3Q3MyKgqkNeumLkFHXVkqMnXnK1aLeEbV59EOK8UHQ5UPJofSj1zvRMm9Du7w=="],
+    "@algorandfoundation/algokit-utils": ["@algorandfoundation/algokit-utils@9.2.0", "", { "dependencies": { "buffer": "^6.0.3" }, "peerDependencies": { "algosdk": "^3.5.2" } }, "sha512-jILpK3PlSJ55crS8+Dl7iIiADEj/VowokTGSVEEneDG41XM3jMmogGVpCNipBil/YAGC2eh2yc4l9iHnfQdT/g=="],
 
     "@algorandfoundation/dp256": ["@algorandfoundation/dp256@1.1.0", "", { "dependencies": { "@noble/curves": "1.9.6", "@noble/hashes": "1.8.0", "@scure/bip39": "1.6.0" } }, "sha512-s+ZQG3WK6eWskfmjh0bbMImyO+SIR297s+7vQoercbM0hYvilzTBT/rEcvs4ZQxU6TxkTXLq4BRj1USjGFpsCA=="],
 
@@ -1623,10 +1625,6 @@
 
     "zwitch": ["zwitch@2.0.4", "", {}, "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="],
 
-    "@algorandfoundation/algokit-utils/@noble/curves": ["@noble/curves@2.3.0", "", { "dependencies": { "@noble/hashes": "2.3.0" } }, "sha512-v7cY+4oWYPQszRj6ZFGzTVL7uP2TaLo1xMhWHzYC5wj0ZhOXQ5x+sBre8rF3hi8cAoi0bh1qXoovoOkdFtvqEg=="],
-
-    "@algorandfoundation/algokit-utils/@noble/hashes": ["@noble/hashes@2.3.0", "", {}, "sha512-oN+QwyX7VSHotibwubG3kpzbwKrfnyR6OOO+3Nk/53ADL7FmgHHz4TgrbaYKvvOw09u6QTx0oiH1cNCIOuN0CQ=="],
-
     "@algorandfoundation/dp256/@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
 
     "@algorandfoundation/xhd-wallet-api/@noble/curves": ["@noble/curves@2.3.0", "", { "dependencies": { "@noble/hashes": "2.3.0" } }, "sha512-v7cY+4oWYPQszRj6ZFGzTVL7uP2TaLo1xMhWHzYC5wj0ZhOXQ5x+sBre8rF3hi8cAoi0bh1qXoovoOkdFtvqEg=="],
@@ -1670,6 +1668,8 @@
     "@txnlab/nfd-sdk/@algorandfoundation/algokit-utils": ["@algorandfoundation/algokit-utils@8.2.2", "", { "dependencies": { "buffer": "^6.0.3" }, "peerDependencies": { "algosdk": "^3.0.0" } }, "sha512-cDlukxXRHEIWR9Iae/Jnxl0Z5JUuHTdVbGpGgFUBxaHCSVxb+VUE5b0fsuSOmUvAEyFiMLe7PLb9DCv0xjdE5Q=="],
 
     "@txnlab/use-wallet/@tanstack/store": ["@tanstack/store@0.9.1", "", {}, "sha512-+qcNkOy0N1qSGsP7omVCW0SDrXtaDcycPqBDE726yryiA5eTDFpjBReaYjghVJwNf1pcPMyzIwTGlYjCSQR0Fg=="],
+
+    "@x402/avm/@algorandfoundation/algokit-utils": ["@algorandfoundation/algokit-utils@10.0.0-alpha.46", "", { "dependencies": { "@algorandfoundation/xhd-wallet-api": "2.0.0-canary.1", "@noble/curves": "^2.0.1", "@noble/ed25519": "^3.0.0", "@noble/hashes": "^2.0.1", "algorand-msgpack": "^1.1.0", "buffer": "^6.0.3", "dotenv": "^16.4.5", "hi-base32": "^0.5.1", "json-bigint": "^1.0.0", "tweetnacl": "^1.0.3", "vlq": "^2.0.4" } }, "sha512-Lx56ET6RmrDCFGwx6qyIr7YRX3Q3MyKgqkNeumLkFHXVkqMnXnK1aLeEbV59EOK8UHQ5UPJofSj1zvRMm9Du7w=="],
 
     "@x402/core/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
@@ -1754,6 +1754,10 @@
     "yargs/yargs-parser": ["yargs-parser@22.0.0", "", {}, "sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw=="],
 
     "zod-to-ts/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@x402/avm/@algorandfoundation/algokit-utils/@noble/curves": ["@noble/curves@2.3.0", "", { "dependencies": { "@noble/hashes": "2.3.0" } }, "sha512-v7cY+4oWYPQszRj6ZFGzTVL7uP2TaLo1xMhWHzYC5wj0ZhOXQ5x+sBre8rF3hi8cAoi0bh1qXoovoOkdFtvqEg=="],
+
+    "@x402/avm/@algorandfoundation/algokit-utils/@noble/hashes": ["@noble/hashes@2.3.0", "", {}, "sha512-oN+QwyX7VSHotibwubG3kpzbwKrfnyR6OOO+3Nk/53ADL7FmgHHz4TgrbaYKvvOw09u6QTx0oiH1cNCIOuN0CQ=="],
 
     "ansi-align/string-width/emoji-regex": ["emoji-regex@8.0.0", "", {}, "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="],
 

@@ -163,6 +163,8 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'arcade.orderbook': pluginRecordBuilder('arcade.orderbook'),
   'arcade.positions': pluginRecordBuilder('arcade.positions'),
   'arcade.orders': pluginRecordBuilder('arcade.orders'),
+  'web.results': pluginRecordBuilder('web.results'),
+  'web.page': pluginRecordBuilder('web.page'),
 }
 
 /**

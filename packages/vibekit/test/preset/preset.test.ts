@@ -10,6 +10,7 @@ test('the preset wires every domain and plugin, and reads the env convention', (
     'alpha-arcade',
     'vestige',
     'pera',
+    'web',
   ])
 
   const defaults = { network: 'localnet' as const, networks: [] }

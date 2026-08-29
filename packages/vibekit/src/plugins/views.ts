@@ -21,7 +21,9 @@ import {
   defiProtocolsSchema,
   rankedAssetsSchema,
 } from './vestige/schemas.js'
+import { webPageSchema, webResultsSchema } from './web/schemas.js'
 
+export type { WebPage, WebResults } from './web/schemas.js'
 export type {
   MarketRow,
   Markets,
@@ -47,6 +49,8 @@ export const PLUGIN_VIEW_IDS = [
   'arcade.orderbook',
   'arcade.positions',
   'arcade.orders',
+  'web.results',
+  'web.page',
 ] as const
 
 export type PluginViewId = (typeof PLUGIN_VIEW_IDS)[number]
@@ -64,4 +68,6 @@ export const pluginViewSchemas = {
   'arcade.orderbook': orderbookSchema,
   'arcade.positions': positionsSchema,
   'arcade.orders': openOrdersSchema,
+  'web.results': webResultsSchema,
+  'web.page': webPageSchema,
 } as const satisfies Record<PluginViewId, z.ZodType>

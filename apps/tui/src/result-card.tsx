@@ -32,6 +32,8 @@ import {
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createWebPageViewModel,
+  createWebResultsViewModel,
   createSwapQuoteViewModel,
   createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
@@ -86,6 +88,7 @@ import {
 } from './features/plugins/arcade.js'
 import { NfdCard } from './features/plugins/nfd.js'
 import { SwapQuoteCard } from './features/plugins/swap.js'
+import { WebPageCard, WebResultsCard } from './features/plugins/web.js'
 import { PeraAssetCard } from './features/plugins/pera.js'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards.js'
 import { TransactionGraphCard } from './features/transactions/graph.js'
@@ -489,6 +492,16 @@ export function ResultCard({
       const derived = createArcadeOrdersViewModel(store, view)
       if (!derived.ok) return <Unavailable title="OPEN ORDERS" width={width} />
       return <OrdersCard data={derived.model} width={width} />
+    }
+    case 'web.results': {
+      const derived = createWebResultsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="WEB" width={width} />
+      return <WebResultsCard data={derived.model} width={width} />
+    }
+    case 'web.page': {
+      const derived = createWebPageViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="PAGE" width={width} />
+      return <WebPageCard data={derived.model} width={width} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

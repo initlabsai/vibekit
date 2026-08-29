@@ -8,6 +8,8 @@ import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
 export type {
+  WebPage,
+  WebResults,
   MarketRow,
   Markets,
   OpenOrders,
@@ -92,6 +94,16 @@ export const createArcadeOrdersViewModel = viewModelFor(
   pluginViewSchemas['arcade.orders'],
   'arcade.orders',
   'Open orders',
+)
+export const createWebResultsViewModel = viewModelFor(
+  pluginViewSchemas['web.results'],
+  'web.results',
+  'Web results',
+)
+export const createWebPageViewModel = viewModelFor(
+  pluginViewSchemas['web.page'],
+  'web.page',
+  'Web page',
 )
 export const createPeraAssetViewModel = viewModelFor(
   pluginViewSchemas['pera.asset'],

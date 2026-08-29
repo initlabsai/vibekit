@@ -13,6 +13,8 @@ import {
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createWebPageViewModel,
+  createWebResultsViewModel,
   createSwapQuoteViewModel,
   createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
@@ -78,6 +80,7 @@ import { DefiOverviewCard } from './features/plugins/defi-card'
 import { MarketPricesCard, MarketRankedCard } from './features/plugins/market-cards'
 import { PriceHistoryCard } from './features/plugins/price-history-card'
 import { SwapQuoteCard } from './features/plugins/swap-quote-card'
+import { WebPageCard, WebResultsCard } from './features/plugins/web-cards'
 import { NfdCard } from './features/plugins/nfd-card'
 import { PeraAssetCard } from './features/plugins/pera-card'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
@@ -435,6 +438,21 @@ export function ResultCard({
           }
         />
       )
+    }
+    case 'web.results': {
+      const derived = createWebResultsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <WebResultsCard
+          data={derived.model}
+          onRead={onInput ? (url) => onInput(`read ${url}`) : undefined}
+        />
+      )
+    }
+    case 'web.page': {
+      const derived = createWebPageViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <WebPageCard data={derived.model} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

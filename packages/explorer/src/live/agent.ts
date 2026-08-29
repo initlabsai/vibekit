@@ -10,9 +10,11 @@ import {
   type VibekitAgentOptions,
 } from '@initlabs/vibekit/agent'
 import type { AnyTool, ToolPlugin } from '@initlabs/vibekit'
+import { alphaArcadePlugin } from '@initlabs/vibekit/plugins/alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
 import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
+import { webPlugin } from '@initlabs/vibekit/plugins/web'
 import {
   accountTools,
   assetTools,
@@ -150,6 +152,7 @@ export function explorerSystemPrompt(
     '',
     '## Writes',
     'Write tools (send_payment, app_call, asset_*, generated app methods, swap) compose an unsigned group. They do not send. Say it is ready for review.',
+    'The web: web_search when the question is about the world, not the chain — news, docs, who is behind a project, what a token is for; read_page when a highlight is not enough. The RESULTS card is the citation: answer in a sentence, name the source, never quote pages at length. Chain facts still come from chain tools.',
     'Prediction markets (Alpha Arcade, mainnet): get_live_markets for what is open, get_market for one, get_orderbook for depth, get_positions / get_open_orders for the active account unless the user names another. YES price is the implied probability. Trading: place_order (limit with priceUsd, market without), cancel_order, claim_winnings — each composes for the wallet like every write; only when the user says so.',
     "Swaps: get_swap_quote first — the QUOTE card has the button — and call swap only when the user says go (amount in the asset's own units, sender = the active account, slippage 1% unless asked). Both are mainnet-only: elsewhere say the user must switch to mainnet; never pin or change networks for them.",
     'A simulate that fails with "balance N below min M" for the app account means the contract writes a box or state it must fund: re-run the generated method tool with fundAppMicroAlgos (M minus N, rounded up) — it pays the app in the same group. Generated app-method tools (named <app>_<method>) call one method each. For several calls in one atomic group — an opt-in plus a call, a payment plus a method — use send_group_transactions with each app call as {type:"app_call", appId, methodSignature, args}; the signature is in that tool\'s description.',
@@ -192,11 +195,16 @@ export interface ExplorerAgentOptions {
   wrapTools?: (tools: AnyTool[]) => AnyTool[]
 }
 
-/** The three built-in plugins the Explorer agent registers. */
+/** The built-in plugins the Explorer agent registers: names, prices, asset trust, prediction markets, the web. */
 export function explorerPlugins(disabled?: ReadonlySet<string>, extra: readonly ToolPlugin[] = []) {
-  return [nfdPlugin(), vestigePlugin(), peraPlugin(), ...extra].filter(
-    (plugin) => !disabled?.has(plugin.name),
-  )
+  return [
+    nfdPlugin(),
+    vestigePlugin(),
+    peraPlugin(),
+    alphaArcadePlugin(),
+    webPlugin(),
+    ...extra,
+  ].filter((plugin) => !disabled?.has(plugin.name))
 }
 
 /** Creates the Explorer's agent session (compose-only, signerless). */

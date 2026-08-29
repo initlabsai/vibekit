@@ -596,3 +596,16 @@ a.button-active { text-decoration: underline; }
 .book-price { position: relative; }
 .book-qty { position: relative; text-align: right; }
 @media (max-width: 600px) { .books { grid-template-columns: 1fr; } }
+
+/* Web results and pages. */
+.web-query { color: var(--muted); font-style: italic; margin: .8rem 0 0; }
+.web-results { list-style: none; margin: .6rem 0 0; padding: 0; }
+.web-result { border-top: 1px solid var(--border-soft); padding: .6rem 0; }
+.web-result-line { align-items: baseline; display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; }
+.web-index { color: var(--faint); font-family: var(--font-mono); font-size: .75rem; }
+.web-title { color: var(--brass); text-decoration: none; }
+.web-title:hover { color: var(--brass-bright); text-decoration: underline; }
+.web-meta { color: var(--faint); font-family: var(--font-mono); font-size: .72rem; }
+.web-highlight { color: var(--muted); font-size: .88rem; line-height: 1.5; margin: .3rem 0 0 1.4rem; }
+.web-page { font-family: inherit; font-size: .88rem; line-height: 1.55; margin: .8rem 0 0; max-height: 60vh; overflow: auto; white-space: pre-wrap; }
+.web-more { margin: .6rem 0 0; }
