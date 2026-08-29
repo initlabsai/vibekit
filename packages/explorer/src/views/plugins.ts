@@ -8,6 +8,7 @@ import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
 export type {
+  SwapQuote,
   AssetHistory,
   AssetPrices,
   AssetProfile,
@@ -56,6 +57,11 @@ export const createDefiProtocolsViewModel = viewModelFor(
   pluginViewSchemas['vestige.protocols'],
   'vestige.protocols',
   'DeFi protocols',
+)
+export const createSwapQuoteViewModel = viewModelFor(
+  pluginViewSchemas['haystack.quote'],
+  'haystack.quote',
+  'Swap quote',
 )
 export const createPeraAssetViewModel = viewModelFor(
   pluginViewSchemas['pera.asset'],

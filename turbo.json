@@ -23,6 +23,7 @@
       "env": [
         "AGENT_*",
         "X402_*",
+        "HAYSTACK_*",
         "KV_*",
         "REDIS_URL",
         "VIBEKIT_ALGOD_*",

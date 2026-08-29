@@ -9,7 +9,7 @@ import {
   type AgentSession,
   type VibekitAgentOptions,
 } from '@initlabs/vibekit/agent'
-import type { AnyTool } from '@initlabs/vibekit'
+import type { AnyTool, ToolPlugin } from '@initlabs/vibekit'
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
 import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
@@ -149,7 +149,8 @@ export function explorerSystemPrompt(
     "To explain a transaction, lookup_transaction alone is enough. An account's history includes txns that merely reference it (inner txns, app-call refs) — check sender/receiver before saying the account did something.",
     '',
     '## Writes',
-    'Write tools (send_payment, app_call, asset_*, generated app methods) compose an unsigned group. They do not send. Say it is ready for review.',
+    'Write tools (send_payment, app_call, asset_*, generated app methods, swap) compose an unsigned group. They do not send. Say it is ready for review.',
+    "Swaps: get_swap_quote first — the QUOTE card has the button — and call swap only when the user says go (amount in the asset's own units, sender = the active account, slippage 1% unless asked). Both are mainnet-only: elsewhere say the user must switch to mainnet; never pin or change networks for them.",
     'A simulate that fails with "balance N below min M" for the app account means the contract writes a box or state it must fund: re-run the generated method tool with fundAppMicroAlgos (M minus N, rounded up) — it pays the app in the same group. Generated app-method tools (named <app>_<method>) call one method each. For several calls in one atomic group — an opt-in plus a call, a payment plus a method — use send_group_transactions with each app call as {type:"app_call", appId, methodSignature, args}; the signature is in that tool\'s description.',
     "A turn may open with an 'Active account (default sender)' line — the wallet's current account; use it as the sender unless the user names another.",
     'Writes always need `network`; on testnet or mainnet, confirm the network with the user before composing; on localnet, proceed.',
@@ -180,6 +181,8 @@ export interface ExplorerAgentOptions {
   approveToolCall?: VibekitAgentOptions['approveToolCall']
   /** Plugins the user turned off; their tools never register. */
   disabledPlugins?: ReadonlySet<string>
+  /** Plugins a host configured beyond the built-in three (swaps need a key). */
+  extraPlugins?: readonly ToolPlugin[]
   /** Prior turns, for a host that keeps none itself. */
   history?: VibekitAgentOptions['history']
   /** Local file reads for tools that take a spec path; remote hosts leave it unset. */
@@ -189,8 +192,8 @@ export interface ExplorerAgentOptions {
 }
 
 /** The three built-in plugins the Explorer agent registers. */
-export function explorerPlugins(disabled?: ReadonlySet<string>) {
-  return [nfdPlugin(), vestigePlugin(), peraPlugin()].filter(
+export function explorerPlugins(disabled?: ReadonlySet<string>, extra: readonly ToolPlugin[] = []) {
+  return [nfdPlugin(), vestigePlugin(), peraPlugin(), ...extra].filter(
     (plugin) => !disabled?.has(plugin.name),
   )
 }
@@ -198,7 +201,7 @@ export function explorerPlugins(disabled?: ReadonlySet<string>) {
 /** Creates the Explorer's agent session (compose-only, signerless). */
 export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession {
   const network = options.network ?? 'localnet'
-  const plugins = explorerPlugins(options.disabledPlugins)
+  const plugins = explorerPlugins(options.disabledPlugins, options.extraPlugins)
   const base = options.tools ?? explorerTools(options.extraTools, options.omitTools)
   const tools = options.wrapTools ? options.wrapTools(base) : base
   const promptTools = options.tools

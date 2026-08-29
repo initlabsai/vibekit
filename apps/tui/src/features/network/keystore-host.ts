@@ -14,7 +14,7 @@ import type {
 } from '@initlabs/vibekit-explorer'
 import {
   createLiveHost,
-  signedGroupRecordFor,
+  signDraftWith,
   unsignedTransactionsForDraft,
   type LiveHost,
   type LiveNetworkId,
@@ -71,21 +71,20 @@ export function createKeystorePaymentHost(
       }))
     },
     async signDraft(draftRecord: StructuredResult) {
-      const transactions = unsignedTransactionsForDraft(draftRecord)
-      const sender = transactions[0]!.sender.toString()
+      // The keystore signs for the drafted sender; a router's legs come pre-signed in the draft.
+      const sender =
+        (draftRecord.state === 'success'
+          ? (draftRecord.data as { sender: string }).sender
+          : undefined) ?? unsignedTransactionsForDraft(draftRecord)[0]!.sender.toString()
       const txnSigner = await (await signer()).resolveSigner(sender)
-      const signed = await txnSigner(
-        transactions,
-        transactions.map((_, index) => index),
-      )
-      return signedGroupRecordFor(
+      return signDraftWith(
         {
           resultId: `result-live-payment-signed-${crypto.randomUUID()}`,
           toolCallId: `tool-call-live-payment-signed-${crypto.randomUUID()}`,
           network: draftRecord.network,
         },
         draftRecord,
-        signed,
+        txnSigner,
       )
     },
     async close() {

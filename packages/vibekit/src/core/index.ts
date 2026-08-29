@@ -12,7 +12,9 @@ export { DEFAULT_LIMIT, indexerSemaphore, Semaphore, stripFinalToken } from './u
 export * from './compose/index.js'
 export {
   executeGroupResultSchema,
+  swapIntentSchema,
   unsignedGroupResultSchema,
+  writeIntentSchema,
   writeResultSchema,
 } from './schemas.js'
 export {

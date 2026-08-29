@@ -4,7 +4,17 @@
 import { formatMicroAlgos, type WriteFlowViewModel } from '@initlabs/vibekit-explorer'
 import type { ReactNode } from 'react'
 
-import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, type Tone } from '../../primitives'
+import {
+  Button,
+  Copyable,
+  Fact,
+  Facts,
+  FooterNote,
+  Frame,
+  Header,
+  Hero,
+  type Tone,
+} from '../../primitives'
 import { shorten } from '../../theme'
 import { TransactionsGraphView } from './graph'
 
@@ -23,7 +33,10 @@ function signedDelta(value: number | string): string {
 }
 
 /** What the group is, in the modal's question and the card's kicker. */
-export function writeKind(model: WriteFlowViewModel): 'PAYMENT' | 'DEPLOY' | 'CALL' | 'GROUP' {
+export function writeKind(
+  model: WriteFlowViewModel,
+): 'PAYMENT' | 'SWAP' | 'DEPLOY' | 'CALL' | 'GROUP' {
+  if (model.intent?.kind === 'swap') return 'SWAP'
   if (model.amountMicroAlgos !== undefined) return 'PAYMENT'
   if (model.unsignedGroup.summary.startsWith('create app')) return 'DEPLOY'
   const types = model.simulation?.transactionTypes
@@ -38,8 +51,11 @@ export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
       {model.receiver ? <Fact label="to" value={model.receiver} copy={model.receiver} /> : null}
       {model.note ? <Fact label="note" value={model.note} /> : null}
       <Fact label="group">
-        {model.unsignedGroup.size} transaction{model.unsignedGroup.size === 1 ? '' : 's'} ·{' '}
-        <Copyable value={model.unsignedGroup.transactions[0]!} width={32} />
+        {model.unsignedGroup.size} transaction{model.unsignedGroup.size === 1 ? '' : 's'}
+        {model.presignedIndexes?.length
+          ? ` · ${model.presignedIndexes.length} signed by the router`
+          : ''}{' '}
+        · <Copyable value={model.unsignedGroup.transactions[0]!} width={32} />
         <span className="line muted">{model.unsignedGroup.summary}</span>
       </Fact>
       {model.simulation ? (
@@ -49,7 +65,9 @@ export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
             tone={model.simulation.wouldSucceed ? 'ok' : 'danger'}
             value={[
               model.simulation.wouldSucceed ? 'would succeed' : 'WOULD FAIL',
-              model.simulation.simulatedRound === undefined ? '' : `round ${model.simulation.simulatedRound}`,
+              model.simulation.simulatedRound === undefined
+                ? ''
+                : `round ${model.simulation.simulatedRound}`,
               model.simulation.failureMessage ? shorten(model.simulation.failureMessage, 160) : '',
             ]
               .filter(Boolean)
@@ -59,7 +77,8 @@ export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
           <Fact label="effects">
             {model.simulation.effects.map((effect) => (
               <span key={effect.account} className="line">
-                <span className="muted">{effect.role.padEnd(8)}</span> {signedDelta(effect.deltaMicroAlgos)} ALGO ·{' '}
+                <span className="muted">{effect.role.padEnd(8)}</span>{' '}
+                {signedDelta(effect.deltaMicroAlgos)} ALGO ·{' '}
                 <Copyable value={effect.account} width={20} />
               </span>
             ))}
@@ -67,16 +86,21 @@ export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
         </>
       ) : null}
       {model.approval && model.approval.state !== 'pending' ? (
-        <Fact label="approval" value={`${model.approval.state}${model.approval.reason ? ` · ${model.approval.reason}` : ''}`} />
+        <Fact
+          label="approval"
+          value={`${model.approval.state}${model.approval.reason ? ` · ${model.approval.reason}` : ''}`}
+        />
       ) : null}
       {model.signed ? (
         <Fact label="signed">
-          by <Copyable value={model.signed.signer} width={20} /> · <Copyable value={model.signed.txIds[0]!} width={20} />
+          by <Copyable value={model.signed.signer} width={20} /> ·{' '}
+          <Copyable value={model.signed.txIds[0]!} width={20} />
         </Fact>
       ) : null}
       {model.confirmation ? (
         <Fact label="confirmed" tone="ok">
-          round {model.confirmation.confirmedRound} · <Copyable value={model.confirmation.transactionId} width={20} />
+          round {model.confirmation.confirmedRound} ·{' '}
+          <Copyable value={model.confirmation.transactionId} width={20} />
         </Fact>
       ) : null}
     </Facts>
@@ -110,17 +134,39 @@ export function WriteFlowCard({
   const failed = model.simulation?.wouldSucceed === false
   const denied = model.stage === 'denied'
   const badge = busy ? 'working…' : model.stage.replace('-', ' ')
-  const tone: Tone = failed || denied ? 'danger' : model.stage === 'confirmed' ? 'ok' : model.stage === 'awaiting-approval' ? 'warn' : 'idle'
+  const tone: Tone =
+    failed || denied
+      ? 'danger'
+      : model.stage === 'confirmed'
+        ? 'ok'
+        : model.stage === 'awaiting-approval'
+          ? 'warn'
+          : 'idle'
   return (
     <Frame tone={failed || denied || network === 'mainnet' ? 'danger' : undefined}>
-      <Header kicker={writeKind(model)} chip={model.network} pill={badge} tone={tone} action={action} />
+      <Header
+        kicker={writeKind(model)}
+        chip={model.network}
+        pill={badge}
+        tone={tone}
+        action={action}
+      />
       <Hero
-        value={model.amountMicroAlgos === undefined ? model.unsignedGroup.summary : formatMicroAlgos(model.amountMicroAlgos)}
+        value={
+          model.amountMicroAlgos === undefined
+            ? model.unsignedGroup.summary
+            : formatMicroAlgos(model.amountMicroAlgos)
+        }
         unit={model.amountMicroAlgos === undefined ? undefined : 'ALGO'}
       />
       <ol className="flow-steps">
         {FLOW_STEPS.map((step, index) => (
-          <li key={step.label} className={index < currentIndex ? 'done' : index === currentIndex ? 'current' : undefined}>
+          <li
+            key={step.label}
+            className={
+              index < currentIndex ? 'done' : index === currentIndex ? 'current' : undefined
+            }
+          >
             {step.label}
           </li>
         ))}
@@ -128,7 +174,9 @@ export function WriteFlowCard({
       {model.graph ? <TransactionsGraphView graph={model.graph} /> : null}
       <WriteFlowBody model={model} />
       {failed ? <p className="flow-warning">This group WOULD FAIL if submitted.</p> : null}
-      {model.stage === 'approved' && !busy ? <FooterNote text="Approved — nothing was signed." /> : null}
+      {model.stage === 'approved' && !busy ? (
+        <FooterNote text="Approved — nothing was signed." />
+      ) : null}
       {onClose && !busy && model.stage !== 'awaiting-approval' ? (
         <div className="actions">
           <Button label="close" onPress={onClose} />

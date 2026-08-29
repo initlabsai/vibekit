@@ -5,6 +5,7 @@
  */
 import type { z } from 'zod'
 
+import { swapQuoteSchema } from './haystack/schemas.js'
 import { nfdRecordSchema } from './nfd/schemas.js'
 import { assetProfileSchema } from './pera/schemas.js'
 import {
@@ -14,6 +15,7 @@ import {
   rankedAssetsSchema,
 } from './vestige/schemas.js'
 
+export type { SwapQuote } from './haystack/schemas.js'
 export type { NfdRecord } from './nfd/schemas.js'
 export type { AssetProfile } from './pera/schemas.js'
 export type { AssetHistory, AssetPrices, DefiProtocols, RankedAssets } from './vestige/schemas.js'
@@ -25,6 +27,7 @@ export const PLUGIN_VIEW_IDS = [
   'vestige.history',
   'vestige.protocols',
   'pera.asset',
+  'haystack.quote',
 ] as const
 
 export type PluginViewId = (typeof PLUGIN_VIEW_IDS)[number]
@@ -36,4 +39,5 @@ export const pluginViewSchemas = {
   'vestige.history': assetHistorySchema,
   'vestige.protocols': defiProtocolsSchema,
   'pera.asset': assetProfileSchema,
+  'haystack.quote': swapQuoteSchema,
 } as const satisfies Record<PluginViewId, z.ZodType>

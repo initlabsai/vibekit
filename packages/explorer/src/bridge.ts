@@ -157,6 +157,7 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'vestige.history': pluginRecordBuilder('vestige.history'),
   'vestige.protocols': pluginRecordBuilder('vestige.protocols'),
   'pera.asset': pluginRecordBuilder('pera.asset'),
+  'haystack.quote': pluginRecordBuilder('haystack.quote'),
 }
 
 /**

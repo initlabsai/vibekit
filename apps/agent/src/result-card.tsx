@@ -4,9 +4,11 @@ import { useState } from 'react'
 
 /** The one place a view id becomes UI: every trusted view spec renders through this exhaustive switch. */
 import {
+  formatBaseUnits,
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createSwapQuoteViewModel,
   createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
@@ -63,6 +65,7 @@ import { NetworkCard } from './features/network/cards'
 import { DefiOverviewCard } from './features/plugins/defi-card'
 import { MarketPricesCard, MarketRankedCard } from './features/plugins/market-cards'
 import { PriceHistoryCard } from './features/plugins/price-history-card'
+import { SwapQuoteCard } from './features/plugins/swap-quote-card'
 import { NfdCard } from './features/plugins/nfd-card'
 import { PeraAssetCard } from './features/plugins/pera-card'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
@@ -335,6 +338,26 @@ export function ResultCard({
       const derived = createDefiProtocolsViewModel(store, view)
       if (!derived.ok) return <RawCard store={store} view={view} />
       return <DefiOverviewCard data={derived.model} network={derived.model.network} />
+    }
+    case 'haystack.quote': {
+      const derived = createSwapQuoteViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      const quote = derived.model
+      const amount = formatBaseUnits(quote.amountIn, quote.fromDecimals)
+      return (
+        <SwapQuoteCard
+          data={quote}
+          network={quote.network}
+          onSwap={
+            onInput
+              ? () =>
+                  onInput(
+                    `swap ${amount} ${quote.fromUnit} (asset ${quote.fromAssetId}) to ${quote.toUnit} (asset ${quote.toAssetId})`,
+                  )
+              : undefined
+          }
+        />
+      )
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

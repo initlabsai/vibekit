@@ -34,7 +34,8 @@ export async function searchBlockHeaders(ctx: ToolContext, args: SearchBlockHead
   const counterByRound = new Map(headers.map((header) => [header.round, header.counter]))
   const blocks = headers.map(({ round, timestamp, counter, proposer, transactions }) => {
     const previous = counterByRound.get(round - 1)
-    const fromCounter = counter !== undefined && previous !== undefined ? counter - previous : undefined
+    const fromCounter =
+      counter !== undefined && previous !== undefined ? counter - previous : undefined
     return {
       round,
       timestamp,

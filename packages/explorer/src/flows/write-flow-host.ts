@@ -3,6 +3,7 @@
  * capability an app provides, and the controller that walks a flow through
  * its stages. Any composed group runs here — payments, app calls, deploys.
  */
+import { writeIntentSchema } from '@initlabs/vibekit'
 import { z } from 'zod'
 
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
@@ -38,6 +39,8 @@ import {
 export const composeWireResultSchema = z.object({
   unsignedGroup: z.array(z.string().min(1)).min(1),
   summary: z.string().min(1),
+  presigned: z.array(z.string().min(1).nullable()).optional(),
+  intent: writeIntentSchema.optional(),
 })
 
 /** The JSON-safe wire subset of simulate_transactions this slice consumes. */
@@ -126,7 +129,12 @@ export function buildDraftRecord(
     ...(facts.graphTransactions === undefined
       ? {}
       : { graphTransactions: facts.graphTransactions }),
+    ...(compose.presigned === undefined ? {} : { presigned: compose.presigned }),
+    ...(compose.intent === undefined ? {} : { intent: compose.intent }),
   })
+  if (compose.presigned && compose.presigned.length !== compose.unsignedGroup.length) {
+    throw new Error('presigned must name every index of the group')
+  }
   return record(identity, toolName, data)
 }
 

@@ -31,6 +31,37 @@ export interface UnsignedGroupResult {
   /** base64-encoded unsigned transactions, in group order. */
   unsignedGroup: string[]
   summary: string
+  /**
+   * Per index: a base64 signed transaction some other party already signed
+   * (a router's logicsig leg), or null where the user's wallet signs. Absent
+   * means the wallet signs everything.
+   */
+  presigned?: (string | null)[]
+  /** What the group does, for a host's approval screen: a swap, an order. */
+  intent?: WriteIntent
+}
+
+/** The intents a host can summarize better than a transaction list. */
+export type WriteIntent = {
+  kind: 'swap'
+  fromAssetId: number
+  toAssetId: number
+  fromUnit: string
+  toUnit: string
+  fromDecimals: number
+  toDecimals: number
+  /** Base units of the input asset. */
+  amountIn: string
+  /** Base units of the output asset at the quoted price. */
+  amountOut: string
+  /** Base units the group refuses to settle below (after slippage). */
+  minAmountOut: string
+  slippagePercent: number
+  priceImpactPercent?: number
+  usdIn?: number
+  usdOut?: number
+  /** Venues by share of the input, e.g. Tinyman V2 60 / Pact 40. */
+  route: Array<{ venue: string; percentage: number }>
 }
 
 export interface ToolDefinition<P extends z.ZodType = z.ZodType> {

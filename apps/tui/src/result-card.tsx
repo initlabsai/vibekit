@@ -27,6 +27,7 @@ import {
   createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createSwapQuoteViewModel,
   createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
@@ -72,6 +73,7 @@ import {
   PriceHistoryCard,
 } from './features/plugins/market.js'
 import { NfdCard } from './features/plugins/nfd.js'
+import { SwapQuoteCard } from './features/plugins/swap.js'
 import { PeraAssetCard } from './features/plugins/pera.js'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards.js'
 import { TransactionGraphCard } from './features/transactions/graph.js'
@@ -428,6 +430,11 @@ export function ResultCard({
       const derived = createDefiProtocolsViewModel(store, view)
       if (!derived.ok) return <Unavailable title="DEFI" width={width} />
       return <DefiOverviewCard data={derived.model} network={derived.model.network} width={width} />
+    }
+    case 'haystack.quote': {
+      const derived = createSwapQuoteViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="QUOTE" width={width} />
+      return <SwapQuoteCard data={derived.model} network={derived.model.network} width={width} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

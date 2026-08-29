@@ -115,6 +115,7 @@ export {
   createNfdProfileViewModel,
   createVestigeHistoryViewModel,
   createPeraAssetViewModel,
+  createSwapQuoteViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
 } from './views/plugins.js'
@@ -125,6 +126,7 @@ export type {
   DefiProtocols,
   NfdRecord,
   RankedAssets,
+  SwapQuote,
 } from './views/plugins.js'
 export type { NetworkStatusViewModel } from './views/network.js'
 export {

@@ -36,7 +36,12 @@ export function formatApplication(app: IndexerApplication): FormattedApplication
     applicationLabel: knownAppLabel(Number(app.id)),
     creator: params.creator ? String(params.creator) : undefined,
     createdAtRound: app.createdAtRound === undefined ? undefined : Number(app.createdAtRound),
-    ...(app.deleted ? { deleted: true, deletedAtRound: app.deletedAtRound === undefined ? undefined : Number(app.deletedAtRound) } : {}),
+    ...(app.deleted
+      ? {
+          deleted: true,
+          deletedAtRound: app.deletedAtRound === undefined ? undefined : Number(app.deletedAtRound),
+        }
+      : {}),
     globalState: params.globalState?.map((kv: algosdk.indexerModels.TealKeyValue) => ({
       key: bytesToBase64(kv.key),
       value: {

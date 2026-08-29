@@ -559,3 +559,11 @@ a.button-active { text-decoration: underline; }
 .tvl-fill { background: var(--signal); display: block; height: 100%; }
 .tvl-value { font-family: var(--font-mono); font-size: .8rem; text-align: right; }
 @media (max-width: 600px) { .tvl-row { grid-template-columns: minmax(5rem, 1fr) 2fr auto; } }
+
+/* Swap quote: the route as one bar, a segment per venue. */
+.route-bar { display: flex; gap: 2px; height: 22px; margin: 1rem 0 0; overflow: hidden; }
+.route-seg { align-items: center; color: var(--bg); display: flex; font-family: var(--font-mono); font-size: .68rem; letter-spacing: .04em; min-width: 2px; overflow: hidden; padding: 0 .4rem; white-space: nowrap; }
+.route-seg-0 { background: var(--signal); }
+.route-seg-1 { background: var(--brass); }
+.route-seg-2 { background: var(--signal-dim, #2e5c5e); color: var(--text); }
+.route-seg-3 { background: var(--muted); }

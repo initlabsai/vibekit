@@ -6,7 +6,9 @@ const blockSummary = z.object({
   timestamp: z.number(),
   transactionCount: z.number(),
   proposer: z.string().optional(),
-  transactionTypes: z.array(z.object({ type: z.string(), count: z.number().int().nonnegative() })).optional(),
+  transactionTypes: z
+    .array(z.object({ type: z.string(), count: z.number().int().nonnegative() }))
+    .optional(),
 })
 
 /** Wire shape of get_network ('network.status' view, deployment configuration). */

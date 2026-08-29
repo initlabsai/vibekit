@@ -3,6 +3,7 @@
  * and the view model an approval screen renders. Payment-shaped fields
  * (receiver, amount) are present when the group is one plain pay.
  */
+import { writeIntentSchema } from '@initlabs/vibekit'
 import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
@@ -56,6 +57,10 @@ export const writeDraftDataSchema = z
       .strict(),
     // Decoded txn rows for the flow graph; optional so older recorded fixtures still parse.
     graphTransactions: z.array(viewDataSchemas['transaction.detail']).min(1).optional(),
+    /** Per index: a base64 signed leg another party signed, or null where the wallet signs. */
+    presigned: z.array(z.string().min(1).nullable()).optional(),
+    /** What the group does, when a screen can say it better than its transactions. */
+    intent: writeIntentSchema.optional(),
   })
   .strict()
 
@@ -440,6 +445,9 @@ export const writeFlowViewModelSchema = z
       })
       .strict(),
     graph: transactionsGraphSchema.optional(),
+    /** Legs the wallet does not sign (a router's), by group index. */
+    presignedIndexes: z.array(z.number().int().nonnegative()).optional(),
+    intent: writeIntentSchema.optional(),
     simulation: z
       .object({
         wouldSucceed: z.boolean(),
@@ -632,6 +640,14 @@ export function createWriteFlowViewModel(
       transactions: draftData.unsignedGroup.transactions,
     },
     ...(graph === undefined ? {} : { graph }),
+    ...(draftData.presigned === undefined
+      ? {}
+      : {
+          presignedIndexes: draftData.presigned
+            .map((leg, index) => (leg === null ? -1 : index))
+            .filter((index) => index >= 0),
+        }),
+    ...(draftData.intent === undefined ? {} : { intent: draftData.intent }),
     ...(simulation === undefined ? {} : { simulation }),
     ...(flow.approvalRequest === undefined
       ? {}

@@ -1,9 +1,37 @@
 /** Shared zod schemas for write-tool outputs (compose | execute result union). */
 import { z } from 'zod'
 
+export const swapIntentSchema = z.object({
+  kind: z.literal('swap'),
+  fromAssetId: z.number(),
+  toAssetId: z.number(),
+  fromUnit: z.string(),
+  toUnit: z.string(),
+  fromDecimals: z.number(),
+  toDecimals: z.number(),
+  amountIn: z.string(),
+  amountOut: z.string(),
+  minAmountOut: z.string(),
+  slippagePercent: z.number(),
+  priceImpactPercent: z.number().optional(),
+  usdIn: z.number().optional(),
+  usdOut: z.number().optional(),
+  route: z.array(z.object({ venue: z.string(), percentage: z.number() })),
+})
+
+/** What a write intends, when a host can say it better than a transaction list. */
+export const writeIntentSchema = z.discriminatedUnion('kind', [swapIntentSchema])
+
 export const unsignedGroupResultSchema = z.object({
   unsignedGroup: z.array(z.string()).describe('base64-encoded unsigned transactions, group order'),
   summary: z.string(),
+  presigned: z
+    .array(z.string().nullable())
+    .optional()
+    .describe(
+      'per index: a base64 signed txn another party signed, or null where the wallet signs',
+    ),
+  intent: writeIntentSchema.optional(),
 })
 
 export const executeGroupResultSchema = z.object({

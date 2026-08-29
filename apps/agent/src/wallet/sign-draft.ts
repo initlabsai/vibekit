@@ -62,9 +62,19 @@ export function createWalletSignDraft(args: {
       throw new Error(`Wallet is on ${walletNetwork}; Explorer is on ${args.network}`)
     }
     const transactions = unsignedTransactionsForDraft(draftRecord)
-    const signed = await args.transactionSigner(
-      transactions,
-      transactions.map((_, index) => index),
+    // A router's legs arrive signed by the router; the wallet sees only its own.
+    const presigned =
+      draftRecord.state === 'success'
+        ? writeDraftDataSchema.parse(draftRecord.data).presigned
+        : undefined
+    const indexes = transactions.map((_, index) => index).filter((index) => !presigned?.[index])
+    const signed = await args.transactionSigner(transactions, indexes)
+    if (signed.length !== indexes.length)
+      throw new Error(
+        `The wallet returned ${signed.length} signatures for ${indexes.length} transactions`,
+      )
+    const group = transactions.map(
+      (_, index) => presigned?.[index] ?? bytesToBase64(signed[indexes.indexOf(index)]!),
     )
     const response = await fetch('/api/explorer', {
       method: 'POST',
@@ -73,7 +83,7 @@ export function createWalletSignDraft(args: {
         action: 'record-signed',
         network: args.network,
         draftRecord,
-        signedTransactions: signed.map((bytes) => bytesToBase64(bytes)),
+        signedTransactions: group,
       }),
     })
     const payload = (await response.json()) as { record?: unknown; error?: string }

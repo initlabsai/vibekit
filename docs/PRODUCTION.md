@@ -90,6 +90,17 @@ in `AGENTS.md`.
   an address's turns (the bearer token is per browser) is deferred until there
   is a real session backend.
 
+- **Agent: swaps need a router key.** `HAYSTACK_API_KEY` registers the
+  haystack plugin (`get_swap_quote`, `swap`); without it the agent has no swap
+  tools and says so. txnlab publishes a free-tier key in the SDK README (60
+  requests a minute, shared by everyone who copies it) — fine for a laptop,
+  not for production: ask support@txnlab.dev for our own. `HAYSTACK_REFERRER`
+  is the address that earns the referrer share of the router fee on every
+  swap; the house address is
+  `ST5CPUODRQLSIUIXE75GTH6YGX3L4NYHFATN4IKX7SDY3MENYIA2WXEO7A` (2026-08-29).
+  Swaps are mainnet-only by construction: the plugin refuses other networks
+  and the wallet is never pinned or switched for the user.
+
 - **Agent: a credit can be lost between settlement and the ledger.** The
   facilitator settles the USDC transfer inside the same Vercel invocation that
   credits the payer; if the function dies in between, the money moved and the

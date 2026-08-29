@@ -15,7 +15,9 @@
       "name": "@initlabs/vibekit-agent",
       "version": "0.1.1-alpha.2",
       "dependencies": {
+        "@initlabs/vibekit": "workspace:*",
         "@initlabs/vibekit-explorer": "workspace:*",
+        "@txnlab/haystack-router": "2.0.5",
         "@txnlab/use-wallet-lute": "5.0.0",
         "@txnlab/use-wallet-pera": "5.0.0",
         "@txnlab/use-wallet-react": "5.0.0",
@@ -110,6 +112,7 @@
         "@modelcontextprotocol/client": "^2.0.0",
         "@modelcontextprotocol/server": "^2.0.0",
         "@tanstack/store": "0.9.3",
+        "@txnlab/haystack-router": "2.0.5",
         "@txnlab/nfd-sdk": "^1.1.0",
         "@types/bun": "^1.4.0",
         "ai": "^7.0.74",
@@ -127,6 +130,7 @@
         "@alpha-arcade/sdk": "^0.4.0",
         "@modelcontextprotocol/server": "^2.0.0",
         "@tanstack/store": "0.9.3",
+        "@txnlab/haystack-router": "^2.0.5",
         "@txnlab/nfd-sdk": "^1.1.0",
         "ai": "^7.0.0",
         "algosdk": ">=3.7.0 <4",
@@ -141,6 +145,7 @@
         "@alpha-arcade/sdk",
         "@modelcontextprotocol/server",
         "@tanstack/store",
+        "@txnlab/haystack-router",
         "@txnlab/nfd-sdk",
         "ai",
       ],
@@ -608,6 +613,8 @@
     "@turbo/windows-64": ["@turbo/windows-64@2.10.11", "", { "os": "win32", "cpu": "x64" }, "sha512-4aD7edogJ8arK8DOyvjTI2KKwmchD5M/WM4BZgidrtFf7aSgn8Ce2rJnDwmriw980c2cKlHnhXtlGy38VtKB8g=="],
 
     "@turbo/windows-arm64": ["@turbo/windows-arm64@2.10.11", "", { "os": "win32", "cpu": "arm64" }, "sha512-m8tJkIrTrbQ9O1uHxV0GUq623Zg1678xGna8eMsy4KbygUX/wVFgdZDYV/AxyoyaW/U7nyKoBvaDVwm22p9xqA=="],
+
+    "@txnlab/haystack-router": ["@txnlab/haystack-router@2.0.5", "", { "peerDependencies": { "algosdk": "^3.0.0" } }, "sha512-2d7nmf3Jfc2RyceewRsXhBB7pWN4+Zoj5Lw5iVCRmntCPL25oJb2hkv2xkkaoPcjMxFoqzP4qC+fp1eyRbFvZA=="],
 
     "@txnlab/nfd-sdk": ["@txnlab/nfd-sdk@1.1.0", "", { "dependencies": { "@algorandfoundation/algokit-utils": "^8.2.2", "@hey-api/client-fetch": "^0.8.1" }, "peerDependencies": { "algosdk": "^3.0.0" } }, "sha512-eYGorqymNBhSJxtOBxeYlUfs3OfalS8pHIt+KBg0Q12kXzUqkMP3XFJ16GPE6419Jo3x3sHptWseztXZmMpm0Q=="],
 

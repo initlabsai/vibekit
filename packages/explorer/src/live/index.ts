@@ -43,7 +43,10 @@ import type { JsonValue, StructuredResult } from '../core/results.js'
  * Payment receiver/amount are filled only when every transaction is a plain pay
  * and there is exactly one of them — mixed groups stay group-shaped.
  */
-export function decodeUnsignedGroup(transactions: readonly string[]): DecodedGroupFacts {
+export function decodeUnsignedGroup(
+  transactions: readonly string[],
+  presigned?: readonly (string | null)[],
+): DecodedGroupFacts {
   if (transactions.length === 0 || transactions.length > 16) {
     throw new Error(`Unsupported group size: ${transactions.length}`)
   }
@@ -60,8 +63,15 @@ export function decodeUnsignedGroup(transactions: readonly string[]): DecodedGro
     decoded[0]!.type === algosdk.TransactionType.pay &&
     decoded[0]!.payment &&
     decoded[0]!.payment.closeRemainderTo === undefined
+  // The sender is whoever the wallet signs for: the first leg that is not another party's.
+  const walletIndex = presigned
+    ? Math.max(
+        0,
+        presigned.findIndex((leg) => leg === null),
+      )
+    : 0
   return decodedGroupFactsSchema.parse({
-    sender: decoded[0]!.sender.toString(),
+    sender: decoded[walletIndex]!.sender.toString(),
     ...(singlePay
       ? {
           receiver: decoded[0]!.payment!.receiver.toString(),
@@ -145,12 +155,20 @@ export function signedGroupRecordFor(
   }
   const txIds: string[] = []
   for (const [index, signed] of signedTransactions.entries()) {
-    const decoded = algosdk.decodeSignedTransaction(signed)
-    const embedded = bytesToBase64(algosdk.encodeUnsignedTransaction(decoded.txn))
-    if (embedded !== draft.unsignedGroup.transactions[index]) {
-      throw new Error(`Signed transaction ${index} does not wrap the drafted bytes`)
+    const presigned = draft.presigned?.[index]
+    if (presigned !== undefined && presigned !== null) {
+      // Another party's leg: the only acceptable bytes are the ones the draft carried.
+      if (bytesToBase64(signed) !== presigned) {
+        throw new Error(`Transaction ${index} is not the pre-signed leg the draft carried`)
+      }
+    } else {
+      const decoded = algosdk.decodeSignedTransaction(signed)
+      const embedded = bytesToBase64(algosdk.encodeUnsignedTransaction(decoded.txn))
+      if (embedded !== draft.unsignedGroup.transactions[index]) {
+        throw new Error(`Signed transaction ${index} does not wrap the drafted bytes`)
+      }
     }
-    txIds.push(decoded.txn.txID())
+    txIds.push(algosdk.decodeSignedTransaction(signed).txn.txID())
   }
   return buildSignedGroupRecord(identity, {
     transactions: signedTransactions.map((signed) => bytesToBase64(signed)),
@@ -165,9 +183,41 @@ export function draftRecordFromComposeWire(
   wire: unknown,
   toolName = 'send_payment',
 ): StructuredResult {
-  const { unsignedGroup } = wire as { unsignedGroup: string[] }
-  const decoded = decodeUnsignedGroup(unsignedGroup)
+  const { unsignedGroup, presigned } = wire as {
+    unsignedGroup: string[]
+    presigned?: (string | null)[]
+  }
+  const decoded = decodeUnsignedGroup(unsignedGroup, presigned)
   return buildDraftRecord(identity, wire, decoded, toolName)
+}
+
+/**
+ * Signs a draft with a wallet's signer: only the legs the draft leaves to the
+ * wallet are offered to it; pre-signed legs are spliced back in place. The
+ * result is verified like any signed group before it becomes a record.
+ */
+export async function signDraftWith(
+  identity: { resultId: string; toolCallId: string; network: string },
+  draftRecord: StructuredResult,
+  signer: (txns: algosdk.Transaction[], indexesToSign: number[]) => Promise<Uint8Array[]>,
+): Promise<StructuredResult> {
+  const transactions = unsignedTransactionsForDraft(draftRecord)
+  const presigned =
+    draftRecord.state === 'success'
+      ? writeDraftDataSchema.parse(draftRecord.data).presigned
+      : undefined
+  const indexes = transactions.map((_, index) => index).filter((index) => !presigned?.[index])
+  const signed = await signer(transactions, indexes)
+  if (signed.length !== indexes.length) {
+    throw new Error(
+      `The wallet returned ${signed.length} signatures for ${indexes.length} transactions`,
+    )
+  }
+  const group = transactions.map((_, index) => {
+    const leg = presigned?.[index]
+    return leg ? base64ToBytes(leg) : signed[indexes.indexOf(index)]!
+  })
+  return signedGroupRecordFor(identity, draftRecord, group)
 }
 
 /** Parameters for composing one live unsigned payment. */

@@ -15,6 +15,7 @@ import {
 } from '@initlabs/vibekit-explorer/live'
 import { unsignedGroupFromToolResult } from '@initlabs/vibekit-explorer'
 import algosdk from 'algosdk'
+import { haystackPlugin } from '@initlabs/vibekit/plugins/haystack'
 import { z } from 'zod'
 
 import { creditsConfig } from '../credits/config'
@@ -53,6 +54,14 @@ const OMITTED_TOOLS = new Set([
   'get_application_info',
   'batch_lookup_accounts',
 ])
+
+/** Swaps register only with a router key; without one the agent simply has no swap tools. */
+function haystackPlugins() {
+  const apiKey = process.env.HAYSTACK_API_KEY
+  if (!apiKey) return []
+  const referrerAddress = process.env.HAYSTACK_REFERRER
+  return [haystackPlugin({ apiKey, ...(referrerAddress ? { referrerAddress } : {}) })]
+}
 
 const requestSchema = z.object({
   network: z.enum(['localnet', 'testnet', 'mainnet']),
@@ -174,6 +183,7 @@ export async function POST(request: Request): Promise<Response> {
     network: body.network,
     history: body.history as never,
     omitTools: OMITTED_TOOLS,
+    extraPlugins: haystackPlugins(),
     approveToolCall: async ({ toolName }) =>
       toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
   })
