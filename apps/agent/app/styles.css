@@ -577,14 +577,15 @@ a.button-active { text-decoration: underline; }
 .prob { align-items: center; display: inline-flex; gap: .5rem; justify-content: flex-end; min-width: 5rem; position: relative; }
 .prob-bar { background: color-mix(in srgb, var(--signal) 28%, transparent); display: inline-block; height: 8px; max-width: 3.5rem; }
 .prob-value { font-family: var(--font-mono); }
-.arcade-sides { display: grid; gap: .6rem; grid-template-columns: 1fr 1fr; margin-top: 1rem; }
-.arcade-side { border: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: .35rem; padding: .7rem .8rem; }
-.arcade-yes { border-color: color-mix(in srgb, var(--signal) 45%, var(--border-soft)); }
-.arcade-no { border-color: color-mix(in srgb, var(--brass) 45%, var(--border-soft)); }
-.arcade-side-label { color: var(--faint); font-family: var(--font-mono); font-size: .68rem; letter-spacing: .12em; }
-.arcade-side-price { font-family: var(--font-mono); font-size: 1.5rem; }
-.arcade-yes .arcade-side-price { color: var(--signal); }
-.arcade-no .arcade-side-price { color: var(--brass); }
+.odds { align-items: center; display: grid; gap: .8rem; grid-template-columns: auto 1fr auto; margin: 1rem 0 0; }
+.odds-end { font-family: var(--font-mono); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.odds-end b { font-size: 1.25rem; font-weight: 500; letter-spacing: 0; }
+.odds-yes { color: var(--signal); }
+.odds-no { color: var(--brass); text-align: right; }
+.odds-track { background: var(--brass); display: block; height: 10px; overflow: hidden; }
+.odds-fill { background: var(--signal); display: block; height: 100%; transition: width .3s; }
+.odds-empty { background: var(--border-soft); display: block; height: 100%; }
+.arcade-actions { display: flex; gap: .5rem; margin: .7rem 0 0; }
 .arcade-options { list-style: none; margin: .8rem 0 0; padding: 0; }
 .arcade-option { border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; padding: .35rem 0; }
 .books { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; margin-top: 1rem; }

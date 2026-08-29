@@ -40,10 +40,24 @@ function status(m: MarketRow): { label: string; tone: 'ok' | 'idle' | 'warn' } {
 
 function Thumb({ src }: { src: string | undefined }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return src?.startsWith('https://') ? (
-    <img className="arcade-thumb" src={src} alt="" width={28} height={28} />
-  ) : (
-    <span className="arcade-thumb arcade-thumb-empty" />
+  return src?.startsWith('https://') ? <img className="arcade-thumb" src={src} alt="" width={28} height={28} /> : null
+}
+
+/** YES and NO as one bar: teal for YES's share, brass for NO's; the numbers sit at the ends. */
+function Odds({ yes, no }: { yes: number | undefined; no: number | undefined }) {
+  const share = yes !== undefined ? Math.round(yes * 100) : no !== undefined ? 100 - Math.round(no * 100) : undefined
+  return (
+    <div className="odds" role="img" aria-label={`YES ${percent(yes)}, NO ${percent(no)}`}>
+      <span className="odds-end odds-yes">
+        <b>{percent(yes)}</b> yes
+      </span>
+      <span className="odds-track">
+        {share === undefined ? <span className="odds-empty" /> : <span className="odds-fill" style={{ width: `${share}%` }} />}
+      </span>
+      <span className="odds-end odds-no">
+        no <b>{percent(no)}</b>
+      </span>
+    </div>
   )
 }
 
@@ -147,43 +161,27 @@ export function MarketCard({
 }) {
   const state = status(data)
   const closed = data.isResolved || endsIn(data.endTs) === 'closed'
+  const ends = new Date(data.endTs * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
   return (
     <Frame>
-      <Header
-        kicker="MARKET"
-        chip="ALPHA ARCADE"
-        pill={state.label}
-        tone={state.tone}
-        action={onOrderbook ? <Button label="orderbook ▸" onPress={onOrderbook} /> : undefined}
-      />
+      <Header kicker="MARKET" chip="ALPHA ARCADE" pill={state.label} tone={state.tone} action={onOrderbook ? <Button label="orderbook ▸" onPress={onOrderbook} /> : undefined} />
       <p className="hero arcade-hero">
         <Thumb src={data.image} />
         <span className="hero-value">{data.title}</span>
       </p>
-      <div className="arcade-sides">
-        <div className="arcade-side arcade-yes">
-          <span className="arcade-side-label">YES</span>
-          <span className="arcade-side-price">{percent(data.yesPriceUsd)}</span>
-          {onBuy && !closed ? <Button label="buy yes" onPress={() => onBuy('yes')} /> : null}
-        </div>
-        <div className="arcade-side arcade-no">
-          <span className="arcade-side-label">NO</span>
-          <span className="arcade-side-price">{percent(data.noPriceUsd)}</span>
-          {onBuy && !closed ? <Button label="buy no" onPress={() => onBuy('no')} /> : null}
-        </div>
-      </div>
+      <Odds yes={data.yesPriceUsd} no={data.noPriceUsd} />
+      {onBuy && !closed ? (
+        <p className="arcade-actions">
+          <Button label="buy yes" onPress={() => onBuy('yes')} />
+          <Button label="buy no" onPress={() => onBuy('no')} />
+        </p>
+      ) : null}
       <Facts>
-        <Fact label="app" value={String(data.marketAppId)} copy={String(data.marketAppId)} />
         <Fact label="volume" value={compactUsd(data.volumeUsd ?? null)} />
-        <Fact
-          label="ends"
-          value={`${endsIn(data.endTs)} · ${new Date(data.endTs * 1000).toLocaleDateString()}`}
-        />
-        {data.categories?.length ? (
-          <Fact label="category" value={data.categories.join(', ')} />
-        ) : null}
-        <Fact label="shares" value={`YES ${data.yesAssetId} · NO ${data.noAssetId}`} />
-        <Fact label="network" value={network} />
+        <Fact label="ends" value={`${endsIn(data.endTs)} · ${ends}`} />
+        {data.categories?.length ? <Fact label="category" value={data.categories.join(', ')} /> : null}
+        <Fact label="app" value={String(data.marketAppId)} copy={String(data.marketAppId)} />
+        {data.yesAssetId ? <Fact label="shares" value={`YES ${data.yesAssetId} · NO ${data.noAssetId}`} /> : null}
       </Facts>
       {data.options?.length ? (
         <ol className="arcade-options">
@@ -195,6 +193,7 @@ export function MarketCard({
           ))}
         </ol>
       ) : null}
+      <FooterNote text={`${network} · a share pays $1 if right, so the price is the crowd's probability`} />
     </Frame>
   )
 }

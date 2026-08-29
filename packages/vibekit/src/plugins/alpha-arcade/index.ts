@@ -231,6 +231,20 @@ const MICRO = 1_000_000
 const marketIdArg = z.string().describe('Market app ID as a string, or its UUID')
 
 async function marketFor(ctx: ToolContext, marketId: string) {
+  // The list we already hold has prices, images, and volume; the per-market routes often do not.
+  const listed = await getAlphaService(ctx)
+    .markets()
+    .then((markets) =>
+      markets.find(
+        (m) =>
+          String(m.marketAppId) === marketId ||
+          m.id === marketId ||
+          m.slug === marketId ||
+          m.options?.some((o) => String(o.marketAppId) === marketId),
+      ),
+    )
+    .catch(() => undefined)
+  if (listed) return listed
   const client = getAlphaClient(ctx)
   let market = await client.getMarketFromApi(marketId).catch(() => null)
   if (!market && /^\d+$/.test(marketId)) market = await client.getMarketOnChain(Number(marketId))
@@ -278,17 +292,7 @@ export const alphaArcadeTools: AnyTool[] = [
     }),
     output: marketSchema,
     view: 'arcade.market',
-    handler: async (ctx, args) => {
-      const client = getAlphaClient(ctx)
-      let market = await client.getMarketFromApi(args.marketId).catch(() => null)
-      if (!market && /^\d+$/.test(args.marketId)) {
-        market = await client.getMarketOnChain(Number(args.marketId))
-      }
-      if (!market) {
-        throw new ToolError('MARKET_NOT_FOUND', `Market not found: ${args.marketId}`)
-      }
-      return formatMarket(market)
-    },
+    handler: async (ctx, args) => formatMarket(await marketFor(ctx, args.marketId)),
   }),
   defineTool({
     name: 'get_orderbook',
