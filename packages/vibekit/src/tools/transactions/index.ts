@@ -27,7 +27,7 @@ export const transactionTools: AnyTool[] = [
   defineTool({
     name: 'search_transactions',
     description:
-      'Search transactions and render a transaction list card. Results come OLDEST first within the bounds you set, and nextToken walks forward. Always bound a search: set minRound (for the latest activity, the current round from get_network_status minus a few hundred, then read the last rows) or a round/time window — an unbounded txType-only search times out at the indexer. To list a block, set minRound and maxRound to that round. To filter by kind, set txType (pay, axfer, appl, …). For one account use search_account_transactions. Do not recap results as markdown — the list card is the answer.',
+      'Search transactions and render a transaction list card. Results come OLDEST first within the bounds you set, and nextToken walks forward. Always bound a search: set minRound or a round/time window — an unbounded txType-only search times out at the indexer. For the LATEST activity, keep the window tiny: minRound = the current round from get_network_status minus 30, read the last row, and only widen (×4) if the page came back empty — a wide window fills pages with old rows before it reaches the tip. To list a block, set minRound and maxRound to that round. To filter by kind, set txType (pay, axfer, appl, …). For one account use search_account_transactions. Do not recap results as markdown — the list card is the answer.',
     parameters: z.object({
       limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
       nextToken: z.string().optional().describe('Pagination token'),
