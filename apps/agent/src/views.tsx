@@ -8,7 +8,7 @@ const USDC: Record<string, string | undefined> = { mainnet: '31566704', testnet:
 export function welcomeExamples(network: string): string[] {
   if (network === 'mainnet') {
     return [
-      "show algorand's chart (wince)",
+      "get algorand's price chart",
       'who is vibekit.algo?',
       'quote 10 ALGO to USDC',
       'what prediction markets are live?',

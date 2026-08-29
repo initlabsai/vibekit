@@ -4,7 +4,7 @@ import { welcomeExamples } from './views'
 
 test('mainnet intro names ecosystem reads', () => {
   expect(welcomeExamples('mainnet')).toContain('who is vibekit.algo?')
-  expect(welcomeExamples('mainnet')).toContain("show algorand's chart (wince)")
+  expect(welcomeExamples('mainnet')).toContain("get algorand's price chart")
 })
 
 test('testnet and localnet intros never ask for a name that is not there', () => {

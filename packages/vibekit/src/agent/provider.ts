@@ -49,13 +49,12 @@ export function isOpenRouterBaseUrl(baseUrl: string): boolean {
 /**
  * OpenRouter's default load-balances toward the cheapest host. Some of those
  * advertise `tools` but stream DeepSeek DSML as text, so the agent never
- * executes the call. Fireworks first (low time-to-first-token); Together if
- * it misses.
+ * executes the call. Keep only hosts that accept the tools payload, then
+ * pick the fastest of those.
  */
 export const OPENROUTER_AGENT_PROVIDER = {
   require_parameters: true,
-  order: ['fireworks', 'together'],
-  allow_fallbacks: true,
+  sort: 'throughput',
 } as const
 
 /** Merge the prefs onto a chat-completions body unless one is already set. */

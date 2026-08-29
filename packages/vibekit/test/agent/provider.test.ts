@@ -15,17 +15,13 @@ describe('OpenRouter routing', () => {
     expect(isOpenRouterBaseUrl('not a url')).toBe(false)
   })
 
-  test('tries Fireworks then Together unless the body already set provider', () => {
+  test('keeps tool-capable hosts and sorts by throughput unless the body already set provider', () => {
     expect(applyOpenRouterProviderPrefs({ model: 'deepseek/deepseek-v4-flash-0731', messages: [] })).toEqual({
       model: 'deepseek/deepseek-v4-flash-0731',
       messages: [],
-      provider: {
-        require_parameters: true,
-        order: ['fireworks', 'together'],
-        allow_fallbacks: true,
-      },
+      provider: { require_parameters: true, sort: 'throughput' },
     })
-    expect(OPENROUTER_AGENT_PROVIDER.order).toEqual(['fireworks', 'together'])
+    expect(OPENROUTER_AGENT_PROVIDER).toEqual({ require_parameters: true, sort: 'throughput' })
     const pinned = { provider: { order: ['Together'] } }
     expect(applyOpenRouterProviderPrefs(pinned)).toBe(pinned)
   })
