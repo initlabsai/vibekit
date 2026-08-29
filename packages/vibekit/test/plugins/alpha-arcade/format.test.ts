@@ -201,13 +201,9 @@ describe('plugin shape', () => {
     // Options that have no app yet are not tradable; a market with only those is not a market yet.
     const unlaunched = { ...feed.markets[0]!, options: [{ id: 'x', label: 'soon' }] }
     expect(marketFromCachedFeed(unlaunched as never)).toBeUndefined()
-    const mixed = {
-      ...feed.markets[1]!,
-      options: [...feed.markets[1]!.options, { id: 'y', label: 'soon' }],
-    }
-    expect(marketFromCachedFeed(mixed as never)!.options).toHaveLength(
-      feed.markets[1]!.options.length,
-    )
+    const launched = feed.markets[1]!.options ?? []
+    const mixed = { ...feed.markets[1]!, options: [...launched, { id: 'y', label: 'soon' }] }
+    expect(marketFromCachedFeed(mixed as never)?.options).toHaveLength(launched.length)
   })
 
   test('cachedFeed pages through lastEvaluatedKey and drops hidden markets', async () => {
