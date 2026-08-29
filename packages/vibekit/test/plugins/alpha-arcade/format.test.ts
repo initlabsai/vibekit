@@ -198,6 +198,16 @@ describe('plugin shape', () => {
     expect(multi!.options?.length).toBeGreaterThan(1)
     expect(multi!.options?.[0]?.yesPriceUsd).toBeLessThan(1)
     expect(multi!.yesPriceUsd).toBeUndefined()
+    // Options that have no app yet are not tradable; a market with only those is not a market yet.
+    const unlaunched = { ...feed.markets[0]!, options: [{ id: 'x', label: 'soon' }] }
+    expect(marketFromCachedFeed(unlaunched as never)).toBeUndefined()
+    const mixed = {
+      ...feed.markets[1]!,
+      options: [...feed.markets[1]!.options, { id: 'y', label: 'soon' }],
+    }
+    expect(marketFromCachedFeed(mixed as never)!.options).toHaveLength(
+      feed.markets[1]!.options.length,
+    )
   })
 
   test('cachedFeed pages through lastEvaluatedKey and drops hidden markets', async () => {

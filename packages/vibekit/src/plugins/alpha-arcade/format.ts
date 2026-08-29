@@ -32,9 +32,10 @@ export interface CachedFeedMarket {
     id: string
     label?: string
     title?: string
-    marketAppId: number
-    yesAssetId: number
-    noAssetId: number
+    /** Absent until the option's market app is live on chain. */
+    marketAppId?: number
+    yesAssetId?: number
+    noAssetId?: number
     yesProb?: number
     noProb?: number
     volume?: number
@@ -43,7 +44,13 @@ export interface CachedFeedMarket {
 
 /** Shapes a cached-feed group into the SDK's Market, so one formatter serves both sources. */
 export function marketFromCachedFeed(raw: CachedFeedMarket): Market | undefined {
-  const options = raw.options ?? []
+  // An option without its app is not tradable yet; a market with none of them is not a market yet.
+  const options = (raw.options ?? []).filter(
+    (o): o is typeof o & { marketAppId: number; yesAssetId: number; noAssetId: number } =>
+      typeof o.marketAppId === 'number' &&
+      typeof o.yesAssetId === 'number' &&
+      typeof o.noAssetId === 'number',
+  )
   const first = options[0]
   if (!first) return undefined
   const single = options.length === 1
