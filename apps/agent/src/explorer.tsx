@@ -209,6 +209,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
               view={block.view}
               onOpen={openTarget}
               onInput={submit}
+              onRerun={(toolName, args) => lookups.rerunPlugin(sectionId, itemId, block.view, toolName, args)}
               onMore={() => lookups.loadMore(sectionId, itemId, block.view)}
               loadingMore={lookups.loadingMore === itemId}
             />

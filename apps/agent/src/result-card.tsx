@@ -168,6 +168,7 @@ export function ResultCard({
   loadingMore,
   tailing = false,
   onInput,
+  onRerun,
 }: {
   store: ResultStore
   view: ViewSpec
@@ -356,8 +357,11 @@ export function ResultCard({
           data={derived.model}
           network={derived.model.network}
           onRange={
-            onInput ? (range) => onInput(`/price ${derived.model.assetId} ${range}`) : undefined
+            onRerun
+              ? (range) => onRerun('get_asset_price_history', { assetId: derived.model.assetId, range })
+              : undefined
           }
+          loading={loadingMore}
           onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
       )

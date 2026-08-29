@@ -1,5 +1,7 @@
 /** The direct lane: entity lookups by id that need no model, each landing as a card in the feed. */
 import {
+  isPluginViewId,
+  type JsonValue,
   buildPluginRecord,
   type NfdRecord,
   addResult,
@@ -417,6 +419,45 @@ export function useLookups({
     [appendNote, host, networkRef, presentRecord, withBusy],
   )
 
+  /** Re-runs a plugin read with new arguments and swaps the result into the same card (a chart's range chips). */
+  const rerunPlugin = useCallback(
+    (
+      sectionId: number,
+      itemId: number,
+      view: ViewSpec,
+      toolName: string,
+      args: Record<string, unknown>,
+    ) => {
+      if (loadingMore !== null) return
+      const viewId = view.view
+      if (!isPluginViewId(viewId)) return
+      setLoadingMore(itemId)
+      const network = networkRef.current
+      remoteHost
+        .pluginTool(toolName, args)
+        .then((wire) => {
+          const record = buildPluginRecord(
+            viewId,
+            {
+              resultId: `result-rerun-${crypto.randomUUID()}`,
+              toolCallId: `tool-call-rerun-${crypto.randomUUID()}`,
+              network,
+              input: args as JsonValue,
+            },
+            wire,
+            toolName,
+          )
+          commitStore(addResult(storeRef.current, record))
+          replaceBlockView(sectionId, itemId, viewFor(record, viewId))
+        })
+        .catch((error: unknown) =>
+          appendNote(sectionId, `Couldn't reload — ${errorMessage(error)}`, 'error'),
+        )
+        .finally(() => setLoadingMore(null))
+    },
+    [appendNote, commitStore, loadingMore, networkRef, remoteHost, replaceBlockView, storeRef],
+  )
+
   /** Fetches the next page of a list card into the same card. */
   const loadMore = useCallback(
     (sectionId: number, itemId: number, view: ViewSpec) => {
@@ -438,6 +479,7 @@ export function useLookups({
 
   return {
     loadMore,
+    rerunPlugin,
     loadingMore,
     openTransaction,
     openAccount,

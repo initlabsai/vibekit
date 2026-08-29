@@ -3,7 +3,18 @@
  * exactly like the core views. A plugin declares its view id and schema;
  * the host owns nothing but the card.
  */
-import { pluginViewSchemas, type PluginViewId } from '@initlabs/vibekit/plugins/views'
+import {
+  PLUGIN_VIEW_IDS,
+  pluginViewSchemas,
+  type PluginViewId,
+} from '@initlabs/vibekit/plugins/views'
+
+export { PLUGIN_VIEW_IDS, type PluginViewId }
+
+/** True for a view a plugin declares (rendered from its own schema, re-runnable through the plugin host). */
+export function isPluginViewId(view: string): view is PluginViewId {
+  return (PLUGIN_VIEW_IDS as readonly string[]).includes(view)
+}
 import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 

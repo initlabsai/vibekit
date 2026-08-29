@@ -111,6 +111,8 @@ export type { BlockDetailViewModel } from './views/block.js'
 export { createNetworkStatusViewModel } from './views/network.js'
 export {
   buildPluginRecord,
+  isPluginViewId,
+  PLUGIN_VIEW_IDS,
   createArcadeMarketViewModel,
   createArcadeMarketsViewModel,
   createArcadeOrderbookViewModel,
@@ -136,6 +138,7 @@ export type {
   Markets,
   NfdList,
   NfdRecord,
+  PluginViewId,
   OpenOrders,
   OrderbookView,
   Positions,
