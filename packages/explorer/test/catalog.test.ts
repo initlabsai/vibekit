@@ -173,7 +173,7 @@ describe('first-party catalog views', () => {
     expect(derived.model.transactions).toHaveLength(2)
   })
 
-  test('search_assets and search_asset_holders become list and holders cards', () => {
+  test('search_assets and top_asset_holders become list and holders cards', () => {
     const assets = bridgeToolResult(
       {
         id: '1',
@@ -199,7 +199,7 @@ describe('first-party catalog views', () => {
     const holders = bridgeToolResult(
       {
         id: '2',
-        toolName: 'search_asset_holders',
+        toolName: 'top_asset_holders',
         view: 'asset.holders',
         output: { balances: [{ address: FIXTURE_SENDER, amount: '12', isFrozen: false }] },
         isError: false,

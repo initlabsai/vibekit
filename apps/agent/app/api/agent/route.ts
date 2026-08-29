@@ -18,7 +18,16 @@ import algosdk from 'algosdk'
 import { z } from 'zod'
 
 import { creditsConfig } from '../credits/config'
-import { balance, bearerOf, freeTurn, houseTurn, ipOf, payerForToken, spend, TURNS_PER_PACK } from '../credits/ledger'
+import {
+  balance,
+  bearerOf,
+  freeTurn,
+  houseTurn,
+  ipOf,
+  payerForToken,
+  spend,
+  TURNS_PER_PACK,
+} from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -29,12 +38,30 @@ const DEFAULT_MODEL = 'Qwen/Qwen2.5-72B-Instruct-Turbo'
 const MAX_BODY_BYTES = 256 * 1024
 const MAX_HISTORY = 40
 const PROGRAM_PAGES_PER_TURN = 2
+// Not for a chat window: spec-path deploys (no file grant here), the admin writes
+// of assets and apps you created, and algod twins of indexer lookups.
+const OMITTED_TOOLS = new Set([
+  'app_deploy',
+  'app_update',
+  'app_delete',
+  'app_close_out',
+  'list_app_spec_methods',
+  'asset_freeze',
+  'asset_config',
+  'asset_destroy',
+  'get_asset_info',
+  'get_application_info',
+  'batch_lookup_accounts',
+])
 
 const requestSchema = z.object({
   network: z.enum(['localnet', 'testnet', 'mainnet']),
   input: z.string().min(1).max(4000),
   /** The wallet's accounts, so the prompt can name a default sender. */
-  accounts: z.array(z.object({ address: z.string(), name: z.string().optional() })).max(32).default([]),
+  accounts: z
+    .array(z.object({ address: z.string(), name: z.string().optional() }))
+    .max(32)
+    .default([]),
   activeAddress: z.string().optional(),
   /** What the Explorer is showing, one line per card, oldest first. */
   context: z.string().max(4000).optional(),
@@ -49,7 +76,8 @@ const IP_HOURLY_CAP = Number(process.env.AGENT_IP_HOURLY_CAP ?? 30)
 async function chargeTurn(ip: string): Promise<string | undefined> {
   const verdict = await houseTurn(ip, { daily: DAILY_CAP, hourly: IP_HOURLY_CAP })
   if (verdict === 'daily') return "the house is out of turns for today. i'll be here tomorrow."
-  if (verdict === 'hourly') return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
+  if (verdict === 'hourly')
+    return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
   return undefined
 }
 
@@ -58,7 +86,8 @@ async function chargeTurn(ip: string): Promise<string | undefined> {
  * alone still works as the shortest setup. The provider shown to the user is the
  * endpoint's host.
  */
-function config(): { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
+function config():
+  { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
   const apiKey = process.env.AGENT_API_KEY ?? process.env.TOGETHER_API_KEY
   if (!apiKey) return undefined
   const baseUrl = process.env.AGENT_BASE_URL ?? DEFAULT_BASE_URL
@@ -77,7 +106,13 @@ export async function GET(): Promise<Response> {
   const endpoint = config()
   return Response.json({
     enabled: endpoint !== undefined,
-    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: creditsConfig() ? ('x402' as const) : ('house' as const) } : {}),
+    ...(endpoint
+      ? {
+          model: endpoint.model,
+          provider: endpoint.provider,
+          billing: creditsConfig() ? ('x402' as const) : ('house' as const),
+        }
+      : {}),
     private: false,
   })
 }
@@ -86,7 +121,8 @@ export async function POST(request: Request): Promise<Response> {
   const endpoint = config()
   if (!endpoint) return Response.json({ error: 'No agent configured' }, { status: 404 })
   const text = await request.text()
-  if (Buffer.byteLength(text) > MAX_BODY_BYTES) return Response.json({ error: 'Request body is too large' }, { status: 413 })
+  if (Buffer.byteLength(text) > MAX_BODY_BYTES)
+    return Response.json({ error: 'Request body is too large' }, { status: 413 })
   let parsed
   try {
     parsed = requestSchema.safeParse(JSON.parse(text))
@@ -109,7 +145,10 @@ export async function POST(request: Request): Promise<Response> {
       const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
       if (paid === undefined) {
         return Response.json(
-          { error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`, offer: { price: pack.price, turns: TURNS_PER_PACK } },
+          {
+            error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`,
+            offer: { price: pack.price, turns: TURNS_PER_PACK },
+          },
           { status: 402 },
         )
       }
@@ -125,11 +164,18 @@ export async function POST(request: Request): Promise<Response> {
   // time; the house pays for two pages per turn, which explains a contract, and no more.
   let programPages = 0
   const session = createExplorerAgent({
-    model: { provider: 'openai-compatible', baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model: endpoint.model },
+    model: {
+      provider: 'openai-compatible',
+      baseUrl: endpoint.baseUrl,
+      apiKey: endpoint.apiKey,
+      model: endpoint.model,
+    },
     addressBook: body.accounts,
     network: body.network,
     history: body.history as never,
-    approveToolCall: async ({ toolName }) => toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
+    omitTools: OMITTED_TOOLS,
+    approveToolCall: async ({ toolName }) =>
+      toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
   })
   const context = [activeSenderLine(body.activeAddress, body.accounts), body.context ?? '']
     .filter(Boolean)
@@ -141,7 +187,8 @@ export async function POST(request: Request): Promise<Response> {
   const encoder = new TextEncoder()
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const send = (event: unknown) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
+      const send = (event: unknown) =>
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
       try {
         if (charged) send({ type: 'credits', credits: charged })
         for await (const event of session.stream(input)) {
@@ -150,7 +197,11 @@ export async function POST(request: Request): Promise<Response> {
             if (compose) {
               // A composed group is the draft the approval modal reviews; the model never sees signing.
               const draftRecord = draftRecordFromComposeWire(
-                { resultId: newId('result-agent-draft'), toolCallId: event.id, network: networkOfCall(event.input, body.network) },
+                {
+                  resultId: newId('result-agent-draft'),
+                  toolCallId: event.id,
+                  network: networkOfCall(event.input, body.network),
+                },
                 compose,
                 event.toolName,
               )

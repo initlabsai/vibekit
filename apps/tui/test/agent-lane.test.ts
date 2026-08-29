@@ -331,7 +331,7 @@ describe('TUI agent lane', () => {
 
 describe('explain_application', () => {
   test('the agent’s markdown becomes a trusted explanation record', async () => {
-    const { explainApplicationTool } = await import('../src/features/agent/explain-tool.js')
+    const { explainApplicationTool } = await import('@initlabs/vibekit-explorer/live')
     const output = await explainApplicationTool.handler({} as never, {
       applicationId: 42,
       markdown: '## Pool\n- swap',

@@ -4,11 +4,11 @@ import { transactionListSchema } from '../shared/schemas.js'
 import { lookupAsset } from './lookup.js'
 import { topAssetHolders } from './holders.js'
 import { approxWords, scaleBaseUnits } from './format.js'
-import { searchAssetBalances, searchAssetTransactions, searchAssets } from './search.js'
+import { searchAssetTransactions, searchAssets } from './search.js'
 import { assetDetailSchema, assetHoldersSchema, assetListSchema } from './schemas.js'
 
 export * from './schemas.js'
-export { lookupAsset, searchAssetBalances, searchAssetTransactions, searchAssets }
+export { lookupAsset, searchAssetTransactions, searchAssets }
 export type { FormattedAsset, AssetBalance } from './format.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 
@@ -29,37 +29,24 @@ export const assetTools: AnyTool[] = [
   defineTool({
     name: 'top_asset_holders',
     description:
-      'The largest holders of an asset, sorted by balance — scans every holder via the indexer, so it is authoritative. Use for "top holders", "biggest bags", "whale watch", or concentration questions. Not paginated; ask for a bigger limit instead.',
+      'The largest holders of an asset, sorted by balance — scans every holder via the indexer, so it is authoritative. Use for "top holders", "biggest bags", "whale watch", or concentration questions. Not paginated; ask for a bigger limit instead. minBalance/maxBalance (raw base units) narrow the set — "who holds more than N".',
     parameters: z.object({
       assetId: z.number().describe('The asset ID'),
       limit: z.number().optional().describe('How many top holders to return (default 10, max 100)'),
+      minBalance: z
+        .number()
+        .optional()
+        .describe('Only holders with more than this (raw base units)'),
+      maxBalance: z
+        .number()
+        .optional()
+        .describe('Only holders with less than this (raw base units)'),
     }),
     // Superset of the shared 'asset.holders' shape; extra per-row fields
     // (amountScaled, percentOfSupply) ride through validation to the agent.
     output: assetHoldersSchema,
     view: 'asset.holders',
     handler: async (ctx, args) => topAssetHolders(ctx, args),
-  }),
-  defineTool({
-    name: 'search_asset_holders',
-    description:
-      'One page of holders of an asset, in address order, with an optional minimum balance (currencyGreaterThan, raw base units). For the largest holders use top_asset_holders instead: this page is not sorted by balance.',
-    parameters: z.object({
-      assetId: z.number().describe('The asset ID'),
-      limit: z.number().optional().describe('Max results to return (default 20, max 100)'),
-      nextToken: z.string().optional().describe('Pagination token'),
-      currencyGreaterThan: z
-        .number()
-        .optional()
-        .describe('Min balance in raw base units (before decimal adjustment)'),
-      currencyLessThan: z
-        .number()
-        .optional()
-        .describe('Max balance in raw base units (before decimal adjustment)'),
-    }),
-    output: assetHoldersSchema,
-    view: 'asset.holders',
-    handler: async (ctx, args) => searchAssetBalances(ctx, args),
   }),
   defineTool({
     name: 'search_asset_transactions',

@@ -28,7 +28,7 @@ export interface TopAssetHolders {
  */
 export async function topAssetHolders(
   ctx: ToolContext,
-  args: { assetId: number; limit?: number },
+  args: { assetId: number; limit?: number; minBalance?: number; maxBalance?: number },
 ): Promise<TopAssetHolders> {
   const limit = Math.min(args.limit ?? 10, 100)
 
@@ -48,6 +48,8 @@ export async function topAssetHolders(
   for (let page = 0; page < MAX_PAGES; page += 1) {
     let query = ctx.indexer.lookupAssetBalances(args.assetId).limit(PAGE_SIZE)
     if (nextToken) query = query.nextToken(nextToken)
+    if (args.minBalance !== undefined) query = query.currencyGreaterThan(args.minBalance)
+    if (args.maxBalance !== undefined) query = query.currencyLessThan(args.maxBalance)
     const response = await query.do()
     for (const b of response.balances ?? []) {
       const amount = BigInt(b.amount)

@@ -3,11 +3,7 @@ import { jsonSafe } from '../../src/core/index.js'
 import { assetTools } from '../../src/tools/assets/index.js'
 import { lookupAsset } from '../../src/tools/assets/lookup.js'
 import { topAssetHolders } from '../../src/tools/assets/holders.js'
-import {
-  searchAssetBalances,
-  searchAssetTransactions,
-  searchAssets,
-} from '../../src/tools/assets/search.js'
+import { searchAssetTransactions, searchAssets } from '../../src/tools/assets/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const usdcParams = {
@@ -27,7 +23,6 @@ describe('registry', () => {
     expect(assetTools.map((t) => t.name)).toEqual([
       'lookup_asset',
       'top_asset_holders',
-      'search_asset_holders',
       'search_asset_transactions',
       'search_assets',
       'get_asset_info',
@@ -104,53 +99,6 @@ describe('lookupAsset', () => {
     expect(asset.freeze).toBeUndefined()
     expect(asset.clawback).toBeUndefined()
     expect(asset.url).toBe('https://centre.io')
-  })
-})
-
-describe('searchAssetBalances', () => {
-  test('sorts by balance descending, formats with decimals, slices to limit', async () => {
-    const ctx = fakeContext({
-      indexer: {
-        lookupAssetBalances: () =>
-          chainable({
-            balances: [
-              { address: 'SMALL', amount: BigInt(1_000_000), isFrozen: false },
-              { address: 'BIG', amount: BigInt(5_500_000), isFrozen: true },
-              { address: 'MID', amount: BigInt(2_000_000), isFrozen: false },
-            ],
-            nextToken: 'tok',
-          }),
-        lookupAssetByID: () =>
-          chainable({ asset: { index: BigInt(31566704), params: usdcParams } }),
-      },
-    })
-    const result = await searchAssetBalances(ctx, { assetId: 31566704, limit: 2 })
-    expect(result.balances).toEqual([
-      { address: 'BIG', amount: '5500000', isFrozen: true },
-      { address: 'MID', amount: '2000000', isFrozen: false },
-    ])
-    expect(result.decimals).toBe(6)
-    // page of 3 < 100 → final page, token stripped
-    expect(result.nextToken).toBeUndefined()
-  })
-
-  test('falls back to raw amounts when the decimals lookup fails', async () => {
-    const ctx = fakeContext({
-      indexer: {
-        lookupAssetBalances: () =>
-          chainable({
-            balances: [{ address: 'A', amount: BigInt(1_500_000), isFrozen: false }],
-          }),
-        lookupAssetByID: () => ({
-          do: async () => {
-            throw new Error('indexer down')
-          },
-        }),
-      },
-    })
-    const result = await searchAssetBalances(ctx, { assetId: 123 })
-    expect(result.balances).toEqual([{ address: 'A', amount: '1500000', isFrozen: false }])
-    expect(result.decimals).toBeUndefined()
   })
 })
 

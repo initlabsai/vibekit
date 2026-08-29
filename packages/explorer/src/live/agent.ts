@@ -3,7 +3,12 @@
  * composes over, its voice, and the context lines a host prepends to a
  * turn. Both hosts run it through createAgent; neither can sign.
  */
-import { createAgent, WELL_KNOWN_ASSETS, type AgentSession, type VibekitAgentOptions } from '@initlabs/vibekit/agent'
+import {
+  createAgent,
+  WELL_KNOWN_ASSETS,
+  type AgentSession,
+  type VibekitAgentOptions,
+} from '@initlabs/vibekit/agent'
 import type { AnyTool } from '@initlabs/vibekit'
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
@@ -20,6 +25,7 @@ import {
 } from '@initlabs/vibekit/tools'
 
 import type { ResultStore } from '../core/results.js'
+import { explainApplicationTool } from './explain-tool.js'
 import type { LiveNetworkId } from '../host.js'
 
 /** The network a tool call queried: its explicit `network` arg, else the session default. */
@@ -30,7 +36,15 @@ export function networkOfCall(input: unknown, sessionNetwork: LiveNetworkId): Li
     : sessionNetwork
 }
 
-export function explorerTools(extra: readonly AnyTool[] = []): AnyTool[] {
+/**
+ * The base Explorer tool set: every read, the compose-only writes, the
+ * explanation tool, plus a host's extras. `omit` names tools a host has no
+ * use for (the web app drops spec-path deploys and admin writes).
+ */
+export function explorerTools(
+  extra: readonly AnyTool[] = [],
+  omit?: ReadonlySet<string>,
+): AnyTool[] {
   return [
     ...transactionTools,
     ...transactionWriteTools,
@@ -40,8 +54,11 @@ export function explorerTools(extra: readonly AnyTool[] = []): AnyTool[] {
     ...contractTools,
     ...contractWriteTools,
     ...networkTools,
+    explainApplicationTool,
     ...extra,
-  ].filter((tool) => !tool.mutatesState && tool.name !== 'simulate_transactions')
+  ].filter(
+    (tool) => !tool.mutatesState && tool.name !== 'simulate_transactions' && !omit?.has(tool.name),
+  )
 }
 
 const CONTEXT_KEYS = [
@@ -125,7 +142,7 @@ export function explorerSystemPrompt(
     "Named accounts (SMOKE1, etc.) map to addresses below. name.algo → resolve_nfd (mainnet/testnet), then pass the address; never pass names to other tools. 'Look up name.algo' means resolve_nfd alone — the NFD card is the answer; fetch nothing more unless asked.",
     'When asked for my/your accounts, call batch_lookup_accounts with every address below. Do not answer from this list.',
     "Unfamiliar asset → get_asset_profile (Pera's curated registry: identity, socials, verification tier). A suspicious or unverified tier is said plainly before anyone sends funds at it.",
-    'Top/largest holders, whales, concentration → top_asset_holders (it scans every holder and sorts; never reconstruct from search_asset_holders). USD prices → get_asset_prices (ALGO is asset 0). "The real X" or trending → search_assets_ranked. All three mainnet-only.',
+    'Top/largest holders, whales, concentration → top_asset_holders (it scans every holder and sorts; minBalance for "holds more than N"). USD prices → get_asset_prices (ALGO is asset 0). "The real X" or trending → search_assets_ranked. All three mainnet-only.',
     'A group ID is the 44-character base64 hash on a transaction card (group fact) → lookup_transaction_group renders the group card.',
     'One kind of transaction for an account (axfer, pay, appl, …) → search_account_transactions with txType set; do not fetch everything and filter by hand, and do not look up individual rows afterwards unless asked.',
     'lookup_block is a header: type totals only. To list or filter txns in a round you MUST call search_transactions with minRound and maxRound set to the round (plus txType to filter). Never write a transaction table yourself.',
@@ -149,7 +166,6 @@ export function explorerSystemPrompt(
   ].join('\n')
 }
 
-
 export interface ExplorerAgentOptions {
   model: VibekitAgentOptions['model']
   addressBook: ReadonlyArray<{ address: string; name?: string }>
@@ -158,6 +174,8 @@ export interface ExplorerAgentOptions {
   tools?: AnyTool[]
   /** Read-only tools a host adds (the terminal's My Apps methods). */
   extraTools?: readonly AnyTool[]
+  /** Tool names a host leaves out. */
+  omitTools?: ReadonlySet<string>
   /** Gate for expensive tool calls; writes are compose-only and never gated here. */
   approveToolCall?: VibekitAgentOptions['approveToolCall']
   /** Plugins the user turned off; their tools never register. */
@@ -172,16 +190,20 @@ export interface ExplorerAgentOptions {
 
 /** The three built-in plugins the Explorer agent registers. */
 export function explorerPlugins(disabled?: ReadonlySet<string>) {
-  return [nfdPlugin(), vestigePlugin(), peraPlugin()].filter((plugin) => !disabled?.has(plugin.name))
+  return [nfdPlugin(), vestigePlugin(), peraPlugin()].filter(
+    (plugin) => !disabled?.has(plugin.name),
+  )
 }
 
 /** Creates the Explorer's agent session (compose-only, signerless). */
 export function createExplorerAgent(options: ExplorerAgentOptions): AgentSession {
   const network = options.network ?? 'localnet'
   const plugins = explorerPlugins(options.disabledPlugins)
-  const base = options.tools ?? explorerTools(options.extraTools)
+  const base = options.tools ?? explorerTools(options.extraTools, options.omitTools)
   const tools = options.wrapTools ? options.wrapTools(base) : base
-  const promptTools = options.tools ? tools : [...tools, ...plugins.flatMap((plugin) => plugin.tools)]
+  const promptTools = options.tools
+    ? tools
+    : [...tools, ...plugins.flatMap((plugin) => plugin.tools)]
   return createAgent({
     network,
     // Every network is served: the model passes `network` to leave the active one.

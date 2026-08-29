@@ -25,7 +25,7 @@ export const assetDetailSchema = z.object({
   url: z.string().optional(),
 })
 
-/** Wire shape of search_asset_holders ('asset.holders' view). */
+/** Wire shape of top_asset_holders ('asset.holders' view). */
 export const assetHoldersSchema = z.object({
   balances: z.array(
     z.object({

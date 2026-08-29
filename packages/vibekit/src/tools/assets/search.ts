@@ -1,56 +1,6 @@
 import { DEFAULT_LIMIT, stripFinalToken, type ToolContext } from '../../core/index.js'
 import { formatTransaction, type FormattedTransaction } from '../shared/format.js'
-import { formatAsset, type AssetBalance, type FormattedAsset } from './format.js'
-
-export interface SearchAssetBalancesArgs {
-  assetId: number
-  limit?: number
-  nextToken?: string
-  currencyGreaterThan?: number
-  currencyLessThan?: number
-}
-
-export async function searchAssetBalances(
-  ctx: ToolContext,
-  args: SearchAssetBalancesArgs,
-): Promise<{ balances: AssetBalance[]; decimals?: number; nextToken?: string }> {
-  const indexer = ctx.indexer
-  const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
-  let query = indexer.lookupAssetBalances(args.assetId).limit(100)
-
-  if (args.nextToken) query = query.nextToken(args.nextToken)
-  if (args.currencyGreaterThan !== undefined)
-    query = query.currencyGreaterThan(args.currencyGreaterThan)
-  if (args.currencyLessThan !== undefined) query = query.currencyLessThan(args.currencyLessThan)
-
-  const response = await query.do()
-
-  let decimals: number | undefined
-  try {
-    const assetRes = await indexer.lookupAssetByID(args.assetId).do()
-    decimals = Number(assetRes.asset.params.decimals ?? 0)
-  } catch {
-    /* decimals stay unknown; amounts are raw base units regardless */
-  }
-
-  const allBalances = (response.balances ?? [])
-    .map((b) => ({
-      address: String(b.address),
-      amount: String(b.amount),
-      rawAmount: BigInt(b.amount),
-      isFrozen: b.isFrozen,
-    }))
-    .sort((a, b) => (b.rawAmount > a.rawAmount ? 1 : b.rawAmount < a.rawAmount ? -1 : 0))
-    .map(({ rawAmount: _, ...rest }) => rest)
-
-  const balances = allBalances.slice(0, limit)
-
-  return {
-    balances,
-    ...(decimals === undefined ? {} : { decimals }),
-    nextToken: stripFinalToken(allBalances.length, 100, response.nextToken),
-  }
-}
+import { formatAsset, type FormattedAsset } from './format.js'
 
 export interface SearchAssetTransactionsArgs {
   assetId: number

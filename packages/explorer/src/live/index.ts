@@ -425,3 +425,4 @@ export {
   networkOfCall,
   type ExplorerAgentOptions,
 } from './agent.js'
+export { explainApplicationTool } from './explain-tool.js'

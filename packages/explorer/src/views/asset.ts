@@ -106,11 +106,11 @@ export function buildAssetHoldingsRecord(
   return record(identity, toolName, assetHoldingsDataSchema.parse(wire))
 }
 
-/** Wraps search_asset_holders. */
+/** Wraps top_asset_holders. */
 export function buildAssetHoldersRecord(
   identity: ResultIdentity,
   wire: unknown,
-  toolName = 'search_asset_holders',
+  toolName = 'top_asset_holders',
 ): StructuredResult {
   return record(identity, toolName, assetHoldersDataSchema.parse(wire))
 }

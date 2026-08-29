@@ -15,7 +15,6 @@ import { CopyContext, useCopyOnSelect } from './copy-selection.js'
 import { useAccounts } from './features/accounts/hooks.js'
 import { AccountListScreen } from './features/accounts/list-screen.js'
 import { WalletScreen } from './features/accounts/wallet-screen.js'
-import { explainApplicationTool } from './features/agent/explain-tool.js'
 import { useAgentLane } from './features/agent/hooks.js'
 import { EXPLORER_PLUGIN_INFO } from './features/agent/session.js'
 import { useApps } from './features/apps/hooks.js'
@@ -169,10 +168,7 @@ export function App() {
     [createSection, flowRef, network, newId, startFromDraft],
   )
   const apps = useApps({ screen, network, sender: activeSender, live, host, onDraft: onAppsDraft })
-  const agentExtraTools = useMemo(
-    () => [...apps.extraTools, explainApplicationTool],
-    [apps.extraTools],
-  )
+  const agentExtraTools = apps.extraTools
 
   const lookup = useLookups({
     feed,
