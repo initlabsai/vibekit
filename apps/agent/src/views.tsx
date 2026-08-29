@@ -5,7 +5,8 @@ import { CompanionFace } from './features/profile/companion'
 const USDC: Record<string, string | undefined> = { mainnet: '31566704', testnet: '10458941' }
 
 function examples(network: string): string[] {
-  if (network === 'mainnet') return ['who is vibekit.algo?', 'quote 10 ALGO to USDC', 'what prediction markets are live?']
+  if (network === 'mainnet')
+    return ["show algorand's chart (wince)", 'who is vibekit.algo?', 'quote 10 ALGO to USDC', 'what prediction markets are live?']
   const usdc = USDC[network]
   return [usdc ? `what is asset ${usdc}?` : '/blocks', 'who is vibekit.algo?', '/status']
 }
