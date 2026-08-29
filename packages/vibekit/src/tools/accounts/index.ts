@@ -66,7 +66,7 @@ export const accountTools: AnyTool[] = [
   defineTool({
     name: 'search_account_transactions',
     description:
-      "Search one account's transactions, newest first; nextToken walks back in time. Narrow with txType, assetId, addressRole (sender or receiver), rounds, or times before paging. For the account's EARLIEST activity do not page from the top: take createdAtRound from lookup_account and search with minRound=createdAtRound and maxRound=createdAtRound+100000 — the last rows of that window are its first transactions.",
+      "Search one account's transactions, NEWEST first (the opposite of search_transactions); nextToken walks back in time. Narrow with txType, assetId, addressRole (sender or receiver), rounds, or times before paging. For the account's EARLIEST activity do not page from the top: take createdAtRound from lookup_account and search with minRound=createdAtRound and maxRound=createdAtRound+100000 — the last rows of that window are its first transactions.",
     parameters: z.object({
       address: z.string().describe('The Algorand address'),
       addressRole: z.enum(['sender', 'receiver']).optional().describe("Only transactions where the address was the sender or the receiver; unset means either. 'receiver' finds what an account was given."),
