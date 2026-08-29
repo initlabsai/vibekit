@@ -366,7 +366,8 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
       }
       const draft = writeDraftDataSchema.parse(draftRecord.data)
       // The group bytes, not reconstructed specs, are the simulated truth.
-      const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions)
+      // The same sender rule as the draft: the wallet's first leg, not a router's.
+      const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions, draft.presigned)
       const wire = await simulateUnsignedGroup(context.algod, draft.unsignedGroup.transactions)
       return buildSimulationRecord(
         identity('payment-simulation', { network: draftRecord.network }),

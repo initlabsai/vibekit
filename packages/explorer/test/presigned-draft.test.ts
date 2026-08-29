@@ -92,6 +92,27 @@ describe('drafts with pre-signed legs', () => {
     expect(model.model.intent).toMatchObject({ kind: 'swap', minAmountOut: '2286900' })
   })
 
+  test("the simulation record names the wallet's sender, so the view model derives", async () => {
+    const { buildSimulationRecord } = await import('../src/flows/write-flow-host.js')
+    const { decodeUnsignedGroup } = await import('../src/live/index.js')
+    const { record, wire } = draft()
+    const decoded = decodeUnsignedGroup(wire.unsignedGroup, wire.presigned)
+    const simulation = buildSimulationRecord(
+      { resultId: 'result-sim', toolCallId: 'tool-call-sim', network: 'mainnet' },
+      { wouldSucceed: true, simulatedRound: 1, txids: [] },
+      decoded,
+    )
+    const store = addResult(addResult(createResultStore(), record), simulation)
+    const model = createWriteFlowViewModel(store, {
+      flowId: 'flow-2',
+      stage: 'simulated',
+      draft: { source: 'result', id: record.resultId },
+      simulation: { source: 'result', id: simulation.resultId },
+    } as never)
+    if (!model.ok) throw new Error(model.error.message)
+    expect(model.model.sender).toBe(user.addr.toString())
+  })
+
   test('signDraftWith offers the wallet only its own legs and splices the rest back in order', async () => {
     const { record, presignedRouter } = draft()
     const offered: number[][] = []

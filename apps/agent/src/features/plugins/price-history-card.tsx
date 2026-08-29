@@ -33,12 +33,14 @@ export function PriceHistoryCard({
   data,
   network,
   onRange,
+  loading,
   onOpen,
 }: {
   data: AssetHistory
   network: string
-  /** Re-runs the lookup on another range. */
+  /** Re-runs the lookup on another range, in place. */
   onRange?: (range: AssetHistory['range']) => void
+  loading?: boolean
   onOpen?: (assetId: number) => void
 }) {
   const [hover, setHover] = useState<number | null>(null)
@@ -149,6 +151,7 @@ export function PriceHistoryCard({
               key={range}
               label={range}
               active={range === data.range}
+              disabled={loading}
               onPress={() => onRange(range)}
             />
           ))}

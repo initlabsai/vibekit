@@ -175,8 +175,10 @@ export function ResultCard({
   onOpen?: (target: OpenTarget) => void
   /** Fetches the next page into this card. */
   onMore?: () => void
-  /** Sends text as composer input (a card's range chips, a suggested next lookup). */
+  /** Sends text as composer input (a suggested next lookup). */
   onInput?: (text: string) => void
+  /** Re-runs this card's plugin read with new arguments, in place (a chart's range chips). */
+  onRerun?: (toolName: string, args: Record<string, unknown>) => void
   loadingMore?: boolean
   /** A block list that follows the chain. */
   tailing?: boolean
@@ -358,7 +360,8 @@ export function ResultCard({
           network={derived.model.network}
           onRange={
             onRerun
-              ? (range) => onRerun('get_asset_price_history', { assetId: derived.model.assetId, range })
+              ? (range) =>
+                  onRerun('get_asset_price_history', { assetId: derived.model.assetId, range })
               : undefined
           }
           loading={loadingMore}
