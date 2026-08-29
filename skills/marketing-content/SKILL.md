@@ -137,6 +137,8 @@ Lessons that cost time — don't relearn them:
     forward. Do not leave a resolved screen on display merely because the
     recording has spare runtime. Music: trim to video length, `afade` in 0.5s
     / out 3s, and add a matching video `fade=t=out` at the end.
+16. **libx264 needs even height.** 1200×675 (16:9 tweet size) is odd and the
+    encoder refuses it. Pad to 676 or shoot 1920×1080.
 
 Recording against live mainnet needs: keystore daemon
 (`bun run apps/cli/src/index.ts keystore status`), and for AI segments the
@@ -157,6 +159,10 @@ Mono), so it cuts against real footage without a seam.
   `python3 qt314-boot.py <framesdir>` then encode at 24fps with `retro` from 0.
 - `references/qt314-loop.py` — the 9s tweet loop, 1200x675 at 12fps; GIF via
   palettegen/paletteuse, MP4 for X.
+- `references/qt314-ecosystem.py` — the 35s read-tools promo (Aug 2026): chart,
+  web, quote, markets as cards. 1920×1080 at 24fps.
+  `python3 qt314-ecosystem.py <framesdir> <candles.json>` then `neon-drive`
+  from 30s. Candle/quote/headline data is captured the day of rendering.
 
 **How her face assembles** (the beat Gabe called incredible — keep it): it is
 not a morph, it is per-character noise resolving. For ~2 seconds each of the
