@@ -1,6 +1,6 @@
 /**
- * Web plugin: search and read pages through Exa's hosted MCP, which answers
- * without a key. Every network; every call counts as expensive so a host can
+ * Web plugin: search and read pages through Exa's hosted MCP. Keyless works
+ * for a handful of calls, then Exa asks for a key (EXA_API_KEY). Every network; every call counts as expensive so a host can
  * cap how many one turn spends. The card is the citation; the model's
  * sentence is the answer.
  */
@@ -22,7 +22,7 @@ const EXA_MCP_URL = 'https://mcp.exa.ai/mcp'
 const PAGE_CHARS = 12_000
 
 export interface WebOptions {
-  /** Raises Exa's rate limit; keyless works for casual use. */
+  /** Exa API key (dashboard.exa.ai); keyless answers a few calls a day, then rate-limits. */
   apiKey?: string
   /** Test seam and self-hosting hook. */
   endpoint?: string
@@ -34,7 +34,9 @@ export interface WebService {
 }
 
 function createWebService(options: WebOptions): WebService {
-  const endpoint = options.endpoint ?? EXA_MCP_URL
+  const endpoint = new URL(options.endpoint ?? EXA_MCP_URL)
+  // Exa reads the key from the URL, not a header.
+  if (options.apiKey) endpoint.searchParams.set('exaApiKey', options.apiKey)
   let id = 0
   return {
     async call(tool, args) {
@@ -43,7 +45,6 @@ function createWebService(options: WebOptions): WebService {
         headers: {
           'content-type': 'application/json',
           accept: 'application/json, text/event-stream',
-          ...(options.apiKey ? { 'x-api-key': options.apiKey } : {}),
         },
         body: JSON.stringify({
           jsonrpc: '2.0',
@@ -81,7 +82,15 @@ function createWebService(options: WebOptions): WebService {
           ?.filter((part) => part.type === 'text')
           .map((part) => part.text ?? '')
           .join('\n') ?? ''
-      if (message.result?.isError) throw new ToolError('WEB_ERROR', text || 'Web search failed')
+      if (message.result?.isError) {
+        const limited = /rate limit/i.test(text)
+        throw new ToolError(
+          limited ? 'WEB_RATE_LIMITED' : 'WEB_ERROR',
+          limited
+            ? 'Web search is rate-limited right now — try again later'
+            : text || 'Web search failed',
+        )
+      }
       return text
     },
   }

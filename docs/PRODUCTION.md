@@ -90,10 +90,12 @@ in `AGENTS.md`.
   an address's turns (the bearer token is per browser) is deferred until there
   is a real session backend.
 
-- **Agent: web search is keyless.** `web_search` / `read_page` go through Exa's
-  hosted MCP (`https://mcp.exa.ai/mcp`) with no key; the free plan covers
-  casual use and answers 429 past it. `EXA_API_KEY` raises the limit when that
-  day comes. The house gate allows three web calls per turn (`WEB_CALLS_PER_TURN`
+- **Agent: web search needs an Exa key in production.** `web_search` /
+  `read_page` go through Exa's hosted MCP (`https://mcp.exa.ai/mcp`). Keyless
+  answered a handful of calls on 2026-08-29 and then rate-limited for the day,
+  so it is a demo, not a plan: create a key at https://dashboard.exa.ai/api-keys
+  and set `EXA_API_KEY` (the plugin passes it as `?exaApiKey=`). Rate limits
+  reach the model as `WEB_RATE_LIMITED`. The house gate allows three web calls per turn (`WEB_CALLS_PER_TURN`
   in the agent route), so one turn cannot loop searches.
 
 - **Agent: swaps run on txnlab's free-tier key until we set our own.** The
