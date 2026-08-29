@@ -89,6 +89,27 @@ export function ipOf(request: Request): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
 }
 
+/**
+ * House mode's caps, on the same store: one counter for the day across everyone,
+ * one per IP per hour, each expiring on its own. Refused turns are not counted.
+ */
+export async function houseTurn(ip: string, caps: { daily: number; hourly: number }, now = new Date()): Promise<'ok' | 'daily' | 'hourly'> {
+  const day = now.toISOString().slice(0, 10)
+  const hour = now.toISOString().slice(0, 13)
+  const total = await incrBy(`house:day:${day}`, 1, DAY_SECONDS)
+  if (total > caps.daily) {
+    await incrBy(`house:day:${day}`, -1)
+    return 'daily'
+  }
+  const mine = await incrBy(`house:ip:${ip}:${hour}`, 1, 60 * 60)
+  if (mine > caps.hourly) {
+    await incrBy(`house:ip:${ip}:${hour}`, -1)
+    await incrBy(`house:day:${day}`, -1)
+    return 'hourly'
+  }
+  return 'ok'
+}
+
 /** Test seam: forget the in-process ledger. */
 export function resetMemoryLedger(): void {
   memory.clear()
