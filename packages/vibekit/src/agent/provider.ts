@@ -36,6 +36,33 @@ export function isProviderConfig(value: unknown): value is ProviderConfig {
   )
 }
 
+/** True for OpenRouter's chat completions host, not Together or a local proxy. */
+export function isOpenRouterBaseUrl(baseUrl: string): boolean {
+  try {
+    const host = new URL(baseUrl).hostname
+    return host === 'openrouter.ai' || host.endsWith('.openrouter.ai')
+  } catch {
+    return false
+  }
+}
+
+/**
+ * OpenRouter's default load-balances toward the cheapest host. Some of those
+ * advertise `tools` but stream DeepSeek DSML as text, so the agent never
+ * executes the call. `require_parameters` keeps only hosts that accept the
+ * tools payload; `throughput` picks the fastest of those.
+ */
+export const OPENROUTER_AGENT_PROVIDER = {
+  require_parameters: true,
+  sort: 'throughput',
+} as const
+
+/** Merge the prefs onto a chat-completions body unless one is already set. */
+export function applyOpenRouterProviderPrefs(body: Record<string, unknown>): Record<string, unknown> {
+  if (body.provider !== undefined) return body
+  return { ...body, provider: { ...OPENROUTER_AGENT_PROVIDER } }
+}
+
 export function createModel(config: ProviderConfig): LanguageModel {
   switch (config.provider) {
     case 'anthropic':
@@ -66,10 +93,20 @@ export function createModel(config: ProviderConfig): LanguageModel {
       if (!config.baseUrl) {
         throw new Error("provider 'openai-compatible' requires baseUrl")
       }
+      const openrouter = isOpenRouterBaseUrl(config.baseUrl)
       return createOpenAICompatible({
-        name: 'openai-compatible',
+        name: openrouter ? 'openrouter' : 'openai-compatible',
         baseURL: config.baseUrl,
         ...(config.apiKey ? { apiKey: config.apiKey } : {}),
+        ...(openrouter
+          ? {
+              headers: {
+                'HTTP-Referer': 'https://agent.getvibekit.ai',
+                'X-Title': 'VibeKit Agent',
+              },
+              transformRequestBody: applyOpenRouterProviderPrefs,
+            }
+          : {}),
       })(config.model)
     }
   }

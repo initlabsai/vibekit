@@ -1,6 +1,12 @@
 export { createAgent, type AgentSession, type VibekitAgentOptions } from './agent.js'
 export { type AgentEvent, type ToolErrorOutput } from './events.js'
-export { createModel, type ProviderConfig } from './provider.js'
+export {
+  applyOpenRouterProviderPrefs,
+  createModel,
+  isOpenRouterBaseUrl,
+  OPENROUTER_AGENT_PROVIDER,
+  type ProviderConfig,
+} from './provider.js'
 export {
   loadStoredAgentConfig,
   loadStoredPlugins,
