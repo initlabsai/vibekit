@@ -183,4 +183,43 @@ describe('plugin shape', () => {
     })
     expect(result.summary).toContain('buy 50 YES @ $0.65')
   })
+
+  test('the cached feed: a single option is the market, several are its options, probabilities scale from microunits', async () => {
+    const { marketFromCachedFeed } = await import('../../../src/plugins/alpha-arcade/format.js')
+    const feed = (await import('./live-markets-cached.json')).default as {
+      markets: Parameters<typeof marketFromCachedFeed>[0][]
+    }
+    const [single, multi] = feed.markets.map((raw) => formatMarket(marketFromCachedFeed(raw)!))
+    expect(single!.marketAppId).toBeGreaterThan(0)
+    expect(single!.yesPriceUsd).toBeGreaterThan(0)
+    expect(single!.yesPriceUsd).toBeLessThan(1)
+    expect(single!.endTs).toBeLessThan(1e10)
+    expect(single!.options).toBeUndefined()
+    expect(multi!.options?.length).toBeGreaterThan(1)
+    expect(multi!.options?.[0]?.yesPriceUsd).toBeLessThan(1)
+    expect(multi!.yesPriceUsd).toBeUndefined()
+  })
+
+  test('cachedFeed pages through lastEvaluatedKey and drops hidden markets', async () => {
+    const { cachedFeed } = await import('../../../src/plugins/alpha-arcade/index.js')
+    const feed = (await import('./live-markets-cached.json')).default
+    const calls: string[] = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (async (url: string) => {
+      calls.push(String(url))
+      const second = String(url).includes('lastEvaluatedKey')
+      const body = second
+        ? { markets: [{ ...feed.markets[0], id: 'hidden-one', hidden: true }] }
+        : feed
+      return new Response(JSON.stringify(body), { status: 200 })
+    }) as never
+    try {
+      const markets = await cachedFeed('k', 'https://example.test/api')
+      expect(calls).toHaveLength(2)
+      expect(calls[1]).toContain('lastEvaluatedKey=eyJvZmZzZXQiOjMwM30%3D')
+      expect(markets.map((m) => m.id)).toEqual(feed.markets.map((m) => m.id))
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
 })

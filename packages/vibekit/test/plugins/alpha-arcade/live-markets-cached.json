@@ -1,0 +1,64 @@
+{
+  "markets": [
+    {
+      "id": "01K11DNKAV3T04FNYQCWA28Y5V",
+      "title": "Zelenskyy out as Ukraine president by end of 2026?",
+      "image": "https://s7d1.scene7.com/is/image/wbcollab/zelensky-2?qlt=90&fmt=webp&resMode=sharp2",
+      "slug": "zelensky-out-by-end-of-2026",
+      "endTs": 1798790400000,
+      "volume": 308.70635351,
+      "categories": ["Geopolitics"],
+      "hidden": false,
+      "featured": true,
+      "options": [
+        {
+          "id": "01K11DNKAV3T04FNYQCWA28Y5V-yes",
+          "label": "Yes",
+          "marketAppId": 3137970373,
+          "yesAssetId": 3137970523,
+          "noAssetId": 3137970524,
+          "yesProb": 60000,
+          "noProb": 940000,
+          "volume": 0,
+          "percentage": 6
+        }
+      ]
+    },
+    {
+      "id": "01K0HQDM64MEEWPTRWQ60HMTH8",
+      "title": "Presidential Election Winner 2028",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQb1u3Wb9iu2vm7OVuJCN6d7cmrCo9VHIH6w&s",
+      "slug": "us-presidential-election-winner-2028",
+      "endTs": 1864530000000,
+      "volume": 0,
+      "categories": ["Elections", "Politics", "Geopolitics"],
+      "hidden": false,
+      "featured": true,
+      "options": [
+        {
+          "id": "01K0HQE3CEM2T2RDRWSCJ3V647",
+          "label": "JD Vance",
+          "marketAppId": 3127788681,
+          "yesAssetId": 3127788825,
+          "noAssetId": 3127788826,
+          "yesProb": 242500,
+          "noProb": 757500,
+          "volume": 206.2378303935,
+          "percentage": 24.25
+        },
+        {
+          "id": "01K0HQEM34CD3PR78XY6W1RZX8",
+          "label": "Gavin Newsom",
+          "marketAppId": 3127789013,
+          "yesAssetId": 3127789224,
+          "noAssetId": 3127789225,
+          "yesProb": 1,
+          "noProb": 999999,
+          "volume": 25.252174,
+          "percentage": 0.0001
+        }
+      ]
+    }
+  ],
+  "lastEvaluatedKey": "eyJvZmZzZXQiOjMwM30="
+}

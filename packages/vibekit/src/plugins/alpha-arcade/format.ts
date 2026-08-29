@@ -6,6 +6,77 @@ import type { Market, OpenOrder, Orderbook, WalletPosition } from '@alpha-arcade
 
 const MICROUNIT = 1_000_000
 
+/** A probability from either scale: the API sends microunits (242500), the chain 0..1. */
+export function prob(value: number | null | undefined): number | undefined {
+  if (value === null || value === undefined) return undefined
+  return value > 1 ? value / MICROUNIT : value
+}
+
+/** A timestamp in seconds; the cached feed sends milliseconds. */
+function seconds(ts: number | undefined): number {
+  return ts === undefined ? 0 : ts > 1e10 ? Math.floor(ts / 1000) : ts
+}
+
+/** One market group from `get-live-markets-cached`: a single option is the market; several are its options. */
+export interface CachedFeedMarket {
+  id: string
+  title?: string
+  slug?: string
+  image?: string
+  endTs?: number
+  volume?: number
+  categories?: string[]
+  hidden?: boolean
+  featured?: boolean
+  options?: Array<{
+    id: string
+    label?: string
+    title?: string
+    marketAppId: number
+    yesAssetId: number
+    noAssetId: number
+    yesProb?: number
+    noProb?: number
+    volume?: number
+  }>
+}
+
+/** Shapes a cached-feed group into the SDK's Market, so one formatter serves both sources. */
+export function marketFromCachedFeed(raw: CachedFeedMarket): Market | undefined {
+  const options = raw.options ?? []
+  const first = options[0]
+  if (!first) return undefined
+  const single = options.length === 1
+  return {
+    id: raw.id,
+    title: String(raw.title ?? ''),
+    slug: raw.slug,
+    image: raw.image,
+    marketAppId: first.marketAppId,
+    yesAssetId: single ? first.yesAssetId : 0,
+    noAssetId: single ? first.noAssetId : 0,
+    ...(single ? { yesProb: prob(first.yesProb), noProb: prob(first.noProb) } : {}),
+    volume: raw.volume ?? (single ? first.volume : undefined),
+    endTs: seconds(raw.endTs),
+    isLive: true,
+    isResolved: false,
+    categories: raw.categories,
+    featured: raw.featured,
+    source: 'api',
+    ...(single
+      ? {}
+      : {
+          options: options.map((o) => ({
+            id: o.id,
+            title: String(o.title ?? o.label ?? ''),
+            marketAppId: o.marketAppId,
+            yesProb: prob(o.yesProb) ?? 0,
+            noProb: prob(o.noProb) ?? 0,
+          })),
+        }),
+  } as Market
+}
+
 /** Convert microunits to USD as a raw number — consumers handle formatting. */
 export function microToUsd(micro: number): number {
   return micro / MICROUNIT
@@ -24,10 +95,10 @@ export function formatMarket(m: Market) {
     yesAssetId: m.yesAssetId,
     noAssetId: m.noAssetId,
     // A share pays $1, so price-in-USD equals probability; both exposed raw.
-    yesPriceUsd: m.yesProb ?? undefined,
-    yesProb: m.yesProb ?? undefined,
-    noPriceUsd: m.noProb ?? undefined,
-    noProb: m.noProb ?? undefined,
+    yesPriceUsd: prob(m.yesProb),
+    yesProb: prob(m.yesProb),
+    noPriceUsd: prob(m.noProb),
+    noProb: prob(m.noProb),
     volumeUsd: m.volume,
     endTs: m.endTs,
     resolution: m.resolution,
@@ -46,10 +117,10 @@ export function formatMarket(m: Market) {
       id: o.id,
       title: o.title,
       marketAppId: o.marketAppId,
-      yesPriceUsd: o.yesProb ?? undefined,
-      yesProb: o.yesProb ?? undefined,
-      noPriceUsd: o.noProb ?? undefined,
-      noProb: o.noProb ?? undefined,
+      yesPriceUsd: prob(o.yesProb),
+      yesProb: prob(o.yesProb),
+      noPriceUsd: prob(o.noProb),
+      noProb: prob(o.noProb),
     })),
     source: m.source,
   }

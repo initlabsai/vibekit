@@ -90,11 +90,14 @@ in `AGENTS.md`.
   an address's turns (the bearer token is per browser) is deferred until there
   is a real session backend.
 
-- **Agent: prediction markets need an Alpha Arcade key to be fast.** Without
+- **Agent: prediction markets need an Alpha Arcade key to be fast.** With
   `ALPHA_API_KEY` (Account page on platform.alphaarcade.com) `get_live_markets`
-  scans every market app on chain — ~1900 on 2026-08-29, tens of seconds — and
-  the plugin keeps that scan for a minute per process. With the key it is one
-  API call. Reads other than the list, and all writes, are on-chain either way.
+  pages the site's own `get-live-markets-cached` feed (~3 s, prices included).
+  The SDK's `get-live-markets` route was 502 behind Cloudflare on 2026-08-29,
+  so the plugin tries the cached feed first, the SDK route second, and the
+  on-chain scan last — the scan is every market app ever (~2000, tens of
+  seconds, no prices) and is kept a minute per process. Writes are on-chain
+  either way.
 
 - **Agent: web search needs an Exa key in production.** `web_search` /
   `read_page` go through Exa's hosted MCP (`https://mcp.exa.ai/mcp`). Keyless

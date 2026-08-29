@@ -16,7 +16,14 @@ import {
 import { AlphaClient, type Market, type Position } from '@alpha-arcade/sdk'
 import algosdk from 'algosdk'
 import { z } from 'zod'
-import { formatMarket, formatOpenOrder, formatOrderbook, formatPosition } from './format.js'
+import {
+  formatMarket,
+  formatOpenOrder,
+  formatOrderbook,
+  formatPosition,
+  marketFromCachedFeed,
+  type CachedFeedMarket,
+} from './format.js'
 import {
   marketSchema,
   marketsSchema,
@@ -72,6 +79,35 @@ export interface AlphaService {
 }
 
 const MARKETS_TTL_MS = 60_000
+const API_BASE_URL = 'https://platform.alphaarcade.com/api'
+const FEED_PAGE = 300
+const FEED_MAX_PAGES = 10
+
+/** Every live market from `get-live-markets-cached`, following `lastEvaluatedKey`; hidden ones dropped. */
+export async function cachedFeed(apiKey: string, baseUrl = API_BASE_URL): Promise<Market[]> {
+  const markets: Market[] = []
+  let cursor: string | undefined
+  for (let page = 0; page < FEED_MAX_PAGES; page += 1) {
+    const params = new URLSearchParams({ limit: String(FEED_PAGE) })
+    if (cursor) params.set('lastEvaluatedKey', cursor)
+    const response = await fetch(`${baseUrl}/get-live-markets-cached?${params}`, {
+      headers: { 'x-api-key': apiKey },
+    })
+    if (!response.ok) throw new ToolError('ALPHA_API_ERROR', `Alpha API ${response.status}`)
+    const data = (await response.json()) as {
+      markets?: CachedFeedMarket[]
+      lastEvaluatedKey?: string
+    }
+    for (const raw of data.markets ?? []) {
+      if (raw.hidden) continue
+      const market = marketFromCachedFeed(raw)
+      if (market) markets.push(market)
+    }
+    cursor = typeof data.lastEvaluatedKey === 'string' ? data.lastEvaluatedKey : undefined
+    if (!cursor) break
+  }
+  return markets
+}
 
 function createAlphaService(options: AlphaArcadeOptions): AlphaService {
   const dummySigner: algosdk.TransactionSigner = async () => []
@@ -85,12 +121,17 @@ function createAlphaService(options: AlphaArcadeOptions): AlphaService {
     read,
     trading: (activeAddress, signer) => clientWith(options, activeAddress, signer),
     async markets() {
-      // The API is one call; when it is down (502s happen) the chain still knows every market.
       if (options.apiKey) {
+        // The site's own feed: cached, paged, and up when the SDK's uncached route 502s.
+        try {
+          return await cachedFeed(options.apiKey)
+        } catch {
+          /* the SDK's route next */
+        }
         try {
           return await read.getLiveMarketsFromApi()
         } catch {
-          /* fall through to the scan */
+          /* the chain always knows */
         }
       }
       // ponytail: the keyless path scans every market app through the indexer (~1900 and
