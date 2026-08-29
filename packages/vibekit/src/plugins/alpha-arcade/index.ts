@@ -84,8 +84,15 @@ function createAlphaService(options: AlphaArcadeOptions): AlphaService {
   return {
     read,
     trading: (activeAddress, signer) => clientWith(options, activeAddress, signer),
-    markets() {
-      if (options.apiKey) return read.getLiveMarketsFromApi()
+    async markets() {
+      // The API is one call; when it is down (502s happen) the chain still knows every market.
+      if (options.apiKey) {
+        try {
+          return await read.getLiveMarketsFromApi()
+        } catch {
+          /* fall through to the scan */
+        }
+      }
       // ponytail: the keyless path scans every market app through the indexer (~1900 and
       // counting); one scan a minute per process is the ceiling until a key is set.
       if (!cached || Date.now() - cached.at > MARKETS_TTL_MS) {
