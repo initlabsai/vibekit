@@ -96,7 +96,8 @@ function createAlphaService(options: AlphaArcadeOptions): AlphaService {
       // ponytail: the keyless path scans every market app through the indexer (~1900 and
       // counting); one scan a minute per process is the ceiling until a key is set.
       if (!cached || Date.now() - cached.at > MARKETS_TTL_MS) {
-        const markets = read.getLiveMarkets().catch((error: unknown) => {
+        // getLiveMarkets() would take the API again when a key is set; this one never does.
+        const markets = read.getMarketsOnChain().catch((error: unknown) => {
           cached = undefined
           throw error
         })
