@@ -5,6 +5,7 @@
  * submit always verifies them against the approved draft before broadcast.
  */
 import {
+  buildPluginRecord,
   structuredResultSchema,
   type LiveNetworkId,
   type StructuredResult,
@@ -17,6 +18,7 @@ import {
   type EnrichmentHost,
   type LiveHost,
 } from '@initlabs/vibekit-explorer/live'
+import { PLUGIN_VIEW_IDS, type PluginViewId } from '@initlabs/vibekit/plugins/views'
 import { z } from 'zod'
 
 import { MissingEndpointsError, networkConfigFromEnv } from './endpoints'
@@ -41,23 +43,51 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
     toolName: z.string().min(1),
     args: z.record(z.string(), z.unknown()),
   }),
-  z.object({ action: z.literal('lookup-account'), network: networkSchema, address: z.string().min(1) }),
+  z.object({
+    action: z.literal('lookup-account'),
+    network: networkSchema,
+    address: z.string().min(1),
+  }),
   z.object({
     action: z.literal('lookup-accounts'),
     network: networkSchema,
     addresses: z.array(z.string().min(1)).min(1),
   }),
-  z.object({ action: z.literal('lookup-account-assets'), network: networkSchema, address: z.string().min(1) }),
-  z.object({ action: z.literal('lookup-account-app-states'), network: networkSchema, address: z.string().min(1) }),
-  z.object({ action: z.literal('lookup-transaction'), network: networkSchema, txid: z.string().min(1) }),
-  z.object({ action: z.literal('lookup-transaction-group'), network: networkSchema, groupId: z.string().min(1) }),
-  z.object({ action: z.literal('lookup-asset'), network: networkSchema, assetId: z.number().int().nonnegative() }),
+  z.object({
+    action: z.literal('lookup-account-assets'),
+    network: networkSchema,
+    address: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('lookup-account-app-states'),
+    network: networkSchema,
+    address: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('lookup-transaction'),
+    network: networkSchema,
+    txid: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('lookup-transaction-group'),
+    network: networkSchema,
+    groupId: z.string().min(1),
+  }),
+  z.object({
+    action: z.literal('lookup-asset'),
+    network: networkSchema,
+    assetId: z.number().int().nonnegative(),
+  }),
   z.object({
     action: z.literal('lookup-application'),
     network: networkSchema,
     applicationId: z.number().int().nonnegative(),
   }),
-  z.object({ action: z.literal('lookup-block'), network: networkSchema, round: z.number().int().nonnegative() }),
+  z.object({
+    action: z.literal('lookup-block'),
+    network: networkSchema,
+    round: z.number().int().nonnegative(),
+  }),
   z.object({
     action: z.literal('search-transactions'),
     network: networkSchema,
@@ -80,12 +110,24 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
       note: z.string().min(1).optional(),
     }),
   }),
-  z.object({ action: z.literal('simulate-draft'), network: networkSchema, draftRecord: structuredResultSchema }),
+  z.object({
+    action: z.literal('simulate-draft'),
+    network: networkSchema,
+    draftRecord: structuredResultSchema,
+  }),
   z.object({ action: z.literal('record-signed'), ...signedBody }),
   z.object({ action: z.literal('submit-signed'), ...signedBody }),
-  z.object({ action: z.literal('await-confirmation'), network: networkSchema, txid: z.string().min(1) }),
+  z.object({
+    action: z.literal('await-confirmation'),
+    network: networkSchema,
+    txid: z.string().min(1),
+  }),
   z.object({ action: z.literal('status-round'), network: networkSchema }),
-  z.object({ action: z.literal('resolve-nfd'), network: networkSchema, name: z.string().min(1).max(128) }),
+  z.object({
+    action: z.literal('resolve-nfd'),
+    network: networkSchema,
+    name: z.string().min(1).max(128),
+  }),
   // The enrichment host owns its tool list (the three plugins' read tools); an unknown name is a 400 there.
   z.object({
     action: z.literal('plugin-tool'),
@@ -160,7 +202,11 @@ export async function GET(request: Request): Promise<Response> {
       host.statusRound(),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
     ]).catch(() => null)
-    return Response.json(status ? { network: parsed.data, live: true, round: status.lastRound } : { network: parsed.data, live: false })
+    return Response.json(
+      status
+        ? { network: parsed.data, live: true, round: status.lastRound }
+        : { network: parsed.data, live: false },
+    )
   } catch (error) {
     if (error instanceof MissingEndpointsError) return fail(503, error.message)
     return Response.json({ network: parsed.data, live: false })
@@ -190,7 +236,9 @@ export async function POST(request: Request): Promise<Response> {
       case 'status-round':
         return Response.json(await host.statusRound())
       case 'plugin-tool':
-        return Response.json({ output: await enrichmentFor(body.network).callTool(body.toolName, body.args) })
+        return Response.json({
+          output: await enrichmentFor(body.network).callTool(body.toolName, body.args),
+        })
       case 'resolve-nfd': {
         // The nfd plugin's own client, beside the live host; the host itself carries no plugins.
         if (body.network === 'localnet') {
@@ -199,8 +247,28 @@ export async function POST(request: Request): Promise<Response> {
         }
         return Response.json({ nfd: await resolveNfdName(body.network, body.name) })
       }
-      case 'call-tool':
+      case 'call-tool': {
+        // A plugin read (a market list's next page) is served by the enrichment host, wrapped as its view's record.
+        const enrichment = enrichmentFor(body.network)
+        const view = enrichment.viewOf(body.toolName)
+        if (view && (PLUGIN_VIEW_IDS as readonly string[]).includes(view)) {
+          const wire = await enrichment.callTool(body.toolName, body.args)
+          return Response.json({
+            record: buildPluginRecord(
+              view as PluginViewId,
+              {
+                resultId: `result-plugin-${crypto.randomUUID()}`,
+                toolCallId: `tool-call-plugin-${crypto.randomUUID()}`,
+                network: body.network,
+                input: body.args as never,
+              },
+              wire,
+              body.toolName,
+            ),
+          })
+        }
         return await record(host.callTool(body.toolName, body.args))
+      }
       case 'lookup-account':
         return await record(host.lookupAccount(body.address))
       case 'lookup-accounts':
@@ -249,7 +317,9 @@ export async function POST(request: Request): Promise<Response> {
       }
       case 'await-confirmation': {
         const confirmation = await host.confirmation(body.txid)
-        return confirmation ? Response.json({ record: confirmation }) : Response.json({ pending: true })
+        return confirmation
+          ? Response.json({ record: confirmation })
+          : Response.json({ pending: true })
       }
     }
     return fail(400, 'Invalid explorer request')

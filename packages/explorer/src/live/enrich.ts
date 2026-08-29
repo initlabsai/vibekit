@@ -1,15 +1,17 @@
 /**
- * The enrichment host: a signerless deployment of the nfd, pera, and
- * vestige plugin tools beside the live host, so a card can ask for names,
- * verification tiers, logos, and prices. Every call still runs through
- * executeToolCall; the tool list is the three plugins' and nothing else.
+ * The enrichment host: a signerless deployment of the read plugins beside
+ * the live host — names, verification tiers, logos, prices, markets — so a
+ * card can ask for them and page them. Every call still runs through
+ * executeToolCall; the tool list is the plugins' and nothing else.
  */
 import { executeToolCall, resolveDeployment, type NetworkConfig } from '@initlabs/vibekit'
+import { alphaArcadePlugin } from '@initlabs/vibekit/plugins/alpha-arcade'
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
 import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
 
 import type { LiveNetworkId } from '../host.js'
+import { alphaOptions } from './plugin-options.js'
 
 export interface EnrichmentHost {
   network: string
@@ -17,13 +19,15 @@ export interface EnrichmentHost {
   toolNames: readonly string[]
   /** Runs one plugin tool and returns its wire output. Unknown names throw. */
   callTool(toolName: string, args: Record<string, unknown>): Promise<unknown>
+  /** The view id a plugin tool declares, so a host can wrap its wire as a record. */
+  viewOf(toolName: string): string | undefined
 }
 
 export function createEnrichmentHost(config: LiveNetworkId | NetworkConfig): EnrichmentHost {
   const deployment = resolveDeployment({
     network: config,
     mode: 'compose',
-    plugins: [nfdPlugin(), peraPlugin(), vestigePlugin()],
+    plugins: [nfdPlugin(), peraPlugin(), vestigePlugin(), alphaArcadePlugin(alphaOptions())],
   })
   return {
     network: typeof config === 'string' ? config : config.id,
@@ -33,5 +37,6 @@ export function createEnrichmentHost(config: LiveNetworkId | NetworkConfig): Enr
       if (!tool) throw new Error(`This host has no tool named ${toolName}`)
       return executeToolCall(deployment, tool, args)
     },
+    viewOf: (toolName) => deployment.tools.find((tool) => tool.name === toolName)?.view,
   }
 }

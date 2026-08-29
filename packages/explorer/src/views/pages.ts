@@ -14,6 +14,7 @@ const LIST_KEYS: Partial<Record<TrustedViewId, string>> = {
   'application.locals': 'apps',
   'application.logs': 'logData',
   'block.list': 'blocks',
+  'arcade.markets': 'markets',
 }
 
 /**

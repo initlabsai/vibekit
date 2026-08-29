@@ -84,6 +84,25 @@ const FEED_PAGE = 300
 const FEED_MAX_PAGES = 10
 
 /** Every live market from `get-live-markets-cached`, following `lastEvaluatedKey`; hidden ones dropped. */
+/** Cached feed, then the SDK's route, then the chain — the first that answers. */
+async function fetchMarkets(options: AlphaArcadeOptions, read: AlphaClient): Promise<Market[]> {
+  if (options.apiKey) {
+    try {
+      return await cachedFeed(options.apiKey)
+    } catch {
+      /* the SDK's route next */
+    }
+    try {
+      return await read.getLiveMarketsFromApi()
+    } catch {
+      /* the chain always knows */
+    }
+  }
+  // ponytail: the keyless path scans every market app through the indexer (~2000 and
+  // counting, no prices); getLiveMarkets() would take the API again when a key is set.
+  return read.getMarketsOnChain()
+}
+
 export async function cachedFeed(apiKey: string, baseUrl = API_BASE_URL): Promise<Market[]> {
   const markets: Market[] = []
   let cursor: string | undefined
@@ -120,25 +139,11 @@ function createAlphaService(options: AlphaArcadeOptions): AlphaService {
   return {
     read,
     trading: (activeAddress, signer) => clientWith(options, activeAddress, signer),
-    async markets() {
-      if (options.apiKey) {
-        // The site's own feed: cached, paged, and up when the SDK's uncached route 502s.
-        try {
-          return await cachedFeed(options.apiKey)
-        } catch {
-          /* the SDK's route next */
-        }
-        try {
-          return await read.getLiveMarketsFromApi()
-        } catch {
-          /* the chain always knows */
-        }
-      }
-      // ponytail: the keyless path scans every market app through the indexer (~1900 and
-      // counting); one scan a minute per process is the ceiling until a key is set.
+    markets() {
+      // One list a minute per process, whichever source produced it: the pages a card asks
+      // for are slices of this list, so "more" never re-fetches or re-sorts.
       if (!cached || Date.now() - cached.at > MARKETS_TTL_MS) {
-        // getLiveMarkets() would take the API again when a key is set; this one never does.
-        const markets = read.getMarketsOnChain().catch((error: unknown) => {
+        const markets = fetchMarkets(options, read).catch((error: unknown) => {
           cached = undefined
           throw error
         })
@@ -241,6 +246,7 @@ export const alphaArcadeTools: AnyTool[] = [
     parameters: z.object({
       category: z.string().optional().describe('Only markets in this category (case-insensitive)'),
       limit: z.number().optional().describe('Max markets (default 20, max 100)'),
+      nextToken: z.string().optional().describe('Pagination token from the previous page'),
     }),
     output: marketsSchema,
     view: 'arcade.markets',
@@ -253,7 +259,15 @@ export const alphaArcadeTools: AnyTool[] = [
         .filter((m) => m.isLive !== false && !m.isResolved)
         .filter((m) => !wanted || m.categories?.some((c) => c.toLowerCase() === wanted))
         .sort((a, b) => (b.volumeUsd ?? 0) - (a.volumeUsd ?? 0))
-      return { markets: rows.slice(0, Math.min(args.limit ?? 20, 100)), total: rows.length }
+      const limit = Math.min(args.limit ?? 20, 100)
+      const offset = /^\d+$/.test(args.nextToken ?? '') ? Number(args.nextToken) : 0
+      const page = rows.slice(offset, offset + limit)
+      const end = offset + page.length
+      return {
+        markets: page,
+        total: rows.length,
+        ...(end < rows.length ? { nextToken: String(end) } : {}),
+      }
     },
   }),
   defineTool({

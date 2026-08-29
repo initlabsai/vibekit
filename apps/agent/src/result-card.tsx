@@ -395,6 +395,8 @@ export function ResultCard({
           data={derived.model}
           network={derived.model.network}
           onOpen={onInput ? (id) => onInput(`show market ${id}`) : undefined}
+          onMore={more}
+          loadingMore={loadingMore}
         />
       )
     }

@@ -20,14 +20,28 @@ mock.module('@initlabs/vibekit-explorer/live', () => ({
   ...live,
   createEnrichmentHost: (config: unknown) => ({
     network: typeof config === 'string' ? config : (config as { id: string }).id,
-    toolNames: ['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices'],
+    toolNames: [
+      'batch_reverse_resolve_nfd',
+      'get_asset_profile',
+      'get_asset_prices',
+      'get_live_markets',
+    ],
     callTool: async (toolName: string, args: unknown) => {
-      if (!['batch_reverse_resolve_nfd', 'get_asset_profile', 'get_asset_prices'].includes(toolName)) {
+      if (
+        ![
+          'batch_reverse_resolve_nfd',
+          'get_asset_profile',
+          'get_asset_prices',
+          'get_live_markets',
+        ].includes(toolName)
+      ) {
         throw new Error(`This host has no tool named ${toolName}`)
       }
       pluginCalls.push([toolName, args])
+      if (toolName === 'get_live_markets') return { markets: [], total: 0 }
       return { results: [] }
     },
+    viewOf: (toolName: string) => (toolName === 'get_live_markets' ? 'arcade.markets' : undefined),
   }),
   resolveNfdName: async (network: string, name: string) => ({
     name,
@@ -96,8 +110,34 @@ describe('explorer route', () => {
     expect(byNetwork('mainnet')).toBeLessThanOrEqual(1)
   })
 
+  test("a plugin read through call-tool comes back as its view's record, with the call remembered for paging", async () => {
+    const response = await post({
+      action: 'call-tool',
+      network: 'localnet',
+      toolName: 'get_live_markets',
+      args: { limit: 2, nextToken: '2' },
+    })
+    expect(response.status).toBe(200)
+    const { record } = (await response.json()) as {
+      record: { state: string; toolName: string; input?: unknown; data?: unknown }
+    }
+    expect(record).toMatchObject({
+      state: 'success',
+      toolName: 'get_live_markets',
+      input: { limit: 2, nextToken: '2' },
+      data: { markets: [], total: 0 },
+    })
+    expect(pluginCalls.at(-1)).toEqual(['get_live_markets', { limit: 2, nextToken: '2' }])
+    pluginCalls.length = 0
+  })
+
   test('unknown tool names are 400, not 502', async () => {
-    const response = await post({ action: 'call-tool', network: 'localnet', toolName: 'nope', args: {} })
+    const response = await post({
+      action: 'call-tool',
+      network: 'localnet',
+      toolName: 'nope',
+      args: {},
+    })
     expect(response.status).toBe(400)
   })
 
@@ -178,24 +218,43 @@ describe('explorer route', () => {
   })
 
   test('oversized bodies are 413', async () => {
-    const response = await post({ action: 'probe', network: 'localnet', pad: 'x'.repeat(300 * 1024) })
+    const response = await post({
+      action: 'probe',
+      network: 'localnet',
+      pad: 'x'.repeat(300 * 1024),
+    })
     expect(response.status).toBe(413)
   })
 
   test('resolve-nfd answers on mainnet and testnet only', async () => {
     const ok = await post({ action: 'resolve-nfd', network: 'mainnet', name: 'alice.algo' })
     expect(await ok.json()).toEqual({
-      nfd: { name: 'alice.algo', address: FIXTURE_SENDER, state: 'owned', properties: { network: 'mainnet' } },
+      nfd: {
+        name: 'alice.algo',
+        address: FIXTURE_SENDER,
+        state: 'owned',
+        properties: { network: 'mainnet' },
+      },
     })
     const local = await post({ action: 'resolve-nfd', network: 'localnet', name: 'alice.algo' })
     expect(local.status).toBe(400)
   })
 
-  test('plugin-tool runs only the enrichment plugins\' tools', async () => {
-    const ok = await post({ action: 'plugin-tool', network: 'mainnet', toolName: 'batch_reverse_resolve_nfd', args: { addresses: [FIXTURE_SENDER] } })
+  test("plugin-tool runs only the enrichment plugins' tools", async () => {
+    const ok = await post({
+      action: 'plugin-tool',
+      network: 'mainnet',
+      toolName: 'batch_reverse_resolve_nfd',
+      args: { addresses: [FIXTURE_SENDER] },
+    })
     expect(await ok.json()).toEqual({ output: { results: [] } })
     expect(pluginCalls).toEqual([['batch_reverse_resolve_nfd', { addresses: [FIXTURE_SENDER] }]])
-    const refused = await post({ action: 'plugin-tool', network: 'mainnet', toolName: 'send_payment', args: {} })
+    const refused = await post({
+      action: 'plugin-tool',
+      network: 'mainnet',
+      toolName: 'send_payment',
+      args: {},
+    })
     expect(refused.status).toBe(400)
   })
 })

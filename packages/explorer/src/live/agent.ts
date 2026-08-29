@@ -28,6 +28,7 @@ import {
 
 import type { ResultStore } from '../core/results.js'
 import { explainApplicationTool } from './explain-tool.js'
+import { alphaOptions, webOptions } from './plugin-options.js'
 import type { LiveNetworkId } from '../host.js'
 
 /** The network a tool call queried: its explicit `network` arg, else the session default. */
@@ -194,18 +195,6 @@ export interface ExplorerAgentOptions {
   readFile?: VibekitAgentOptions['readFile']
   /** Rewrites tools before they register (the terminal labels program selectors from known specs). */
   wrapTools?: (tools: AnyTool[]) => AnyTool[]
-}
-
-/** Alpha Arcade's API needs a key (ALPHA_API_KEY, from the platform's Account page); without one, markets come from a slow on-chain scan. */
-function alphaOptions() {
-  const apiKey = process.env.ALPHA_API_KEY
-  return apiKey ? { apiKey } : {}
-}
-
-/** Exa answers keyless; a key (EXA_API_KEY) only raises the rate limit. */
-function webOptions() {
-  const apiKey = process.env.EXA_API_KEY
-  return apiKey ? { apiKey } : {}
 }
 
 /** The built-in plugins the Explorer agent registers: names, prices, asset trust, prediction markets, the web. */

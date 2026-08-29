@@ -9,7 +9,7 @@ import type {
   Positions,
 } from '@initlabs/vibekit-explorer'
 
-import { Table, type Column } from '../../generic-cards'
+import { MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header } from '../../primitives'
 import { shorten } from '../../theme'
 import { compactUsd } from './market-cards'
@@ -51,10 +51,14 @@ export function MarketsCard({
   data,
   network,
   onOpen,
+  onMore,
+  loadingMore,
 }: {
   data: Markets
   network: string
   onOpen?: (marketId: string) => void
+  onMore?: () => void
+  loadingMore?: boolean
 }) {
   const columns: Column<MarketRow>[] = [
     {
@@ -119,6 +123,12 @@ export function MarketsCard({
           onOpen={onOpen ? (m) => onOpen(String(m.marketAppId)) : undefined}
         />
       )}
+      <MoreFooter
+        count={data.markets.length}
+        nextToken={data.nextToken}
+        onMore={onMore}
+        loadingMore={loadingMore}
+      />
       <FooterNote text={`${network} · YES price is the implied probability`} />
     </Frame>
   )

@@ -34,7 +34,11 @@ const marketRowSchema = z.object({
 })
 
 /** get_live_markets' wire shape (the `arcade.markets` view). */
-export const marketsSchema = z.object({ markets: z.array(marketRowSchema), total: z.number() })
+export const marketsSchema = z.object({
+  markets: z.array(marketRowSchema),
+  total: z.number(),
+  nextToken: z.string().optional().describe('Pass back to get_live_markets for the next page'),
+})
 export type Markets = z.infer<typeof marketsSchema>
 
 /** get_market's wire shape (the `arcade.market` view). */
