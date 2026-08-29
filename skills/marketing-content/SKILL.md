@@ -158,6 +158,19 @@ Mono), so it cuts against real footage without a seam.
 - `references/qt314-loop.py` — the 9s tweet loop, 1200x675 at 12fps; GIF via
   palettegen/paletteuse, MP4 for X.
 
+**How her face assembles** (the beat Gabe called incredible — keep it): it is
+not a morph, it is per-character noise resolving. For ~2 seconds each of the
+five glyphs of `(^‿^)` is, independently, either its final character or a
+random pick from a pool of *other kaomoji fragments and block glyphs*
+(`(・‿・)(´▽`)(>_<)(x_x)<('-'<)\(^▽^)/░▒▓█▌▐│┃╱╲`). The chance of showing the
+final character is `k²`, where `k` runs 0→1 over the window, so it stays chaos
+for most of the time and snaps together at the end; colour flips between teal
+and hero amber with probability `0.5·(1−k)`, so the flicker dies as she
+settles. Because the pool is made of *her own* possible faces, the noise reads
+as her trying on expressions rather than static. Same trick, on `░▒▓` only
+and per character, resolves the block wordmark. Both are in `qt314-boot.py`;
+the seed is the frame index, so a re-render is identical.
+
 Lessons: wide faces (`(>'-')>`, `\(^▽^)/`) need a smaller size or they run
 into the copy; the kaomoji are in the mono font, so measure with a frame, not
 by eye; put the wordmark in the header row, never beside prose; check the
