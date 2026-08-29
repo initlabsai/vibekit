@@ -73,7 +73,7 @@ describe('REFACTOR.md §1 semantics', () => {
 })
 
 describe('plugin shape', () => {
-  test('factory returns a ToolPlugin with service and 5 read tools', () => {
+  test('factory returns a ToolPlugin with service, 5 reads, and 3 writes', () => {
     const plugin = alphaArcadePlugin()
     expect(plugin.name).toBe('alpha-arcade')
     expect(plugin.service).toBeDefined()
@@ -83,17 +83,104 @@ describe('plugin shape', () => {
       'get_orderbook',
       'get_positions',
       'get_open_orders',
+      'place_order',
+      'cancel_order',
+      'claim_winnings',
     ])
-    for (const tool of alphaArcadeTools) expect(tool.requiresSigner ?? false).toBe(false)
+    for (const tool of alphaArcadeTools.slice(0, 5))
+      expect(tool.requiresSigner ?? false).toBe(false)
   })
 
-  test('every tool declares an arcade view with a schema', () => {
+  test('every read declares an arcade view with a schema; writes compose for a signer', () => {
     const plugin = alphaArcadePlugin()
+    expect(alphaArcadeTools.filter((t) => t.requiresSigner).map((t) => t.name)).toEqual([
+      'place_order',
+      'cancel_order',
+      'claim_winnings',
+    ])
     for (const tool of alphaArcadeTools) {
+      if (tool.requiresSigner) {
+        expect(tool.view).toBe('txn')
+        expect(tool.description.length).toBeLessThanOrEqual(200)
+        continue
+      }
       expect(tool.view?.startsWith('arcade.')).toBe(true)
       expect(plugin.views?.[tool.view!]).toBeDefined()
       expect(tool.output).toBeDefined()
       expect(tool.description.length).toBeLessThanOrEqual(200)
     }
+  })
+
+  test('place_order captures the group the SDK built and never submits it', async () => {
+    const { resolveNetwork } = await import('../../../src/core/index.js')
+    const algosdk = (await import('algosdk')).default
+    const user = algosdk.generateAccount()
+    const params = {
+      fee: 1000,
+      firstValid: 1,
+      lastValid: 1001,
+      genesisID: 'test',
+      genesisHash: new Uint8Array(32),
+      minFee: 1000,
+    }
+    const leg = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      sender: user.addr,
+      receiver: user.addr,
+      amount: 1,
+      suggestedParams: params,
+    })
+    let submitted = false
+    const service = {
+      read: {
+        getMarketFromApi: async () => ({
+          marketAppId: 7,
+          title: 'Rain tomorrow?',
+          yesProb: 0.65,
+          noProb: 0.35,
+          yesAssetId: 1,
+          noAssetId: 2,
+        }),
+      },
+      trading: (
+        _address: string,
+        signer: (txns: unknown[], indexes: number[]) => Promise<unknown>,
+      ) => ({
+        createLimitOrder: async () => {
+          await signer([leg], [0])
+          submitted = true
+          return { txIds: [], confirmedRound: 0 }
+        },
+      }),
+    }
+    const ctx = {
+      network: resolveNetwork('mainnet'),
+      services: { 'alpha-arcade': service },
+      mode: 'compose',
+    } as never
+    const tool = alphaArcadeTools.find((t) => t.name === 'place_order')!
+    const result = (await tool.handler(ctx, {
+      marketId: '7',
+      side: 'yes',
+      action: 'buy',
+      quantity: 50,
+      priceUsd: 0.65,
+      sender: user.addr.toString(),
+    })) as {
+      unsignedGroup: string[]
+      intent: Record<string, unknown>
+      summary: string
+    }
+    expect(submitted).toBe(false)
+    expect(result.unsignedGroup).toHaveLength(1)
+    expect(result.intent).toMatchObject({
+      kind: 'order',
+      side: 'yes',
+      action: 'buy',
+      orderType: 'limit',
+      priceUsd: 0.65,
+      quantity: 50,
+      totalUsd: 32.5,
+    })
+    expect(result.summary).toContain('buy 50 YES @ $0.65')
   })
 })

@@ -67,10 +67,54 @@ function SwapSummary({
   )
 }
 
+/** An order reads like the ticket: buy 50 YES at 65¢, $32.50 on the line. */
+function OrderSummary({
+  model,
+  order,
+}: {
+  model: WriteFlowViewModel
+  order: Extract<NonNullable<WriteFlowViewModel['intent']>, { kind: 'order' }>
+}) {
+  const cents = `${Math.round(order.priceUsd * 100)}¢`
+  return (
+    <>
+      <Hero
+        value={`${order.action} ${order.quantity.toLocaleString()} ${order.side.toUpperCase()} @ ${cents}`}
+        unit={order.orderType === 'market' ? 'market order' : 'limit order'}
+      />
+      <Facts>
+        {order.title ? <Fact label="market" value={order.title} /> : null}
+        <Fact
+          label="app"
+          value={String(order.marketAppId)}
+          copy={String(order.marketAppId)}
+          open={false}
+        />
+        <Fact
+          label={order.action === 'buy' ? 'costs' : 'returns'}
+          value={`$${order.totalUsd.toFixed(2)}${order.action === 'buy' ? ` · pays $${order.quantity.toFixed(2)} if ${order.side.toUpperCase()}` : ''}`}
+        />
+        {order.slippagePercent === undefined ? null : (
+          <Fact label="slippage" value={`${order.slippagePercent}%`} />
+        )}
+        <Fact label="from" value={model.sender} copy={model.sender} open={false} />
+        {model.simulation ? (
+          <Fact label="fee" value={`${formatMicroAlgos(model.simulation.feeMicroAlgos)} ALGO`} />
+        ) : null}
+        <Fact label="group" value={`${model.unsignedGroup.size} transactions`} />
+        {model.simulation?.failureMessage ? (
+          <Fact label="would fail" tone="danger" value={model.simulation.failureMessage} />
+        ) : null}
+      </Facts>
+    </>
+  )
+}
+
 function Summary({ model }: { model: WriteFlowViewModel }) {
   const kind = writeKind(model)
   const payment = kind === 'PAYMENT' && model.amountMicroAlgos !== undefined
   if (model.intent?.kind === 'swap') return <SwapSummary model={model} swap={model.intent} />
+  if (model.intent?.kind === 'order') return <OrderSummary model={model} order={model.intent} />
   return (
     <>
       {payment ? (

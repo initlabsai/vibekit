@@ -19,8 +19,21 @@ export const swapIntentSchema = z.object({
   route: z.array(z.object({ venue: z.string(), percentage: z.number() })),
 })
 
+export const orderIntentSchema = z.object({
+  kind: z.literal('order'),
+  marketAppId: z.number(),
+  title: z.string().optional(),
+  side: z.enum(['yes', 'no']),
+  action: z.enum(['buy', 'sell']),
+  orderType: z.enum(['limit', 'market']),
+  priceUsd: z.number(),
+  quantity: z.number(),
+  totalUsd: z.number(),
+  slippagePercent: z.number().optional(),
+})
+
 /** What a write intends, when a host can say it better than a transaction list. */
-export const writeIntentSchema = z.discriminatedUnion('kind', [swapIntentSchema])
+export const writeIntentSchema = z.discriminatedUnion('kind', [swapIntentSchema, orderIntentSchema])
 
 export const unsignedGroupResultSchema = z.object({
   unsignedGroup: z.array(z.string()).describe('base64-encoded unsigned transactions, group order'),

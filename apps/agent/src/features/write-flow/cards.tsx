@@ -35,8 +35,9 @@ function signedDelta(value: number | string): string {
 /** What the group is, in the modal's question and the card's kicker. */
 export function writeKind(
   model: WriteFlowViewModel,
-): 'PAYMENT' | 'SWAP' | 'DEPLOY' | 'CALL' | 'GROUP' {
+): 'PAYMENT' | 'SWAP' | 'ORDER' | 'DEPLOY' | 'CALL' | 'GROUP' {
   if (model.intent?.kind === 'swap') return 'SWAP'
+  if (model.intent?.kind === 'order') return 'ORDER'
   if (model.amountMicroAlgos !== undefined) return 'PAYMENT'
   if (model.unsignedGroup.summary.startsWith('create app')) return 'DEPLOY'
   const types = model.simulation?.transactionTypes

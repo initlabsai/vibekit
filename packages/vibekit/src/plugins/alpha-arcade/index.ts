@@ -4,13 +4,16 @@
  * read-only (dummy signer — read methods never sign).
  */
 import {
+  bytesToBase64,
   defineTool,
   ToolError,
+  writeResultSchema,
   type AnyTool,
   type ToolContext,
   type ToolPlugin,
+  type UnsignedGroupResult,
 } from '../../core/index.js'
-import { AlphaClient } from '@alpha-arcade/sdk'
+import { AlphaClient, type Position } from '@alpha-arcade/sdk'
 import algosdk from 'algosdk'
 import { z } from 'zod'
 import { formatMarket, formatOpenOrder, formatOrderbook, formatPosition } from './format.js'
@@ -41,29 +44,125 @@ export interface AlphaArcadeOptions {
   apiKey?: string
 }
 
-function createAlphaClient(options: AlphaArcadeOptions): AlphaClient {
-  const dummySigner: algosdk.TransactionSigner = async () => []
+const MAINNET_ALGOD = 'https://mainnet-api.4160.nodely.dev'
+const MAINNET_INDEXER = 'https://mainnet-idx.4160.nodely.dev'
+
+function clientWith(
+  options: AlphaArcadeOptions,
+  activeAddress: string,
+  signer: algosdk.TransactionSigner,
+): AlphaClient {
   return new AlphaClient({
-    algodClient: new algosdk.Algodv2('', 'https://mainnet-api.4160.nodely.dev', 443),
-    indexerClient: new algosdk.Indexer('', 'https://mainnet-idx.4160.nodely.dev', 443),
-    signer: dummySigner,
-    activeAddress: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+    algodClient: new algosdk.Algodv2('', MAINNET_ALGOD, 443),
+    indexerClient: new algosdk.Indexer('', MAINNET_INDEXER, 443),
+    signer,
+    activeAddress,
     matcherAppId: MAINNET_MATCHER_APP_ID,
     usdcAssetId: MAINNET_USDC_ASSET_ID,
     ...(options.apiKey && { apiKey: options.apiKey }),
   })
 }
 
-/** Typed accessor for ctx.services. */
-export function getAlphaClient(ctx: ToolContext): AlphaClient {
-  const client = ctx.services[PLUGIN_NAME] as AlphaClient | undefined
-  if (!client) {
+/** The read client, shared; a trading client per sender and signer. */
+export interface AlphaService {
+  read: AlphaClient
+  trading(activeAddress: string, signer: algosdk.TransactionSigner): AlphaClient
+}
+
+function createAlphaService(options: AlphaArcadeOptions): AlphaService {
+  const dummySigner: algosdk.TransactionSigner = async () => []
+  return {
+    read: clientWith(
+      options,
+      'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+      dummySigner,
+    ),
+    trading: (activeAddress, signer) => clientWith(options, activeAddress, signer),
+  }
+}
+
+function getAlphaService(ctx: ToolContext): AlphaService {
+  const service = ctx.services[PLUGIN_NAME] as AlphaService | undefined
+  if (!service) {
     throw new ToolError(
       'PLUGIN_NOT_CONFIGURED',
       'The alpha-arcade plugin is not registered in this deployment',
     )
   }
-  return client
+  if (ctx.network.id !== 'mainnet') {
+    throw new ToolError(
+      'UNSUPPORTED_NETWORK',
+      `Alpha Arcade lives on mainnet, not ${ctx.network.id} — switch networks`,
+    )
+  }
+  return service
+}
+
+/** Typed accessor for ctx.services: the read client. */
+export function getAlphaClient(ctx: ToolContext): AlphaClient {
+  return getAlphaService(ctx).read
+}
+
+/** Thrown by the dry-run signer with the group the SDK built; nothing was submitted. */
+class CapturedGroup extends Error {
+  constructor(readonly txns: algosdk.Transaction[]) {
+    super('captured')
+  }
+}
+
+// ponytail: the SDK has no build-only path (0.4.11) — it composes, signs, and submits in one
+// call with no side effect before signing, so a signer that keeps the group and throws is a
+// clean stop. Replace with the SDK's compose method the day it grows one.
+async function captureGroup(
+  run: (signer: algosdk.TransactionSigner) => Promise<unknown>,
+): Promise<algosdk.Transaction[]> {
+  const signer: algosdk.TransactionSigner = async (txns) => {
+    throw new CapturedGroup(txns)
+  }
+  try {
+    await run(signer)
+  } catch (error) {
+    if (error instanceof CapturedGroup) return error.txns
+    throw error
+  }
+  throw new ToolError('NO_GROUP', 'The SDK submitted nothing and signed nothing')
+}
+
+/**
+ * Runs one SDK write: in execute mode with the sender's real signer; in compose
+ * mode as a dry run whose group becomes the unsigned wire for the wallet.
+ */
+async function composeOrExecuteWrite(
+  ctx: ToolContext,
+  sender: string,
+  summary: string,
+  intent: UnsignedGroupResult['intent'],
+  run: (client: AlphaClient) => Promise<{ txIds: string[]; confirmedRound: number }>,
+): Promise<UnsignedGroupResult | { txids: string[]; confirmedRound: number; returns: [] }> {
+  const service = getAlphaService(ctx)
+  if (ctx.mode === 'execute') {
+    if (!ctx.resolveSigner)
+      throw new ToolError('SIGNER_UNAVAILABLE', 'No signer for this deployment')
+    const result = await run(service.trading(sender, await ctx.resolveSigner(sender)))
+    return { txids: result.txIds, confirmedRound: Number(result.confirmedRound), returns: [] }
+  }
+  const txns = await captureGroup((signer) => run(service.trading(sender, signer)))
+  return {
+    unsignedGroup: txns.map((txn) => bytesToBase64(algosdk.encodeUnsignedTransaction(txn))),
+    summary,
+    ...(intent ? { intent } : {}),
+  }
+}
+
+const MICRO = 1_000_000
+const marketIdArg = z.string().describe('Market app ID as a string, or its UUID')
+
+async function marketFor(ctx: ToolContext, marketId: string) {
+  const client = getAlphaClient(ctx)
+  let market = await client.getMarketFromApi(marketId).catch(() => null)
+  if (!market && /^\d+$/.test(marketId)) market = await client.getMarketOnChain(Number(marketId))
+  if (!market) throw new ToolError('MARKET_NOT_FOUND', `Market not found: ${marketId}`)
+  return market
 }
 
 export const alphaArcadeTools: AnyTool[] = [
@@ -155,6 +254,124 @@ export const alphaArcadeTools: AnyTool[] = [
       ),
     }),
   }),
+  defineTool({
+    name: 'place_order',
+    description:
+      'Compose an Alpha Arcade order for the wallet to sign (mainnet): buy or sell YES/NO shares; a limit order at a price, a market order without one. Never call it unasked.',
+    parameters: z.object({
+      marketId: marketIdArg,
+      side: z.enum(['yes', 'no']),
+      action: z.enum(['buy', 'sell']),
+      quantity: z.number().positive().describe('Shares (each pays $1 if right)'),
+      priceUsd: z
+        .number()
+        .min(0.01)
+        .max(0.99)
+        .optional()
+        .describe('Limit price per share in USD; omit for a market order'),
+      slippagePercent: z
+        .number()
+        .min(0)
+        .max(50)
+        .optional()
+        .describe('Market orders only; default 2'),
+      sender: z.string().describe('The account that trades'),
+    }),
+    output: writeResultSchema,
+    requiresSigner: true,
+    view: 'txn',
+    handler: async (ctx, args) => {
+      const market = await marketFor(ctx, args.marketId)
+      const position: Position = args.side === 'yes' ? 1 : 0
+      const orderType = args.priceUsd === undefined ? 'market' : 'limit'
+      const quoted = args.side === 'yes' ? market.yesProb : market.noProb
+      const priceUsd = args.priceUsd ?? quoted
+      if (priceUsd === undefined) {
+        throw new ToolError('NO_PRICE', 'The market has no price yet — give a limit price')
+      }
+      const slippage = args.slippagePercent ?? 2
+      const summary = `${args.action} ${args.quantity} ${args.side.toUpperCase()} @ $${priceUsd.toFixed(2)} on market ${market.marketAppId} (${market.title})${orderType === 'market' ? ` · market order, ${slippage}% slippage` : ''}`
+      const intent: UnsignedGroupResult['intent'] = {
+        kind: 'order',
+        marketAppId: market.marketAppId,
+        title: market.title,
+        side: args.side,
+        action: args.action,
+        orderType,
+        priceUsd,
+        quantity: args.quantity,
+        totalUsd: Math.round(priceUsd * args.quantity * 100) / 100,
+        ...(orderType === 'market' ? { slippagePercent: slippage } : {}),
+      }
+      const params = {
+        marketAppId: market.marketAppId,
+        position,
+        price: Math.round(priceUsd * MICRO),
+        quantity: Math.round(args.quantity * MICRO),
+        isBuying: args.action === 'buy',
+      }
+      return composeOrExecuteWrite(ctx, args.sender, summary, intent, (client) =>
+        orderType === 'market'
+          ? client.createMarketOrder({
+              ...params,
+              slippage: Math.round(((priceUsd * slippage) / 100) * MICRO),
+            })
+          : client.createLimitOrder(params),
+      )
+    },
+  }),
+  defineTool({
+    name: 'cancel_order',
+    description:
+      'Compose the cancellation of one open Alpha Arcade order (by escrow app id) for the wallet to sign.',
+    parameters: z.object({
+      marketAppId: z.number(),
+      escrowAppId: z.number().describe('From get_open_orders'),
+      sender: z.string().describe("The order's owner"),
+    }),
+    output: writeResultSchema,
+    requiresSigner: true,
+    view: 'txn',
+    handler: async (ctx, args) =>
+      composeOrExecuteWrite(
+        ctx,
+        args.sender,
+        `cancel order ${args.escrowAppId} on market ${args.marketAppId}`,
+        undefined,
+        (client) =>
+          client.cancelOrder({
+            marketAppId: args.marketAppId,
+            escrowAppId: args.escrowAppId,
+            orderOwner: args.sender,
+          }),
+      ),
+  }),
+  defineTool({
+    name: 'claim_winnings',
+    description:
+      "Compose the claim of a resolved Alpha Arcade market's winning shares for the wallet to sign.",
+    parameters: z.object({
+      marketId: marketIdArg,
+      side: z.enum(['yes', 'no']).describe('Which shares the account holds'),
+      sender: z.string().describe('The account that claims'),
+    }),
+    output: writeResultSchema,
+    requiresSigner: true,
+    view: 'txn',
+    handler: async (ctx, args) => {
+      const market = await marketFor(ctx, args.marketId)
+      if (!market.isResolved)
+        throw new ToolError('NOT_RESOLVED', `Market ${market.marketAppId} has not resolved yet`)
+      const assetId = args.side === 'yes' ? market.yesAssetId : market.noAssetId
+      return composeOrExecuteWrite(
+        ctx,
+        args.sender,
+        `claim ${args.side.toUpperCase()} winnings on market ${market.marketAppId} (${market.title})`,
+        undefined,
+        (client) => client.claim({ marketAppId: market.marketAppId, assetId }),
+      )
+    },
+  }),
 ]
 
 /** The plugin factory — `plugins: [alphaArcadePlugin({ apiKey })]`. */
@@ -163,7 +380,7 @@ export function alphaArcadePlugin(options: AlphaArcadeOptions = {}): ToolPlugin 
     name: PLUGIN_NAME,
     description: 'Alpha Arcade prediction markets — prices, orderbooks, positions (mainnet)',
     tools: alphaArcadeTools,
-    service: createAlphaClient(options),
+    service: createAlphaService(options),
     views: {
       'arcade.markets': marketsSchema,
       'arcade.market': marketSchema,

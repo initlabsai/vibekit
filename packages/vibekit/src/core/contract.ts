@@ -42,7 +42,25 @@ export interface UnsignedGroupResult {
 }
 
 /** The intents a host can summarize better than a transaction list. */
-export type WriteIntent = {
+export type WriteIntent = OrderIntent | SwapIntent
+
+export interface OrderIntent {
+  kind: 'order'
+  marketAppId: number
+  title?: string
+  side: 'yes' | 'no'
+  action: 'buy' | 'sell'
+  orderType: 'limit' | 'market'
+  /** Dollars per share, 0..1 — the implied probability. */
+  priceUsd: number
+  /** Shares. */
+  quantity: number
+  /** price × quantity: what a buy locks up, what a sell returns at that price. */
+  totalUsd: number
+  slippagePercent?: number
+}
+
+export interface SwapIntent {
   kind: 'swap'
   fromAssetId: number
   toAssetId: number
