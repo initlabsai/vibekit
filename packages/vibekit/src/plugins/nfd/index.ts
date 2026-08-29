@@ -13,6 +13,10 @@ import {
 import { NfdApiClient } from '@txnlab/nfd-sdk'
 import { z } from 'zod'
 
+import { nfdRecordSchema, propertiesSchema, type NfdRecord } from './schemas.js'
+
+export { nfdRecordSchema, type NfdRecord }
+
 export const PLUGIN_NAME = 'nfd'
 
 /** NFD serves mainnet and testnet; clients are cached per network id. */
@@ -107,20 +111,6 @@ function extractProperties(properties?: {
   }
   return Object.keys(picked).length > 0 ? picked : undefined
 }
-
-const propertiesSchema = z.record(z.string(), z.string()).optional()
-
-/** resolve_nfd's wire shape; hosts that resolve names directly build the same record. */
-export const nfdRecordSchema = z.object({
-  name: z.string(),
-  address: z.string().optional(),
-  owner: z.string().optional(),
-  appId: z.number().optional(),
-  state: z.string().optional(),
-  properties: propertiesSchema,
-})
-
-export type NfdRecord = z.infer<typeof nfdRecordSchema>
 
 /** Shapes an SDK NFD (any view) into the resolve_nfd record. */
 export function nfdRecord(

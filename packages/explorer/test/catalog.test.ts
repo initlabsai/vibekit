@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  type TrustedViewId,
+  createNfdProfileViewModel,
   EXPLORER_PROTOCOL_VERSION,
   FIXTURE_SENDER,
   addResult,
@@ -25,20 +27,7 @@ const identity = {
   network: 'localnet' as const,
 }
 
-function viewFor(
-  record: { resultId: string },
-  view:
-    | 'account.summary'
-    | 'account.list'
-    | 'transaction.list'
-    | 'transaction.group'
-    | 'asset.list'
-    | 'asset.holdings'
-    | 'asset.holders'
-    | 'application.state'
-    | 'application.locals'
-    | 'block.list',
-) {
+function viewFor(record: { resultId: string }, view: TrustedViewId) {
   return viewSpecSchema.parse({
     protocolVersion: EXPLORER_PROTOCOL_VERSION,
     type: 'view',
@@ -171,6 +160,39 @@ describe('first-party catalog views', () => {
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.groupId).toBe('abc123')
     expect(derived.model.transactions).toHaveLength(2)
+  })
+
+  test('plugin views bridge like core views: parsed wire gets the card, a bad wire degrades', () => {
+    const nfd = bridgeToolResult(
+      {
+        id: 'nfd-1',
+        toolName: 'resolve_nfd',
+        view: 'nfd.profile',
+        output: { name: 'alice.algo', address: FIXTURE_SENDER, state: 'owned' },
+        isError: false,
+      },
+      { ...identity, resultId: 'result-nfd', toolCallId: 'tool-call-nfd' },
+    )
+    expect(nfd.view).toBe('nfd.profile')
+    const model = createNfdProfileViewModel(
+      addResult(createResultStore(), nfd.record),
+      viewFor(nfd.record, 'nfd.profile'),
+    )
+    if (!model.ok) throw new Error(model.error.message)
+    expect(model.model.address).toBe(FIXTURE_SENDER)
+
+    const bad = bridgeToolResult(
+      {
+        id: 'nfd-2',
+        toolName: 'resolve_nfd',
+        view: 'nfd.profile',
+        output: { appId: 'seven' },
+        isError: false,
+      },
+      { ...identity, resultId: 'result-nfd-bad', toolCallId: 'tool-call-nfd-bad' },
+    )
+    expect(bad.view).toBeUndefined()
+    expect(bad.degraded?.view).toBe('nfd.profile')
   })
 
   test('search_assets and top_asset_holders become list and holders cards', () => {

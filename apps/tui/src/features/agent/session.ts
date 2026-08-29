@@ -18,7 +18,6 @@ import {
   type ResultStore,
   type StructuredResult,
 } from '@initlabs/vibekit-explorer'
-import type { z } from 'zod'
 import {
   activeSenderLine,
   createExplorerAgent as createSharedExplorerAgent,
@@ -105,16 +104,6 @@ function withProgramLabels(
 
 /** One throwaway instance of each built-in plugin, for metadata and view schemas. */
 const BUILTIN_PLUGINS = explorerPlugins()
-
-/**
- * Trusted plugin views, merged from the same plugins the session registers:
- * dotted plugin-namespaced view id → wire schema. A tool result declaring one
- * of these ids gets its card only after the wire parses.
- */
-const PLUGIN_VIEWS = Object.assign(
-  {},
-  ...BUILTIN_PLUGINS.map((plugin) => plugin.views ?? {}),
-) as Record<string, z.ZodType>
 
 /** Name and blurb per built-in plugin, in display order — the plugins screen's rows. */
 export const EXPLORER_PLUGIN_INFO = BUILTIN_PLUGINS.map(({ name, description }) => ({
@@ -210,19 +199,9 @@ export function planToolResult(
     })
     const record = withAccountNames(enrichResultWithAbi(bridged, ctx.specCatalog), ctx.addressBook)
     const blocks: SectionBlock[] = []
-    const pluginSchema = view === undefined && event.view ? PLUGIN_VIEWS[event.view] : undefined
-    const pluginParse =
-      pluginSchema && record.state === 'success' ? pluginSchema.safeParse(record.data) : undefined
     const table =
       event.view === 'table' && record.state === 'success' ? tableModel(record.data) : undefined
-    if (pluginParse?.success) {
-      blocks.push({
-        kind: 'plugin',
-        view: event.view!,
-        data: pluginParse.data,
-        network: usedNetwork,
-      })
-    } else if (table) {
+    if (table) {
       blocks.push({ kind: 'table', title: event.toolName, ...table })
     } else if (view === undefined) {
       const text = JSON.stringify(record.state === 'success' ? record.data : record.error, null, 2)
@@ -248,13 +227,9 @@ export function planToolResult(
       }
     }
     // A raw card where a real one was promised is a bug somewhere; name it.
-    const pluginIssue =
-      pluginParse && !pluginParse.success ? pluginParse.error.issues[0] : undefined
     const note = degraded
       ? `${event.toolName} declared ${degraded.view} but its result didn't parse (${degraded.reason}) — shown raw.`
-      : pluginIssue
-        ? `${event.toolName} declared ${event.view} but its result didn't parse (${pluginIssue.path.map(String).join('.') || '(root)'}: ${pluginIssue.message}) — shown raw.`
-        : undefined
+      : undefined
     return { usedNetwork, kind: 'cards', record, blocks, ...(note ? { note } : {}) }
   } catch (error: unknown) {
     // Say so: a silently dropped result looks like the agent said nothing.

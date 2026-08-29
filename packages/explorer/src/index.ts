@@ -109,6 +109,14 @@ export {
 } from './views/block.js'
 export type { BlockDetailViewModel } from './views/block.js'
 export { createNetworkStatusViewModel } from './views/network.js'
+export {
+  buildPluginRecord,
+  createNfdProfileViewModel,
+  createPeraAssetViewModel,
+  createVestigeMarketsViewModel,
+  createVestigePricesViewModel,
+} from './views/plugins.js'
+export type { AssetPrices, AssetProfile, NfdRecord, RankedAssets } from './views/plugins.js'
 export type { NetworkStatusViewModel } from './views/network.js'
 export {
   createTransactionCollectionViewModel,

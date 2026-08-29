@@ -16,7 +16,16 @@ import {
 } from '@initlabs/vibekit-explorer'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 import { EnrichmentProvider } from './enrich'
 import { RoundPulse } from './features/network/pulse'
@@ -27,7 +36,6 @@ import { useCredits } from './features/credits/hooks'
 import { useComposer } from './features/composer/hooks'
 import { usePanel } from './features/layout/hooks'
 import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
-import { NfdCard } from './features/plugins/nfd-card'
 import { ProfileRail } from './features/profile/rail'
 import { WriteFlowCard } from './features/write-flow/cards'
 import { useWriteFlow } from './features/write-flow/hooks'
@@ -35,7 +43,7 @@ import { ApprovalModal } from './features/write-flow/modal'
 import { useLookups } from './lookup'
 import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
 import { Button, CopyContext, OpenContext } from './primitives'
-import type { NfdProfile, RemoteExplorerHost } from './remote-host'
+import type { RemoteExplorerHost } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'
 import { shorten } from './theme'
 import { WalletMenu } from './features/wallet/menu'
@@ -96,7 +104,9 @@ const TABS = [
 function creditsLine(credits: ReturnType<typeof useCredits>): string {
   const offer = `/buy ${credits.turnsPerPack} for ${credits.price}${credits.chain === 'testnet' ? ' testnet USDC' : ''}`
   const free = `${credits.freeLeft ?? credits.freeTurns} free today`
-  return credits.paid === undefined ? `${free} · ${offer}` : `${credits.paid} turns · ${free} · ${offer}`
+  return credits.paid === undefined
+    ? `${free} · ${offer}`
+    : `${credits.paid} turns · ${free} · ${offer}`
 }
 
 /** The layout mounts this inside the wallet provider, client-only. */
@@ -138,10 +148,24 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   useEffect(() => setNetwork(network), [network, setNetwork])
   const feed = useFeed(networkRef)
   const { sections, selectedId, selectSection } = feed
-  const shared = { feed, storeRef, commitStore, host, live, networkRef, busyRef, setBusy, setStatus }
+  const shared = {
+    feed,
+    storeRef,
+    commitStore,
+    host,
+    live,
+    networkRef,
+    busyRef,
+    setBusy,
+    setStatus,
+  }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
   const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
-  const credits = useCredits({ activeAddress, signTransactions: wallet.signTransactions, withWalletNetwork: wallet.withWalletNetwork })
+  const credits = useCredits({
+    activeAddress,
+    signTransactions: wallet.signTransactions,
+    withWalletNetwork: wallet.withWalletNetwork,
+  })
   const agent = useAgentLane({
     onCredits: credits.setCredits,
     feed,
@@ -203,17 +227,6 @@ function ExplorerApp({ children }: { children: ReactNode }) {
         }
         case 'raw':
           return <RawBlock title={block.title} text={block.text} />
-        case 'plugin': {
-          if (block.view !== 'nfd.profile') return <RawBlock title={block.view} text={JSON.stringify(block.data, null, 2)} />
-          const data = block.data as NfdProfile
-          return (
-            <NfdCard
-              data={data}
-              network={block.network}
-              onOpenAccount={data.address ? () => openTarget({ kind: 'account', address: data.address! }) : undefined}
-            />
-          )
-        }
       }
     },
     [busy, lookups, network, openTarget, payment, store],
@@ -221,7 +234,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
 
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
-    payment.flow?.stage === 'awaiting-approval' ? createWriteFlowViewModel(store, payment.flow) : undefined
+    payment.flow?.stage === 'awaiting-approval'
+      ? createWriteFlowViewModel(store, payment.flow)
+      : undefined
   const announceCopy = useCallback((text: string) => setStatus(`copied ${shorten(text, 28)}`), [])
   // `/` jumps to the composer from anywhere; Esc returns to the feed.
   useEffect(() => {
@@ -240,7 +255,10 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   }, [approval, goHome])
   const modeLabel = live === 'probing' ? 'probing…' : live ? 'live' : 'sample data'
   // Two lines share one slot: something happening (a copy, an error, sample data), else the standing offer.
-  const transient = status || wallet.networkError || (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
+  const transient =
+    status ||
+    wallet.networkError ||
+    (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
   const idleLine = agent.status.enabled
     ? credits.enabled
       ? creditsLine(credits)
@@ -272,115 +290,169 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       submit,
       setStatus,
       renderBlock,
-      agent: { enabled: agent.status.enabled, model: agent.status.model, provider: agent.status.provider, streamingSection: agent.streamingSection },
+      agent: {
+        enabled: agent.status.enabled,
+        model: agent.status.model,
+        provider: agent.status.provider,
+        streamingSection: agent.streamingSection,
+      },
     }),
-    [activeAddress, agent.streamingSection, agent.status.enabled, agent.status.model, agent.status.provider, busy, commitStore, feed, host, latestRound, live, network, openTarget, remoteHost, renderBlock, store, submit, wallet],
+    [
+      activeAddress,
+      agent.streamingSection,
+      agent.status.enabled,
+      agent.status.model,
+      agent.status.provider,
+      busy,
+      commitStore,
+      feed,
+      host,
+      latestRound,
+      live,
+      network,
+      openTarget,
+      remoteHost,
+      renderBlock,
+      store,
+      submit,
+      wallet,
+    ],
   )
 
   return (
     <EnrichmentProvider host={remoteHost} live={live === true}>
-    <CopyContext.Provider value={announceCopy}>
-    <OpenContext.Provider value={openTarget}>
-    <ExplorerContext.Provider value={context}>
-    <main className={`shell${railOpen ? ' rail-open' : ' rail-folded'}${navOpen ? '' : ' nav-folded'}`}>
-      <header className="top">
-        <div className="top-row">
-          <span className="brand">
-            VIBEKIT <b>AGENT</b>
-          </span>
-          <span className="top-state">
-            <span>
-              <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span>{' '}
-              <span className="live-label">{modeLabel}</span>
-              {latestRound === undefined ? null : (
-                <>
-                  {' '}
-                  <RoundPulse round={latestRound} />
-                  <span className="round" key={latestRound}>{latestRound}</span>
-                </>
-              )}
-            </span>
-            <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
-              {network}
-            </button>
-            <WalletMenu lane={wallet} onError={setStatus} />
-          </span>
-          {/* Phones: everything above folds into one sheet behind ☰. */}
-          <details className="sheet" ref={sheetRef}>
-            <summary className="button" aria-label="menu">☰</summary>
-            <div className="sheet-body">
-              <nav className="tabs">
-                {TABS.map((tab) => (
-                  <Link key={tab.href} href={tab.href} className={`button${pathname === tab.href ? ' button-active' : ''}`} onClick={closeSheet}>
-                    {tab.label}
-                  </Link>
-                ))}
-              </nav>
-              <p className="sheet-idle">{idleLine}</p>
-              <div className="sheet-row">
-                <span>
-                  <span className={`live-dot${live === true ? ' on' : ''}`}>{live === true ? '●' : '○'}</span> {modeLabel}
-                  {latestRound === undefined ? null : <span className="round"> {latestRound}</span>}
-                </span>
-                <button className={`net net-${network}`} onClick={() => switchNetwork(undefined)} title="switch network">
-                  {network}
-                </button>
+      <CopyContext.Provider value={announceCopy}>
+        <OpenContext.Provider value={openTarget}>
+          <ExplorerContext.Provider value={context}>
+            <main
+              className={`shell${railOpen ? ' rail-open' : ' rail-folded'}${navOpen ? '' : ' nav-folded'}`}
+            >
+              <header className="top">
+                <div className="top-row">
+                  <span className="brand">
+                    VIBEKIT <b>AGENT</b>
+                  </span>
+                  <span className="top-state">
+                    <span>
+                      <span className={`live-dot${live === true ? ' on' : ''}`}>
+                        {live === true ? '●' : '○'}
+                      </span>{' '}
+                      <span className="live-label">{modeLabel}</span>
+                      {latestRound === undefined ? null : (
+                        <>
+                          {' '}
+                          <RoundPulse round={latestRound} />
+                          <span className="round" key={latestRound}>
+                            {latestRound}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                    <button
+                      className={`net net-${network}`}
+                      onClick={() => switchNetwork(undefined)}
+                      title="switch network"
+                    >
+                      {network}
+                    </button>
+                    <WalletMenu lane={wallet} onError={setStatus} />
+                  </span>
+                  {/* Phones: everything above folds into one sheet behind ☰. */}
+                  <details className="sheet" ref={sheetRef}>
+                    <summary className="button" aria-label="menu">
+                      ☰
+                    </summary>
+                    <div className="sheet-body">
+                      <nav className="tabs">
+                        {TABS.map((tab) => (
+                          <Link
+                            key={tab.href}
+                            href={tab.href}
+                            className={`button${pathname === tab.href ? ' button-active' : ''}`}
+                            onClick={closeSheet}
+                          >
+                            {tab.label}
+                          </Link>
+                        ))}
+                      </nav>
+                      <p className="sheet-idle">{idleLine}</p>
+                      <div className="sheet-row">
+                        <span>
+                          <span className={`live-dot${live === true ? ' on' : ''}`}>
+                            {live === true ? '●' : '○'}
+                          </span>{' '}
+                          {modeLabel}
+                          {latestRound === undefined ? null : (
+                            <span className="round"> {latestRound}</span>
+                          )}
+                        </span>
+                        <button
+                          className={`net net-${network}`}
+                          onClick={() => switchNetwork(undefined)}
+                          title="switch network"
+                        >
+                          {network}
+                        </button>
+                      </div>
+                      <NavPane
+                        sections={sections}
+                        selectedId={selectedId}
+                        onSelect={(id) => {
+                          goHome()
+                          selectSection(id)
+                          closeSheet()
+                        }}
+                        open
+                        onToggle={closeSheet}
+                      />
+                    </div>
+                  </details>
+                </div>
+                <nav className="top-row tabs">
+                  {TABS.map((tab) => (
+                    <Link
+                      key={tab.href}
+                      href={tab.href}
+                      className={`button${pathname === tab.href ? ' button-active' : ''}`}
+                    >
+                      {tab.label}
+                    </Link>
+                  ))}
+                </nav>
+              </header>
+              <div className="body">
+                <NavPane
+                  sections={sections}
+                  selectedId={selectedId}
+                  onSelect={(id) => {
+                    goHome()
+                    selectSection(id)
+                  }}
+                  open={navOpen}
+                  onToggle={toggleNav}
+                />
+                {children}
+                <ProfileRail open={railOpen} onToggle={toggleRail} />
               </div>
-              <NavPane
-                sections={sections}
-                selectedId={selectedId}
-                onSelect={(id) => {
-                  goHome()
-                  selectSection(id)
-                  closeSheet()
-                }}
-                open
-                onToggle={closeSheet}
+              <Composer
+                onSubmit={submit}
+                status={transient}
+                idle={idleLine}
+                placeholder="ask anything, paste an id, or / for commands"
               />
-            </div>
-          </details>
-        </div>
-        <nav className="top-row tabs">
-          {TABS.map((tab) => (
-            <Link key={tab.href} href={tab.href} className={`button${pathname === tab.href ? ' button-active' : ''}`}>
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      </header>
-      <div className="body">
-        <NavPane
-          sections={sections}
-          selectedId={selectedId}
-          onSelect={(id) => {
-            goHome()
-            selectSection(id)
-          }}
-          open={navOpen}
-          onToggle={toggleNav}
-        />
-        {children}
-        <ProfileRail open={railOpen} onToggle={toggleRail} />
-      </div>
-      <Composer
-        onSubmit={submit}
-        status={transient}
-        idle={idleLine}
-        placeholder="ask anything, paste an id, or / for commands"
-      />
-      {approval ? (
-        <ApprovalModal
-          model={approval.ok ? approval.model : undefined}
-          network={network}
-          busy={busy}
-          onApprove={() => payment.decide('approve')}
-          onDeny={() => payment.decide('deny')}
-        />
-      ) : null}
-    </main>
-    </ExplorerContext.Provider>
-    </OpenContext.Provider>
-    </CopyContext.Provider>
+              {approval ? (
+                <ApprovalModal
+                  model={approval.ok ? approval.model : undefined}
+                  network={network}
+                  busy={busy}
+                  onApprove={() => payment.decide('approve')}
+                  onDeny={() => payment.decide('deny')}
+                />
+              ) : null}
+            </main>
+          </ExplorerContext.Provider>
+        </OpenContext.Provider>
+      </CopyContext.Provider>
     </EnrichmentProvider>
   )
 }

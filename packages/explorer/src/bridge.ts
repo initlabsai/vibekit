@@ -38,6 +38,7 @@ import {
 } from './views/asset.js'
 import { buildBlockDetailRecord, buildBlockListRecord } from './views/block.js'
 import { buildNetworkStatusRecord } from './views/network.js'
+import { pluginRecordBuilder } from './views/plugins.js'
 import {
   buildTransactionDetailRecord,
   buildTransactionGroupRecord,
@@ -150,6 +151,10 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'block.detail': buildBlockDetailRecord,
   'block.list': buildBlockListRecord,
   'network.status': buildNetworkStatusRecord,
+  'nfd.profile': pluginRecordBuilder('nfd.profile'),
+  'vestige.prices': pluginRecordBuilder('vestige.prices'),
+  'vestige.markets': pluginRecordBuilder('vestige.markets'),
+  'pera.asset': pluginRecordBuilder('pera.asset'),
 }
 
 /**

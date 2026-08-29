@@ -9,7 +9,6 @@ export type SectionBlock =
   | { kind: 'view'; view: ViewSpec }
   | { kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
-  | { kind: 'plugin'; view: string; data: unknown; network: string }
   /** A coarse `table` view's result, pre-shaped by tableModel — formatted raw, not trusted. */
   | {
       kind: 'table'

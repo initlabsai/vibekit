@@ -1,10 +1,11 @@
+import { PLUGIN_VIEW_IDS } from '@initlabs/vibekit/plugins/views'
 import { z } from 'zod'
 
 import { resultReferenceSchema, type ResultReference } from './results.js'
 import { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from './version.js'
 
-/** View ids the Explorer apps render as cards; anything else shows as a raw record. */
-export const TRUSTED_VIEW_IDS = [
+/** The core view ids — one per chain-data card. */
+const CORE_VIEW_IDS = [
   'transaction.detail',
   'transaction.list',
   'transaction.group',
@@ -29,6 +30,9 @@ export const TRUSTED_VIEW_IDS = [
   'block.list',
   'network.status',
 ] as const
+
+/** View ids the Explorer apps render as cards — core and plugin; anything else shows as a raw record. */
+export const TRUSTED_VIEW_IDS = [...CORE_VIEW_IDS, ...PLUGIN_VIEW_IDS] as const
 
 /** A view id from TRUSTED_VIEW_IDS. */
 export type TrustedViewId = (typeof TRUSTED_VIEW_IDS)[number]

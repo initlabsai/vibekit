@@ -1,5 +1,7 @@
 /** The direct lane: entity lookups by id that need no model, each landing as a card in the feed. */
 import {
+  buildPluginRecord,
+  type NfdRecord,
   addResult,
   createAccountListViewModel,
   createAccountPortfolioViewModel,
@@ -79,7 +81,9 @@ export function useLookups({
         return Promise.resolve()
       }
       setBusy(true)
-      setStatus(live === true ? status : `${status} (sample data — ${networkRef.current} is unreachable)`)
+      setStatus(
+        live === true ? status : `${status} (sample data — ${networkRef.current} is unreachable)`,
+      )
       return task()
         .catch((error: unknown) =>
           appendNote(
@@ -135,19 +139,20 @@ export function useLookups({
   const openTransaction = useCallback(
     (sectionId: number, txid: string) =>
       txid === ''
-        ? (appendNote(sectionId, 'That row has no transaction id of its own.', 'error'), Promise.resolve())
+        ? (appendNote(sectionId, 'That row has no transaction id of its own.', 'error'),
+          Promise.resolve())
         : lookupById(sectionId, {
-        label: txid.slice(0, 8),
-        view: 'transaction.detail',
-        failure: "Couldn't find that transaction",
-        run: () => host().lookupTransaction(txid),
-        summary: (view) => {
-          const derived = createTransactionDetailViewModel(storeRef.current, view)
-          return derived.ok && derived.model.paymentAmountMicroAlgos !== undefined
-            ? `${formatMicroAlgos(derived.model.paymentAmountMicroAlgos)} ALGO from ${shorten(derived.model.sender, 12)} to ${shorten(derived.model.receiver ?? '—', 12)}, ${derived.model.status}.`
-            : undefined
-        },
-      }),
+            label: txid.slice(0, 8),
+            view: 'transaction.detail',
+            failure: "Couldn't find that transaction",
+            run: () => host().lookupTransaction(txid),
+            summary: (view) => {
+              const derived = createTransactionDetailViewModel(storeRef.current, view)
+              return derived.ok && derived.model.paymentAmountMicroAlgos !== undefined
+                ? `${formatMicroAlgos(derived.model.paymentAmountMicroAlgos)} ALGO from ${shorten(derived.model.sender, 12)} to ${shorten(derived.model.receiver ?? '—', 12)}, ${derived.model.status}.`
+                : undefined
+            },
+          }),
     [appendNote, host, lookupById, storeRef],
   )
 
@@ -172,14 +177,28 @@ export function useLookups({
     (sectionId: number, name: string) => {
       const network = networkRef.current
       if (network !== 'mainnet' && network !== 'testnet') {
-        appendNote(sectionId, `NFD names resolve on mainnet and testnet only — you're on ${network}. Paste an address instead.`, 'error')
+        appendNote(
+          sectionId,
+          `NFD names resolve on mainnet and testnet only — you're on ${network}. Paste an address instead.`,
+          'error',
+        )
         return Promise.resolve()
       }
       let address: string | undefined
       return withBusy(sectionId, `resolving ${name}…`, `Couldn't resolve ${name}`, async () => {
-        const data = await remoteHost.resolveName(name)
-        if (!data.address) throw new Error('the name has no deposit address')
-        appendBlock(sectionId, { kind: 'plugin', view: 'nfd.profile', data, network })
+        const record = buildPluginRecord(
+          'nfd.profile',
+          {
+            resultId: `result-nfd-${crypto.randomUUID()}`,
+            toolCallId: `tool-call-nfd-${crypto.randomUUID()}`,
+            network,
+          },
+          await remoteHost.resolveName(name),
+          'resolve_nfd',
+        )
+        const data = record.state === 'success' ? (record.data as NfdRecord) : undefined
+        if (!data?.address) throw new Error('the name has no deposit address')
+        presentRecord(sectionId, record, 'nfd.profile')
         address = data.address
       }).then(() => {
         // Its own lookup, after the resolve has released busy: from here the
@@ -187,7 +206,7 @@ export function useLookups({
         if (address) return openAccount(sectionId, address)
       })
     },
-    [appendBlock, appendNote, networkRef, openAccount, remoteHost, withBusy],
+    [appendNote, networkRef, openAccount, presentRecord, remoteHost, withBusy],
   )
 
   const openMyAccounts = useCallback(
@@ -341,7 +360,11 @@ export function useLookups({
             presentRecord(sectionId, match.record, view)
           }
           if (outcome.matches.length === 0) {
-            appendNote(sectionId, `No asset, application, or block ${raw} on ${networkRef.current}.`, 'error')
+            appendNote(
+              sectionId,
+              `No asset, application, or block ${raw} on ${networkRef.current}.`,
+              'error',
+            )
             return
           }
           if (outcome.misses.length > 0) {
@@ -367,7 +390,9 @@ export function useLookups({
           commitStore(addResult(storeRef.current, merged))
           replaceBlockView(sectionId, itemId, viewFor(merged, view.view))
         })
-        .catch((error: unknown) => appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'))
+        .catch((error: unknown) =>
+          appendNote(sectionId, `Couldn't load more — ${errorMessage(error)}`, 'error'),
+        )
         .finally(() => setLoadingMore(null))
     },
     [appendNote, commitStore, host, loadingMore, networkRef, replaceBlockView, storeRef],

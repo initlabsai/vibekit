@@ -9,12 +9,19 @@ export type SectionBlock =
   | { kind: 'view'; view: ViewSpec }
   | { kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
-  | { kind: 'plugin'; view: string; data: unknown; network: string }
   | { kind: 'write'; flow: WriteFlowState }
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =
-  | { id: number; kind: 'note'; text: string; tone: 'muted' | 'error' | 'agent'; /** Still being written: 'thinking…', '→ tool…'. */ pending?: boolean; /** An identifier shown after the text, with its copy glyph. */ copy?: string; /** A face she insists on for this line. */ mood?: 'squint' | 'bright' }
+  | {
+      id: number
+      kind: 'note'
+      text: string
+      tone: 'muted' | 'error' | 'agent'
+      /** Still being written: 'thinking…', '→ tool…'. */ pending?: boolean
+      /** An identifier shown after the text, with its copy glyph. */ copy?: string
+      /** A face she insists on for this line. */ mood?: 'squint' | 'bright'
+    }
   | { id: number; kind: 'block'; block: SectionBlock }
 
 /** Everything one request produced, in order. The nav pane is this list's index. */
@@ -83,7 +90,10 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
     (prompt: string): number => {
       sectionSeq.current += 1
       const id = sectionSeq.current
-      commitSections([...sectionsRef.current, { id, prompt, network: networkRef.current, items: [] }])
+      commitSections([
+        ...sectionsRef.current,
+        { id, prompt, network: networkRef.current, items: [] },
+      ])
       setSelectedId(id)
       scrollToBottom()
       return id
@@ -131,9 +141,15 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
   )
 
   const appendNote = useCallback(
-    (sectionId: number, text: string, tone: 'muted' | 'error' | 'agent' = 'muted', extra?: { copy?: string; mood?: 'squint' | 'bright' }) => {
+    (
+      sectionId: number,
+      text: string,
+      tone: 'muted' | 'error' | 'agent' = 'muted',
+      extra?: { copy?: string; mood?: 'squint' | 'bright' },
+    ) => {
       const id = appendNoteReturning(sectionId, text, tone)
-      if (extra) updateItem(sectionId, id, (item) => (item.kind === 'note' ? { ...item, ...extra } : item))
+      if (extra)
+        updateItem(sectionId, id, (item) => (item.kind === 'note' ? { ...item, ...extra } : item))
     },
     [appendNoteReturning, updateItem],
   )
@@ -157,7 +173,10 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
 
   const removeItem = useCallback(
     (sectionId: number, itemId: number) => {
-      updateSection(sectionId, (section) => ({ ...section, items: section.items.filter((item) => item.id !== itemId) }))
+      updateSection(sectionId, (section) => ({
+        ...section,
+        items: section.items.filter((item) => item.id !== itemId),
+      }))
     },
     [updateSection],
   )

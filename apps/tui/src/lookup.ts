@@ -1,5 +1,6 @@
 /** The direct lane: entity lookups by id that bypass the model, each landing as a card in the feed. */
 import {
+  buildPluginRecord,
   loadNextPage as loadNextPageRecord,
   type TransactionSearchFilter,
   addResult,
@@ -227,7 +228,17 @@ export function useLookups({
         const nfd = await nfdRef.current.clientFor(network).resolve(name, { view: 'full' })
         const data = nfdRecord(nfd, name)
         if (!data.address) throw new Error('the name has no deposit address')
-        appendBlock(sectionId, { kind: 'plugin', view: 'nfd.profile', data, network })
+        const record = buildPluginRecord(
+          'nfd.profile',
+          {
+            resultId: `result-nfd-${crypto.randomUUID()}`,
+            toolCallId: `tool-call-nfd-${crypto.randomUUID()}`,
+            network,
+          },
+          data,
+          'resolve_nfd',
+        )
+        presentRecord(sectionId, record, 'nfd.profile')
         address = data.address
       }).then(() => {
         // Its own lookup, after the resolve has released busy: from here the
@@ -235,7 +246,7 @@ export function useLookups({
         if (address) void openAccount(sectionId, address)
       })
     },
-    [appendBlock, appendNote, disabledPlugins, networkRef, openAccount, withBusy],
+    [appendNote, disabledPlugins, networkRef, openAccount, presentRecord, withBusy],
   )
 
   const openMyAccounts = useCallback(

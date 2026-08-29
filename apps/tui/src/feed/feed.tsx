@@ -17,7 +17,6 @@ import {
 } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 
-import { PLUGIN_CARDS } from '../features/plugins/cards.js'
 import { WriteFlowCard } from '../features/write-flow/cards.js'
 import { RawCard, TableCard } from '../generic-cards.js'
 import { HighlightContext, usePulse } from '../primitives.js'
@@ -379,19 +378,6 @@ export function ContentPane({
                           rows={block.rows}
                           width={cardWidth}
                         />
-                      ) : block.kind === 'plugin' ? (
-                        (PLUGIN_CARDS[block.view]?.({
-                          data: block.data,
-                          network: block.network,
-                          width: cardWidth,
-                          onOpen,
-                        }) ?? (
-                          <RawCard
-                            title={block.view}
-                            text={JSON.stringify(block.data, null, 2)}
-                            width={cardWidth}
-                          />
-                        ))
                       ) : (
                         <WriteFlowCard
                           key={block.flow.stage}

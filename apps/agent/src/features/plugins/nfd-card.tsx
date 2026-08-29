@@ -1,8 +1,9 @@
 'use client'
 
 /** An NFD profile from a pasted name: the deposit address, verified handles, and a line of bio. */
+import type { NfdRecord } from '@initlabs/vibekit-explorer'
+
 import { Button, Copyable, Fact, Facts, Frame, Header } from '../../primitives'
-import type { NfdProfile } from '../../remote-host'
 import { shorten } from '../../theme'
 
 /** Verified handles and links, in display order; each row copies its value. */
@@ -19,7 +20,9 @@ const LINKS: ReadonlyArray<[key: string, label: string]> = [
 ]
 
 /** Row-major facts: common profiles pair app/twitter, then discord/github. */
-export function nfdFactsFor(data: NfdProfile): ReadonlyArray<Readonly<{ label: string; value: string }>> {
+export function nfdFactsFor(
+  data: NfdRecord,
+): ReadonlyArray<Readonly<{ label: string; value: string }>> {
   const props = data.properties ?? {}
   return [
     ...(data.appId === undefined ? [] : [{ label: 'app', value: String(data.appId) }]),
@@ -33,7 +36,7 @@ export function NfdCard({
   network,
   onOpenAccount,
 }: {
-  data: NfdProfile
+  data: NfdRecord
   network: string
   onOpenAccount?: () => void
 }) {

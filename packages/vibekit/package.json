@@ -52,6 +52,10 @@
       "types": "./dist/preset/index.d.ts",
       "import": "./dist/preset/index.js"
     },
+    "./plugins/views": {
+      "types": "./dist/plugins/views.d.ts",
+      "import": "./dist/plugins/views.js"
+    },
     "./plugins/nfd": {
       "types": "./dist/plugins/nfd/index.d.ts",
       "import": "./dist/plugins/nfd/index.js"

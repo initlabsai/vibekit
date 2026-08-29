@@ -24,6 +24,10 @@ import {
   createBlockDetailViewModel,
   createBlockListViewModel,
   createNetworkStatusViewModel,
+  createNfdProfileViewModel,
+  createPeraAssetViewModel,
+  createVestigeMarketsViewModel,
+  createVestigePricesViewModel,
   createTransactionCollectionViewModel,
   createTransactionDetailViewModel,
   type ResultStore,
@@ -59,6 +63,9 @@ import {
 } from './features/assets/cards.js'
 import { BlockCard, BlockListCard } from './features/blocks/cards.js'
 import { NetworkCard } from './features/network/cards.js'
+import { MarketPricesCard, MarketRankedCard } from './features/plugins/market.js'
+import { NfdCard } from './features/plugins/nfd.js'
+import { PeraAssetCard } from './features/plugins/pera.js'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards.js'
 import { TransactionGraphCard } from './features/transactions/graph.js'
 import { Unavailable } from './primitives.js'
@@ -356,6 +363,59 @@ export function ResultCard({
     case 'application.methods': {
       const derived = createApplicationMethodsViewModel(store, view)
       return <ApplicationMethodsCard model={derived.ok ? derived.model : undefined} width={width} />
+    }
+    case 'nfd.profile': {
+      const derived = createNfdProfileViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="NFD" width={width} />
+      const nfd = derived.model
+      return (
+        <NfdCard
+          data={nfd}
+          network={nfd.network}
+          width={width}
+          onOpenAccount={
+            onOpen && nfd.address
+              ? () => onOpen({ kind: 'account', address: nfd.address! })
+              : undefined
+          }
+        />
+      )
+    }
+    case 'vestige.prices': {
+      const derived = createVestigePricesViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="PRICES" width={width} />
+      return (
+        <MarketPricesCard
+          data={derived.model}
+          network={derived.model.network}
+          width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'vestige.markets': {
+      const derived = createVestigeMarketsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="MARKETS" width={width} />
+      return (
+        <MarketRankedCard
+          data={derived.model}
+          network={derived.model.network}
+          width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'pera.asset': {
+      const derived = createPeraAssetViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="ASSET PROFILE" width={width} />
+      return (
+        <PeraAssetCard
+          data={derived.model}
+          network={derived.model.network}
+          width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
     }
     case 'application.explanation': {
       const derived = createApplicationExplanationViewModel(store, view)

@@ -565,11 +565,8 @@ describe('planToolResult', () => {
       ctx,
     )
     if (plan.kind !== 'cards') throw new Error(plan.kind)
-    expect(plan.blocks[0]).toMatchObject({
-      kind: 'plugin',
-      view: 'nfd.profile',
-      network: 'mainnet',
-    })
+    expect(plan.blocks[0]).toMatchObject({ kind: 'view', view: { view: 'nfd.profile' } })
+    expect(plan.record.network).toBe('mainnet')
     expect(plan.note).toBeUndefined()
 
     // A wire that misses the plugin's schema degrades to raw, and says so.
@@ -586,7 +583,7 @@ describe('planToolResult', () => {
     const prices = { prices: [{ assetId: 0, priceUsd: '0.19', confidence: 0.99 }] }
     const plan = planToolResult(result('get_asset_prices', prices, { view: 'vestige.prices' }), ctx)
     if (plan.kind !== 'cards') throw new Error(plan.kind)
-    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.prices' })
+    expect(plan.blocks[0]).toMatchObject({ kind: 'view', view: { view: 'vestige.prices' } })
 
     const markets = {
       assets: [
@@ -607,7 +604,7 @@ describe('planToolResult', () => {
       ctx,
     )
     if (ranked.kind !== 'cards') throw new Error(ranked.kind)
-    expect(ranked.blocks[0]).toMatchObject({ kind: 'plugin', view: 'vestige.markets' })
+    expect(ranked.blocks[0]).toMatchObject({ kind: 'view', view: { view: 'vestige.markets' } })
   })
 
   test('pera registers its asset profile view', () => {
@@ -619,7 +616,7 @@ describe('planToolResult', () => {
     }
     const plan = planToolResult(result('get_asset_profile', profile, { view: 'pera.asset' }), ctx)
     if (plan.kind !== 'cards') throw new Error(plan.kind)
-    expect(plan.blocks[0]).toMatchObject({ kind: 'plugin', view: 'pera.asset' })
+    expect(plan.blocks[0]).toMatchObject({ kind: 'view', view: { view: 'pera.asset' } })
   })
 
   test("a coarse 'table' cue renders rows; other shapes stay raw", () => {
