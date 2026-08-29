@@ -74,17 +74,26 @@ export function useComposer({
         case 'transaction':
           return void lookups.openTransaction(createSection(target.txid), target.txid)
         case 'group':
-          return void lookups.openGroup(createSection(`group ${target.groupId.slice(0, 8)}…`), target.groupId)
+          return void lookups.openGroup(
+            createSection(`group ${target.groupId.slice(0, 8)}…`),
+            target.groupId,
+          )
         case 'account':
           return void lookups.openAccount(createSection(target.address), target.address)
         case 'asset':
           return void lookups.openAsset(createSection(`asset ${target.assetId}`), target.assetId)
         case 'application':
-          return void lookups.openApplication(createSection(`app ${target.applicationId}`), target.applicationId)
+          return void lookups.openApplication(
+            createSection(`app ${target.applicationId}`),
+            target.applicationId,
+          )
         case 'block':
           return void lookups.openBlock(createSection(`block ${target.round}`), target.round)
         case 'holdings':
-          return void lookups.openHoldings(createSection(`assets of ${target.address.slice(0, 8)}…`), target.address)
+          return void lookups.openHoldings(
+            createSection(`assets of ${target.address.slice(0, 8)}…`),
+            target.address,
+          )
         case 'transactions':
           return void lookups.openTransactions(createSection('transactions'), target.filter)
       }
@@ -126,14 +135,24 @@ export function useComposer({
           return void lookups.openBlock(sectionId, outcome.round)
         case 'network':
           if (outcome.network) return switchNetwork(outcome.network, sectionId)
-          return appendNote(sectionId, `You're on ${networkRef.current}. Use "/network localnet|testnet|mainnet" or click the chip to switch.`)
+          return appendNote(
+            sectionId,
+            `You're on ${networkRef.current}. Use "/network localnet|testnet|mainnet" or click the chip to switch.`,
+          )
         case 'network-status':
           return void lookups.openNetworkStatus(sectionId)
+        case 'price':
+          return void lookups.openPriceHistory(sectionId, outcome.assetId, outcome.range)
         case 'buy':
           appendNote(sectionId, 'Opening your wallet to pay…')
           return void buyCredits(outcome.turns).then(
             ({ line, txid }) => appendNote(sectionId, line, 'muted', { copy: txid }),
-            (error: unknown) => appendNote(sectionId, `Couldn't buy — ${error instanceof Error ? error.message : String(error)}`, 'error'),
+            (error: unknown) =>
+              appendNote(
+                sectionId,
+                `Couldn't buy — ${error instanceof Error ? error.message : String(error)}`,
+                'error',
+              ),
           )
         case 'help':
           return appendNote(sectionId, HELP)
@@ -143,7 +162,21 @@ export function useComposer({
           return void runAgent(sectionId, outcome.text)
       }
     },
-    [appendNote, buyCredits, createSection, feed, goHome, lookups, networkRef, payment, push, resetHistory, runAgent, setStatus, switchNetwork],
+    [
+      appendNote,
+      buyCredits,
+      createSection,
+      feed,
+      goHome,
+      lookups,
+      networkRef,
+      payment,
+      push,
+      resetHistory,
+      runAgent,
+      setStatus,
+      switchNetwork,
+    ],
   )
 
   return { submit, openTarget, switchNetwork, goHome }

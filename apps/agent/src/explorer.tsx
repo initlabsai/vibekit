@@ -208,6 +208,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
               store={store}
               view={block.view}
               onOpen={openTarget}
+              onInput={submit}
               onMore={() => lookups.loadMore(sectionId, itemId, block.view)}
               loadingMore={lookups.loadingMore === itemId}
             />

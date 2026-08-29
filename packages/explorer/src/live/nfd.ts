@@ -3,7 +3,12 @@
  * client and record shape, on mainnet or testnet. The live host itself
  * carries no plugins; a host that offers names calls this beside it.
  */
-import { nfdPlugin, nfdRecord, type NfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
+import {
+  nfdPlugin,
+  nfdRecord,
+  type NfdRecord,
+  type NfdService,
+} from '@initlabs/vibekit/plugins/nfd'
 
 import type { LiveNetworkId } from '../host.js'
 

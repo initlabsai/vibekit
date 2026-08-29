@@ -26,3 +26,38 @@ export const rankedAssetsSchema = z.object({
   ),
 })
 export type RankedAssets = z.infer<typeof rankedAssetsSchema>
+
+/** get_asset_price_history's wire shape (the `vestige.history` view). */
+export const assetHistorySchema = z.object({
+  assetId: z.number(),
+  range: z.enum(['1d', '7d', '30d', '90d', '1y']),
+  intervalSeconds: z.number(),
+  candles: z.array(
+    z.object({
+      time: z.number().describe('Candle open, unix seconds'),
+      open: z.number(),
+      high: z.number(),
+      low: z.number(),
+      close: z.number(),
+      volumeUsd: z.number(),
+      confidence: z.number(),
+    }),
+  ),
+})
+export type AssetHistory = z.infer<typeof assetHistorySchema>
+
+/** get_defi_overview's wire shape (the `vestige.protocols` view). */
+export const defiProtocolsSchema = z.object({
+  totalTvlUsd: z.number(),
+  protocols: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      version: z.string(),
+      url: z.string().nullable(),
+      tvlUsd: z.number(),
+      active: z.boolean(),
+    }),
+  ),
+})
+export type DefiProtocols = z.infer<typeof defiProtocolsSchema>

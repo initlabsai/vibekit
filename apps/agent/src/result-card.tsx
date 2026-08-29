@@ -4,8 +4,10 @@ import { useState } from 'react'
 
 /** The one place a view id becomes UI: every trusted view spec renders through this exhaustive switch. */
 import {
+  createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
   createAccountListViewModel,
@@ -58,7 +60,9 @@ import {
 } from './features/assets/cards'
 import { BlockCard, BlockListCard } from './features/blocks/cards'
 import { NetworkCard } from './features/network/cards'
+import { DefiOverviewCard } from './features/plugins/defi-card'
 import { MarketPricesCard, MarketRankedCard } from './features/plugins/market-cards'
+import { PriceHistoryCard } from './features/plugins/price-history-card'
 import { NfdCard } from './features/plugins/nfd-card'
 import { PeraAssetCard } from './features/plugins/pera-card'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards'
@@ -143,12 +147,15 @@ export function ResultCard({
   onMore,
   loadingMore,
   tailing = false,
+  onInput,
 }: {
   store: ResultStore
   view: ViewSpec
   onOpen?: (target: OpenTarget) => void
   /** Fetches the next page into this card. */
   onMore?: () => void
+  /** Sends text as composer input (a card's range chips, a suggested next lookup). */
+  onInput?: (text: string) => void
   loadingMore?: boolean
   /** A block list that follows the chain. */
   tailing?: boolean
@@ -309,6 +316,25 @@ export function ResultCard({
           onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
       )
+    }
+    case 'vestige.history': {
+      const derived = createVestigeHistoryViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return (
+        <PriceHistoryCard
+          data={derived.model}
+          network={derived.model.network}
+          onRange={
+            onInput ? (range) => onInput(`/price ${derived.model.assetId} ${range}`) : undefined
+          }
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'vestige.protocols': {
+      const derived = createDefiProtocolsViewModel(store, view)
+      if (!derived.ok) return <RawCard store={store} view={view} />
+      return <DefiOverviewCard data={derived.model} network={derived.model.network} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

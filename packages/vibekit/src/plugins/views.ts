@@ -7,16 +7,23 @@ import type { z } from 'zod'
 
 import { nfdRecordSchema } from './nfd/schemas.js'
 import { assetProfileSchema } from './pera/schemas.js'
-import { assetPricesSchema, rankedAssetsSchema } from './vestige/schemas.js'
+import {
+  assetHistorySchema,
+  assetPricesSchema,
+  defiProtocolsSchema,
+  rankedAssetsSchema,
+} from './vestige/schemas.js'
 
 export type { NfdRecord } from './nfd/schemas.js'
 export type { AssetProfile } from './pera/schemas.js'
-export type { AssetPrices, RankedAssets } from './vestige/schemas.js'
+export type { AssetHistory, AssetPrices, DefiProtocols, RankedAssets } from './vestige/schemas.js'
 
 export const PLUGIN_VIEW_IDS = [
   'nfd.profile',
   'vestige.prices',
   'vestige.markets',
+  'vestige.history',
+  'vestige.protocols',
   'pera.asset',
 ] as const
 
@@ -26,5 +33,7 @@ export const pluginViewSchemas = {
   'nfd.profile': nfdRecordSchema,
   'vestige.prices': assetPricesSchema,
   'vestige.markets': rankedAssetsSchema,
+  'vestige.history': assetHistorySchema,
+  'vestige.protocols': defiProtocolsSchema,
   'pera.asset': assetProfileSchema,
 } as const satisfies Record<PluginViewId, z.ZodType>

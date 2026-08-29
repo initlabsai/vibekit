@@ -24,8 +24,10 @@ import {
   createBlockDetailViewModel,
   createBlockListViewModel,
   createNetworkStatusViewModel,
+  createDefiProtocolsViewModel,
   createNfdProfileViewModel,
   createPeraAssetViewModel,
+  createVestigeHistoryViewModel,
   createVestigeMarketsViewModel,
   createVestigePricesViewModel,
   createTransactionCollectionViewModel,
@@ -63,7 +65,12 @@ import {
 } from './features/assets/cards.js'
 import { BlockCard, BlockListCard } from './features/blocks/cards.js'
 import { NetworkCard } from './features/network/cards.js'
-import { MarketPricesCard, MarketRankedCard } from './features/plugins/market.js'
+import {
+  DefiOverviewCard,
+  MarketPricesCard,
+  MarketRankedCard,
+  PriceHistoryCard,
+} from './features/plugins/market.js'
 import { NfdCard } from './features/plugins/nfd.js'
 import { PeraAssetCard } from './features/plugins/pera.js'
 import { TransactionCard, TransactionListCard } from './features/transactions/cards.js'
@@ -404,6 +411,23 @@ export function ResultCard({
           onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
         />
       )
+    }
+    case 'vestige.history': {
+      const derived = createVestigeHistoryViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="PRICE" width={width} />
+      return (
+        <PriceHistoryCard
+          data={derived.model}
+          network={derived.model.network}
+          width={width}
+          onOpen={onOpen ? (assetId) => onOpen({ kind: 'asset', assetId }) : undefined}
+        />
+      )
+    }
+    case 'vestige.protocols': {
+      const derived = createDefiProtocolsViewModel(store, view)
+      if (!derived.ok) return <Unavailable title="DEFI" width={width} />
+      return <DefiOverviewCard data={derived.model} network={derived.model.network} width={width} />
     }
     case 'pera.asset': {
       const derived = createPeraAssetViewModel(store, view)

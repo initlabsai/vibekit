@@ -12,13 +12,26 @@ import {
 import { z } from 'zod'
 
 import {
+  assetHistorySchema,
   assetPricesSchema,
+  defiProtocolsSchema,
   rankedAssetsSchema,
+  type AssetHistory,
   type AssetPrices,
+  type DefiProtocols,
   type RankedAssets,
 } from './schemas.js'
 
-export { assetPricesSchema, rankedAssetsSchema, type AssetPrices, type RankedAssets }
+export {
+  assetHistorySchema,
+  assetPricesSchema,
+  defiProtocolsSchema,
+  rankedAssetsSchema,
+  type AssetHistory,
+  type AssetPrices,
+  type DefiProtocols,
+  type RankedAssets,
+}
 
 export const PLUGIN_NAME = 'vestige'
 
@@ -157,13 +170,107 @@ export const vestigeTools: AnyTool[] = [
   }),
 ]
 
+/** Candle width per range: enough points for a line, under Vestige's candle cap. */
+export const HISTORY_INTERVALS: Record<AssetHistory['range'], { seconds: number; days: number }> = {
+  '1d': { seconds: 3600, days: 1 },
+  '7d': { seconds: 3600, days: 7 },
+  '30d': { seconds: 14400, days: 30 },
+  '90d': { seconds: 86400, days: 90 },
+  '1y': { seconds: 86400, days: 365 },
+}
+
+interface WireCandle {
+  timestamp: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+  confidence: number
+}
+
+interface WireProtocol {
+  id: number
+  name: string
+  version: string
+  url: string | null
+  tvl: number
+  active: boolean
+}
+
+vestigeTools.push(
+  defineTool({
+    name: 'get_asset_price_history',
+    description:
+      'USD price candles for one asset over a range (mainnet, Vestige). The chart card is the answer; ALGO is asset 0.',
+    parameters: z.object({
+      assetId: z.number().describe('Asset ID (0 = ALGO)'),
+      range: z.enum(['1d', '7d', '30d', '90d', '1y']).optional().describe('Default 7d'),
+    }),
+    output: assetHistorySchema,
+    view: 'vestige.history',
+    handler: async (ctx: ToolContext, args: { assetId: number; range?: AssetHistory['range'] }) => {
+      const range = args.range ?? '7d'
+      const { seconds, days } = HISTORY_INTERVALS[range]
+      const rows = (await getVestige(ctx).get(`/assets/${args.assetId}/candles`, {
+        interval: seconds,
+        start: Math.floor(Date.now() / 1000) - days * 86400,
+        network_id: 0,
+        denominating_asset_id: USDC_ID,
+      })) as WireCandle[]
+      return {
+        assetId: args.assetId,
+        range,
+        intervalSeconds: seconds,
+        candles: rows.map((c) => ({
+          time: c.timestamp,
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volumeUsd: c.volume,
+          confidence: c.confidence,
+        })),
+      }
+    },
+  }),
+  defineTool({
+    name: 'get_defi_overview',
+    description:
+      'Algorand DeFi by protocol — TVL in USD per DEX and lending market (mainnet, Vestige). For "how big is DeFi" or "biggest protocol".',
+    parameters: z.object({}),
+    output: defiProtocolsSchema,
+    view: 'vestige.protocols',
+    handler: async (ctx: ToolContext) => {
+      const rows = (await getVestige(ctx).get('/protocols', {})) as WireProtocol[]
+      const protocols = rows
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          version: p.version,
+          url: p.url,
+          tvlUsd: p.tvl,
+          active: p.active,
+        }))
+        .sort((a, b) => b.tvlUsd - a.tvlUsd)
+      return { totalTvlUsd: protocols.reduce((sum, p) => sum + p.tvlUsd, 0), protocols }
+    },
+  }),
+)
+
 /** The plugin factory — `plugins: [vestigePlugin()]` in deployment options. */
 export function vestigePlugin(baseUrl?: string): ToolPlugin {
   return {
     name: PLUGIN_NAME,
-    description: 'Vestige market data — USD prices, ranked asset search (mainnet)',
+    description:
+      'Vestige market data — USD prices, history charts, ranked asset search, DeFi TVL (mainnet)',
     tools: vestigeTools,
     service: createVestigeService(baseUrl),
-    views: { 'vestige.prices': assetPricesSchema, 'vestige.markets': rankedAssetsSchema },
+    views: {
+      'vestige.prices': assetPricesSchema,
+      'vestige.markets': rankedAssetsSchema,
+      'vestige.history': assetHistorySchema,
+      'vestige.protocols': defiProtocolsSchema,
+    },
   }
 }

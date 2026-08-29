@@ -546,3 +546,16 @@ a.button-active { text-decoration: underline; }
   /* phones: no custom-address form on the assets/apps/txns pages; the wallet's account is the subject */
   .picker-form { display: none; }
 }
+
+/* Price history and DeFi cards. */
+.delta-up { color: var(--ok, #7fbf7f); }
+.delta-down { color: var(--danger, #d9776f); }
+.range-chips { display: flex; gap: .35rem; margin: .6rem 0 0; }
+.tvl-bars { list-style: none; margin: 1rem 0 0; padding: 0; }
+.tvl-row { align-items: center; display: grid; gap: .7rem; grid-template-columns: minmax(7rem, 1fr) 3fr auto; padding: .3rem 0; }
+.tvl-name a { color: var(--brass); text-decoration: none; }
+.tvl-name a:hover { color: var(--brass-bright); }
+.tvl-bar { background: var(--border-soft); display: block; height: 6px; overflow: hidden; }
+.tvl-fill { background: var(--signal); display: block; height: 100%; }
+.tvl-value { font-family: var(--font-mono); font-size: .8rem; text-align: right; }
+@media (max-width: 600px) { .tvl-row { grid-template-columns: minmax(5rem, 1fr) 2fr auto; } }

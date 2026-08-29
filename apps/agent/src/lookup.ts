@@ -22,7 +22,7 @@ import {
 } from '@initlabs/vibekit-explorer'
 import { useCallback, useState } from 'react'
 
-import type { WalletAccount } from './commands'
+import type { PriceRange, WalletAccount } from './commands'
 import type { Feed } from './feed/hooks'
 import type { ExplorerHost } from './features/network/hooks'
 import type { RemoteExplorerHost } from './remote-host'
@@ -207,6 +207,44 @@ export function useLookups({
       })
     },
     [appendNote, networkRef, openAccount, presentRecord, remoteHost, withBusy],
+  )
+
+  /** A plugin read from the direct lane: Vestige candles become the price card. */
+  const openPriceHistory = useCallback(
+    (sectionId: number, assetId: number, range?: PriceRange) => {
+      const network = networkRef.current
+      if (network !== 'mainnet') {
+        appendNote(
+          sectionId,
+          `Prices come from Vestige on mainnet — you're on ${network}.`,
+          'error',
+        )
+        return Promise.resolve()
+      }
+      return withBusy(
+        sectionId,
+        `charting ${assetId === 0 ? 'ALGO' : `asset ${assetId}`}…`,
+        "Couldn't load the price history",
+        async () => {
+          const wire = await remoteHost.pluginTool('get_asset_price_history', {
+            assetId,
+            ...(range ? { range } : {}),
+          })
+          const record = buildPluginRecord(
+            'vestige.history',
+            {
+              resultId: `result-price-${crypto.randomUUID()}`,
+              toolCallId: `tool-call-price-${crypto.randomUUID()}`,
+              network,
+            },
+            wire,
+            'get_asset_price_history',
+          )
+          presentRecord(sectionId, record, 'vestige.history')
+        },
+      )
+    },
+    [appendNote, networkRef, presentRecord, remoteHost, withBusy],
   )
 
   const openMyAccounts = useCallback(
@@ -405,6 +443,7 @@ export function useLookups({
     openAccount,
     openAccountName,
     openMyAccounts,
+    openPriceHistory,
     openHoldings,
     openAsset,
     openApplication,

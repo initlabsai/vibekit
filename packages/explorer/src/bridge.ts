@@ -154,6 +154,8 @@ const RECORD_BUILDERS: Record<TrustedViewId, RecordBuilder> = {
   'nfd.profile': pluginRecordBuilder('nfd.profile'),
   'vestige.prices': pluginRecordBuilder('vestige.prices'),
   'vestige.markets': pluginRecordBuilder('vestige.markets'),
+  'vestige.history': pluginRecordBuilder('vestige.history'),
+  'vestige.protocols': pluginRecordBuilder('vestige.protocols'),
   'pera.asset': pluginRecordBuilder('pera.asset'),
 }
 

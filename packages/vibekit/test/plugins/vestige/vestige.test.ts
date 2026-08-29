@@ -6,8 +6,13 @@ const ctxFor = (network: NetworkId, service?: unknown) =>
   ({ network: resolveNetwork(network), services: service ? { vestige: service } : {} }) as never
 
 describe('vestige plugin', () => {
-  test('exports 2 read-only tools with output schemas and views', () => {
-    expect(vestigeTools.map((t) => t.name)).toEqual(['get_asset_prices', 'search_assets_ranked'])
+  test('exports 4 read-only tools with output schemas and views', () => {
+    expect(vestigeTools.map((t) => t.name)).toEqual([
+      'get_asset_prices',
+      'search_assets_ranked',
+      'get_asset_price_history',
+      'get_defi_overview',
+    ])
     for (const tool of vestigeTools) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
@@ -41,5 +46,63 @@ describe('vestige plugin', () => {
       { assetId: 0, priceUsd: '0.09', confidence: 1 },
       { assetId: 7, priceUsd: '0.00000004923466042154566', confidence: 0.9 },
     ])
+  })
+
+  test('get_asset_price_history picks the interval per range and maps candles', async () => {
+    let captured: { path: string; params: Record<string, string | number> } | undefined
+    const service = {
+      get: async (path: string, params: Record<string, string | number>) => {
+        captured = { path, params }
+        return [
+          { timestamp: 1, open: 1, high: 2, low: 0.5, close: 1.5, volume: 10, confidence: 0.9 },
+        ]
+      },
+    }
+    const tool = vestigeTools.find((t) => t.name === 'get_asset_price_history')!
+    const result = (await tool.handler(ctxFor('mainnet', service), {
+      assetId: 0,
+      range: '30d',
+    })) as {
+      intervalSeconds: number
+      candles: unknown[]
+    }
+    expect(captured?.path).toBe('/assets/0/candles')
+    expect(captured?.params.interval).toBe(14400)
+    expect(captured?.params.denominating_asset_id).toBe(31566704)
+    expect(result.intervalSeconds).toBe(14400)
+    expect(result.candles).toEqual([
+      { time: 1, open: 1, high: 2, low: 0.5, close: 1.5, volumeUsd: 10, confidence: 0.9 },
+    ])
+  })
+
+  test('get_defi_overview sorts protocols by TVL and totals them', async () => {
+    const service = {
+      get: async () => [
+        {
+          id: 1,
+          name: 'Tinyman',
+          version: '1.1',
+          url: 'https://tinyman.org',
+          tvl: 5,
+          active: true,
+        },
+        {
+          id: 2,
+          name: 'Tinyman',
+          version: '2.0',
+          url: 'https://tinyman.org',
+          tvl: 50,
+          active: true,
+        },
+        { id: 3, name: 'Pact', version: '1.0', url: null, tvl: 20, active: false },
+      ],
+    }
+    const tool = vestigeTools.find((t) => t.name === 'get_defi_overview')!
+    const result = (await tool.handler(ctxFor('mainnet', service), {})) as {
+      totalTvlUsd: number
+      protocols: Array<{ id: number }>
+    }
+    expect(result.totalTvlUsd).toBe(75)
+    expect(result.protocols.map((p) => p.id)).toEqual([2, 3, 1])
   })
 })

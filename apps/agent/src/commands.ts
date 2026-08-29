@@ -7,6 +7,9 @@ import {
   type LiveNetworkId,
 } from '@initlabs/vibekit-explorer'
 
+export type PriceRange = '1d' | '7d' | '30d' | '90d' | '1y'
+const PRICE_RANGES: ReadonlySet<string> = new Set(['1d', '7d', '30d', '90d', '1y'])
+
 /** The composer's deterministic lane: slash commands, then the shared Explorer routes for pasted ids. */
 export type ComposerRoute =
   | ExplorerComposerRoute
@@ -15,6 +18,7 @@ export type ComposerRoute =
   | { status: 'network'; network?: LiveNetworkId }
   | { status: 'network-status' }
   | { status: 'buy'; turns?: number }
+  | { status: 'price'; assetId: number; range?: PriceRange }
   | { status: 'clear' }
   | { status: 'help' }
 
@@ -38,6 +42,7 @@ export const COMMANDS: ReadonlyArray<SlashCommand> = [
   { name: 'network', hint: 'switch network', template: '/network mainnet' },
   { name: 'pay', hint: 'draft a payment for your wallet to sign', template: '/pay 0.5 to ' },
   { name: 'asset', hint: 'open an asset by id', template: '/asset ' },
+  { name: 'price', hint: 'USD price chart — /price ALGO 30d', template: '/price ' },
   { name: 'app', hint: 'open an application by id', template: '/app ' },
   { name: 'block', hint: 'open a block by round', template: '/block ' },
   { name: 'clear', hint: 'empty the transcript and her memory of it' },
@@ -72,12 +77,24 @@ export function routeComposerInput(input: string): ComposerRoute {
       return { status: 'network-status' }
     case 'buy':
       return /^\d+$/.test(arg) ? { status: 'buy', turns: Number(arg) } : { status: 'buy' }
+    case 'price': {
+      const [asset = '', range] = rest
+      const assetId = asset === 'algo' ? 0 : /^\d+$/.test(asset) ? Number(asset) : undefined
+      if (assetId === undefined) return { status: 'text', text: trimmed }
+      return {
+        status: 'price',
+        assetId,
+        ...(range && PRICE_RANGES.has(range) ? { range: range as PriceRange } : {}),
+      }
+    }
     case 'clear':
       return { status: 'clear' }
     case 'help':
       return { status: 'help' }
     case 'network':
-      return arg === 'localnet' || arg === 'testnet' || arg === 'mainnet' ? { status: 'network', network: arg } : { status: 'network' }
+      return arg === 'localnet' || arg === 'testnet' || arg === 'mainnet'
+        ? { status: 'network', network: arg }
+        : { status: 'network' }
     default:
       // `/pay …`, `/asset 31566704`, `/app …`, `/block …` are the shared routes without the slash.
       return routeExplorerComposerInput(trimmed.slice(1))
@@ -114,10 +131,12 @@ export function resolvePaymentParties(args: {
   const sender = known && activeAddress ? activeAddress : accounts[0]!.address
   if (!to) return { error: 'Name the receiver: pay <amount> to <wallet label | address>' }
   if (algosdk.isValidAddress(to)) return { sender, receiver: to }
-  if (/^[A-Z2-7]{58}$/.test(to)) return { error: `"${to.slice(0, 8)}…" fails its checksum — check the address` }
+  if (/^[A-Z2-7]{58}$/.test(to))
+    return { error: `"${to.slice(0, 8)}…" fails its checksum — check the address` }
   const matches = accounts.filter((account) => account.name?.toLowerCase() === to.toLowerCase())
   if (matches.length === 1) return { sender, receiver: matches[0]!.address }
-  if (matches.length > 1) return { error: `"${to}" matches ${matches.length} accounts — use an address` }
+  if (matches.length > 1)
+    return { error: `"${to}" matches ${matches.length} accounts — use an address` }
   return { error: `No connected account named "${to}" — use a wallet label or an address` }
 }
 

@@ -8,8 +8,10 @@ import type { ResultIdentity, StructuredResult } from '../core/results.js'
 import { record, viewModelFor } from './derive.js'
 
 export type {
+  AssetHistory,
   AssetPrices,
   AssetProfile,
+  DefiProtocols,
   NfdRecord,
   RankedAssets,
 } from '@initlabs/vibekit/plugins/views'
@@ -44,6 +46,16 @@ export const createVestigeMarketsViewModel = viewModelFor(
   pluginViewSchemas['vestige.markets'],
   'vestige.markets',
   'Ranked assets',
+)
+export const createVestigeHistoryViewModel = viewModelFor(
+  pluginViewSchemas['vestige.history'],
+  'vestige.history',
+  'Price history',
+)
+export const createDefiProtocolsViewModel = viewModelFor(
+  pluginViewSchemas['vestige.protocols'],
+  'vestige.protocols',
+  'DeFi protocols',
 )
 export const createPeraAssetViewModel = viewModelFor(
   pluginViewSchemas['pera.asset'],

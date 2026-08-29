@@ -23,7 +23,14 @@ export const networkStatusDataSchema = z.object({
   onlineStakeMicroAlgos: uint64JsonSchema.optional(),
   consensusVersion: z.string().optional(),
   blockDetails: z
-    .array(z.object({ round: z.number().int(), txnCount: z.number().int().nonnegative(), blockTime: z.number().finite(), tps: z.number().finite() }))
+    .array(
+      z.object({
+        round: z.number().int(),
+        txnCount: z.number().int().nonnegative(),
+        blockTime: z.number().finite(),
+        tps: z.number().finite(),
+      }),
+    )
     .optional(),
 })
 
