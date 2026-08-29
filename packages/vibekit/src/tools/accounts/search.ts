@@ -38,6 +38,8 @@ export async function searchAccounts(
 
 export interface SearchAccountTransactionsArgs {
   address: string
+  /** Only transactions where the address played this part; unset means either. */
+  addressRole?: 'sender' | 'receiver'
   limit?: number
   nextToken?: string
   assetId?: number
@@ -61,6 +63,7 @@ export async function searchAccountTransactions(
   const limit = Math.min(args.limit ?? DEFAULT_LIMIT, 100)
   let query = ctx.indexer.searchForTransactions().address(args.address).limit(limit)
 
+  if (args.addressRole) query = query.addressRole(args.addressRole)
   if (args.nextToken) query = query.nextToken(args.nextToken)
   if (args.assetId) query = query.assetID(args.assetId)
   if (args.txType) query = query.txType(args.txType)
