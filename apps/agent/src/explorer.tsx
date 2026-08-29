@@ -167,6 +167,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     setNetwork: setNetworkState,
     setStatus,
     runAgent: agent.runAgent,
+    resetHistory: agent.resetHistory,
     buyCredits: async (turns) => {
       // The receipt is a line with the txid; the pack is paid on the pack's chain, which need not be the one on screen.
       const { state: next, txid } = await credits.buy(turns)

@@ -15,6 +15,7 @@ export type ComposerRoute =
   | { status: 'network'; network?: LiveNetworkId }
   | { status: 'network-status' }
   | { status: 'buy'; turns?: number }
+  | { status: 'clear' }
   | { status: 'help' }
 
 export interface SlashCommand {
@@ -39,6 +40,7 @@ export const COMMANDS: ReadonlyArray<SlashCommand> = [
   { name: 'asset', hint: 'open an asset by id', template: '/asset ' },
   { name: 'app', hint: 'open an application by id', template: '/app ' },
   { name: 'block', hint: 'open a block by round', template: '/block ' },
+  { name: 'clear', hint: 'empty the transcript and her memory of it' },
   { name: 'help', hint: 'this list' },
 ]
 
@@ -70,6 +72,8 @@ export function routeComposerInput(input: string): ComposerRoute {
       return { status: 'network-status' }
     case 'buy':
       return /^\d+$/.test(arg) ? { status: 'buy', turns: Number(arg) } : { status: 'buy' }
+    case 'clear':
+      return { status: 'clear' }
     case 'help':
       return { status: 'help' }
     case 'network':

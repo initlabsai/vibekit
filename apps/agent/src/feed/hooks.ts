@@ -73,6 +73,12 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
     [scrollToSection],
   )
 
+  /** Empties the transcript; ids keep counting so nothing stale can match. */
+  const clear = useCallback(() => {
+    commitSections([])
+    setSelectedId(null)
+  }, [commitSections])
+
   const createSection = useCallback(
     (prompt: string): number => {
       sectionSeq.current += 1
@@ -182,6 +188,7 @@ export function useFeed(networkRef: { current: LiveNetworkId }) {
     replaceBlockView,
     toggleCollapsed,
     scrollToBottom,
+    clear,
   }
 }
 

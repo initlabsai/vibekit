@@ -24,6 +24,7 @@ export function useComposer({
   setStatus,
   runAgent,
   buyCredits,
+  resetHistory,
 }: {
   pathname: string
   push: (href: string) => void
@@ -37,6 +38,8 @@ export function useComposer({
   runAgent: (sectionId: number, input: string) => Promise<void>
   /** Buys turns through the wallet (the pack size by default); resolves to the line to show and the settled txid. */
   buyCredits: (turns?: number) => Promise<{ line: string; txid?: string }>
+  /** Forgets the agent's conversation. */
+  resetHistory: () => void
 }) {
   const { createSection, appendNote } = feed
   const goHome = useCallback(() => {
@@ -93,6 +96,13 @@ export function useComposer({
     (raw: string) => {
       const outcome = routeComposerInput(raw)
       if (outcome.status === 'nav') return push(`/${outcome.screen}`)
+      if (outcome.status === 'clear') {
+        feed.clear()
+        resetHistory()
+        goHome()
+        setStatus('cleared.')
+        return
+      }
       goHome()
       const sectionId = createSection(raw.trim())
       switch (outcome.status) {
@@ -133,7 +143,7 @@ export function useComposer({
           return void runAgent(sectionId, outcome.text)
       }
     },
-    [appendNote, buyCredits, createSection, goHome, lookups, networkRef, payment, push, runAgent, switchNetwork],
+    [appendNote, buyCredits, createSection, feed, goHome, lookups, networkRef, payment, push, resetHistory, runAgent, setStatus, switchNetwork],
   )
 
   return { submit, openTarget, switchNetwork, goHome }

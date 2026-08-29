@@ -285,5 +285,10 @@ export function useAgentLane({
     [appendBlock, appendNote, commitStore, storeRef],
   )
 
-  return { status, runAgent, streamingSection }
+  /** Forgets the conversation; the next turn starts fresh. */
+  const resetHistory = useCallback(() => {
+    historyRef.current = []
+  }, [])
+
+  return { status, runAgent, streamingSection, resetHistory }
 }

@@ -4,8 +4,8 @@
  * The transaction-group flow graph, drawn: one lifeline per entity, one row
  * per transaction, exactly as the shared TransactionsGraph model emits them.
  * A node marks the origin, an arrowhead the target, the caption sits on the
- * line; (n) and (rk) tags name which identity acted. Narrow viewports get
- * the same rows as a list.
+ * line; (n) and (rk) tags name which identity acted. Narrow viewports scroll
+ * the lanes sideways.
  */
 import {
   formatBaseUnits,
@@ -22,7 +22,7 @@ import type { OpenTarget } from '../../result-card'
 import { COLORS, shorten } from '../../theme'
 import { TOP, layoutGraph, marker, type RowGeometry } from './graph-layout'
 
-/** Below this width the lanes are unreadable; rows become a list. */
+/** The lanes never draw narrower than this; a phone scrolls the card sideways instead. */
 const LANES_MIN_WIDTH = 600
 
 /** Color family for a row label, from the palette only. */
@@ -88,9 +88,7 @@ export function TransactionsGraphView({ graph }: { graph: TransactionsGraph }) {
   const openTarget = useContext(OpenContext)
   const n = graph.verticals.length
   if (n === 0) return null
-  if (width > 0 && width < LANES_MIN_WIDTH) return <GraphList graph={graph} />
-
-  const geometry = layoutGraph(graph, width, (row) => labelText(row.label, row.isRemainder))
+  const geometry = layoutGraph(graph, Math.max(width, LANES_MIN_WIDTH), (row) => labelText(row.label, row.isRemainder))
   const open = (target: OpenTarget) => openTarget?.(target)
 
   return (
@@ -180,27 +178,3 @@ function ArrowHead({ x, y, dir, color }: { x: number; y: number; dir: 'left' | '
   const s = dir === 'right' ? 1 : -1
   return <path d={`M ${x} ${y} l ${-8 * s} -4.5 v 9 z`} fill={color} />
 }
-
-function GraphList({ graph }: { graph: TransactionsGraph }) {
-  return (
-    <ol className="graph-list">
-      {graph.horizontals.map((row, index) => {
-        const rep = row.representation
-        const from = rep.kind === 'vector' ? (rep.direction === 'leftToRight' ? rep.fromVertical : rep.toVertical) : rep.vertical
-        const to = rep.kind === 'vector' ? (rep.direction === 'leftToRight' ? rep.toVertical : rep.fromVertical) : rep.vertical
-        const name = (i: number) => {
-          const v = graph.verticals[i]
-          return v ? heading(v).text : '?'
-        }
-        return (
-          <li key={index} style={{ paddingLeft: `${row.depth}rem` }}>
-            <span className="graph-label" style={{ color: labelColor(row.label.type) }}>{labelText(row.label, row.isRemainder)}</span>{' '}
-            {name(from)}
-            {rep.kind === 'selfLoop' ? ' ↺' : rep.kind === 'point' ? '' : ` → ${name(to)}`}
-          </li>
-        )
-      })}
-    </ol>
-  )
-}
-

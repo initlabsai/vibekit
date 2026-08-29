@@ -34,6 +34,7 @@ describe('web composer routing', () => {
     expect(routeComposerInput('/accounts')).toEqual({ status: 'account-list' })
     expect(routeComposerInput('/status')).toEqual({ status: 'network-status' })
     expect(routeComposerInput('/buy')).toEqual({ status: 'buy' })
+    expect(routeComposerInput('/clear')).toEqual({ status: 'clear' })
     expect(routeComposerInput('/buy 50')).toEqual({ status: 'buy', turns: 50 })
     expect(routeComposerInput('/network')).toEqual({ status: 'network' })
     expect(routeComposerInput('/NETWORK TestNet')).toEqual({ status: 'network', network: 'testnet' })
