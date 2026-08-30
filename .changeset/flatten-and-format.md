@@ -1,6 +1,5 @@
 ---
 '@initlabs/vibekit': patch
-'@initlabs/vibekit-explorer': patch
 '@initlabs/vibekit-cli': patch
 '@initlabs/vibekit-tui': patch
 ---

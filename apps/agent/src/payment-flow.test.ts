@@ -201,7 +201,7 @@ describe('web payment wiring', () => {
       switch (body.action) {
         case 'draft':
           return Response.json({ record: draft })
-        case 'simulate-draft':
+        case 'simulate':
           return Response.json({ record: await fixture.simulateDraft(draft) })
         case 'record-signed': {
           // What the server does: refuse unless the bytes wrap the drafted group.
@@ -212,10 +212,10 @@ describe('web payment wiring', () => {
           }
           return Response.json({ record: await fixture.signDraft!(draft) })
         }
-        case 'submit-signed':
+        case 'submit':
           expect(body.draftRecord).toBeDefined()
           return Response.json({ txid: SIGNED_FIXTURE_TXID, pending: true })
-        case 'await-confirmation':
+        case 'confirmation':
           polls += 1
           return polls < 2
             ? Response.json({ pending: true })
@@ -223,7 +223,7 @@ describe('web payment wiring', () => {
         default:
           return Response.json({ error: `unexpected ${body.action}` }, { status: 400 })
       }
-    }) as typeof fetch
+    }) as unknown as typeof fetch
     try {
       const host = createRemoteExplorerHost({
         network: 'localnet',
@@ -236,14 +236,7 @@ describe('web payment wiring', () => {
       const done = await submitAction({ host, store: approved.store, flow: approved.flow, newId })
       expect(done.ok).toBe(true)
       expect(done.flow?.stage).toBe('confirmed')
-      expect(actions).toEqual([
-        'draft',
-        'simulate-draft',
-        'record-signed',
-        'submit-signed',
-        'await-confirmation',
-        'await-confirmation',
-      ])
+      expect(actions).toEqual(['draft', 'simulate', 'record-signed', 'submit', 'confirmation', 'confirmation'])
 
       // A wallet on another network never signs.
       const mismatched = createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'mainnet', signer: transactionSigner, record: (d, signed) => recordSigned('localnet', d, signed) })

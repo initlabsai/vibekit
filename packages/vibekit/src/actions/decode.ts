@@ -5,9 +5,10 @@
  */
 import algosdk from 'algosdk'
 
-import { base64ToBytes } from '../core/codec.js'
+import { base64ToBytes, bytesToBase64 } from '../core/codec.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
-import { buildDraftRecord, decodedGroupFactsSchema, type DecodedGroupFacts } from './host.js'
+import { buildDraftRecord, buildSignedGroupRecord, decodedGroupFactsSchema, type DecodedGroupFacts } from './host.js'
+import { writeDraftDataSchema } from './reducer.js'
 import type { StructuredResult } from './records.js'
 
 /**
@@ -69,5 +70,47 @@ export function draftRecordFromComposeWire(
   }
   const decoded = decodeUnsignedGroup(unsignedGroup, presigned)
   return buildDraftRecord(identity, wire, decoded, toolName)
+}
+
+
+/**
+ * Wraps signer output as a signed-group record after verifying that every
+ * signed transaction embeds exactly the draft's bytes — a signature over
+ * anything but the approved group is refused, not recorded.
+ */
+export function signedGroupRecordFor(
+  identity: { resultId: string; toolCallId: string; network: string },
+  draftRecord: StructuredResult,
+  signedTransactions: readonly Uint8Array[],
+): StructuredResult {
+  if (draftRecord.state !== 'success') {
+    throw new Error('Cannot sign a failed draft record')
+  }
+  const draft = writeDraftDataSchema.parse(draftRecord.data)
+  if (signedTransactions.length !== draft.unsignedGroup.transactions.length) {
+    throw new Error('Signed group size does not match the drafted group')
+  }
+  const txIds: string[] = []
+  for (const [index, signed] of signedTransactions.entries()) {
+    const presigned = draft.presigned?.[index]
+    if (presigned !== undefined && presigned !== null) {
+      // Another party's leg: the only acceptable bytes are the ones the draft carried.
+      if (bytesToBase64(signed) !== presigned) {
+        throw new Error(`Transaction ${index} is not the pre-signed leg the draft carried`)
+      }
+    } else {
+      const decoded = algosdk.decodeSignedTransaction(signed)
+      const embedded = bytesToBase64(algosdk.encodeUnsignedTransaction(decoded.txn))
+      if (embedded !== draft.unsignedGroup.transactions[index]) {
+        throw new Error(`Signed transaction ${index} does not wrap the drafted bytes`)
+      }
+    }
+    txIds.push(algosdk.decodeSignedTransaction(signed).txn.txID())
+  }
+  return buildSignedGroupRecord(identity, {
+    transactions: signedTransactions.map((signed) => bytesToBase64(signed)),
+    txIds,
+    signer: draft.sender,
+  })
 }
 

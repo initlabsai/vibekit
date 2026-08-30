@@ -1,6 +1,5 @@
 ---
 '@initlabs/vibekit': major
-'@initlabs/vibekit-explorer': major
 '@initlabs/vibekit-cli': major
 '@initlabs/vibekit-tui': major
 ---

@@ -23,16 +23,18 @@ import {
 } from '../tools/index.js'
 
 import { bridgeToolResult } from '../views/bridge.js'
+import { createReadHost } from '../views/read-host.js'
 import type { ExplorerReadHost, LiveNetworkId } from '../views/host.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from '../actions/algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
   buildConfirmationRecord,
-  buildSignedGroupRecord,
   buildSimulationRecord,
   decodeUnsignedGroup,
   draftRecordFromComposeWire,
+  signedGroupRecordFor,
 } from '../actions/index.js'
+export { signedGroupRecordFor }
 import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/index.js'
 import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '../actions/index.js'
 import type { JsonValue, StructuredResult } from '../actions/index.js'
@@ -77,47 +79,6 @@ export async function simulateUnsignedGroup(
     simulatedRound: Number(simulateResponse.lastRound),
     txids,
   }
-}
-
-/**
- * Wraps signer output as a signed-group record after verifying that every
- * signed transaction embeds exactly the draft's bytes — a signature over
- * anything but the approved group is refused, not recorded.
- */
-export function signedGroupRecordFor(
-  identity: { resultId: string; toolCallId: string; network: string },
-  draftRecord: StructuredResult,
-  signedTransactions: readonly Uint8Array[],
-): StructuredResult {
-  if (draftRecord.state !== 'success') {
-    throw new Error('Cannot sign a failed draft record')
-  }
-  const draft = writeDraftDataSchema.parse(draftRecord.data)
-  if (signedTransactions.length !== draft.unsignedGroup.transactions.length) {
-    throw new Error('Signed group size does not match the drafted group')
-  }
-  const txIds: string[] = []
-  for (const [index, signed] of signedTransactions.entries()) {
-    const presigned = draft.presigned?.[index]
-    if (presigned !== undefined && presigned !== null) {
-      // Another party's leg: the only acceptable bytes are the ones the draft carried.
-      if (bytesToBase64(signed) !== presigned) {
-        throw new Error(`Transaction ${index} is not the pre-signed leg the draft carried`)
-      }
-    } else {
-      const decoded = algosdk.decodeSignedTransaction(signed)
-      const embedded = bytesToBase64(algosdk.encodeUnsignedTransaction(decoded.txn))
-      if (embedded !== draft.unsignedGroup.transactions[index]) {
-        throw new Error(`Signed transaction ${index} does not wrap the drafted bytes`)
-      }
-    }
-    txIds.push(algosdk.decodeSignedTransaction(signed).txn.txID())
-  }
-  return buildSignedGroupRecord(identity, {
-    transactions: signedTransactions.map((signed) => bytesToBase64(signed)),
-    txIds,
-    signer: draft.sender,
-  })
 }
 
 /**
@@ -292,35 +253,7 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
         { transactionId: txid, confirmedRound: Number(confirmation.confirmedRound) },
       )
     },
-    lookupAccount: (address) => callTool('get_account_portfolio', { address }),
-    lookupAccounts: (addresses) => callTool('batch_lookup_accounts', { addresses: [...addresses] }),
-    lookupTransaction: (txid) => callTool('lookup_transaction', { txid }),
-    lookupTransactionGroup: (groupId) => callTool('lookup_transaction_group', { groupId }),
-    lookupAsset: (assetId) => callTool('lookup_asset', { assetId }),
-    lookupApplication: (applicationId) => callTool('lookup_application', { applicationId }),
-    lookupBlock: (round) => callTool('lookup_block', { round }),
-    lookupAccountAssets: (address) => callTool('get_account_assets', { address }),
-    lookupAccountAppStates: (address) => callTool('get_account_app_local_states', { address }),
-    searchTransactions({ address, assetId, applicationId, round, txType, nextToken }) {
-      const page = {
-        limit: 20,
-        ...(nextToken ? { nextToken } : {}),
-        ...(txType ? { txType } : {}),
-      }
-      return address
-        ? callTool('search_account_transactions', {
-            ...page,
-            address,
-            ...(assetId === undefined ? {} : { assetId }),
-          })
-        : callTool('search_transactions', {
-            ...page,
-            ...(assetId === undefined ? {} : { assetId }),
-            ...(applicationId === undefined ? {} : { applicationId }),
-            ...(round === undefined ? {} : { minRound: round, maxRound: round }),
-          })
-    },
-    callTool,
+    ...createReadHost(callTool),
     async statusRound() {
       const status = await context.algod.status().do()
       return { lastRound: Number(status.lastRound) }
@@ -361,9 +294,7 @@ export {
   type BlockTailTick,
   type BlockTailWatch,
 } from './block-tail.js'
-export { nfdRecordSchema, resolveNfdName, type NfdRecord } from './nfd.js'
 
-export { createEnrichmentHost, type EnrichmentHost } from './enrich.js'
 export {
   activeSenderLine,
   createExplorerAgent,

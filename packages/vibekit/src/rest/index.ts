@@ -40,7 +40,7 @@ export function createQueryHandler(options: DeploymentOptions): QueryHandler {
         }
       }
       try {
-        return json(200, { tool: toolName, result: jsonSafe(await executeToolCall(deployment, tool, args)) })
+        return json(200, { tool: toolName, ...(tool.view ? { view: tool.view } : {}), result: jsonSafe(await executeToolCall(deployment, tool, args)) })
       } catch (error) {
         if (error instanceof ToolError) return json(error.code === 'INVALID_ARGS' || error.code === 'UNKNOWN_NETWORK' ? 400 : 502, { error: error.message, code: error.code })
         return json(500, { error: error instanceof Error ? error.message : String(error) })

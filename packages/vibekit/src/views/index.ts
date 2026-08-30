@@ -185,6 +185,7 @@ export {
   type DraftSigner,
 } from '../actions/index.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
+export { createReadHost, recordForToolCall } from './read-host.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'
 export { FIXTURE_ADDRESS_BOOK } from './sample/account.js'
