@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render a portrait photograph as ASCII. Prints HTML for a <pre>.
 
-    lore-ascii.py [cols] [image]        default: 76, lore-portrait.png
+    lore-ascii.py [cols] [image]        default: 76, ../assets/lore-portrait.png
 
 Run the photo through lore-portrait-prep.py first — this stage does no
 correction, it only samples. Tone comes from the character ramp, not from
@@ -18,7 +18,7 @@ RAMP = " .,:;+=xX$&@"             # darkest first
 TINTS = ["#5f4c2f", "#7c6340", "#c4a06a", "#e2c795", "#ffb454"]
 
 cols = int(sys.argv[1]) if len(sys.argv) > 1 else 76
-src = sys.argv[2] if len(sys.argv) > 2 else pathlib.Path(__file__).parent / "lore-portrait.png"
+src = sys.argv[2] if len(sys.argv) > 2 else pathlib.Path(__file__).parent.parent / "assets" / "lore-portrait.png"
 
 img = ImageOps.autocontrast(Image.open(src).convert("L"), cutoff=0)
 rows = max(1, round(cols * ASPECT * img.height / img.width))

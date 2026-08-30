@@ -1,3 +1,6 @@
+# english -> the agent wakes up
+# Run vhs from the repo root: `vhs skills/marketing-content/scripts/segB.tape`
+# (vhs rejects absolute Output paths, so it writes beside your cwd.)
 Output segB.mp4
 Set Width 1400
 Set Height 1150
@@ -5,9 +8,10 @@ Set FontSize 20
 Set Padding 12
 Set WaitTimeout 90s
 Set Framerate 30
+Set Theme { "background": "#0a0b0e", "foreground": "#e9e1d4", "cursor": "#ffb454" }
 
 Hide
-Type "cd /home/gabe/Code/vibekit && bun run apps/tui/src/index.tsx"
+Type "bun run apps/tui/src/index.tsx"
 Enter
 Wait+Screen /paste an id/
 Type "network mainnet"

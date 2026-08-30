@@ -7,9 +7,8 @@
 # and ducks to 0.85. START skips a track's quiet intro -- measure it, don't
 # guess:
 #   ffmpeg -hide_banner -ss 30 -t 6 -i t.mp3 -af volumedetect -f null /dev/null
-# (needs default log level; -v error hides the summary). The four site tracks:
-# retro is hot from 0, neon-drive settles at 30s, neon-horizon needs 15s,
-# 80s-retro dips around 75s so do not land an ending there.
+# (needs default log level; -v error hides the summary). Per-track offsets are
+# in references/brand.md.
 set -eu
 IN="$1"; TRACK="$2"; OUT="$3"; START="${4:-0}"; FADE="${5:-3}"
 DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$IN")

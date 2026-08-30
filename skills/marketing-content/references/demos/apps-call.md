@@ -1,4 +1,9 @@
-# demo: apps page → method line → signed call
+# ARCHIVED SHOOT — demo: apps page → method line → signed call
+
+> Recorded once, kept as a worked example of beat breakdown. The app IDs,
+> paths (`~/vk`), and artifacts are from that day and will not exist now —
+> read this for the *shape* (hide setup → reveal the artifact → type slowly →
+> approval modal → confirmation), not as a script to re-run.
 
 The beat: a deployed ARC-56 contract shows up on its own, you call a method
 by typing one line, and you sign exactly the bytes you see. ~25s of tape.

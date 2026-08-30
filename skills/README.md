@@ -30,9 +30,11 @@ The current set has four product skills and one maintenance skill:
 One internal skill (`internal: true` in frontmatter — discoverable by local
 agents through the symlinks, skipped by `bundle-skills`, never shipped):
 
-- `marketing-content` — promo videos of the TUI (VHS + ffmpeg pipeline),
-  tweet drafts in the vibekit voice, and the brand palette/fonts.
+- `marketing-content` — every public-facing asset: social copy in the vibekit
+  and qt314 voices, promo videos of the TUI (VHS + ffmpeg), title cards, OG
+  and quote images, lore dossier cards, qt314 animations, and the brand
+  palette, type, and card grammar.
 
 Skills follow the [Agent Skills](https://agentskills.io) format: one directory
 per skill with a `SKILL.md` (frontmatter: `name`, `description`) plus optional
-`references/`.
+`references/`, `scripts/`, and `assets/`.

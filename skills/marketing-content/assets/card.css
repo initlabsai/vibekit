@@ -1,0 +1,39 @@
+/* Shared shell for every rendered card (title, lore, quote/OG).
+ * Values mirror apps/tui/src/theme.ts — the palette's source of truth. If the
+ * TUI theme moves, move these; a card that drifts off-palette is the tell.
+ * Scripts cat this into their <style>, then override .card padding/justify. */
+:root {
+  --ground: #0a0b0e;    /* terminal background */
+  --surface: #111318;   /* raised card */
+  --brass: #c4a06a;     /* structure: rules, kickers, labels */
+  --hero: #ffb454;      /* the payoff line — one per card */
+  --teal: #6fd3d3;      /* alive / touchable / signal */
+  --text: #e9e1d4;      /* warm neutral */
+  --muted: #8e8476;
+  --dim: #605c56;
+  --danger: #e07c7c;    /* danger only, never decoration */
+}
+* { box-sizing: border-box; margin: 0 }
+body {
+  background: var(--ground);
+  color: var(--text);
+  overflow: hidden;
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+}
+.card {
+  border-top: 8px solid var(--brass);
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+/* Scanlines: 1px lit, 2px gap. Survives x264 over type and vanishes on black,
+ * which is correct — it should read as phosphor, not as a texture overlay. */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px);
+}
+.kicker { color: var(--brass); font-weight: 700; letter-spacing: .16em }

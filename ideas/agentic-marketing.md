@@ -66,7 +66,7 @@ noise; these four have one job each and a source of truth to check against:
 | --- | --- | --- |
 | claims | does any sentence make a checkable assertion about VibeKit or Algorand? is it true? | the repo |
 | canon | does this contradict established lore, or reuse a spent beat? | `canon.md` |
-| voice | lowercase, one idea, no hashtags, no begging, at most one emoji | `references/tweets.md` |
+| voice | lowercase, one idea, no hashtags, no begging, at most one emoji | `skills/marketing-content/references/voice.md` |
 | frame | for video: read the prose in the final frame. promo-safe, or re-roll? | `SKILL.md` lesson 6 |
 
 The claims reviewer is the one that matters. It is the enforcement mechanism for

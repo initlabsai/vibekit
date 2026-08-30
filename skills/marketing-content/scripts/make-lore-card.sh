@@ -13,7 +13,7 @@
 # QUOTE splits on `|`; the last line renders in hero amber, so put the payoff
 # there. Optional: KICKER, DATE, CAP, FOOT_L, FOOT_R, W/H.
 #
-# The face is lore-portrait.png (a photograph, prepared by lore-portrait-prep.py)
+# The face is assets/lore-portrait.png (a photograph, prepared by lore-portrait-prep.py)
 # rendered to ASCII by lore-ascii.py. Everyone in the Directorate sits for the
 # same portrait, so one face serves the series and the name carries the
 # character; COLS raises or lowers the grain.
@@ -24,6 +24,7 @@ FOOT_L="${FOOT_L:-END OF TRANSMISSION}"; FOOT_R="${FOOT_R:-MAKE IT UBIQUITOUS}"
 CAP="${CAP:-ARCHIVE PORTRAIT // 4,096 BITS}"; W="${W:-1600}"; H="${H:-900}"
 DIR=$(cd "$(dirname "$0")" && pwd)
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+CSS=$(cat "$DIR/../assets/card.css")
 
 MASK=$(python3 "$DIR/lore-ascii.py" "${COLS:-76}")
 
@@ -41,25 +42,21 @@ done
 
 cat > "$TMP/c.html" <<HTML
 <!doctype html><html><head><meta charset="utf-8"><style>
-*{box-sizing:border-box;margin:0}
-body{background:#0a0b0e;color:#e9e1d4;width:${W}px;height:${H}px;overflow:hidden;
- font-family:"JetBrainsMono Nerd Font","JetBrains Mono",monospace}
-.card{border-top:8px solid #c4a06a;height:100%;padding:52px 76px 48px;position:relative;
- display:flex;flex-direction:column;justify-content:space-between}
-.card::after{content:"";position:absolute;inset:0;pointer-events:none;
- background:repeating-linear-gradient(180deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px)}
-.bar{display:flex;justify-content:space-between;color:#c4a06a;font-size:21px;font-weight:700;letter-spacing:.16em}
-.bar .dim{color:#605c56}
+$CSS
+body{width:${W}px;height:${H}px}
+.card{padding:52px 76px 48px;justify-content:space-between}
+.bar{display:flex;justify-content:space-between;color:var(--brass);font-size:21px;font-weight:700;letter-spacing:.16em}
+.bar .dim{color:var(--dim)}
 .body{display:flex;gap:70px;align-items:center;flex:1;padding:26px 0}
-.frame{border:1px solid #2a251d;padding:16px 20px;background:#0d0f13}
+.frame{border:1px solid var(--frame,#2a251d);padding:16px 20px;background:#0d0f13}
 .frame pre{font-size:10px;line-height:10px;white-space:pre}
 .cap{color:#4f4b45;font-size:14px;letter-spacing:.14em;margin-top:14px;text-align:center}
 blockquote{font-size:42px;line-height:1.36;letter-spacing:-.035em;text-indent:-.55em}
-blockquote b{color:#ffb454;font-weight:inherit}
-.by{margin-top:44px;border-left:2px solid #c4a06a;padding-left:22px}
+blockquote b{color:var(--hero);font-weight:inherit}
+.by{margin-top:44px;border-left:2px solid var(--brass);padding-left:22px}
 .by h1{font-size:29px;font-weight:500;letter-spacing:-.02em}
-.by .role{color:#c4a06a;font-size:17px;font-weight:700;letter-spacing:.16em;margin-top:9px}
-.by .sub{color:#8e8476;font-size:19px;margin-top:7px}
+.by .role{color:var(--brass);font-size:17px;font-weight:700;letter-spacing:.16em;margin-top:9px}
+.by .sub{color:var(--muted);font-size:19px;margin-top:7px}
 .strip{margin-top:30px;color:#5c574f;font-size:15px;letter-spacing:.04em}
 .strip b{color:#8a7048;font-weight:700;letter-spacing:.14em}
 .strip em{color:#3a352c;font-style:normal;padding:0 .55em}
