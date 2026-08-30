@@ -16,6 +16,7 @@
     "agent": "turbo run build --filter=@initlabs/vibekit-agent^... && bun run --cwd apps/agent dev",
     "website": "bun run --cwd apps/website dev",
     "build:website": "turbo run build --filter=@initlabs/vibekit-website",
+    "docs:reference": "bun packages/vibekit/scripts/generate-reference.ts",
     "mcp": "turbo run build --filter=@initlabs/vibekit... && bun packages/vibekit/examples/stdio.ts",
     "verify:packed": "bun verify/verify-packed.ts",
     "format": "prettier --write \"**/*.{ts,tsx,json}\"",

@@ -3,8 +3,25 @@
 ▀▄▀ █ █▄█ ██▄ █ █ █  █
 ```
 
-VibeKit gives your AI agent the skills and tools to build on Algorand, and
-gives you a terminal Explorer to watch it work.
+VibeKit is a toolkit for building Algorand agents: typed queries and actions,
+an agent loop with an HTTP handler, an x402 paywall, REST and MCP adapters, a
+keystore signer, and copy-paste React components — plus a CLI that sets up
+your coding agent and a terminal Explorer to watch it work. The
+[web agent](https://agent.getvibekit.ai) is built from these pieces and
+nothing else.
+
+```
+@initlabs/vibekit            queries, actions, plugins, network, defineQuery, defineAction
+@initlabs/vibekit/actions    the draft → approve → sign → confirm machine, wallet signing
+@initlabs/vibekit/agent      createAgent, createAgentHandler
+@initlabs/vibekit/pay        createPaywall (x402 → credit → a turn per call)
+@initlabs/vibekit/rest       createQueryHandler (POST /query/<tool>)
+@initlabs/vibekit/mcp        stdio and streamable HTTP
+vibekit add <component>      companion, action, approval, tool-result, transaction, asset, account
+```
+
+Docs: [getvibekit.ai/docs](https://getvibekit.ai/docs) — start with
+[build an agent](https://getvibekit.ai/docs/tutorials/build-an-agent/).
 
 Works with **Claude Code**, **Codex**, **Cursor**, **Copilot**, **Grok**,
 **opencode**, and **pi**.

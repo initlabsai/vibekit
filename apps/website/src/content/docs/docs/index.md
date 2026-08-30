@@ -32,6 +32,15 @@ Pick a hatch:
 Got your own capability? [Make it a plugin](./guides/create-a-vibekit-plugin/).
 Need a different tool mix? [Compose a custom MCP](./guides/create-a-custom-mcp/).
 
+## the toolkit
+
+The web agent is not the product; it is what the pieces build. Every one of
+them is yours: [build an agent](./tutorials/build-an-agent/) with its own
+endpoint, [charge for it](./guides/rest-and-x402/), [pick the
+model](./guides/swap-the-model/) and [the signer](./guides/swap-the-signer/),
+and [render what it says](./guides/components/). The full surface is the
+[tools reference](./reference/tools/), generated from the code.
+
 ## what's in the box
 
 The CLI can create a project, configure the coding agent you already use, and

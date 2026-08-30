@@ -9,6 +9,18 @@ VibeKit exposes one `ToolDefinition` contract through every host. Extend that
 contract, compose tools and plugins into a deployment, then select a host. Do
 not create a parallel handler or execution path.
 
+## The toolkit surface
+
+Beyond tools and plugins, `@initlabs/vibekit` ships the pieces the web agent is
+built from — reach for these before writing your own: `@initlabs/vibekit/agent`
+(`createAgent`, `createAgentHandler`: a turn over HTTP as NDJSON), `/actions`
+(the draft → approve → sign → confirm machine, `createWalletSignDraft`), `/pay`
+(`createPaywall`: x402 → credit → `charge(request)`), `/rest`
+(`createQueryHandler`: `POST /query/<tool>`), and `vibekit add <component>`
+(copy-paste React whose props are a tool's output type). Runnable examples:
+`packages/vibekit/examples/{agent-http,rest,signer,stdio,http}.ts` and
+`packages/explorer/examples/action.ts`.
+
 ## Current distribution boundary
 
 Everything ships as one package, `@initlabs/vibekit`, with subpath exports
