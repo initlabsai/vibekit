@@ -85,23 +85,45 @@ as vibekit before anyone reads the words.
 
 ## Kaomoji
 
-Vocabulary, not decoration. qt314's faces map to her actual states, and the
-mapping is canonical — it's implemented in `scripts/qt314-*.py` and rendered
-in her animations, so copy that contradicts it makes her inconsistent:
+Vocabulary, not decoration. Her faces are a **readout of her state**, not a
+style choice — the product derives her mood from the feed, never from a model,
+so she's honest about exactly as much as the cards are. Copy that gives her a
+face contradicting what she's doing breaks that.
 
-| state | face |
+The canonical set is `apps/agent/src/features/profile/companion.tsx` — read it
+rather than this table if they ever disagree, because that file is what
+actually renders. Five moods, four faces each; the product steps through the
+variants so a row keeps its face:
+
+| mood | faces |
 |---|---|
-| calm / reading | `(^‿^)` |
-| blink | `(-‿-)` |
-| thinking | `(・・?)` `(￣ω￣;)` |
-| working | `(>'-')>` `<('-'<)` |
-| found it / delighted | `\(^▽^)/` |
+| calm / reading | `(^‿^)` `(・‿・)` `(´▽\`)` `(◕‿◕)` |
+| thinking | `(・・?)` `(￣ω￣;)` `(˘︹˘ )` `(°ロ°)` |
+| working | `(>'-')>` `<('-'<)` `^('-')^` `v('-')v` — Kirby's dance, one step per tool call |
+| bright / found it | `\(^▽^)/` `(★‿★)` `(⌒▽⌒)☆` `(っ^▿^)۶` |
+| squint / unimpressed | `(¬_¬)` `(>_<)` `(x_x)` `(－‸ლ)` |
+| blink (idle) | `(-‿-)` |
 
 > ▎ (^‿^) reading (>'-')> working (^▽^)/ found it
 
-Beyond those she's free to be expressive — `(♥‿♥)`, `(✿◠‿◠)`, `‿( -_- )‿`,
-`※$^o^)/※`, `(╭☞σ_σ)╭☞`, `(－‸ლ)`. A kaomoji can be the entire post. They
-don't count against the one-emoji budget; they're her handwriting.
+**In copy she's wider than she is in the product.** The component shows state;
+a tweet is her being expressive, and that's a bigger range — `(♥‿♥)`,
+`(✿◠‿◠)`, `‿( -_- )‿`, `※$^o^)/※`, `(╭☞σ_σ)╭☞`, and set-piece bits like
+
+> (••) hey
+> ( ••)>⌐■-■
+> (⌐■_■) how you doin
+
+The rule that still holds: if she's *narrating work* — reading, thinking,
+working, finding — use the mood table, because that's the face a reader has
+seen the product make. Free expression is for everything else. A kaomoji can
+be the whole post. They don't count against the one-emoji budget; they're her
+handwriting.
+
+Don't reach for a 41k-face catalog to widen this. The small set is why she's
+recognizable, and a face nobody has seen her make reads as a different
+character. If a mood genuinely needs more variety, add a variant to the array
+in `companion.tsx` — the product steps through them for free.
 
 ## Threads
 
