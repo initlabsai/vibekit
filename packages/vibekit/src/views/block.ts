@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { uint64JsonSchema } from './format.js'
 import { algorandAddressCandidateSchema } from './input.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { record, viewModelFor } from './derive.js'
+import { createRecord, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
@@ -56,7 +56,7 @@ export function buildBlockDetailRecord(
   toolName = 'lookup_block',
 ): StructuredResult {
   const block = blockDetailDataSchema.parse(wire)
-  return record(identity, toolName, {
+  return createRecord(identity, toolName, {
     ...block,
     ...(block.round > 0 ? { previousRound: block.round - 1 } : {}),
     nextRound: block.round + 1,
@@ -69,7 +69,7 @@ export function buildBlockListRecord(
   wire: unknown,
   toolName = 'search_block_headers',
 ): StructuredResult {
-  return record(identity, toolName, blockListDataSchema.parse(wire))
+  return createRecord(identity, toolName, blockListDataSchema.parse(wire))
 }
 
 /** Derives block presentation from one trusted result reference. */
@@ -100,7 +100,7 @@ export function formatBlockTime(timestamp: number): string {
 }
 
 /** Lora-style UTC timestamp for explorer cards. */
-export function formatExplorerTime(timestamp: number): string {
+export function formatTime(timestamp: number): string {
   return new Date(timestamp * 1000).toUTCString().replace(/GMT$/, 'UTC')
 }
 

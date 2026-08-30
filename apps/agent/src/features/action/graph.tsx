@@ -7,14 +7,7 @@
  * line; (n) and (rk) tags name which identity acted. Narrow viewports scroll
  * the lanes sideways.
  */
-import {
-  formatBaseUnits,
-  formatMicroAlgos,
-  type GraphHorizontal,
-  type GraphLabel,
-  type GraphVertical,
-  type TransactionsGraph,
-} from '@initlabs/vibekit/views'
+import { formatBaseUnits, formatMicroAlgos, type GraphHorizontal, type GraphLabel, type GraphVertical, type TransactionsGraph } from '@initlabs/vibekit/views'
 import { useContext, useEffect, useRef, useState } from 'react'
 
 import { OpenContext } from '../../primitives'

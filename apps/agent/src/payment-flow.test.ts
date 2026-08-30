@@ -1,22 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  submitAction,
-  createSampleHost,
-  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
-  PAYMENT_FIXTURE_TRANSACTION_ID as SIGNED_FIXTURE_TXID,
-  createFixtureResultStore,
-  createActionViewModel,
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performActionStep,
-  startAction,
-  createWalletSignDraft,
-  unsignedTransactionsForDraft,
-  type ActionHost,
-} from '@initlabs/vibekit/views'
+import { submitAction, performActionStep, startAction, createWalletSignDraft, unsignedTransactionsForDraft, type ActionHost } from '@initlabs/vibekit/actions'
+import { createSampleHost, PAYMENT_FIXTURE_SIGNED_TRANSACTION, PAYMENT_FIXTURE_TRANSACTION_ID as SIGNED_FIXTURE_TXID, createFixtureResultStore, FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID, PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit/views/sample'
+import { createActionViewModel } from '@initlabs/vibekit/views'
 
 import { resolvePaymentParties, routeComposerInput } from './commands.js'
 import { createRemoteExplorerHost } from './remote-host.js'

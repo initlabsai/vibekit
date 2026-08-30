@@ -1,15 +1,4 @@
-import {
-  buildTransactionsGraph,
-  formatBaseUnits,
-  formatMicroAlgos,
-  type GraphHorizontal,
-  type GraphLabel,
-  type GraphMarkerTag,
-  type GraphTransaction,
-  type GraphVertical,
-  type TransactionsGraph,
-  type TransactionRowData,
-} from '@initlabs/vibekit/views'
+import { buildTransactionsGraph, formatBaseUnits, formatMicroAlgos, type GraphHorizontal, type GraphLabel, type GraphMarkerTag, type GraphTransaction, type GraphVertical, type TransactionsGraph, type TransactionRowData } from '@initlabs/vibekit/views'
 import { getApplicationAddress } from 'algosdk'
 
 import { COLORS, shorten } from '../../theme.js'

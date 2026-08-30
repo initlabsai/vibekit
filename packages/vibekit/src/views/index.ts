@@ -4,64 +4,13 @@
  * the recorded sample data. Browser-safe. The deployment-backed host that
  * produces live records is `@initlabs/vibekit/live`.
  */
-export { RECORD_PROTOCOL_VERSION, recordProtocolVersionSchema } from '../actions/index.js'
-export type { RecordProtocolVersion } from '../actions/index.js'
-export {
-  addResult,
-  createResultStore,
-  failedResultSchema,
-  findResultRecord,
-  jsonValueSchema,
-  resolveResultReference,
-  resultPathSchema,
-  resultPathSegmentSchema,
-  resultReferenceSchema,
-  sameResultReference,
-  structuredResultSchema,
-  successfulResultSchema,
-} from '../actions/index.js'
-export type {
-  FailedResult,
-  JsonValue,
-  ResultIdentity,
-  ResultReference,
-  ResultResolution,
-  ResultResolutionError,
-  ResultStore,
-  StructuredResult,
-  SuccessfulResult,
-  ViewModelError,
-} from '../actions/index.js'
-export {
-  TRUSTED_VIEW_IDS,
-  approvalDecisionSchema,
-  approvalRequestSchema,
-  createApprovalDecisionEvent,
-  createApprovalRequestEvent,
-  createStageEvent,
-  viewSpecSchema,
-  confirmStageEventSchema,
-  draftStageEventSchema,
-  inspectStageEventSchema,
-  signStageEventSchema,
-  simulateStageEventSchema,
-  stageEventSchema,
-} from '../actions/index.js'
-export type {
-  ApprovalDecision,
-  ApprovalRequest,
-  OpenView,
-  TrustedViewId,
-  ViewSpec,
-  StageEvent,
-} from '../actions/index.js'
 export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
 export {
-  classifyExplorerInput,
+  classifyInput,
   parseEntityComposerCommand,
-  routeExplorerComposerInput,
+  routeInput,
 } from './input.js'
-export type { ExplorerComposerRoute } from './input.js'
+export type { InputRoute } from './input.js'
 export { loadNextPage, mergePages, nextPageArgs } from './pages.js'
 export {
   createAccountListViewModel,
@@ -105,7 +54,7 @@ export {
   createBlockDetailViewModel,
   createBlockListViewModel,
   formatBlockTxnType,
-  formatExplorerTime,
+  formatTime,
   formatOnCompletion,
 } from './block.js'
 export type { BlockDetailViewModel } from './block.js'
@@ -169,50 +118,17 @@ export type {
 } from './transaction-graph.js'
 export { createActionViewModel } from './action.js'
 export type { ActionViewModel } from './action.js'
-export { draftDataSchema } from '../actions/index.js'
-export type { ActionState } from '../actions/index.js'
-export {
-  submitAction,
-  performActionStep,
-  startAction,
-  startActionFromDraft,
-} from '../actions/index.js'
-export type { ActionDraft, ActionHost } from '../actions/index.js'
-export {
-  createWalletSignDraft,
-  signGroupForDraft,
-  unsignedTransactionsForDraft,
-  type DraftSigner,
-} from '../actions/index.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
 export { createReadHost, recordForToolCall } from './read-host.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'
-export { FIXTURE_ADDRESS_BOOK } from './sample/account.js'
-export {
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  PAYMENT_FIXTURE_SIGNED_TRANSACTION,
-  PAYMENT_FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  createSampleHost,
-  parsePaymentComposerCommand,
-} from './sample/payment.js'
-export {
-  FIXTURE_RECEIVER,
-  FIXTURE_RESULT_ID,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  createFixtureResultStore,
-  lookupFixture,
-} from './sample/transaction.js'
-export type { FixtureLookupOutcome } from './sample/transaction.js'
 export type {
   AccountLookupHost,
   ApplicationLookupHost,
   AssetLookupHost,
   BlockLookupHost,
   EntityLookupHost,
-  ExplorerReadHost,
+  ReadHost,
   LiveNetworkId,
   ToolCallHost,
   TransactionLookupHost,

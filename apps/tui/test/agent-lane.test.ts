@@ -3,18 +3,9 @@ import { MockLanguageModelV4, simulateReadableStream } from 'ai/test'
 import { z } from 'zod'
 
 import { defineTool } from '@initlabs/vibekit'
-import {
-  createSampleHost,
-  createFixtureResultStore,
-  createApplicationMethodsViewModel,
-  bridgeToolResult,
-  unsignedGroupFromToolResult,
-  FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  startActionFromDraft,
-  type ToolResultEventLike,
-} from '@initlabs/vibekit/views'
+import { createSampleHost, createFixtureResultStore, FIXTURE_TRANSACTION_ID, PAYMENT_FIXTURE_TRANSACTION_ID, PAYMENT_FIXTURE_UNSIGNED_TRANSACTION } from '@initlabs/vibekit/views/sample'
+import { createApplicationMethodsViewModel, bridgeToolResult, unsignedGroupFromToolResult, type ToolResultEventLike } from '@initlabs/vibekit/views'
+import { startActionFromDraft } from '@initlabs/vibekit/actions'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
@@ -22,11 +13,8 @@ import { viewFor } from '../src/lookup.js'
 import { labelProgramMethods, specsByProgramHash } from '../src/features/apps/abi-catalog.js'
 import { normalizeAppSpec } from '@initlabs/vibekit/tools'
 import { readFileSync } from 'node:fs'
-import {
-  addResult,
-  createAccountListViewModel,
-  createResultStore,
-} from '@initlabs/vibekit/views'
+import { addResult, createResultStore } from '@initlabs/vibekit/actions'
+import { createAccountListViewModel } from '@initlabs/vibekit/views'
 import { withAccountNames } from '../src/features/network/keystore-host.js'
 
 import {

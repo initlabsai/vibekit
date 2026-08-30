@@ -16,7 +16,7 @@ export function isPluginViewId(view: string): view is PluginViewId {
   return (PLUGIN_VIEW_IDS as readonly string[]).includes(view)
 }
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { record, viewModelFor } from './derive.js'
+import { createRecord, viewModelFor } from './derive.js'
 
 export type {
   WebPage,
@@ -39,7 +39,7 @@ export type {
 /** A record builder for one plugin view: parse the wire, wrap it. */
 export function pluginRecordBuilder(view: PluginViewId) {
   return (identity: ResultIdentity, wire: unknown, toolName: string): StructuredResult =>
-    record(identity, toolName, pluginViewSchemas[view].parse(wire))
+    createRecord(identity, toolName, pluginViewSchemas[view].parse(wire))
 }
 
 /** Builds a plugin view's record from data a host fetched itself (a resolved name). */

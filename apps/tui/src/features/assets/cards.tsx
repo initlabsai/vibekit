@@ -1,8 +1,4 @@
-import {
-  formatAssetAmount,
-  formatBaseUnits,
-  type AssetDetailViewModel,
-} from '@initlabs/vibekit/views'
+import { formatAssetAmount, formatBaseUnits, type AssetDetailViewModel } from '@initlabs/vibekit/views'
 
 import {
   Button,

@@ -1,13 +1,7 @@
 'use client'
 
 /** Alpha Arcade: markets as a list, one market with its YES/NO prices, the book as depth, an account's positions and orders. */
-import type {
-  MarketRow,
-  Markets,
-  OpenOrders,
-  OrderbookView,
-  Positions,
-} from '@initlabs/vibekit/views'
+import type { MarketRow, Markets, OpenOrders, OrderbookView, Positions } from '@initlabs/vibekit/views'
 
 import { MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header } from '../../primitives'

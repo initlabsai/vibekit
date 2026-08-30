@@ -1,13 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  RECORD_PROTOCOL_VERSION,
-  FIXTURE_RESULT_ID,
-  approvalDecisionSchema,
-  approvalRequestSchema,
-  viewSpecSchema,
-  stageEventSchema,
-} from '../../src/views/index.js'
+import { RECORD_PROTOCOL_VERSION, approvalDecisionSchema, approvalRequestSchema, viewSpecSchema, stageEventSchema } from '../../src/actions/index.js'
+import { FIXTURE_RESULT_ID } from '../../src/views/sample/index.js'
 import {
   FIXTURE_TOOL_CALL_ID,
   createTransactionFixtureViewSpec,

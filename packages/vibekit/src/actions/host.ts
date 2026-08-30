@@ -11,7 +11,7 @@ import { createApprovalDecisionEvent, createApprovalRequestEvent, createStageEve
 import {
   addResult,
   findResultRecord,
-  record,
+  createRecord,
   type ResultIdentity,
   type ResultStore,
   type StructuredResult,
@@ -129,7 +129,7 @@ export function buildDraftRecord(
   if (compose.presigned && compose.presigned.length !== compose.unsignedGroup.length) {
     throw new Error('presigned must name every index of the group')
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /**
@@ -162,7 +162,7 @@ export function buildSimulationRecord(
     effects,
     simulatedRound: simulation.simulatedRound,
   })
-  return record(identity, 'simulate_transactions', data)
+  return createRecord(identity, 'simulate_transactions', data)
 }
 
 /** Wraps signed group bytes and their transaction ids as a signed record. */
@@ -170,7 +170,7 @@ export function buildSignedGroupRecord(
   identity: ResultIdentity,
   data: { transactions: string[]; txIds: string[]; signer: string },
 ): StructuredResult {
-  return record(identity, 'sign_group', signedGroupDataSchema.parse(data))
+  return createRecord(identity, 'sign_group', signedGroupDataSchema.parse(data))
 }
 
 /** Wraps an on-chain confirmation as a confirmation record. */
@@ -178,7 +178,7 @@ export function buildConfirmationRecord(
   identity: ResultIdentity,
   data: { transactionId: string; confirmedRound: number },
 ): StructuredResult {
-  return record(identity, 'submit_group', confirmationDataSchema.parse(data))
+  return createRecord(identity, 'submit_group', confirmationDataSchema.parse(data))
 }
 
 /** What to draft: an action tool by name and its arguments. */

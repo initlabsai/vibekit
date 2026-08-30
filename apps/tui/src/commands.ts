@@ -1,16 +1,13 @@
 import algosdk from 'algosdk'
-import {
-  FIXTURE_SENDER,
-  routeExplorerComposerInput,
-  type ExplorerComposerRoute,
-} from '@initlabs/vibekit/views'
+import { FIXTURE_SENDER } from '@initlabs/vibekit/views/sample'
+import { routeInput, type InputRoute } from '@initlabs/vibekit/views'
 
 /**
  * The transcript's deterministic lane, checked before any model call: exact
  * commands, then recognized identifiers; everything else is conversation.
  */
 export type ComposerRoute =
-  | ExplorerComposerRoute
+  | InputRoute
   | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: 'localnet' | 'testnet' | 'mainnet' }
@@ -60,7 +57,7 @@ function isMineQuery(word: string, noun: string): boolean {
 /** Routes one composer submission: the TUI's own words first, then the shared lane. */
 export function routeComposerInput(input: string): ComposerRoute {
   const trimmed = input.trim()
-  const shared = routeExplorerComposerInput(trimmed)
+  const shared = routeInput(trimmed)
   if (shared.status !== 'text') return shared
   const word = trimmed.toLowerCase()
   if (word === 'accounts' || word === 'wallet') return { status: 'nav', screen: 'wallet' }

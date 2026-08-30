@@ -7,12 +7,7 @@
  * and groups keep their flow graph and summary. Red frame when the simulation
  * failed or the network is mainnet: money on the line, right now.
  */
-import {
-  formatBaseUnits,
-  formatMicroAlgos,
-  type LiveNetworkId,
-  type ActionViewModel,
-} from '@initlabs/vibekit/views'
+import { formatBaseUnits, formatMicroAlgos, type LiveNetworkId, type ActionViewModel } from '@initlabs/vibekit/views'
 import { useEffect, useRef } from 'react'
 
 import { Button, Fact, Facts, Header, Hero } from '../../primitives'

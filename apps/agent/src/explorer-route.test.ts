@@ -1,7 +1,8 @@
 /** The browser's routes are mounts: the package's action routes over one live host per network, and the query handler for reads. */
 import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 
-import { createSampleHost, FIXTURE_RECEIVER, FIXTURE_SENDER, PAYMENT_FIXTURE_AMOUNT_MICROALGOS, PAYMENT_FIXTURE_SIGNED_TRANSACTION, type StructuredResult } from '@initlabs/vibekit/views'
+import { createSampleHost, FIXTURE_RECEIVER, FIXTURE_SENDER, PAYMENT_FIXTURE_AMOUNT_MICROALGOS, PAYMENT_FIXTURE_SIGNED_TRANSACTION } from '@initlabs/vibekit/views/sample'
+import { type StructuredResult } from '@initlabs/vibekit/actions'
 
 const live = await import('@initlabs/vibekit/live')
 

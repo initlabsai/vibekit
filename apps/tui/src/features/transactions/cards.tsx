@@ -1,15 +1,6 @@
 import { base64ToBytes } from '@initlabs/vibekit'
 import type { MouseEvent } from '@opentui/core'
-import {
-  formatAssetAmount,
-  formatBlockTxnType,
-  formatExplorerTime,
-  formatMicroAlgos,
-  formatOnCompletion,
-  transactionKind,
-  type TransactionDetailViewModel,
-  type TransactionRowData,
-} from '@initlabs/vibekit/views'
+import { formatAssetAmount, formatBlockTxnType, formatTime, formatMicroAlgos, formatOnCompletion, transactionKind, type TransactionDetailViewModel, type TransactionRowData } from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 import {
@@ -95,7 +86,7 @@ function detailFacts(model: TransactionDetailViewModel): FactRow[] {
     { label: 'id', value: model.id, copy: model.id },
     model.roundTime === undefined
       ? undefined
-      : { label: 'time', value: formatExplorerTime(model.roundTime) },
+      : { label: 'time', value: formatTime(model.roundTime) },
     id(model.confirmedRound, 'block'),
     { label: 'fee', value: algo(model.feeMicroAlgos) },
     address(model.sender, 'from'),
@@ -418,7 +409,7 @@ function RowBlock({
         />
       )}
       {row.roundTime === undefined ? null : (
-        <Fact label="time" value={formatExplorerTime(row.roundTime)} width={width} />
+        <Fact label="time" value={formatTime(row.roundTime)} width={width} />
       )}
       {row.feeMicroAlgos === undefined ? null : (
         <Fact label="fee" value={algo(row.feeMicroAlgos)} width={width} />

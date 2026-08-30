@@ -1,4 +1,4 @@
-import { createSampleHost } from '@initlabs/vibekit/views'
+import { createSampleHost } from '@initlabs/vibekit/views/sample'
 import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 

@@ -10,7 +10,7 @@ import type { TransactionSearchFilter } from './transaction.js'
 /** The named networks a live host can serve; core ships their endpoints. */
 export type LiveNetworkId = 'localnet' | 'testnet' | 'mainnet'
 
-export interface ExplorerReadHost {
+export interface ReadHost {
   /** Looks an account's portfolio up as an authoritative record. */
   lookupAccount(address: string): Promise<StructuredResult>
   /** Looks several accounts up as one account.list record. */
@@ -32,7 +32,7 @@ export interface ExplorerReadHost {
 }
 
 export type AccountLookupHost = Pick<
-  ExplorerReadHost,
+  ReadHost,
   | 'lookupAccount'
   | 'lookupAccounts'
   | 'lookupAccountAssets'
@@ -41,12 +41,12 @@ export type AccountLookupHost = Pick<
   | 'callTool'
 >
 export type TransactionLookupHost = Pick<
-  ExplorerReadHost,
+  ReadHost,
   'lookupTransaction' | 'lookupTransactionGroup' | 'searchTransactions'
 >
-export type AssetLookupHost = Pick<ExplorerReadHost, 'lookupAsset'>
-export type ApplicationLookupHost = Pick<ExplorerReadHost, 'lookupApplication'>
-export type BlockLookupHost = Pick<ExplorerReadHost, 'lookupBlock'>
-export type ToolCallHost = Pick<ExplorerReadHost, 'callTool'>
+export type AssetLookupHost = Pick<ReadHost, 'lookupAsset'>
+export type ApplicationLookupHost = Pick<ReadHost, 'lookupApplication'>
+export type BlockLookupHost = Pick<ReadHost, 'lookupBlock'>
+export type ToolCallHost = Pick<ReadHost, 'callTool'>
 /** The three lookups a host runs concurrently for a bare numeric identifier. */
 export type EntityLookupHost = AssetLookupHost & ApplicationLookupHost & BlockLookupHost

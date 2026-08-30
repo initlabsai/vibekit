@@ -40,6 +40,10 @@
       "types": "./dist/views/index.d.ts",
       "import": "./dist/views/index.js"
     },
+    "./views/sample": {
+      "types": "./dist/views/sample/index.d.ts",
+      "import": "./dist/views/sample/index.js"
+    },
     "./live": {
       "types": "./dist/live/index.d.ts",
       "import": "./dist/live/index.js"

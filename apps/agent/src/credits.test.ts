@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { NextRequest } from 'next/server'
 
-import { FIXTURE_SENDER } from '@initlabs/vibekit/views'
+import { FIXTURE_SENDER } from '@initlabs/vibekit/views/sample'
 
 const env = { ...process.env }
 afterEach(() => {

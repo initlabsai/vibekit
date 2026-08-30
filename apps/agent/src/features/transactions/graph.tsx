@@ -2,12 +2,7 @@
 
 /** The flow graph as a card: one column per entity, one row per transaction, from the shared graph model. */
 import algosdk from 'algosdk'
-import {
-  buildTransactionsGraph,
-  type GraphTransaction,
-  type TransactionRowData,
-  type TransactionsGraph,
-} from '@initlabs/vibekit/views'
+import { buildTransactionsGraph, type GraphTransaction, type TransactionRowData, type TransactionsGraph } from '@initlabs/vibekit/views'
 import type { ReactNode } from 'react'
 
 import { Fact, Facts, FooterNote, Frame, Header } from '../../primitives'

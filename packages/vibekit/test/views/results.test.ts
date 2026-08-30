@@ -1,15 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  RECORD_PROTOCOL_VERSION,
-  FIXTURE_RESULT_ID,
-  FIXTURE_SENDER,
-  addResult,
-  createFixtureResultStore,
-  createResultStore,
-  resolveResultReference,
-  structuredResultSchema,
-} from '../../src/views/index.js'
+import { RECORD_PROTOCOL_VERSION, addResult, createResultStore, resolveResultReference, structuredResultSchema } from '../../src/actions/index.js'
+import { FIXTURE_RESULT_ID, FIXTURE_SENDER, createFixtureResultStore } from '../../src/views/sample/index.js'
 import { FIXTURE_TOOL_CALL_ID, transactionFixtureResult } from '../../src/views/sample/transaction.js'
 
 describe('client-owned result store', () => {

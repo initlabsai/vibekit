@@ -1,18 +1,13 @@
 import algosdk from 'algosdk'
-import {
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  routeExplorerComposerInput,
-  type ExplorerComposerRoute,
-  type LiveNetworkId,
-} from '@initlabs/vibekit/views'
+import { FIXTURE_RECEIVER, FIXTURE_SENDER } from '@initlabs/vibekit/views/sample'
+import { routeInput, type InputRoute, type LiveNetworkId } from '@initlabs/vibekit/views'
 
 export type PriceRange = '1d' | '7d' | '30d' | '90d' | '1y'
 const PRICE_RANGES: ReadonlySet<string> = new Set(['1d', '7d', '30d', '90d', '1y'])
 
 /** The composer's deterministic lane: slash commands, then the shared Explorer routes for pasted ids. */
 export type ComposerRoute =
-  | ExplorerComposerRoute
+  | InputRoute
   | { status: 'nav'; screen: 'wallet' | 'assets' | 'apps' | 'txns' | 'blocks' }
   | { status: 'account-list' }
   | { status: 'network'; network?: LiveNetworkId }
@@ -60,7 +55,7 @@ export function routeComposerInput(input: string): ComposerRoute {
   const trimmed = input.trim()
   if (!trimmed.startsWith('/')) {
     // Pasted ids, names, and `pay …` stay deterministic; any other words go to the agent.
-    return routeExplorerComposerInput(trimmed)
+    return routeInput(trimmed)
   }
   const [word = '', ...rest] = trimmed.slice(1).toLowerCase().split(/\s+/)
   const arg = rest.join(' ')
@@ -97,7 +92,7 @@ export function routeComposerInput(input: string): ComposerRoute {
         : { status: 'network' }
     default:
       // `/pay …`, `/asset 31566704`, `/app …`, `/block …` are the shared routes without the slash.
-      return routeExplorerComposerInput(trimmed.slice(1))
+      return routeInput(trimmed.slice(1))
   }
 }
 

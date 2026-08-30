@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import { algorandTransactionIdSchema } from '../../src/views/input.js'
 import {
-  createExplorerFixtureResultStore,
+  createSampleResultStore,
   createPaymentFixtureEvent,
   createPaymentFixtureResultStore,
   PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
@@ -12,19 +12,9 @@ import {
   PAYMENT_FIXTURE_SIGNED_TRANSACTION,
   paymentFixtureResults,
 } from '../../src/views/sample/payment.js'
-import {
-  createActionViewModel,
-  createResultStore,
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  parsePaymentComposerCommand,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  PAYMENT_FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  type StructuredResult,
-  type ActionState,
-} from '../../src/views/index.js'
+import { createActionViewModel } from '../../src/views/index.js'
+import { createResultStore, type StructuredResult, type ActionState } from '../../src/actions/index.js'
+import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID, parsePaymentComposerCommand, PAYMENT_FIXTURE_AMOUNT_MICROALGOS, PAYMENT_FIXTURE_TRANSACTION_ID, PAYMENT_FIXTURE_UNSIGNED_TRANSACTION } from '../../src/views/sample/index.js'
 import {
   simulationDataSchema,
   actionEventKinds,
@@ -83,7 +73,7 @@ describe('fixture-backed payment write flow', () => {
   })
 
   test('the view model derives authoritative facts from structured results at every stage', () => {
-    const store = createExplorerFixtureResultStore()
+    const store = createSampleResultStore()
     let state: ActionState | null = null
     for (const kind of HAPPY_PATH) {
       state = advance(state, kind)

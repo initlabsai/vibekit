@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { FIXTURE_RECEIVER, FIXTURE_SENDER } from '@initlabs/vibekit/views'
+import { FIXTURE_RECEIVER, FIXTURE_SENDER } from '@initlabs/vibekit/views/sample'
 
 import { createEnrichment } from './enrich.js'
 import type { RemoteExplorerHost } from './remote-host.js'

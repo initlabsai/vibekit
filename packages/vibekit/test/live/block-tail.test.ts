@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 
-import { FIXTURE_RECEIVER, FIXTURE_SENDER } from '../../src/views/index.js'
+import { FIXTURE_RECEIVER, FIXTURE_SENDER } from '../../src/views/sample/index.js'
 import { formatAlgodTransaction } from '../../src/actions/algod-txn.js'
 import {
   matchesInTick,

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { uint64JsonSchema } from './format.js'
 import { algorandAddressCandidateSchema } from './input.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { record, viewModelFor } from './derive.js'
+import { createRecord, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
@@ -85,7 +85,7 @@ export function buildAssetDetailRecord(
   wire: unknown,
   toolName = 'lookup_asset',
 ): StructuredResult {
-  return record(identity, toolName, assetDetailDataSchema.parse(wire))
+  return createRecord(identity, toolName, assetDetailDataSchema.parse(wire))
 }
 
 /** Wraps search_assets. */
@@ -94,7 +94,7 @@ export function buildAssetListRecord(
   wire: unknown,
   toolName = 'search_assets',
 ): StructuredResult {
-  return record(identity, toolName, assetListDataSchema.parse(wire))
+  return createRecord(identity, toolName, assetListDataSchema.parse(wire))
 }
 
 /** Wraps get_account_assets. */
@@ -103,7 +103,7 @@ export function buildAssetHoldingsRecord(
   wire: unknown,
   toolName = 'get_account_assets',
 ): StructuredResult {
-  return record(identity, toolName, assetHoldingsDataSchema.parse(wire))
+  return createRecord(identity, toolName, assetHoldingsDataSchema.parse(wire))
 }
 
 /** Wraps top_asset_holders. */
@@ -112,7 +112,7 @@ export function buildAssetHoldersRecord(
   wire: unknown,
   toolName = 'top_asset_holders',
 ): StructuredResult {
-  return record(identity, toolName, assetHoldersDataSchema.parse(wire))
+  return createRecord(identity, toolName, assetHoldersDataSchema.parse(wire))
 }
 
 /** Derives asset presentation from one trusted result reference. */

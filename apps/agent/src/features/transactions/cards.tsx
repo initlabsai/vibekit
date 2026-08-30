@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  formatAssetAmount,
-  formatBlockTxnType,
-  formatExplorerTime,
-  formatMicroAlgos,
-  formatOnCompletion,
-  transactionKind,
-  type TransactionDetailViewModel,
-  type TransactionRowData,
-} from '@initlabs/vibekit/views'
+import { formatAssetAmount, formatBlockTxnType, formatTime, formatMicroAlgos, formatOnCompletion, transactionKind, type TransactionDetailViewModel, type TransactionRowData } from '@initlabs/vibekit/views'
 
 import { algo, bytesDisplay, MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable, type Tone } from '../../primitives'
@@ -61,7 +52,7 @@ function detailFacts(model: TransactionDetailViewModel): FactRow[] {
   ]
   const rows: Array<FactRow | undefined> = [
     { label: 'id', value: model.id, copy: model.id, open: false },
-    model.roundTime === undefined ? undefined : { label: 'time', value: formatExplorerTime(model.roundTime) },
+    model.roundTime === undefined ? undefined : { label: 'time', value: formatTime(model.roundTime) },
     id(model.confirmedRound, 'block', model.confirmedRound === undefined ? undefined : { kind: 'block', round: Number(model.confirmedRound) }),
     { label: 'fee', value: algo(model.feeMicroAlgos) },
     address(model.sender, 'from'),
@@ -283,7 +274,7 @@ export function TransactionListCard({
       label: 'time',
       width: 'minmax(6rem, .7fr)',
       sortValue: ({ parent }) => parent.roundTime,
-      cell: ({ row }) => (row.roundTime === undefined ? '' : formatExplorerTime(row.roundTime)),
+      cell: ({ row }) => (row.roundTime === undefined ? '' : formatTime(row.roundTime)),
     },
   ]
   return (

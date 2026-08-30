@@ -19,7 +19,7 @@ const NUMERIC_ID_PATTERN = /^(0|[1-9]\d*)$/
 const ACCOUNT_NAME_PATTERN = /^(?:[a-z0-9-]+\.)+algo$/
 
 /** Result of deterministic Explorer input classification. */
-export type ClassifiedExplorerInput =
+export type ClassifiedInput =
   | {
       kind: 'entity'
       entity: 'transaction'
@@ -55,7 +55,7 @@ export type ClassifiedExplorerInput =
  * numeric identifiers stay an explicit asset/application/block ambiguity
  * instead of guessing which domain owns the number.
  */
-export function classifyExplorerInput(raw: string): ClassifiedExplorerInput {
+export function classifyInput(raw: string): ClassifiedInput {
   const input = raw.trim()
   if (algorandTransactionIdSchema.safeParse(input).success) {
     return { kind: 'entity', entity: 'transaction', value: input }
@@ -89,7 +89,7 @@ export type DirectedEntityCommand =
 /**
  * Parses `asset 1042`, `app 1071`, `application 1071`, `asa 1042`,
  * `block 22`, or `group <base64>`. Bare numbers stay ambiguous and go
- * through classifyExplorerInput.
+ * through classifyInput.
  */
 export function parseEntityComposerCommand(raw: string): DirectedEntityCommand | undefined {
   const trimmed = raw.trim()
@@ -137,7 +137,7 @@ export function parsePaymentComposerCommand(
  * text. Navigation, help, and network commands are the app's own words and
  * are matched before this.
  */
-export type ExplorerComposerRoute =
+export type InputRoute =
   | { status: 'payment'; amountMicroAlgos: number; to?: string }
   | { status: 'transaction'; txid: string }
   | { status: 'group'; groupId: string }
@@ -149,7 +149,7 @@ export type ExplorerComposerRoute =
   | { status: 'ambiguous'; value: string }
   | { status: 'text'; text: string }
 
-export function routeExplorerComposerInput(input: string): ExplorerComposerRoute {
+export function routeInput(input: string): InputRoute {
   const trimmed = input.trim()
   const payment = parsePaymentComposerCommand(trimmed)
   if (payment) return { status: 'payment', ...payment }
@@ -159,7 +159,7 @@ export function routeExplorerComposerInput(input: string): ExplorerComposerRoute
     return { status: 'application', applicationId: directed.id }
   if (directed?.entity === 'block') return { status: 'block', round: directed.id }
   if (directed?.entity === 'group') return { status: 'group', groupId: directed.id }
-  const classified = classifyExplorerInput(trimmed)
+  const classified = classifyInput(trimmed)
   if (classified.kind === 'entity' && classified.entity === 'transaction') {
     return { status: 'transaction', txid: classified.value }
   }

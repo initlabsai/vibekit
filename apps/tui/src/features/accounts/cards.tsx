@@ -1,8 +1,4 @@
-import {
-  formatAssetAmount,
-  formatMicroAlgos,
-  type AccountPortfolioViewModel,
-} from '@initlabs/vibekit/views'
+import { formatAssetAmount, formatMicroAlgos, type AccountPortfolioViewModel } from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 import {

@@ -6,16 +6,10 @@ import {
   type DecodedGroupFacts,
 } from '../../src/actions/index.js'
 import { structuredResultFromToolEvent } from '../../src/views/bridge.js'
-import { createExplorerFixtureResultStore } from '../../src/views/sample/payment.js'
-import {
-  createActionViewModel,
-  createStageEvent,
-  createApprovalDecisionEvent,
-  createApprovalRequestEvent,
-  addResult,
-  PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  type ActionState,
-} from '../../src/views/index.js'
+import { createSampleResultStore } from '../../src/views/sample/payment.js'
+import { createActionViewModel } from '../../src/views/index.js'
+import { createStageEvent, createApprovalDecisionEvent, createApprovalRequestEvent, addResult, type ActionState } from '../../src/actions/index.js'
+import { PAYMENT_FIXTURE_UNSIGNED_TRANSACTION } from '../../src/views/sample/index.js'
 import {
   draftDataSchema,
   simulationDataSchema,
@@ -117,7 +111,7 @@ describe('live payment mapping over recorded engine outputs', () => {
       recorded.simulate,
       decodedFacts(),
     )
-    let store = createExplorerFixtureResultStore()
+    let store = createSampleResultStore()
     store = addResult(store, draftRecord)
     store = addResult(store, simulationRecord)
 

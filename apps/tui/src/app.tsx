@@ -1,8 +1,5 @@
-import {
-  createFixtureResultStore,
-  type ResultStore,
-  type ViewSpec,
-} from '@initlabs/vibekit/views'
+import { createFixtureResultStore } from '@initlabs/vibekit/views/sample'
+import { type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
 import { draftRecordFromComposeWire, type LiveNetworkId } from '@initlabs/vibekit/live'
 import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'

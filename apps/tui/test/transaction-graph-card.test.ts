@@ -2,12 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import {
-  buildTransactionsGraph,
-  formatMicroAlgos,
-  type GraphTransaction,
-  type TransactionsGraph,
-} from '@initlabs/vibekit/views'
+import { buildTransactionsGraph, formatMicroAlgos, type GraphTransaction, type TransactionsGraph } from '@initlabs/vibekit/views'
 import { getApplicationAddress } from 'algosdk'
 
 import {

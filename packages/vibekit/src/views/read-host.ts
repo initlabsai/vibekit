@@ -7,7 +7,7 @@
  */
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
 import { bridgeToolResult } from './bridge.js'
-import type { ExplorerReadHost } from './host.js'
+import type { ReadHost } from './host.js'
 
 /** A tool's output as the record its view selects; a wire that fails the view's schema stays a raw record. */
 export function recordForToolCall(
@@ -23,7 +23,7 @@ export function recordForToolCall(
 /** The read surface over a record-returning `callTool`. */
 export function createReadHost(
   callTool: (toolName: string, args: Record<string, unknown>) => Promise<StructuredResult>,
-): ExplorerReadHost {
+): ReadHost {
   return {
     lookupAccount: (address) => callTool('get_account_portfolio', { address }),
     lookupAccounts: (addresses) => callTool('batch_lookup_accounts', { addresses: [...addresses] }),

@@ -11,13 +11,8 @@ import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vi
 import { estimateProgramTokens } from '@initlabs/vibekit/tools'
 import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
 import { readLocalFile } from '@initlabs/vibekit/preset'
-import {
-  bridgeToolResult,
-  unsignedGroupFromToolResult,
-  type JsonValue,
-  type ResultStore,
-  type StructuredResult,
-} from '@initlabs/vibekit/views'
+import { bridgeToolResult, unsignedGroupFromToolResult } from '@initlabs/vibekit/views'
+import { type JsonValue, type ResultStore, type StructuredResult } from '@initlabs/vibekit/actions'
 import {
   activeSenderLine,
   createExplorerAgent as createSharedExplorerAgent,

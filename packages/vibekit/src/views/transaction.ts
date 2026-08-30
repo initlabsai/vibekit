@@ -10,7 +10,7 @@ import type {
   StructuredResult,
   ViewModelError,
 } from '../actions/index.js'
-import { derive, record, viewModelFor } from './derive.js'
+import { derive, createRecord, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
@@ -233,7 +233,7 @@ export function buildTransactionDetailRecord(
     status: txn.confirmedRound === undefined ? 'pending' : 'confirmed',
     ...(txn.innerTxns?.length ? { innerCount: txn.innerTxns.length } : {}),
   })
-  return record(identity, toolName, {
+  return createRecord(identity, toolName, {
     ...data,
     ...(data.innerTxns ? { innerTxns: data.innerTxns.map(withInnerCounts) } : {}),
   })
@@ -256,7 +256,7 @@ export function buildTransactionListRecord(
   toolName = 'search_transactions',
 ): StructuredResult {
   const page = transactionCollectionDataSchema.parse(wire)
-  return record(identity, toolName, {
+  return createRecord(identity, toolName, {
     ...page,
     transactions: page.transactions.map(withInnerCounts),
   })

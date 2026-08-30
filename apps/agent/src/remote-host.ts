@@ -6,11 +6,12 @@
  * connected; the server verifies and broadcasts, and the browser polls.
  */
 import { createRemoteActionHost, type ActionHost, type RemoteActionHost } from '@initlabs/vibekit/actions'
-import { createReadHost, recordForToolCall, type ExplorerReadHost, type LiveNetworkId, type StructuredResult } from '@initlabs/vibekit/views'
+import { createReadHost, recordForToolCall, type ReadHost, type LiveNetworkId } from '@initlabs/vibekit/views'
+import { type StructuredResult } from '@initlabs/vibekit/actions'
 
 const ROUTE = '/api/explorer'
 
-export type RemoteExplorerHost = ExplorerReadHost &
+export type RemoteExplorerHost = ReadHost &
   RemoteActionHost & {
     network: LiveNetworkId
     probe(): Promise<boolean>

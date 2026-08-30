@@ -24,7 +24,7 @@ import {
 
 import { bridgeToolResult } from '../views/bridge.js'
 import { createReadHost } from '../views/read-host.js'
-import type { ExplorerReadHost, LiveNetworkId } from '../views/host.js'
+import type { ReadHost, LiveNetworkId } from '../views/host.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from '../actions/algod-txn.js'
 import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
 import {
@@ -96,7 +96,7 @@ export async function signDraftWith(
 }
 
 /** What the live host offers: reads, the action steps, and the block tail. Nothing here can sign. */
-export interface LiveHost extends ExplorerReadHost {
+export interface LiveHost extends ReadHost {
   network: string
   /** True when the network's algod answers within the timeout. */
   probe(timeoutMs?: number): Promise<boolean>

@@ -1,5 +1,6 @@
 /** The page after a stored list record, merged into one record; undefined when the record is final. */
-import { loadNextPage, type ResultStore, type StructuredResult, type ViewSpec } from '@initlabs/vibekit/views'
+import { loadNextPage } from '@initlabs/vibekit/views'
+import { type ResultStore, type StructuredResult, type ViewSpec } from '@initlabs/vibekit/actions'
 
 import type { ExplorerHost } from './features/network/hooks'
 

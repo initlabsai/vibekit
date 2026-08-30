@@ -1,4 +1,4 @@
-import { classifyExplorerInput, type ClassifiedExplorerInput } from '../input.js'
+import { classifyInput, type ClassifiedInput } from '../input.js'
 import { viewSpecSchema, type OpenView, type ViewSpec } from '../../actions/index.js'
 import { createResultStore, type ResultStore, type StructuredResult } from '../../actions/index.js'
 import { transactionDetailDataSchema } from '../transaction.js'
@@ -60,7 +60,7 @@ export function createTransactionFixtureViewSpec(): ViewSpec {
 }
 
 type TransactionClassification = Extract<
-  ClassifiedExplorerInput,
+  ClassifiedInput,
   { kind: 'entity'; entity: 'transaction' }
 >
 
@@ -75,16 +75,16 @@ export type FixtureLookupOutcome =
     }
   | {
       status: 'ambiguous'
-      classification: Extract<ClassifiedExplorerInput, { kind: 'ambiguous-entity' }>
+      classification: Extract<ClassifiedInput, { kind: 'ambiguous-entity' }>
     }
   | {
       status: 'unresolved'
-      classification: ClassifiedExplorerInput
+      classification: ClassifiedInput
     }
 
 /** Classifies direct input and resolves the known fixture to a trusted detail view. */
 export function lookupFixture(raw: string): FixtureLookupOutcome {
-  const classification = classifyExplorerInput(raw)
+  const classification = classifyInput(raw)
   if (
     classification.kind === 'entity' &&
     classification.entity === 'transaction' &&

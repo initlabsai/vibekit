@@ -1,12 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { getApplicationAddress } from 'algosdk'
 
-import {
-  buildTransactionsGraph,
-  type GraphHorizontal,
-  type GraphTransaction,
-  type TransactionsGraph,
-} from '../../src/views/index.js'
+import { buildTransactionsGraph, type GraphHorizontal, type GraphTransaction, type TransactionsGraph } from '../../src/views/index.js'
 import { buildTransactionGroupRecord } from '../../src/views/transaction.js'
 // Naming note: transactions are mainnet; each group entry carries its own
 // `network` (two of Lora's snapshot groups only exist on testnet).

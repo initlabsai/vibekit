@@ -3,13 +3,8 @@
  * `useKeyboard`; every action is injected from the composition root, and the
  * apps screen's keys live with the apps feature.
  */
-import {
-  createTransactionCollectionViewModel,
-  findResultRecord,
-  nextPageArgs,
-  type ResultStore,
-  type ViewSpec,
-} from '@initlabs/vibekit/views'
+import { createTransactionCollectionViewModel, nextPageArgs } from '@initlabs/vibekit/views'
+import { findResultRecord, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
 import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useKeyboard } from '@opentui/react'
 import { useCallback } from 'react'

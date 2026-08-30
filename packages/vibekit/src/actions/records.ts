@@ -221,7 +221,7 @@ export function resolveResultReference(
 }
 
 /** Identity for one tool call's record: paired ids, the network, and the input that produced it. */
-export function record(identity: ResultIdentity, toolName: string, data: unknown): StructuredResult {
+export function createRecord(identity: ResultIdentity, toolName: string, data: unknown): StructuredResult {
   return structuredResultSchema.parse({
     protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'result',

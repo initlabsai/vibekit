@@ -1,15 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  FIXTURE_RECEIVER,
-  FIXTURE_RESULT_ID,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  createFixtureResultStore,
-  createTransactionDetailViewModel,
-  lookupFixture,
-  viewSpecSchema,
-} from '../../src/views/index.js'
+import { FIXTURE_RECEIVER, FIXTURE_RESULT_ID, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID, createFixtureResultStore, lookupFixture } from '../../src/views/sample/index.js'
+import { createTransactionDetailViewModel } from '../../src/views/index.js'
+import { viewSpecSchema } from '../../src/actions/index.js'
 import { transactionDetailDataSchema } from '../../src/views/transaction.js'
 import { transactionFixtureResult } from '../../src/views/sample/transaction.js'
 

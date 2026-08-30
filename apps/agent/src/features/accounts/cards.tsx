@@ -1,11 +1,6 @@
 'use client'
 
-import {
-  formatAssetAmount,
-  formatMicroAlgos,
-  type AccountPortfolioViewModel,
-  type AccountSummaryViewModel,
-} from '@initlabs/vibekit/views'
+import { formatAssetAmount, formatMicroAlgos, type AccountPortfolioViewModel, type AccountSummaryViewModel } from '@initlabs/vibekit/views'
 
 import { formatUsd, useAlgoPrice, useAssetMeta } from '../../enrich'
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'

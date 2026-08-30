@@ -7,15 +7,8 @@ import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { bytesToBase64 } from '../../src/core/index.js'
 
-import {
-  createActionViewModel,
-  createResultStore,
-  performActionStep,
-  startAction,
-  startActionFromDraft,
-  submitAction,
-  type ActionHost,
-} from '../../src/views/index.js'
+import { createActionViewModel } from '../../src/views/index.js'
+import { createResultStore, performActionStep, startAction, startActionFromDraft, submitAction, type ActionHost } from '../../src/actions/index.js'
 import { buildConfirmationRecord, buildSimulationRecord } from '../../src/actions/index.js'
 import {
   createLiveHost,

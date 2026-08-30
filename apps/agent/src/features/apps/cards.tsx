@@ -1,11 +1,6 @@
 'use client'
 
-import type {
-  ApplicationDetailViewModel,
-  ApplicationExplanationViewModel,
-  ApplicationMethodsViewModel,
-  ApplicationProgramViewModel,
-} from '@initlabs/vibekit/views'
+import type { ApplicationDetailViewModel, ApplicationExplanationViewModel, ApplicationMethodsViewModel, ApplicationProgramViewModel } from '@initlabs/vibekit/views'
 
 import { bytesDisplay, MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable } from '../../primitives'

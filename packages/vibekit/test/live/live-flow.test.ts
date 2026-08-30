@@ -6,18 +6,10 @@ import {
   buildSignedGroupRecord,
   buildSimulationRecord,
 } from '../../src/actions/index.js'
-import {
-  submitAction,
-  createSampleHost,
-  createFixtureResultStore,
-  startAction,
-  createActionViewModel,
-  performActionStep,
-  type ActionHost,
-  type ResultStore,
-  type ActionState,
-} from '../../src/views/index.js'
-import { createExplorerFixtureResultStore } from '../../src/views/sample/payment.js'
+import { submitAction, startAction, performActionStep, type ActionHost, type ResultStore, type ActionState } from '../../src/actions/index.js'
+import { createSampleHost, createFixtureResultStore } from '../../src/views/sample/index.js'
+import { createActionViewModel } from '../../src/views/index.js'
+import { createSampleResultStore } from '../../src/views/sample/payment.js'
 import { decodeUnsignedGroup } from '../../src/live/index.js'
 import recorded from '../recorded/localnet-payment.json' with { type: 'json' }
 
@@ -64,7 +56,7 @@ const DRAFT_PARAMS = {
 describe('shared live payment flow controller', () => {
   test('walks draft → simulate → inspect → approval → decision over host-produced records', async () => {
     const host = stubHost()
-    let store: ResultStore = createExplorerFixtureResultStore()
+    let store: ResultStore = createSampleResultStore()
     let flow: ActionState | null = null
 
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
@@ -91,7 +83,7 @@ describe('shared live payment flow controller', () => {
 
   test('refuses signing and confirmation on a host without those capabilities', async () => {
     const host = stubHost()
-    let store: ResultStore = createExplorerFixtureResultStore()
+    let store: ResultStore = createSampleResultStore()
     let flow: ActionState | null = null
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
       const outcome = await performActionStep({
@@ -136,7 +128,7 @@ describe('shared live payment flow controller', () => {
         )
       },
     })
-    let store: ResultStore = createExplorerFixtureResultStore()
+    let store: ResultStore = createSampleResultStore()
     let flow: ActionState | null = null
     const kinds = [
       'draft',
@@ -180,7 +172,7 @@ describe('shared live payment flow controller', () => {
         throw new Error('should not be called')
       },
     })
-    let store: ResultStore = createExplorerFixtureResultStore()
+    let store: ResultStore = createSampleResultStore()
     let flow: ActionState | null = null
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval'] as const) {
       const outcome = await performActionStep({
@@ -207,7 +199,7 @@ describe('shared live payment flow controller', () => {
         throw new Error('algod unreachable')
       },
     })
-    const store = createExplorerFixtureResultStore()
+    const store = createSampleResultStore()
     const outcome = await performActionStep({
       host,
       store,
@@ -221,7 +213,7 @@ describe('shared live payment flow controller', () => {
 
   test('refuses out-of-order steps with the machine message', async () => {
     const host = stubHost()
-    const store = createExplorerFixtureResultStore()
+    const store = createSampleResultStore()
     const outcome = await performActionStep({
       host,
       store,

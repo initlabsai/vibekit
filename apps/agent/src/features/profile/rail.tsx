@@ -6,16 +6,8 @@
  * it beside the feed; narrower ones fold it behind a button. The account in
  * focus is the connected wallet's, else the last account opened.
  */
-import {
-  addResult,
-  createAccountPortfolioViewModel,
-  createTransactionCollectionViewModel,
-  formatAssetAmount,
-  formatMicroAlgos,
-  type AccountPortfolioViewModel,
-  type ResultStore,
-  type ViewSpec,
-} from '@initlabs/vibekit/views'
+import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
+import { createAccountPortfolioViewModel, createTransactionCollectionViewModel, formatAssetAmount, formatMicroAlgos, type AccountPortfolioViewModel } from '@initlabs/vibekit/views'
 import { useEffect, useMemo, useState } from 'react'
 
 import { formatUsd, useAlgoPrice } from '../../enrich'

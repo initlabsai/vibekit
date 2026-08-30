@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { uint64JsonSchema } from './format.js'
 import { algorandAddressCandidateSchema } from './input.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { addressEnvelopeSchema, record, viewModelFor } from './derive.js'
+import { addressEnvelopeSchema, createRecord, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()
 
@@ -171,7 +171,7 @@ export function buildApplicationDetailRecord(
     globalStateCount: globalState?.length ?? 0,
     ...(globalState?.length ? { globalState: globalState.map(decodeGlobalEntry) } : {}),
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /** Wraps search_applications. */
@@ -189,7 +189,7 @@ export function buildApplicationListRecord(
     })),
     nextToken: page.nextToken,
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /** Wraps read_global_state and read_local_state (the unified scope shape). */
@@ -210,7 +210,7 @@ export function buildApplicationStateRecord(
       type: entry.type,
     })),
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 type LocalKeyValue = ViewData<'application.locals'>['appLocalStates'][number]['keyValue'][number]
@@ -248,7 +248,7 @@ export function buildApplicationLocalsRecord(
     })),
     nextToken: page.nextToken,
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /** Wraps lookup_application_logs. */
@@ -257,7 +257,7 @@ export function buildApplicationLogsRecord(
   wire: unknown,
   toolName = 'lookup_application_logs',
 ): StructuredResult {
-  return record(identity, toolName, applicationLogsDataSchema.parse(wire))
+  return createRecord(identity, toolName, applicationLogsDataSchema.parse(wire))
 }
 
 /** Wraps get_application_program. */
@@ -266,7 +266,7 @@ export function buildApplicationProgramRecord(
   wire: unknown,
   toolName = 'get_application_program',
 ): StructuredResult {
-  return record(identity, toolName, applicationProgramDataSchema.parse(wire))
+  return createRecord(identity, toolName, applicationProgramDataSchema.parse(wire))
 }
 
 /** The methods view over a get_application_program record (or any wire with the same keys). */
@@ -275,7 +275,7 @@ export function buildApplicationMethodsRecord(
   wire: unknown,
   toolName = 'get_application_program',
 ): StructuredResult {
-  return record(identity, toolName, applicationMethodsDataSchema.parse(wire))
+  return createRecord(identity, toolName, applicationMethodsDataSchema.parse(wire))
 }
 
 /** Wraps explain_application — the model's markdown, kept verbatim. */
@@ -284,7 +284,7 @@ export function buildApplicationExplanationRecord(
   wire: unknown,
   toolName = 'explain_application',
 ): StructuredResult {
-  return record(identity, toolName, applicationExplanationDataSchema.parse(wire))
+  return createRecord(identity, toolName, applicationExplanationDataSchema.parse(wire))
 }
 
 /** Wraps read_box_state. */
@@ -301,7 +301,7 @@ export function buildApplicationBoxRecord(
     value: box.value,
     size: box.size,
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /** Wraps list_application_boxes. */
@@ -316,7 +316,7 @@ export function buildApplicationBoxesRecord(
     boxes: page.boxes,
     truncated: page.truncated,
   }
-  return record(identity, toolName, data)
+  return createRecord(identity, toolName, data)
 }
 
 /** Derives application presentation from one trusted result reference. */

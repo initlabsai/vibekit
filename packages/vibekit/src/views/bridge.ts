@@ -10,7 +10,7 @@ import { z } from 'zod'
 import { TRUSTED_VIEW_IDS, type TrustedViewId } from '../actions/index.js'
 import { structuredResultSchema, type JsonValue } from '../actions/index.js'
 import { RECORD_PROTOCOL_VERSION } from '../actions/index.js'
-import { record } from './derive.js'
+import { createRecord } from './derive.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
 import { composeWireResultSchema } from '../actions/index.js'
 import {
@@ -83,7 +83,7 @@ export function structuredResultFromToolEvent(
         : { code: 'TOOL_ERROR', message: 'Tool call failed without a structured error' },
     })
   }
-  return record(
+  return createRecord(
     {
       resultId: identity.resultId,
       toolCallId: event.id,

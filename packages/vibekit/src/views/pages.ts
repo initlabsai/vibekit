@@ -1,7 +1,7 @@
 import type { TrustedViewId } from '../actions/index.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
 import type { ToolCallHost } from './host.js'
-import { record } from './derive.js'
+import { createRecord } from './derive.js'
 
 /** The array a paged list view renders; the next page's rows append to it. */
 const LIST_KEYS: Partial<Record<TrustedViewId, string>> = {
@@ -51,7 +51,7 @@ export function mergePages(
   const b = next.data as Record<string, unknown>
   const rows = [...((a[key] as unknown[]) ?? []), ...((b[key] as unknown[]) ?? [])]
   const { nextToken: _first, ...rest } = a
-  return record(
+  return createRecord(
     { ...identity, ...(first.input === undefined ? {} : { input: first.input }) },
     first.toolName,
     {

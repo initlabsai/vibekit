@@ -1,21 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  addResult,
-  RECORD_PROTOCOL_VERSION,
-  createAccountOpenView,
-  createAccountPortfolioViewModel,
-  createSampleHost,
-  createFixtureResultStore,
-  createResultStore,
-  createTransactionCollectionViewModel,
-  FIXTURE_ADDRESS_BOOK,
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  formatMicroAlgos,
-  viewSpecSchema,
-} from '../../src/views/index.js'
+import { addResult, RECORD_PROTOCOL_VERSION, createResultStore, viewSpecSchema } from '../../src/actions/index.js'
+import { createAccountOpenView, createAccountPortfolioViewModel, createTransactionCollectionViewModel, formatMicroAlgos } from '../../src/views/index.js'
+import { createSampleHost, createFixtureResultStore, FIXTURE_ADDRESS_BOOK, FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from '../../src/views/sample/index.js'
 import { buildAccountPortfolioRecord } from '../../src/views/account.js'
 import { createFixtureAccountLookup } from '../../src/views/sample/account.js'
 import { FIXTURE_APPLICATION_ID } from '../../src/views/sample/entities.js'

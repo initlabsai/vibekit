@@ -1,9 +1,4 @@
-import type {
-  ApplicationDetailViewModel,
-  ApplicationExplanationViewModel,
-  ApplicationMethodsViewModel,
-  ApplicationProgramViewModel,
-} from '@initlabs/vibekit/views'
+import type { ApplicationDetailViewModel, ApplicationExplanationViewModel, ApplicationMethodsViewModel, ApplicationProgramViewModel } from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 import {

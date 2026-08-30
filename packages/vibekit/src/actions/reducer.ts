@@ -383,7 +383,7 @@ export const actionEventKinds = [
 export type ActionEventKind = (typeof actionEventKinds)[number]
 
 /** Lists the event kinds the machine accepts next, so an app can enable the right controls. */
-export function actionNextEventKinds(
+export function nextActionEvents(
   state: ActionState | null,
 ): readonly ActionEventKind[] {
   if (state === null) return ['draft']

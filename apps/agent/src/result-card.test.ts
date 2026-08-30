@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { TRUSTED_VIEW_IDS } from '@initlabs/vibekit/views'
+import { TRUSTED_VIEW_IDS } from '@initlabs/vibekit/actions'
 
 const source = await Bun.file(new URL('./result-card.tsx', import.meta.url)).text()
 

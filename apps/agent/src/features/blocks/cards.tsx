@@ -1,6 +1,6 @@
 'use client'
 
-import { formatBlockTxnType, formatExplorerTime, type BlockDetailViewModel } from '@initlabs/vibekit/views'
+import { formatBlockTxnType, formatTime, type BlockDetailViewModel } from '@initlabs/vibekit/views'
 import { useEffect, useState } from 'react'
 
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'
@@ -26,7 +26,7 @@ export function BlockCard({
       />
       <Hero value={`round ${model.round}`} copy={String(model.round)} />
       <Facts>
-        <Fact label="time" value={formatExplorerTime(model.timestamp)} />
+        <Fact label="time" value={formatTime(model.timestamp)} />
         <Fact label="txns">
           <TxnTags row={model} />
           {model.transactionTypes.length === 0 ? null : <span className="muted"> · {model.transactionCount} total</span>}
@@ -93,7 +93,7 @@ export function BlockListCard({
   const columns: Column<BlockRow>[] = [
     { key: 'round', label: 'round', width: 'minmax(6rem, .7fr)', sortValue: (b) => b.round, cell: (b) => <span className="tt-kind">{b.round}</span> },
     { key: 'age', label: 'age', width: 'minmax(4rem, .5fr)', cell: (b) => <Age timestamp={b.timestamp} /> },
-    { key: 'time', label: 'time', width: 'minmax(12rem, 1fr)', sortValue: (b) => b.timestamp, cell: (b) => formatExplorerTime(b.timestamp) },
+    { key: 'time', label: 'time', width: 'minmax(12rem, 1fr)', sortValue: (b) => b.timestamp, cell: (b) => formatTime(b.timestamp) },
     { key: 'txns', label: 'txns', width: 'minmax(9rem, 1.2fr)', sortValue: (b) => b.transactionCount, cell: (b) => <TxnTags row={b} /> },
     {
       key: 'proposer',

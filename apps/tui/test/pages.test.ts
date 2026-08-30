@@ -1,9 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import {
-  buildAssetHoldingsRecord,
-  createResultStore,
-  type ResultStore,
-} from '@initlabs/vibekit/views'
+import { buildAssetHoldingsRecord } from '@initlabs/vibekit/views'
+import { createResultStore, type ResultStore } from '@initlabs/vibekit/actions'
 
 import { loadNextPage, viewFor } from '../src/lookup.js'
 import type { ExplorerHost } from '../src/features/network/hooks.js'

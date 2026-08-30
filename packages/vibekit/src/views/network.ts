@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { uint64JsonSchema } from './format.js'
 
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { record, viewModelFor } from './derive.js'
+import { createRecord, viewModelFor } from './derive.js'
 
 /**
  * Authoritative health metrics required by the trusted network status view.
@@ -43,7 +43,7 @@ export function buildNetworkStatusRecord(
   wire: unknown,
   toolName = 'get_network_status',
 ): StructuredResult {
-  return record(identity, toolName, networkStatusDataSchema.parse(wire))
+  return createRecord(identity, toolName, networkStatusDataSchema.parse(wire))
 }
 
 /** Derives network presentation from one trusted result reference. */

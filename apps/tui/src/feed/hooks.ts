@@ -2,7 +2,7 @@
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useCallback, useRef, useState } from 'react'
 
-import type { ViewSpec, ActionState } from '@initlabs/vibekit/views'
+import type { ViewSpec, ActionState } from '@initlabs/vibekit/actions'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =

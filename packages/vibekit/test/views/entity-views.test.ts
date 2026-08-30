@@ -1,23 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  RECORD_PROTOCOL_VERSION,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  addResult,
-  bridgeToolResult,
-  createApplicationDetailViewModel,
-  createAssetDetailViewModel,
-  createBlockDetailViewModel,
-  createTransactionDetailViewModel,
-  createNetworkStatusViewModel,
-  createResultStore,
-  formatBlockTxnType,
-  formatExplorerTime,
-  lookupAmbiguousEntity,
-  parseEntityComposerCommand,
-  viewSpecSchema,
-} from '../../src/views/index.js'
+import { RECORD_PROTOCOL_VERSION, addResult, createResultStore, viewSpecSchema } from '../../src/actions/index.js'
+import { FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from '../../src/views/sample/index.js'
+import { bridgeToolResult, createApplicationDetailViewModel, createAssetDetailViewModel, createBlockDetailViewModel, createTransactionDetailViewModel, createNetworkStatusViewModel, formatBlockTxnType, formatTime, lookupAmbiguousEntity, parseEntityComposerCommand } from '../../src/views/index.js'
 import {
   FIXTURE_APPLICATION_ID,
   FIXTURE_ASSET_ID,
@@ -119,7 +104,7 @@ describe('fixture entity lookup', () => {
     expect(formatBlockTime(derivedBlock.model.timestamp)).toBe(
       new Date(1787169189 * 1000).toISOString(),
     )
-    expect(formatExplorerTime(derivedBlock.model.timestamp)).toBe(
+    expect(formatTime(derivedBlock.model.timestamp)).toBe(
       new Date(1787169189 * 1000).toUTCString().replace(/GMT$/, 'UTC'),
     )
 

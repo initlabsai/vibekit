@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 
-import { createFixtureResultStore, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from '@initlabs/vibekit/views'
+import { createFixtureResultStore, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID } from '@initlabs/vibekit/views/sample'
 
 import { createRemoteExplorerHost } from './remote-host.js'
 

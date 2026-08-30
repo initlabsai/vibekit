@@ -1,25 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  type TrustedViewId,
-  createNfdProfileViewModel,
-  RECORD_PROTOCOL_VERSION,
-  FIXTURE_SENDER,
-  addResult,
-  bridgeToolResult,
-  createAccountListViewModel,
-  createAccountSummaryViewModel,
-  createApplicationLocalsViewModel,
-  createApplicationStateViewModel,
-  createAssetHoldersViewModel,
-  createAssetHoldingsViewModel,
-  createAssetListViewModel,
-  createBlockDetailViewModel,
-  createBlockListViewModel,
-  createResultStore,
-  createTransactionCollectionViewModel,
-  viewSpecSchema,
-} from '../../src/views/index.js'
+import { type TrustedViewId, RECORD_PROTOCOL_VERSION, addResult, createResultStore, viewSpecSchema } from '../../src/actions/index.js'
+import { createNfdProfileViewModel, bridgeToolResult, createAccountListViewModel, createAccountSummaryViewModel, createApplicationLocalsViewModel, createApplicationStateViewModel, createAssetHoldersViewModel, createAssetHoldingsViewModel, createAssetListViewModel, createBlockDetailViewModel, createBlockListViewModel, createTransactionCollectionViewModel } from '../../src/views/index.js'
+import { FIXTURE_SENDER } from '../../src/views/sample/index.js'
 
 const identity = {
   resultId: 'result-catalog',

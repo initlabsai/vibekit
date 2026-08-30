@@ -1,8 +1,4 @@
-import {
-  formatBlockTxnType,
-  formatExplorerTime,
-  type BlockDetailViewModel,
-} from '@initlabs/vibekit/views'
+import { formatBlockTxnType, formatTime, type BlockDetailViewModel } from '@initlabs/vibekit/views'
 
 import { COLORS } from '../../theme.js'
 import {
@@ -43,7 +39,7 @@ export function BlockCard({
       <Hero value={`round ${model.round}`} copy={String(model.round)} />
       <box marginTop={1} flexDirection="column">
         <Rule width={body} />
-        <Fact label="time" value={formatExplorerTime(model.timestamp)} width={body} />
+        <Fact label="time" value={formatTime(model.timestamp)} width={body} />
         <box flexDirection="row" height={1}>
           <text fg={COLORS.faint} content={'txns'.padEnd(10)} />
           {model.transactionTypes.length === 0 ? (
@@ -129,7 +125,7 @@ export function BlockListCard({
       onOpen={onOpen && ((block) => onOpen(block.round))}
       facts={(block, body) => (
         <>
-          <Fact label="time" value={formatExplorerTime(block.timestamp)} width={body} />
+          <Fact label="time" value={formatTime(block.timestamp)} width={body} />
           <Fact
             label="txns"
             value={`${block.transactionCount} txn${block.transactionCount === 1 ? '' : 's'}`}

@@ -2,7 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { bytesToBase64 } from '../../src/core/index.js'
 
-import { createActionViewModel, addResult, createResultStore } from '../../src/views/index.js'
+import { createActionViewModel } from '../../src/views/index.js'
+import { addResult, createResultStore } from '../../src/actions/index.js'
 import {
   draftRecordFromComposeWire,
   signDraftWith,

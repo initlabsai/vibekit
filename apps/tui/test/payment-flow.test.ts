@@ -1,16 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  submitAction,
-  createSampleHost,
-  createFixtureResultStore,
-  createActionViewModel,
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performActionStep,
-  startAction,
-} from '@initlabs/vibekit/views'
+import { submitAction, performActionStep, startAction } from '@initlabs/vibekit/actions'
+import { createSampleHost, createFixtureResultStore, FIXTURE_RECEIVER, FIXTURE_SENDER, PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit/views/sample'
+import { createActionViewModel } from '@initlabs/vibekit/views'
 
 import { paymentLines } from '../src/features/action/cards.js'
 import { routeComposerInput } from '../src/commands.js'

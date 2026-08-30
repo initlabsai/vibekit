@@ -1,5 +1,6 @@
 /** The active network: the remote host for it, the sample fallback, the reachability probe, and the round poll. */
-import { createSampleHost, type LiveNetworkId } from '@initlabs/vibekit/views'
+import { createSampleHost } from '@initlabs/vibekit/views/sample'
+import { type LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { createRemoteExplorerHost, type RemoteExplorerHost } from '../../remote-host'

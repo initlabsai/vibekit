@@ -6,12 +6,8 @@
  * (`submitAction`), which is the only caller.
  */
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
-import type {
-  EntityLookupHost,
-  ActionHost,
-  StructuredResult,
-  TransactionSearchFilter,
-} from '@initlabs/vibekit/views'
+import type { EntityLookupHost, TransactionSearchFilter } from '@initlabs/vibekit/views'
+import type { ActionHost, StructuredResult } from '@initlabs/vibekit/actions'
 import {
   createLiveHost,
   signDraftWith,

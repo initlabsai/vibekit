@@ -4,7 +4,7 @@
  * package's `createWalletSignDraft` as its `record` transport.
  */
 import { createRemoteActionHost } from '@initlabs/vibekit/actions'
-import type { StructuredResult } from '@initlabs/vibekit/views'
+import type { StructuredResult } from '@initlabs/vibekit/actions'
 
 export function recordSigned(network: string, draftRecord: StructuredResult, signedTransactions: string[]): Promise<StructuredResult> {
   return createRemoteActionHost({ url: '/api/explorer', network }).recordSigned(draftRecord, signedTransactions)

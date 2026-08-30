@@ -1,50 +1,8 @@
 /** ViewSpec → card: the one switch that maps every trusted view id to its feature's card. */
 import { useState } from 'react'
 
-import {
-  findResultRecord,
-  nextPageArgs,
-  createAccountListViewModel,
-  createAccountPortfolioViewModel,
-  createAccountSummaryViewModel,
-  createApplicationBoxViewModel,
-  createApplicationBoxesViewModel,
-  createApplicationDetailViewModel,
-  createApplicationListViewModel,
-  createApplicationLocalsViewModel,
-  createApplicationLogsViewModel,
-  createApplicationProgramViewModel,
-  createApplicationMethodsViewModel,
-  createApplicationExplanationViewModel,
-  createApplicationStateViewModel,
-  createAssetDetailViewModel,
-  createAssetHoldersViewModel,
-  createAssetHoldingsViewModel,
-  createAssetListViewModel,
-  createBlockDetailViewModel,
-  createBlockListViewModel,
-  createNetworkStatusViewModel,
-  createArcadeMarketViewModel,
-  createArcadeMarketsViewModel,
-  createArcadeOrderbookViewModel,
-  createArcadeOrdersViewModel,
-  createArcadePositionsViewModel,
-  createDefiProtocolsViewModel,
-  createNfdListViewModel,
-  createNfdProfileViewModel,
-  createPeraAssetViewModel,
-  createWebPageViewModel,
-  createWebResultsViewModel,
-  createSwapQuoteViewModel,
-  createVestigeHistoryViewModel,
-  createVestigeMarketsViewModel,
-  createVestigePricesViewModel,
-  createTransactionCollectionViewModel,
-  createTransactionDetailViewModel,
-  type ResultStore,
-  type ViewSpec,
-  type TransactionSearchFilter,
-} from '@initlabs/vibekit/views'
+import { findResultRecord, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
+import { nextPageArgs, createAccountListViewModel, createAccountPortfolioViewModel, createAccountSummaryViewModel, createApplicationBoxViewModel, createApplicationBoxesViewModel, createApplicationDetailViewModel, createApplicationListViewModel, createApplicationLocalsViewModel, createApplicationLogsViewModel, createApplicationProgramViewModel, createApplicationMethodsViewModel, createApplicationExplanationViewModel, createApplicationStateViewModel, createAssetDetailViewModel, createAssetHoldersViewModel, createAssetHoldingsViewModel, createAssetListViewModel, createBlockDetailViewModel, createBlockListViewModel, createNetworkStatusViewModel, createArcadeMarketViewModel, createArcadeMarketsViewModel, createArcadeOrderbookViewModel, createArcadeOrdersViewModel, createArcadePositionsViewModel, createDefiProtocolsViewModel, createNfdListViewModel, createNfdProfileViewModel, createPeraAssetViewModel, createWebPageViewModel, createWebResultsViewModel, createSwapQuoteViewModel, createVestigeHistoryViewModel, createVestigeMarketsViewModel, createVestigePricesViewModel, createTransactionCollectionViewModel, createTransactionDetailViewModel, type TransactionSearchFilter } from '@initlabs/vibekit/views'
 
 import {
   AccountCard,

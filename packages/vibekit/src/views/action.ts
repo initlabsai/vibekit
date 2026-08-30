@@ -6,7 +6,7 @@
 import { actionIntentSchema } from '../core/index.js'
 import {
   actionEventKinds,
-  actionNextEventKinds,
+  nextActionEvents,
   actionStageSchema,
   algorandAddressCandidateSchema,
   algorandTransactionIdSchema,
@@ -239,7 +239,7 @@ export function createActionViewModel(
     flow: 'payment',
     flowId: flow.flowId,
     stage: flow.stage,
-    nextEventKinds: [...actionNextEventKinds(flow)],
+    nextEventKinds: [...nextActionEvents(flow)],
     network,
     sender: draftData.sender,
     ...(draftData.receiver === undefined ? {} : { receiver: draftData.receiver }),

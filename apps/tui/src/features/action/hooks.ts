@@ -1,14 +1,6 @@
-import {
-  submitAction,
-  createActionViewModel,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performActionStep,
-  startAction,
-  startActionFromDraft,
-  type ResultStore,
-  type StructuredResult,
-  type ActionState,
-} from '@initlabs/vibekit/views'
+import { submitAction, performActionStep, startAction, startActionFromDraft, type ResultStore, type StructuredResult, type ActionState } from '@initlabs/vibekit/actions'
+import { createActionViewModel } from '@initlabs/vibekit/views'
+import { PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit/views/sample'
 import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useCallback, useMemo, useRef, useState } from 'react'
 

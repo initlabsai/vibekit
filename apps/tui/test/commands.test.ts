@@ -1,11 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import {
-  FIXTURE_RECEIVER,
-  FIXTURE_SENDER,
-  FIXTURE_TRANSACTION_ID,
-  PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-} from '@initlabs/vibekit/views'
+import { FIXTURE_RECEIVER, FIXTURE_SENDER, FIXTURE_TRANSACTION_ID, PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit/views/sample'
 
 import { resolvePaymentParties, routeComposerInput } from '../src/commands.js'
 

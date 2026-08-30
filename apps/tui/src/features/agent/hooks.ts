@@ -1,4 +1,4 @@
-import { addResult, type ResultStore } from '@initlabs/vibekit/views'
+import { addResult, type ResultStore } from '@initlabs/vibekit/actions'
 import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import {
   listZeroSignalModels,

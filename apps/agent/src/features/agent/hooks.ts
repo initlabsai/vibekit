@@ -4,16 +4,8 @@
  * tool results as the same cards the direct lane makes, a composed group as
  * the approval modal. The browser keeps the history and sends it back.
  */
-import {
-  addResult,
-  bridgeToolResult,
-  structuredResultSchema,
-  type JsonValue,
-  type LiveNetworkId,
-  type ResultStore,
-  type StructuredResult,
-  type ToolResultEventLike,
-} from '@initlabs/vibekit/views'
+import { addResult, structuredResultSchema, type JsonValue, type ResultStore, type StructuredResult } from '@initlabs/vibekit/actions'
+import { bridgeToolResult, type LiveNetworkId, type ToolResultEventLike } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { WalletAccount } from '../../commands'

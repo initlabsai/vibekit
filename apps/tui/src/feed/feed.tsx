@@ -2,11 +2,8 @@
  * The transcript: the session index (NavPane), the results feed (ContentPane)
  * with its welcome panel and thinking fold, and the composer input.
  */
-import {
-  createActionViewModel,
-  type ResultStore,
-  type ViewSpec,
-} from '@initlabs/vibekit/views'
+import { createActionViewModel } from '@initlabs/vibekit/views'
+import { type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
 import {
   createTextAttributes,
   type BoxRenderable,

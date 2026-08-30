@@ -189,7 +189,7 @@ export function createPaymentFixtureResultStore(): ResultStore {
 }
 
 /** Creates the full fixture store both apps start from: transaction plus payment results. */
-export function createExplorerFixtureResultStore(): ResultStore {
+export function createSampleResultStore(): ResultStore {
   return createResultStore([transactionFixtureResult, ...paymentFixtureResults])
 }
 

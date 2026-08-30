@@ -2,12 +2,12 @@ import { describe, expect, test } from 'bun:test'
 
 import { createPaymentFixtureEvent, PAYMENT_FIXTURE_FLOW_ID } from '../../src/views/sample/payment.js'
 import {
-  actionNextEventKinds,
+  nextActionEvents,
   actionReducer,
   actionStateSchema,
   type ActionEventKind,
 } from '../../src/actions/index.js'
-import { type ActionState } from '../../src/views/index.js'
+import { type ActionState } from '../../src/actions/index.js'
 
 function advance(state: ActionState | null, kind: ActionEventKind): ActionState {
   const transition = actionReducer(state, createPaymentFixtureEvent(kind))
@@ -72,7 +72,7 @@ describe('write flow state machine', () => {
     expect(denied.stage).toBe('denied')
     expect(denied.approvalDecision?.reason).toBe('Denied in Explorer review')
     expect(actionStateSchema.safeParse(denied).success).toBeTrue()
-    expect(actionNextEventKinds(denied)).toEqual([])
+    expect(nextActionEvents(denied)).toEqual([])
 
     const confirm = actionReducer(denied, createPaymentFixtureEvent('sign'))
     expect(confirm).toEqual({
@@ -153,14 +153,14 @@ describe('write flow state machine', () => {
   })
 
   test('offers exactly the legal next event kinds at every stage', () => {
-    expect(actionNextEventKinds(null)).toEqual(['draft'])
-    expect(actionNextEventKinds(flowAt('drafted'))).toEqual(['simulate'])
-    expect(actionNextEventKinds(flowAt('simulated'))).toEqual(['inspect'])
-    expect(actionNextEventKinds(flowAt('inspected'))).toEqual(['request-approval'])
-    expect(actionNextEventKinds(flowAt('awaiting-approval'))).toEqual(['approve', 'deny'])
-    expect(actionNextEventKinds(flowAt('approved'))).toEqual(['sign'])
-    expect(actionNextEventKinds(flowAt('signed'))).toEqual(['confirm'])
-    expect(actionNextEventKinds(advance(flowAt('signed'), 'confirm'))).toEqual([])
+    expect(nextActionEvents(null)).toEqual(['draft'])
+    expect(nextActionEvents(flowAt('drafted'))).toEqual(['simulate'])
+    expect(nextActionEvents(flowAt('simulated'))).toEqual(['inspect'])
+    expect(nextActionEvents(flowAt('inspected'))).toEqual(['request-approval'])
+    expect(nextActionEvents(flowAt('awaiting-approval'))).toEqual(['approve', 'deny'])
+    expect(nextActionEvents(flowAt('approved'))).toEqual(['sign'])
+    expect(nextActionEvents(flowAt('signed'))).toEqual(['confirm'])
+    expect(nextActionEvents(advance(flowAt('signed'), 'confirm'))).toEqual([])
   })
 
   test('the state schema rejects stage and field combinations the machine cannot produce', () => {

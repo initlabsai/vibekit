@@ -1,10 +1,5 @@
-import {
-  addResult,
-  FIXTURE_ADDRESS_BOOK,
-  FIXTURE_SENDER,
-  type ResultStore,
-  type ViewSpec,
-} from '@initlabs/vibekit/views'
+import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
+import { FIXTURE_ADDRESS_BOOK, FIXTURE_SENDER } from '@initlabs/vibekit/views/sample'
 import { useCallback, useEffect, useState } from 'react'
 
 import type { Screen } from '../../top-bar.js'

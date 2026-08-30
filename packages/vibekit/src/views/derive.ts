@@ -1,5 +1,5 @@
 import {
-  record,
+  createRecord,
   resolveResultReference,
   type ResultStore,
   type ViewModelError,
@@ -7,7 +7,7 @@ import {
 } from '../actions/index.js'
 import { z } from 'zod'
 
-export { record }
+export { createRecord }
 
 /**
  * Hosts scope some list wires to an account by merging an `address` key into

@@ -5,7 +5,7 @@ import { join, relative } from 'node:path'
 const root = join(import.meta.dir, '..')
 const FORBIDDEN = ["'@initlabs/vibekit/live'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
 // Browser-safe subpaths: the action machine and the views (records, view models, sample data).
-const ALLOWED = ["'@initlabs/vibekit/actions'", "'@initlabs/vibekit/views'"]
+const ALLOWED = ["'@initlabs/vibekit/actions'", "'@initlabs/vibekit/views/sample'", "'@initlabs/vibekit/views'"]
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

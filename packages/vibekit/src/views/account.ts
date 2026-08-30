@@ -6,7 +6,7 @@ import { algorandAddressCandidateSchema } from './input.js'
 import type { OpenView } from '../actions/index.js'
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
 import { RECORD_PROTOCOL_VERSION } from '../actions/index.js'
-import { record, viewModelFor } from './derive.js'
+import { createRecord, viewModelFor } from './derive.js'
 
 /** One asset holding on an account. */
 export const accountAssetHoldingSchema = z.object({
@@ -65,7 +65,7 @@ export function buildAccountPortfolioRecord(
   wire: unknown,
   toolName = 'get_account_portfolio',
 ): StructuredResult {
-  return record(identity, toolName, accountPortfolioDataSchema.parse(wire))
+  return createRecord(identity, toolName, accountPortfolioDataSchema.parse(wire))
 }
 
 /** Builds the titled trusted view that renders a portfolio record. */
@@ -91,7 +91,7 @@ export function buildAccountSummaryRecord(
   wire: unknown,
   toolName = 'lookup_account',
 ): StructuredResult {
-  return record(identity, toolName, accountSummaryDataSchema.parse(wire))
+  return createRecord(identity, toolName, accountSummaryDataSchema.parse(wire))
 }
 
 /** Wraps search_accounts / batch_lookup_accounts. */
@@ -100,7 +100,7 @@ export function buildAccountListRecord(
   wire: unknown,
   toolName = 'search_accounts',
 ): StructuredResult {
-  return record(identity, toolName, accountListDataSchema.parse(wire))
+  return createRecord(identity, toolName, accountListDataSchema.parse(wire))
 }
 
 /** Derives account presentation from one trusted result reference. */

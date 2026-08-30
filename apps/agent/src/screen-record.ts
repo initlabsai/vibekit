@@ -1,5 +1,5 @@
 /** One record a screen owns outside the transcript: fetched on demand, paged in place. */
-import { addResult, type StructuredResult, type TrustedViewId, type ViewSpec } from '@initlabs/vibekit/views'
+import { addResult, type StructuredResult, type TrustedViewId, type ViewSpec } from '@initlabs/vibekit/actions'
 import { useCallback, useState } from 'react'
 
 import { useExplorer } from './explorer'
