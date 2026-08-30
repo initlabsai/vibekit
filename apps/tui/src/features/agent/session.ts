@@ -17,7 +17,7 @@ import {
   type JsonValue,
   type ResultStore,
   type StructuredResult,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import {
   activeSenderLine,
   createExplorerAgent as createSharedExplorerAgent,
@@ -28,7 +28,7 @@ import {
   networkOfCall,
   type ExplorerAgentOptions as SharedAgentOptions,
   type LiveNetworkId,
-} from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/live'
 
 export { activeSenderLine, explorerContext, explorerSystemPrompt, networkOfCall }
 import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'

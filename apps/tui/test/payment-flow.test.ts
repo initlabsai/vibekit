@@ -10,7 +10,7 @@ import {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   performActionStep,
   startAction,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { paymentLines } from '../src/features/action/cards.js'
 import { routeComposerInput } from '../src/commands.js'

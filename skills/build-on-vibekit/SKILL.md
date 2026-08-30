@@ -19,7 +19,7 @@ built from — reach for these before writing your own: `@initlabs/vibekit/agent
 (`createQueryHandler`: `POST /query/<tool>`), and `vibekit add <component>`
 (copy-paste React whose props are a tool's output type). Runnable examples:
 `packages/vibekit/examples/{agent-http,rest,signer,stdio,http}.ts` and
-`packages/explorer/examples/action.ts`.
+`packages/vibekit/examples/action.ts`.
 
 ## Current distribution boundary
 

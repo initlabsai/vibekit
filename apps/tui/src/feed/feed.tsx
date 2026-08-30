@@ -6,7 +6,7 @@ import {
   createActionViewModel,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import {
   createTextAttributes,
   type BoxRenderable,

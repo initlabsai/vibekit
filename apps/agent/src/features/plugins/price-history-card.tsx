@@ -2,7 +2,7 @@
 
 /** An asset's USD price over a range: the line, the last close, and the move across the range. */
 import { useState } from 'react'
-import type { AssetHistory } from '@initlabs/vibekit-explorer'
+import type { AssetHistory } from '@initlabs/vibekit/views'
 
 import { AssetMark, Button, Fact, Facts, FooterNote, Frame, Header } from '../../primitives'
 import { chartGeometry } from '../network/chart'

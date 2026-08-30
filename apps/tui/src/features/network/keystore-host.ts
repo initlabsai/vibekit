@@ -11,14 +11,14 @@ import type {
   ActionHost,
   StructuredResult,
   TransactionSearchFilter,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import {
   createLiveHost,
   signDraftWith,
   unsignedTransactionsForDraft,
   type LiveHost,
   type LiveNetworkId,
-} from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/live'
 
 /** The live host plus keystore signing (so it satisfies ActionHost) and the daemon's address book. */
 export interface KeystorePaymentHost extends LiveHost, EntityLookupHost {

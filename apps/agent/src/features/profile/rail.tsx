@@ -15,7 +15,7 @@ import {
   type AccountPortfolioViewModel,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useEffect, useMemo, useState } from 'react'
 
 import { formatUsd, useAlgoPrice } from '../../enrich'

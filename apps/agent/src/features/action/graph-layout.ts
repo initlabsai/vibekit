@@ -3,7 +3,7 @@
  * and where each row's origin, target, and caption go, for a given width.
  * The renderer draws exactly this and decides nothing.
  */
-import type { GraphHorizontal, GraphMarkerTag, GraphVertical, TransactionsGraph } from '@initlabs/vibekit-explorer'
+import type { GraphHorizontal, GraphMarkerTag, GraphVertical, TransactionsGraph } from '@initlabs/vibekit/views'
 
 export const ROW = 40
 export const TOP = 34

@@ -13,7 +13,7 @@ import {
   type ResultStore,
   type StructuredResult,
   type ToolResultEventLike,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { WalletAccount } from '../../commands'

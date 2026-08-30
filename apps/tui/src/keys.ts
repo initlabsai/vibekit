@@ -9,8 +9,8 @@ import {
   nextPageArgs,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/views'
+import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useKeyboard } from '@opentui/react'
 import { useCallback } from 'react'
 

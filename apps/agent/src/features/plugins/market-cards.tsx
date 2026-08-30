@@ -1,7 +1,7 @@
 'use client'
 
 /** Vestige market data: USD prices for named assets, and the activity-ranked search. */
-import type { AssetPrices, RankedAssets } from '@initlabs/vibekit-explorer'
+import type { AssetPrices, RankedAssets } from '@initlabs/vibekit/views'
 
 import { Table, type Column } from '../../generic-cards'
 import { AssetMark, FooterNote, Frame, Header } from '../../primitives'

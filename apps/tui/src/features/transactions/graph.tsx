@@ -1,4 +1,4 @@
-import type { TransactionsGraph } from '@initlabs/vibekit-explorer'
+import type { TransactionsGraph } from '@initlabs/vibekit/views'
 
 import {
   Button,

@@ -21,7 +21,7 @@ import {
   type TransactionSearchFilter,
   type TrustedViewId,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useCallback, useState } from 'react'
 
 import type { PriceRange, WalletAccount } from './commands'

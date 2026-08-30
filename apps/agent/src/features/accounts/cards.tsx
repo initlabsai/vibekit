@@ -5,7 +5,7 @@ import {
   formatMicroAlgos,
   type AccountPortfolioViewModel,
   type AccountSummaryViewModel,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { formatUsd, useAlgoPrice, useAssetMeta } from '../../enrich'
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'

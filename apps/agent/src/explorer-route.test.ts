@@ -7,16 +7,16 @@ import {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   PAYMENT_FIXTURE_SIGNED_TRANSACTION,
   type StructuredResult,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
-const live = await import('@initlabs/vibekit-explorer/live')
+const live = await import('@initlabs/vibekit/live')
 
 /** Every createLiveHost call is recorded; the host answers with fixture records and a broadcast stub. */
 const created: unknown[] = []
 const broadcasts: StructuredResult[] = []
 const sample = createSampleHost()
 const pluginCalls: Array<[string, unknown]> = []
-mock.module('@initlabs/vibekit-explorer/live', () => ({
+mock.module('@initlabs/vibekit/live', () => ({
   ...live,
   createEnrichmentHost: (config: unknown) => ({
     network: typeof config === 'string' ? config : (config as { id: string }).id,

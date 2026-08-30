@@ -30,4 +30,4 @@ leaves to the wallet are offered to it; a router's pre-signed legs are spliced
 back in place.
 
 Example of the whole action, no UI:
-[`packages/explorer/examples/action.ts`](https://github.com/initlabsai/vibekit/blob/main/packages/explorer/examples/action.ts).
+[`packages/vibekit/examples/action.ts`](https://github.com/initlabsai/vibekit/blob/main/packages/vibekit/examples/action.ts).

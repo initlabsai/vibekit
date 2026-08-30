@@ -3,7 +3,7 @@ import {
   buildAssetHoldingsRecord,
   createResultStore,
   type ResultStore,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { loadNextPage, viewFor } from '../src/lookup.js'
 import type { ExplorerHost } from '../src/features/network/hooks.js'

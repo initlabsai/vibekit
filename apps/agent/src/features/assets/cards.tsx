@@ -1,6 +1,6 @@
 'use client'
 
-import { formatAssetAmount, formatBaseUnits, type AssetDetailViewModel } from '@initlabs/vibekit-explorer'
+import { formatAssetAmount, formatBaseUnits, type AssetDetailViewModel } from '@initlabs/vibekit/views'
 
 import { formatUsd, useAssetMeta } from '../../enrich'
 import { MoreFooter, Table, type Column } from '../../generic-cards'

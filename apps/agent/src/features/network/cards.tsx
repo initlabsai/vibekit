@@ -1,7 +1,7 @@
 'use client'
 
 /** Network health: the TPS headline, a line over the sampled blocks, and the numbers that explain it. */
-import type { NetworkStatusViewModel } from '@initlabs/vibekit-explorer'
+import type { NetworkStatusViewModel } from '@initlabs/vibekit/views'
 import { useState } from 'react'
 
 import { Copyable, Frame, Header, Unavailable } from '../../primitives'

@@ -1,0 +1,74 @@
+import { z } from 'zod'
+
+import {
+  sameUint64,
+  signedMicroAlgosJsonSchema,
+  uint64JsonSchema,
+  type SignedMicroAlgosJson,
+  type Uint64Json,
+} from '../actions/index.js'
+
+export { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema, type SignedMicroAlgosJson, type Uint64Json }
+
+/**
+ * Formats microALGOs as an exact decimal ALGO string using digit math, never
+ * floating point, so authoritative amounts survive display unchanged.
+ */
+export function formatMicroAlgos(value: Uint64Json | SignedMicroAlgosJson): string {
+  const raw = typeof value === 'number' ? value.toString() : value
+  if (!/^-?\d+$/.test(raw)) throw new Error(`Not a microALGO integer: ${raw}`)
+  const negative = raw.startsWith('-')
+  const magnitude = formatBaseUnits(negative ? raw.slice(1) : raw, 6)
+  return negative && magnitude !== '0' ? `-${magnitude}` : magnitude
+}
+
+/** Thousands separators on the whole part: 2522 → 2,522. Display only; nothing parses these back. */
+function group(whole: string): string {
+  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+/**
+ * Formats an unsigned integer in base units as a decimal string with `decimals`
+ * places, using digit math so ASA amounts survive display unchanged.
+ */
+export function formatBaseUnits(value: Uint64Json, decimals: number): string {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 19) {
+    throw new Error(`Invalid decimals: ${decimals}`)
+  }
+  const raw = typeof value === 'number' ? value.toString() : value
+  if (!/^\d+$/.test(raw)) throw new Error(`Not a uint64: ${raw}`)
+  if (decimals === 0) return group(raw.replace(/^0+(?=\d)/, ''))
+  const digits = raw.padStart(decimals + 1, '0')
+  const whole = group(digits.slice(0, -decimals).replace(/^0+(?=\d)/, ''))
+  const fraction = digits.slice(-decimals).replace(/0+$/, '')
+  return fraction ? `${whole}.${fraction}` : whole
+}
+
+/**
+ * An ASA amount for display: scaled when the decimals are known, raw base
+ * units otherwise, with the unit name when given. `1500000 · 6 · USDC` → `1.5 USDC`.
+ */
+export function formatAssetAmount(
+  amount: Uint64Json,
+  decimals?: number,
+  unitName?: string,
+): string {
+  const value = decimals === undefined ? String(amount) : formatBaseUnits(amount, decimals)
+  return unitName ? `${value} ${unitName}` : value
+}
+
+/**
+ * Parses a human decimal ALGO amount into safe-integer microALGOs using digit
+ * math. Returns undefined for malformed input, more than six decimal places,
+ * or amounts beyond the safe-integer range.
+ */
+export function parseAlgosToMicroAlgos(text: string): number | undefined {
+  const match = /^(\d+)(?:\.(\d{1,6}))?$/.exec(text.trim())
+  if (!match) return undefined
+  const whole = match[1]!
+  const fraction = (match[2] ?? '').padEnd(6, '0')
+  const combined = `${whole}${fraction}`.replace(/^0+(?=\d)/, '')
+  const value = Number(combined)
+  if (!Number.isSafeInteger(value)) return undefined
+  return value
+}

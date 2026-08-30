@@ -9,7 +9,7 @@ import {
   transactionKind,
   type TransactionDetailViewModel,
   type TransactionRowData,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 import {

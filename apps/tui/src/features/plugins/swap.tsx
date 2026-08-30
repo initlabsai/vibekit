@@ -1,5 +1,5 @@
 /** A Haystack quote (the `haystack.quote` view): in → out, venues, impact. */
-import { formatBaseUnits } from '@initlabs/vibekit-explorer'
+import { formatBaseUnits } from '@initlabs/vibekit/views'
 import type { SwapQuote } from '@initlabs/vibekit/plugins/haystack'
 
 import { Fact, Frame, Header, Hero, innerWidth } from '../../primitives.js'

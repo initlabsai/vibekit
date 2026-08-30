@@ -1,7 +1,7 @@
 'use client'
 
 /** Pera's curated asset profile: the verification tier is the whole point. */
-import type { AssetProfile } from '@initlabs/vibekit-explorer'
+import type { AssetProfile } from '@initlabs/vibekit/views'
 
 import {
   Button,

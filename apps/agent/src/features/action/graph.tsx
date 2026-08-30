@@ -14,7 +14,7 @@ import {
   type GraphLabel,
   type GraphVertical,
   type TransactionsGraph,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useContext, useEffect, useRef, useState } from 'react'
 
 import { OpenContext } from '../../primitives'

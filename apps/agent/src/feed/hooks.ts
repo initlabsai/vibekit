@@ -1,8 +1,8 @@
 /** The transcript's state: sections, their items (notes and cards), and the selection. */
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback, useRef, useState } from 'react'
 
-import type { ViewSpec, ActionState } from '@initlabs/vibekit-explorer'
+import type { ViewSpec, ActionState } from '@initlabs/vibekit/views'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =

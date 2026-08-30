@@ -20,7 +20,6 @@ renders what those tools return.
 | `packages/vibekit/src/agent` (`./agent`, `./agent/config`) | Host: the LLM tool loop and its stored config. |
 | `packages/vibekit/src/preset` (`./preset`) | The stock tool and plugin mix every stock host composes from. |
 | `packages/vibekit/examples` | Reference stdio and HTTP deployments, typechecked with the package. |
-| `packages/explorer` (private) | View models for tool results (`src/views`, including the action view model), the tool-result bridge (`src/bridge.ts`), input classification (`src/input.ts`), formatting (`src/format.ts`), recorded sample data (`src/sample`), and the live host (`src/live`). Not a UI. The record envelope, events, and action machine it builds on are `@initlabs/vibekit/actions`. `src/index.ts` lists what the apps use; everything else is internal. |
 | `apps/cli` | The `vibekit` binary: `new`, `init`, `localnet`, `keystore`, `dispenser`, `doctor`, `tool`, `mcp`, `explore`. Host: `commands/tool.ts` and `commands/mcp.ts`. |
 | `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. `features/<name>/` holds one feature's hooks, screen, and cards; `feed/` is the transcript; `app.tsx` composes them. |
 | `apps/agent` | The web Explorer with its agent (Next.js). Sample-backed reads plus a compose-only flow route. |
@@ -43,7 +42,7 @@ Read:
 host (mcp | agent | cli tool) → executeToolCall(deployment, tool, args)
   → picks the network context → tool.handler(ctx, args) → jsonSafe()
   → output schema check → wire result
-Explorer: wire → build*Record (packages/explorer/src/views) → StructuredResult
+Views: wire → build*Record (packages/vibekit/src/views) → StructuredResult
   → ViewSpec → create*ViewModel → card (apps/tui/src/features/*/cards.tsx)
 ```
 
@@ -72,7 +71,7 @@ One word per concept. Do not introduce a synonym.
 - **deployment** — a configured set of tools and plugins over one or more
   networks, in execute or compose mode, with an optional signer.
 - **host** — a process that runs tool calls through `executeToolCall`: the
-  MCP server, the agent loop, `vibekit tool`. In `packages/explorer`, a
+  MCP server, the agent loop, `vibekit tool`. In `packages/vibekit/src/views`, a
   `*Host` interface is the backend an Explorer app calls for results
   (`LiveHost`, the fixture host).
 - **core** — `packages/vibekit/src/core`. Not "kernel" or "engine".
@@ -139,7 +138,7 @@ One word per concept. Do not introduce a synonym.
 - Apps are private workspaces and independent deployment artifacts. They
   import `@initlabs/*` through public exports using `workspace:*`; no relative
   or private cross-package imports. Packages never depend on apps.
-- Shared Explorer state and protocol live in `packages/explorer`; rendering
+- Shared Explorer state and protocol live in `@initlabs/vibekit/views` and `/live`; rendering
   primitives live in their apps. `bun run verify:packed` builds the
   out-of-workspace consumer from packed tarballs; run it after any change to
   package exports, manifests, or public types.

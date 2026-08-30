@@ -2,7 +2,7 @@
 import algosdk from 'algosdk'
 
 import { base64ToBytes } from '@initlabs/vibekit'
-import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos } from '@initlabs/vibekit/views'
 
 import type { ReactNode } from 'react'
 

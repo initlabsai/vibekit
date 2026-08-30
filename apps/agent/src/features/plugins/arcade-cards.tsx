@@ -7,7 +7,7 @@ import type {
   OpenOrders,
   OrderbookView,
   Positions,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header } from '../../primitives'

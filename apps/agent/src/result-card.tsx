@@ -47,7 +47,7 @@ import {
   type ResultStore,
   type TransactionSearchFilter,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { AccountCard, AccountListCard, AccountSummaryCard } from './features/accounts/cards'
 import {

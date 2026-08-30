@@ -5,7 +5,7 @@ import {
   routeExplorerComposerInput,
   type ExplorerComposerRoute,
   type LiveNetworkId,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 export type PriceRange = '1d' | '7d' | '30d' | '90d' | '1y'
 const PRICE_RANGES: ReadonlySet<string> = new Set(['1d', '7d', '30d', '90d', '1y'])

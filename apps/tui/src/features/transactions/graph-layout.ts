@@ -9,7 +9,7 @@ import {
   type GraphVertical,
   type TransactionsGraph,
   type TransactionRowData,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { getApplicationAddress } from 'algosdk'
 
 import { COLORS, shorten } from '../../theme.js'

@@ -11,7 +11,7 @@ import {
   type StructuredResult,
   type TransactionSearchFilter,
   type ActionHost,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 const ROUTE = '/api/explorer'
 const CONFIRMATION_POLL_MS = 1000

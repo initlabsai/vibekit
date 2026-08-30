@@ -144,7 +144,7 @@ Recording against live mainnet needs: keystore daemon
 (`bun run apps/cli/src/index.ts keystore status`), and for AI segments the
 configured agent provider (zs-proxy for zerosignal — probe its `/v1/models`).
 Good demo IDs: asset `31566704` (USDC), app `1002541853` (Tinyman v2),
-txns from `packages/explorer/test/recorded/mainnet-graph-corpus.json`.
+txns from `packages/vibekit/test/recorded/mainnet-graph-corpus.json`.
 
 ## qt314 pieces (no TUI footage)
 

@@ -7,7 +7,7 @@ import {
   formatMicroAlgos,
   type GraphTransaction,
   type TransactionsGraph,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { getApplicationAddress } from 'algosdk'
 
 import {
@@ -24,7 +24,7 @@ import { COLORS } from '../src/theme.js'
 
 const corpus = JSON.parse(
   readFileSync(
-    join(import.meta.dir, '../../../packages/explorer/test/recorded/mainnet-graph-corpus.json'),
+    join(import.meta.dir, '../../../packages/vibekit/test/recorded/mainnet-graph-corpus.json'),
     'utf8',
   ),
 ) as {

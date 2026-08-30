@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import type { StructuredResult } from '@initlabs/vibekit-explorer'
+import type { StructuredResult } from '@initlabs/vibekit/views'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

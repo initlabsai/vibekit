@@ -9,7 +9,7 @@ import {
   transactionKind,
   type TransactionDetailViewModel,
   type TransactionRowData,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { algo, bytesDisplay, MoreFooter, Table, type Column } from '../../generic-cards'
 import { Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, Unavailable, type Tone } from '../../primitives'

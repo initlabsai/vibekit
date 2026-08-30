@@ -14,8 +14,8 @@ import {
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   startActionFromDraft,
   type ToolResultEventLike,
-} from '@initlabs/vibekit-explorer'
-import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/views'
+import { draftRecordFromComposeWire } from '@initlabs/vibekit/live'
 
 import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
 import { viewFor } from '../src/lookup.js'
@@ -26,7 +26,7 @@ import {
   addResult,
   createAccountListViewModel,
   createResultStore,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { withAccountNames } from '../src/features/network/keystore-host.js'
 
 import {
@@ -333,7 +333,7 @@ describe('TUI agent lane', () => {
 
 describe('explain_application', () => {
   test('the agent’s markdown becomes a trusted explanation record', async () => {
-    const { explainApplicationTool } = await import('@initlabs/vibekit-explorer/live')
+    const { explainApplicationTool } = await import('@initlabs/vibekit/live')
     const output = await explainApplicationTool.handler({} as never, {
       applicationId: 42,
       markdown: '## Pool\n- swap',
@@ -709,7 +709,7 @@ describe('applyToolResultPlan', () => {
   })
 
   test('the explorer agent registers every built-in plugin', async () => {
-    const { explorerPlugins } = await import('@initlabs/vibekit-explorer/live')
+    const { explorerPlugins } = await import('@initlabs/vibekit/live')
     expect(explorerPlugins().map((plugin) => plugin.name)).toEqual([
       'nfd',
       'vestige',

@@ -13,7 +13,7 @@ import {
   createFixtureResultStore,
   createActionViewModel,
   type ResultStore,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -41,7 +41,7 @@ import { ActionCard } from './features/action/cards'
 import { useActionFeed } from './features/action/hooks'
 import { ApprovalModal } from './features/action/modal'
 import { useLookups } from './lookup'
-import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit/views'
 import { Button, CopyContext, OpenContext } from './primitives'
 import type { RemoteExplorerHost } from './remote-host'
 import { ResultCard, type OpenTarget } from './result-card'

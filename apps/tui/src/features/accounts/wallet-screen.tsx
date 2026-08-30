@@ -1,4 +1,4 @@
-import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos } from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 

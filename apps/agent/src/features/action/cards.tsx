@@ -1,7 +1,7 @@
 'use client'
 
 /** The action flow in the feed: the stage rail, the authoritative facts, the graph, and where it ended. */
-import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit/views'
 import type { ReactNode } from 'react'
 
 import {

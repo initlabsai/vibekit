@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@initlabs/vibekit-explorer'],
+  transpilePackages: ['@initlabs/vibekit/views'],
   // The DeFi SDKs stay Node modules: bundling them re-resolves their algokit peer to the
   // wrong major and trips Turbopack's export analysis.
   serverExternalPackages: [

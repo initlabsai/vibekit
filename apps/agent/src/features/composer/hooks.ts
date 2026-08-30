@@ -3,7 +3,7 @@
  * a section in the transcript, and hand it to the lane that owns it. Screen
  * names are routes; everything else lands in the feed.
  */
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback } from 'react'
 
 import { HELP, routeComposerInput } from '../../commands'

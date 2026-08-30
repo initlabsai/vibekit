@@ -9,7 +9,7 @@ import {
   structuredResultSchema,
   type LiveNetworkId,
   type StructuredResult,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import {
   createEnrichmentHost,
   createLiveHost,
@@ -17,7 +17,7 @@ import {
   signedGroupRecordFor,
   type EnrichmentHost,
   type LiveHost,
-} from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/live'
 import { PLUGIN_VIEW_IDS, type PluginViewId } from '@initlabs/vibekit/plugins/views'
 import { z } from 'zod'
 

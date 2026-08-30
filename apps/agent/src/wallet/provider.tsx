@@ -9,7 +9,7 @@
 import { lute } from '@txnlab/use-wallet-lute'
 import { pera } from '@txnlab/use-wallet-pera'
 import { useNetwork as useWalletNetwork, useWallet, WalletManager, WalletProvider } from '@txnlab/use-wallet-react'
-import { createWalletSignDraft, type LiveNetworkId } from '@initlabs/vibekit-explorer'
+import { createWalletSignDraft, type LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { WalletAccount } from '../commands'

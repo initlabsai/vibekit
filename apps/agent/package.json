@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@initlabs/vibekit": "workspace:*",
-    "@initlabs/vibekit-explorer": "workspace:*",
     "@txnlab/haystack-router": "2.0.5",
     "@txnlab/use-wallet-lute": "5.0.0",
     "@txnlab/use-wallet-pera": "5.0.0",

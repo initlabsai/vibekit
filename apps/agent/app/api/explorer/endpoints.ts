@@ -5,7 +5,7 @@
  * URLs are unset; `next dev` falls back to the named endpoints core ships.
  * Localnet is always the hardcoded localhost pair.
  */
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 
 /** The endpoint shape createLiveHost accepts alongside a named network id. */
 export interface NetworkConfig {

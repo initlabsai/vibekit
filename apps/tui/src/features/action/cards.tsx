@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit/views'
 
 import { COLORS } from '../../theme.js'
 import {

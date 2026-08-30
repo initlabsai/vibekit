@@ -2,7 +2,7 @@ import {
   formatAssetAmount,
   formatMicroAlgos,
   type AccountPortfolioViewModel,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { COLORS, shorten } from '../../theme.js'
 import {

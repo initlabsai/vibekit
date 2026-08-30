@@ -1,7 +1,7 @@
 'use client'
 
 /** Algorand DeFi by protocol: TVL bars, biggest first. */
-import type { DefiProtocols } from '@initlabs/vibekit-explorer'
+import type { DefiProtocols } from '@initlabs/vibekit/views'
 
 import { FooterNote, Frame, Header } from '../../primitives'
 import { compactUsd } from './market-cards'

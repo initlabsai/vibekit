@@ -2,7 +2,7 @@
 
 /** Card pieces shared across domains: value formatters, the sortable table, the paged-list footer. */
 import algosdk from 'algosdk'
-import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos } from '@initlabs/vibekit/views'
 import { useState, type ReactNode } from 'react'
 
 import { Button, FooterNote, InertContext } from './primitives'

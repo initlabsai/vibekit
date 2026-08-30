@@ -18,8 +18,8 @@ import {
   type StructuredResult,
   type TrustedViewId,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/views'
+import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
 import { useCallback, useRef } from 'react'
 

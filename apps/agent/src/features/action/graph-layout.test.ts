@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { buildTransactionsGraph, PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit-explorer'
+import { buildTransactionsGraph, PAYMENT_FIXTURE_AMOUNT_MICROALGOS } from '@initlabs/vibekit/views'
 
 import { endTag, layoutGraph, MAX_LANE, MIN_LANE, PAD_X } from './graph-layout.js'
 

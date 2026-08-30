@@ -1,7 +1,7 @@
 'use client'
 
 /** An NFD profile from a pasted name: the deposit address, verified handles, and a line of bio. */
-import type { NfdRecord } from '@initlabs/vibekit-explorer'
+import type { NfdRecord } from '@initlabs/vibekit/views'
 
 import { Button, Copyable, Fact, Facts, Frame, Header } from '../../primitives'
 import { shorten } from '../../theme'

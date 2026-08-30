@@ -5,7 +5,7 @@ import {
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { matchCommands, resolvePaymentParties, routeComposerInput } from './commands.js'
 

@@ -36,6 +36,14 @@
       "types": "./dist/agent/config.d.ts",
       "import": "./dist/agent/config.js"
     },
+    "./views": {
+      "types": "./dist/views/index.d.ts",
+      "import": "./dist/views/index.js"
+    },
+    "./live": {
+      "types": "./dist/live/index.d.ts",
+      "import": "./dist/live/index.js"
+    },
     "./pay": {
       "types": "./dist/pay/index.d.ts",
       "import": "./dist/pay/index.js"

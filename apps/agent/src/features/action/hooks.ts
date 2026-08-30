@@ -1,5 +1,5 @@
 /** The feed's view of an action: the block it updates, the notes it leaves, the status line. */
-import type { ResultStore, StructuredResult } from '@initlabs/vibekit-explorer'
+import type { ResultStore, StructuredResult } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useRef } from 'react'
 
 import { useAction, type ActionNotice } from '../../components/action'

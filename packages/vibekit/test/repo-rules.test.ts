@@ -35,6 +35,8 @@ describe('dependencies point inward', () => {
     actions: ['core', 'tools', 'plugins'],
     agent: ['core', 'actions'],
     mcp: ['core'],
+    views: ['core', 'tools', 'plugins', 'actions'],
+    live: ['core', 'tools', 'plugins', 'actions', 'views', 'agent'],
     pay: [],
     rest: ['core'],
     'signer-keystore': ['core'],
@@ -66,7 +68,6 @@ describe('comments describe the code as committed', () => {
   test('no plan language or retired terms in source and docs', () => {
     const roots = [
       'packages/vibekit/src',
-      'packages/explorer/src',
       'apps/cli/src',
       'apps/tui/src',
       'apps/agent/src',

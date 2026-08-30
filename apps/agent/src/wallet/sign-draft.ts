@@ -4,7 +4,7 @@
  * is not trusted to claim what it signed. Pairs with the explorer's
  * `createWalletSignDraft` as its `record` transport.
  */
-import { structuredResultSchema, type StructuredResult } from '@initlabs/vibekit-explorer'
+import { structuredResultSchema, type StructuredResult } from '@initlabs/vibekit/views'
 
 export async function recordSigned(
   network: string,

@@ -7,7 +7,7 @@
  */
 import { createAgentHandler, type AgentHandler } from '@initlabs/vibekit/agent'
 import { haystackPlugin } from '@initlabs/vibekit/plugins/haystack'
-import { explorerPlugins, explorerSystemPrompt, explorerTools } from '@initlabs/vibekit-explorer/live'
+import { explorerPlugins, explorerSystemPrompt, explorerTools } from '@initlabs/vibekit/live'
 
 import { paywall } from '../credits/config'
 import { houseRefusal, ipOf } from '../credits/ledger'

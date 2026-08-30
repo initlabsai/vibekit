@@ -2,7 +2,7 @@ import {
   formatBlockTxnType,
   formatExplorerTime,
   type BlockDetailViewModel,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { COLORS } from '../../theme.js'
 import {

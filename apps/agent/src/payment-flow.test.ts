@@ -16,7 +16,7 @@ import {
   createWalletSignDraft,
   unsignedTransactionsForDraft,
   type ActionHost,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { resolvePaymentParties, routeComposerInput } from './commands.js'
 import { createRemoteExplorerHost } from './remote-host.js'

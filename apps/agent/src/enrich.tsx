@@ -7,7 +7,7 @@
  * re-renders when its answer lands. Nothing here blocks a card from showing.
  */
 import { z } from 'zod'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 
 import type { RemoteExplorerHost } from './remote-host'

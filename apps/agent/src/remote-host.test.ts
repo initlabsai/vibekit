@@ -4,7 +4,7 @@ import {
   createFixtureResultStore,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import { createRemoteExplorerHost } from './remote-host.js'
 

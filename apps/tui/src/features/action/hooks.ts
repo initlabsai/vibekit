@@ -8,8 +8,8 @@ import {
   type ResultStore,
   type StructuredResult,
   type ActionState,
-} from '@initlabs/vibekit-explorer'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+} from '@initlabs/vibekit/views'
+import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
 import { resolvePaymentParties } from '../../commands.js'

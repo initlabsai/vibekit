@@ -4,7 +4,7 @@ import {
   FIXTURE_SENDER,
   type ResultStore,
   type ViewSpec,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useState } from 'react'
 
 import type { Screen } from '../../top-bar.js'

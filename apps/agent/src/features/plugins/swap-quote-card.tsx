@@ -1,7 +1,7 @@
 'use client'
 
 /** A Haystack quote: what you give, what you get, the venues that make the price. The button composes the swap. */
-import { formatBaseUnits, type SwapQuote } from '@initlabs/vibekit-explorer'
+import { formatBaseUnits, type SwapQuote } from '@initlabs/vibekit/views'
 
 import { Button, Fact, Facts, Frame, Header } from '../../primitives'
 

@@ -2,7 +2,7 @@ import {
   formatAssetAmount,
   formatBaseUnits,
   type AssetDetailViewModel,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 import {
   Button,

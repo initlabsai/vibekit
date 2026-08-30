@@ -3,7 +3,7 @@ import {
   FIXTURE_SENDER,
   routeExplorerComposerInput,
   type ExplorerComposerRoute,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 
 /**
  * The transcript's deterministic lane, checked before any model call: exact

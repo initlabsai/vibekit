@@ -1,4 +1,4 @@
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import { useEffect, useState } from 'react'
 
 import { Button, LiveDot } from './primitives.js'

@@ -1,4 +1,4 @@
-import type { ResultStore, ViewSpec } from '@initlabs/vibekit-explorer'
+import type { ResultStore, ViewSpec } from '@initlabs/vibekit/views'
 
 import { Ident } from '../../primitives.js'
 import { ResultCard, type OpenTarget } from '../../result-card.js'

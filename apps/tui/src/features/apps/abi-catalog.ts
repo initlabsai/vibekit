@@ -2,7 +2,7 @@
  * My Apps spec catalog: match deployed associations to local specs by name,
  * then decode recorded app calls onto stored results.
  */
-import type { StructuredResult } from '@initlabs/vibekit-explorer'
+import type { StructuredResult } from '@initlabs/vibekit/views'
 import { base64ToBytes } from '@initlabs/vibekit'
 import {
   enrichTransactionsWithAbi,

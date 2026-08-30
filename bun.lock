@@ -16,7 +16,6 @@
       "version": "0.1.1-alpha.2",
       "dependencies": {
         "@initlabs/vibekit": "workspace:*",
-        "@initlabs/vibekit-explorer": "workspace:*",
         "@txnlab/haystack-router": "2.0.5",
         "@txnlab/use-wallet-lute": "5.0.0",
         "@txnlab/use-wallet-pera": "5.0.0",
@@ -60,7 +59,6 @@
       "version": "1.0.0-alpha.2",
       "dependencies": {
         "@initlabs/vibekit": "workspace:*",
-        "@initlabs/vibekit-explorer": "workspace:*",
         "@opentui/core": "0.5.6",
         "@opentui/react": "0.5.6",
         "algosdk": "3.7.0",
@@ -83,21 +81,6 @@
       },
       "devDependencies": {
         "@astrojs/check": "^0.9.4",
-        "typescript": "^5.9.3",
-      },
-    },
-    "packages/explorer": {
-      "name": "@initlabs/vibekit-explorer",
-      "version": "1.0.0-alpha.2",
-      "dependencies": {
-        "@algorandfoundation/algokit-utils": "9.2.0",
-        "@alpha-arcade/sdk": "0.4.11",
-        "@initlabs/vibekit": "workspace:*",
-        "algosdk": "3.7.0",
-        "zod": "^4.4.3",
-      },
-      "devDependencies": {
-        "@types/bun": "^1.4.0",
         "typescript": "^5.9.3",
       },
     },
@@ -406,8 +389,6 @@
     "@initlabs/vibekit-agent": ["@initlabs/vibekit-agent@workspace:apps/agent"],
 
     "@initlabs/vibekit-cli": ["@initlabs/vibekit-cli@workspace:apps/cli"],
-
-    "@initlabs/vibekit-explorer": ["@initlabs/vibekit-explorer@workspace:packages/explorer"],
 
     "@initlabs/vibekit-tui": ["@initlabs/vibekit-tui@workspace:apps/tui"],
 

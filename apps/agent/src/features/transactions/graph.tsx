@@ -7,7 +7,7 @@ import {
   type GraphTransaction,
   type TransactionRowData,
   type TransactionsGraph,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import type { ReactNode } from 'react'
 
 import { Fact, Facts, FooterNote, Frame, Header } from '../../primitives'

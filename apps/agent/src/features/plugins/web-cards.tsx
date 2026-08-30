@@ -2,7 +2,7 @@
 
 /** The web as citations: numbered results with their matching passages, and one page folded under its title. */
 import { useState } from 'react'
-import type { WebPage, WebResults } from '@initlabs/vibekit-explorer'
+import type { WebPage, WebResults } from '@initlabs/vibekit/views'
 
 import { Button, FooterNote, Frame, Header } from '../../primitives'
 

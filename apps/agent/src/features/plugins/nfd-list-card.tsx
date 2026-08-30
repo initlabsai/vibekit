@@ -1,7 +1,7 @@
 'use client'
 
 /** NFD names that match a fragment: the name, who owns it, what it asks if listed. */
-import { formatMicroAlgos, type NfdList } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type NfdList } from '@initlabs/vibekit/views'
 
 import { Table, type Column } from '../../generic-cards'
 import { Copyable, FooterNote, Frame, Header } from '../../primitives'

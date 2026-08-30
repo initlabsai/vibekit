@@ -1,7 +1,7 @@
 'use client'
 
 /** The wallet screen: a branded connect menu over `useWallet().wallets`, and the connected accounts. */
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 
 import { useState } from 'react'
 

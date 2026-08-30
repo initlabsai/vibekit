@@ -1,5 +1,5 @@
-import { addResult, type ResultStore } from '@initlabs/vibekit-explorer'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
+import { addResult, type ResultStore } from '@initlabs/vibekit/views'
+import type { LiveNetworkId } from '@initlabs/vibekit/live'
 import {
   listZeroSignalModels,
   probeZeroSignal,

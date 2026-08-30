@@ -1,6 +1,6 @@
 'use client'
 
-import { formatBlockTxnType, formatExplorerTime, type BlockDetailViewModel } from '@initlabs/vibekit-explorer'
+import { formatBlockTxnType, formatExplorerTime, type BlockDetailViewModel } from '@initlabs/vibekit/views'
 import { useEffect, useState } from 'react'
 
 import { algo, MoreFooter, Table, type Column } from '../../generic-cards'

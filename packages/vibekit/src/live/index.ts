@@ -1,0 +1,377 @@
+/**
+ * The live host: a compose-only (signerless) deployment over the vibekit tools
+ * on one named network, wrapped so every call returns a StructuredResult —
+ * reads as records, an ActionHost, the block tail. Server-side: it needs
+ * algosdk clients, so it is not part of the browser-safe views export.
+ */
+import algosdk from 'algosdk'
+import {
+  base64ToBytes,
+  bytesToBase64,
+  executeToolCall,
+  isAction,
+  resolveDeployment,
+  type NetworkConfig,
+} from '../core/index.js'
+import {
+  accountQueries,
+  assetQueries,
+  contractQueries,
+  networkQueries,
+  transactionQueries,
+  transactionActions,
+} from '../tools/index.js'
+
+import { bridgeToolResult } from '../views/bridge.js'
+import type { ExplorerReadHost, LiveNetworkId } from '../views/host.js'
+import { formatAlgodTransaction, printableNote, safeUint64 } from '../actions/algod-txn.js'
+import { tickFromAlgodBlock, type BlockTailTick } from './block-tail.js'
+import {
+  buildConfirmationRecord,
+  buildSignedGroupRecord,
+  buildSimulationRecord,
+  decodeUnsignedGroup,
+  draftRecordFromComposeWire,
+} from '../actions/index.js'
+import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/index.js'
+import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '../actions/index.js'
+import type { JsonValue, StructuredResult } from '../actions/index.js'
+
+export { decodeUnsignedGroup, draftRecordFromComposeWire, unsignedTransactionsForDraft }
+
+/**
+ * Simulates the exact unsigned group bytes (empty signatures allowed). Used
+ * by the live host so approval reviews the drafted transactions, not a
+ * reconstructed spec.
+ */
+export async function simulateUnsignedGroup(
+  algod: algosdk.Algodv2,
+  transactions: readonly string[],
+): Promise<{
+  wouldSucceed: boolean
+  failureMessage?: string
+  simulatedRound: number
+  txids: string[]
+}> {
+  // The bytes are already a group (group ids set), so no ATC: it refuses
+  // grouped transactions. Simulate the encoded group directly.
+  const decoded = transactions.map((encoded) =>
+    algosdk.decodeUnsignedTransaction(base64ToBytes(encoded)),
+  )
+  const request = new algosdk.modelsv2.SimulateRequest({
+    txnGroups: [
+      new algosdk.modelsv2.SimulateRequestTransactionGroup({
+        txns: decoded.map((txn) =>
+          algosdk.decodeSignedTransaction(algosdk.encodeUnsignedSimulateTransaction(txn)),
+        ),
+      }),
+    ],
+    allowEmptySignatures: true,
+  })
+  const simulateResponse = await algod.simulateTransactions(request).do()
+  const group = simulateResponse.txnGroups[0]
+  const txids = decoded.map((txn) => txn.txID())
+  return {
+    wouldSucceed: !group?.failureMessage,
+    ...(group?.failureMessage ? { failureMessage: group.failureMessage } : {}),
+    simulatedRound: Number(simulateResponse.lastRound),
+    txids,
+  }
+}
+
+/**
+ * Wraps signer output as a signed-group record after verifying that every
+ * signed transaction embeds exactly the draft's bytes — a signature over
+ * anything but the approved group is refused, not recorded.
+ */
+export function signedGroupRecordFor(
+  identity: { resultId: string; toolCallId: string; network: string },
+  draftRecord: StructuredResult,
+  signedTransactions: readonly Uint8Array[],
+): StructuredResult {
+  if (draftRecord.state !== 'success') {
+    throw new Error('Cannot sign a failed draft record')
+  }
+  const draft = writeDraftDataSchema.parse(draftRecord.data)
+  if (signedTransactions.length !== draft.unsignedGroup.transactions.length) {
+    throw new Error('Signed group size does not match the drafted group')
+  }
+  const txIds: string[] = []
+  for (const [index, signed] of signedTransactions.entries()) {
+    const presigned = draft.presigned?.[index]
+    if (presigned !== undefined && presigned !== null) {
+      // Another party's leg: the only acceptable bytes are the ones the draft carried.
+      if (bytesToBase64(signed) !== presigned) {
+        throw new Error(`Transaction ${index} is not the pre-signed leg the draft carried`)
+      }
+    } else {
+      const decoded = algosdk.decodeSignedTransaction(signed)
+      const embedded = bytesToBase64(algosdk.encodeUnsignedTransaction(decoded.txn))
+      if (embedded !== draft.unsignedGroup.transactions[index]) {
+        throw new Error(`Signed transaction ${index} does not wrap the drafted bytes`)
+      }
+    }
+    txIds.push(algosdk.decodeSignedTransaction(signed).txn.txID())
+  }
+  return buildSignedGroupRecord(identity, {
+    transactions: signedTransactions.map((signed) => bytesToBase64(signed)),
+    txIds,
+    signer: draft.sender,
+  })
+}
+
+/**
+ * Signs a draft with a wallet's signer: only the legs the draft leaves to the
+ * wallet are offered to it; pre-signed legs are spliced back in place. The
+ * result is verified like any signed group before it becomes a record.
+ */
+export async function signDraftWith(
+  identity: { resultId: string; toolCallId: string; network: string },
+  draftRecord: StructuredResult,
+  signer: DraftSigner,
+): Promise<StructuredResult> {
+  const group = await signGroupForDraft(draftRecord, signer)
+  return signedGroupRecordFor(identity, draftRecord, group.map(base64ToBytes))
+}
+
+/** What the live host offers: reads, the action steps, and the block tail. Nothing here can sign. */
+export interface LiveHost extends ExplorerReadHost {
+  network: string
+  /** True when the network's algod answers within the timeout. */
+  probe(timeoutMs?: number): Promise<boolean>
+  /** Runs an action tool in compose mode and wraps the unsigned group as a draft record. */
+  draft(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
+  /** Simulates the payment decoded from a draft record's actual group bytes. */
+  simulateDraft(draftRecord: StructuredResult): Promise<StructuredResult>
+  /**
+   * Submits an already-signed group and waits for confirmation. Holds no
+   * custody: it can only broadcast bytes some signer produced elsewhere.
+   */
+  submitSigned(signedRecord: StructuredResult): Promise<StructuredResult>
+  /** Broadcasts a signed group and returns at once; pair with `confirmation` to poll. */
+  broadcastSigned(signedRecord: StructuredResult): Promise<{ txid: string }>
+  /** The confirmation record once algod reports the transaction in a round; undefined while pending. */
+  confirmation(txid: string): Promise<StructuredResult | undefined>
+  /** Current algod lastRound. */
+  statusRound(): Promise<{ lastRound: number }>
+  /** Resolves when lastRound is greater than `round` (algod wait-for-block). */
+  waitAfterBlock(round: number): Promise<{ lastRound: number }>
+  /** Reads one confirmed round from algod as feed-ready block + transaction records. */
+  readBlockTick(round: number): Promise<BlockTailTick>
+}
+
+function newId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`
+}
+
+export type { LiveNetworkId }
+
+/**
+ * Creates the shared live host: a compose-only (signerless) deployment over
+ * the transaction actions on one network — a named id, or a NetworkConfig
+ * carrying the caller's own endpoints. No signing or key material is
+ * reachable from here by construction.
+ */
+export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet'): LiveHost {
+  const network = typeof config === 'string' ? config : config.id
+  const deployment = resolveDeployment({
+    network: config,
+    mode: 'compose',
+    // Every query, so callTool can page any list an agent or a lane fetched.
+    tools: [
+      ...transactionActions,
+      ...[
+        ...transactionQueries,
+        ...accountQueries,
+        ...assetQueries,
+        ...contractQueries,
+        ...networkQueries,
+      ].filter((tool) => !tool.mutatesState && !tool.requiresSigner),
+    ],
+  })
+  const context = deployment.contexts.get(network)
+  if (!context) throw new Error(`Deployment is missing network ${network}`)
+
+  /** Fresh paired ids for one live call's record. */
+  const identity = (slug: string, extra?: { input?: JsonValue; network?: string }) => ({
+    resultId: newId(`result-live-${slug}`),
+    toolCallId: newId(`tool-call-live-${slug}`),
+    network: extra?.network ?? network,
+    ...(extra?.input === undefined ? {} : { input: extra.input }),
+  })
+
+  /**
+   * Any of the deployment's tools by name. The tool's view id picks the record
+   * builder; `input` is recorded so a list can re-run its own call for the
+   * next page. Every read below is this.
+   */
+  const callTool = async (toolName: string, args: Record<string, unknown>) => {
+    const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+    if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+    const id = newId('tool-call-live')
+    const output = await executeToolCall(deployment, tool, args)
+    // Hosts scope account lists by merging the address in; the tool's own wire lacks it.
+    const wire =
+      typeof args.address === 'string' &&
+      output !== null &&
+      typeof output === 'object' &&
+      !Array.isArray(output)
+        ? { ...(output as object), address: args.address }
+        : output
+    return bridgeToolResult(
+      { id, toolName, output: wire, isError: false, ...(tool.view ? { view: tool.view } : {}) },
+      { resultId: newId('result-live'), toolCallId: id, network, input: args as JsonValue },
+    ).record
+  }
+
+  /** Broadcast only; confirmation is a separate poll so a caller need not hold a connection. */
+  const broadcastSigned = async (signedRecord: StructuredResult): Promise<{ txid: string }> => {
+    if (signedRecord.state !== 'success') {
+      throw new Error('Cannot submit a failed signed record')
+    }
+    const signed = signedGroupDataSchema.parse(signedRecord.data)
+    const bytes = signed.transactions.map((txn) => base64ToBytes(txn))
+    const { txid } = await context.algod.sendRawTransaction(bytes).do()
+    return { txid }
+  }
+
+  return {
+    network,
+    async probe(timeoutMs = 1500) {
+      try {
+        await Promise.race([
+          context.algod.status().do(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('probe timeout')), timeoutMs),
+          ),
+        ])
+        return true
+      } catch {
+        return false
+      }
+    },
+    async draft(toolName, args) {
+      const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+      if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+      // Only actions draft; a query has no group to sign, and this is the trust boundary a route relies on.
+      if (!isAction(tool)) throw new Error(`${toolName} is a query, not an action`)
+      const wire = await executeToolCall(deployment, tool, args)
+      return draftRecordFromComposeWire(identity('draft'), wire, toolName)
+    },
+    async simulateDraft(draftRecord) {
+      if (draftRecord.state !== 'success') {
+        throw new Error('Cannot simulate a failed draft record')
+      }
+      const draft = writeDraftDataSchema.parse(draftRecord.data)
+      // The group bytes, not reconstructed specs, are the simulated truth.
+      // The same sender rule as the draft: the wallet's first leg, not a router's.
+      const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions, draft.presigned)
+      const wire = await simulateUnsignedGroup(context.algod, draft.unsignedGroup.transactions)
+      return buildSimulationRecord(
+        identity('payment-simulation', { network: draftRecord.network }),
+        wire,
+        decoded,
+      )
+    },
+    broadcastSigned,
+    async confirmation(txid) {
+      const pending = await context.algod.pendingTransactionInformation(txid).do()
+      if (pending.poolError) throw new Error(pending.poolError)
+      const round = pending.confirmedRound
+      if (round === undefined || Number(round) === 0) return undefined
+      return buildConfirmationRecord(identity('payment-confirmation'), {
+        transactionId: txid,
+        confirmedRound: Number(round),
+      })
+    },
+    async submitSigned(signedRecord) {
+      const { txid } = await broadcastSigned(signedRecord)
+      const confirmation = await algosdk.waitForConfirmation(context.algod, txid, 4)
+      return buildConfirmationRecord(
+        identity('payment-confirmation', { network: signedRecord.network }),
+        { transactionId: txid, confirmedRound: Number(confirmation.confirmedRound) },
+      )
+    },
+    lookupAccount: (address) => callTool('get_account_portfolio', { address }),
+    lookupAccounts: (addresses) => callTool('batch_lookup_accounts', { addresses: [...addresses] }),
+    lookupTransaction: (txid) => callTool('lookup_transaction', { txid }),
+    lookupTransactionGroup: (groupId) => callTool('lookup_transaction_group', { groupId }),
+    lookupAsset: (assetId) => callTool('lookup_asset', { assetId }),
+    lookupApplication: (applicationId) => callTool('lookup_application', { applicationId }),
+    lookupBlock: (round) => callTool('lookup_block', { round }),
+    lookupAccountAssets: (address) => callTool('get_account_assets', { address }),
+    lookupAccountAppStates: (address) => callTool('get_account_app_local_states', { address }),
+    searchTransactions({ address, assetId, applicationId, round, txType, nextToken }) {
+      const page = {
+        limit: 20,
+        ...(nextToken ? { nextToken } : {}),
+        ...(txType ? { txType } : {}),
+      }
+      return address
+        ? callTool('search_account_transactions', {
+            ...page,
+            address,
+            ...(assetId === undefined ? {} : { assetId }),
+          })
+        : callTool('search_transactions', {
+            ...page,
+            ...(assetId === undefined ? {} : { assetId }),
+            ...(applicationId === undefined ? {} : { applicationId }),
+            ...(round === undefined ? {} : { minRound: round, maxRound: round }),
+          })
+    },
+    callTool,
+    async statusRound() {
+      const status = await context.algod.status().do()
+      return { lastRound: Number(status.lastRound) }
+    },
+    async waitAfterBlock(round) {
+      const status = await context.algod.statusAfterBlock(round).do()
+      return { lastRound: Number(status.lastRound) }
+    },
+    async readBlockTick(round) {
+      const response = await context.algod.block(round).do()
+      const header = response.block.header
+      const payset = response.block.payset ?? []
+      return tickFromAlgodBlock(
+        {
+          resultId: newId('result-live-block-tick'),
+          toolCallId: newId('tool-call-live-block-tick'),
+          network,
+        },
+        header,
+        payset.map((entry) => ({
+          txn: entry.signedTxn.signedTxn.txn,
+          hasGenesisID: entry.hasGenesisID,
+          hasGenesisHash: entry.hasGenesisHash,
+          apply: entry.signedTxn.applyData,
+        })),
+      )
+    },
+  }
+}
+
+export {
+  matchesInTick,
+  runBlockTail,
+  tickFromAlgodBlock,
+  withRelated,
+  type BlockTailClock,
+  type BlockTailMatch,
+  type BlockTailTick,
+  type BlockTailWatch,
+} from './block-tail.js'
+export { nfdRecordSchema, resolveNfdName, type NfdRecord } from './nfd.js'
+
+export { createEnrichmentHost, type EnrichmentHost } from './enrich.js'
+export {
+  activeSenderLine,
+  createExplorerAgent,
+  explorerContext,
+  explorerPlugins,
+  explorerSystemPrompt,
+  explorerTools,
+  networkOfCall,
+  type ExplorerAgentOptions,
+} from './agent.js'
+export { explainApplicationTool } from './explain-tool.js'

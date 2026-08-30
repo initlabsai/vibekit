@@ -3,9 +3,9 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const root = join(import.meta.dir, '..')
-const FORBIDDEN = ["'@initlabs/vibekit-explorer/live'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
-// The action machine is browser-safe (the explorer root the browser already bundles is built on it).
-const ALLOWED = ["'@initlabs/vibekit/actions'"]
+const FORBIDDEN = ["'@initlabs/vibekit/live'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
+// Browser-safe subpaths: the action machine and the views (records, view models, sample data).
+const ALLOWED = ["'@initlabs/vibekit/actions'", "'@initlabs/vibekit/views'"]
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -18,7 +18,7 @@ function walk(dir: string): string[] {
 }
 
 describe('browser bundle boundary', () => {
-  test('only app/api/** imports the live host or the vibekit package', () => {
+  test('only app/api/** imports the live host or the server-side vibekit package', () => {
     const offenders = walk(root)
       .filter((path) => !relative(root, path).startsWith('app/api/'))
       .filter((path) => {

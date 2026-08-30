@@ -1,4 +1,4 @@
-import { formatMicroAlgos } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos } from '@initlabs/vibekit/views'
 import type { NfdList, NfdRecord } from '@initlabs/vibekit/plugins/nfd'
 
 import { ListCard } from '../../generic-cards.js'

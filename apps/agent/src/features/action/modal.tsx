@@ -12,7 +12,7 @@ import {
   formatMicroAlgos,
   type LiveNetworkId,
   type ActionViewModel,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/views'
 import { useEffect, useRef } from 'react'
 
 import { Button, Fact, Facts, Header, Hero } from '../../primitives'
