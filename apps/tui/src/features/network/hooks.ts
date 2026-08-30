@@ -1,5 +1,5 @@
 import { createSampleHost } from '@initlabs/vibekit/views/sample'
-import type { LiveNetworkId } from '@initlabs/vibekit/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { createKeystorePaymentHost, type KeystorePaymentHost } from './keystore-host.js'

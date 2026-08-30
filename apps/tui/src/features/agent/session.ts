@@ -13,17 +13,10 @@ import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
 import { readLocalFile } from '@initlabs/vibekit/preset'
 import { bridgeToolResult, unsignedGroupFromToolResult } from '@initlabs/vibekit/views'
 import { type JsonValue, type ResultStore, type StructuredResult } from '@initlabs/vibekit/actions'
-import {
-  activeSenderLine,
-  createExplorerAgent as createSharedExplorerAgent,
-  draftRecordFromComposeWire,
-  explorerContext,
-  explorerPlugins,
-  explorerSystemPrompt,
-  networkOfCall,
-  type ExplorerAgentOptions as SharedAgentOptions,
-  type LiveNetworkId,
-} from '@initlabs/vibekit/live'
+import { activeSenderLine } from '@initlabs/vibekit/agent'
+import { createExplorerAgent as createSharedExplorerAgent, explorerContext, explorerPlugins, explorerSystemPrompt, networkOfCall, type ExplorerAgentOptions as SharedAgentOptions } from '@initlabs/vibekit/preset'
+import { draftRecordFromComposeWire } from '@initlabs/vibekit/actions'
+import { type LiveNetworkId } from '@initlabs/vibekit/views'
 
 export { activeSenderLine, explorerContext, explorerSystemPrompt, networkOfCall }
 import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'

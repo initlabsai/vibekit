@@ -2,7 +2,7 @@ import { executeToolCall, resolveDeployment, ToolError } from '@initlabs/vibekit
 import { loadStoredApps, type StoredAppEntry } from '@initlabs/vibekit/agent/config'
 import { readLocalFile } from '@initlabs/vibekit/preset'
 import type { StructuredResult } from '@initlabs/vibekit/actions'
-import type { LiveNetworkId } from '@initlabs/vibekit/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import {
   contractActions,
   DEPLOYER_NOTE_PREFIX,

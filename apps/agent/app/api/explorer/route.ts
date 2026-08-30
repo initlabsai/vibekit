@@ -7,7 +7,8 @@
  * answers "is this network reachable, and what round is it on".
  */
 import { createActionRoutes } from '@initlabs/vibekit/actions'
-import { createLiveHost, type LiveHost, type LiveNetworkId } from '@initlabs/vibekit/live'
+import { createHost, type Host } from '@initlabs/vibekit/preset'
+import { type LiveNetworkId } from '@initlabs/vibekit/views'
 import { z } from 'zod'
 
 import { MissingEndpointsError, networkConfigFromEnv } from './endpoints'
@@ -18,17 +19,17 @@ export const maxDuration = 15
 const networkSchema = z.enum(['localnet', 'testnet', 'mainnet'])
 
 /**
- * Cache only signerless createLiveHost(network) with the stock tool list.
+ * Cache only signerless createHost(network) with the stock tool list.
  * Do not put request- or user-scoped options on a cached host. Serverless
  * isolates each have their own Map.
  */
-const hosts = new Map<LiveNetworkId, LiveHost>()
-function hostFor(network: string): LiveHost {
+const hosts = new Map<LiveNetworkId, Host>()
+function hostFor(network: string): Host {
   const parsed = networkSchema.safeParse(network)
   if (!parsed.success) throw new UnknownNetworkError(network)
   let host = hosts.get(parsed.data)
   if (!host) {
-    host = createLiveHost(networkConfigFromEnv(parsed.data))
+    host = createHost(networkConfigFromEnv(parsed.data))
     hosts.set(parsed.data, host)
   }
   return host

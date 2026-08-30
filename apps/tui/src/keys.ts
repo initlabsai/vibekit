@@ -5,7 +5,7 @@
  */
 import { createTransactionCollectionViewModel, nextPageArgs } from '@initlabs/vibekit/views'
 import { findResultRecord, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
-import type { LiveNetworkId } from '@initlabs/vibekit/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { useKeyboard } from '@opentui/react'
 import { useCallback } from 'react'
 

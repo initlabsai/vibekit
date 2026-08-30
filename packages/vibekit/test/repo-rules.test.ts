@@ -36,11 +36,10 @@ describe('dependencies point inward', () => {
     agent: ['core', 'actions'],
     mcp: ['core'],
     views: ['core', 'tools', 'plugins', 'actions'],
-    live: ['core', 'tools', 'plugins', 'actions', 'views', 'agent'],
     pay: [],
     rest: ['core'],
     'signer-keystore': ['core'],
-    preset: ['core', 'tools', 'plugins', 'signer-keystore'],
+    preset: ['core', 'tools', 'plugins', 'signer-keystore', 'actions', 'views', 'agent'],
   }
 
   test('every src area imports only from core (plus its own area)', () => {

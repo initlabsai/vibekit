@@ -4,11 +4,7 @@ import { bytesToBase64 } from '../../src/core/index.js'
 
 import { createActionViewModel } from '../../src/views/index.js'
 import { addResult, createResultStore } from '../../src/actions/index.js'
-import {
-  draftRecordFromComposeWire,
-  signDraftWith,
-  signedGroupRecordFor,
-} from '../../src/live/index.js'
+import { draftRecordFromComposeWire, signDraftWith, signedGroupRecordFor } from '../../src/actions/index.js'
 
 const params: algosdk.SuggestedParams = {
   fee: 1000,
@@ -95,7 +91,7 @@ describe('drafts with pre-signed legs', () => {
 
   test("the simulation record names the wallet's sender, so the view model derives", async () => {
     const { buildSimulationRecord } = await import('@initlabs/vibekit/actions')
-    const { decodeUnsignedGroup } = await import('../../src/live/index.js')
+    const { decodeUnsignedGroup } = await import('../../src/actions/index.js')
     const { record, wire } = draft()
     const decoded = decodeUnsignedGroup(wire.unsignedGroup, wire.presigned)
     const simulation = buildSimulationRecord(

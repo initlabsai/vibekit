@@ -4,7 +4,7 @@ import { buildTransactionDetailRecord } from '../../src/views/transaction.js'
 import { createSampleHost, createFixtureResultStore, PAYMENT_FIXTURE_TRANSACTION_ID } from '../../src/views/sample/index.js'
 import { createActionViewModel, createTransactionDetailViewModel, bridgeToolResult, unsignedGroupFromToolResult, type ToolResultEventLike } from '../../src/views/index.js'
 import { startActionFromDraft } from '../../src/actions/index.js'
-import { draftRecordFromComposeWire } from '../../src/live/index.js'
+import { draftRecordFromComposeWire } from '../../src/actions/index.js'
 import recorded from '../recorded/localnet-payment.json' with { type: 'json' }
 
 let counter = 0

@@ -6,7 +6,7 @@
 import { createQueryHandler, type QueryHandler } from '@initlabs/vibekit/rest'
 import { createVibekitHttpHandler } from '@initlabs/vibekit/mcp/http'
 import { defaultTools } from '@initlabs/vibekit/preset'
-import { explorerPlugins } from '@initlabs/vibekit/live'
+import { explorerPlugins } from '@initlabs/vibekit/preset'
 import type { NetworkId } from '@initlabs/vibekit'
 
 import { MissingEndpointsError, networkConfigFromEnv, isProduction } from '../explorer/endpoints'

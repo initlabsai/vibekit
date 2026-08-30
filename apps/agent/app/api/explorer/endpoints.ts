@@ -7,7 +7,7 @@
  */
 import type { LiveNetworkId } from '@initlabs/vibekit/views'
 
-/** The endpoint shape createLiveHost accepts alongside a named network id. */
+/** The endpoint shape createHost accepts alongside a named network id. */
 export interface NetworkConfig {
   id: string
   algod: { url: string; token?: string }

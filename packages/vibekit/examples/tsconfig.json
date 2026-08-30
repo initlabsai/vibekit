@@ -11,7 +11,6 @@
       "@initlabs/vibekit/agent": ["../src/agent/index.ts"],
       "@initlabs/vibekit/actions": ["../src/actions/index.ts"],
       "@initlabs/vibekit/views": ["../src/views/index.ts"],
-      "@initlabs/vibekit/live": ["../src/live/index.ts"],
       "@initlabs/vibekit/pay": ["../src/pay/index.ts"],
       "@initlabs/vibekit/rest": ["../src/rest/index.ts"],
       "@initlabs/vibekit/signer-keystore": ["../src/signer-keystore/index.ts"]

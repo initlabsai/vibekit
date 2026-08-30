@@ -8,16 +8,12 @@
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 import type { EntityLookupHost, TransactionSearchFilter } from '@initlabs/vibekit/views'
 import type { ActionHost, StructuredResult } from '@initlabs/vibekit/actions'
-import {
-  createLiveHost,
-  signDraftWith,
-  unsignedTransactionsForDraft,
-  type LiveHost,
-  type LiveNetworkId,
-} from '@initlabs/vibekit/live'
+import { createHost, type Host } from '@initlabs/vibekit/preset'
+import { signDraftWith, unsignedTransactionsForDraft } from '@initlabs/vibekit/actions'
+import { type LiveNetworkId } from '@initlabs/vibekit/views'
 
 /** The live host plus keystore signing (so it satisfies ActionHost) and the daemon's address book. */
-export interface KeystorePaymentHost extends LiveHost, EntityLookupHost {
+export interface KeystorePaymentHost extends Host, EntityLookupHost {
   /** Signs the approved draft group in the keystore daemon. */
   signDraft(draftRecord: StructuredResult): Promise<StructuredResult>
   /** The keystore daemon's address book (names never leave this process). */
@@ -53,7 +49,7 @@ export function withAccountNames(
 export function createKeystorePaymentHost(
   network: LiveNetworkId = 'localnet',
 ): KeystorePaymentHost {
-  const compose = createLiveHost(network)
+  const compose = createHost(network)
   let signerPromise: Promise<KeystoreSigner> | undefined
   const signer = () => (signerPromise ??= createKeystoreSigner())
 

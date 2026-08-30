@@ -81,3 +81,15 @@ export function networksFromEnv(
         .filter(Boolean) as NetworkId[]) ?? defaults.networks,
   }
 }
+
+export { createHost, type Host } from './host.js'
+export {
+  createExplorerAgent,
+  explorerContext,
+  explorerPlugins,
+  explorerSystemPrompt,
+  explorerTools,
+  networkOfCall,
+  type ExplorerAgentOptions,
+} from './explorer.js'
+export { explainApplicationTool } from './explain-tool.js'

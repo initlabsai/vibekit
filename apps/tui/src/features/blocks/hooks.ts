@@ -4,7 +4,7 @@
  * host stops spending algod/indexer budget.
  */
 import { addResult, type ResultStore, type ViewSpec } from '@initlabs/vibekit/actions'
-import { runBlockTail, type LiveNetworkId } from '@initlabs/vibekit/live'
+import { runBlockTail, type LiveNetworkId } from '@initlabs/vibekit/views'
 import { useCallback, useEffect, useState } from 'react'
 
 import { errorMessage } from '../../theme.js'

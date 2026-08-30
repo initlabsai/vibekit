@@ -5,6 +5,7 @@
  */
 import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '../core/codec.js'
+import { signedGroupRecordFor } from './decode.js'
 import type { StructuredResult } from './records.js'
 import { draftDataSchema } from './reducer.js'
 
@@ -72,4 +73,18 @@ export function createWalletSignDraft(args: {
     }
     return args.record(draftRecord, await signGroupForDraft(draftRecord, args.signer))
   }
+}
+
+/**
+ * Signs a draft with a wallet's signer: only the legs the draft leaves to the
+ * wallet are offered to it; pre-signed legs are spliced back in place. The
+ * result is verified like any signed group before it becomes a record.
+ */
+export async function signDraftWith(
+  identity: { resultId: string; toolCallId: string; network: string },
+  draftRecord: StructuredResult,
+  signer: DraftSigner,
+): Promise<StructuredResult> {
+  const group = await signGroupForDraft(draftRecord, signer)
+  return signedGroupRecordFor(identity, draftRecord, group.map(base64ToBytes))
 }

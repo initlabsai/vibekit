@@ -4,15 +4,15 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
 import { createSampleHost, FIXTURE_RECEIVER, FIXTURE_SENDER, PAYMENT_FIXTURE_AMOUNT_MICROALGOS, PAYMENT_FIXTURE_SIGNED_TRANSACTION } from '@initlabs/vibekit/views/sample'
 import { type StructuredResult } from '@initlabs/vibekit/actions'
 
-const live = await import('@initlabs/vibekit/live')
+const live = await import('@initlabs/vibekit/preset')
 
-/** Every createLiveHost call is recorded; the host answers with fixture records and a broadcast stub. */
+/** Every createHost call is recorded; the host answers with fixture records and a broadcast stub. */
 const created: unknown[] = []
 const broadcasts: StructuredResult[] = []
 const sample = createSampleHost()
-mock.module('@initlabs/vibekit/live', () => ({
+mock.module('@initlabs/vibekit/preset', () => ({
   ...live,
-  createLiveHost: (config: unknown) => {
+  createHost: (config: unknown) => {
     created.push(config)
     const network = typeof config === 'string' ? config : (config as { id: string }).id
     return {

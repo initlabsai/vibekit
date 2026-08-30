@@ -1,7 +1,7 @@
 /** The direct lane: entity lookups by id that bypass the model, each landing as a card in the feed. */
 import { buildPluginRecord, loadNextPage as loadNextPageRecord, type TransactionSearchFilter, createAccountListViewModel, createAccountPortfolioViewModel, createApplicationDetailViewModel, createAssetDetailViewModel, createBlockDetailViewModel, createTransactionCollectionViewModel, createTransactionDetailViewModel, formatMicroAlgos, lookupAmbiguousEntity } from '@initlabs/vibekit/views'
 import { addResult, RECORD_PROTOCOL_VERSION, type ResultStore, type StructuredResult, type TrustedViewId, type ViewSpec } from '@initlabs/vibekit/actions'
-import type { LiveNetworkId } from '@initlabs/vibekit/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 import { nfdPlugin, nfdRecord, type NfdService } from '@initlabs/vibekit/plugins/nfd'
 import { useCallback, useRef } from 'react'
 

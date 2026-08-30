@@ -1,7 +1,8 @@
 /**
- * The Explorer's agent, shared by the terminal and the web: the tool set it
- * composes over, its voice, and the context lines a host prepends to a
- * turn. Both hosts run it through createAgent; neither can sign.
+ * The Explorer preset: the agent the terminal and the web agent share — its
+ * tool set, its voice, its plugins, and the context lines a host prepends to
+ * a turn. Both run it through createAgent; neither can sign. An opinion,
+ * which is what a preset is.
  */
 import {
   activeSenderLine,

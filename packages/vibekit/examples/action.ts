@@ -9,14 +9,15 @@
  */
 import { createKeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 import { createResultStore, performActionStep, startAction, submitAction } from '@initlabs/vibekit/actions'
-import { createLiveHost, signDraftWith } from '@initlabs/vibekit/live'
+import { createHost } from '@initlabs/vibekit/preset'
+import { signDraftWith } from '@initlabs/vibekit/actions'
 
 const sender = process.env.SENDER!
 const receiver = process.env.RECEIVER ?? sender
 const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
 
 // The live host composes and submits but cannot sign; signing is the one capability we add.
-const live = createLiveHost('localnet')
+const live = createHost('localnet')
 const keystore = await createKeystoreSigner()
 const host = {
   ...live,

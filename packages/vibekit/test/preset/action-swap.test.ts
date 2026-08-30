@@ -10,12 +10,8 @@ import { bytesToBase64 } from '../../src/core/index.js'
 import { createActionViewModel } from '../../src/views/index.js'
 import { createResultStore, performActionStep, startAction, startActionFromDraft, submitAction, type ActionHost } from '../../src/actions/index.js'
 import { buildConfirmationRecord, buildSimulationRecord } from '../../src/actions/index.js'
-import {
-  createLiveHost,
-  decodeUnsignedGroup,
-  draftRecordFromComposeWire,
-  signDraftWith,
-} from '../../src/live/index.js'
+import { createHost } from '../../src/preset/index.js'
+import { decodeUnsignedGroup, draftRecordFromComposeWire, signDraftWith } from '../../src/actions/index.js'
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
@@ -119,7 +115,7 @@ describe('a swap through the action machine', () => {
 
 describe('the live host drafts actions only', () => {
   test('a query is refused before anything touches the network', async () => {
-    const host = createLiveHost('localnet')
+    const host = createHost('localnet')
     await expect(host.draft('lookup_asset', { assetId: 1 })).rejects.toThrow('lookup_asset is a query, not an action')
     await expect(host.draft('no_such_tool', {})).rejects.toThrow('no tool named no_such_tool')
   })

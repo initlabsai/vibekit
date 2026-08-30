@@ -5,7 +5,8 @@
  * expressed as named tool calls. The live host passes `executeToolCall`;
  * a browser passes a fetch to its server's query route. One mapping.
  */
-import type { ResultIdentity, StructuredResult } from '../actions/index.js'
+import { executeToolCall, type ResolvedDeployment } from '../core/index.js'
+import type { JsonValue, ResultIdentity, StructuredResult } from '../actions/index.js'
 import { bridgeToolResult } from './bridge.js'
 import type { ReadHost } from './host.js'
 
@@ -47,4 +48,25 @@ export function createReadHost(
     },
     callTool,
   }
+}
+
+/**
+ * Reads over a deployment: every call runs through `executeToolCall` and
+ * comes back as its view's record, with `input` kept so a list can page
+ * itself. Hosts scope account lists by merging the address in; the tool's
+ * own wire lacks it.
+ */
+export function createDeploymentReadHost(deployment: ResolvedDeployment, network = deployment.defaultNetwork): ReadHost {
+  const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
+  return createReadHost(async (toolName, args) => {
+    const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+    if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+    const id = newId('tool-call')
+    const output = await executeToolCall(deployment, tool, args)
+    const wire =
+      typeof args.address === 'string' && output !== null && typeof output === 'object' && !Array.isArray(output)
+        ? { ...(output as object), address: args.address }
+        : output
+    return recordForToolCall({ resultId: newId('result'), toolCallId: id, network, input: args as JsonValue }, toolName, wire, tool.view)
+  })
 }

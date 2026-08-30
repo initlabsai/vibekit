@@ -4,13 +4,13 @@
  * produce. Renderers append those records to the feed; this module never
  * owns UI.
  */
-import type { BlockTailMatch, BlockTailTick } from '../views/block.js'
+import type { BlockTailMatch, BlockTailTick } from './block.js'
 export type { BlockTailMatch, BlockTailTick }
 import type { FormattedTransaction } from '../tools/index.js'
 
 import type { ResultIdentity, StructuredResult } from '../actions/index.js'
-import { buildBlockDetailRecord } from '../views/block.js'
-import { buildTransactionListRecord } from '../views/transaction.js'
+import { buildBlockDetailRecord } from './block.js'
+import { buildTransactionListRecord } from './transaction.js'
 import { formatAlgodTransaction, safeUint64, txIdInBlock, typeCounts } from '../actions/algod-txn.js'
 import type algosdk from 'algosdk'
 

@@ -2,7 +2,7 @@
  * Views: what a tool result looks like once a host has it — records by view
  * id, the view models a card renders, formatting, input classification, and
  * the recorded sample data. Browser-safe. The deployment-backed host that
- * produces live records is `@initlabs/vibekit/live`.
+ * produces live records is `createHost` in `@initlabs/vibekit/preset`.
  */
 export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
 export {
@@ -119,7 +119,17 @@ export type {
 export { createActionViewModel } from './action.js'
 export type { ActionViewModel } from './action.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
-export { createReadHost, recordForToolCall } from './read-host.js'
+export { createDeploymentReadHost, createReadHost, recordForToolCall } from './read-host.js'
+export {
+  matchesInTick,
+  runBlockTail,
+  tickFromAlgodBlock,
+  withRelated,
+  type BlockTailClock,
+  type BlockTailMatch,
+  type BlockTailTick,
+  type BlockTailWatch,
+} from './block-tail.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'
 export type {

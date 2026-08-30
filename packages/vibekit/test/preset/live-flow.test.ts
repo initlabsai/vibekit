@@ -10,7 +10,7 @@ import { submitAction, startAction, performActionStep, type ActionHost, type Res
 import { createSampleHost, createFixtureResultStore } from '../../src/views/sample/index.js'
 import { createActionViewModel } from '../../src/views/index.js'
 import { createSampleResultStore } from '../../src/views/sample/payment.js'
-import { decodeUnsignedGroup } from '../../src/live/index.js'
+import { decodeUnsignedGroup } from '../../src/actions/index.js'
 import recorded from '../recorded/localnet-payment.json' with { type: 'json' }
 
 let counter = 0

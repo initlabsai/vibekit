@@ -1,5 +1,5 @@
 import type { ActionViewModel } from '@initlabs/vibekit/views'
-import type { LiveNetworkId } from '@initlabs/vibekit/live'
+import type { LiveNetworkId } from '@initlabs/vibekit/views'
 
 import { ActionBody } from './cards.js'
 import { computeGraphLayout } from '../transactions/graph-layout.js'

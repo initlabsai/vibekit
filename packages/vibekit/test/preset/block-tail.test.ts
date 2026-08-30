@@ -10,7 +10,7 @@ import {
   withRelated,
   type BlockTailClock,
   type BlockTailTick,
-} from '../../src/live/block-tail.js'
+} from '../../src/views/block-tail.js'
 
 const params: algosdk.SuggestedParams = {
   fee: 1000,

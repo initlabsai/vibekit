@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const root = join(import.meta.dir, '..')
-const FORBIDDEN = ["'@initlabs/vibekit/live'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
+const FORBIDDEN = ["'@initlabs/vibekit/preset'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
 // Browser-safe subpaths: the action machine and the views (records, view models, sample data).
 const ALLOWED = ["'@initlabs/vibekit/actions'", "'@initlabs/vibekit/views/sample'", "'@initlabs/vibekit/views'"]
 
@@ -18,7 +18,7 @@ function walk(dir: string): string[] {
 }
 
 describe('browser bundle boundary', () => {
-  test('only app/api/** imports the live host or the server-side vibekit package', () => {
+  test('only app/api/** imports the preset host or the server-side vibekit package', () => {
     const offenders = walk(root)
       .filter((path) => !relative(root, path).startsWith('app/api/'))
       .filter((path) => {

@@ -18,7 +18,7 @@ import {
 } from '../../src/actions/index.js'
 import { base64ToBytes } from '../../src/core/index.js'
 
-import { decodeUnsignedGroup, signedGroupRecordFor } from '../../src/live/index.js'
+import { decodeUnsignedGroup, signedGroupRecordFor } from '../../src/actions/index.js'
 import recorded from '../recorded/localnet-payment.json' with { type: 'json' }
 
 const DRAFT_IDENTITY = {
