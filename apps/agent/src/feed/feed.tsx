@@ -82,6 +82,27 @@ export function latestAgentNote(sections: ReadonlyArray<Section>): { sectionId: 
   return undefined
 }
 
+/** A word in the touchable color, like every button; it says so itself when the link is on the clipboard. */
+function ShareButton({ disabled, onShare }: { disabled: boolean; onShare: () => Promise<boolean> }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const id = setTimeout(() => setCopied(false), 1200)
+    return () => clearTimeout(id)
+  }, [copied])
+  return (
+    <button
+      type="button"
+      className={`share-button${copied ? ' copied' : ''}`}
+      disabled={disabled}
+      onClick={() => void onShare().then((ok) => setCopied(ok))}
+      title="copy a share link for this exchange"
+    >
+      {copied ? '✓ copied' : 'share'}
+    </button>
+  )
+}
+
 export function FeedPane({
   sections,
   selectedId,
@@ -99,8 +120,8 @@ export function FeedPane({
   onToggle: (id: number) => void
   /** The section the agent is still speaking into, if any. */
   streamingSection?: number | null
-  /** Turns the exchange into a URL; the glyph waits until her line is finished. */
-  onShare?: (section: Section) => void
+  /** Turns the exchange into a URL; resolves true when the link reached the clipboard. */
+  onShare?: (section: Section) => Promise<boolean>
 }) {
   // Only her newest line wears a live face; every earlier one is a still.
   const latest = latestAgentNote(sections)
@@ -130,16 +151,10 @@ export function FeedPane({
               ) : null}
             </button>
             {onShare && section.items.some((item) => item.kind === 'note' && item.tone === 'agent') ? (
-              <button
-                type="button"
-                className="share-glyph"
+              <ShareButton
                 disabled={streamingSection === section.id}
-                onClick={() => onShare(section)}
-                title="copy a share link for this exchange"
-                aria-label="share this exchange"
-              >
-                ⤴
-              </button>
+                onShare={() => onShare(section)}
+              />
             ) : null}
           </div>
           {section.collapsed ? null : section.items.map((item, index) =>

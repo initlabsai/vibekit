@@ -15,11 +15,11 @@ export function FeedScreen() {
 
   /** The exchange as a URL: POST the payload, copy the link, report on the status line. */
   const share = useCallback(
-    async (section: Section) => {
+    async (section: Section): Promise<boolean> => {
       const payload = payloadFor(section, storeRef.current)
       if (!payload) {
         setStatus('nothing shareable there yet — she has to answer first.')
-        return
+        return false
       }
       try {
         const response = await fetch('/api/share', {
@@ -30,13 +30,15 @@ export function FeedScreen() {
         const body = (await response.json().catch(() => ({}))) as { url?: string; error?: string }
         if (!response.ok || !body.url) {
           setStatus(body.error ?? `share failed (${response.status})`)
-          return
+          return false
         }
         const url = new URL(body.url, window.location.origin).toString()
         await navigator.clipboard?.writeText(url)
         setStatus(`share link copied — ${url}`)
+        return true
       } catch (error) {
         setStatus(`share failed — ${errorMessage(error)}`)
+        return false
       }
     },
     [setStatus, storeRef],
