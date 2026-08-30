@@ -73,6 +73,8 @@ The agent never holds a key. That is the whole design.
 
 ## What next?
 
+- The whole thing, working: [`apps/reference`](https://github.com/initlabsai/vibekit/tree/main/apps/reference) — a 50-line Bun server mounting the handler, the action routes, and REST, and a 150-line React page over these components. `bun run build && bun server.ts`.
+
 - Charge for turns: [REST and x402](../../guides/rest-and-x402/).
 - The full list of what it can do: [tools](../../reference/tools/).
 - Why it is shaped this way: [queries and actions](../../explanation/queries-and-actions/).

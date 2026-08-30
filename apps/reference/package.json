@@ -1,0 +1,28 @@
+{
+  "name": "@initlabs/vibekit-reference",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The reference agent: a Bun server mounting the toolkit, a React page over vibekit add components. ~200 lines of app.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "serve": "bun server.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@initlabs/vibekit": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1"
+  }
+}

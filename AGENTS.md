@@ -12,6 +12,7 @@ renders what those tools return.
 | Path | What it is |
 | --- | --- |
 | `packages/vibekit` | The one published package, `@initlabs/vibekit`. Every `src/` area is a subpath export. |
+| `apps/reference` | The reference agent: a Bun server mounting the toolkit and a Vite/React page over `vibekit add` components. Keep it small; it is the tutorial's endpoint. |
 | `packages/vibekit/src/core` (`.`) | The tool contract, `resolveDeployment`, `executeToolCall`, the codec, and the compose engine (`core/compose/`). |
 | `packages/vibekit/src/tools` (`./tools`, `./tools/views`) | The domain tools: accounts, assets, contracts, network, transactions — each a flat directory of `index.ts` (the tool definitions), `schemas.ts`, and the functions behind them. `views.ts` maps each view id to its wire schema. |
 | `packages/vibekit/src/plugins/*` (`./plugins/<name>`) | Third-party tool plugins: nfd, pera, vestige, alpha-arcade. |

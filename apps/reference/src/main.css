@@ -1,0 +1,11 @@
+:root { color-scheme: dark; }
+body { background: #0a0b0e; color: #e9e1d4; font: 15px/1.5 system-ui, sans-serif; margin: 0; }
+main { display: grid; gap: 1rem; margin: 0 auto; max-width: 44rem; padding: 1.5rem 1rem 6rem; }
+header { align-items: center; display: flex; gap: 1rem; opacity: .85; }
+.feed { display: grid; gap: .75rem; }
+.you { color: #6fd3d3; margin: 0; }
+.agent { margin: 0; white-space: pre-wrap; }
+.note { color: #8e8476; font-style: italic; margin: 0; }
+form { background: #0a0b0e; bottom: 0; display: flex; gap: .5rem; left: 0; padding: 1rem; position: fixed; right: 0; }
+form input { background: #111318; border: 1px solid #2a2d35; border-radius: .4rem; color: inherit; flex: 1; font: inherit; margin: 0 auto; max-width: 36rem; padding: .6rem .8rem; }
+form button { background: #c4a06a; border: 0; border-radius: .4rem; color: #0a0b0e; font: inherit; padding: .6rem 1rem; }

@@ -21,7 +21,10 @@ vibekit add <component>      companion, action, approval, tool-result, transacti
 ```
 
 Docs: [getvibekit.ai/docs](https://getvibekit.ai/docs) — start with
-[build an agent](https://getvibekit.ai/docs/tutorials/build-an-agent/).
+[build an agent](https://getvibekit.ai/docs/tutorials/build-an-agent/). The
+reference implementation is [`apps/reference`](apps/reference): ~200 lines
+of app over the toolkit. The [web agent](https://agent.getvibekit.ai) is the
+product built the same way.
 
 Works with **Claude Code**, **Codex**, **Cursor**, **Copilot**, **Grok**,
 **opencode**, and **pi**.
