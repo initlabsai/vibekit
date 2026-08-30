@@ -1,4 +1,5 @@
 ---
+import Analytics from '@vercel/analytics/astro'
 import '../styles/site.css'
 
 interface Props {
@@ -38,6 +39,7 @@ const ogImage = new URL('/og-image.png', Astro.site).href
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
     <title>{title}</title>
+    <Analytics />
   </head>
   <body>
     <div class="crt" aria-hidden="true"></div>

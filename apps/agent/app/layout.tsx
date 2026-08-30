@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       </head>
       <body>
         <ShellMount>{children}</ShellMount>
+        <Analytics />
       </body>
     </html>
   )

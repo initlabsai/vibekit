@@ -8,6 +8,7 @@ export default defineConfig({
       title: 'VibeKit',
       description: 'The agentic stack for Algorand builders.',
       components: {
+        Head: './src/components/Head.astro',
         SiteTitle: './src/components/SiteTitle.astro',
       },
       customCss: ['./src/styles/docs.css'],
