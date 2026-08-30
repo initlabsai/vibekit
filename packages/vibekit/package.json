@@ -32,6 +32,14 @@
       "types": "./dist/agent/index.d.ts",
       "import": "./dist/agent/index.js"
     },
+    "./agent/providers": {
+      "types": "./dist/agent/providers.d.ts",
+      "import": "./dist/agent/providers.js"
+    },
+    "./compose": {
+      "types": "./dist/compose/index.d.ts",
+      "import": "./dist/compose/index.js"
+    },
     "./agent/config": {
       "types": "./dist/agent/config.d.ts",
       "import": "./dist/agent/config.js"

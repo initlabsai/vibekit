@@ -8,7 +8,8 @@ import { createApplicationMethodsViewModel, bridgeToolResult, unsignedGroupFromT
 import { startActionFromDraft } from '@initlabs/vibekit/actions'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit/actions'
 
-import { resolveAgentConfig, type AgentEvent } from '@initlabs/vibekit/agent'
+import { resolveAgentConfig } from '@initlabs/vibekit/agent/config'
+import { type AgentEvent } from '@initlabs/vibekit/agent'
 import { viewFor } from '../src/lookup.js'
 import { labelProgramMethods, specsByProgramHash } from '../src/features/apps/abi-catalog.js'
 import { normalizeAppSpec } from '@initlabs/vibekit/tools'

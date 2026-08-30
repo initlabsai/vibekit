@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { z } from 'zod'
 
 import { defineAction, defineQuery } from '../../src/core/index.js'
-import { createQueryHandler } from '../../src/rest/index.js'
+import { createRestHandler } from '../../src/rest/index.js'
 
 const echo = defineQuery({
   name: 'echo',
@@ -18,8 +18,8 @@ const draft = defineAction({
   output: z.unknown(),
   handler: async () => ({ unsignedGroup: ['AAAA'], summary: 'thing' }),
 })
-const rest = createQueryHandler({ network: 'localnet', mode: 'compose', tools: [echo, draft] })
-const post = (name: string, body?: string) => rest.call(name, new Request('http://x/api/query/' + name, { method: 'POST', ...(body === undefined ? {} : { body }) }))
+const rest = createRestHandler({ network: 'localnet', mode: 'compose', tools: [echo, draft] })
+const post = (name: string, body?: string) => rest.call(name, new Request('http://x/api/tools/' + name, { method: 'POST', ...(body === undefined ? {} : { body }) }))
 
 describe('REST over the tool contract', () => {
   test('runs a query with the JSON body as arguments', async () => {

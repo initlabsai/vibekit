@@ -12,15 +12,15 @@ import {
   type ToolPlugin,
 } from '@initlabs/vibekit'
 import {
-  accountTools,
-  networkTools,
-  transactionTools,
+  accountQueries,
+  networkQueries,
+  transactionQueries,
   viewDataSchemas,
   type FormattedTransaction,
   type ViewData,
 } from '@initlabs/vibekit/tools'
 import { viewDataSchemas as viewSchemasFromSubpath } from '@initlabs/vibekit/tools/views'
-import { createVibekitMcp, VIEW_META_KEY } from '@initlabs/vibekit/mcp'
+import { createMcpServer, VIEW_META_KEY } from '@initlabs/vibekit/mcp'
 import type { AgentEvent, ProviderConfig } from '@initlabs/vibekit/agent'
 import { createSignerFromKeystore, type KeystoreLike } from '@initlabs/vibekit/signer-keystore'
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
@@ -73,15 +73,15 @@ const echo = defineTool({
 const deployment = resolveDeployment({
   network: 'localnet',
   mode: 'compose',
-  tools: [echo, ...accountTools, ...networkTools, ...transactionTools],
+  tools: [echo, ...accountQueries, ...networkQueries, ...transactionQueries],
 })
 if (!deployment.contexts.get('localnet')) fail('resolveDeployment produced no localnet context')
 
 const result = (await executeToolCall(deployment, echo, { value: 'hi' })) as { big: number }
 if (result.big !== 7) fail(`executeToolCall returned ${JSON.stringify(result)}`)
 
-const server = createVibekitMcp({ network: 'localnet', mode: 'compose', tools: [echo] })
-if (!server || typeof VIEW_META_KEY !== 'string') fail('createVibekitMcp did not construct')
+const server = createMcpServer({ network: 'localnet', mode: 'compose', tools: [echo] })
+if (!server || typeof VIEW_META_KEY !== 'string') fail('createMcpServer did not construct')
 
 void ToolError
 

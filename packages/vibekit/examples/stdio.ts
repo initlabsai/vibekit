@@ -3,7 +3,7 @@
  * Typechecked by this package's `typecheck` script so it cannot rot; run it
  * with `bun packages/vibekit/examples/stdio.ts` from the repo root.
  */
-import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
+import { serveMcpStdio } from '@initlabs/vibekit/mcp/stdio'
 import {
   defaultPlugins,
   defaultTools,
@@ -18,7 +18,7 @@ import { createKeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 const mode = process.env.SIGNING === 'execute' ? 'execute' : 'compose'
 const signer = mode === 'execute' ? await createKeystoreSigner() : undefined
 
-const handle = serveVibekitStdio({
+const handle = serveMcpStdio({
   name: 'vibekit-reference',
   // e.g. NETWORKS=testnet,localnet for per-request network selection
   ...networksFromEnv({ network: 'testnet', networks: [] }),

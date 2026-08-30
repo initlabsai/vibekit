@@ -64,10 +64,10 @@ host's approval boundary.
 Stdio is the local-agent path:
 
 ```ts
-import { serveVibekitStdio } from "@initlabs/vibekit/mcp/stdio";
+import { serveMcpStdio } from "@initlabs/vibekit/mcp/stdio";
 import { accountQueries, networkQueries } from "@initlabs/vibekit/tools";
 
-const handle = serveVibekitStdio({
+const handle = serveMcpStdio({
   name: "my-vibekit-mcp",
   network: "testnet",
   mode: "compose",
@@ -91,10 +91,10 @@ The HTTP adapter returns a `2026-07-28` stateless fetch handler. Its server
 factory is invoked once per request:
 
 ```ts
-import { createVibekitHttpHandler } from "@initlabs/vibekit/mcp/http";
+import { createMcpHttpHandler } from "@initlabs/vibekit/mcp/http";
 import { accountQueries, networkQueries } from "@initlabs/vibekit/tools";
 
-const handler = createVibekitHttpHandler({
+const handler = createMcpHttpHandler({
   name: "my-vibekit-mcp",
   network: "testnet",
   mode: "compose",

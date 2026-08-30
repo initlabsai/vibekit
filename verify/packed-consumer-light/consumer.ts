@@ -9,7 +9,7 @@ import {
   resolveDeployment,
   type ToolDefinition,
 } from '@initlabs/vibekit'
-import { accountTools, viewDataSchemas, type ViewData } from '@initlabs/vibekit/tools'
+import { accountQueries, viewDataSchemas, type ViewData } from '@initlabs/vibekit/tools'
 import { viewDataSchemas as fromSubpath } from '@initlabs/vibekit/tools/views'
 import { z } from 'zod'
 
@@ -32,7 +32,7 @@ const echo = defineTool({
 const deployment = resolveDeployment({
   network: 'localnet',
   mode: 'compose',
-  tools: [echo, ...accountTools],
+  tools: [echo, ...accountQueries],
 })
 const result = (await executeToolCall(deployment, echo, { value: 'hi' })) as { value: string }
 if (result.value !== 'hi') fail(`executeToolCall returned ${JSON.stringify(result)}`)

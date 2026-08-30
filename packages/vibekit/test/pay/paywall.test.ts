@@ -7,7 +7,7 @@ const TOKEN = 'a'.repeat(64)
 const store = memoryStore()
 const paywall = createPaywall({ chain: 'testnet', payTo: PAYER, priceMicroUsdc: 1_000_000, turnsPerPack: 25, freeTurns: 2, store })
 const { credits } = paywall
-const request = (headers: Record<string, string> = {}, url = 'http://local/api/query/x') =>
+const request = (headers: Record<string, string> = {}, url = 'http://local/api/tools/x') =>
   new Request(url, { method: 'POST', headers: { 'x-forwarded-for': '9.9.9.9', ...headers } })
 
 beforeEach(() => store.clear())

@@ -4,7 +4,7 @@ description: Expose queries over HTTP and charge for them in USDC.
 draft: false
 ---
 
-Two primitives. `createQueryHandler` runs any tool from a JSON body;
+Two primitives. `createRestHandler` runs any tool from a JSON body;
 `createPaywall` turns an x402 payment into credit and takes a turn per call.
 Put the second in front of the first — or in front of the agent, or MCP over
 HTTP; it is the same `charge(request)`.
@@ -14,13 +14,13 @@ The working example is
 
 ```ts
 import { createPaywall, memoryStore } from '@initlabs/vibekit/pay'
-import { createQueryHandler } from '@initlabs/vibekit/rest'
+import { createRestHandler } from '@initlabs/vibekit/rest'
 
-const rest = createQueryHandler({ network: 'testnet', mode: 'compose', tools: defaultTools })
+const rest = createRestHandler({ network: 'testnet', mode: 'compose', tools: defaultTools })
 const paywall = createPaywall({ chain: 'testnet', payTo: HOUSE_ADDRESS, priceMicroUsdc: 1_000_000, turnsPerPack: 25, store: memoryStore() })
 
 // POST /buy   → 402 with the requirements; a paid retry credits the payer
-// POST /query/<tool> → charge a turn (free ones first), then run the tool
+// POST /tools/<tool> → charge a turn (free ones first), then run the tool
 const charge = await paywall.charge(request)
 if (!charge.ok) return charge.response
 return rest.call(name, request)

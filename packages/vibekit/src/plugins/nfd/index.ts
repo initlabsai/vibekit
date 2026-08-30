@@ -266,7 +266,7 @@ nfdTools.push(
   }),
 )
 
-/** The plugin factory — `plugins: [nfdPlugin()]` in createVibekitMcp options. */
+/** The plugin factory — `plugins: [nfdPlugin()]` in createMcpServer options. */
 export function nfdPlugin(): ToolPlugin {
   return {
     name: PLUGIN_NAME,

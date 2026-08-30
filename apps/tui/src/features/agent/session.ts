@@ -9,7 +9,7 @@
 import { type AgentEvent, type AgentSession } from '@initlabs/vibekit/agent'
 import { createNetworkClients, resolveNetwork, type AnyTool } from '@initlabs/vibekit'
 import { estimateProgramTokens } from '@initlabs/vibekit/tools'
-import { readZeroSignalCatalog } from '@initlabs/vibekit/agent'
+import { readZeroSignalCatalog } from '@initlabs/vibekit/agent/providers'
 import { readLocalFile } from '@initlabs/vibekit/preset'
 import { bridgeToolResult, unsignedGroupFromToolResult } from '@initlabs/vibekit/views'
 import { type JsonValue, type ResultStore, type StructuredResult } from '@initlabs/vibekit/actions'

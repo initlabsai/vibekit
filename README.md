@@ -15,7 +15,7 @@ nothing else.
 @initlabs/vibekit/actions    the draft → approve → sign → confirm machine, wallet signing
 @initlabs/vibekit/agent      createAgent, createAgentHandler
 @initlabs/vibekit/pay        createPaywall (x402 → credit → a turn per call)
-@initlabs/vibekit/rest       createQueryHandler (POST /query/<tool>)
+@initlabs/vibekit/rest       createRestHandler (POST /tools/<tool>)
 @initlabs/vibekit/mcp        stdio and streamable HTTP
 vibekit add <component>      companion, action, approval, tool-result, transaction, asset, account
 ```

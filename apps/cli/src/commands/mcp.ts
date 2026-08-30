@@ -8,7 +8,7 @@
  *   SIGNING   'execute' (keystore daemon) or 'compose' (unsigned groups out)
  */
 
-import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
+import { serveMcpStdio } from '@initlabs/vibekit/mcp/stdio'
 import {
   defaultPlugins,
   defaultTools,
@@ -40,7 +40,7 @@ export async function commandMcp(): Promise<void> {
     }
   }
 
-  const handle = serveVibekitStdio({
+  const handle = serveMcpStdio({
     name: 'vibekit',
     ...networksFromEnv({ network: 'localnet', networks: ['localnet', 'testnet', 'mainnet'] }),
     mode,

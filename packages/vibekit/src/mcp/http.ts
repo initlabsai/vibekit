@@ -1,5 +1,5 @@
 import { createMcpHandler } from '@modelcontextprotocol/server'
-import { createServerFactory } from './index.js'
+import { createMcpServerFactory } from './index.js'
 import type { VibekitMcpOptions } from './options.js'
 
 /**
@@ -8,8 +8,8 @@ import type { VibekitMcpOptions } from './options.js'
  * HTTP deployments default to compose mode. Passing mode 'execute' is an
  * explicit self-host opt-in; the deployer must put auth in front.
  */
-export function createVibekitHttpHandler(
+export function createMcpHttpHandler(
   options: VibekitMcpOptions,
 ): ReturnType<typeof createMcpHandler> {
-  return createMcpHandler(createServerFactory(options))
+  return createMcpHandler(createMcpServerFactory(options))
 }

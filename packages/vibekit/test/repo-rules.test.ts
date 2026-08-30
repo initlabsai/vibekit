@@ -30,6 +30,7 @@ describe('dependencies point inward', () => {
   // Everything may import core. tools may import tools/shared. Only preset fans out.
   const allowed: Record<string, string[]> = {
     core: ['core'],
+    compose: ['core'],
     tools: ['core', 'tools'],
     plugins: ['core'],
     actions: ['core', 'tools', 'plugins'],

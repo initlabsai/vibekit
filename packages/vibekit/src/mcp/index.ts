@@ -12,7 +12,7 @@ export type { VibekitMcpOptions } from './options.js'
  * Transports live in subpath exports so the core stays runtime-neutral:
  * `@initlabs/vibekit/mcp/stdio` and `@initlabs/vibekit/mcp/http`.
  */
-export function createVibekitMcp(options: VibekitMcpOptions): McpServer {
+export function createMcpServer(options: VibekitMcpOptions): McpServer {
   const deployment = resolveMcpDeployment(options)
   const server = new McpServer({ name: deployment.name, version: deployment.version })
   registerTools(server, deployment)
@@ -23,7 +23,7 @@ export function createVibekitMcp(options: VibekitMcpOptions): McpServer {
  * A validated factory: options are checked eagerly (fail at startup), then each
  * call builds a fresh server — the shape both serveStdio and createMcpHandler want.
  */
-export function createServerFactory(options: VibekitMcpOptions): () => McpServer {
+export function createMcpServerFactory(options: VibekitMcpOptions): () => McpServer {
   resolveMcpDeployment(options)
-  return () => createVibekitMcp(options)
+  return () => createMcpServer(options)
 }

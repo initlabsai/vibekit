@@ -73,7 +73,7 @@ One word per concept. Do not introduce a synonym.
 - **host** — a process that runs tool calls through `executeToolCall`: the
   MCP server, the agent loop, `vibekit tool`. In `packages/vibekit/src/views`, a
   `*Host` interface is the backend an Explorer app calls for results
-  (`LiveHost`, the fixture host).
+  (`Host` from the preset, the sample host).
 - **core** — `packages/vibekit/src/core`. Not "kernel" or "engine".
 - **compose engine** — `core/compose/`: `TxnSpec[]` to a transaction group.
 - **compose mode / execute mode** — return the group unsigned / sign and send.

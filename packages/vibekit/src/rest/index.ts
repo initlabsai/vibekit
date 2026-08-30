@@ -1,5 +1,5 @@
 /**
- * REST over the tool contract: `POST …/query/<name>` with the tool's
+ * REST over the tool contract: `POST …/tools/<name>` with the tool's
  * arguments as the JSON body returns its result. Actions return the draft
  * (an unsigned group) and never sign — the same compose rule as MCP over
  * HTTP. Put a paywall's `charge` in front of it when turns cost money.
@@ -15,7 +15,7 @@ import {
   type DeploymentOptions,
 } from '../core/index.js'
 
-export interface QueryHandler {
+export interface RestHandler {
   /** Runs the named tool with the request's JSON body as arguments. */
   call(toolName: string, request: Request): Promise<Response>
   /** The catalogue: every tool's name, description, kind, and input schema (JSON Schema). */
@@ -24,7 +24,7 @@ export interface QueryHandler {
 
 const json = (status: number, body: unknown) => Response.json(body, { status })
 
-export function createQueryHandler(options: DeploymentOptions): QueryHandler {
+export function createRestHandler(options: DeploymentOptions): RestHandler {
   const deployment = resolveDeployment(options)
   return {
     async call(toolName, request) {

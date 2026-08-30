@@ -115,15 +115,15 @@ describe('credits price', () => {
 describe('query and mcp routes', () => {
   test('the catalogue is free; a call or a tools/call costs a turn and 402s when there are none', async () => {
     process.env.X402_PAY_TO = FIXTURE_SENDER
-    const catalogue = await import('../app/api/query/route.js')
-    const query = await import('../app/api/query/[name]/route.js')
+    const catalogue = await import('../app/api/tools/route.js')
+    const query = await import('../app/api/tools/[name]/route.js')
     const mcp = await import('../app/api/mcp/route.js')
     const tools = (await (await catalogue.GET()).json()).tools as { name: string; kind: string }[]
     expect(tools.find((tool) => tool.name === 'lookup_asset')?.kind).toBe('query')
     expect(tools.find((tool) => tool.name === 'send_payment')?.kind).toBe('action')
     for (let i = 0; i < ledger.FREE_TURNS; i++) await ledger.freeTurn('7.7.7.7')
     const headers = { 'content-type': 'application/json', 'x-forwarded-for': '7.7.7.7' }
-    const dry = await query.POST(new Request('http://local/api/query/lookup_asset', { method: 'POST', headers, body: '{"assetId":1}' }), { params: Promise.resolve({ name: 'lookup_asset' }) })
+    const dry = await query.POST(new Request('http://local/api/tools/lookup_asset', { method: 'POST', headers, body: '{"assetId":1}' }), { params: Promise.resolve({ name: 'lookup_asset' }) })
     expect(dry.status).toBe(402)
     const call = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'lookup_asset', arguments: {} } })
     expect((await mcp.POST(new Request('http://local/api/mcp', { method: 'POST', headers, body: call }))).status).toBe(402)

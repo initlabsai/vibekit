@@ -16,7 +16,7 @@ built from — reach for these before writing your own: `@initlabs/vibekit/agent
 (`createAgent`, `createAgentHandler`: a turn over HTTP as NDJSON), `/actions`
 (the draft → approve → sign → confirm machine, `createWalletSignDraft`), `/pay`
 (`createPaywall`: x402 → credit → `charge(request)`), `/rest`
-(`createQueryHandler`: `POST /query/<tool>`), and `vibekit add <component>`
+(`createRestHandler`: `POST /tools/<tool>`), and `vibekit add <component>`
 (copy-paste React whose props are a tool's output type). Runnable examples:
 `packages/vibekit/examples/{agent-http,rest,signer,stdio,http}.ts` and
 `packages/vibekit/examples/action.ts`.

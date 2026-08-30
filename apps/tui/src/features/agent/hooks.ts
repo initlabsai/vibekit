@@ -1,12 +1,8 @@
 import { addResult, type ResultStore } from '@initlabs/vibekit/actions'
 import type { LiveNetworkId } from '@initlabs/vibekit/views'
-import {
-  listZeroSignalModels,
-  probeZeroSignal,
-  resolveAgentConfig,
-  zeroSignalSetupHint,
-  type AgentSession,
-} from '@initlabs/vibekit/agent'
+import { listZeroSignalModels, probeZeroSignal, zeroSignalSetupHint } from '@initlabs/vibekit/agent/providers'
+import { resolveAgentConfig } from '@initlabs/vibekit/agent/config'
+import { type AgentSession } from '@initlabs/vibekit/agent'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { labelProgramMethods } from '../apps/abi-catalog.js'

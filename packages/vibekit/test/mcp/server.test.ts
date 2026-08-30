@@ -3,7 +3,7 @@ import { defineTool, ToolError, type AnyTool } from '../../src/core/index.js'
 import { Client } from '@modelcontextprotocol/client'
 import { InMemoryTransport } from '@modelcontextprotocol/server'
 import { z } from 'zod'
-import { VIEW_META_KEY, createVibekitMcp } from '../../src/mcp/index.js'
+import { VIEW_META_KEY, createMcpServer } from '../../src/mcp/index.js'
 import { resolveMcpDeployment } from '../../src/mcp/options.js'
 
 const echo = defineTool({
@@ -48,7 +48,7 @@ const writeTool = defineTool({
 }) as AnyTool
 
 async function connect(tools: AnyTool[]) {
-  const server = createVibekitMcp({ network: 'localnet', mode: 'compose', tools })
+  const server = createMcpServer({ network: 'localnet', mode: 'compose', tools })
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
   await server.connect(serverTransport)
   const client = new Client({ name: 'test', version: '0.0.0' })
@@ -56,7 +56,7 @@ async function connect(tools: AnyTool[]) {
   return client
 }
 
-describe('createVibekitMcp', () => {
+describe('createMcpServer', () => {
   test('lists tools with annotations and view meta', async () => {
     const client = await connect([echo, writeTool, lookup])
     const { tools } = await client.listTools()
@@ -138,7 +138,7 @@ describe('resolveMcpDeployment validation', () => {
 
 describe('multi-network adapter (§10 state model)', () => {
   const connectMulti = async (tools: AnyTool[]) => {
-    const server = createVibekitMcp({
+    const server = createMcpServer({
       network: 'localnet',
       networks: ['testnet'],
       mode: 'compose',
@@ -207,7 +207,7 @@ describe('multi-network adapter (§10 state model)', () => {
       handler: async () => 'x',
     }) as AnyTool
     expect(() =>
-      createVibekitMcp({
+      createMcpServer({
         network: 'localnet',
         networks: ['testnet'],
         mode: 'compose',

@@ -6,7 +6,7 @@ import type { InputRenderable } from '@opentui/core'
 import { useTerminalDimensions } from '@opentui/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 
-import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent'
+import { loadStoredPlugins, saveStoredPlugins } from '@initlabs/vibekit/agent/config'
 
 import { routeComposerInput } from './commands.js'
 import { CopyContext, useCopyOnSelect } from './copy-selection.js'

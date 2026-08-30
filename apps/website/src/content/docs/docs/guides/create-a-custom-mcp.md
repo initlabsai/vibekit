@@ -26,10 +26,10 @@ This server exposes only account and network reads on TestNet. Stdio is the
 normal local-agent transport.
 
 ```ts
-import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
+import { serveMcpStdio } from '@initlabs/vibekit/mcp/stdio'
 import { accountQueries, networkQueries } from '@initlabs/vibekit/tools'
 
-const handle = serveVibekitStdio({
+const handle = serveMcpStdio({
   name: 'my-vibekit-mcp',
   network: 'testnet',
   mode: 'compose',
@@ -64,7 +64,7 @@ Instantiate plugins through the deployment rather than copying their tools:
 ```ts
 import { nfdPlugin } from '@initlabs/vibekit/plugins/nfd'
 
-const handle = serveVibekitStdio({
+const handle = serveMcpStdio({
   name: 'my-vibekit-mcp',
   network: 'testnet',
   mode: 'compose',
@@ -79,7 +79,7 @@ into every tool and requires it on writes.
 
 ## HTTP is an adapter, not another architecture
 
-Use `createVibekitHttpHandler` from `@initlabs/vibekit/mcp/http` when your own
+Use `createMcpHttpHandler` from `@initlabs/vibekit/mcp/http` when your own
 application needs a stateless Streamable HTTP handler. The handler creates a
 fresh MCP server per request; it does not retain client sessions. Bring your
 own authentication, origin policy, and deployment model. The

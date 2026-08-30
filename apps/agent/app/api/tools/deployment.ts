@@ -3,8 +3,8 @@
  * serve (production needs its own endpoints per network), compose mode, the
  * stock tools and plugins. Signerless by construction. One per isolate.
  */
-import { createQueryHandler, type QueryHandler } from '@initlabs/vibekit/rest'
-import { createVibekitHttpHandler } from '@initlabs/vibekit/mcp/http'
+import { createRestHandler, type RestHandler } from '@initlabs/vibekit/rest'
+import { createMcpHttpHandler } from '@initlabs/vibekit/mcp/http'
 import { defaultTools } from '@initlabs/vibekit/preset'
 import { explorerPlugins } from '@initlabs/vibekit/preset'
 import type { NetworkId } from '@initlabs/vibekit'
@@ -28,14 +28,14 @@ function options() {
   return { network: networks[0]!, networks, mode: 'compose' as const, tools: defaultTools, plugins: explorerPlugins() }
 }
 
-let rest: QueryHandler | undefined
-export function queryHandler(): QueryHandler {
-  return (rest ??= createQueryHandler(options()))
+let rest: RestHandler | undefined
+export function restHandler(): RestHandler {
+  return (rest ??= createRestHandler(options()))
 }
 
-let mcp: ReturnType<typeof createVibekitHttpHandler> | undefined
-export function mcpHandler(): ReturnType<typeof createVibekitHttpHandler> {
-  return (mcp ??= createVibekitHttpHandler({ name: 'vibekit', ...options() }))
+let mcp: ReturnType<typeof createMcpHttpHandler> | undefined
+export function mcpHandler(): ReturnType<typeof createMcpHttpHandler> {
+  return (mcp ??= createMcpHttpHandler({ name: 'vibekit', ...options() }))
 }
 
 /** One turn: the paywall's charge when packs are for sale, the house caps in production otherwise. */

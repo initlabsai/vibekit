@@ -2,7 +2,7 @@
  * MCP over streamable HTTP, behind the same paywall as the REST route: a
  * `tools/call` costs a turn; the handshake and listings are free.
  */
-import { chargeTurn, mcpHandler } from '../query/deployment'
+import { chargeTurn, mcpHandler } from '../tools/deployment'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30

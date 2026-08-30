@@ -8,13 +8,13 @@
  * Run: MNEMONIC="..." bun packages/vibekit/examples/signer.ts
  */
 import algosdk from 'algosdk'
-import { createVibekitHttpHandler } from '@initlabs/vibekit/mcp/http'
+import { createMcpHttpHandler } from '@initlabs/vibekit/mcp/http'
 import { defaultTools } from '@initlabs/vibekit/preset'
 
 const account = algosdk.mnemonicToSecretKey(process.env.MNEMONIC ?? '')
 const signer = algosdk.makeBasicAccountTransactionSigner(account)
 
-const handler = createVibekitHttpHandler({
+const handler = createMcpHttpHandler({
   name: 'vibekit-signer-example',
   network: 'testnet',
   mode: 'execute',
