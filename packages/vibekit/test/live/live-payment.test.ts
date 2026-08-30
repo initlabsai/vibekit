@@ -9,7 +9,7 @@ import { structuredResultFromToolEvent } from '../../src/views/bridge.js'
 import { createExplorerFixtureResultStore } from '../../src/views/sample/payment.js'
 import {
   createActionViewModel,
-  createWriteStageEvent,
+  createStageEvent,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
   addResult,
@@ -17,8 +17,8 @@ import {
   type ActionState,
 } from '../../src/views/index.js'
 import {
-  writeDraftDataSchema,
-  writeSimulationDataSchema,
+  draftDataSchema,
+  simulationDataSchema,
   signedGroupDataSchema,
   actionReducer,
 } from '../../src/actions/index.js'
@@ -85,7 +85,7 @@ describe('live payment mapping over recorded engine outputs', () => {
       network: 'localnet',
     })
     if (record.state !== 'success') throw new Error('Expected success record')
-    const data = writeDraftDataSchema.parse(record.data)
+    const data = draftDataSchema.parse(record.data)
     expect(data.amountMicroAlgos).toBe(250000)
     expect(data.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)
     expect(data.unsignedGroup.summary).toBe(recorded.compose.summary)
@@ -94,7 +94,7 @@ describe('live payment mapping over recorded engine outputs', () => {
   test('wraps the recorded simulation with facts from the group under approval', () => {
     const record = buildSimulationRecord(SIMULATION_IDENTITY, recorded.simulate, decodedFacts())
     if (record.state !== 'success') throw new Error('Expected success record')
-    const data = writeSimulationDataSchema.parse(record.data)
+    const data = simulationDataSchema.parse(record.data)
     expect(data).toMatchObject({
       wouldSucceed: true,
       simulatedRound: recorded.simulate.simulatedRound,
@@ -123,18 +123,18 @@ describe('live payment mapping over recorded engine outputs', () => {
 
     const flowId = 'flow-live-001'
     const steps = [
-      createWriteStageEvent({
+      createStageEvent({
         stage: 'draft',
         flowId,
         toolCallId: DRAFT_IDENTITY.toolCallId,
         draft: { source: 'result', id: draftRecord.resultId },
       }),
-      createWriteStageEvent({
+      createStageEvent({
         stage: 'simulate',
         flowId,
         simulation: { source: 'result', id: simulationRecord.resultId },
       }),
-      createWriteStageEvent({
+      createStageEvent({
         stage: 'inspect',
         flowId,
         inspection: { source: 'result', id: simulationRecord.resultId },

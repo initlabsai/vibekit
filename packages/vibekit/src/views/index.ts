@@ -38,14 +38,14 @@ export {
   approvalRequestSchema,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
-  createWriteStageEvent,
+  createStageEvent,
   viewSpecSchema,
-  writeConfirmEventSchema,
-  writeDraftEventSchema,
-  writeInspectEventSchema,
-  writeSignEventSchema,
-  writeSimulateEventSchema,
-  writeStageEventSchema,
+  confirmStageEventSchema,
+  draftStageEventSchema,
+  inspectStageEventSchema,
+  signStageEventSchema,
+  simulateStageEventSchema,
+  stageEventSchema,
 } from '../actions/index.js'
 export type {
   ApprovalDecision,
@@ -53,7 +53,7 @@ export type {
   OpenView,
   TrustedViewId,
   ViewSpec,
-  WriteStageEvent,
+  StageEvent,
 } from '../actions/index.js'
 export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
 export {
@@ -169,7 +169,7 @@ export type {
 } from './transaction-graph.js'
 export { createActionViewModel } from './action.js'
 export type { ActionViewModel } from './action.js'
-export { writeDraftDataSchema } from '../actions/index.js'
+export { draftDataSchema } from '../actions/index.js'
 export type { ActionState } from '../actions/index.js'
 export {
   submitAction,

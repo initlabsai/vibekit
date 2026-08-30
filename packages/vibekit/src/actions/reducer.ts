@@ -5,9 +5,9 @@
  */
 import { z } from 'zod'
 
-import { writeIntentSchema } from '../core/schemas.js'
+import { actionIntentSchema } from '../core/schemas.js'
 import { viewDataSchemas } from '../tools/views.js'
-import { approvalDecisionSchema, approvalRequestSchema, writeStageEventSchema } from './protocol.js'
+import { approvalDecisionSchema, approvalRequestSchema, stageEventSchema } from './protocol.js'
 import { resultReferenceSchema, sameResultReference } from './records.js'
 import {
   algorandAddressCandidateSchema,
@@ -30,7 +30,7 @@ export const paymentEffectSchema = z
  * group bytes are the ground truth the flow inspects and approves. Payment
  * receiver/amount are present when the group is a single plain pay.
  */
-export const writeDraftDataSchema = z
+export const draftDataSchema = z
   .object({
     sender: algorandAddressCandidateSchema,
     receiver: algorandAddressCandidateSchema.optional(),
@@ -49,7 +49,7 @@ export const writeDraftDataSchema = z
     /** Per index: a base64 signed leg another party signed, or null where the wallet signs. */
     presigned: z.array(z.string().min(1).nullable()).optional(),
     /** What the group does, when a screen can say it better than its transactions. */
-    intent: writeIntentSchema.optional(),
+    intent: actionIntentSchema.optional(),
   })
   .strict()
 
@@ -58,7 +58,7 @@ export const writeDraftDataSchema = z
  * group facts so the approval view has one authoritative source; the view
  * model cross-checks them against the draft before presenting.
  */
-export const writeSimulationDataSchema = z
+export const simulationDataSchema = z
   .object({
     wouldSucceed: z.boolean(),
     failureMessage: z.string().min(1).optional(),
@@ -99,10 +99,10 @@ export const confirmationDataSchema = z
   .strict()
 
 /** Authoritative data of a composed, unsigned payment draft result. */
-export type WriteDraftData = z.infer<typeof writeDraftDataSchema>
+export type DraftData = z.infer<typeof draftDataSchema>
 
 /** Authoritative data of a payment simulation result. */
-export type WriteSimulationData = z.infer<typeof writeSimulationDataSchema>
+export type SimulationData = z.infer<typeof simulationDataSchema>
 
 /** Authoritative data of a signed payment group. */
 export type SignedGroupData = z.infer<typeof signedGroupDataSchema>
@@ -136,7 +136,7 @@ export type ActionStage = z.infer<typeof actionStageSchema>
  * sees; the flow machine adds ordering, never a private approval channel.
  */
 export const actionEventSchema = z.union([
-  writeStageEventSchema,
+  stageEventSchema,
   approvalRequestSchema,
   approvalDecisionSchema,
 ])

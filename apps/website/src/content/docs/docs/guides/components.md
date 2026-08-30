@@ -18,7 +18,7 @@ vibekit add transaction asset approval        # --dir components  --force
 | --- | --- | --- |
 | `companion` | `mood, step, faces` | [qt314's face](../add-a-companion/) — your own strings |
 | `action` | `host, store, newId, onNotice` | `useAction`: one action from draft to confirmed, headless |
-| `approval` | `WriteDraftData`, a simulation, approve/deny | the decision screen; red on mainnet or a failed simulation |
+| `approval` | `DraftData`, a simulation, approve/deny | the decision screen; red on mainnet or a failed simulation |
 | `tool-result` | a `tool-result` event | JSON, errors handled — the fallback for any tool |
 | `transaction` | `ViewData<'transaction.detail'>` | one transaction |
 | `asset` | `ViewData<'asset.detail'>` / `'asset.list'` | an asset, and the list |

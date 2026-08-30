@@ -5,9 +5,9 @@
  */
 import { z } from 'zod'
 
-import { writeIntentSchema } from '../core/schemas.js'
+import { actionIntentSchema } from '../core/schemas.js'
 import { viewDataSchemas } from '../tools/views.js'
-import { createApprovalDecisionEvent, createApprovalRequestEvent, createWriteStageEvent } from './protocol.js'
+import { createApprovalDecisionEvent, createApprovalRequestEvent, createStageEvent } from './protocol.js'
 import {
   addResult,
   findResultRecord,
@@ -19,11 +19,11 @@ import {
 import { algorandAddressCandidateSchema, uint64JsonSchema } from './schemas.js'
 import {
   confirmationDataSchema,
-  writeDraftDataSchema,
+  draftDataSchema,
   signedGroupDataSchema,
-  writeSimulationDataSchema,
+  simulationDataSchema,
   actionReducer,
-  type WriteDraftData,
+  type DraftData,
   type ActionEvent,
   type ActionEventKind,
   type ActionState,
@@ -34,7 +34,7 @@ export const composeWireResultSchema = z.object({
   unsignedGroup: z.array(z.string().min(1)).min(1),
   summary: z.string().min(1),
   presigned: z.array(z.string().min(1).nullable()).optional(),
-  intent: writeIntentSchema.optional(),
+  intent: actionIntentSchema.optional(),
 })
 
 /** The JSON-safe wire subset of simulate_transactions this slice consumes. */
@@ -109,7 +109,7 @@ export function buildDraftRecord(
 ): StructuredResult {
   const compose = composeWireResultSchema.parse(wire)
   const facts = decodedGroupFactsSchema.parse(decoded)
-  const data: WriteDraftData = writeDraftDataSchema.parse({
+  const data: DraftData = draftDataSchema.parse({
     sender: facts.sender,
     ...(facts.receiver === undefined ? {} : { receiver: facts.receiver }),
     ...(facts.amountMicroAlgos === undefined ? {} : { amountMicroAlgos: facts.amountMicroAlgos }),
@@ -149,7 +149,7 @@ export function buildSimulationRecord(
     return absolute <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString()
   }
   const effects = algoEffectsFromFacts(facts, toJson)
-  const data = writeSimulationDataSchema.parse({
+  const data = simulationDataSchema.parse({
     wouldSucceed: simulation.wouldSucceed,
     ...(simulation.failureMessage === undefined
       ? {}
@@ -229,7 +229,7 @@ function resultRef(record: StructuredResult): { source: 'result'; id: string } {
 
 /** The draft event carries the record's identifiers; later approvals correlate on its tool-call id. */
 function draftEventFor(flowId: string, record: StructuredResult): ActionEvent {
-  return createWriteStageEvent({
+  return createStageEvent({
     stage: 'draft',
     flowId,
     toolCallId: record.toolCallId,
@@ -279,7 +279,7 @@ export async function performActionStep(input: {
         const record = await host.simulateDraft(draftRecord)
         store = addResult(store, record)
         return advance(
-          createWriteStageEvent({
+          createStageEvent({
             stage: 'simulate',
             flowId: flow.flowId,
             simulation: resultRef(record),
@@ -292,7 +292,7 @@ export async function performActionStep(input: {
         // Inspection reviews exactly the flow's simulation; before one exists there is no event.
         return advance(
           flow.simulation &&
-            createWriteStageEvent({
+            createStageEvent({
               stage: 'inspect',
               flowId: flow.flowId,
               inspection: flow.simulation,
@@ -349,7 +349,7 @@ export async function performActionStep(input: {
         const record = await host.signDraft(draftRecord)
         store = addResult(store, record)
         return advance(
-          createWriteStageEvent({ stage: 'sign', flowId: flow.flowId, signed: resultRef(record) }),
+          createStageEvent({ stage: 'sign', flowId: flow.flowId, signed: resultRef(record) }),
           flow,
         )
       }
@@ -366,7 +366,7 @@ export async function performActionStep(input: {
         const record = await host.submitSigned(signedRecord)
         store = addResult(store, record)
         return advance(
-          createWriteStageEvent({
+          createStageEvent({
             stage: 'confirm',
             flowId: flow.flowId,
             confirmation: resultRef(record),

@@ -7,7 +7,7 @@ import {
   composeOrExecute,
   defineTool,
   simulateGroup,
-  writeResultSchema,
+  actionResultSchema,
   type AnyTool,
   type TxnSpec,
 } from '../../core/index.js'
@@ -138,7 +138,7 @@ function toolForMethod(
     name,
     description,
     parameters,
-    output: readonly ? simulateResultSchema : writeResultSchema,
+    output: readonly ? simulateResultSchema : actionResultSchema,
     ...(readonly ? {} : { requiresSigner: true }),
     view: readonly ? 'json' : 'txn',
     handler: async (ctx, args) => {

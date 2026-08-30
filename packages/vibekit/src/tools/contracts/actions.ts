@@ -4,7 +4,7 @@ import {
   composeOrExecute,
   defineTool,
   ToolError,
-  writeResultSchema,
+  actionResultSchema,
   type AnyTool,
   type ToolContext,
   type TxnSpec,
@@ -56,7 +56,7 @@ function appTool(
     name,
     description: `${description} Provide methodSignature OR appSpec+method for ABI calls; omit both for a bare call. In compose mode returns unsigned transactions for external signing.`,
     parameters: appCallParams,
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) =>

@@ -38,11 +38,11 @@ export interface UnsignedGroupResult {
    */
   presigned?: (string | null)[]
   /** What the group does, for a host's approval screen: a swap, an order. */
-  intent?: WriteIntent
+  intent?: ActionIntent
 }
 
 /** The intents a host can summarize better than a transaction list. */
-export type WriteIntent = OrderIntent | SwapIntent
+export type ActionIntent = OrderIntent | SwapIntent
 
 export interface OrderIntent {
   kind: 'order'

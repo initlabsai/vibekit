@@ -33,7 +33,7 @@ export const orderIntentSchema = z.object({
 })
 
 /** What a write intends, when a host can say it better than a transaction list. */
-export const writeIntentSchema = z.discriminatedUnion('kind', [swapIntentSchema, orderIntentSchema])
+export const actionIntentSchema = z.discriminatedUnion('kind', [swapIntentSchema, orderIntentSchema])
 
 export const unsignedGroupResultSchema = z.object({
   unsignedGroup: z.array(z.string()).describe('base64-encoded unsigned transactions, group order'),
@@ -44,7 +44,7 @@ export const unsignedGroupResultSchema = z.object({
     .describe(
       'per index: a base64 signed txn another party signed, or null where the wallet signs',
     ),
-  intent: writeIntentSchema.optional(),
+  intent: actionIntentSchema.optional(),
 })
 
 export const executeGroupResultSchema = z.object({
@@ -56,4 +56,4 @@ export const executeGroupResultSchema = z.object({
 })
 
 /** What every action returns: unsigned group (compose mode) or execution result. */
-export const writeResultSchema = z.union([unsignedGroupResultSchema, executeGroupResultSchema])
+export const actionResultSchema = z.union([unsignedGroupResultSchema, executeGroupResultSchema])

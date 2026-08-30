@@ -6,17 +6,17 @@ import { createFixtureAccountLookup } from './account.js'
 import {
   approvalDecisionSchema,
   approvalRequestSchema,
-  writeConfirmEventSchema,
-  writeDraftEventSchema,
-  writeInspectEventSchema,
-  writeSignEventSchema,
-  writeSimulateEventSchema,
+  confirmStageEventSchema,
+  draftStageEventSchema,
+  inspectStageEventSchema,
+  signStageEventSchema,
+  simulateStageEventSchema,
 } from '../../actions/index.js'
 import {
   confirmationDataSchema,
-  writeDraftDataSchema,
+  draftDataSchema,
   signedGroupDataSchema,
-  writeSimulationDataSchema,
+  simulationDataSchema,
   type ActionEvent,
   type ActionEventKind,
 } from '../../actions/index.js'
@@ -88,7 +88,7 @@ export const PAYMENT_FIXTURE_SIGNED_RESULT_ID = 'result-fixture-payment-signed-0
 /** The compose summary recorded with the fixture group. */
 export const PAYMENT_FIXTURE_GROUP_SUMMARY = `[0] pay 250000 microALGO ${FIXTURE_SENDER} → ${FIXTURE_RECEIVER}`
 
-const draftData = writeDraftDataSchema.parse({
+const draftData = draftDataSchema.parse({
   sender: FIXTURE_SENDER,
   receiver: FIXTURE_RECEIVER,
   amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
@@ -111,7 +111,7 @@ const draftData = writeDraftDataSchema.parse({
   ],
 })
 
-const simulationData = writeSimulationDataSchema.parse({
+const simulationData = simulationDataSchema.parse({
   wouldSucceed: true,
   sender: FIXTURE_SENDER,
   receiver: FIXTURE_RECEIVER,
@@ -274,7 +274,7 @@ export function createSampleHost(): ActionHost &
 export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
   switch (kind) {
     case 'draft':
-      return writeDraftEventSchema.parse({
+      return draftStageEventSchema.parse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'draft',
@@ -283,7 +283,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
         draft: reference(PAYMENT_FIXTURE_DRAFT_RESULT_ID),
       })
     case 'simulate':
-      return writeSimulateEventSchema.parse({
+      return simulateStageEventSchema.parse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'simulate',
@@ -293,7 +293,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
     case 'inspect':
       // Inspection presents the simulation record: the one authoritative
       // source of the reviewed sender, amount, fee, and effects.
-      return writeInspectEventSchema.parse({
+      return inspectStageEventSchema.parse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'inspect',
@@ -325,7 +325,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
         reason: 'Denied in Explorer review',
       })
     case 'sign':
-      return writeSignEventSchema.parse({
+      return signStageEventSchema.parse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'sign',
@@ -333,7 +333,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
         signed: reference(PAYMENT_FIXTURE_SIGNED_RESULT_ID),
       })
     case 'confirm':
-      return writeConfirmEventSchema.parse({
+      return confirmStageEventSchema.parse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'confirm',

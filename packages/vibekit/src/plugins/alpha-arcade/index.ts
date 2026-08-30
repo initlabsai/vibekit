@@ -7,7 +7,7 @@ import {
   bytesToBase64,
   defineTool,
   ToolError,
-  writeResultSchema,
+  actionResultSchema,
   type AnyTool,
   type ToolContext,
   type ToolPlugin,
@@ -363,7 +363,7 @@ export const alphaArcadeTools: AnyTool[] = [
         .describe('Market orders only; default 2'),
       sender: z.string().describe('The account that trades'),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => {
@@ -415,7 +415,7 @@ export const alphaArcadeTools: AnyTool[] = [
       escrowAppId: z.number().describe('From get_open_orders'),
       sender: z.string().describe("The order's owner"),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) =>
@@ -441,7 +441,7 @@ export const alphaArcadeTools: AnyTool[] = [
       side: z.enum(['yes', 'no']).describe('Which shares the account holds'),
       sender: z.string().describe('The account that claims'),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => {

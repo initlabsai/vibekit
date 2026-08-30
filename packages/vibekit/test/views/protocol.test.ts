@@ -6,7 +6,7 @@ import {
   approvalDecisionSchema,
   approvalRequestSchema,
   viewSpecSchema,
-  writeStageEventSchema,
+  stageEventSchema,
 } from '../../src/views/index.js'
 import {
   FIXTURE_TOOL_CALL_ID,
@@ -68,14 +68,14 @@ describe('explorer protocol', () => {
       toolCallId: FIXTURE_TOOL_CALL_ID,
       draft: { source: 'result', id: FIXTURE_RESULT_ID },
     }
-    expect(writeStageEventSchema.parse(draft).protocolVersion).toBe('0.1.0')
-    expect(writeStageEventSchema.safeParse({ ...draft, stage: 'sign' }).success).toBeFalse()
-    expect(writeStageEventSchema.safeParse({ ...draft, amount: 0.25 }).success).toBeFalse()
+    expect(stageEventSchema.parse(draft).protocolVersion).toBe('0.1.0')
+    expect(stageEventSchema.safeParse({ ...draft, stage: 'sign' }).success).toBeFalse()
+    expect(stageEventSchema.safeParse({ ...draft, amount: 0.25 }).success).toBeFalse()
     expect(
-      writeStageEventSchema.safeParse({ ...draft, protocolVersion: '1.0.0' }).success,
+      stageEventSchema.safeParse({ ...draft, protocolVersion: '1.0.0' }).success,
     ).toBeFalse()
     expect(
-      writeStageEventSchema.safeParse({
+      stageEventSchema.safeParse({
         protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'confirm',

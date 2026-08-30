@@ -3,7 +3,7 @@
  * sender, network, fees, effects, the unsigned group, and the transactions
  * graph — all from the flow's records, never from request parameters.
  */
-import { writeIntentSchema } from '../core/index.js'
+import { actionIntentSchema } from '../core/index.js'
 import {
   actionEventKinds,
   actionNextEventKinds,
@@ -16,8 +16,8 @@ import {
   signedGroupDataSchema,
   signedMicroAlgosJsonSchema,
   uint64JsonSchema,
-  writeDraftDataSchema,
-  writeSimulationDataSchema,
+  draftDataSchema,
+  simulationDataSchema,
   type ActionState,
   type ResultStore,
   type ViewModelError,
@@ -60,7 +60,7 @@ export const actionViewModelSchema = z
     graph: transactionsGraphSchema.optional(),
     /** Legs the wallet does not sign (a router's), by group index. */
     presignedIndexes: z.array(z.number().int().nonnegative()).optional(),
-    intent: writeIntentSchema.optional(),
+    intent: actionIntentSchema.optional(),
     simulation: z
       .object({
         wouldSucceed: z.boolean(),
@@ -123,7 +123,7 @@ export function createActionViewModel(
 ): ActionViewModelResult {
   const draft = resolveResultReference(store, flow.draft)
   if (!draft.ok) return draft
-  const parsedDraft = writeDraftDataSchema.safeParse(draft.value)
+  const parsedDraft = draftDataSchema.safeParse(draft.value)
   if (!parsedDraft.success) {
     return invalid('Draft result did not match the payment draft schema')
   }
@@ -134,7 +134,7 @@ export function createActionViewModel(
   if (flow.simulation) {
     const resolution = resolveResultReference(store, flow.simulation)
     if (!resolution.ok) return resolution
-    const parsed = writeSimulationDataSchema.safeParse(resolution.value)
+    const parsed = simulationDataSchema.safeParse(resolution.value)
     if (!parsed.success) {
       return invalid('Simulation result did not match the payment simulation schema')
     }

@@ -6,7 +6,7 @@
 import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '../core/codec.js'
 import type { StructuredResult } from './records.js'
-import { writeDraftDataSchema } from './reducer.js'
+import { draftDataSchema } from './reducer.js'
 
 /** `(txnGroup, indexesToSign) => signed bytes` — algosdk's TransactionSigner, use-wallet's `transactionSigner`, a keystore's. */
 export type DraftSigner = (
@@ -19,7 +19,7 @@ export function unsignedTransactionsForDraft(draftRecord: StructuredResult): alg
   if (draftRecord.state !== 'success') {
     throw new Error('Cannot decode a failed draft record')
   }
-  const draft = writeDraftDataSchema.parse(draftRecord.data)
+  const draft = draftDataSchema.parse(draftRecord.data)
   return draft.unsignedGroup.transactions.map((txn) =>
     algosdk.decodeUnsignedTransaction(base64ToBytes(txn)),
   )
@@ -37,7 +37,7 @@ export async function signGroupForDraft(
   const transactions = unsignedTransactionsForDraft(draftRecord)
   const presigned =
     draftRecord.state === 'success'
-      ? writeDraftDataSchema.parse(draftRecord.data).presigned
+      ? draftDataSchema.parse(draftRecord.data).presigned
       : undefined
   const indexes = transactions.map((_, index) => index).filter((index) => !presigned?.[index])
   const signed = await signer(transactions, indexes)

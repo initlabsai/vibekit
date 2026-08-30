@@ -2,7 +2,7 @@
 import {
   composeOrExecute,
   defineTool,
-  writeResultSchema,
+  actionResultSchema,
   type AnyTool,
   type TxnSpec,
 } from '../../core/index.js'
@@ -11,7 +11,7 @@ import { z } from 'zod'
 const sender = z.string().describe('Sender address')
 const note = z.string().optional().describe('Optional note (max 1000 bytes)')
 
-function writeTool<P extends z.ZodType>(def: {
+function actionTool<P extends z.ZodType>(def: {
   name: string
   description: string
   parameters: P
@@ -21,7 +21,7 @@ function writeTool<P extends z.ZodType>(def: {
     name: def.name,
     description: `${def.description} In compose mode returns the unsigned transaction for external signing.`,
     parameters: def.parameters,
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, [def.toSpec(args)]),
@@ -29,7 +29,7 @@ function writeTool<P extends z.ZodType>(def: {
 }
 
 export const assetActions: AnyTool[] = [
-  writeTool({
+  actionTool({
     name: 'asset_create',
     description: 'Create a new Algorand Standard Asset (ASA).',
     parameters: z.object({
@@ -52,7 +52,7 @@ export const assetActions: AnyTool[] = [
     }),
     toSpec: (a) => ({ ...a, type: 'asset_create' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_transfer',
     description: 'Transfer an ASA between accounts (or claw back with clawbackTarget).',
     parameters: z.object({
@@ -72,13 +72,13 @@ export const assetActions: AnyTool[] = [
     }),
     toSpec: (a) => ({ ...a, type: 'asset_transfer' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_opt_in',
     description: 'Opt the sender account into an ASA so it can receive it.',
     parameters: z.object({ sender, assetId: z.number().describe('The asset ID'), note }),
     toSpec: (a) => ({ ...a, type: 'asset_opt_in' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_opt_out',
     description:
       'Opt the sender out of an ASA, closing remaining balance to closeAssetTo (usually the creator). Fails on non-zero balance unless ensureZeroBalance is false.',
@@ -93,7 +93,7 @@ export const assetActions: AnyTool[] = [
     }),
     toSpec: (a) => ({ ...a, type: 'asset_opt_out' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_freeze',
     description:
       "Freeze or unfreeze an account's holding of an ASA (sender must be the freeze address).",
@@ -106,7 +106,7 @@ export const assetActions: AnyTool[] = [
     }),
     toSpec: (a) => ({ ...a, type: 'asset_freeze' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_config',
     description:
       "Reconfigure an ASA's role addresses (sender must be the manager). Omitted addresses are cleared PERMANENTLY and require confirmClearRoles: true.",
@@ -125,7 +125,7 @@ export const assetActions: AnyTool[] = [
     }),
     toSpec: (a) => ({ ...a, type: 'asset_config' }),
   }),
-  writeTool({
+  actionTool({
     name: 'asset_destroy',
     description:
       'Destroy an ASA (sender must be the manager; all units must be back in the creator account).',

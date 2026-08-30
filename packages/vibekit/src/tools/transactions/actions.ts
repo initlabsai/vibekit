@@ -3,7 +3,7 @@ import {
   composeOrExecute,
   defineTool,
   simulateGroup,
-  writeResultSchema,
+  actionResultSchema,
   type AnyTool,
   type TxnSpec,
 } from '../../core/index.js'
@@ -198,7 +198,7 @@ export const transactionActions: AnyTool[] = [
         .describe('Address receiving remaining balance — closes the sender account'),
       note: z.string().optional().describe('Optional UTF-8 note'),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) =>
@@ -220,7 +220,7 @@ export const transactionActions: AnyTool[] = [
     parameters: z.object({
       transactions: z.array(txnSpecSchema).min(1).max(16),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (ctx, args) => composeOrExecute(ctx, args.transactions as TxnSpec[]),

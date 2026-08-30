@@ -56,16 +56,16 @@ export interface OpenView {
   view: ViewSpec
 }
 
-const writeStageEventBase = {
+const stageEventBase = {
   protocolVersion: recordProtocolVersionSchema,
   type: z.literal('write.stage'),
   flowId: z.string().min(1),
 }
 
 /** Begins one observable action flow around a composed, unsigned draft result. */
-export const writeDraftEventSchema = z
+export const draftStageEventSchema = z
   .object({
-    ...writeStageEventBase,
+    ...stageEventBase,
     stage: z.literal('draft'),
     toolCallId: z.string().min(1),
     draft: resultReferenceSchema,
@@ -73,36 +73,36 @@ export const writeDraftEventSchema = z
   .strict()
 
 /** Attaches an authoritative simulation result to a drafted action flow. */
-export const writeSimulateEventSchema = z
+export const simulateStageEventSchema = z
   .object({
-    ...writeStageEventBase,
+    ...stageEventBase,
     stage: z.literal('simulate'),
     simulation: resultReferenceSchema,
   })
   .strict()
 
 /** Marks the human-visible inspection of one authoritative review result. */
-export const writeInspectEventSchema = z
+export const inspectStageEventSchema = z
   .object({
-    ...writeStageEventBase,
+    ...stageEventBase,
     stage: z.literal('inspect'),
     inspection: resultReferenceSchema,
   })
   .strict()
 
 /** Attaches the authoritative signed-group result to an approved action flow. */
-export const writeSignEventSchema = z
+export const signStageEventSchema = z
   .object({
-    ...writeStageEventBase,
+    ...stageEventBase,
     stage: z.literal('sign'),
     signed: resultReferenceSchema,
   })
   .strict()
 
 /** Attaches the authoritative confirmation result to a signed action flow. */
-export const writeConfirmEventSchema = z
+export const confirmStageEventSchema = z
   .object({
-    ...writeStageEventBase,
+    ...stageEventBase,
     stage: z.literal('confirm'),
     confirmation: resultReferenceSchema,
   })
@@ -113,16 +113,16 @@ export const writeConfirmEventSchema = z
  * references; authoritative senders, amounts, fees, and effects stay in
  * structured results.
  */
-export const writeStageEventSchema = z.discriminatedUnion('stage', [
-  writeDraftEventSchema,
-  writeSimulateEventSchema,
-  writeInspectEventSchema,
-  writeSignEventSchema,
-  writeConfirmEventSchema,
+export const stageEventSchema = z.discriminatedUnion('stage', [
+  draftStageEventSchema,
+  simulateStageEventSchema,
+  inspectStageEventSchema,
+  signStageEventSchema,
+  confirmStageEventSchema,
 ])
 
 /** Observable action stage event. */
-export type WriteStageEvent = z.infer<typeof writeStageEventSchema>
+export type StageEvent = z.infer<typeof stageEventSchema>
 
 /** A pending human approval that references authoritative inspection data. */
 export const approvalRequestSchema = z
@@ -154,7 +154,7 @@ export type ApprovalRequest = z.infer<typeof approvalRequestSchema>
 export type ApprovalDecision = z.infer<typeof approvalDecisionSchema>
 
 /** A reference-only stage payload accepted by the write stage constructors. */
-type WriteStageInput =
+type StageInput =
   | { stage: 'draft'; flowId: string; toolCallId: string; draft: ResultReference }
   | { stage: 'simulate'; flowId: string; simulation: ResultReference }
   | { stage: 'inspect'; flowId: string; inspection: ResultReference }
@@ -162,8 +162,8 @@ type WriteStageInput =
   | { stage: 'confirm'; flowId: string; confirmation: ResultReference }
 
 /** Builds one versioned, validated write.stage event from ids and references. */
-export function createWriteStageEvent(input: WriteStageInput): WriteStageEvent {
-  return writeStageEventSchema.parse({
+export function createStageEvent(input: StageInput): StageEvent {
+  return stageEventSchema.parse({
     protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'write.stage',
     ...input,

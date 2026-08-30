@@ -18,8 +18,8 @@ export {
   orderIntentSchema,
   swapIntentSchema,
   unsignedGroupResultSchema,
-  writeIntentSchema,
-  writeResultSchema,
+  actionIntentSchema,
+  actionResultSchema,
 } from './schemas.js'
 export {
   executeToolCall,

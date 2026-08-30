@@ -5,13 +5,13 @@
  * from, to; anything else shows its summary and the group. Wrap it in your
  * own modal, or render it inline.
  */
-import type { WriteDraftData, WriteSimulationData } from '@initlabs/vibekit/actions'
+import type { DraftData, SimulationData } from '@initlabs/vibekit/actions'
 
 import { formatBaseUnits, formatMicroAlgos, shorten } from './format'
 
 export type ActionApprovalProps = {
-  draft: WriteDraftData
-  simulation?: WriteSimulationData
+  draft: DraftData
+  simulation?: SimulationData
   network: string
   onApprove: () => void
   onDeny: () => void
@@ -20,7 +20,7 @@ export type ActionApprovalProps = {
   className?: string
 }
 
-function headline(draft: WriteDraftData): string {
+function headline(draft: DraftData): string {
   const intent = draft.intent
   if (intent?.kind === 'swap') {
     return `${formatBaseUnits(intent.amountIn, intent.fromDecimals)} ${intent.fromUnit} → ${formatBaseUnits(intent.amountOut, intent.toDecimals)} ${intent.toUnit}`

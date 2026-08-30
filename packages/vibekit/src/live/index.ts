@@ -35,7 +35,7 @@ import {
   signedGroupRecordFor,
 } from '../actions/index.js'
 export { signedGroupRecordFor }
-import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/index.js'
+import { draftDataSchema, signedGroupDataSchema } from '../actions/index.js'
 import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '../actions/index.js'
 import type { JsonValue, StructuredResult } from '../actions/index.js'
 
@@ -223,7 +223,7 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
       if (draftRecord.state !== 'success') {
         throw new Error('Cannot simulate a failed draft record')
       }
-      const draft = writeDraftDataSchema.parse(draftRecord.data)
+      const draft = draftDataSchema.parse(draftRecord.data)
       // The group bytes, not reconstructed specs, are the simulated truth.
       // The same sender rule as the draft: the wallet's first leg, not a router's.
       const decoded = decodeUnsignedGroup(draft.unsignedGroup.transactions, draft.presigned)

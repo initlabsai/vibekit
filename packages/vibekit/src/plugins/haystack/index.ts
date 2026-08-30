@@ -18,7 +18,7 @@ import {
   type ToolPlugin,
   type UnsignedGroupResult,
 } from '../../core/index.js'
-import { writeResultSchema } from '../../core/schemas.js'
+import { actionResultSchema } from '../../core/schemas.js'
 import { swapQuoteSchema, type SwapQuote } from './schemas.js'
 
 export { swapQuoteSchema, type SwapQuote }
@@ -196,7 +196,7 @@ export const haystackTools: AnyTool[] = [
       sender: z.string().describe('The account that sells and receives'),
       slippagePercent: z.number().min(0).max(50).optional().describe('Default 1'),
     }),
-    output: writeResultSchema,
+    output: actionResultSchema,
     requiresSigner: true,
     view: 'txn',
     handler: async (

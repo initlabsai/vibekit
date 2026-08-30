@@ -26,7 +26,7 @@ import {
   type ActionState,
 } from '../../src/views/index.js'
 import {
-  writeSimulationDataSchema,
+  simulationDataSchema,
   actionEventKinds,
   actionEventSchema,
   actionReducer,
@@ -167,8 +167,8 @@ describe('fixture-backed payment write flow', () => {
     if (!simulationRecord || simulationRecord.state !== 'success') {
       throw new Error('Expected simulation fixture')
     }
-    const tamperedData = writeSimulationDataSchema.parse({
-      ...writeSimulationDataSchema.parse(simulationRecord.data),
+    const tamperedData = simulationDataSchema.parse({
+      ...simulationDataSchema.parse(simulationRecord.data),
       amountMicroAlgos: 999,
     })
     const tamperedStore = createResultStore(

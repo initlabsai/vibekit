@@ -8,7 +8,7 @@ import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '../core/codec.js'
 import { formatAlgodTransaction, printableNote, safeUint64 } from './algod-txn.js'
 import { buildDraftRecord, buildSignedGroupRecord, decodedGroupFactsSchema, type DecodedGroupFacts } from './host.js'
-import { writeDraftDataSchema } from './reducer.js'
+import { draftDataSchema } from './reducer.js'
 import type { StructuredResult } from './records.js'
 
 /**
@@ -86,7 +86,7 @@ export function signedGroupRecordFor(
   if (draftRecord.state !== 'success') {
     throw new Error('Cannot sign a failed draft record')
   }
-  const draft = writeDraftDataSchema.parse(draftRecord.data)
+  const draft = draftDataSchema.parse(draftRecord.data)
   if (signedTransactions.length !== draft.unsignedGroup.transactions.length) {
     throw new Error('Signed group size does not match the drafted group')
   }
