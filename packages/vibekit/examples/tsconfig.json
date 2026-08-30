@@ -8,6 +8,7 @@
       "@initlabs/vibekit/mcp/stdio": ["../src/mcp/stdio.ts"],
       "@initlabs/vibekit/mcp/http": ["../src/mcp/http.ts"],
       "@initlabs/vibekit/preset": ["../src/preset/index.ts"],
+      "@initlabs/vibekit/agent": ["../src/agent/index.ts"],
       "@initlabs/vibekit/pay": ["../src/pay/index.ts"],
       "@initlabs/vibekit/rest": ["../src/rest/index.ts"],
       "@initlabs/vibekit/signer-keystore": ["../src/signer-keystore/index.ts"]

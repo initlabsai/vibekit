@@ -4,6 +4,7 @@
  * turn. Both hosts run it through createAgent; neither can sign.
  */
 import {
+  activeSenderLine,
   createAgent,
   WELL_KNOWN_ASSETS,
   type AgentSession,
@@ -30,6 +31,8 @@ import type { ResultStore } from '@initlabs/vibekit/actions'
 import { explainApplicationTool } from './explain-tool.js'
 import { alphaOptions, webOptions } from './plugin-options.js'
 import type { LiveNetworkId } from '../host.js'
+
+export { activeSenderLine }
 
 /** The network a tool call queried: its explicit `network` arg, else the session default. */
 export function networkOfCall(input: unknown, sessionNetwork: LiveNetworkId): LiveNetworkId {
@@ -100,20 +103,6 @@ export function explorerContext(store: ResultStore, limit = 3, network?: string)
     .slice(-limit)
     .map((record) => `- ${record.toolName}: ${describeRecord(record.data)}`)
   return lines.length === 0 ? '' : `Cards on screen (oldest first):\n${lines.join('\n')}`
-}
-
-/**
- * The wallet's active account as a default-sender line for the agent, or ''
- * when there is none. Resolves a keystore label when known.
- */
-export function activeSenderLine(
-  activeSender: string | undefined,
-  addressBook: ReadonlyArray<{ address: string; name?: string }>,
-): string {
-  if (!activeSender) return ''
-  const named = addressBook.find((entry) => entry.address === activeSender)
-  const label = named?.name ? `${named.name} (${activeSender})` : activeSender
-  return `Active account (default sender): ${label}. Use it as sender for writes unless the user names another.`
 }
 
 /** One short Explorer prompt: tools, cards, keystore. Replaces the default. */

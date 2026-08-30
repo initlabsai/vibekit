@@ -33,7 +33,7 @@ describe('dependencies point inward', () => {
     tools: ['core', 'tools'],
     plugins: ['core'],
     actions: ['core', 'tools', 'plugins'],
-    agent: ['core'],
+    agent: ['core', 'actions'],
     mcp: ['core'],
     pay: [],
     rest: ['core'],

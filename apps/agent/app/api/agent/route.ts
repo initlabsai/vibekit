@@ -1,22 +1,13 @@
 /**
- * The web Explorer's agent lane: one createAgent per request over the same
- * compose-only deployment the TUI uses, streamed back as NDJSON events. The
- * browser sends the prior turns; nothing is cached. Composed groups leave
- * here as draft records for the write flow's approval modal. The model is any
- * OpenAI-compatible endpoint (Together, OpenRouter, …) named by env; prompts
- * go there, which is not private, and the UI says so.
+ * The web agent's lane: the package's agent handler, mounted. Everything
+ * here is choice, not mechanism — which model (env), which tools (the
+ * Explorer's set minus what a chat window has no use for), which prompt
+ * (the Explorer's voice), and who pays (the paywall, or the house's caps).
+ * Prompts go to the model endpoint, which is not private, and the UI says so.
  */
-import { structuredResultSchema, type LiveNetworkId } from '@initlabs/vibekit-explorer'
-import {
-  activeSenderLine,
-  createExplorerAgent,
-  draftRecordFromComposeWire,
-  networkOfCall,
-} from '@initlabs/vibekit-explorer/live'
-import { unsignedGroupFromToolResult } from '@initlabs/vibekit-explorer'
-import algosdk from 'algosdk'
+import { createAgentHandler, type AgentHandler } from '@initlabs/vibekit/agent'
 import { haystackPlugin } from '@initlabs/vibekit/plugins/haystack'
-import { z } from 'zod'
+import { explorerPlugins, explorerSystemPrompt, explorerTools } from '@initlabs/vibekit-explorer/live'
 
 import { paywall } from '../credits/config'
 import { houseRefusal, ipOf } from '../credits/ledger'
@@ -27,11 +18,6 @@ export const maxDuration = 60
 
 const DEFAULT_BASE_URL = 'https://api.together.xyz/v1'
 const DEFAULT_MODEL = 'Qwen/Qwen2.5-72B-Instruct-Turbo'
-const MAX_BODY_BYTES = 256 * 1024
-const MAX_HISTORY = 40
-const PROGRAM_PAGES_PER_TURN = 2
-const WEB_CALLS_PER_TURN = 3
-const WEB_TOOLS = new Set(['web_search', 'read_page'])
 // Not for a chat window: spec-path deploys (no file grant here), the admin writes
 // of assets and apps you created, and algod twins of indexer lookups.
 const OMITTED_TOOLS = new Set([
@@ -47,39 +33,19 @@ const OMITTED_TOOLS = new Set([
   'get_application_info',
   'batch_lookup_accounts',
 ])
+// The house pays for two program pages a turn (a page is ~3k tokens; two explain a contract) and three web calls.
+const PER_TURN = { get_application_program: 2, web_search: 3, read_page: 3 }
 
 // txnlab publishes this free-tier key in the SDK README (60 requests a minute, shared by
 // everyone who copies it). Fine for a laptop; production sets HAYSTACK_API_KEY to its own.
 const HAYSTACK_FREE_TIER_KEY = '1b72df7e-1131-4449-8ce1-29b79dd3f51e'
-
-function haystackPlugins() {
-  const apiKey = process.env.HAYSTACK_API_KEY ?? HAYSTACK_FREE_TIER_KEY
-  const referrerAddress = process.env.HAYSTACK_REFERRER
-  return [haystackPlugin({ apiKey, ...(referrerAddress ? { referrerAddress } : {}) })]
-}
-
-const requestSchema = z.object({
-  network: z.enum(['localnet', 'testnet', 'mainnet']),
-  input: z.string().min(1).max(4000),
-  /** The wallet's accounts, so the prompt can name a default sender. */
-  accounts: z
-    .array(z.object({ address: z.string(), name: z.string().optional() }))
-    .max(32)
-    .default([]),
-  activeAddress: z.string().optional(),
-  /** What the Explorer is showing, one line per card, oldest first. */
-  context: z.string().max(4000).optional(),
-  /** Prior turns as the model saw them; opaque to the browser. */
-  history: z.array(z.unknown()).max(MAX_HISTORY).default([]),
-})
 
 /**
  * AGENT_API_KEY + AGENT_BASE_URL + AGENT_MODEL name the endpoint; TOGETHER_API_KEY
  * alone still works as the shortest setup. The provider shown to the user is the
  * endpoint's host.
  */
-function config():
-  { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
+function config(): { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
   const apiKey = process.env.AGENT_API_KEY ?? process.env.TOGETHER_API_KEY
   if (!apiKey) return undefined
   const baseUrl = process.env.AGENT_BASE_URL ?? DEFAULT_BASE_URL
@@ -93,18 +59,52 @@ function config():
   return { apiKey, baseUrl, model, provider }
 }
 
+/** House mode bills nothing and rate-limits in production; a paywall bills turns. */
+function billing() {
+  const wall = paywall()
+  if (wall) return wall
+  return {
+    async charge(request: Request) {
+      const refused = isProduction() ? await houseRefusal(ipOf(request)) : undefined
+      return refused ? { ok: false as const, response: Response.json({ error: refused }, { status: 429 }) } : { ok: true as const }
+    },
+  }
+}
+
+let built: { key: string; handler: AgentHandler } | undefined
+function handler(endpoint: NonNullable<ReturnType<typeof config>>): AgentHandler {
+  const key = [endpoint.baseUrl, endpoint.apiKey, endpoint.model, paywall() ? 'x402' : 'house'].join('|')
+  if (built?.key !== key) {
+    const haystack = haystackPlugin({
+      apiKey: process.env.HAYSTACK_API_KEY ?? HAYSTACK_FREE_TIER_KEY,
+      ...(process.env.HAYSTACK_REFERRER ? { referrerAddress: process.env.HAYSTACK_REFERRER } : {}),
+    })
+    built = {
+      key,
+      handler: createAgentHandler({
+        model: { provider: 'openai-compatible', baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, model: endpoint.model },
+        network: 'localnet',
+        // Every network is served: the model passes `network` to leave the active one.
+        networks: ['localnet', 'testnet', 'mainnet'],
+        mode: 'compose',
+        tools: explorerTools(undefined, OMITTED_TOOLS),
+        plugins: explorerPlugins(undefined, [haystack]),
+        systemPrompt: (turn) => explorerSystemPrompt(turn.tools, turn.network, turn.accounts),
+        maxSteps: 8,
+        perTurn: PER_TURN,
+        billing: billing(),
+      }),
+    }
+  }
+  return built.handler
+}
+
 /** Whether the lane is on, and which model answers; the composer reads this once. */
 export async function GET(): Promise<Response> {
   const endpoint = config()
   return Response.json({
     enabled: endpoint !== undefined,
-    ...(endpoint
-      ? {
-          model: endpoint.model,
-          provider: endpoint.provider,
-          billing: paywall() ? ('x402' as const) : ('house' as const),
-        }
-      : {}),
+    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: paywall() ? ('x402' as const) : ('house' as const) } : {}),
     private: false,
   })
 }
@@ -112,96 +112,5 @@ export async function GET(): Promise<Response> {
 export async function POST(request: Request): Promise<Response> {
   const endpoint = config()
   if (!endpoint) return Response.json({ error: 'No agent configured' }, { status: 404 })
-  const text = await request.text()
-  if (Buffer.byteLength(text) > MAX_BODY_BYTES)
-    return Response.json({ error: 'Request body is too large' }, { status: 413 })
-  let parsed
-  try {
-    parsed = requestSchema.safeParse(JSON.parse(text))
-  } catch {
-    return Response.json({ error: 'Malformed JSON body' }, { status: 400 })
-  }
-  if (!parsed.success) return Response.json({ error: 'Invalid agent request' }, { status: 400 })
-  const body = parsed.data
-  // Paid mode: today's free turns for the IP go first (they expire; paid ones keep), then the
-  // bearer token's paid turns, else 402. House mode rate-limits instead. Nothing here trusts a
-  // caller-chosen address.
-  const wall = paywall()
-  let charged: { paid?: number; freeLeft?: number } | undefined
-  if (wall) {
-    const charge = await wall.charge(request)
-    if (!charge.ok) return charge.response
-    charged = charge.credits
-  } else {
-    const refused = isProduction() ? await houseRefusal(ipOf(request)) : undefined
-    if (refused) return Response.json({ error: refused }, { status: 429 })
-  }
-
-  // The gate sees every write and expensive call. Writes compose only — the wallet decides —
-  // so they always pass. The one expensive tool reads a program a page (~3k tokens) at a
-  // time; the house pays for two pages per turn, which explains a contract, and no more.
-  let programPages = 0
-  let webCalls = 0
-  const session = createExplorerAgent({
-    model: {
-      provider: 'openai-compatible',
-      baseUrl: endpoint.baseUrl,
-      apiKey: endpoint.apiKey,
-      model: endpoint.model,
-    },
-    addressBook: body.accounts,
-    network: body.network,
-    history: body.history as never,
-    omitTools: OMITTED_TOOLS,
-    extraPlugins: haystackPlugins(),
-    approveToolCall: async ({ toolName }) =>
-      WEB_TOOLS.has(toolName)
-        ? ++webCalls <= WEB_CALLS_PER_TURN
-        : toolName !== 'get_application_program' || ++programPages <= PROGRAM_PAGES_PER_TURN,
-  })
-  const context = [activeSenderLine(body.activeAddress, body.accounts), body.context ?? '']
-    .filter(Boolean)
-    .join('\n')
-  const input = context ? `${context}\n\n${body.input}` : body.input
-  const historyLength = body.history.length
-  const newId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
-
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (event: unknown) =>
-        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
-      try {
-        if (charged) send({ type: 'credits', credits: charged })
-        for await (const event of session.stream(input)) {
-          if (event.type === 'tool-result') {
-            const compose = unsignedGroupFromToolResult(event)
-            if (compose) {
-              // A composed group is the draft the approval modal reviews; the model never sees signing.
-              const draftRecord = draftRecordFromComposeWire(
-                {
-                  resultId: newId('result-agent-draft'),
-                  toolCallId: event.id,
-                  network: networkOfCall(event.input, body.network),
-                },
-                compose,
-                event.toolName,
-              )
-              send({ type: 'draft', record: structuredResultSchema.parse(draftRecord) })
-              continue
-            }
-          }
-          send(event)
-        }
-        send({ type: 'messages', messages: session.messages.slice(historyLength) })
-      } catch (error) {
-        send({ type: 'error', message: error instanceof Error ? error.message : String(error) })
-      } finally {
-        controller.close()
-      }
-    },
-  })
-  return new Response(stream, {
-    headers: { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store' },
-  })
+  return handler(endpoint).fetch(request)
 }
