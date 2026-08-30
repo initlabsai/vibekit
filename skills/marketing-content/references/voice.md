@@ -92,16 +92,16 @@ face contradicting what she's doing breaks that.
 
 The canonical set is `apps/agent/src/features/profile/companion.tsx` — read it
 rather than this table if they ever disagree, because that file is what
-actually renders. Five moods, four faces each; the product steps through the
+actually renders. Five moods, four to six faces each; the product steps through the
 variants so a row keeps its face:
 
 | mood | faces |
 |---|---|
-| calm / reading | `(^‿^)` `(・‿・)` `(´▽\`)` `(◕‿◕)` |
-| thinking | `(・・?)` `(￣ω￣;)` `(˘︹˘ )` `(°ロ°)` |
+| calm / reading | `(^‿^)` `(・‿・)` `(´▽\`)` `(◕‿◕)` `( ˆωˆ )` |
+| thinking | `(・・?)` `(￣ω￣;)` `(˘︹˘ )` `(°ロ°)` `(¯ . ¯)` |
 | working | `(>'-')>` `<('-'<)` `^('-')^` `v('-')v` — Kirby's dance, one step per tool call |
-| bright / found it | `\(^▽^)/` `(★‿★)` `(⌒▽⌒)☆` `(っ^▿^)۶` |
-| squint / unimpressed | `(¬_¬)` `(>_<)` `(x_x)` `(－‸ლ)` |
+| bright / found it | `\(^▽^)/` `(★‿★)` `(⌒▽⌒)☆` `(っ^▿^)۶` `(^_^)v` |
+| squint / unimpressed | `(¬_¬)` `(>_<)` `(x_x)` `(－‸ლ)` `╮(╯-╰)╭` `( ¬‿¬ )` |
 | blink (idle) | `(-‿-)` |
 
 > ▎ (^‿^) reading (>'-')> working (^▽^)/ found it

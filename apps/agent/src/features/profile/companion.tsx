@@ -13,12 +13,13 @@ export type Mood = 'calm' | 'thinking' | 'working' | 'bright' | 'squint'
 
 /** Several faces per mood; `step` picks one so a row keeps its face. */
 const FACES: Record<Mood, readonly string[]> = {
-  calm: ['(^‿^)', '(・‿・)', '(´▽`)', '(◕‿◕)'],
-  thinking: ['(・・?)', '(￣ω￣;)', '(˘︹˘ )', '(°ロ°)'],
-  // Kirby's dance, one step per call.
+  calm: ['(^‿^)', '(・‿・)', '(´▽`)', '(◕‿◕)', '( ˆωˆ )'],
+  thinking: ['(・・?)', '(￣ω￣;)', '(˘︹˘ )', '(°ロ°)', '(¯ . ¯)'],
+  // Kirby's dance: right, left, up, down. Four frames is the full cycle —
+  // a fifth face here would break the loop, so this mood stays at four.
   working: ["(>'-')>", "<('-'<)", "^('-')^", "v('-')v"],
-  bright: ['\\(^▽^)/', '(★‿★)', '(⌒▽⌒)☆', '(っ^▿^)۶'],
-  squint: ['(¬_¬)', '(>_<)', '(x_x)', '(－‸ლ)'],
+  bright: ['\\(^▽^)/', '(★‿★)', '(⌒▽⌒)☆', '(っ^▿^)۶', '(^_^)v'],
+  squint: ['(¬_¬)', '(>_<)', '(x_x)', '(－‸ლ)', '╮(╯-╰)╭', '( ¬‿¬ )'],
 }
 const BLINK = '(-‿-)'
 
