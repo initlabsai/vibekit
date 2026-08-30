@@ -1,0 +1,52 @@
+/**
+ * The deployment behind the REST and MCP routes: every network this host can
+ * serve (production needs its own endpoints per network), compose mode, the
+ * stock tools and plugins. Signerless by construction. One per isolate.
+ */
+import { createQueryHandler, type QueryHandler } from '@initlabs/vibekit/rest'
+import { createVibekitHttpHandler } from '@initlabs/vibekit/mcp/http'
+import { defaultTools } from '@initlabs/vibekit/preset'
+import { explorerPlugins } from '@initlabs/vibekit-explorer/live'
+import type { NetworkId } from '@initlabs/vibekit'
+
+import { MissingEndpointsError, networkConfigFromEnv, isProduction } from '../explorer/endpoints'
+import { paywall } from '../credits/config'
+import { houseRefusal, ipOf } from '../credits/ledger'
+
+const NETWORKS = ['mainnet', 'testnet', 'localnet'] as const
+
+function options() {
+  const networks = NETWORKS.flatMap((network) => {
+    try {
+      return [networkConfigFromEnv(network)]
+    } catch (error) {
+      if (error instanceof MissingEndpointsError) return []
+      throw error
+    }
+  })
+  if (networks.length === 0) throw new Error('No network has endpoints configured')
+  return { network: networks[0]!, networks, mode: 'compose' as const, tools: defaultTools, plugins: explorerPlugins() }
+}
+
+let rest: QueryHandler | undefined
+export function queryHandler(): QueryHandler {
+  return (rest ??= createQueryHandler(options()))
+}
+
+let mcp: ReturnType<typeof createVibekitHttpHandler> | undefined
+export function mcpHandler(): ReturnType<typeof createVibekitHttpHandler> {
+  return (mcp ??= createVibekitHttpHandler({ name: 'vibekit', ...options() }))
+}
+
+/** One turn: the paywall's charge when packs are for sale, the house caps in production otherwise. */
+export async function chargeTurn(request: Request): Promise<Response | undefined> {
+  const wall = paywall()
+  if (wall) {
+    const charge = await wall.charge(request)
+    return charge.ok ? undefined : charge.response
+  }
+  const refused = isProduction() ? await houseRefusal(ipOf(request)) : undefined
+  return refused ? Response.json({ error: refused }, { status: 429 }) : undefined
+}
+
+export type { NetworkId }

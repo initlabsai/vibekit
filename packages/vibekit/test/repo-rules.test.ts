@@ -35,6 +35,8 @@ describe('dependencies point inward', () => {
     actions: ['core', 'tools', 'plugins'],
     agent: ['core'],
     mcp: ['core'],
+    pay: [],
+    rest: ['core'],
     'signer-keystore': ['core'],
     preset: ['core', 'tools', 'plugins', 'signer-keystore'],
   }

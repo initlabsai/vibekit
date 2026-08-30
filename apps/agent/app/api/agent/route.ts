@@ -18,17 +18,8 @@ import algosdk from 'algosdk'
 import { haystackPlugin } from '@initlabs/vibekit/plugins/haystack'
 import { z } from 'zod'
 
-import { creditsConfig } from '../credits/config'
-import {
-  balance,
-  bearerOf,
-  freeTurn,
-  houseTurn,
-  ipOf,
-  payerForToken,
-  spend,
-  TURNS_PER_PACK,
-} from '../credits/ledger'
+import { paywall } from '../credits/config'
+import { houseRefusal, ipOf } from '../credits/ledger'
 import { isProduction } from '../explorer/endpoints'
 
 export const runtime = 'nodejs'
@@ -82,18 +73,6 @@ const requestSchema = z.object({
   history: z.array(z.unknown()).max(MAX_HISTORY).default([]),
 })
 
-/** The house-billed caps, kept on the ledger's store so they hold across isolates and cold starts. */
-const DAILY_CAP = Number(process.env.AGENT_DAILY_CAP_TURNS ?? 300)
-const IP_HOURLY_CAP = Number(process.env.AGENT_IP_HOURLY_CAP ?? 30)
-
-async function chargeTurn(ip: string): Promise<string | undefined> {
-  const verdict = await houseTurn(ip, { daily: DAILY_CAP, hourly: IP_HOURLY_CAP })
-  if (verdict === 'daily') return "the house is out of turns for today. i'll be here tomorrow."
-  if (verdict === 'hourly')
-    return "hmph. that's a lot of questions for one hour. give me a minute — or a few."
-  return undefined
-}
-
 /**
  * AGENT_API_KEY + AGENT_BASE_URL + AGENT_MODEL name the endpoint; TOGETHER_API_KEY
  * alone still works as the shortest setup. The provider shown to the user is the
@@ -123,7 +102,7 @@ export async function GET(): Promise<Response> {
       ? {
           model: endpoint.model,
           provider: endpoint.provider,
-          billing: creditsConfig() ? ('x402' as const) : ('house' as const),
+          billing: paywall() ? ('x402' as const) : ('house' as const),
         }
       : {}),
     private: false,
@@ -147,28 +126,14 @@ export async function POST(request: Request): Promise<Response> {
   // Paid mode: today's free turns for the IP go first (they expire; paid ones keep), then the
   // bearer token's paid turns, else 402. House mode rate-limits instead. Nothing here trusts a
   // caller-chosen address.
-  const pack = creditsConfig()
+  const wall = paywall()
   let charged: { paid?: number; freeLeft?: number } | undefined
-  if (pack) {
-    const payer = await payerForToken(bearerOf(request))
-    const free = await freeTurn(ipOf(request))
-    if (free !== undefined) {
-      charged = { freeLeft: free, ...(payer ? { paid: await balance(payer) } : {}) }
-    } else {
-      const paid = payer && algosdk.isValidAddress(payer) ? await spend(payer) : undefined
-      if (paid === undefined) {
-        return Response.json(
-          {
-            error: `Out of turns — /buy a pack (${pack.price} → ${TURNS_PER_PACK} turns).`,
-            offer: { price: pack.price, turns: TURNS_PER_PACK },
-          },
-          { status: 402 },
-        )
-      }
-      charged = { paid, freeLeft: 0 }
-    }
+  if (wall) {
+    const charge = await wall.charge(request)
+    if (!charge.ok) return charge.response
+    charged = charge.credits
   } else {
-    const refused = isProduction() ? await chargeTurn(ipOf(request)) : undefined
+    const refused = isProduction() ? await houseRefusal(ipOf(request)) : undefined
     if (refused) return Response.json({ error: refused }, { status: 429 })
   }
 

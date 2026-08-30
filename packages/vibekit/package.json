@@ -36,6 +36,14 @@
       "types": "./dist/agent/config.d.ts",
       "import": "./dist/agent/config.js"
     },
+    "./pay": {
+      "types": "./dist/pay/index.d.ts",
+      "import": "./dist/pay/index.js"
+    },
+    "./rest": {
+      "types": "./dist/rest/index.d.ts",
+      "import": "./dist/rest/index.js"
+    },
     "./mcp": {
       "types": "./dist/mcp/index.d.ts",
       "import": "./dist/mcp/index.js"
@@ -107,10 +115,18 @@
     "@txnlab/haystack-router": "^2.0.5",
     "@txnlab/nfd-sdk": "^1.1.0",
     "ai": "^7.0.0",
+    "@x402/avm": "^2.24.0",
+    "@x402/core": "^2.24.0",
     "algosdk": ">=3.7.0 <4",
     "zod": "^4.0.0"
   },
   "peerDependenciesMeta": {
+    "@x402/avm": {
+      "optional": true
+    },
+    "@x402/core": {
+      "optional": true
+    },
     "@ai-sdk/anthropic": {
       "optional": true
     },
@@ -159,6 +175,8 @@
     "@txnlab/haystack-router": "2.0.5",
     "@txnlab/nfd-sdk": "^1.1.0",
     "@types/bun": "^1.4.0",
+    "@x402/avm": "2.24.0",
+    "@x402/core": "2.24.0",
     "ai": "^7.0.74",
     "algosdk": "3.7.0",
     "tweetnacl": "^1.0.3",

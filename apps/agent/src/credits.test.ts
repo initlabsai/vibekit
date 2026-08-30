@@ -59,14 +59,6 @@ describe('house caps', () => {
 })
 
 describe('credits route', () => {
-  test('reads the buyer token from the settle context, wrapped or bare', () => {
-    const adapter = { getHeader: (name: string) => (name === 'x-credit-token' ? TOKEN : undefined) }
-    expect(credits.creditTokenOf({ request: { adapter }, responseBody: '', responseHeaders: {} })).toBe(TOKEN)
-    expect(credits.creditTokenOf({ adapter })).toBe(TOKEN)
-    expect(credits.creditTokenOf({ request: { adapter: { getHeader: () => 'nope' } } })).toBeUndefined()
-    expect(credits.creditTokenOf(undefined)).toBeUndefined()
-  })
-
   test('is off without a house address', async () => {
     delete process.env.X402_PAY_TO
     const body = await (await credits.GET(new NextRequest('http://local/api/credits'))).json()
@@ -88,33 +80,53 @@ describe('credits route', () => {
 
 describe('credits price', () => {
   test('is an integer in USDC base units, formatted for people', async () => {
-    const { creditsConfig, formatUsdc } = await import('../app/api/credits/config.js')
+    const { paywall, formatUsdc } = await import('../app/api/credits/config.js')
     process.env.X402_PAY_TO = FIXTURE_SENDER
     process.env.X402_PRICE_MICROUSDC = '250000'
-    expect(creditsConfig()).toMatchObject({ priceMicroUsdc: 250_000, price: '$0.25' })
+    expect(paywall()?.offer).toMatchObject({ priceMicroUsdc: 250_000, price: '$0.25' })
     process.env.X402_PRICE_MICROUSDC = '1.5'
-    expect(creditsConfig()?.priceMicroUsdc).toBe(1_000_000)
+    expect(paywall()?.offer.priceMicroUsdc).toBe(1_000_000)
     expect(formatUsdc(1_000_000)).toBe('$1.00')
     process.env.X402_ASSET_ID = '31566704'
-    expect(creditsConfig()?.asset).toBe('31566704')
+    expect(paywall()?.offer.asset).toBe('31566704')
   })
 
   test('X402_NETWORK picks the chain even in production', async () => {
-    const { creditsConfig } = await import('../app/api/credits/config.js')
+    const { paywall } = await import('../app/api/credits/config.js')
     process.env.X402_PAY_TO = FIXTURE_SENDER
     process.env.VERCEL = '1'
-    expect(creditsConfig()?.chain).toBe('mainnet')
+    expect(paywall()?.offer.chain).toBe('mainnet')
     process.env.X402_NETWORK = 'testnet'
-    expect(creditsConfig()).toMatchObject({ chain: 'testnet', asset: '10458941' })
+    expect(paywall()?.offer).toMatchObject({ chain: 'testnet', asset: '10458941' })
   })
 
   test('turns requested clamp to the pack by default and to the cap at most', async () => {
-    const { turnsRequested, MAX_TURNS_PER_BUY } = await import('../app/api/credits/config.js')
-    expect(turnsRequested(null)).toBe(ledger.TURNS_PER_PACK)
-    expect(turnsRequested('50')).toBe(50)
-    expect(turnsRequested('0')).toBe(ledger.TURNS_PER_PACK)
-    expect(turnsRequested('2.5')).toBe(ledger.TURNS_PER_PACK)
-    expect(turnsRequested(String(MAX_TURNS_PER_BUY * 3))).toBe(MAX_TURNS_PER_BUY)
+    const { paywall, MAX_TURNS_PER_BUY } = await import('../app/api/credits/config.js')
+    process.env.X402_PAY_TO = FIXTURE_SENDER
+    const turns = (query: string) => paywall()!.turnsRequested(new Request(`http://local/api/credits${query}`))
+    expect(turns('')).toBe(ledger.TURNS_PER_PACK)
+    expect(turns('?turns=50')).toBe(50)
+    expect(turns('?turns=0')).toBe(ledger.TURNS_PER_PACK)
+    expect(turns('?turns=2.5')).toBe(ledger.TURNS_PER_PACK)
+    expect(turns(`?turns=${MAX_TURNS_PER_BUY * 3}`)).toBe(MAX_TURNS_PER_BUY)
+  })
+})
+
+describe('query and mcp routes', () => {
+  test('the catalogue is free; a call or a tools/call costs a turn and 402s when there are none', async () => {
+    process.env.X402_PAY_TO = FIXTURE_SENDER
+    const catalogue = await import('../app/api/query/route.js')
+    const query = await import('../app/api/query/[name]/route.js')
+    const mcp = await import('../app/api/mcp/route.js')
+    const tools = (await (await catalogue.GET()).json()).tools as { name: string; kind: string }[]
+    expect(tools.find((tool) => tool.name === 'lookup_asset')?.kind).toBe('query')
+    expect(tools.find((tool) => tool.name === 'send_payment')?.kind).toBe('action')
+    for (let i = 0; i < ledger.FREE_TURNS; i++) await ledger.freeTurn('7.7.7.7')
+    const headers = { 'content-type': 'application/json', 'x-forwarded-for': '7.7.7.7' }
+    const dry = await query.POST(new Request('http://local/api/query/lookup_asset', { method: 'POST', headers, body: '{"assetId":1}' }), { params: Promise.resolve({ name: 'lookup_asset' }) })
+    expect(dry.status).toBe(402)
+    const call = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'lookup_asset', arguments: {} } })
+    expect((await mcp.POST(new Request('http://local/api/mcp', { method: 'POST', headers, body: call }))).status).toBe(402)
   })
 })
 
