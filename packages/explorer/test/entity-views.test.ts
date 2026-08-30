@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   addResult,
@@ -43,7 +43,7 @@ function viewFor(
     | 'transaction.detail',
 ) {
   return viewSpecSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },

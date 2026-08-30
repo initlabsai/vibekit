@@ -1,36 +1,13 @@
-import { jsonSafe } from '@initlabs/vibekit'
+import {
+  record,
+  resolveResultReference,
+  type ResultStore,
+  type ViewModelError,
+  type ViewSpec,
+} from '@initlabs/vibekit/actions'
 import { z } from 'zod'
 
-import type { ViewSpec } from '../core/protocol.js'
-import {
-  resolveResultReference,
-  structuredResultSchema,
-  type ResultIdentity,
-  type ResultStore,
-  type StructuredResult,
-  type ViewModelError,
-} from '../core/results.js'
-import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
-
-export function record(
-  identity: ResultIdentity,
-  toolName: string,
-  data: unknown,
-): StructuredResult {
-  return structuredResultSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
-    type: 'result',
-    state: 'success',
-    resultId: identity.resultId,
-    toolCallId: identity.toolCallId,
-    toolName,
-    network: identity.network,
-    ...(identity.input === undefined ? {} : { input: identity.input }),
-    // Builders construct data with plain optional fields; undefined entries
-    // are not JSON and must not reach the stored record.
-    data: jsonSafe(data),
-  })
-}
+export { record }
 
 /**
  * Hosts scope some list wires to an account by merging an `address` key into

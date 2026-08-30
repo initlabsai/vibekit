@@ -3,13 +3,13 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from '../format.js'
 import { algorandAddressCandidateSchema, algorandTransactionIdSchema } from '../input.js'
-import type { ViewSpec } from '../core/protocol.js'
+import type { ViewSpec } from '@initlabs/vibekit/actions'
 import type {
   ResultIdentity,
   ResultStore,
   StructuredResult,
   ViewModelError,
-} from '../core/results.js'
+} from '@initlabs/vibekit/actions'
 import { derive, record, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()

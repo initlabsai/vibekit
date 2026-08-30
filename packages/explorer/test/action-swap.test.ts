@@ -16,7 +16,7 @@ import {
   submitAction,
   type ActionHost,
 } from '../src/index.js'
-import { buildConfirmationRecord, buildSimulationRecord } from '../src/actions/host.js'
+import { buildConfirmationRecord, buildSimulationRecord } from '@initlabs/vibekit/actions'
 import {
   createLiveHost,
   decodeUnsignedGroup,

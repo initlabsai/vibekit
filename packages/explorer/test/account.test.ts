@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 
 import {
   addResult,
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   createAccountOpenView,
   createAccountPortfolioViewModel,
   createSampleHost,
@@ -95,7 +95,7 @@ describe('account portfolio slice', () => {
     const derived = createTransactionCollectionViewModel(
       addResult(createResultStore(), txns),
       viewSpecSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'view',
         view: 'transaction.list',
         source: { source: 'result', id: txns.resultId },

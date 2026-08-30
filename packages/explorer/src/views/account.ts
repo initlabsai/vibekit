@@ -3,9 +3,9 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from '../format.js'
 import { algorandAddressCandidateSchema } from '../input.js'
-import type { OpenView } from '../core/protocol.js'
-import type { ResultIdentity, StructuredResult } from '../core/results.js'
-import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
+import type { OpenView } from '@initlabs/vibekit/actions'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
+import { RECORD_PROTOCOL_VERSION } from '@initlabs/vibekit/actions'
 import { record, viewModelFor } from './derive.js'
 
 /** One asset holding on an account. */
@@ -77,7 +77,7 @@ export function createAccountOpenView(record: StructuredResult): OpenView {
   return {
     title: `Account ${address.slice(0, 6)}…${address.slice(-4)}`,
     view: {
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'view',
       view: 'account.portfolio',
       source: { source: 'result', id: record.resultId },

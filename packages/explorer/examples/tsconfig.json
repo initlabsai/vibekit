@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "types": ["bun"],
     "paths": {
+      "@initlabs/vibekit/actions": ["../../vibekit/src/actions/index.ts"],
       "@initlabs/vibekit-explorer": ["../src/index.ts"],
       "@initlabs/vibekit-explorer/live": ["../src/live/index.ts"]
     }

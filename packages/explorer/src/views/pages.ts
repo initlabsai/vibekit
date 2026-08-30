@@ -1,5 +1,5 @@
-import type { TrustedViewId } from '../core/protocol.js'
-import type { ResultIdentity, StructuredResult } from '../core/results.js'
+import type { TrustedViewId } from '@initlabs/vibekit/actions'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
 import type { ToolCallHost } from '../host.js'
 import { record } from './derive.js'
 

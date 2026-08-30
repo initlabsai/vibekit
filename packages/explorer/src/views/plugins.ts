@@ -15,7 +15,7 @@ export { PLUGIN_VIEW_IDS, type PluginViewId }
 export function isPluginViewId(view: string): view is PluginViewId {
   return (PLUGIN_VIEW_IDS as readonly string[]).includes(view)
 }
-import type { ResultIdentity, StructuredResult } from '../core/results.js'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
 import { record, viewModelFor } from './derive.js'
 
 export type {

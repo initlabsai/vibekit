@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   FIXTURE_RESULT_ID,
   approvalDecisionSchema,
   approvalRequestSchema,
@@ -18,7 +18,7 @@ describe('explorer protocol', () => {
   test('visibly versions result, view, and approval messages', () => {
     const view = createTransactionFixtureViewSpec()
     const request = approvalRequestSchema.parse({
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'approval.request',
       requestId: 'approval-001',
       state: 'pending',
@@ -26,7 +26,7 @@ describe('explorer protocol', () => {
       inspection: { source: 'result', id: FIXTURE_RESULT_ID },
     })
     const decision = approvalDecisionSchema.parse({
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'approval.decision',
       requestId: 'approval-001',
       state: 'approved',
@@ -61,7 +61,7 @@ describe('explorer protocol', () => {
 
   test('validates write.stage events and rejects inline authoritative fields', () => {
     const draft = {
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'write.stage',
       stage: 'draft',
       flowId: 'flow-001',
@@ -76,7 +76,7 @@ describe('explorer protocol', () => {
     ).toBeFalse()
     expect(
       writeStageEventSchema.safeParse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'confirm',
         flowId: 'flow-001',
@@ -87,7 +87,7 @@ describe('explorer protocol', () => {
 
   test('keeps approval facts behind an inspection result reference', () => {
     const base = {
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'approval.request',
       requestId: 'approval-001',
       state: 'pending',

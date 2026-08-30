@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   FIXTURE_RESULT_ID,
   FIXTURE_SENDER,
   addResult,
@@ -45,7 +45,7 @@ describe('client-owned result store', () => {
 
     const failed = createResultStore([
       {
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'result',
         state: 'error',
         resultId: 'failed-result',
@@ -66,7 +66,7 @@ describe('client-owned result store', () => {
   test('adds records as values without mutating the previous store', () => {
     const initial = createFixtureResultStore()
     const next = addResult(initial, {
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'result',
       state: 'error',
       resultId: 'result-002',

@@ -12,7 +12,7 @@ import {
   createBlockDetailViewModel,
   createTransactionCollectionViewModel,
   createTransactionDetailViewModel,
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   formatMicroAlgos,
   lookupAmbiguousEntity,
   type LiveNetworkId,
@@ -34,7 +34,7 @@ import { errorMessage, shorten } from './theme'
 /** Wraps a stored record in a trusted view spec. */
 export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
   return {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },

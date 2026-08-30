@@ -6,7 +6,7 @@ import {
   actionReducer,
   actionStateSchema,
   type ActionEventKind,
-} from '../src/actions/reducer.js'
+} from '@initlabs/vibekit/actions'
 import { type ActionState } from '../src/index.js'
 
 function advance(state: ActionState | null, kind: ActionEventKind): ActionState {

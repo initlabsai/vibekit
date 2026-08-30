@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { uint64JsonSchema } from '../format.js'
 import { algorandAddressCandidateSchema } from '../input.js'
-import type { ResultIdentity, StructuredResult } from '../core/results.js'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
 import { record, viewModelFor } from './derive.js'
 
 const optionalAddress = z.string().min(1).optional()

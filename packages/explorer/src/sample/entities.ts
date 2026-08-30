@@ -3,7 +3,7 @@ import { buildApplicationDetailRecord, type ApplicationLookupHost } from '../vie
 import { buildAssetDetailRecord, type AssetLookupHost } from '../views/asset.js'
 import { buildBlockDetailRecord, type BlockLookupHost } from '../views/block.js'
 import type { EntityLookupHost } from '../entity-lookup.js'
-import type { StructuredResult } from '../core/results.js'
+import type { StructuredResult } from '@initlabs/vibekit/actions'
 
 /** Sample ASA id used when localnet is offline. */
 export const FIXTURE_ASSET_ID = 1042

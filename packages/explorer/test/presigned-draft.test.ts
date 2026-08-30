@@ -93,7 +93,7 @@ describe('drafts with pre-signed legs', () => {
   })
 
   test("the simulation record names the wallet's sender, so the view model derives", async () => {
-    const { buildSimulationRecord } = await import('../src/actions/host.js')
+    const { buildSimulationRecord } = await import('@initlabs/vibekit/actions')
     const { decodeUnsignedGroup } = await import('../src/live/index.js')
     const { record, wire } = draft()
     const decoded = decodeUnsignedGroup(wire.unsignedGroup, wire.presigned)

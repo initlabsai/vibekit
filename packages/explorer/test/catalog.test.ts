@@ -3,7 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   type TrustedViewId,
   createNfdProfileViewModel,
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   FIXTURE_SENDER,
   addResult,
   bridgeToolResult,
@@ -29,7 +29,7 @@ const identity = {
 
 function viewFor(record: { resultId: string }, view: TrustedViewId) {
   return viewSpecSchema.parse({
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },
@@ -373,7 +373,7 @@ describe('first-party catalog views', () => {
     const derived = createBlockDetailViewModel(
       addResult(createResultStore(), bridged.record),
       viewSpecSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'view',
         view: 'block.detail',
         source: { source: 'result', id: bridged.record.resultId },

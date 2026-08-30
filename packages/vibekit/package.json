@@ -24,6 +24,10 @@
       "types": "./dist/tools/views.d.ts",
       "import": "./dist/tools/views.js"
     },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "import": "./dist/actions/index.js"
+    },
     "./agent": {
       "types": "./dist/agent/index.d.ts",
       "import": "./dist/agent/index.js"

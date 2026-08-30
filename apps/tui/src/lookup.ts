@@ -13,7 +13,7 @@ import {
   createTransactionDetailViewModel,
   formatMicroAlgos,
   lookupAmbiguousEntity,
-  EXPLORER_PROTOCOL_VERSION,
+  RECORD_PROTOCOL_VERSION,
   type ResultStore,
   type StructuredResult,
   type TrustedViewId,
@@ -60,7 +60,7 @@ export async function loadNextPage(args: {
 /** Wraps a stored record in a trusted view spec. */
 export function viewFor(record: StructuredResult, view: TrustedViewId): ViewSpec {
   return {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'view',
     view,
     source: { source: 'result', id: record.resultId },

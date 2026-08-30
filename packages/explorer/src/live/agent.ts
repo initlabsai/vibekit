@@ -26,7 +26,7 @@ import {
   transactionActions,
 } from '@initlabs/vibekit/tools'
 
-import type { ResultStore } from '../core/results.js'
+import type { ResultStore } from '@initlabs/vibekit/actions'
 import { explainApplicationTool } from './explain-tool.js'
 import { alphaOptions, webOptions } from './plugin-options.js'
 import type { LiveNetworkId } from '../host.js'

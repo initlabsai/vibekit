@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { explorerProtocolVersionSchema } from './version.js'
+import { jsonSafe } from '../core/codec.js'
+import { RECORD_PROTOCOL_VERSION, recordProtocolVersionSchema } from './version.js'
 
 /** A recursively JSON-safe value suitable for browser and terminal consumers. */
 export type JsonValue =
@@ -51,7 +52,7 @@ export function sameResultReference(left: ResultReference, right: ResultReferenc
 }
 
 const structuredResultBase = {
-  protocolVersion: explorerProtocolVersionSchema,
+  protocolVersion: recordProtocolVersionSchema,
   type: z.literal('result'),
   resultId: z.string().min(1),
   toolCallId: z.string().min(1),
@@ -79,7 +80,7 @@ export const failedResultSchema = z
   })
   .strict()
 
-/** A versioned result record stored by Explorer clients. */
+/** A versioned result record a host stores. */
 export const structuredResultSchema = z.discriminatedUnion('state', [
   successfulResultSchema,
   failedResultSchema,
@@ -91,7 +92,7 @@ export type SuccessfulResult = z.infer<typeof successfulResultSchema>
 /** A failed tool result retained for correlation and explicit rendering. */
 export type FailedResult = z.infer<typeof failedResultSchema>
 
-/** A versioned result record stored by Explorer clients. */
+/** A versioned result record a host stores. */
 export type StructuredResult = z.infer<typeof structuredResultSchema>
 
 /**
@@ -217,4 +218,21 @@ export function resolveResultReference(
   }
 
   return { ok: true, record, value }
+}
+
+/** Identity for one tool call's record: paired ids, the network, and the input that produced it. */
+export function record(identity: ResultIdentity, toolName: string, data: unknown): StructuredResult {
+  return structuredResultSchema.parse({
+    protocolVersion: RECORD_PROTOCOL_VERSION,
+    type: 'result',
+    state: 'success',
+    resultId: identity.resultId,
+    toolCallId: identity.toolCallId,
+    toolName,
+    network: identity.network,
+    ...(identity.input === undefined ? {} : { input: identity.input }),
+    // Builders construct data with plain optional fields; undefined entries
+    // are not JSON and must not reach the stored record.
+    data: jsonSafe(data),
+  })
 }

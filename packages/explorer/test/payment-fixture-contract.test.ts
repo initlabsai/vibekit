@@ -31,7 +31,7 @@ import {
   actionEventSchema,
   actionReducer,
   type ActionEventKind,
-} from '../src/actions/reducer.js'
+} from '@initlabs/vibekit/actions'
 
 function collectLeaves(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(collectLeaves)

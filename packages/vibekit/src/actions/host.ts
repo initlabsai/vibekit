@@ -3,26 +3,20 @@
  * capability an app provides, and the controller that walks a flow through
  * its stages. Any composed group runs here — payments, app calls, deploys.
  */
-import { writeIntentSchema } from '@initlabs/vibekit'
 import { z } from 'zod'
 
-import { viewDataSchemas } from '@initlabs/vibekit/tools/views'
-
-import { uint64JsonSchema } from '../format.js'
-import { algorandAddressCandidateSchema } from '../input.js'
+import { writeIntentSchema } from '../core/schemas.js'
+import { viewDataSchemas } from '../tools/views.js'
+import { createApprovalDecisionEvent, createApprovalRequestEvent, createWriteStageEvent } from './protocol.js'
 import {
   addResult,
   findResultRecord,
+  record,
   type ResultIdentity,
   type ResultStore,
   type StructuredResult,
-} from '../core/results.js'
-import { record } from '../views/derive.js'
-import {
-  createApprovalDecisionEvent,
-  createApprovalRequestEvent,
-  createWriteStageEvent,
-} from '../core/protocol.js'
+} from './records.js'
+import { algorandAddressCandidateSchema, uint64JsonSchema } from './schemas.js'
 import {
   confirmationDataSchema,
   writeDraftDataSchema,

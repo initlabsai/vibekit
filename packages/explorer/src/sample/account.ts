@@ -1,4 +1,4 @@
-import type { StructuredResult } from '../core/results.js'
+import type { StructuredResult } from '@initlabs/vibekit/actions'
 import {
   buildAccountListRecord,
   buildAccountPortfolioRecord,

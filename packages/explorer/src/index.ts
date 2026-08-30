@@ -3,8 +3,8 @@
  * ids and view models, the action flow, formatting, input classification, and
  * the recorded sample data. The live host is the separate `./live` subpath.
  */
-export { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from './core/version.js'
-export type { ExplorerProtocolVersion } from './core/version.js'
+export { RECORD_PROTOCOL_VERSION, recordProtocolVersionSchema } from '@initlabs/vibekit/actions'
+export type { RecordProtocolVersion } from '@initlabs/vibekit/actions'
 export {
   addResult,
   createResultStore,
@@ -18,7 +18,7 @@ export {
   sameResultReference,
   structuredResultSchema,
   successfulResultSchema,
-} from './core/results.js'
+} from '@initlabs/vibekit/actions'
 export type {
   FailedResult,
   JsonValue,
@@ -30,7 +30,7 @@ export type {
   StructuredResult,
   SuccessfulResult,
   ViewModelError,
-} from './core/results.js'
+} from '@initlabs/vibekit/actions'
 export {
   TRUSTED_VIEW_IDS,
   approvalDecisionSchema,
@@ -45,7 +45,7 @@ export {
   writeSignEventSchema,
   writeSimulateEventSchema,
   writeStageEventSchema,
-} from './core/protocol.js'
+} from '@initlabs/vibekit/actions'
 export type {
   ApprovalDecision,
   ApprovalRequest,
@@ -53,7 +53,7 @@ export type {
   TrustedViewId,
   ViewSpec,
   WriteStageEvent,
-} from './core/protocol.js'
+} from '@initlabs/vibekit/actions'
 export { formatAssetAmount, formatBaseUnits, formatMicroAlgos } from './format.js'
 export {
   classifyExplorerInput,
@@ -166,21 +166,23 @@ export type {
   GraphVertical,
   TransactionsGraph,
 } from './views/transaction-graph.js'
-export { createActionViewModel, writeDraftDataSchema } from './actions/reducer.js'
-export type { ActionViewModel, ActionState } from './actions/reducer.js'
+export { createActionViewModel } from './views/action.js'
+export type { ActionViewModel } from './views/action.js'
+export { writeDraftDataSchema } from '@initlabs/vibekit/actions'
+export type { ActionState } from '@initlabs/vibekit/actions'
 export {
   submitAction,
   performActionStep,
   startAction,
   startActionFromDraft,
-} from './actions/host.js'
-export type { ActionDraft, ActionHost } from './actions/host.js'
+} from '@initlabs/vibekit/actions'
+export type { ActionDraft, ActionHost } from '@initlabs/vibekit/actions'
 export {
   createWalletSignDraft,
   signGroupForDraft,
   unsignedTransactionsForDraft,
   type DraftSigner,
-} from './actions/sign.js'
+} from '@initlabs/vibekit/actions'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'

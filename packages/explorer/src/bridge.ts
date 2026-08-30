@@ -7,12 +7,12 @@
  */
 import { z } from 'zod'
 
-import { TRUSTED_VIEW_IDS, type TrustedViewId } from './core/protocol.js'
-import { structuredResultSchema, type JsonValue } from './core/results.js'
-import { EXPLORER_PROTOCOL_VERSION } from './core/version.js'
+import { TRUSTED_VIEW_IDS, type TrustedViewId } from '@initlabs/vibekit/actions'
+import { structuredResultSchema, type JsonValue } from '@initlabs/vibekit/actions'
+import { RECORD_PROTOCOL_VERSION } from '@initlabs/vibekit/actions'
 import { record } from './views/derive.js'
-import type { ResultIdentity, StructuredResult } from './core/results.js'
-import { composeWireResultSchema } from './actions/host.js'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
+import { composeWireResultSchema } from '@initlabs/vibekit/actions'
 import {
   buildAccountListRecord,
   buildAccountPortfolioRecord,
@@ -71,7 +71,7 @@ export function structuredResultFromToolEvent(
   if (event.isError) {
     const parsed = toolErrorOutputSchema.safeParse(event.output)
     return structuredResultSchema.parse({
-      protocolVersion: EXPLORER_PROTOCOL_VERSION,
+      protocolVersion: RECORD_PROTOCOL_VERSION,
       type: 'result',
       state: 'error',
       resultId: identity.resultId,

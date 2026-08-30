@@ -8,7 +8,6 @@
  * without it the action rests at `approved`. Copy this file; edit freely.
  */
 import {
-  createActionViewModel,
   performActionStep,
   startAction,
   startActionFromDraft,
@@ -18,7 +17,8 @@ import {
   type ActionState,
   type ResultStore,
   type StructuredResult,
-} from '@initlabs/vibekit-explorer'
+} from '@initlabs/vibekit/actions'
+import { createActionViewModel } from '@initlabs/vibekit-explorer'
 import { useCallback, useRef, useState } from 'react'
 
 /** What the hook is doing right now; `idle` includes resting at `awaiting-approval`. */

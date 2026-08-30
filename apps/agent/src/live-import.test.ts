@@ -4,6 +4,8 @@ import { join, relative } from 'node:path'
 
 const root = join(import.meta.dir, '..')
 const FORBIDDEN = ["'@initlabs/vibekit-explorer/live'", "'@initlabs/vibekit'", "'@initlabs/vibekit/"]
+// The action machine is browser-safe (the explorer root the browser already bundles is built on it).
+const ALLOWED = ["'@initlabs/vibekit/actions'"]
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -20,7 +22,7 @@ describe('browser bundle boundary', () => {
     const offenders = walk(root)
       .filter((path) => !relative(root, path).startsWith('app/api/'))
       .filter((path) => {
-        const source = readFileSync(path, 'utf8')
+        const source = ALLOWED.reduce((text, needle) => text.replaceAll(needle, ''), readFileSync(path, 'utf8'))
         return FORBIDDEN.some((needle) => source.includes(needle))
       })
       .map((path) => relative(root, path))

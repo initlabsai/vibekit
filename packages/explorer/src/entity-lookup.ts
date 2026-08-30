@@ -1,4 +1,4 @@
-import type { StructuredResult } from './core/results.js'
+import type { StructuredResult } from '@initlabs/vibekit/actions'
 import type { EntityLookupHost } from './host.js'
 
 /** Entity kinds a bare numeric identifier can resolve to. */

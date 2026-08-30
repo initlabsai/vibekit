@@ -5,7 +5,7 @@ import {
   buildDraftRecord,
   buildSignedGroupRecord,
   buildSimulationRecord,
-} from '../src/actions/host.js'
+} from '@initlabs/vibekit/actions'
 import {
   submitAction,
   createSampleHost,

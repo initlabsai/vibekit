@@ -1,7 +1,7 @@
 import type { AccountLookupHost } from '../views/account.js'
 import type { TransactionLookupHost } from '../views/transaction.js'
 import { createFixtureEntityLookup } from './entities.js'
-import type { ActionHost } from '../actions/host.js'
+import type { ActionHost } from '@initlabs/vibekit/actions'
 import { createFixtureAccountLookup } from './account.js'
 import {
   approvalDecisionSchema,
@@ -11,7 +11,7 @@ import {
   writeInspectEventSchema,
   writeSignEventSchema,
   writeSimulateEventSchema,
-} from '../core/protocol.js'
+} from '@initlabs/vibekit/actions'
 import {
   confirmationDataSchema,
   writeDraftDataSchema,
@@ -19,14 +19,14 @@ import {
   writeSimulationDataSchema,
   type ActionEvent,
   type ActionEventKind,
-} from '../actions/reducer.js'
+} from '@initlabs/vibekit/actions'
 import {
   createResultStore,
   type ResultReference,
   type ResultStore,
   type StructuredResult,
-} from '../core/results.js'
-import { EXPLORER_PROTOCOL_VERSION } from '../core/version.js'
+} from '@initlabs/vibekit/actions'
+import { RECORD_PROTOCOL_VERSION } from '@initlabs/vibekit/actions'
 import type { BlockTailTick } from '../live/block-tail.js'
 import {
   FIXTURE_RECEIVER,
@@ -142,7 +142,7 @@ const confirmationData = confirmationDataSchema.parse({
  */
 export const paymentFixtureResults: readonly StructuredResult[] = createResultStore([
   {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_DRAFT_RESULT_ID,
@@ -152,7 +152,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: draftData,
   },
   {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_SIMULATION_RESULT_ID,
@@ -162,7 +162,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: simulationData,
   },
   {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_SIGNED_RESULT_ID,
@@ -172,7 +172,7 @@ export const paymentFixtureResults: readonly StructuredResult[] = createResultSt
     data: signedGroupData,
   },
   {
-    protocolVersion: EXPLORER_PROTOCOL_VERSION,
+    protocolVersion: RECORD_PROTOCOL_VERSION,
     type: 'result',
     state: 'success',
     resultId: PAYMENT_FIXTURE_CONFIRMATION_RESULT_ID,
@@ -275,7 +275,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
   switch (kind) {
     case 'draft':
       return writeDraftEventSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'draft',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -284,7 +284,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       })
     case 'simulate':
       return writeSimulateEventSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'simulate',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -294,7 +294,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       // Inspection presents the simulation record: the one authoritative
       // source of the reviewed sender, amount, fee, and effects.
       return writeInspectEventSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'inspect',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -302,7 +302,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       })
     case 'request-approval':
       return approvalRequestSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'approval.request',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'pending',
@@ -311,14 +311,14 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       })
     case 'approve':
       return approvalDecisionSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'approval.decision',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'approved',
       })
     case 'deny':
       return approvalDecisionSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'approval.decision',
         requestId: PAYMENT_FIXTURE_APPROVAL_REQUEST_ID,
         state: 'denied',
@@ -326,7 +326,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       })
     case 'sign':
       return writeSignEventSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'sign',
         flowId: PAYMENT_FIXTURE_FLOW_ID,
@@ -334,7 +334,7 @@ export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
       })
     case 'confirm':
       return writeConfirmEventSchema.parse({
-        protocolVersion: EXPLORER_PROTOCOL_VERSION,
+        protocolVersion: RECORD_PROTOCOL_VERSION,
         type: 'write.stage',
         stage: 'confirm',
         flowId: PAYMENT_FIXTURE_FLOW_ID,

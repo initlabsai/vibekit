@@ -8,7 +8,7 @@
  *   SENDER=<address in the keystore> RECEIVER=<address> bun packages/explorer/examples/action.ts
  */
 import { createKeystoreSigner } from '@initlabs/vibekit/signer-keystore'
-import { createResultStore, performActionStep, startAction, submitAction } from '@initlabs/vibekit-explorer'
+import { createResultStore, performActionStep, startAction, submitAction } from '@initlabs/vibekit/actions'
 import { createLiveHost, signDraftWith } from '@initlabs/vibekit-explorer/live'
 
 const sender = process.env.SENDER!

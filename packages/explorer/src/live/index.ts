@@ -33,10 +33,10 @@ import {
   buildSimulationRecord,
   decodedGroupFactsSchema,
   type DecodedGroupFacts,
-} from '../actions/host.js'
-import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/reducer.js'
-import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '../actions/sign.js'
-import type { JsonValue, StructuredResult } from '../core/results.js'
+} from '@initlabs/vibekit/actions'
+import { writeDraftDataSchema, signedGroupDataSchema } from '@initlabs/vibekit/actions'
+import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '@initlabs/vibekit/actions'
+import type { JsonValue, StructuredResult } from '@initlabs/vibekit/actions'
 
 export { unsignedTransactionsForDraft }
 

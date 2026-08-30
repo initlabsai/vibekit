@@ -4,7 +4,7 @@ import {
   buildDraftRecord,
   buildSimulationRecord,
   type DecodedGroupFacts,
-} from '../src/actions/host.js'
+} from '@initlabs/vibekit/actions'
 import { structuredResultFromToolEvent } from '../src/bridge.js'
 import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
 import {
@@ -21,7 +21,7 @@ import {
   writeSimulationDataSchema,
   signedGroupDataSchema,
   actionReducer,
-} from '../src/actions/reducer.js'
+} from '@initlabs/vibekit/actions'
 import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'

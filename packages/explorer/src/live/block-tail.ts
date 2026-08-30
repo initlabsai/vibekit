@@ -6,7 +6,7 @@
  */
 import type { FormattedTransaction } from '@initlabs/vibekit/tools'
 
-import type { ResultIdentity, StructuredResult } from '../core/results.js'
+import type { ResultIdentity, StructuredResult } from '@initlabs/vibekit/actions'
 import { buildBlockDetailRecord } from '../views/block.js'
 import { buildTransactionListRecord } from '../views/transaction.js'
 import { formatAlgodTransaction, safeUint64, txIdInBlock, typeCounts } from './algod-txn.js'

@@ -4,7 +4,7 @@
  * the hosts that have them (`ActionHost`, `LiveHost`). The per-view
  * aliases below let a module declare only the reads it needs.
  */
-import type { StructuredResult } from './core/results.js'
+import type { StructuredResult } from '@initlabs/vibekit/actions'
 import type { TransactionSearchFilter } from './views/transaction.js'
 
 /** The named networks a live host can serve; core ships their endpoints. */

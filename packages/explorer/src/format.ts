@@ -1,26 +1,14 @@
 import { z } from 'zod'
 
-/**
- * A uint64 on the JSON-safe wire: a safe nonnegative integer, or a decimal
- * string when the value exceeds Number.MAX_SAFE_INTEGER (the jsonSafe codec
- * convention).
- */
-export const uint64JsonSchema = z.union([
-  z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
-  z.string().regex(/^\d+$/, 'Expected a decimal uint64 string'),
-])
+import {
+  sameUint64,
+  signedMicroAlgosJsonSchema,
+  uint64JsonSchema,
+  type SignedMicroAlgosJson,
+  type Uint64Json,
+} from '@initlabs/vibekit/actions'
 
-/** A signed microALGO delta on the JSON-safe wire: safe integer or decimal string. */
-export const signedMicroAlgosJsonSchema = z.union([
-  z.number().int().min(-Number.MAX_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER),
-  z.string().regex(/^-?\d+$/, 'Expected a signed decimal string'),
-])
-
-/** A uint64 on the JSON-safe wire. */
-export type Uint64Json = z.infer<typeof uint64JsonSchema>
-
-/** A signed microALGO amount on the JSON-safe wire. */
-export type SignedMicroAlgosJson = z.infer<typeof signedMicroAlgosJsonSchema>
+export { sameUint64, signedMicroAlgosJsonSchema, uint64JsonSchema, type SignedMicroAlgosJson, type Uint64Json }
 
 /**
  * Formats microALGOs as an exact decimal ALGO string using digit math, never
@@ -83,9 +71,4 @@ export function parseAlgosToMicroAlgos(text: string): number | undefined {
   const value = Number(combined)
   if (!Number.isSafeInteger(value)) return undefined
   return value
-}
-
-/** Compares two JSON-safe uint64 values by numeric identity. */
-export function sameUint64(left: Uint64Json, right: Uint64Json): boolean {
-  return BigInt(left) === BigInt(right)
 }

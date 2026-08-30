@@ -32,6 +32,7 @@ describe('dependencies point inward', () => {
     core: ['core'],
     tools: ['core', 'tools'],
     plugins: ['core'],
+    actions: ['core', 'tools', 'plugins'],
     agent: ['core'],
     mcp: ['core'],
     'signer-keystore': ['core'],

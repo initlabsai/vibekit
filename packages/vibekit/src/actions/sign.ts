@@ -4,9 +4,8 @@
  * are spliced back in place. Browser-safe: algosdk decode only, no node.
  */
 import algosdk from 'algosdk'
-import { base64ToBytes, bytesToBase64 } from '@initlabs/vibekit'
-
-import type { StructuredResult } from '../core/results.js'
+import { base64ToBytes, bytesToBase64 } from '../core/codec.js'
+import type { StructuredResult } from './records.js'
 import { writeDraftDataSchema } from './reducer.js'
 
 /** `(txnGroup, indexesToSign) => signed bytes` — algosdk's TransactionSigner, use-wallet's `transactionSigner`, a keystore's. */
