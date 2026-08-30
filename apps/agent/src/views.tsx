@@ -23,7 +23,7 @@ export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void
   const EXAMPLES = welcomeExamples(network)
   return (
     <div className="note-agent intro">
-      <CompanionFace mood="calm" seed={0} />
+      <CompanionFace mood="calm" step={0} />
       <div className="note-agent-body">
         <p className="note-agent-text">
           hi. i'm <em>qt314</em>. i read algorand for you. i'm the helpfulest, but plz be specific. i'm in alpha i guess.

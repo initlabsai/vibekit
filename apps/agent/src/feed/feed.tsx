@@ -138,7 +138,7 @@ export function FeedPane({
               <div key={item.id} className={`note-agent${item.pending ? ' pending' : ''}`}>
                 <CompanionFace
                   mood={moodFor(section, item, streamingSection === section.id && index === section.items.length - 1)}
-                  seed={item.id}
+                  step={item.id}
                   still={!(latest?.sectionId === section.id && latest.itemId === item.id)}
                 />
                 <div className="note-agent-body">

@@ -27,6 +27,7 @@ export default defineConfig({
             { label: 'Add VibeKit to a project', slug: 'docs/guides/add-to-an-existing-project' },
             { label: 'Create a VibeKit plugin', slug: 'docs/guides/create-a-vibekit-plugin' },
             { label: 'Create a custom MCP', slug: 'docs/guides/create-a-custom-mcp' },
+            { label: 'Add a companion', slug: 'docs/guides/add-a-companion' },
           ],
         },
         {

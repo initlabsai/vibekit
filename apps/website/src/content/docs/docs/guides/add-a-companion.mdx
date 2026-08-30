@@ -1,0 +1,181 @@
+---
+title: Add a companion
+description: qt314's face, as one file you copy into any React app and feed your own moods.
+draft: false
+---
+
+qt314 is the kaomoji beside what the web agent says. She never decides her own
+mood — the app does, from what actually happened — so she is exactly as honest
+as the data next to her. The whole thing is one React file and a few lines of
+CSS. Copy both; there is no package.
+
+import CompanionDemo from '../../../../components/CompanionDemo.astro'
+
+export const KAOMOJI = {
+  calm: ['(^‿^)', '(・‿・)', '(´▽`)', '(◕‿◕)'],
+  thinking: ['(・・?)', '(￣ω￣;)', '(˘︹˘ )'],
+  working: ["(>'-')>", "<('-'<)", "^('-')^", "v('-')v"],
+  bright: ['\\(^▽^)/', '(★‿★)', '(⌒▽⌒)☆'],
+  squint: ['(¬_¬)', '(>_<)', '(x_x)'],
+}
+export const SPINNER = { working: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧'], calm: ['·'] }
+export const EMOJI = { calm: ['🙂', '🙃'], working: ['🏃', '🏃‍♀️'], squint: ['😑'] }
+
+<p>
+  <CompanionDemo faces={KAOMOJI} mood="calm" blink="(-‿-)" label="calm" />
+  <CompanionDemo faces={KAOMOJI} mood="thinking" every={900} label="thinking" />
+  <CompanionDemo faces={KAOMOJI} mood="working" every={350} label="working" />
+  <CompanionDemo faces={KAOMOJI} mood="bright" every={900} label="bright" />
+  <CompanionDemo faces={KAOMOJI} mood="squint" every={900} label="squint" />
+</p>
+
+## Copy the component
+
+Save as `companion.tsx`:
+
+```tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+
+export type Faces = Record<string, readonly string[]>
+
+export function faceFor(faces: Faces, mood: string, step: number): string {
+  const set = faces[mood] ?? Object.values(faces)[0] ?? ['']
+  return set[Math.abs(step) % set.length]!
+}
+
+export type CompanionProps = {
+  mood: string
+  step: number
+  faces: Faces
+  /** Idle face; omit to never blink. */
+  blink?: string
+  /** Which mood blinks. Default: 'calm'. */
+  blinkOn?: string
+  /** Frozen: default face, no blink, no glitch, dimmed. */
+  still?: boolean
+  className?: string
+}
+
+export function Companion({ mood, step, faces, blink, blinkOn = 'calm', still = false, className = '' }: CompanionProps) {
+  const [blinking, setBlinking] = useState(false)
+  const canBlink = blink !== undefined && mood === blinkOn && !still
+  useEffect(() => {
+    if (!canBlink) return
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    const interval = setInterval(() => {
+      setBlinking(true)
+      timeout = setTimeout(() => setBlinking(false), 140)
+    }, 3800 + Math.floor(Math.random() * 2600))
+    return () => {
+      clearInterval(interval)
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [canBlink])
+  if (still) {
+    return (
+      <span className={`companion companion-still ${className}`} aria-hidden="true">
+        {faceFor(faces, blinkOn, 0)}
+      </span>
+    )
+  }
+  const face = canBlink && blinking ? blink : faceFor(faces, mood, step)
+  return (
+    <span className={`companion companion-${mood} glitch ${className}`} data-text={face} aria-hidden="true">
+      {face}
+    </span>
+  )
+}
+```
+
+And `companion.css` — adjust the colors; `--neon` is the only variable that matters:
+
+```css
+.companion { --neon: #f0b35e; color: var(--neon); display: inline-block; font-family: ui-monospace, monospace; position: relative; text-shadow: 0 0 .55rem color-mix(in srgb, var(--neon) 55%, transparent); transition: color .2s; white-space: nowrap; }
+.companion-thinking, .companion-working { --neon: #6ee7ff; }
+.companion-bright { --neon: #ffb454; }
+.companion-squint { --neon: #ff5c5c; }
+.companion-still { color: #6b6f78; text-shadow: none; }
+.companion.glitch::before, .companion.glitch::after { content: attr(data-text); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.companion.glitch::before { animation: glitch-a 7s steps(1) infinite; color: #6ee7ff; }
+.companion.glitch::after { animation: glitch-b 7s steps(1) infinite; color: #ffb454; }
+.companion-working.glitch::before, .companion-working.glitch::after { animation-duration: 1.6s; }
+@keyframes glitch-a {
+  0%, 100% { opacity: 0; }
+  2% { clip-path: inset(20% 0 55% 0); opacity: 1; transform: translate(-.2rem, 0); }
+  4% { clip-path: inset(60% 0 10% 0); transform: translate(.15rem, .05rem); }
+  6% { opacity: 0; }
+  40% { clip-path: inset(5% 0 80% 0); opacity: 1; transform: translate(.15rem, 0); }
+  42% { opacity: 0; }
+}
+@keyframes glitch-b {
+  0%, 100% { opacity: 0; }
+  2% { clip-path: inset(50% 0 20% 0); opacity: 1; transform: translate(.2rem, 0); }
+  4% { clip-path: inset(10% 0 70% 0); transform: translate(-.15rem, -.05rem); }
+  6% { opacity: 0; }
+  40% { clip-path: inset(65% 0 5% 0); opacity: 1; transform: translate(-.15rem, 0); }
+  42% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .companion.glitch::before, .companion.glitch::after { animation: none; } }
+```
+
+## Give her faces
+
+`faces` is a map from *your* mood names to arrays of strings. Any strings.
+
+```tsx
+import { Companion } from './companion'
+import './companion.css'
+
+const FACES = {
+  calm: ['(^‿^)', '(・‿・)', '(´▽`)', '(◕‿◕)'],
+  thinking: ['(・・?)', '(￣ω￣;)', '(˘︹˘ )'],
+  working: ["(>'-')>", "<('-'<)", "^('-')^", "v('-')v"], // Kirby, one step per event
+  bright: ['\\(^▽^)/', '(★‿★)', '(⌒▽⌒)☆'],
+  squint: ['(¬_¬)', '(>_<)', '(x_x)'],
+}
+
+<Companion mood={mood} step={events} faces={FACES} blink="(-‿-)" />
+```
+
+Other sets that work unchanged:
+
+<p>
+  <CompanionDemo faces={SPINNER} mood="working" every={80} label="spinner" />
+  <CompanionDemo faces={EMOJI} mood="working" every={400} label="emoji" />
+  <CompanionDemo faces={EMOJI} mood="squint" label="emoji, held" />
+</p>
+
+```ts
+// a spinner
+const FACES = { working: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧'], calm: ['·'] }
+// emoji
+const FACES = { calm: ['🙂', '🙃'], working: ['🏃', '🏃‍♀️'], squint: ['😑'] }
+```
+
+## The step contract
+
+This is the entire API: `step` indexes into the current mood's array.
+
+- **Increment it on each event** (a tool call, a chunk, a tick) and she steps
+  through the set — that is the dance and the spinner.
+- **Hold it constant** and she keeps one face. The web agent passes the row
+  index, so a line keeps the face it was born with.
+
+`mood` is whatever you decide it is. Derive it from real state — a pending
+request, an error, a confirmed transaction — not from a model's guess. She
+should only ever look as happy as things actually are.
+
+## Props
+
+| prop | what |
+| --- | --- |
+| `mood` | key into `faces` |
+| `step` | picks the face within the mood |
+| `faces` | your map |
+| `blink` | idle face; omit and she never blinks |
+| `blinkOn` | which mood blinks (default `'calm'`) |
+| `still` | frozen and dimmed — for lines that are no longer live |
+
+Colors come from `.companion-<mood>` classes, so a new mood is one CSS line.

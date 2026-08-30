@@ -1,0 +1,62 @@
+---
+// A live Companion: the same faces/step/blink contract as the React file, in
+// vanilla JS so the docs need no framework island. `every` advances the step.
+interface Props {
+  faces: Record<string, readonly string[]>
+  mood: string
+  blink?: string
+  /** ms between steps; omit to hold one face. */
+  every?: number
+  label?: string
+}
+const { faces, mood, blink, every, label } = Astro.props
+const face = faces[mood]?.[0] ?? ''
+---
+
+<span class="companion-demo">
+  <span class={`companion companion-${mood} glitch`} data-text={face} data-faces={JSON.stringify(faces[mood] ?? [])} data-blink={blink} data-every={every}>{face}</span>
+  {label && <code>{label}</code>}
+</span>
+
+<script>
+  for (const el of document.querySelectorAll<HTMLElement>('.companion-demo .companion')) {
+    const faces: string[] = JSON.parse(el.dataset.faces ?? '[]')
+    const show = (face: string) => { el.textContent = face; el.dataset.text = face }
+    let step = 0
+    const every = Number(el.dataset.every)
+    if (every) setInterval(() => show(faces[++step % faces.length]!), every)
+    const blink = el.dataset.blink
+    if (blink) setInterval(() => { show(blink); setTimeout(() => show(faces[step % faces.length]!), 140) }, 3800 + Math.random() * 2600)
+  }
+</script>
+
+<style is:global>
+  .companion-demo { align-items: center; display: inline-flex; gap: .75rem; margin: .25rem 1.25rem .25rem 0; }
+  .companion-demo code { color: var(--sl-color-gray-3); }
+  .companion { --neon: #f0b35e; color: var(--neon); display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace; min-width: 4.6rem; position: relative; text-align: center; text-shadow: 0 0 .55rem color-mix(in srgb, var(--neon) 55%, transparent); transition: color .2s; white-space: nowrap; }
+  .companion-thinking, .companion-working { --neon: #6ee7ff; }
+  .companion-bright { --neon: #ffb454; }
+  .companion-squint { --neon: #ff5c5c; }
+  .companion-still { color: #6b6f78; text-shadow: none; }
+  .companion.glitch::before, .companion.glitch::after { content: attr(data-text); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+  .companion.glitch::before { animation: glitch-a 7s steps(1) infinite; color: #6ee7ff; }
+  .companion.glitch::after { animation: glitch-b 7s steps(1) infinite; color: #ffb454; }
+  .companion-working.glitch::before, .companion-working.glitch::after { animation-duration: 1.6s; }
+  @keyframes glitch-a {
+    0%, 100% { opacity: 0; }
+    2% { clip-path: inset(20% 0 55% 0); opacity: 1; transform: translate(-.2rem, 0); }
+    4% { clip-path: inset(60% 0 10% 0); transform: translate(.15rem, .05rem); }
+    6% { opacity: 0; }
+    40% { clip-path: inset(5% 0 80% 0); opacity: 1; transform: translate(.15rem, 0); }
+    42% { opacity: 0; }
+  }
+  @keyframes glitch-b {
+    0%, 100% { opacity: 0; }
+    2% { clip-path: inset(50% 0 20% 0); opacity: 1; transform: translate(.2rem, 0); }
+    4% { clip-path: inset(10% 0 70% 0); transform: translate(-.15rem, -.05rem); }
+    6% { opacity: 0; }
+    40% { clip-path: inset(65% 0 5% 0); opacity: 1; transform: translate(-.15rem, 0); }
+    42% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .companion.glitch::before, .companion.glitch::after { animation: none; } }
+</style>
