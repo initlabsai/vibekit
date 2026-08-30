@@ -5,6 +5,7 @@ import { useState } from 'react'
 import type { WebPage, WebResults } from '@initlabs/vibekit/views'
 
 import { Button, FooterNote, Frame, Header } from '../../primitives'
+import { safeHref } from '../../theme'
 
 export function domainOf(url: string): string {
   try {
@@ -37,13 +38,19 @@ export function WebResultsCard({
         <FooterNote text="Nothing found." />
       ) : (
         <ol className="web-results">
-          {data.results.map((r, i) => (
+          {data.results.map((r, i) => {
+            const href = safeHref(r.url)
+            return (
             <li key={r.url} className="web-result">
               <p className="web-result-line">
                 <span className="web-index">{i + 1}</span>
-                <a href={r.url} target="_blank" rel="noreferrer" className="web-title">
-                  {r.title}
-                </a>
+                {href ? (
+                  <a href={href} target="_blank" rel="noreferrer" className="web-title">
+                    {r.title}
+                  </a>
+                ) : (
+                  <span className="web-title">{r.title}</span>
+                )}
                 <span className="web-meta">
                   {domainOf(r.url)}
                   {dateOf(r.published) ? ` · ${dateOf(r.published)}` : ''}
@@ -56,7 +63,8 @@ export function WebResultsCard({
                 </p>
               ))}
             </li>
-          ))}
+            )
+          })}
         </ol>
       )}
     </Frame>
@@ -66,6 +74,7 @@ export function WebResultsCard({
 export function WebPageCard({ data }: { data: WebPage }) {
   const [open, setOpen] = useState(false)
   const excerpt = data.content.slice(0, 600)
+  const href = safeHref(data.url)
   return (
     <Frame>
       <Header
@@ -74,9 +83,11 @@ export function WebPageCard({ data }: { data: WebPage }) {
         pill={domainOf(data.url).toUpperCase()}
         tone="idle"
         action={
-          <a href={data.url} target="_blank" rel="noreferrer" className="button">
-            open ↗
-          </a>
+          href ? (
+            <a href={href} target="_blank" rel="noreferrer" className="button">
+              open ↗
+            </a>
+          ) : undefined
         }
       />
       <p className="hero">

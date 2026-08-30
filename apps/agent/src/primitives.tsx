@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 import { useAssetMeta, useName, useOnScreen, useProfile, type Tier } from './enrich'
 import type { OpenTarget } from './result-card'
-import { shorten } from './theme'
+import { safeHref, shorten } from './theme'
 
 /** Where a copy is announced (the status line); no-op without a provider. */
 export const CopyContext = createContext<(text: string) => void>(() => undefined)
@@ -278,11 +278,12 @@ export function AssetMark({
   const [ref, seen] = useOnScreen<HTMLSpanElement>()
   const meta = useAssetMeta(assetId, seen)
   const label = name ?? meta?.name ?? unitName ?? meta?.unitName ?? `asset ${assetId}`
+  const logo = safeHref(meta?.logoUrl)
   return (
     <span className="asset-mark" ref={ref}>
-      {meta?.logoUrl ? (
+      {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="asset-logo" src={meta.logoUrl} alt="" width={18} height={18} loading="lazy" />
+        <img className="asset-logo" src={logo} alt="" width={18} height={18} loading="lazy" />
       ) : (
         <span className="asset-logo asset-logo-empty" aria-hidden="true">
           {label.slice(0, 1).toUpperCase()}
@@ -298,9 +299,10 @@ export function AssetMark({
 export function Avatar({ address, size = 44 }: { address: string; size?: number }) {
   const profile = useProfile(address)
   const style = { width: size, height: size }
-  return profile?.avatar ? (
+  const avatar = safeHref(profile?.avatar)
+  return avatar ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className="identity-avatar" src={profile.avatar} alt="" width={size} height={size} style={style} />
+    <img className="identity-avatar" src={avatar} alt="" width={size} height={size} style={style} />
   ) : (
     <span className="identity-avatar identity-avatar-empty" aria-hidden="true" style={style}>
       {(profile?.name ?? address).slice(0, 2)}

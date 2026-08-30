@@ -14,6 +14,7 @@ import {
   type Tone,
 } from '../../primitives'
 import type { Tier } from '../../enrich'
+import { safeHref } from '../../theme'
 import { trimPrice } from './market-cards'
 
 function tierTone(tier: string): Tone {
@@ -47,6 +48,7 @@ export function PeraAssetCard({
   )
   const blurb = data.description ?? project.description
   const title = data.name ?? data.unitName ?? `Asset #${data.assetId}`
+  const logo = safeHref(data.logoUrl)
   return (
     <Frame tone={data.verificationTier === 'suspicious' ? 'danger' : undefined}>
       <Header
@@ -60,11 +62,11 @@ export function PeraAssetCard({
       />
       <p className="hero">
         <span className="hero-value asset-hero">
-          {data.logoUrl ? (
+          {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               className="asset-logo asset-logo-lg"
-              src={data.logoUrl}
+              src={logo}
               alt=""
               width={40}
               height={40}

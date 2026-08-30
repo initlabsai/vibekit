@@ -4,7 +4,7 @@
 import type { NfdRecord } from '@initlabs/vibekit/views'
 
 import { Button, Copyable, Fact, Facts, Frame, Header } from '../../primitives'
-import { shorten } from '../../theme'
+import { safeHref, shorten } from '../../theme'
 
 /** Verified handles and links, in display order; each row copies its value. */
 const LINKS: ReadonlyArray<[key: string, label: string]> = [
@@ -43,6 +43,7 @@ export function NfdCard({
   const props = data.properties ?? {}
   const facts = nfdFactsFor(data)
   const byline = props.name && props.name !== data.name ? props.name : undefined
+  const avatar = safeHref(props.avatar)
   return (
     <Frame className="nfd-card">
       <Header
@@ -52,9 +53,9 @@ export function NfdCard({
         action={onOpenAccount ? <Button label="account ▸" onPress={onOpenAccount} /> : undefined}
       />
       <div className="nfd-identity">
-        {props.avatar?.startsWith('https://') ? (
+        {avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="identity-avatar" src={props.avatar} alt="" width={56} height={56} />
+          <img className="identity-avatar" src={avatar} alt="" width={56} height={56} />
         ) : null}
         <div className="nfd-identity-body">
           <p className="hero nfd-name">

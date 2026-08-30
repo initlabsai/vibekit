@@ -5,7 +5,7 @@ import { formatAssetAmount, formatBaseUnits, type AssetDetailViewModel } from '@
 import { formatUsd, useAssetMeta } from '../../enrich'
 import { MoreFooter, Table, type Column } from '../../generic-cards'
 import { AssetMark, Button, Copyable, Fact, Facts, FooterNote, Frame, Header, Hero, TierBadge, Unavailable } from '../../primitives'
-import { shorten } from '../../theme'
+import { safeHref, shorten } from '../../theme'
 
 export function AssetCard({
   model,
@@ -21,6 +21,8 @@ export function AssetCard({
     value ? <Fact label={label} value={value} copy={value} /> : null
   const tone = meta?.tier === 'suspicious' ? 'danger' : meta?.tier === 'trusted' || meta?.tier === 'verified' ? 'ok' : 'idle'
   const project = meta?.project
+  const logo = safeHref(meta?.logoUrl)
+  const site = safeHref(project?.url)
   return (
     <Frame tone={meta?.tier === 'suspicious' ? 'danger' : undefined}>
       <Header
@@ -32,9 +34,9 @@ export function AssetCard({
       />
       <p className="hero">
         <span className="hero-value asset-hero">
-          {meta?.logoUrl ? (
+          {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="asset-logo asset-logo-lg" src={meta.logoUrl} alt="" width={40} height={40} />
+            <img className="asset-logo asset-logo-lg" src={logo} alt="" width={40} height={40} />
           ) : null}
           {title}
           <TierBadge tier={meta?.tier} />
@@ -53,7 +55,7 @@ export function AssetCard({
         {address('freeze', model.freeze)}
         {address('clawback', model.clawback)}
         {project?.name ? <Fact label="project" value={project.name} /> : null}
-        {project?.url ? <Fact label="site"><a className="ident-link" href={project.url} target="_blank" rel="noreferrer">{project.url}</a></Fact> : null}
+        {site ? <Fact label="site"><a className="ident-link" href={site} target="_blank" rel="noreferrer">{site}</a></Fact> : null}
         {project?.twitter ? <Fact label="twitter" value={`@${project.twitter}`} copy={project.twitter} /> : null}
       </Facts>
       {project?.description ? <FooterNote text={project.description} /> : null}

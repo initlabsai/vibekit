@@ -5,7 +5,7 @@ import { formatMicroAlgos, type NfdList } from '@initlabs/vibekit/views'
 
 import { Table, type Column } from '../../generic-cards'
 import { Copyable, FooterNote, Frame, Header } from '../../primitives'
-import { shorten } from '../../theme'
+import { safeHref, shorten } from '../../theme'
 
 type Row = NfdList['nfds'][number]
 
@@ -23,15 +23,18 @@ export function NfdListCard({
       key: 'name',
       label: 'name',
       width: 'minmax(10rem, 2fr)',
-      cell: (n) => (
-        <span className="arcade-title">
-          {n.properties?.avatar?.startsWith('https://') ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="arcade-thumb" src={n.properties.avatar} alt="" width={28} height={28} />
-          ) : null}
-          {n.name}
-        </span>
-      ),
+      cell: (n) => {
+        const avatar = safeHref(n.properties?.avatar)
+        return (
+          <span className="arcade-title">
+            {avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="arcade-thumb" src={avatar} alt="" width={28} height={28} />
+            ) : null}
+            {n.name}
+          </span>
+        )
+      },
     },
     { key: 'state', label: 'state', width: 'minmax(5rem, .7fr)', cell: (n) => n.state ?? '' },
     {

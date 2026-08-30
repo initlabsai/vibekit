@@ -42,6 +42,12 @@ const CONTEXT_KEYS = [
   'network',
 ] as const
 
+/** Record data reaches the prompt as text; a crafted value must stay one short inert line. */
+const contextValue = (value: unknown): string =>
+  String(value)
+    .replace(/[\p{Cc}\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu, ' ')
+    .slice(0, 120)
+
 /** What the Explorer is showing, so "that transaction" means something to the model. */
 export function explorerContext(store: ResultStore, network: string, limit = 3): string {
   const lines = store
@@ -50,7 +56,7 @@ export function explorerContext(store: ResultStore, network: string, limit = 3):
     .map((record) => {
       const data = (record.state === 'success' ? record.data : {}) as Record<string, unknown>
       const facts = CONTEXT_KEYS.filter((key) => data?.[key] !== undefined).map(
-        (key) => `${key}=${String(data[key])}`,
+        (key) => `${key}=${contextValue(data[key])}`,
       )
       return `- ${record.toolName}: ${facts.join(' ')}`
     })

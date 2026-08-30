@@ -30,6 +30,17 @@ export function errorMessage(error: unknown): string {
   return text.replace(/^Network request error\. Received status \d+ \([^)]*\): /, '')
 }
 
+/** A record's URL is only ever a link or image source when it is http(s); anything else renders as text. */
+export function safeHref(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  try {
+    const { protocol } = new URL(url)
+    return protocol === 'http:' || protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function shorten(value: string, width: number): string {
   if (value.length <= width) return value
   const left = Math.ceil((width - 1) / 2)

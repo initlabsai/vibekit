@@ -4,6 +4,7 @@
 import type { DefiProtocols } from '@initlabs/vibekit/views'
 
 import { FooterNote, Frame, Header } from '../../primitives'
+import { safeHref } from '../../theme'
 import { compactUsd } from './market-cards'
 
 export function DefiOverviewCard({ data, network }: { data: DefiProtocols; network: string }) {
@@ -20,11 +21,13 @@ export function DefiOverviewCard({ data, network }: { data: DefiProtocols; netwo
         <FooterNote text="No protocols reported." />
       ) : (
         <ol className="tvl-bars">
-          {active.map((p) => (
+          {active.map((p) => {
+            const site = safeHref(p.url)
+            return (
             <li key={p.id} className="tvl-row">
               <span className="tvl-name">
-                {p.url ? (
-                  <a href={p.url} target="_blank" rel="noreferrer">
+                {site ? (
+                  <a href={site} target="_blank" rel="noreferrer">
                     {p.name} <span className="muted">{p.version}</span>
                   </a>
                 ) : (
@@ -41,7 +44,8 @@ export function DefiOverviewCard({ data, network }: { data: DefiProtocols; netwo
               </span>
               <span className="tvl-value">{compactUsd(p.tvlUsd)}</span>
             </li>
-          ))}
+            )
+          })}
         </ol>
       )}
     </Frame>
