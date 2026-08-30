@@ -33,7 +33,7 @@ describe('remote explorer host', () => {
     await host.lookupTransaction(FIXTURE_TRANSACTION_ID)
     await host.searchTransactions({ address: FIXTURE_SENDER })
     await host.callTool('lookup_asset', { assetId: 1 })
-    await host.draftPayment({ sender: 'a', receiver: 'b', amountMicroAlgos: 1 })
+    await host.draft('send_payment', { sender: 'a', receiver: 'b', amountMicroAlgos: 1 })
     await host.probe()
     await host.statusRound()
     expect(bodies.length).toBe(7)

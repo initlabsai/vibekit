@@ -174,7 +174,13 @@ export {
   startAction,
   startActionFromDraft,
 } from './actions/host.js'
-export type { PaymentDraftParams, ActionHost } from './actions/host.js'
+export type { ActionDraft, ActionHost } from './actions/host.js'
+export {
+  createWalletSignDraft,
+  signGroupForDraft,
+  unsignedTransactionsForDraft,
+  type DraftSigner,
+} from './actions/sign.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'

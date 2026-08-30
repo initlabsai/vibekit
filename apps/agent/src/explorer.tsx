@@ -38,7 +38,7 @@ import { usePanel } from './features/layout/hooks'
 import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
 import { ProfileRail } from './features/profile/rail'
 import { ActionCard } from './features/action/cards'
-import { useAction } from './features/action/hooks'
+import { useActionFeed } from './features/action/hooks'
 import { ApprovalModal } from './features/action/modal'
 import { useLookups } from './lookup'
 import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
@@ -160,7 +160,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     setStatus,
   }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
-  const payment = useAction({ ...shared, newId, accounts, activeAddress })
+  const payment = useActionFeed({ ...shared, newId, accounts, activeAddress })
   const credits = useCredits({
     activeAddress,
     signTransactions: wallet.signTransactions,

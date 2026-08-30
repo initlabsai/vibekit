@@ -152,10 +152,13 @@ export function useAction({
       void startAction({
         host: host(),
         store: storeRef.current,
-        draftParams: {
-          ...parties,
-          amountMicroAlgos: amountMicroAlgos ?? PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-          note: 'Explorer live payment',
+        draft: {
+          toolName: 'send_payment',
+          args: {
+            ...parties,
+            amountMicroAlgos: amountMicroAlgos ?? PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
+            note: 'Explorer live payment',
+          },
         },
         newId,
         onStep: trackFlowStep(sectionId),

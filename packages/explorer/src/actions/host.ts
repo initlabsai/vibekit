@@ -187,24 +187,23 @@ export function buildConfirmationRecord(
   return record(identity, 'submit_group', confirmationDataSchema.parse(data))
 }
 
-/** Parameters for composing one unsigned payment draft. */
-export interface PaymentDraftParams {
-  sender: string
-  receiver: string
-  amountMicroAlgos: number
-  note?: string
+/** What to draft: an action tool by name and its arguments. */
+export interface ActionDraft {
+  toolName: string
+  args: Record<string, unknown>
 }
 
 /**
- * The capability an app needs to run the live payment flow. The TUI
- * satisfies it in-process (adding keystore signing behind explicit approval);
- * the browser satisfies the signerless subset with a fetch wrapper over a
- * compose-only server route. Custody appears only through the optional
- * capabilities and never inside this controller.
+ * The capability an app needs to run an action. The TUI satisfies it
+ * in-process (adding keystore signing behind explicit approval); the browser
+ * satisfies the signerless subset with a fetch wrapper over a compose-only
+ * server route. Custody appears only through the optional capabilities and
+ * never inside this controller.
  */
 export interface ActionHost {
   network: string
-  draftPayment(params: PaymentDraftParams): Promise<StructuredResult>
+  /** Runs an action tool in compose mode and wraps the unsigned group it returns as a draft record. */
+  draft(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   simulateDraft(draftRecord: StructuredResult): Promise<StructuredResult>
   /** Signs the approved draft group; absent on custody-less hosts. */
   signDraft?(draftRecord: StructuredResult): Promise<StructuredResult>
@@ -212,7 +211,7 @@ export interface ActionHost {
   submitSigned?(signedRecord: StructuredResult): Promise<StructuredResult>
 }
 
-/** Result of one live payment step: new client state, or an explicit refusal. */
+/** Result of one action step: new client state, or an explicit refusal. */
 export type ActionStepOutcome =
   { ok: true; store: ResultStore; flow: ActionState } | { ok: false; message: string }
 
@@ -245,7 +244,7 @@ function draftEventFor(flowId: string, record: StructuredResult): ActionEvent {
 }
 
 /**
- * Performs one semantic step of the live payment flow: produce the needed
+ * Performs one semantic step of an action: produce the needed
  * authoritative record through the host, then advance the shared machine with
  * the corresponding protocol event. Signing and confirmation run only when
  * the host carries those capabilities; without them the steps are explicit
@@ -256,7 +255,7 @@ export async function performActionStep(input: {
   store: ResultStore
   flow: ActionState | null
   kind: ActionEventKind
-  draftParams?: PaymentDraftParams
+  draft?: ActionDraft
   newId: (prefix: string) => string
 }): Promise<ActionStepOutcome> {
   const { host, flow, kind, newId } = input
@@ -273,14 +272,14 @@ export async function performActionStep(input: {
   try {
     switch (kind) {
       case 'draft': {
-        if (flow !== null) return { ok: false, message: 'A payment flow is already open' }
-        if (!input.draftParams) return { ok: false, message: 'Draft parameters are required' }
-        const record = await host.draftPayment(input.draftParams)
+        if (flow !== null) return { ok: false, message: 'An action is already open' }
+        if (!input.draft) return { ok: false, message: 'A draft (tool name and arguments) is required' }
+        const record = await host.draft(input.draft.toolName, input.draft.args)
         store = addResult(store, record)
-        return advance(draftEventFor(newId('flow-live-payment'), record), null)
+        return advance(draftEventFor(newId('action'), record), null)
       }
       case 'simulate': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         const draftRecord = findResultRecord(store, flow.draft)
         if (!draftRecord) return { ok: false, message: 'The draft record is missing' }
         const record = await host.simulateDraft(draftRecord)
@@ -295,7 +294,7 @@ export async function performActionStep(input: {
         )
       }
       case 'inspect': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         // Inspection reviews exactly the flow's simulation; before one exists there is no event.
         return advance(
           flow.simulation &&
@@ -308,7 +307,7 @@ export async function performActionStep(input: {
         )
       }
       case 'request-approval': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         // The request covers exactly the inspected reference and tool-call id the machine enforces.
         return advance(
           flow.inspection &&
@@ -321,7 +320,7 @@ export async function performActionStep(input: {
         )
       }
       case 'approve': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         return advance(
           flow.approvalRequest &&
             createApprovalDecisionEvent({
@@ -332,7 +331,7 @@ export async function performActionStep(input: {
         )
       }
       case 'deny': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         return advance(
           flow.approvalRequest &&
             createApprovalDecisionEvent({
@@ -344,7 +343,7 @@ export async function performActionStep(input: {
         )
       }
       case 'sign': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         if (!host.signDraft) {
           return { ok: false, message: 'This host has no signer — signing is unavailable' }
         }
@@ -361,7 +360,7 @@ export async function performActionStep(input: {
         )
       }
       case 'confirm': {
-        if (!flow) return { ok: false, message: 'No payment flow is open' }
+        if (!flow) return { ok: false, message: 'No action is open' }
         if (!host.submitSigned) {
           return { ok: false, message: 'This host cannot submit — confirmation is unavailable' }
         }
@@ -392,7 +391,7 @@ async function runSteps(input: {
   store: ResultStore
   flow: ActionState | null
   kinds: readonly ActionEventKind[]
-  draftParams?: PaymentDraftParams
+  draft?: ActionDraft
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: ActionState) => void
 }): Promise<ActionRun> {
@@ -404,7 +403,7 @@ async function runSteps(input: {
       store,
       flow,
       kind,
-      draftParams: input.draftParams,
+      draft: input.draft,
       newId: input.newId,
     })
     if (!outcome.ok) return { ok: false, message: outcome.message, store, flow }
@@ -416,7 +415,7 @@ async function runSteps(input: {
 }
 
 /**
- * Auto-advances a new payment through its mechanical stages — draft,
+ * Auto-advances a new action through its mechanical stages — draft,
  * simulate, inspect, approval request — and stops at `awaiting-approval`,
  * the one point that needs a human. Every stage still happens as its own
  * observable protocol event; `onStep` streams each one to the renderer.
@@ -424,7 +423,7 @@ async function runSteps(input: {
 export async function startAction(input: {
   host: ActionHost
   store: ResultStore
-  draftParams: PaymentDraftParams
+  draft: ActionDraft
   newId: (prefix: string) => string
   onStep?: (store: ResultStore, flow: ActionState) => void
 }): Promise<ActionRun> {
@@ -462,10 +461,10 @@ export async function submitAction(input: {
 }
 
 /**
- * Auto-advances a payment that was drafted elsewhere (for example by the
+ * Auto-advances an action that was drafted elsewhere (for example by the
  * agent calling send_payment in compose mode): registers the draft record,
  * then simulates, inspects, and requests approval — pausing at the same
- * approval card as every other payment.
+ * approval card as every other action.
  */
 export async function startActionFromDraft(input: {
   host: ActionHost
@@ -487,7 +486,7 @@ export async function startActionFromDraft(input: {
   }
   const transition = actionReducer(
     null,
-    draftEventFor(input.newId('flow-live-payment'), input.draftRecord),
+    draftEventFor(input.newId('action'), input.draftRecord),
   )
   if (!transition.ok) {
     return { ok: false, message: transition.error.message, store, flow: null }

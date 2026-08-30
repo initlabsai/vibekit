@@ -101,14 +101,11 @@ export const explorerRequestSchema = z.discriminatedUnion('action', [
     }),
   }),
   z.object({
-    action: z.literal('draft-payment'),
+    action: z.literal('draft'),
     network: networkSchema,
-    params: z.object({
-      sender: z.string().min(1),
-      receiver: z.string().min(1),
-      amountMicroAlgos: z.number().int().positive(),
-      note: z.string().min(1).optional(),
-    }),
+    // The live host refuses anything but an action tool; the arguments are the tool's to validate.
+    toolName: z.string().min(1).max(64),
+    args: z.record(z.string(), z.unknown()),
   }),
   z.object({
     action: z.literal('simulate-draft'),
@@ -288,8 +285,8 @@ export async function POST(request: Request): Promise<Response> {
         return await record(host.lookupBlock(body.round))
       case 'search-transactions':
         return await record(host.searchTransactions(body.filter))
-      case 'draft-payment':
-        return await record(host.draftPayment(body.params))
+      case 'draft':
+        return await record(host.draft(body.toolName, body.args))
       case 'simulate-draft':
         return await record(host.simulateDraft(body.draftRecord))
       case 'record-signed': {

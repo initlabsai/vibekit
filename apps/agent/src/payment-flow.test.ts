@@ -13,12 +13,14 @@ import {
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
   performActionStep,
   startAction,
+  createWalletSignDraft,
+  unsignedTransactionsForDraft,
   type ActionHost,
 } from '@initlabs/vibekit-explorer'
 
 import { resolvePaymentParties, routeComposerInput } from './commands.js'
 import { createRemoteExplorerHost } from './remote-host.js'
-import { createWalletSignDraft, unsignedTransactionsForDraft } from './wallet/sign-draft.js'
+import { recordSigned } from './wallet/sign-draft.js'
 
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
@@ -35,9 +37,9 @@ function draftingHost(): ActionHost & { drafts: number } {
   const host = {
     drafts: 0,
     network: 'localnet',
-    draftPayment: (params: typeof DRAFT_PARAMS) => {
+    draft: (toolName: string, args: Record<string, unknown>) => {
       host.drafts += 1
-      return fixture.draftPayment(params)
+      return fixture.draft(toolName, args)
     },
     simulateDraft: (record: Parameters<ActionHost['simulateDraft']>[0]) => fixture.simulateDraft(record),
   }
@@ -63,7 +65,7 @@ async function startPayment(args: {
   const run = await startAction({
     host,
     store: createFixtureResultStore(),
-    draftParams: { ...parties, amountMicroAlgos: route.amountMicroAlgos },
+    draft: { toolName: 'send_payment', args: { ...parties, amountMicroAlgos: route.amountMicroAlgos } },
     newId,
   })
   return { host, run }
@@ -112,7 +114,7 @@ describe('web payment wiring', () => {
     const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
       onStep: (_store, flow) => stages.push(flow.stage),
     })
@@ -153,13 +155,13 @@ describe('web payment wiring', () => {
     const fixture = createSampleHost()
     const host: ActionHost = {
       network: 'localnet',
-      draftPayment: (params) => fixture.draftPayment(params),
+      draft: (toolName, args) => fixture.draft(toolName, args),
       simulateDraft: (record) => fixture.simulateDraft(record),
     }
     const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
@@ -184,7 +186,7 @@ describe('web payment wiring', () => {
 
   test('a connected wallet signs on approval, the server verifies, and the client polls to confirmed', async () => {
     const fixture = createSampleHost()
-    const draft = await fixture.draftPayment(DRAFT_PARAMS)
+    const draft = await fixture.draft('send_payment', DRAFT_PARAMS)
     if (draft.state !== 'success') throw new Error('fixture draft failed')
     const signedBytes = new Uint8Array(Buffer.from(PAYMENT_FIXTURE_SIGNED_TRANSACTION, 'base64'))
     // The wallet's signer: the fixture's real signature over the fixture's real bytes.
@@ -197,7 +199,7 @@ describe('web payment wiring', () => {
       actions.push(String(body.action))
       expect(body.network).toBe('localnet')
       switch (body.action) {
-        case 'draft-payment':
+        case 'draft':
           return Response.json({ record: draft })
         case 'simulate-draft':
           return Response.json({ record: await fixture.simulateDraft(draft) })
@@ -225,9 +227,9 @@ describe('web payment wiring', () => {
     try {
       const host = createRemoteExplorerHost({
         network: 'localnet',
-        signDraft: createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'localnet', transactionSigner }),
+        signDraft: createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'localnet', signer: transactionSigner, record: (d, signed) => recordSigned('localnet', d, signed) }),
       })
-      const prepared = await startAction({ host, store: createFixtureResultStore(), draftParams: DRAFT_PARAMS, newId })
+      const prepared = await startAction({ host, store: createFixtureResultStore(), draft: { toolName: 'send_payment', args: DRAFT_PARAMS }, newId })
       if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
       const approved = await performActionStep({ host, store: prepared.store, flow: prepared.flow, kind: 'approve', newId })
       if (!approved.ok) throw new Error(approved.message)
@@ -235,7 +237,7 @@ describe('web payment wiring', () => {
       expect(done.ok).toBe(true)
       expect(done.flow?.stage).toBe('confirmed')
       expect(actions).toEqual([
-        'draft-payment',
+        'draft',
         'simulate-draft',
         'record-signed',
         'submit-signed',
@@ -244,8 +246,8 @@ describe('web payment wiring', () => {
       ])
 
       // A wallet on another network never signs.
-      const mismatched = createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'mainnet', transactionSigner })
-      await expect(mismatched(draft)).rejects.toThrow('Wallet is on mainnet; Explorer is on localnet')
+      const mismatched = createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'mainnet', signer: transactionSigner, record: (d, signed) => recordSigned('localnet', d, signed) })
+      await expect(mismatched(draft)).rejects.toThrow('Wallet is on mainnet; the draft is on localnet')
 
       // A signature over other bytes is refused by the server, and the flow reports it.
       const tampered = createRemoteExplorerHost({
@@ -253,7 +255,8 @@ describe('web payment wiring', () => {
         signDraft: createWalletSignDraft({
           network: 'localnet',
           walletNetwork: () => 'localnet',
-          transactionSigner: async (txns: unknown[]) => txns.map(() => new Uint8Array([1, 2, 3])),
+          signer: async (txns: unknown[]) => txns.map(() => new Uint8Array([1, 2, 3])),
+          record: (d, signed) => recordSigned('localnet', d, signed),
         }),
       })
       const refused = await submitAction({ host: tampered, store: approved.store, flow: approved.flow, newId })

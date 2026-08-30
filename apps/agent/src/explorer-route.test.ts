@@ -76,7 +76,7 @@ const post = (body: unknown) =>
   POST(new Request('http://x/api/explorer', { method: 'POST', body: JSON.stringify(body) }))
 
 async function fixtureDraft(): Promise<StructuredResult> {
-  return sample.draftPayment({
+  return sample.draft('send_payment', {
     sender: FIXTURE_SENDER,
     receiver: FIXTURE_RECEIVER,
     amountMicroAlgos: PAYMENT_FIXTURE_AMOUNT_MICROALGOS,

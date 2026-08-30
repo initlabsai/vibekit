@@ -242,7 +242,7 @@ export function createSampleHost(): ActionHost &
     },
     network: 'localnet',
     // The sample flow always replays the recorded 0.25 ALGO payment.
-    async draftPayment() {
+    async draft() {
       return reidentify(recordById(PAYMENT_FIXTURE_DRAFT_RESULT_ID))
     },
     async simulateDraft() {

@@ -9,12 +9,12 @@
 import { lute } from '@txnlab/use-wallet-lute'
 import { pera } from '@txnlab/use-wallet-pera'
 import { useNetwork as useWalletNetwork, useWallet, WalletManager, WalletProvider } from '@txnlab/use-wallet-react'
-import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
+import { createWalletSignDraft, type LiveNetworkId } from '@initlabs/vibekit-explorer'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { WalletAccount } from '../commands'
 import { defaultNetwork } from '../features/network/hooks'
-import { createWalletSignDraft } from './sign-draft'
+import { recordSigned } from './sign-draft'
 
 const manager = new WalletManager({
   wallets: [pera(), lute({ siteName: 'VibeKit Agent' })],
@@ -107,7 +107,8 @@ export function useWalletLane(network: LiveNetworkId) {
         ? createWalletSignDraft({
             network,
             walletNetwork: () => manager.activeNetwork,
-            transactionSigner: (txns, indexes) => signerRef.current(txns, indexes),
+            signer: (txns, indexes) => signerRef.current(txns, indexes),
+            record: (draftRecord, signedTransactions) => recordSigned(network, draftRecord, signedTransactions),
           })
         : undefined,
     [activeAddress, network],

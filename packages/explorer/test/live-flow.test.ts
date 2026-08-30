@@ -28,7 +28,7 @@ function stubHost(overrides: Partial<ActionHost> = {}): ActionHost {
   const decoded = decodeUnsignedGroup(recorded.compose.unsignedGroup)
   return {
     network: 'localnet',
-    async draftPayment() {
+    async draft() {
       return buildDraftRecord(
         {
           resultId: newId('result-stub-draft'),
@@ -73,7 +73,7 @@ describe('shared live payment flow controller', () => {
         store,
         flow,
         kind,
-        draftParams: DRAFT_PARAMS,
+        draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
         newId,
       })
       expect(outcome.ok).toBeTrue()
@@ -99,7 +99,7 @@ describe('shared live payment flow controller', () => {
         store,
         flow,
         kind,
-        draftParams: DRAFT_PARAMS,
+        draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
         newId,
       })
       if (!outcome.ok) throw new Error(outcome.message)
@@ -153,7 +153,7 @@ describe('shared live payment flow controller', () => {
         store,
         flow,
         kind,
-        draftParams: DRAFT_PARAMS,
+        draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
         newId,
       })
       if (!outcome.ok) throw new Error(`${kind}: ${outcome.message}`)
@@ -188,7 +188,7 @@ describe('shared live payment flow controller', () => {
         store,
         flow,
         kind,
-        draftParams: DRAFT_PARAMS,
+        draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
         newId,
       })
       if (!outcome.ok) throw new Error(outcome.message)
@@ -203,7 +203,7 @@ describe('shared live payment flow controller', () => {
 
   test('surfaces host failures as explicit refusals, never partial state', async () => {
     const host = stubHost({
-      async draftPayment() {
+      async draft() {
         throw new Error('algod unreachable')
       },
     })
@@ -213,7 +213,7 @@ describe('shared live payment flow controller', () => {
       store,
       flow: null,
       kind: 'draft',
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     expect(outcome).toEqual({ ok: false, message: 'algod unreachable' })
@@ -229,7 +229,7 @@ describe('shared live payment flow controller', () => {
       kind: 'simulate',
       newId,
     })
-    expect(outcome).toEqual({ ok: false, message: 'No payment flow is open' })
+    expect(outcome).toEqual({ ok: false, message: 'No action is open' })
   })
 })
 
@@ -240,7 +240,7 @@ describe('auto-advanced payment flow', () => {
     const run = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
       onStep: (_store, flow) => seenStages.push(flow.stage),
     })
@@ -258,7 +258,7 @@ describe('auto-advanced payment flow', () => {
     const started = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)
@@ -293,7 +293,7 @@ describe('auto-advanced payment flow', () => {
     const started = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)
@@ -327,7 +327,7 @@ describe('auto-advanced payment flow', () => {
     const run = await startAction({
       host: broken,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     expect(run.ok).toBeFalse()
@@ -340,7 +340,7 @@ describe('auto-advanced payment flow', () => {
     const started = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)

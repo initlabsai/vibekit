@@ -8,7 +8,6 @@ import {
   structuredResultSchema,
   type ExplorerReadHost,
   type LiveNetworkId,
-  type PaymentDraftParams,
   type StructuredResult,
   type TransactionSearchFilter,
   type ActionHost,
@@ -83,7 +82,7 @@ export function createRemoteExplorerHost(args: {
       const payload = await post<{ nfd?: unknown }>({ action: 'resolve-nfd', network, name })
       return payload.nfd
     },
-    draftPayment: (params: PaymentDraftParams) => call('draft-payment', { params }),
+    draft: (toolName, args) => call('draft', { toolName, args }),
     simulateDraft: (draftRecord) => call('simulate-draft', { draftRecord }),
     ...(signDraft
       ? {

@@ -43,7 +43,7 @@ describe('TUI payment wiring', () => {
     const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
       onStep: (_store, flow) => stages.push(flow.stage),
     })
@@ -87,7 +87,7 @@ describe('TUI payment wiring', () => {
     const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
@@ -108,7 +108,7 @@ describe('TUI payment wiring', () => {
     const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
-      draftParams: DRAFT_PARAMS,
+      draft: { toolName: 'send_payment', args: DRAFT_PARAMS },
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)

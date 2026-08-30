@@ -9,10 +9,9 @@ import {
   base64ToBytes,
   bytesToBase64,
   executeToolCall,
+  isAction,
   resolveDeployment,
-  type AnyTool,
   type NetworkConfig,
-  type ResolvedDeployment,
 } from '@initlabs/vibekit'
 import {
   accountQueries,
@@ -36,7 +35,10 @@ import {
   type DecodedGroupFacts,
 } from '../actions/host.js'
 import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/reducer.js'
+import { signGroupForDraft, unsignedTransactionsForDraft, type DraftSigner } from '../actions/sign.js'
 import type { JsonValue, StructuredResult } from '../core/results.js'
+
+export { unsignedTransactionsForDraft }
 
 /**
  * Decodes the authoritative facts of an unsigned group of 1–16 transactions.
@@ -125,17 +127,6 @@ export async function simulateUnsignedGroup(
   }
 }
 
-/** Decodes a draft record's group into algosdk transactions for a signer. */
-export function unsignedTransactionsForDraft(draftRecord: StructuredResult): algosdk.Transaction[] {
-  if (draftRecord.state !== 'success') {
-    throw new Error('Cannot decode a failed draft record')
-  }
-  const draft = writeDraftDataSchema.parse(draftRecord.data)
-  return draft.unsignedGroup.transactions.map((txn) =>
-    algosdk.decodeUnsignedTransaction(base64ToBytes(txn)),
-  )
-}
-
 /**
  * Wraps signer output as a signed-group record after verifying that every
  * signed transaction embeds exactly the draft's bytes — a signature over
@@ -199,33 +190,10 @@ export function draftRecordFromComposeWire(
 export async function signDraftWith(
   identity: { resultId: string; toolCallId: string; network: string },
   draftRecord: StructuredResult,
-  signer: (txns: algosdk.Transaction[], indexesToSign: number[]) => Promise<Uint8Array[]>,
+  signer: DraftSigner,
 ): Promise<StructuredResult> {
-  const transactions = unsignedTransactionsForDraft(draftRecord)
-  const presigned =
-    draftRecord.state === 'success'
-      ? writeDraftDataSchema.parse(draftRecord.data).presigned
-      : undefined
-  const indexes = transactions.map((_, index) => index).filter((index) => !presigned?.[index])
-  const signed = await signer(transactions, indexes)
-  if (signed.length !== indexes.length) {
-    throw new Error(
-      `The wallet returned ${signed.length} signatures for ${indexes.length} transactions`,
-    )
-  }
-  const group = transactions.map((_, index) => {
-    const leg = presigned?.[index]
-    return leg ? base64ToBytes(leg) : signed[indexes.indexOf(index)]!
-  })
-  return signedGroupRecordFor(identity, draftRecord, group)
-}
-
-/** Parameters for composing one live unsigned payment. */
-export interface LivePaymentParams {
-  sender: string
-  receiver: string
-  amountMicroAlgos: number
-  note?: string
+  const group = await signGroupForDraft(draftRecord, signer)
+  return signedGroupRecordFor(identity, draftRecord, group.map(base64ToBytes))
 }
 
 /** What the live host offers: reads, the action steps, and the block tail. Nothing here can sign. */
@@ -233,8 +201,8 @@ export interface LiveHost extends ExplorerReadHost {
   network: string
   /** True when the network's algod answers within the timeout. */
   probe(timeoutMs?: number): Promise<boolean>
-  /** Composes a real unsigned payment and wraps it as a draft record. */
-  draftPayment(params: LivePaymentParams): Promise<StructuredResult>
+  /** Runs an action tool in compose mode and wraps the unsigned group as a draft record. */
+  draft(toolName: string, args: Record<string, unknown>): Promise<StructuredResult>
   /** Simulates the payment decoded from a draft record's actual group bytes. */
   simulateDraft(draftRecord: StructuredResult): Promise<StructuredResult>
   /**
@@ -252,12 +220,6 @@ export interface LiveHost extends ExplorerReadHost {
   waitAfterBlock(round: number): Promise<{ lastRound: number }>
   /** Reads one confirmed round from algod as feed-ready block + transaction records. */
   readBlockTick(round: number): Promise<BlockTailTick>
-}
-
-function requireTool(deployment: ResolvedDeployment, name: string): AnyTool {
-  const tool = deployment.tools.find((candidate) => candidate.name === name)
-  if (!tool) throw new Error(`Deployment is missing ${name}`)
-  return tool
 }
 
 function newId(prefix: string): string {
@@ -289,7 +251,6 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
       ].filter((tool) => !tool.mutatesState && !tool.requiresSigner),
     ],
   })
-  const sendPayment = requireTool(deployment, 'send_payment')
   const context = deployment.contexts.get(network)
   if (!context) throw new Error(`Deployment is missing network ${network}`)
 
@@ -351,14 +312,13 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
         return false
       }
     },
-    async draftPayment(params) {
-      const wire = await executeToolCall(deployment, sendPayment, {
-        sender: params.sender,
-        receiver: params.receiver,
-        amountMicroAlgos: params.amountMicroAlgos,
-        ...(params.note === undefined ? {} : { note: params.note }),
-      })
-      return draftRecordFromComposeWire(identity('payment-draft'), wire)
+    async draft(toolName, args) {
+      const tool = deployment.tools.find((candidate) => candidate.name === toolName)
+      if (!tool) throw new Error(`This host has no tool named ${toolName}`)
+      // Only actions draft; a query has no group to sign, and this is the trust boundary a route relies on.
+      if (!isAction(tool)) throw new Error(`${toolName} is a query, not an action`)
+      const wire = await executeToolCall(deployment, tool, args)
+      return draftRecordFromComposeWire(identity('draft'), wire, toolName)
     },
     async simulateDraft(draftRecord) {
       if (draftRecord.state !== 'success') {
