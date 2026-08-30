@@ -70,7 +70,7 @@ variables, perform a network request, or mutate global state.
 
 Set `requiresSigner` on a tool that spends user funds. Set `mutatesState` for a
 state change that does not spend funds. These flags tell the host when to ask
-for approval. In a compose deployment, write tools return an unsigned group;
+for approval. In a compose deployment, actions return an unsigned group;
 an execute deployment requires a signer and is responsible for its approval
 boundary.
 

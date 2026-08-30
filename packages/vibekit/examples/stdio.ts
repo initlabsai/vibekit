@@ -14,7 +14,7 @@ import {
 import { createKeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 
 // SIGNING=execute signs via the local keystore daemon (`keystore serve`).
-// Default is compose: write tools return unsigned txns for external signing.
+// Default is compose: actions return unsigned txns for external signing.
 const mode = process.env.SIGNING === 'execute' ? 'execute' : 'compose'
 const signer = mode === 'execute' ? await createKeystoreSigner() : undefined
 

@@ -19,7 +19,7 @@ import { normalizeAppSpec, type NormalizedAppSpec, type ParsedMethod } from './a
 
 const RESERVED_PARAM_NAMES = new Set(['sender', 'appId', 'extraFee', 'note', 'network'])
 
-import { simulateResultSchema } from '../transactions/tools-write.js'
+import { simulateResultSchema } from '../transactions/actions.js'
 
 export interface ToolsFromArc56Options {
   /**

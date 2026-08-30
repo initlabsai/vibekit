@@ -3,7 +3,7 @@
  * with its welcome panel and thinking fold, and the composer input.
  */
 import {
-  createWriteFlowViewModel,
+  createActionViewModel,
   type ResultStore,
   type ViewSpec,
 } from '@initlabs/vibekit-explorer'
@@ -17,7 +17,7 @@ import {
 } from '@opentui/core'
 import { useEffect, useState, type RefObject } from 'react'
 
-import { WriteFlowCard } from '../features/write-flow/cards.js'
+import { ActionCard } from '../features/action/cards.js'
 import { RawCard, TableCard } from '../generic-cards.js'
 import { HighlightContext, usePulse } from '../primitives.js'
 import { ResultCard, type OpenTarget } from '../result-card.js'
@@ -379,10 +379,10 @@ export function ContentPane({
                           width={cardWidth}
                         />
                       ) : (
-                        <WriteFlowCard
+                        <ActionCard
                           key={block.flow.stage}
                           model={(() => {
-                            const derived = createWriteFlowViewModel(store, block.flow)
+                            const derived = createActionViewModel(store, block.flow)
                             return derived.ok ? derived.model : undefined
                           })()}
                           stage={block.flow.stage}

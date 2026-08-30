@@ -24,7 +24,7 @@ export {
   getAccountPortfolio,
 }
 
-export const accountTools: AnyTool[] = [
+export const accountQueries: AnyTool[] = [
   defineTool({
     name: 'lookup_account',
     description:

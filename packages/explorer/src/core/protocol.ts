@@ -62,7 +62,7 @@ const writeStageEventBase = {
   flowId: z.string().min(1),
 }
 
-/** Begins one observable write flow around a composed, unsigned draft result. */
+/** Begins one observable action flow around a composed, unsigned draft result. */
 export const writeDraftEventSchema = z
   .object({
     ...writeStageEventBase,
@@ -72,7 +72,7 @@ export const writeDraftEventSchema = z
   })
   .strict()
 
-/** Attaches an authoritative simulation result to a drafted write flow. */
+/** Attaches an authoritative simulation result to a drafted action flow. */
 export const writeSimulateEventSchema = z
   .object({
     ...writeStageEventBase,
@@ -90,7 +90,7 @@ export const writeInspectEventSchema = z
   })
   .strict()
 
-/** Attaches the authoritative signed-group result to an approved write flow. */
+/** Attaches the authoritative signed-group result to an approved action flow. */
 export const writeSignEventSchema = z
   .object({
     ...writeStageEventBase,
@@ -99,7 +99,7 @@ export const writeSignEventSchema = z
   })
   .strict()
 
-/** Attaches the authoritative confirmation result to a signed write flow. */
+/** Attaches the authoritative confirmation result to a signed action flow. */
 export const writeConfirmEventSchema = z
   .object({
     ...writeStageEventBase,
@@ -109,7 +109,7 @@ export const writeConfirmEventSchema = z
   .strict()
 
 /**
- * Observable write-flow stage events. Each stage carries only result
+ * Observable action stage events. Each stage carries only result
  * references; authoritative senders, amounts, fees, and effects stay in
  * structured results.
  */
@@ -121,7 +121,7 @@ export const writeStageEventSchema = z.discriminatedUnion('stage', [
   writeConfirmEventSchema,
 ])
 
-/** Observable write-flow stage event. */
+/** Observable action stage event. */
 export type WriteStageEvent = z.infer<typeof writeStageEventSchema>
 
 /** A pending human approval that references authoritative inspection data. */

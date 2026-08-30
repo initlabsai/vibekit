@@ -6,7 +6,7 @@ import { batchLookupAccounts, lookupAccount } from '../../src/tools/accounts/loo
 import { transactionQueryOf } from '../../src/tools/shared/schemas.js'
 import { getAccountPortfolio } from '../../src/tools/accounts/portfolio.js'
 import { searchAccounts, searchAccountTransactions } from '../../src/tools/accounts/search.js'
-import { accountTools } from '../../src/tools/accounts/index.js'
+import { accountQueries } from '../../src/tools/accounts/index.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR = algosdk.generateAccount().addr.toString()
@@ -44,7 +44,7 @@ function fakeIndexerAccount(address: string, amount: bigint) {
 
 describe('registry', () => {
   test('exports 7 read-only tools with output schemas and display hints', () => {
-    expect(accountTools.map((t) => t.name)).toEqual([
+    expect(accountQueries.map((t) => t.name)).toEqual([
       'lookup_account',
       'batch_lookup_accounts',
       'search_accounts',
@@ -53,7 +53,7 @@ describe('registry', () => {
       'get_account_app_local_states',
       'get_account_portfolio',
     ])
-    for (const tool of accountTools) {
+    for (const tool of accountQueries) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
       expect(tool.view).toBeDefined()
@@ -298,7 +298,7 @@ describe('searchAccountTransactions', () => {
           }),
       },
     })
-    const tool = accountTools.find((t) => t.name === 'search_account_transactions')!
+    const tool = accountQueries.find((t) => t.name === 'search_account_transactions')!
     const wire = jsonSafe(await tool.handler(ctx, { address: ADDR }))
     expect(tool.output!.safeParse(wire).success).toBe(true)
   })
@@ -412,7 +412,7 @@ describe('getAccountAppLocalStates', () => {
           }),
       },
     })
-    const tool = accountTools.find((t) => t.name === 'get_account_app_local_states')!
+    const tool = accountQueries.find((t) => t.name === 'get_account_app_local_states')!
     const wire = jsonSafe(await tool.handler(ctx, { address: ADDR })) as {
       appLocalStates: Array<{ keyValue: Array<{ value: { uint: unknown } }> }>
     }

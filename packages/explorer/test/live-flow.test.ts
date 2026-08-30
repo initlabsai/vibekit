@@ -5,17 +5,17 @@ import {
   buildDraftRecord,
   buildSignedGroupRecord,
   buildSimulationRecord,
-} from '../src/flows/write-flow-host.js'
+} from '../src/actions/host.js'
 import {
-  completeApprovedWriteFlow,
+  submitAction,
   createSampleHost,
   createFixtureResultStore,
-  startWriteFlow,
-  createWriteFlowViewModel,
-  performWriteFlowStep,
-  type WriteFlowHost,
+  startAction,
+  createActionViewModel,
+  performActionStep,
+  type ActionHost,
   type ResultStore,
-  type WriteFlowState,
+  type ActionState,
 } from '../src/index.js'
 import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
 import { decodeUnsignedGroup } from '../src/live/index.js'
@@ -24,7 +24,7 @@ import recorded from './recorded/localnet-payment.json' with { type: 'json' }
 let counter = 0
 const newId = (prefix: string) => `${prefix}-${++counter}`
 
-function stubHost(overrides: Partial<WriteFlowHost> = {}): WriteFlowHost {
+function stubHost(overrides: Partial<ActionHost> = {}): ActionHost {
   const decoded = decodeUnsignedGroup(recorded.compose.unsignedGroup)
   return {
     network: 'localnet',
@@ -65,10 +65,10 @@ describe('shared live payment flow controller', () => {
   test('walks draft → simulate → inspect → approval → decision over host-produced records', async () => {
     const host = stubHost()
     let store: ResultStore = createExplorerFixtureResultStore()
-    let flow: WriteFlowState | null = null
+    let flow: ActionState | null = null
 
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
-      const outcome = await performWriteFlowStep({
+      const outcome = await performActionStep({
         host,
         store,
         flow,
@@ -83,7 +83,7 @@ describe('shared live payment flow controller', () => {
     }
     expect(flow?.stage).toBe('approved')
 
-    const derived = createWriteFlowViewModel(store, flow!)
+    const derived = createActionViewModel(store, flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.simulation?.wouldSucceed).toBeTrue()
     expect(derived.model.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)
@@ -92,9 +92,9 @@ describe('shared live payment flow controller', () => {
   test('refuses signing and confirmation on a host without those capabilities', async () => {
     const host = stubHost()
     let store: ResultStore = createExplorerFixtureResultStore()
-    let flow: WriteFlowState | null = null
+    let flow: ActionState | null = null
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'approve'] as const) {
-      const outcome = await performWriteFlowStep({
+      const outcome = await performActionStep({
         host,
         store,
         flow,
@@ -107,9 +107,9 @@ describe('shared live payment flow controller', () => {
       flow = outcome.flow
     }
 
-    const sign = await performWriteFlowStep({ host, store, flow, kind: 'sign', newId })
+    const sign = await performActionStep({ host, store, flow, kind: 'sign', newId })
     expect(sign).toEqual({ ok: false, message: expect.stringContaining('no signer') })
-    const confirm = await performWriteFlowStep({ host, store, flow, kind: 'confirm', newId })
+    const confirm = await performActionStep({ host, store, flow, kind: 'confirm', newId })
     expect(confirm).toEqual({ ok: false, message: expect.stringContaining('cannot submit') })
   })
 
@@ -137,7 +137,7 @@ describe('shared live payment flow controller', () => {
       },
     })
     let store: ResultStore = createExplorerFixtureResultStore()
-    let flow: WriteFlowState | null = null
+    let flow: ActionState | null = null
     const kinds = [
       'draft',
       'simulate',
@@ -148,7 +148,7 @@ describe('shared live payment flow controller', () => {
       'confirm',
     ] as const
     for (const kind of kinds) {
-      const outcome = await performWriteFlowStep({
+      const outcome = await performActionStep({
         host,
         store,
         flow,
@@ -162,7 +162,7 @@ describe('shared live payment flow controller', () => {
     }
     expect(flow?.stage).toBe('confirmed')
 
-    const derived = createWriteFlowViewModel(store, flow!)
+    const derived = createActionViewModel(store, flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.signed).toEqual({
       size: 1,
@@ -181,9 +181,9 @@ describe('shared live payment flow controller', () => {
       },
     })
     let store: ResultStore = createExplorerFixtureResultStore()
-    let flow: WriteFlowState | null = null
+    let flow: ActionState | null = null
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval'] as const) {
-      const outcome = await performWriteFlowStep({
+      const outcome = await performActionStep({
         host,
         store,
         flow,
@@ -196,7 +196,7 @@ describe('shared live payment flow controller', () => {
       flow = outcome.flow
     }
 
-    const sign = await performWriteFlowStep({ host, store, flow, kind: 'sign', newId })
+    const sign = await performActionStep({ host, store, flow, kind: 'sign', newId })
     expect(sign).toEqual({ ok: false, message: 'Cannot sign from stage awaiting-approval' })
     expect(signCalls).toBe(0)
   })
@@ -208,7 +208,7 @@ describe('shared live payment flow controller', () => {
       },
     })
     const store = createExplorerFixtureResultStore()
-    const outcome = await performWriteFlowStep({
+    const outcome = await performActionStep({
       host,
       store,
       flow: null,
@@ -222,7 +222,7 @@ describe('shared live payment flow controller', () => {
   test('refuses out-of-order steps with the machine message', async () => {
     const host = stubHost()
     const store = createExplorerFixtureResultStore()
-    const outcome = await performWriteFlowStep({
+    const outcome = await performActionStep({
       host,
       store,
       flow: null,
@@ -237,7 +237,7 @@ describe('auto-advanced payment flow', () => {
   test('runs the mechanical stages and pauses only at the human decision', async () => {
     const host = createSampleHost()
     const seenStages: string[] = []
-    const run = await startWriteFlow({
+    const run = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
@@ -248,21 +248,21 @@ describe('auto-advanced payment flow', () => {
     expect(seenStages).toEqual(['drafted', 'simulated', 'inspected', 'awaiting-approval'])
     expect(run.flow?.stage).toBe('awaiting-approval')
 
-    const derived = createWriteFlowViewModel(run.store, run.flow!)
+    const derived = createActionViewModel(run.store, run.flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.approval?.state).toBe('pending')
   })
 
   test('after approval a signing host completes to a confirmed record', async () => {
     const host = createSampleHost()
-    const started = await startWriteFlow({
+    const started = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)
-    const approved = await performWriteFlowStep({
+    const approved = await performActionStep({
       host,
       store: started.store,
       flow: started.flow,
@@ -272,7 +272,7 @@ describe('auto-advanced payment flow', () => {
     if (!approved.ok) throw new Error(approved.message)
 
     const seenStages: string[] = []
-    const done = await completeApprovedWriteFlow({
+    const done = await submitAction({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -283,21 +283,21 @@ describe('auto-advanced payment flow', () => {
     expect(seenStages).toEqual(['signed', 'confirmed'])
     expect(done.flow?.stage).toBe('confirmed')
 
-    const derived = createWriteFlowViewModel(done.store, done.flow!)
+    const derived = createActionViewModel(done.store, done.flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.confirmation?.transactionId).toBe(derived.model.signed?.txIds[0])
   })
 
   test('a custody-less host rests honestly at approved', async () => {
     const host = stubHost()
-    const started = await startWriteFlow({
+    const started = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)
-    const approved = await performWriteFlowStep({
+    const approved = await performActionStep({
       host,
       store: started.store,
       flow: started.flow,
@@ -306,7 +306,7 @@ describe('auto-advanced payment flow', () => {
     })
     if (!approved.ok) throw new Error(approved.message)
 
-    const done = await completeApprovedWriteFlow({
+    const done = await submitAction({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -324,7 +324,7 @@ describe('auto-advanced payment flow', () => {
         throw new Error('algod unreachable')
       },
     }
-    const run = await startWriteFlow({
+    const run = await startAction({
       host: broken,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
@@ -337,14 +337,14 @@ describe('auto-advanced payment flow', () => {
 
   test('completing is refused before an approval decision exists', async () => {
     const host = createSampleHost()
-    const started = await startWriteFlow({
+    const started = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!started.ok || !started.flow) throw new Error(started.message)
-    const done = await completeApprovedWriteFlow({
+    const done = await submitAction({
       host,
       store: started.store,
       flow: started.flow,

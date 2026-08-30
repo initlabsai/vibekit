@@ -41,7 +41,7 @@ export interface VibekitAgentOptions extends DeploymentOptions {
   /**
    * Human-in-the-loop gate for `requiresSigner`/`mutatesState`/`expensive` tools: called
    * before the handler runs; return false to deny (the model sees a DENIED error
-   * result and the loop continues). Other read tools are never gated.
+   * result and the loop continues). Other queries are never gated.
    */
   approveToolCall?: (call: { toolName: string; input: unknown }) => Promise<boolean>
   /**

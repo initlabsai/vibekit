@@ -1,5 +1,8 @@
 export {
   defineTool,
+  defineQuery,
+  defineAction,
+  isAction,
   type AnyTool,
   type ToolContext,
   type ToolDefinition,

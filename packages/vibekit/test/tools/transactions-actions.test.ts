@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { base64ToBytes } from '../../src/core/index.js'
-import { transactionWriteTools } from '../../src/tools/transactions/tools-write.js'
+import { transactionActions } from '../../src/tools/transactions/actions.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR_A = 'Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA'
@@ -21,17 +21,17 @@ const ctx = () => fakeContext({ algod: { getTransactionParams: () => chainable(s
 
 describe('transaction write tools', () => {
   test('registry: 2 write + 1 simulate, writes require signer', () => {
-    const names = transactionWriteTools.map((t) => t.name)
+    const names = transactionActions.map((t) => t.name)
     expect(names).toEqual(['send_payment', 'send_group_transactions', 'simulate_transactions'])
-    expect(transactionWriteTools.find((t) => t.name === 'send_payment')?.requiresSigner).toBe(true)
+    expect(transactionActions.find((t) => t.name === 'send_payment')?.requiresSigner).toBe(true)
     expect(
-      transactionWriteTools.find((t) => t.name === 'simulate_transactions')?.requiresSigner ??
+      transactionActions.find((t) => t.name === 'simulate_transactions')?.requiresSigner ??
         false,
     ).toBe(false)
   })
 
   test('send_payment composes a decodable unsigned payment', async () => {
-    const tool = transactionWriteTools.find((t) => t.name === 'send_payment')!
+    const tool = transactionActions.find((t) => t.name === 'send_payment')!
     const result = (await tool.handler(ctx(), {
       sender: ADDR_A,
       receiver: ADDR_B,
@@ -43,7 +43,7 @@ describe('transaction write tools', () => {
   })
 
   test('send_group_transactions composes a grouped pair', async () => {
-    const tool = transactionWriteTools.find((t) => t.name === 'send_group_transactions')!
+    const tool = transactionActions.find((t) => t.name === 'send_group_transactions')!
     const result = (await tool.handler(ctx(), {
       transactions: [
         { type: 'payment', sender: ADDR_A, receiver: ADDR_B, amountMicroAlgos: 1 },

@@ -1,7 +1,7 @@
 'use client'
 
-/** The write flow in the feed: the stage rail, the authoritative facts, the graph, and where it ended. */
-import { formatMicroAlgos, type WriteFlowViewModel } from '@initlabs/vibekit-explorer'
+/** The action flow in the feed: the stage rail, the authoritative facts, the graph, and where it ended. */
+import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit-explorer'
 import type { ReactNode } from 'react'
 
 import {
@@ -18,7 +18,7 @@ import {
 import { shorten } from '../../theme'
 import { TransactionsGraphView } from './graph'
 
-const FLOW_STEPS: Array<{ label: string; stages: WriteFlowViewModel['stage'][] }> = [
+const FLOW_STEPS: Array<{ label: string; stages: ActionViewModel['stage'][] }> = [
   { label: 'Draft', stages: ['drafted'] },
   { label: 'Simulate', stages: ['simulated'] },
   { label: 'Inspect', stages: ['inspected'] },
@@ -34,7 +34,7 @@ function signedDelta(value: number | string): string {
 
 /** What the group is, in the modal's question and the card's kicker. */
 export function writeKind(
-  model: WriteFlowViewModel,
+  model: ActionViewModel,
 ): 'PAYMENT' | 'SWAP' | 'ORDER' | 'DEPLOY' | 'CALL' | 'GROUP' {
   if (model.intent?.kind === 'swap') return 'SWAP'
   if (model.intent?.kind === 'order') return 'ORDER'
@@ -45,7 +45,7 @@ export function writeKind(
 }
 
 /** The authoritative facts of the group under review: parties, bytes, simulation, effects, and outcome. */
-export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
+export function ActionBody({ model }: { model: ActionViewModel }) {
   return (
     <Facts>
       <Fact label="from" value={model.sender} copy={model.sender} />
@@ -108,7 +108,7 @@ export function WriteFlowBody({ model }: { model: WriteFlowViewModel }) {
   )
 }
 
-export function WriteFlowCard({
+export function ActionCard({
   model,
   errorMessage,
   network,
@@ -116,7 +116,7 @@ export function WriteFlowCard({
   onClose,
   action,
 }: {
-  model: WriteFlowViewModel | undefined
+  model: ActionViewModel | undefined
   errorMessage: string | undefined
   network: string
   busy: boolean
@@ -173,7 +173,7 @@ export function WriteFlowCard({
         ))}
       </ol>
       {model.graph ? <TransactionsGraphView graph={model.graph} /> : null}
-      <WriteFlowBody model={model} />
+      <ActionBody model={model} />
       {failed ? <p className="flow-warning">This group WOULD FAIL if submitted.</p> : null}
       {model.stage === 'approved' && !busy ? (
         <FooterNote text="Approved — nothing was signed." />

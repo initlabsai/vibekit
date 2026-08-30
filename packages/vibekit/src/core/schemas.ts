@@ -55,5 +55,5 @@ export const executeGroupResultSchema = z.object({
   returns: z.array(z.object({ index: z.number(), value: z.unknown().nullish() })),
 })
 
-/** What every write tool returns: unsigned group (compose mode) or execution result. */
+/** What every action returns: unsigned group (compose mode) or execution result. */
 export const writeResultSchema = z.union([unsignedGroupResultSchema, executeGroupResultSchema])

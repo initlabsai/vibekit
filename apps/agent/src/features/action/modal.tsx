@@ -11,7 +11,7 @@ import {
   formatBaseUnits,
   formatMicroAlgos,
   type LiveNetworkId,
-  type WriteFlowViewModel,
+  type ActionViewModel,
 } from '@initlabs/vibekit-explorer'
 import { useEffect, useRef } from 'react'
 
@@ -24,8 +24,8 @@ function SwapSummary({
   model,
   swap,
 }: {
-  model: WriteFlowViewModel
-  swap: Extract<NonNullable<WriteFlowViewModel['intent']>, { kind: 'swap' }>
+  model: ActionViewModel
+  swap: Extract<NonNullable<ActionViewModel['intent']>, { kind: 'swap' }>
 }) {
   const inAmount = `${formatBaseUnits(swap.amountIn, swap.fromDecimals)} ${swap.fromUnit}`
   const out = (base: string) => `${formatBaseUnits(base, swap.toDecimals)} ${swap.toUnit}`
@@ -72,8 +72,8 @@ function OrderSummary({
   model,
   order,
 }: {
-  model: WriteFlowViewModel
-  order: Extract<NonNullable<WriteFlowViewModel['intent']>, { kind: 'order' }>
+  model: ActionViewModel
+  order: Extract<NonNullable<ActionViewModel['intent']>, { kind: 'order' }>
 }) {
   const cents = `${Math.round(order.priceUsd * 100)}¢`
   return (
@@ -110,7 +110,7 @@ function OrderSummary({
   )
 }
 
-function Summary({ model }: { model: WriteFlowViewModel }) {
+function Summary({ model }: { model: ActionViewModel }) {
   const kind = writeKind(model)
   const payment = kind === 'PAYMENT' && model.amountMicroAlgos !== undefined
   if (model.intent?.kind === 'swap') return <SwapSummary model={model} swap={model.intent} />
@@ -152,7 +152,7 @@ export function ApprovalModal({
   onApprove,
   onDeny,
 }: {
-  model: WriteFlowViewModel | undefined
+  model: ActionViewModel | undefined
   network: LiveNetworkId
   busy: boolean
   onApprove: () => void

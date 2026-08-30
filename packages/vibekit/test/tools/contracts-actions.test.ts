@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { base64ToBytes, bytesToBase64 } from '../../src/core/index.js'
 import { parseAppSpec, substituteTemplateParams } from '../../src/tools/contracts/app-spec.js'
-import { contractWriteTools } from '../../src/tools/contracts/tools-write.js'
+import { contractActions } from '../../src/tools/contracts/actions.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR_A = 'Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA'
@@ -64,7 +64,7 @@ describe('parseAppSpec', () => {
 
 describe('contract write tools', () => {
   test('registry: writes require signer; reads do not', () => {
-    const names = contractWriteTools.map((t) => t.name)
+    const names = contractActions.map((t) => t.name)
     expect(names).toEqual([
       'app_deploy',
       'app_update',
@@ -73,7 +73,7 @@ describe('contract write tools', () => {
       'app_close_out',
       'app_delete',
     ])
-    for (const tool of contractWriteTools) {
+    for (const tool of contractActions) {
       expect(tool.requiresSigner).toBe(true)
     }
   })
@@ -90,7 +90,7 @@ describe('contract write tools', () => {
         },
       },
     })
-    const tool = contractWriteTools.find((t) => t.name === 'app_deploy')!
+    const tool = contractActions.find((t) => t.name === 'app_deploy')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       appSpec: arc56Spec,
@@ -116,7 +116,7 @@ describe('contract write tools', () => {
         compile: () => chainable({ result: bytesToBase64(new Uint8Array([1])) }),
       },
     })
-    const tool = contractWriteTools.find((t) => t.name === 'app_deploy')!
+    const tool = contractActions.find((t) => t.name === 'app_deploy')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       appSpec: arc56Spec,
@@ -134,7 +134,7 @@ describe('contract write tools', () => {
         compile: () => chainable({ result: bytesToBase64(new Uint8Array([9, 9, 9])) }),
       },
     })
-    const tool = contractWriteTools.find((t) => t.name === 'app_update')!
+    const tool = contractActions.find((t) => t.name === 'app_update')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       appId: 1017,
@@ -152,7 +152,7 @@ describe('contract write tools', () => {
 
   test('app_call composes an ABI method call', async () => {
     const ctx = fakeContext({ algod: { getTransactionParams: () => chainable(suggestedParams) } })
-    const tool = contractWriteTools.find((t) => t.name === 'app_call')!
+    const tool = contractActions.find((t) => t.name === 'app_call')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       appId: 7,

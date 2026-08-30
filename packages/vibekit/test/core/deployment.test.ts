@@ -6,6 +6,7 @@ import { defineTool, executeToolCall, resolveDeployment, ToolError } from '../..
 const readTool = defineTool({
   name: 'where',
   description: 'Report network.',
+  output: z.unknown(),
   parameters: z.object({}),
   handler: async (ctx) => ({ network: ctx.network.id }),
 })
@@ -13,6 +14,7 @@ const readTool = defineTool({
 const writeTool = defineTool({
   name: 'spend',
   description: 'A chain write.',
+  output: z.unknown(),
   parameters: z.object({ amount: z.number() }),
   requiresSigner: true,
   handler: async (ctx, args) => ({ network: ctx.network.id, amount: args.amount, big: 7n }),
@@ -113,6 +115,7 @@ describe('parameter validation', () => {
   const greet = defineTool({
     name: 'greet',
     description: 'Greets, with a default.',
+    output: z.unknown(),
     parameters: z.object({ name: z.string(), loud: z.boolean().default(false) }),
     handler: async (_ctx, args) => ({ text: args.loud ? args.name.toUpperCase() : args.name }),
   })

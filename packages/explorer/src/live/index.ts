@@ -15,12 +15,12 @@ import {
   type ResolvedDeployment,
 } from '@initlabs/vibekit'
 import {
-  accountTools,
-  assetTools,
-  contractTools,
-  networkTools,
-  transactionTools,
-  transactionWriteTools,
+  accountQueries,
+  assetQueries,
+  contractQueries,
+  networkQueries,
+  transactionQueries,
+  transactionActions,
 } from '@initlabs/vibekit/tools'
 
 import { bridgeToolResult } from '../bridge.js'
@@ -34,8 +34,8 @@ import {
   buildSimulationRecord,
   decodedGroupFactsSchema,
   type DecodedGroupFacts,
-} from '../flows/write-flow-host.js'
-import { writeDraftDataSchema, signedGroupDataSchema } from '../flows/write-flow.js'
+} from '../actions/host.js'
+import { writeDraftDataSchema, signedGroupDataSchema } from '../actions/reducer.js'
 import type { JsonValue, StructuredResult } from '../core/results.js'
 
 /**
@@ -228,7 +228,7 @@ export interface LivePaymentParams {
   note?: string
 }
 
-/** What the live host offers: reads, the write-flow steps, and the block tail. Nothing here can sign. */
+/** What the live host offers: reads, the action steps, and the block tail. Nothing here can sign. */
 export interface LiveHost extends ExplorerReadHost {
   network: string
   /** True when the network's algod answers within the timeout. */
@@ -268,7 +268,7 @@ export type { LiveNetworkId }
 
 /**
  * Creates the shared live host: a compose-only (signerless) deployment over
- * the transaction write tools on one network — a named id, or a NetworkConfig
+ * the transaction actions on one network — a named id, or a NetworkConfig
  * carrying the caller's own endpoints. No signing or key material is
  * reachable from here by construction.
  */
@@ -277,15 +277,15 @@ export function createLiveHost(config: LiveNetworkId | NetworkConfig = 'localnet
   const deployment = resolveDeployment({
     network: config,
     mode: 'compose',
-    // Every read tool, so callTool can page any list an agent or a lane fetched.
+    // Every query, so callTool can page any list an agent or a lane fetched.
     tools: [
-      ...transactionWriteTools,
+      ...transactionActions,
       ...[
-        ...transactionTools,
-        ...accountTools,
-        ...assetTools,
-        ...contractTools,
-        ...networkTools,
+        ...transactionQueries,
+        ...accountQueries,
+        ...assetQueries,
+        ...contractQueries,
+        ...networkQueries,
       ].filter((tool) => !tool.mutatesState && !tool.requiresSigner),
     ],
   })

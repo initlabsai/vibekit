@@ -10,7 +10,7 @@ The VibeKit Explorer is a full-screen terminal app for Algorand. It is useful
 before you configure a model: direct identifiers route to chain lookups without
 an agent call.
 
-![The VibeKit Explorer welcome screen, with its direct-lookup and write-flow shortcuts.](/images/explorer-welcome.png)
+![The VibeKit Explorer welcome screen, with its direct-lookup and action shortcuts.](/images/explorer-welcome.png)
 
 ## Configure the optional chat lane
 
@@ -63,7 +63,7 @@ alt+digit works too. In the approval modal, `enter` approves and `esc` denies.
 Ask a narrow question such as “show the latest block” or “list my accounts.”
 The chat transcript keeps each request with its result cards. The agent can
 select tools and explain the result; it cannot generate UI code or bypass the
-Explorer’s write flow.
+Explorer’s action flow.
 
 ## Review every write
 

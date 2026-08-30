@@ -2,14 +2,14 @@
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer'
 import { useCallback, useRef, useState } from 'react'
 
-import type { ViewSpec, WriteFlowState } from '@initlabs/vibekit-explorer'
+import type { ViewSpec, ActionState } from '@initlabs/vibekit-explorer'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =
   | { kind: 'view'; view: ViewSpec }
   | { kind: 'raw'; title: string; text: string }
   /** A plugin-declared trusted view; `data` already parsed against the plugin's schema. */
-  | { kind: 'write'; flow: WriteFlowState }
+  | { kind: 'action'; flow: ActionState }
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =

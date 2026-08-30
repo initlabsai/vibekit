@@ -3,12 +3,12 @@
  * book. Key material never enters this process — the daemon signs raw bytes
  * over its local socket. `signDraft` is public here; the guarantee that it
  * runs only after a recorded approval lives in the flow controller
- * (`completeApprovedWriteFlow`), which is the only caller.
+ * (`submitAction`), which is the only caller.
  */
 import { createKeystoreSigner, type KeystoreSigner } from '@initlabs/vibekit/signer-keystore'
 import type {
   EntityLookupHost,
-  WriteFlowHost,
+  ActionHost,
   StructuredResult,
   TransactionSearchFilter,
 } from '@initlabs/vibekit-explorer'
@@ -20,7 +20,7 @@ import {
   type LiveNetworkId,
 } from '@initlabs/vibekit-explorer/live'
 
-/** The live host plus keystore signing (so it satisfies WriteFlowHost) and the daemon's address book. */
+/** The live host plus keystore signing (so it satisfies ActionHost) and the daemon's address book. */
 export interface KeystorePaymentHost extends LiveHost, EntityLookupHost {
   /** Signs the approved draft group in the keystore daemon. */
   signDraft(draftRecord: StructuredResult): Promise<StructuredResult>

@@ -90,7 +90,7 @@ never enter model context.
 
 - **Execute mode:** the daemon signs and submits write groups. Tools return
   transaction IDs and confirmation data.
-- **Compose mode:** write tools return `unsignedGroup` entries as base64 for an
+- **Compose mode:** actions return `unsignedGroup` entries as base64 for an
   external signer.
 
 If the user expects execution but only compose results are available, have

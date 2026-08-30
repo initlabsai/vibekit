@@ -26,7 +26,7 @@ export interface ToolContext {
   readFile?: (path: string) => Promise<string>
 }
 
-/** What write tools return in compose mode. */
+/** What actions return in compose mode. */
 export interface UnsignedGroupResult {
   /** base64-encoded unsigned transactions, in group order. */
   unsignedGroup: string[]
@@ -88,9 +88,10 @@ export interface ToolDefinition<P extends z.ZodType = z.ZodType> {
   parameters: P
   /**
    * Checked by executeToolCall after jsonSafe, so describe the wire shape:
-   * bigints arrive as number or string, bytes as base64.
+   * bigints arrive as number or string, bytes as base64. REST responses and
+   * the generated reference are built from it.
    */
-  output?: z.ZodType
+  output: z.ZodType
   /** Spends from a user account. Hosts require approval and an explicit network. */
   requiresSigner?: boolean
   /** Changes state without spending user funds (key creation, faucet). Approval-gated. */
@@ -116,6 +117,30 @@ export function defineTool<P extends z.ZodType>(def: ToolDefinition<P>): ToolDef
 }
 
 export type AnyTool = ToolDefinition<z.ZodType>
+
+/**
+ * A tool is a query or an action. Actions spend from or change state for a
+ * user account (`requiresSigner` / `mutatesState`): hosts gate them behind
+ * approval, and in compose mode they return a draft instead of sending.
+ * Queries are free to run.
+ */
+export function isAction(tool: Pick<AnyTool, 'requiresSigner' | 'mutatesState'>): boolean {
+  return Boolean(tool.requiresSigner || tool.mutatesState)
+}
+
+/** A read. Same as defineTool; the name documents intent. */
+export function defineQuery<P extends z.ZodType>(
+  def: Omit<ToolDefinition<P>, 'requiresSigner' | 'mutatesState'>,
+): ToolDefinition<P> {
+  return def
+}
+
+/** A tool that drafts a transaction group from a user account: signer-gated. */
+export function defineAction<P extends z.ZodType>(
+  def: Omit<ToolDefinition<P>, 'requiresSigner'>,
+): ToolDefinition<P> {
+  return { ...def, requiresSigner: true }
+}
 
 /** Returned by a plugin factory. The host puts `service` at ctx.services[name]. */
 export interface ToolPlugin {

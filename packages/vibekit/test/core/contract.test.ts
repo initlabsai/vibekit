@@ -9,6 +9,7 @@ describe('defineTool', () => {
     const tool = defineTool({
       name: 'echo',
       description: 'echo',
+      output: z.unknown(),
       parameters: z.object({ value: z.string() }),
       view: 'transaction.detail',
       handler: async (_ctx, args) => args.value.toUpperCase(), // args typed, not unknown

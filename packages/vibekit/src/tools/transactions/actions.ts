@@ -1,4 +1,4 @@
-/** Write tools: send_payment, send_group_transactions, simulate_transactions. */
+/** Actions: send_payment, send_group_transactions, simulate_transactions. */
 import {
   composeOrExecute,
   defineTool,
@@ -179,7 +179,7 @@ args: [{"type":"pay","receiver":"APPADDR","amount":200000}, 1659]
 Inner transaction fees: use extraFee (1000 microALGO per inner txn with fee 0).
 In compose mode this returns unsigned transactions for external signing instead of executing.`
 
-export const transactionWriteTools: AnyTool[] = [
+export const transactionActions: AnyTool[] = [
   defineTool({
     name: 'send_payment',
     description:

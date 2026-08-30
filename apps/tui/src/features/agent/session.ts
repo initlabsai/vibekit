@@ -146,7 +146,7 @@ export function tableModel(
 
 /** What the feed does with one tool result. */
 export type ToolResultPlan = { usedNetwork: LiveNetworkId } & (
-  | { kind: 'write'; draftRecord: StructuredResult }
+  | { kind: 'action'; draftRecord: StructuredResult }
   | { kind: 'cards'; record: StructuredResult; blocks: SectionBlock[]; note?: string }
   | { kind: 'dropped'; message: string }
 )
@@ -179,7 +179,7 @@ export function planToolResult(
       compose,
       event.toolName,
     )
-    return { usedNetwork, kind: 'write', draftRecord }
+    return { usedNetwork, kind: 'action', draftRecord }
   }
   try {
     const { network: _network, ...input } =
@@ -279,7 +279,7 @@ export async function runAgentTurn(
   }
 }
 
-/** Where a tool-result plan lands; the hook wires these to the feed, the store, and the write flow. */
+/** Where a tool-result plan lands; the hook wires these to the feed, the store, and the action flow. */
 export interface PlanSinks {
   addRecord: (record: StructuredResult) => void
   appendBlock: (block: SectionBlock) => void
@@ -290,7 +290,7 @@ export interface PlanSinks {
 /** Lands one planned tool result: a write goes to approval, cards to the feed, a drop to a note. */
 export function applyToolResultPlan(plan: ToolResultPlan, sinks: PlanSinks): void {
   switch (plan.kind) {
-    case 'write':
+    case 'action':
       sinks.startFromDraft(plan.draftRecord)
       return
     case 'cards':

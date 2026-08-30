@@ -1,6 +1,6 @@
 /**
  * The browser's Explorer host: a fetch wrapper over `/api/explorer` that
- * implements every read plus the write flow. The network rides on every
+ * implements every read plus the action flow. The network rides on every
  * request body. Signing is injected only when a wallet is connected; the
  * server verifies and broadcasts, and the browser polls for confirmation.
  */
@@ -11,7 +11,7 @@ import {
   type PaymentDraftParams,
   type StructuredResult,
   type TransactionSearchFilter,
-  type WriteFlowHost,
+  type ActionHost,
 } from '@initlabs/vibekit-explorer'
 
 const ROUTE = '/api/explorer'
@@ -19,7 +19,7 @@ const CONFIRMATION_POLL_MS = 1000
 const CONFIRMATION_ATTEMPTS = 30
 
 export type RemoteExplorerHost = ExplorerReadHost &
-  WriteFlowHost & {
+  ActionHost & {
     network: LiveNetworkId
     probe(): Promise<boolean>
     statusRound(): Promise<{ lastRound: number }>
@@ -52,7 +52,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function createRemoteExplorerHost(args: {
   network: LiveNetworkId
-  signDraft?: WriteFlowHost['signDraft']
+  signDraft?: ActionHost['signDraft']
 }): RemoteExplorerHost {
   const { network, signDraft } = args
   /** The draft the wallet last signed; submit sends it back so the server can re-verify the bytes. */

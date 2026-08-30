@@ -4,7 +4,7 @@ import { readLocalFile } from '@initlabs/vibekit/preset'
 import type { StructuredResult } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import {
-  contractWriteTools,
+  contractActions,
   DEPLOYER_NOTE_PREFIX,
   toolArgsFor,
   toolsFromArc56,
@@ -441,7 +441,7 @@ export function useApps({
         setCallError(`Need a live ${network} to deploy.`)
         return
       }
-      const tool = contractWriteTools.find((entry) => entry.name === 'app_deploy')!
+      const tool = contractActions.find((entry) => entry.name === 'app_deploy')!
       const deployTimeParams = Object.fromEntries(
         Object.entries(values).map(([key, value]) => [
           key,

@@ -19,27 +19,30 @@ import {
   type KeystoreSigner,
 } from '../signer-keystore/index.js'
 import {
-  accountTools,
-  assetTools,
-  assetWriteTools,
-  contractTools,
-  contractWriteTools,
-  networkTools,
-  transactionTools,
-  transactionWriteTools,
+  accountQueries,
+  assetQueries,
+  assetActions,
+  contractQueries,
+  contractActions,
+  networkQueries,
+  transactionQueries,
+  transactionActions,
 } from '../tools/index.js'
 
-/** The full tool surface: every domain, reads before writes. */
-export const defaultTools: AnyTool[] = [
-  ...networkTools,
-  ...accountTools,
-  ...assetTools,
-  ...transactionTools,
-  ...contractTools,
-  ...transactionWriteTools,
-  ...assetWriteTools,
-  ...contractWriteTools,
+/** Every read, by domain. */
+export const defaultQueries: AnyTool[] = [
+  ...networkQueries,
+  ...accountQueries,
+  ...assetQueries,
+  ...transactionQueries,
+  ...contractQueries,
 ]
+
+/** Every action — tools that draft a signer-gated transaction group. */
+export const defaultActions: AnyTool[] = [...transactionActions, ...assetActions, ...contractActions]
+
+/** The full tool surface: queries before actions. */
+export const defaultTools: AnyTool[] = [...defaultQueries, ...defaultActions]
 
 /** The default plugin set — names, market data, asset trust. Fresh instances per call. */
 export function defaultPlugins(): ToolPlugin[] {

@@ -58,6 +58,7 @@ async function collect(events: AsyncIterable<AgentEvent>): Promise<AgentEvent[]>
 const echoTool = defineTool({
   name: 'echo',
   description: 'Echo the message back.',
+  output: z.unknown(),
   parameters: z.object({ message: z.string() }),
   view: 'network.status',
   handler: async (_ctx, args) => ({ echoed: args.message, big: 42n }),
@@ -145,6 +146,7 @@ describe('createAgent', () => {
     const whereTool = defineTool({
       name: 'where',
       description: 'Report the network this call ran against.',
+      output: z.unknown(),
       parameters: z.object({}),
       handler: async (ctx) => {
         seen.push(ctx.network.id)
@@ -174,6 +176,7 @@ describe('createAgent', () => {
     const failTool = defineTool({
       name: 'fail',
       description: 'Always fails.',
+      output: z.unknown(),
       parameters: z.object({}),
       handler: async () => {
         throw new ToolError('INVALID_ADDRESS', 'not an address')
@@ -221,6 +224,7 @@ describe('approval gate', () => {
   const sendTool = defineTool({
     name: 'send',
     description: 'Write tool requiring a signer.',
+    output: z.unknown(),
     parameters: z.object({ amount: z.number() }),
     requiresSigner: true,
     handler: async () => ({ sent: true }),

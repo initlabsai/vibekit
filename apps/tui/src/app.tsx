@@ -24,8 +24,8 @@ import { useBlockTail } from './features/blocks/hooks.js'
 import { BlocksScreen } from './features/blocks/screen.js'
 import { NETWORKS, useNetwork } from './features/network/hooks.js'
 import { PluginsScreen } from './features/plugins/screen.js'
-import { ApprovalModal, ConfirmModal } from './features/write-flow/approval-modal.js'
-import { useWriteFlow } from './features/write-flow/hooks.js'
+import { ApprovalModal, ConfirmModal } from './features/action/approval-modal.js'
+import { useAction } from './features/action/hooks.js'
 import { Composer, ContentPane, NavPane } from './feed/feed.js'
 import { useFeed } from './feed/hooks.js'
 import { cardActionsFor, keybarFor, listRowTxid, useExplorerKeys } from './keys.js'
@@ -118,7 +118,7 @@ export function App() {
   const { signerReady, activeSender, setActiveSender, accountList, cycleAccount, openScreen } =
     accounts
 
-  const payment = useWriteFlow({
+  const payment = useAction({
     feed,
     store,
     storeRef,

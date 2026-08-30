@@ -13,7 +13,7 @@ import {
   paymentFixtureResults,
 } from '../src/sample/payment.js'
 import {
-  createWriteFlowViewModel,
+  createActionViewModel,
   createResultStore,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
@@ -23,15 +23,15 @@ import {
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
   type StructuredResult,
-  type WriteFlowState,
+  type ActionState,
 } from '../src/index.js'
 import {
   writeSimulationDataSchema,
-  writeFlowEventKinds,
-  writeFlowEventSchema,
-  writeFlowReducer,
-  type WriteFlowEventKind,
-} from '../src/flows/write-flow.js'
+  actionEventKinds,
+  actionEventSchema,
+  actionReducer,
+  type ActionEventKind,
+} from '../src/actions/reducer.js'
 
 function collectLeaves(value: unknown): unknown[] {
   if (Array.isArray(value)) return value.flatMap(collectLeaves)
@@ -41,8 +41,8 @@ function collectLeaves(value: unknown): unknown[] {
   return [value]
 }
 
-function advance(state: WriteFlowState | null, kind: WriteFlowEventKind): WriteFlowState {
-  const transition = writeFlowReducer(state, createPaymentFixtureEvent(kind))
+function advance(state: ActionState | null, kind: ActionEventKind): ActionState {
+  const transition = actionReducer(state, createPaymentFixtureEvent(kind))
   if (!transition.ok) throw new Error(`Expected ${kind} to advance: ${transition.error.message}`)
   return transition.state
 }
@@ -59,14 +59,14 @@ const HAPPY_PATH = [
 
 describe('fixture-backed payment write flow', () => {
   test('fixture events validate as versioned protocol messages', () => {
-    for (const kind of writeFlowEventKinds) {
+    for (const kind of actionEventKinds) {
       const event = createPaymentFixtureEvent(kind)
-      expect(writeFlowEventSchema.parse(event).protocolVersion).toBe('0.1.0')
+      expect(actionEventSchema.parse(event).protocolVersion).toBe('0.1.0')
     }
   })
 
   test('events and flow states carry references, never authoritative values', () => {
-    let state: WriteFlowState | null = null
+    let state: ActionState | null = null
     for (const kind of HAPPY_PATH) {
       const leavesOfEvent = collectLeaves(createPaymentFixtureEvent(kind))
       state = advance(state, kind)
@@ -84,10 +84,10 @@ describe('fixture-backed payment write flow', () => {
 
   test('the view model derives authoritative facts from structured results at every stage', () => {
     const store = createExplorerFixtureResultStore()
-    let state: WriteFlowState | null = null
+    let state: ActionState | null = null
     for (const kind of HAPPY_PATH) {
       state = advance(state, kind)
-      const derived = createWriteFlowViewModel(store, state)
+      const derived = createActionViewModel(store, state)
       expect(derived.ok).toBeTrue()
       if (!derived.ok) continue
       expect(derived.model).toMatchObject({
@@ -108,7 +108,7 @@ describe('fixture-backed payment write flow', () => {
     }
     if (!state) throw new Error('Expected confirmed flow')
 
-    const confirmed = createWriteFlowViewModel(store, state)
+    const confirmed = createActionViewModel(store, state)
     if (!confirmed.ok) throw new Error('Expected confirmed model')
     expect(confirmed.model.simulation).toEqual({
       wouldSucceed: true,
@@ -143,12 +143,12 @@ describe('fixture-backed payment write flow', () => {
 
   test('a denied flow presents the decision and offers no further steps', () => {
     const store = createPaymentFixtureResultStore()
-    let state: WriteFlowState | null = null
+    let state: ActionState | null = null
     for (const kind of ['draft', 'simulate', 'inspect', 'request-approval', 'deny'] as const) {
       state = advance(state, kind)
     }
     if (!state) throw new Error('Expected denied flow')
-    const derived = createWriteFlowViewModel(store, state)
+    const derived = createActionViewModel(store, state)
     if (!derived.ok) throw new Error('Expected denied model')
     expect(derived.model.stage).toBe('denied')
     expect(derived.model.approval).toEqual({
@@ -179,7 +179,7 @@ describe('fixture-backed payment write flow', () => {
       ),
     )
     const state = advance(advance(null, 'draft'), 'simulate')
-    const derived = createWriteFlowViewModel(tamperedStore, state)
+    const derived = createActionViewModel(tamperedStore, state)
     expect(derived).toEqual({
       ok: false,
       error: { code: 'INVALID_VIEW_DATA', message: expect.stringContaining('does not simulate') },

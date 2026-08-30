@@ -11,7 +11,7 @@ import {
 import type { ReactNode } from 'react'
 
 import { Fact, Facts, FooterNote, Frame, Header } from '../../primitives'
-import { TransactionsGraphView } from '../write-flow/graph'
+import { TransactionsGraphView } from '../action/graph'
 
 function toGraphTransaction(row: TransactionRowData): GraphTransaction {
   // Spread, then coerce: ids arrive as number | string on the wire.

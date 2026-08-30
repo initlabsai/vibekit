@@ -78,7 +78,7 @@ async function populateResources(
 }
 
 /**
- * The one call write tools make: build the group from specs, then either
+ * The one call actions make: build the group from specs, then either
  * return it unsigned (compose mode) or sign/send/confirm it (execute mode).
  * App-call resource references (boxes, foreign accounts/apps/assets) are
  * auto-populated via a simulate, so callers never hand-declare them.

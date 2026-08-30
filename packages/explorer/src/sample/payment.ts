@@ -1,7 +1,7 @@
 import type { AccountLookupHost } from '../views/account.js'
 import type { TransactionLookupHost } from '../views/transaction.js'
 import { createFixtureEntityLookup } from './entities.js'
-import type { WriteFlowHost } from '../flows/write-flow-host.js'
+import type { ActionHost } from '../actions/host.js'
 import { createFixtureAccountLookup } from './account.js'
 import {
   approvalDecisionSchema,
@@ -17,9 +17,9 @@ import {
   writeDraftDataSchema,
   signedGroupDataSchema,
   writeSimulationDataSchema,
-  type WriteFlowEvent,
-  type WriteFlowEventKind,
-} from '../flows/write-flow.js'
+  type ActionEvent,
+  type ActionEventKind,
+} from '../actions/reducer.js'
 import {
   createResultStore,
   type ResultReference,
@@ -35,7 +35,7 @@ import {
   transactionFixtureResult,
 } from './transaction.js'
 
-/** Opaque flow id of the fixture payment write flow. */
+/** Opaque flow id of the fixture payment action flow. */
 export const PAYMENT_FIXTURE_FLOW_ID = 'flow-fixture-payment-001'
 
 /** Tool-call id of the composing call the fixture flow correlates approval to. */
@@ -198,13 +198,13 @@ function reference(id: string): ResultReference {
 }
 
 /**
- * A WriteFlowHost backed by the recorded fixture flow, so the apps run the
+ * A ActionHost backed by the recorded fixture flow, so the apps run the
  * exact same controller with or without a live chain. Each call returns a
  * freshly identified copy of the recorded record (the store rejects duplicate
  * ids), with the recorded data — including the real signed bytes and the real
  * round-22 confirmation — unchanged.
  */
-export function createSampleHost(): WriteFlowHost &
+export function createSampleHost(): ActionHost &
   AccountLookupHost &
   TransactionLookupHost &
   ReturnType<typeof createFixtureEntityLookup> & {
@@ -271,7 +271,7 @@ export function createSampleHost(): WriteFlowHost &
  * flow. Every event carries only result references; the machine and both
  * apps read authoritative facts from the structured results.
  */
-export function createPaymentFixtureEvent(kind: WriteFlowEventKind): WriteFlowEvent {
+export function createPaymentFixtureEvent(kind: ActionEventKind): ActionEvent {
   switch (kind) {
     case 'draft':
       return writeDraftEventSchema.parse({

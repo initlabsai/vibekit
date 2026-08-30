@@ -1,5 +1,5 @@
 /**
- * The write flow: the data each stage records, the stage machine (reducer),
+ * The action flow: the data each stage records, the stage machine (reducer),
  * and the view model an approval screen renders. Payment-shaped fields
  * (receiver, amount) are present when the group is one plain pay.
  */
@@ -122,12 +122,12 @@ export type SignedGroupData = z.infer<typeof signedGroupDataSchema>
 export type ConfirmationData = z.infer<typeof confirmationDataSchema>
 
 /**
- * Observable stages of one write flow: every state the constitution requires
+ * Observable stages of one action flow: every state the constitution requires
  * a write UI to preserve — draft, simulation, inspection, explicit approval,
  * signing, and confirmation. `signed` is reachable only from `approved`, so a
  * signature can never exist without a recorded human decision before it.
  */
-export const writeFlowStageSchema = z.enum([
+export const actionStageSchema = z.enum([
   'drafted',
   'simulated',
   'inspected',
@@ -138,24 +138,24 @@ export const writeFlowStageSchema = z.enum([
   'confirmed',
 ])
 
-/** Observable stage of one write flow. */
-export type WriteFlowStage = z.infer<typeof writeFlowStageSchema>
+/** Observable stage of one action flow. */
+export type ActionStage = z.infer<typeof actionStageSchema>
 
 /**
- * Any protocol event that can advance a write flow. Approval request and
+ * Any protocol event that can advance a action flow. Approval request and
  * decision are the same first-class protocol events every other consumer
  * sees; the flow machine adds ordering, never a private approval channel.
  */
-export const writeFlowEventSchema = z.union([
+export const actionEventSchema = z.union([
   writeStageEventSchema,
   approvalRequestSchema,
   approvalDecisionSchema,
 ])
 
-/** Any protocol event that can advance a write flow. */
-export type WriteFlowEvent = z.infer<typeof writeFlowEventSchema>
+/** Any protocol event that can advance a action flow. */
+export type ActionEvent = z.infer<typeof actionEventSchema>
 
-const STAGE_RANK: Record<WriteFlowStage, number> = {
+const STAGE_RANK: Record<ActionStage, number> = {
   drafted: 0,
   simulated: 1,
   inspected: 2,
@@ -167,15 +167,15 @@ const STAGE_RANK: Record<WriteFlowStage, number> = {
 }
 
 /**
- * The accumulated state of one write flow. Every field is a protocol value or
+ * The accumulated state of one action flow. Every field is a protocol value or
  * a result reference; authoritative amounts and addresses never appear here.
  */
-export const writeFlowStateSchema = z
+export const actionStateSchema = z
   .object({
     protocolVersion: explorerProtocolVersionSchema,
     flowId: z.string().min(1),
     toolCallId: z.string().min(1),
-    stage: writeFlowStageSchema,
+    stage: actionStageSchema,
     draft: resultReferenceSchema,
     simulation: resultReferenceSchema.optional(),
     inspection: resultReferenceSchema.optional(),
@@ -242,38 +242,38 @@ export const writeFlowStateSchema = z
     }
   })
 
-/** The accumulated state of one write flow. */
-export type WriteFlowState = z.infer<typeof writeFlowStateSchema>
+/** The accumulated state of one action flow. */
+export type ActionState = z.infer<typeof actionStateSchema>
 
-/** Typed refusal of an out-of-order or miscorrelated write-flow event. */
-export interface WriteFlowTransitionError {
+/** Typed refusal of an out-of-order or miscorrelated action event. */
+export interface ActionTransitionError {
   code: 'INVALID_TRANSITION' | 'FLOW_MISMATCH' | 'APPROVAL_MISMATCH'
   message: string
 }
 
-/** Result of applying one protocol event to a write flow. */
-export type WriteFlowTransition =
-  { ok: true; state: WriteFlowState } | { ok: false; error: WriteFlowTransitionError }
+/** Result of applying one protocol event to a action flow. */
+export type ActionTransition =
+  { ok: true; state: ActionState } | { ok: false; error: ActionTransitionError }
 
-function refuse(code: WriteFlowTransitionError['code'], message: string): WriteFlowTransition {
+function refuse(code: ActionTransitionError['code'], message: string): ActionTransition {
   return { ok: false, error: { code, message } }
 }
 
-function accept(state: WriteFlowState): WriteFlowTransition {
-  return { ok: true, state: writeFlowStateSchema.parse(state) }
+function accept(state: ActionState): ActionTransition {
+  return { ok: true, state: actionStateSchema.parse(state) }
 }
 
 /**
- * Applies one validated protocol event to a write flow without mutating the
+ * Applies one validated protocol event to a action flow without mutating the
  * prior value. Passing `null` state starts a flow from a draft event. Every
  * skipped or repeated stage is an explicit typed refusal, never a silent
  * success, so every write state stays observable.
  */
-export function writeFlowReducer(
-  state: WriteFlowState | null,
-  rawEvent: WriteFlowEvent,
-): WriteFlowTransition {
-  const event = writeFlowEventSchema.parse(rawEvent)
+export function actionReducer(
+  state: ActionState | null,
+  rawEvent: ActionEvent,
+): ActionTransition {
+  const event = actionEventSchema.parse(rawEvent)
 
   if (state === null) {
     if (event.type === 'write.stage' && event.stage === 'draft') {
@@ -285,7 +285,7 @@ export function writeFlowReducer(
         draft: event.draft,
       })
     }
-    return refuse('INVALID_TRANSITION', 'No write flow has been drafted')
+    return refuse('INVALID_TRANSITION', 'No action flow has been drafted')
   }
 
   if (event.type === 'write.stage') {
@@ -379,7 +379,7 @@ export function writeFlowReducer(
 }
 
 /** Semantic event kinds a client can offer next, one per legal transition. */
-export const writeFlowEventKinds = [
+export const actionEventKinds = [
   'draft',
   'simulate',
   'inspect',
@@ -391,12 +391,12 @@ export const writeFlowEventKinds = [
 ] as const
 
 /** Semantic event kind a client can offer next. */
-export type WriteFlowEventKind = (typeof writeFlowEventKinds)[number]
+export type ActionEventKind = (typeof actionEventKinds)[number]
 
 /** Lists the event kinds the machine accepts next, so an app can enable the right controls. */
-export function writeFlowNextEventKinds(
-  state: WriteFlowState | null,
-): readonly WriteFlowEventKind[] {
+export function actionNextEventKinds(
+  state: ActionState | null,
+): readonly ActionEventKind[] {
   if (state === null) return ['draft']
   switch (state.stage) {
     case 'drafted':
@@ -425,13 +425,13 @@ const paymentEffectViewSchema = z
   })
   .strict()
 
-/** Renderer-ready semantic model for one observable write flow. */
-export const writeFlowViewModelSchema = z
+/** Renderer-ready semantic model for one observable action flow. */
+export const actionViewModelSchema = z
   .object({
     flow: z.literal('payment'),
     flowId: z.string().min(1),
-    stage: writeFlowStageSchema,
-    nextEventKinds: z.array(z.enum(writeFlowEventKinds)),
+    stage: actionStageSchema,
+    nextEventKinds: z.array(z.enum(actionEventKinds)),
     network: z.string().min(1),
     sender: algorandAddressCandidateSchema,
     receiver: algorandAddressCandidateSchema.optional(),
@@ -486,28 +486,28 @@ export const writeFlowViewModelSchema = z
   })
   .strict()
 
-/** Renderer-ready semantic model for one observable payment write flow. */
-export type WriteFlowViewModel = z.infer<typeof writeFlowViewModelSchema>
+/** Renderer-ready semantic model for one observable payment action flow. */
+export type ActionViewModel = z.infer<typeof actionViewModelSchema>
 
 /** Result of deriving the payment flow view model. */
-export type WriteFlowViewModelResult =
-  { ok: true; model: WriteFlowViewModel } | { ok: false; error: ViewModelError }
+export type ActionViewModelResult =
+  { ok: true; model: ActionViewModel } | { ok: false; error: ViewModelError }
 
-function invalid(message: string): WriteFlowViewModelResult {
+function invalid(message: string): ActionViewModelResult {
   return { ok: false, error: { code: 'INVALID_VIEW_DATA', message } }
 }
 
 /**
- * Derives one write-flow view model from the flow's result
+ * Derives one action view model from the flow's result
  * references. Authoritative sender, network, fees, effects, and the unsigned
  * group bytes come from structured results; a simulation that disagrees with
  * the draft, or a record from another network, refuses to present rather
  * than showing facts the approval would not act on.
  */
-export function createWriteFlowViewModel(
+export function createActionViewModel(
   store: ResultStore,
-  flow: WriteFlowState,
-): WriteFlowViewModelResult {
+  flow: ActionState,
+): ActionViewModelResult {
   const draft = resolveResultReference(store, flow.draft)
   if (!draft.ok) return draft
   const parsedDraft = writeDraftDataSchema.safeParse(draft.value)
@@ -517,7 +517,7 @@ export function createWriteFlowViewModel(
   const draftData = parsedDraft.data
   const network = draft.record.network
 
-  let simulation: WriteFlowViewModel['simulation']
+  let simulation: ActionViewModel['simulation']
   if (flow.simulation) {
     const resolution = resolveResultReference(store, flow.simulation)
     if (!resolution.ok) return resolution
@@ -570,7 +570,7 @@ export function createWriteFlowViewModel(
     }
   }
 
-  let signed: WriteFlowViewModel['signed']
+  let signed: ActionViewModel['signed']
   if (flow.signed) {
     const resolution = resolveResultReference(store, flow.signed)
     if (!resolution.ok) return resolution
@@ -593,7 +593,7 @@ export function createWriteFlowViewModel(
     signed = { size: data.transactions.length, txIds: data.txIds, signer: data.signer }
   }
 
-  let confirmation: WriteFlowViewModel['confirmation']
+  let confirmation: ActionViewModel['confirmation']
   if (flow.confirmation) {
     const resolution = resolveResultReference(store, flow.confirmation)
     if (!resolution.ok) return resolution
@@ -612,7 +612,7 @@ export function createWriteFlowViewModel(
     confirmation = parsed.data
   }
 
-  let graph: WriteFlowViewModel['graph']
+  let graph: ActionViewModel['graph']
   if (draftData.graphTransactions && draftData.graphTransactions.length > 0) {
     try {
       const built = buildTransactionsGraph(draftData.graphTransactions as GraphTransaction[])
@@ -622,11 +622,11 @@ export function createWriteFlowViewModel(
     }
   }
 
-  const model = writeFlowViewModelSchema.parse({
+  const model = actionViewModelSchema.parse({
     flow: 'payment',
     flowId: flow.flowId,
     stage: flow.stage,
-    nextEventKinds: [...writeFlowNextEventKinds(flow)],
+    nextEventKinds: [...actionNextEventKinds(flow)],
     network,
     sender: draftData.sender,
     ...(draftData.receiver === undefined ? {} : { receiver: draftData.receiver }),

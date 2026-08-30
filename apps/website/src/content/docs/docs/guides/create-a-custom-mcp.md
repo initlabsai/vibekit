@@ -27,13 +27,13 @@ normal local-agent transport.
 
 ```ts
 import { serveVibekitStdio } from '@initlabs/vibekit/mcp/stdio'
-import { accountTools, networkTools } from '@initlabs/vibekit/tools'
+import { accountQueries, networkQueries } from '@initlabs/vibekit/tools'
 
 const handle = serveVibekitStdio({
   name: 'my-vibekit-mcp',
   network: 'testnet',
   mode: 'compose',
-  tools: [...networkTools, ...accountTools],
+  tools: [...networkQueries, ...accountQueries],
 })
 
 process.on('SIGINT', () => void handle.close())
@@ -68,7 +68,7 @@ const handle = serveVibekitStdio({
   name: 'my-vibekit-mcp',
   network: 'testnet',
   mode: 'compose',
-  tools: [...networkTools, ...accountTools],
+  tools: [...networkQueries, ...accountQueries],
   plugins: [nfdPlugin()],
 })
 ```

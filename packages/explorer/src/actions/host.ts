@@ -1,5 +1,5 @@
 /**
- * The write-flow host side: record builders for each stage, the host
+ * The action host side: record builders for each stage, the host
  * capability an app provides, and the controller that walks a flow through
  * its stages. Any composed group runs here — payments, app calls, deploys.
  */
@@ -28,14 +28,14 @@ import {
   writeDraftDataSchema,
   signedGroupDataSchema,
   writeSimulationDataSchema,
-  writeFlowReducer,
+  actionReducer,
   type WriteDraftData,
-  type WriteFlowEvent,
-  type WriteFlowEventKind,
-  type WriteFlowState,
-} from './write-flow.js'
+  type ActionEvent,
+  type ActionEventKind,
+  type ActionState,
+} from './reducer.js'
 
-/** The JSON-safe wire shape a compose-mode write tool returns. */
+/** The JSON-safe wire shape a compose-mode action returns. */
 export const composeWireResultSchema = z.object({
   unsignedGroup: z.array(z.string().min(1)).min(1),
   summary: z.string().min(1),
@@ -202,7 +202,7 @@ export interface PaymentDraftParams {
  * compose-only server route. Custody appears only through the optional
  * capabilities and never inside this controller.
  */
-export interface WriteFlowHost {
+export interface ActionHost {
   network: string
   draftPayment(params: PaymentDraftParams): Promise<StructuredResult>
   simulateDraft(draftRecord: StructuredResult): Promise<StructuredResult>
@@ -213,21 +213,21 @@ export interface WriteFlowHost {
 }
 
 /** Result of one live payment step: new client state, or an explicit refusal. */
-export type WriteFlowStepOutcome =
-  { ok: true; store: ResultStore; flow: WriteFlowState } | { ok: false; message: string }
+export type ActionStepOutcome =
+  { ok: true; store: ResultStore; flow: ActionState } | { ok: false; message: string }
 
 /**
  * Result of an auto-advanced run. Progress survives failure: `store` and
  * `flow` always hold the furthest state reached, so a failed step leaves the
  * earlier observable stages intact rather than discarding them.
  */
-export interface WriteFlowRun {
+export interface ActionRun {
   ok: boolean
   message?: string
   /** True when the host has no signer, so the flow rests at `approved`. */
   pausedForSigner?: boolean
   store: ResultStore
-  flow: WriteFlowState | null
+  flow: ActionState | null
 }
 
 function resultRef(record: StructuredResult): { source: 'result'; id: string } {
@@ -235,7 +235,7 @@ function resultRef(record: StructuredResult): { source: 'result'; id: string } {
 }
 
 /** The draft event carries the record's identifiers; later approvals correlate on its tool-call id. */
-function draftEventFor(flowId: string, record: StructuredResult): WriteFlowEvent {
+function draftEventFor(flowId: string, record: StructuredResult): ActionEvent {
   return createWriteStageEvent({
     stage: 'draft',
     flowId,
@@ -251,20 +251,20 @@ function draftEventFor(flowId: string, record: StructuredResult): WriteFlowEvent
  * the host carries those capabilities; without them the steps are explicit
  * refusals, never silent skips.
  */
-export async function performWriteFlowStep(input: {
-  host: WriteFlowHost
+export async function performActionStep(input: {
+  host: ActionHost
   store: ResultStore
-  flow: WriteFlowState | null
-  kind: WriteFlowEventKind
+  flow: ActionState | null
+  kind: ActionEventKind
   draftParams?: PaymentDraftParams
   newId: (prefix: string) => string
-}): Promise<WriteFlowStepOutcome> {
+}): Promise<ActionStepOutcome> {
   const { host, flow, kind, newId } = input
   let store = input.store
 
-  const advance = (event: WriteFlowEvent | undefined, state: WriteFlowState | null) => {
+  const advance = (event: ActionEvent | undefined, state: ActionState | null) => {
     if (!event) return { ok: false as const, message: `No ${kind} event is possible yet` }
-    const transition = writeFlowReducer(state, event)
+    const transition = actionReducer(state, event)
     return transition.ok
       ? { ok: true as const, store, flow: transition.state }
       : { ok: false as const, message: transition.error.message }
@@ -388,18 +388,18 @@ export async function performWriteFlowStep(input: {
 }
 
 async function runSteps(input: {
-  host: WriteFlowHost
+  host: ActionHost
   store: ResultStore
-  flow: WriteFlowState | null
-  kinds: readonly WriteFlowEventKind[]
+  flow: ActionState | null
+  kinds: readonly ActionEventKind[]
   draftParams?: PaymentDraftParams
   newId: (prefix: string) => string
-  onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<WriteFlowRun> {
+  onStep?: (store: ResultStore, flow: ActionState) => void
+}): Promise<ActionRun> {
   let store = input.store
   let flow = input.flow
   for (const kind of input.kinds) {
-    const outcome = await performWriteFlowStep({
+    const outcome = await performActionStep({
       host: input.host,
       store,
       flow,
@@ -421,13 +421,13 @@ async function runSteps(input: {
  * the one point that needs a human. Every stage still happens as its own
  * observable protocol event; `onStep` streams each one to the renderer.
  */
-export async function startWriteFlow(input: {
-  host: WriteFlowHost
+export async function startAction(input: {
+  host: ActionHost
   store: ResultStore
   draftParams: PaymentDraftParams
   newId: (prefix: string) => string
-  onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<WriteFlowRun> {
+  onStep?: (store: ResultStore, flow: ActionState) => void
+}): Promise<ActionRun> {
   return runSteps({
     ...input,
     flow: null,
@@ -440,13 +440,13 @@ export async function startWriteFlow(input: {
  * without a signer the flow rests at `approved` (`pausedForSigner`) — an
  * honest stop, never a fake confirmation.
  */
-export async function completeApprovedWriteFlow(input: {
-  host: WriteFlowHost
+export async function submitAction(input: {
+  host: ActionHost
   store: ResultStore
-  flow: WriteFlowState
+  flow: ActionState
   newId: (prefix: string) => string
-  onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<WriteFlowRun> {
+  onStep?: (store: ResultStore, flow: ActionState) => void
+}): Promise<ActionRun> {
   if (input.flow.stage !== 'approved') {
     return {
       ok: false,
@@ -467,13 +467,13 @@ export async function completeApprovedWriteFlow(input: {
  * then simulates, inspects, and requests approval — pausing at the same
  * approval card as every other payment.
  */
-export async function startWriteFlowFromDraft(input: {
-  host: WriteFlowHost
+export async function startActionFromDraft(input: {
+  host: ActionHost
   store: ResultStore
   draftRecord: StructuredResult
   newId: (prefix: string) => string
-  onStep?: (store: ResultStore, flow: WriteFlowState) => void
-}): Promise<WriteFlowRun> {
+  onStep?: (store: ResultStore, flow: ActionState) => void
+}): Promise<ActionRun> {
   let store: ResultStore
   try {
     store = addResult(input.store, input.draftRecord)
@@ -485,7 +485,7 @@ export async function startWriteFlowFromDraft(input: {
       flow: null,
     }
   }
-  const transition = writeFlowReducer(
+  const transition = actionReducer(
     null,
     draftEventFor(input.newId('flow-live-payment'), input.draftRecord),
   )

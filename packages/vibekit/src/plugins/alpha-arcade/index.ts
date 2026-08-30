@@ -1,5 +1,5 @@
 /**
- * Alpha Arcade plugin: prediction-market read tools over @alpha-arcade/sdk.
+ * Alpha Arcade plugin: prediction-market queries over @alpha-arcade/sdk.
  * The protocol lives on Algorand mainnet; the client is mainnet-fixed and
  * read-only (dummy signer — read methods never sign).
  */

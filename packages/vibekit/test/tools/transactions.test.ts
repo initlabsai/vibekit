@@ -1,18 +1,18 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '../../src/core/index.js'
-import { transactionTools } from '../../src/tools/transactions/index.js'
+import { transactionQueries } from '../../src/tools/transactions/index.js'
 import { lookupTransaction, lookupTransactionGroup } from '../../src/tools/transactions/lookup.js'
 import { searchTransactions } from '../../src/tools/transactions/search.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {
   test('exports 3 read-only tools with output schemas and display hints', () => {
-    expect(transactionTools.map((t) => t.name)).toEqual([
+    expect(transactionQueries.map((t) => t.name)).toEqual([
       'lookup_transaction',
       'search_transactions',
       'lookup_transaction_group',
     ])
-    for (const tool of transactionTools) {
+    for (const tool of transactionQueries) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
       expect(tool.view).toBeDefined()
@@ -331,7 +331,7 @@ describe('lookupTransaction', () => {
           }),
       },
     })
-    const tool = transactionTools.find((t) => t.name === 'lookup_transaction')!
+    const tool = transactionQueries.find((t) => t.name === 'lookup_transaction')!
     const wire = jsonSafe(await tool.handler(ctx, { txid: 'ACREATE' }))
     const parsed = tool.output!.safeParse(wire)
     expect(parsed.success).toBe(true)
@@ -368,7 +368,7 @@ describe('lookupTransaction', () => {
           }),
       },
     })
-    const tool = transactionTools.find((t) => t.name === 'lookup_transaction')!
+    const tool = transactionQueries.find((t) => t.name === 'lookup_transaction')!
     const wire = jsonSafe(await tool.handler(ctx, { txid: 'APPTX' })) as {
       innerTxns: Array<Record<string, unknown>>
     }

@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
-  completeApprovedWriteFlow,
+  submitAction,
   createSampleHost,
   PAYMENT_FIXTURE_SIGNED_TRANSACTION,
   PAYMENT_FIXTURE_TRANSACTION_ID as SIGNED_FIXTURE_TXID,
   createFixtureResultStore,
-  createWriteFlowViewModel,
+  createActionViewModel,
   FIXTURE_RECEIVER,
   FIXTURE_SENDER,
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performWriteFlowStep,
-  startWriteFlow,
-  type WriteFlowHost,
+  performActionStep,
+  startAction,
+  type ActionHost,
 } from '@initlabs/vibekit-explorer'
 
 import { resolvePaymentParties, routeComposerInput } from './commands.js'
@@ -30,7 +30,7 @@ const DRAFT_PARAMS = {
 }
 
 /** A host that records draft calls; the sample host answers them. */
-function draftingHost(): WriteFlowHost & { drafts: number } {
+function draftingHost(): ActionHost & { drafts: number } {
   const fixture = createSampleHost()
   const host = {
     drafts: 0,
@@ -39,7 +39,7 @@ function draftingHost(): WriteFlowHost & { drafts: number } {
       host.drafts += 1
       return fixture.draftPayment(params)
     },
-    simulateDraft: (record: Parameters<WriteFlowHost['simulateDraft']>[0]) => fixture.simulateDraft(record),
+    simulateDraft: (record: Parameters<ActionHost['simulateDraft']>[0]) => fixture.simulateDraft(record),
   }
   return host
 }
@@ -60,7 +60,7 @@ async function startPayment(args: {
     to: route.to,
   })
   if ('error' in parties) return { host, error: parties.error }
-  const run = await startWriteFlow({
+  const run = await startAction({
     host,
     store: createFixtureResultStore(),
     draftParams: { ...parties, amountMicroAlgos: route.amountMicroAlgos },
@@ -109,7 +109,7 @@ describe('web payment wiring', () => {
   test('the browser flow auto-advances to approval and completes after the decision', async () => {
     const host = createSampleHost()
     const stages: string[] = []
-    const prepared = await startWriteFlow({
+    const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
@@ -119,7 +119,7 @@ describe('web payment wiring', () => {
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
     expect(prepared.flow.stage).toBe('awaiting-approval')
 
-    const approved = await performWriteFlowStep({
+    const approved = await performActionStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -127,7 +127,7 @@ describe('web payment wiring', () => {
       newId,
     })
     if (!approved.ok) throw new Error(approved.message)
-    const done = await completeApprovedWriteFlow({
+    const done = await submitAction({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -144,26 +144,26 @@ describe('web payment wiring', () => {
       'confirmed',
     ])
 
-    const derived = createWriteFlowViewModel(done.store, done.flow)
+    const derived = createActionViewModel(done.store, done.flow)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.confirmation?.transactionId).toBe(derived.model.signed?.txIds[0])
   })
 
   test('a host without signDraft rests at approved with nothing signed', async () => {
     const fixture = createSampleHost()
-    const host: WriteFlowHost = {
+    const host: ActionHost = {
       network: 'localnet',
       draftPayment: (params) => fixture.draftPayment(params),
       simulateDraft: (record) => fixture.simulateDraft(record),
     }
-    const prepared = await startWriteFlow({
+    const prepared = await startAction({
       host,
       store: createFixtureResultStore(),
       draftParams: DRAFT_PARAMS,
       newId,
     })
     if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
-    const approved = await performWriteFlowStep({
+    const approved = await performActionStep({
       host,
       store: prepared.store,
       flow: prepared.flow,
@@ -171,7 +171,7 @@ describe('web payment wiring', () => {
       newId,
     })
     if (!approved.ok) throw new Error(approved.message)
-    const done = await completeApprovedWriteFlow({
+    const done = await submitAction({
       host,
       store: approved.store,
       flow: approved.flow,
@@ -227,11 +227,11 @@ describe('web payment wiring', () => {
         network: 'localnet',
         signDraft: createWalletSignDraft({ network: 'localnet', walletNetwork: () => 'localnet', transactionSigner }),
       })
-      const prepared = await startWriteFlow({ host, store: createFixtureResultStore(), draftParams: DRAFT_PARAMS, newId })
+      const prepared = await startAction({ host, store: createFixtureResultStore(), draftParams: DRAFT_PARAMS, newId })
       if (!prepared.ok || !prepared.flow) throw new Error(prepared.message)
-      const approved = await performWriteFlowStep({ host, store: prepared.store, flow: prepared.flow, kind: 'approve', newId })
+      const approved = await performActionStep({ host, store: prepared.store, flow: prepared.flow, kind: 'approve', newId })
       if (!approved.ok) throw new Error(approved.message)
-      const done = await completeApprovedWriteFlow({ host, store: approved.store, flow: approved.flow, newId })
+      const done = await submitAction({ host, store: approved.store, flow: approved.flow, newId })
       expect(done.ok).toBe(true)
       expect(done.flow?.stage).toBe('confirmed')
       expect(actions).toEqual([
@@ -256,7 +256,7 @@ describe('web payment wiring', () => {
           transactionSigner: async (txns: unknown[]) => txns.map(() => new Uint8Array([1, 2, 3])),
         }),
       })
-      const refused = await completeApprovedWriteFlow({ host: tampered, store: approved.store, flow: approved.flow, newId })
+      const refused = await submitAction({ host: tampered, store: approved.store, flow: approved.flow, newId })
       expect(refused.ok).toBe(false)
       expect(refused.message).toContain('does not wrap the drafted bytes')
     } finally {

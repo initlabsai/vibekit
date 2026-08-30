@@ -1,4 +1,4 @@
-/** Contract write tools: app calls via the compose engine, deploy on raw algosdk. */
+/** Contract actions: app calls via the compose engine, deploy on raw algosdk. */
 import {
   bytesToBase64,
   composeOrExecute,
@@ -285,7 +285,7 @@ export const appDeployResultSchema = z.union([
   z.object({ unsignedGroup: z.array(z.string()), summary: z.string() }),
 ])
 
-export const contractWriteTools: AnyTool[] = [
+export const contractActions: AnyTool[] = [
   defineTool({
     name: 'app_deploy',
     description: DEPLOY_DESCRIPTION,

@@ -4,24 +4,24 @@ import {
   buildDraftRecord,
   buildSimulationRecord,
   type DecodedGroupFacts,
-} from '../src/flows/write-flow-host.js'
+} from '../src/actions/host.js'
 import { structuredResultFromToolEvent } from '../src/bridge.js'
 import { createExplorerFixtureResultStore } from '../src/sample/payment.js'
 import {
-  createWriteFlowViewModel,
+  createActionViewModel,
   createWriteStageEvent,
   createApprovalDecisionEvent,
   createApprovalRequestEvent,
   addResult,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  type WriteFlowState,
+  type ActionState,
 } from '../src/index.js'
 import {
   writeDraftDataSchema,
   writeSimulationDataSchema,
   signedGroupDataSchema,
-  writeFlowReducer,
-} from '../src/flows/write-flow.js'
+  actionReducer,
+} from '../src/actions/reducer.js'
 import { base64ToBytes } from '@initlabs/vibekit'
 
 import { decodeUnsignedGroup, signedGroupRecordFor } from '../src/live/index.js'
@@ -146,15 +146,15 @@ describe('live payment mapping over recorded engine outputs', () => {
       }),
       createApprovalDecisionEvent({ requestId: 'approval-live-001', state: 'approved' }),
     ]
-    let flow: WriteFlowState | null = null
+    let flow: ActionState | null = null
     for (const event of steps) {
-      const transition = writeFlowReducer(flow, event)
+      const transition = actionReducer(flow, event)
       if (!transition.ok) throw new Error(transition.error.message)
       flow = transition.state
     }
     expect(flow?.stage).toBe('approved')
 
-    const derived = createWriteFlowViewModel(store, flow!)
+    const derived = createActionViewModel(store, flow!)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model).toMatchObject({
       network: 'localnet',

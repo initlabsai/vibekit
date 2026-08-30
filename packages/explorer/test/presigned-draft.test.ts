@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { bytesToBase64 } from '@initlabs/vibekit'
 
-import { createWriteFlowViewModel, addResult, createResultStore } from '../src/index.js'
+import { createActionViewModel, addResult, createResultStore } from '../src/index.js'
 import {
   draftRecordFromComposeWire,
   signDraftWith,
@@ -82,7 +82,7 @@ describe('drafts with pre-signed legs', () => {
 
   test("the view model exposes the intent and which legs are not the wallet's", () => {
     const { record } = draft()
-    const model = createWriteFlowViewModel(addResult(createResultStore(), record), {
+    const model = createActionViewModel(addResult(createResultStore(), record), {
       flowId: 'flow-1',
       stage: 'drafted',
       draft: { source: 'result', id: record.resultId },
@@ -93,7 +93,7 @@ describe('drafts with pre-signed legs', () => {
   })
 
   test("the simulation record names the wallet's sender, so the view model derives", async () => {
-    const { buildSimulationRecord } = await import('../src/flows/write-flow-host.js')
+    const { buildSimulationRecord } = await import('../src/actions/host.js')
     const { decodeUnsignedGroup } = await import('../src/live/index.js')
     const { record, wire } = draft()
     const decoded = decodeUnsignedGroup(wire.unsignedGroup, wire.presigned)
@@ -103,7 +103,7 @@ describe('drafts with pre-signed legs', () => {
       decoded,
     )
     const store = addResult(addResult(createResultStore(), record), simulation)
-    const model = createWriteFlowViewModel(store, {
+    const model = createActionViewModel(store, {
       flowId: 'flow-2',
       stage: 'simulated',
       draft: { source: 'result', id: record.resultId },

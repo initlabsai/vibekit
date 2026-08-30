@@ -23,12 +23,12 @@ import type { AnyTool } from '@initlabs/vibekit'
 import type { NormalizedAppSpec } from '@initlabs/vibekit/tools'
 import { shorten } from '../../theme.js'
 import type { Feed } from '../../feed/hooks.js'
-import type { WriteFlow } from '../write-flow/hooks.js'
+import type { Action } from '../action/hooks.js'
 
 /**
  * Owns the agent lane: session lifecycle, streaming text/reasoning accretion
  * into the feed, and handing tool results to the feed, the store, or the
- * write flow. The session is rebuilt when the network, the extra tools, or
+ * action flow. The session is rebuilt when the network, the extra tools, or
  * the plugin set change.
  */
 export function useAgentLane({
@@ -52,7 +52,7 @@ export function useAgentLane({
   askConfirm,
 }: {
   feed: Feed
-  payment: WriteFlow
+  payment: Action
   network: LiveNetworkId
   networkRef: { current: LiveNetworkId }
   activeSender: string | undefined

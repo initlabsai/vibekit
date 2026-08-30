@@ -14,7 +14,7 @@ import {
 export * from './schemas.js'
 export { lookupBlock, getNetworkStatus, searchBlockHeaders }
 
-export const networkTools: AnyTool[] = [
+export const networkQueries: AnyTool[] = [
   defineTool({
     name: 'get_network',
     description:

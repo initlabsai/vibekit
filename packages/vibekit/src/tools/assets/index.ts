@@ -12,9 +12,9 @@ export { lookupAsset, searchAssetTransactions, searchAssets }
 export type { FormattedAsset, AssetBalance } from './format.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 
-export { assetWriteTools } from './tools-write.js'
+export { assetActions } from './actions.js'
 
-export const assetTools: AnyTool[] = [
+export const assetQueries: AnyTool[] = [
   defineTool({
     name: 'lookup_asset',
     description:

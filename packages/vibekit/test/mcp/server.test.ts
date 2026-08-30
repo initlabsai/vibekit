@@ -9,6 +9,7 @@ import { resolveMcpDeployment } from '../../src/mcp/options.js'
 const echo = defineTool({
   name: 'echo',
   description: 'Echo a value with a bigint round',
+  output: z.unknown(),
   parameters: z.object({ value: z.string() }),
   view: 'json',
   handler: async (ctx, args) => ({
@@ -21,6 +22,7 @@ const echo = defineTool({
 const lookup = defineTool({
   name: 'lookup_thing',
   description: 'A read tool with an Explorer view',
+  output: z.unknown(),
   parameters: z.object({}),
   view: 'account.summary',
   handler: async () => ({ ok: true }),
@@ -29,6 +31,7 @@ const lookup = defineTool({
 const boom = defineTool({
   name: 'boom',
   description: 'Always throws a ToolError',
+  output: z.unknown(),
   parameters: z.object({}),
   handler: async () => {
     throw new ToolError('KABOOM', 'it broke')
@@ -38,6 +41,7 @@ const boom = defineTool({
 const writeTool = defineTool({
   name: 'write_thing',
   description: 'A write tool',
+  output: z.unknown(),
   parameters: z.object({}),
   requiresSigner: true,
   handler: async () => 'ok',
@@ -198,6 +202,7 @@ describe('multi-network adapter (§10 state model)', () => {
     const clash = defineTool({
       name: 'clash',
       description: 'declares network itself',
+      output: z.unknown(),
       parameters: z.object({ network: z.string() }),
       handler: async () => 'x',
     }) as AnyTool

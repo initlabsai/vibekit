@@ -1,9 +1,9 @@
 /** The domain tools, the ARC-56 toolkit, and the wire schemas consumers parse. */
-export { accountTools } from './accounts/index.js'
-export { assetTools, assetWriteTools } from './assets/index.js'
+export { accountQueries } from './accounts/index.js'
+export { assetQueries, assetActions } from './assets/index.js'
 export {
-  contractTools,
-  contractWriteTools,
+  contractQueries,
+  contractActions,
   DEPLOYER_NOTE_PREFIX,
   enrichTransactionsWithAbi,
   estimateProgramTokens,
@@ -21,8 +21,8 @@ export type {
   ParsedMethod,
   ToolsFromArc56Options,
 } from './contracts/index.js'
-export { networkTools } from './network/index.js'
-export { transactionTools, transactionWriteTools, txnSpecSchema } from './transactions/index.js'
+export { networkQueries } from './network/index.js'
+export { transactionQueries, transactionActions, txnSpecSchema } from './transactions/index.js'
 export { formattedAssetConfigSchema, formattedTransactionSchema } from './shared/format.js'
 export type { FormattedAssetConfig, FormattedTransaction } from './shared/format.js'
 export { viewDataSchemas } from './views.js'

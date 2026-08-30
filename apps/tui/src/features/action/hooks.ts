@@ -1,13 +1,13 @@
 import {
-  completeApprovedWriteFlow,
-  createWriteFlowViewModel,
+  submitAction,
+  createActionViewModel,
   PAYMENT_FIXTURE_AMOUNT_MICROALGOS,
-  performWriteFlowStep,
-  startWriteFlow,
-  startWriteFlowFromDraft,
+  performActionStep,
+  startAction,
+  startActionFromDraft,
   type ResultStore,
   type StructuredResult,
-  type WriteFlowState,
+  type ActionState,
 } from '@initlabs/vibekit-explorer'
 import type { LiveNetworkId } from '@initlabs/vibekit-explorer/live'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -18,8 +18,8 @@ import type { ExplorerHost } from '../network/hooks.js'
 import type { KeystorePaymentHost } from '../network/keystore-host.js'
 
 /** "Payment confirmed on-chain in round N." — the noun comes from what the group held. */
-function confirmedNote(store: ResultStore, flow: WriteFlowState | null): string {
-  const derived = flow?.stage === 'confirmed' ? createWriteFlowViewModel(store, flow) : undefined
+function confirmedNote(store: ResultStore, flow: ActionState | null): string {
+  const derived = flow?.stage === 'confirmed' ? createActionViewModel(store, flow) : undefined
   const model = derived?.ok ? derived.model : undefined
   const types = model?.simulation?.transactionTypes
   const what = model?.unsignedGroup.summary.startsWith('create app')
@@ -36,10 +36,10 @@ function confirmedNote(store: ResultStore, flow: WriteFlowState | null): string 
 }
 
 /**
- * Owns the payment write flow: start/decide orchestration, the flow block in
+ * Owns the payment action flow: start/decide orchestration, the flow block in
  * the feed, and the approval modal's derived model.
  */
-export function useWriteFlow({
+export function useAction({
   feed,
   store,
   storeRef,
@@ -76,23 +76,23 @@ export function useWriteFlow({
 }) {
   const { appendBlock, appendNote, updateItem } = feed
 
-  const [flow, setFlow] = useState<WriteFlowState | null>(null)
+  const [flow, setFlow] = useState<ActionState | null>(null)
   /** Who composed the group under review: the agent, or the user's own typed command/method line. */
   const [flowOrigin, setFlowOrigin] = useState<'agent' | 'typed'>('typed')
-  const flowRef = useRef<WriteFlowState | null>(flow)
+  const flowRef = useRef<ActionState | null>(flow)
   const flowSectionRef = useRef<number | null>(null)
   const flowItemRef = useRef<number | null>(null)
   flowRef.current = flow
 
   const updateFlowBlock = useCallback(
-    (nextFlow: WriteFlowState) => {
+    (nextFlow: ActionState) => {
       flowRef.current = nextFlow
       setFlow(nextFlow)
       const targetSection = flowSectionRef.current
       const targetItem = flowItemRef.current
       if (targetSection === null || targetItem === null) return
       updateItem(targetSection, targetItem, (item) =>
-        item.kind === 'block' && item.block.kind === 'write'
+        item.kind === 'block' && item.block.kind === 'action'
           ? { ...item, block: { ...item.block, flow: nextFlow } }
           : item,
       )
@@ -101,7 +101,7 @@ export function useWriteFlow({
   )
 
   const finishFlow = useCallback(
-    (finalFlow: WriteFlowState | null, message: string, tone: 'muted' | 'error' = 'muted') => {
+    (finalFlow: ActionState | null, message: string, tone: 'muted' | 'error' = 'muted') => {
       if (finalFlow) updateFlowBlock(finalFlow)
       const sectionId = flowSectionRef.current
       flowRef.current = null
@@ -116,11 +116,11 @@ export function useWriteFlow({
   )
 
   const trackFlowStep = useCallback(
-    (sectionId: number) => (nextStore: ResultStore, nextFlow: WriteFlowState) => {
+    (sectionId: number) => (nextStore: ResultStore, nextFlow: ActionState) => {
       commitStore(nextStore)
       if (flowSectionRef.current === null) {
         flowSectionRef.current = sectionId
-        flowItemRef.current = appendBlock(sectionId, { kind: 'write', flow: nextFlow })
+        flowItemRef.current = appendBlock(sectionId, { kind: 'action', flow: nextFlow })
         flowRef.current = nextFlow
         setFlow(nextFlow)
       } else {
@@ -149,7 +149,7 @@ export function useWriteFlow({
           ? `composing and simulating on ${networkRef.current}…`
           : `preparing a sample payment (always 0.25 ALGO — ${networkRef.current} is offline)…`,
       )
-      void startWriteFlow({
+      void startAction({
         host: host(),
         store: storeRef.current,
         draftParams: {
@@ -202,7 +202,7 @@ export function useWriteFlow({
       failurePrefix: string,
     ) => {
       setFlowOrigin(origin)
-      void startWriteFlowFromDraft({
+      void startActionFromDraft({
         host: keystoreHost,
         store: storeRef.current,
         draftRecord,
@@ -244,7 +244,7 @@ export function useWriteFlow({
         return
       setBusy(true)
       void (async () => {
-        const outcome = await performWriteFlowStep({
+        const outcome = await performActionStep({
           host: host(),
           store: storeRef.current,
           flow: current,
@@ -263,7 +263,7 @@ export function useWriteFlow({
           return
         }
         setStatus(live === true ? 'signing and submitting…' : 'finishing the sample…')
-        const run = await completeApprovedWriteFlow({
+        const run = await submitAction({
           host: host(),
           store: outcome.store,
           flow: outcome.flow,
@@ -308,7 +308,7 @@ export function useWriteFlow({
 
   const modalModel = useMemo(() => {
     if (!modalOpen || !flow) return undefined
-    const derived = createWriteFlowViewModel(store, flow)
+    const derived = createActionViewModel(store, flow)
     return derived.ok ? derived.model : undefined
   }, [flow, modalOpen, store])
 
@@ -329,4 +329,4 @@ export function useWriteFlow({
   }
 }
 
-export type WriteFlow = ReturnType<typeof useWriteFlow>
+export type Action = ReturnType<typeof useAction>

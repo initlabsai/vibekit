@@ -31,7 +31,7 @@ than hidden in module state.
 
 ## Compose and execute
 
-Write tools use VibeKit’s compose engine. In compose mode, a write returns the
+Actions use VibeKit’s compose engine. In compose mode, a write returns the
 unsigned transaction group so another signer can review and sign it. In execute
 mode, the deployment provides a signer and the host takes responsibility for
 approval before submitting.

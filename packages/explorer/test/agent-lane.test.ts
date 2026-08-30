@@ -4,12 +4,12 @@ import { buildTransactionDetailRecord } from '../src/views/transaction.js'
 import {
   createSampleHost,
   createFixtureResultStore,
-  createWriteFlowViewModel,
+  createActionViewModel,
   createTransactionDetailViewModel,
   bridgeToolResult,
   unsignedGroupFromToolResult,
   PAYMENT_FIXTURE_TRANSACTION_ID,
-  startWriteFlowFromDraft,
+  startActionFromDraft,
   type ToolResultEventLike,
 } from '../src/index.js'
 import { draftRecordFromComposeWire } from '../src/live/index.js'
@@ -168,7 +168,7 @@ describe('agent lane result bridge', () => {
     expect(compose?.unsignedGroup).toEqual(recorded.compose.unsignedGroup)
 
     const draftRecord = draftRecordFromComposeWire(identity(), compose)
-    const run = await startWriteFlowFromDraft({
+    const run = await startActionFromDraft({
       host: createSampleHost(),
       store: createFixtureResultStore(),
       draftRecord,
@@ -177,7 +177,7 @@ describe('agent lane result bridge', () => {
     if (!run.ok || !run.flow) throw new Error(run.message)
     expect(run.flow.stage).toBe('awaiting-approval')
 
-    const derived = createWriteFlowViewModel(run.store, run.flow)
+    const derived = createActionViewModel(run.store, run.flow)
     if (!derived.ok) throw new Error(derived.error.message)
     expect(derived.model.amountMicroAlgos).toBe(250000)
     expect(derived.model.unsignedGroup.transactions).toEqual(recorded.compose.unsignedGroup)

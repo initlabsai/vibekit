@@ -4,14 +4,14 @@
  * The web Explorer's shell: top bar, session index, the route's screen, and
  * the composer, persisting across every URL. `/` is the transcript; the
  * other routes are screens over the same store. This component is the
- * composition root — the feed, the network, lookups, and the write flow
+ * composition root — the feed, the network, lookups, and the action flow
  * each live in their own hook; the genuinely shared state (result store,
  * busy flag, status line) stays here and reaches screens through
  * `useExplorer`.
  */
 import {
   createFixtureResultStore,
-  createWriteFlowViewModel,
+  createActionViewModel,
   type ResultStore,
 } from '@initlabs/vibekit-explorer'
 import Link from 'next/link'
@@ -37,9 +37,9 @@ import { useComposer } from './features/composer/hooks'
 import { usePanel } from './features/layout/hooks'
 import { defaultNetwork, useNetwork, type ExplorerHost } from './features/network/hooks'
 import { ProfileRail } from './features/profile/rail'
-import { WriteFlowCard } from './features/write-flow/cards'
-import { useWriteFlow } from './features/write-flow/hooks'
-import { ApprovalModal } from './features/write-flow/modal'
+import { ActionCard } from './features/action/cards'
+import { useAction } from './features/action/hooks'
+import { ApprovalModal } from './features/action/modal'
 import { useLookups } from './lookup'
 import type { LiveNetworkId, ResultStore as Store } from '@initlabs/vibekit-explorer'
 import { Button, CopyContext, OpenContext } from './primitives'
@@ -160,7 +160,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     setStatus,
   }
   const lookups = useLookups({ ...shared, remoteHost, accounts })
-  const payment = useWriteFlow({ ...shared, newId, accounts, activeAddress })
+  const payment = useAction({ ...shared, newId, accounts, activeAddress })
   const credits = useCredits({
     activeAddress,
     signTransactions: wallet.signTransactions,
@@ -214,11 +214,11 @@ function ExplorerApp({ children }: { children: ReactNode }) {
               loadingMore={lookups.loadingMore === itemId}
             />
           )
-        case 'write': {
-          const derived = createWriteFlowViewModel(store, block.flow)
+        case 'action': {
+          const derived = createActionViewModel(store, block.flow)
           const isOpen = payment.flowRef.current?.flowId === block.flow.flowId
           return (
-            <WriteFlowCard
+            <ActionCard
               model={derived.ok ? derived.model : undefined}
               errorMessage={derived.ok ? undefined : derived.error.message}
               network={block.flow.draft ? (derived.ok ? derived.model.network : network) : network}
@@ -237,7 +237,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
   // The one moment the UI waits on a human: a true modal over everything.
   const approval =
     payment.flow?.stage === 'awaiting-approval'
-      ? createWriteFlowViewModel(store, payment.flow)
+      ? createActionViewModel(store, payment.flow)
       : undefined
   const announceCopy = useCallback((text: string) => setStatus(`copied ${shorten(text, 28)}`), [])
   // `/` jumps to the composer from anywhere; Esc returns to the feed.

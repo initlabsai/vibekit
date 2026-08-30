@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import algosdk from 'algosdk'
 import { base64ToBytes } from '../../src/core/index.js'
-import { assetWriteTools } from '../../src/tools/assets/tools-write.js'
+import { assetActions } from '../../src/tools/assets/actions.js'
 import { chainable, fakeContext } from './fake-context.js'
 
 const ADDR_A = 'Y76M3MSY6DKBRHBL7C3NNDXGS5IIMQVQVUAB6MP4XEMMGVF2QWNPL226CA'
@@ -18,7 +18,7 @@ const suggestedParams = {
 
 describe('asset write tools', () => {
   test('registry: 7 writes require signer', () => {
-    const names = assetWriteTools.map((t) => t.name)
+    const names = assetActions.map((t) => t.name)
     expect(names).toEqual([
       'asset_create',
       'asset_transfer',
@@ -28,7 +28,7 @@ describe('asset write tools', () => {
       'asset_config',
       'asset_destroy',
     ])
-    for (const tool of assetWriteTools) {
+    for (const tool of assetActions) {
       expect(tool.requiresSigner).toBe(true)
       expect(tool.output).toBeDefined()
     }
@@ -36,7 +36,7 @@ describe('asset write tools', () => {
 
   test('asset_create composes an acfg create with metadata hash', async () => {
     const ctx = fakeContext({ algod: { getTransactionParams: () => chainable(suggestedParams) } })
-    const tool = assetWriteTools.find((t) => t.name === 'asset_create')!
+    const tool = assetActions.find((t) => t.name === 'asset_create')!
     const result = (await tool.handler(ctx, {
       sender: ADDR_A,
       total: 1_000_000,

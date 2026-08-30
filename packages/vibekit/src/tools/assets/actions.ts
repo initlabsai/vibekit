@@ -1,4 +1,4 @@
-/** Asset write tools: thin spec-builders over the core compose engine. */
+/** Asset actions: thin spec-builders over the core compose engine. */
 import {
   composeOrExecute,
   defineTool,
@@ -28,7 +28,7 @@ function writeTool<P extends z.ZodType>(def: {
   })
 }
 
-export const assetWriteTools: AnyTool[] = [
+export const assetActions: AnyTool[] = [
   writeTool({
     name: 'asset_create',
     description: 'Create a new Algorand Standard Asset (ASA).',

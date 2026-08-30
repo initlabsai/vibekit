@@ -2,13 +2,13 @@ import { describe, expect, test } from 'bun:test'
 import { readFile } from 'node:fs/promises'
 import { ToolError } from '../../src/core/index.js'
 
-import { contractTools } from '../../src/tools/contracts/index.js'
-import { contractWriteTools } from '../../src/tools/contracts/tools-write.js'
+import { contractQueries } from '../../src/tools/contracts/index.js'
+import { contractActions } from '../../src/tools/contracts/actions.js'
 import { fakeContext } from './fake-context.js'
 
 const SPEC_PATH = new URL('./fixtures/hello-world.arc56.json', import.meta.url).pathname
 const tool = (name: string) =>
-  [...contractTools, ...contractWriteTools].find((t) => t.name === name)!
+  [...contractQueries, ...contractActions].find((t) => t.name === name)!
 
 const readDisk = (path: string) => readFile(path, 'utf8')
 
@@ -60,7 +60,7 @@ describe('appSpecPath', () => {
 
 describe('appSpecPath on a deployment with no file grant', () => {
   test('refuses the path form instead of reading the host filesystem', async () => {
-    const tool = contractTools.find((entry) => entry.name === 'list_app_spec_methods')!
+    const tool = contractQueries.find((entry) => entry.name === 'list_app_spec_methods')!
     await expect(
       tool.handler(fakeContext({}), { appSpecPath: '/etc/hostname' }),
     ).rejects.toMatchObject({ code: 'APP_SPEC_PATH_UNAVAILABLE' })

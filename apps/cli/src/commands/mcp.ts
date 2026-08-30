@@ -35,7 +35,7 @@ export async function commandMcp(): Promise<void> {
       mode = 'compose'
       console.error(
         'vibekit mcp: keystore daemon not reachable — starting in compose mode ' +
-          '(write tools return unsigned transactions). Run `vibekit keystore start` and restart for signing.',
+          '(actions return unsigned transactions). Run `vibekit keystore start` and restart for signing.',
       )
     }
   }

@@ -11,9 +11,9 @@ export type { SearchTransactionsArgs } from './search.js'
 export type { FormattedTransaction } from '../shared/schemas.js'
 export { formattedTransactionSchema, transactionListSchema } from '../shared/schemas.js'
 
-export { transactionWriteTools, txnSpecSchema } from './tools-write.js'
+export { transactionActions, txnSpecSchema } from './actions.js'
 
-export const transactionTools: AnyTool[] = [
+export const transactionQueries: AnyTool[] = [
   defineTool({
     name: 'lookup_transaction',
     description: 'Look up a single transaction by its ID',

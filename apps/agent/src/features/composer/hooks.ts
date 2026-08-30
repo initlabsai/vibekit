@@ -11,7 +11,7 @@ import type { Feed } from '../../feed/hooks'
 import type { useLookups } from '../../lookup'
 import type { OpenTarget } from '../../result-card'
 import { NETWORKS } from '../network/hooks'
-import type { useWriteFlow } from '../write-flow/hooks'
+import type { useAction } from '../action/hooks'
 
 export function useComposer({
   pathname,
@@ -30,7 +30,7 @@ export function useComposer({
   push: (href: string) => void
   feed: Feed
   lookups: ReturnType<typeof useLookups>
-  payment: ReturnType<typeof useWriteFlow>
+  payment: ReturnType<typeof useAction>
   networkRef: { current: LiveNetworkId }
   setNetwork: (network: LiveNetworkId) => void
   setStatus: (text: string) => void

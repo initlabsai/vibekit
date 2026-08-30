@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { ToolError } from '../../src/core/index.js'
-import { contractTools } from '../../src/tools/contracts/index.js'
+import { contractQueries } from '../../src/tools/contracts/index.js'
 import { lookupApplication, lookupApplicationLogs } from '../../src/tools/contracts/lookup.js'
 import { searchApplications } from '../../src/tools/contracts/search.js'
 import { decodeAddress } from 'algosdk'
@@ -39,7 +39,7 @@ const fakeIndexerApp = {
 
 describe('registry', () => {
   test('exports 10 read-only tools with output schemas and view or display hints', () => {
-    expect(contractTools.map((t) => t.name)).toEqual([
+    expect(contractQueries.map((t) => t.name)).toEqual([
       'lookup_application',
       'search_applications',
       'lookup_application_logs',
@@ -51,7 +51,7 @@ describe('registry', () => {
       'get_application_program',
       'list_app_spec_methods',
     ])
-    for (const tool of contractTools) {
+    for (const tool of contractQueries) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
       expect(tool.view).toBeDefined()
@@ -421,7 +421,7 @@ describe('list_app_spec_methods', () => {
     const spec = JSON.stringify({
       contract: { name: 'Old', methods: [{ name: 'go', args: [], returns: { type: 'void' } }] },
     })
-    const tool = contractTools.find((t) => t.name === 'list_app_spec_methods')!
+    const tool = contractQueries.find((t) => t.name === 'list_app_spec_methods')!
     const result = (await tool.handler(fakeContext({}), { appSpec: spec } as never)) as {
       methods: Array<{ signature: string }>
     }

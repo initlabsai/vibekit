@@ -56,9 +56,9 @@ export type { DecodedAppCall, DecodedAbiValue } from './abi.js'
 export type { FormattedApplication } from './format.js'
 export type { StateValue } from './state.js'
 
-export { contractWriteTools, DEPLOYER_NOTE_PREFIX, deployerNote } from './tools-write.js'
+export { contractActions, DEPLOYER_NOTE_PREFIX, deployerNote } from './actions.js'
 
-export const contractTools: AnyTool[] = [
+export const contractQueries: AnyTool[] = [
   defineTool({
     name: 'lookup_application',
     description:

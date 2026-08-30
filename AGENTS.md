@@ -20,7 +20,7 @@ renders what those tools return.
 | `packages/vibekit/src/agent` (`./agent`, `./agent/config`) | Host: the LLM tool loop and its stored config. |
 | `packages/vibekit/src/preset` (`./preset`) | The stock tool and plugin mix every stock host composes from. |
 | `packages/vibekit/examples` | Reference stdio and HTTP deployments, typechecked with the package. |
-| `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the write flow (`src/flows`), the tool-result bridge (`src/bridge.ts`), input classification (`src/input.ts`), formatting (`src/format.ts`), recorded sample data (`src/sample`), and the live host (`src/live`). Not a UI. `src/index.ts` lists what the apps use; everything else is internal. |
+| `packages/explorer` (private) | The Explorer protocol (`src/core`: result envelope, view ids, write-stage events), view models (`src/views`), the action flow (`src/actions`), the tool-result bridge (`src/bridge.ts`), input classification (`src/input.ts`), formatting (`src/format.ts`), recorded sample data (`src/sample`), and the live host (`src/live`). Not a UI. `src/index.ts` lists what the apps use; everything else is internal. |
 | `apps/cli` | The `vibekit` binary: `new`, `init`, `localnet`, `keystore`, `dispenser`, `doctor`, `tool`, `mcp`, `explore`. Host: `commands/tool.ts` and `commands/mcp.ts`. |
 | `apps/tui` | The terminal Explorer (OpenTUI). Live against a network when reachable, sample data otherwise. `features/<name>/` holds one feature's hooks, screen, and cards; `feed/` is the transcript; `app.tsx` composes them. |
 | `apps/agent` | The web Explorer with its agent (Next.js). Sample-backed reads plus a compose-only flow route. |
@@ -52,8 +52,8 @@ Write:
 ```
 tool.handler → composeOrExecute(ctx, TxnSpec[]) (core/compose)
   → compose mode: unsigned group, base64 | execute mode: sign, send, confirm
-Explorer write flow: draft → simulate → inspect → approve → sign → confirm
-  (packages/explorer/src/flows; every stage is a recorded result)
+Explorer action flow: draft → simulate → inspect → approve → sign → confirm
+  (packages/explorer/src/actions; every stage is a recorded result)
 ```
 
 Every host sends calls through `executeToolCall` in
@@ -89,8 +89,8 @@ One word per concept. Do not introduce a synonym.
   **ViewSpec** binds a trusted view id to a result reference. A **view
   model** is what `create*ViewModel` derives from the store for a ViewSpec.
   A **card** is the TUI component that renders one.
-- **write flow** — the draft/simulate/inspect/approve/sign/confirm state
-  machine in `packages/explorer/src/flows`. The code still says "payment"
+- **action flow** — the draft/simulate/inspect/approve/sign/confirm state
+  machine in `packages/explorer/src/actions`. The code still says "payment"
   in places; it carries app calls and groups too.
 - **agent lane / direct lane** — in the TUI, whether input went to the
   model or was routed deterministically (an id, a command). The only uses

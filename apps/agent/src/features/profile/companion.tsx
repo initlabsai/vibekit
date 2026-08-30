@@ -29,7 +29,7 @@ export function moodFor(section: Section | undefined, item: { pending?: boolean;
   if (streaming) return 'thinking'
   const last = section?.items.at(-1)
   if (last?.kind === 'note' && last.tone === 'error') return 'squint'
-  if (last?.kind === 'block' && last.block.kind === 'write') {
+  if (last?.kind === 'block' && last.block.kind === 'action') {
     const stage = last.block.flow.stage
     if (stage === 'denied') return 'squint'
     if (stage === 'confirmed') return 'bright'

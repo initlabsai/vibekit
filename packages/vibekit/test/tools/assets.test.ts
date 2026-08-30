@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { jsonSafe } from '../../src/core/index.js'
-import { assetTools } from '../../src/tools/assets/index.js'
+import { assetQueries } from '../../src/tools/assets/index.js'
 import { lookupAsset } from '../../src/tools/assets/lookup.js'
 import { topAssetHolders } from '../../src/tools/assets/holders.js'
 import { searchAssetTransactions, searchAssets } from '../../src/tools/assets/search.js'
@@ -20,14 +20,14 @@ const usdcParams = {
 
 describe('registry', () => {
   test('exports 5 read-only tools with output schemas and view or display hints', () => {
-    expect(assetTools.map((t) => t.name)).toEqual([
+    expect(assetQueries.map((t) => t.name)).toEqual([
       'lookup_asset',
       'top_asset_holders',
       'search_asset_transactions',
       'search_assets',
       'get_asset_info',
     ])
-    for (const tool of assetTools) {
+    for (const tool of assetQueries) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
       expect(tool.view).toBeDefined()
@@ -182,7 +182,7 @@ describe('searchAssetTransactions', () => {
           }),
       },
     })
-    const tool = assetTools.find((t) => t.name === 'search_asset_transactions')!
+    const tool = assetQueries.find((t) => t.name === 'search_asset_transactions')!
     const wire = jsonSafe(await tool.handler(ctx, { assetId: 777 })) as {
       transactions: Array<{ innerTxns: Array<Record<string, unknown>> }>
     }
@@ -270,7 +270,7 @@ describe('get_asset_info', () => {
           }),
       },
     })
-    const tool = assetTools.find((t) => t.name === 'get_asset_info')!
+    const tool = assetQueries.find((t) => t.name === 'get_asset_info')!
     const info = (await tool.handler(ctx, { assetId: 42 } as never)) as {
       assetId: number
       creator: string

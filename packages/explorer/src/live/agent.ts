@@ -16,14 +16,14 @@ import { peraPlugin } from '@initlabs/vibekit/plugins/pera'
 import { vestigePlugin } from '@initlabs/vibekit/plugins/vestige'
 import { webPlugin } from '@initlabs/vibekit/plugins/web'
 import {
-  accountTools,
-  assetTools,
-  assetWriteTools,
-  contractTools,
-  contractWriteTools,
-  networkTools,
-  transactionTools,
-  transactionWriteTools,
+  accountQueries,
+  assetQueries,
+  assetActions,
+  contractQueries,
+  contractActions,
+  networkQueries,
+  transactionQueries,
+  transactionActions,
 } from '@initlabs/vibekit/tools'
 
 import type { ResultStore } from '../core/results.js'
@@ -49,14 +49,14 @@ export function explorerTools(
   omit?: ReadonlySet<string>,
 ): AnyTool[] {
   return [
-    ...transactionTools,
-    ...transactionWriteTools,
-    ...accountTools,
-    ...assetTools,
-    ...assetWriteTools,
-    ...contractTools,
-    ...contractWriteTools,
-    ...networkTools,
+    ...transactionQueries,
+    ...transactionActions,
+    ...accountQueries,
+    ...assetQueries,
+    ...assetActions,
+    ...contractQueries,
+    ...contractActions,
+    ...networkQueries,
     explainApplicationTool,
     ...extra,
   ].filter(
@@ -152,7 +152,7 @@ export function explorerSystemPrompt(
     "To explain a transaction, lookup_transaction alone is enough. An account's history includes txns that merely reference it (inner txns, app-call refs) — check sender/receiver before saying the account did something.",
     '',
     '## Writes',
-    'Write tools (send_payment, app_call, asset_*, generated app methods, swap) compose an unsigned group. They do not send. Say it is ready for review.',
+    'Actions (send_payment, app_call, asset_*, generated app methods, swap) compose an unsigned group. They do not send. Say it is ready for review.',
     'A tool error with code RATE_LIMITED means that source is resting: say so in one line, do not retry it this turn, and answer from what is already on screen if you can.',
     'The web: web_search when the question is about the world, not the chain — news, docs, who is behind a project, what a token is for; read_page when a highlight is not enough. The RESULTS card is the citation: answer in a sentence, name the source, never quote pages at length. Chain facts still come from chain tools.',
     'Prediction markets (Alpha Arcade, mainnet): get_live_markets for what is open, get_market for one, get_orderbook for depth, get_positions / get_open_orders for the active account unless the user names another. YES price is the implied probability. Trading: place_order (limit with priceUsd, market without), cancel_order, claim_winnings — each composes for the wallet like every write; only when the user says so.',

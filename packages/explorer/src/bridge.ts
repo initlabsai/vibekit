@@ -12,7 +12,7 @@ import { structuredResultSchema, type JsonValue } from './core/results.js'
 import { EXPLORER_PROTOCOL_VERSION } from './core/version.js'
 import { record } from './views/derive.js'
 import type { ResultIdentity, StructuredResult } from './core/results.js'
-import { composeWireResultSchema } from './flows/write-flow-host.js'
+import { composeWireResultSchema } from './actions/host.js'
 import {
   buildAccountListRecord,
   buildAccountPortfolioRecord,

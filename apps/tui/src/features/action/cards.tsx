@@ -1,5 +1,5 @@
 import algosdk from 'algosdk'
-import { formatMicroAlgos, type WriteFlowViewModel } from '@initlabs/vibekit-explorer'
+import { formatMicroAlgos, type ActionViewModel } from '@initlabs/vibekit-explorer'
 
 import { COLORS } from '../../theme.js'
 import {
@@ -21,7 +21,7 @@ function signedDelta(value: number | string): string {
 }
 
 /** Flat lines for tests and for hosts that still want a text dump. */
-export function paymentLines(model: WriteFlowViewModel): string[] {
+export function paymentLines(model: ActionViewModel): string[] {
   const lines = [
     model.amountMicroAlgos === undefined
       ? `${model.unsignedGroup.summary} · ${model.network}`
@@ -146,12 +146,12 @@ function CallSummary({ summary, width }: { summary: string; width: number }) {
   )
 }
 
-export function WriteFlowBody({
+export function ActionBody({
   model,
   width,
   big = false,
 }: {
-  model: WriteFlowViewModel
+  model: ActionViewModel
   width: number
   /** Render the amount as a two-row ascii figure (the approval modal). */
   big?: boolean
@@ -267,13 +267,13 @@ export function WriteFlowBody({
   )
 }
 
-export function WriteFlowCard({
+export function ActionCard({
   model,
   stage,
   busy,
   width,
 }: {
-  model: WriteFlowViewModel | undefined
+  model: ActionViewModel | undefined
   stage: string
   busy: boolean
   width: number
@@ -299,7 +299,7 @@ export function WriteFlowCard({
         pill={badge}
         tone={tone}
       />
-      <WriteFlowBody model={model} width={innerWidth(width)} />
+      <ActionBody model={model} width={innerWidth(width)} />
     </Frame>
   )
 }

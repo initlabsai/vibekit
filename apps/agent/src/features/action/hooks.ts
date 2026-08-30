@@ -1,14 +1,14 @@
-/** The payment write flow: start/decide orchestration and the flow block in the feed. */
+/** The payment action flow: start/decide orchestration and the flow block in the feed. */
 import {
-  completeApprovedWriteFlow,
-  createWriteFlowViewModel,
-  performWriteFlowStep,
-  startWriteFlow,
-  startWriteFlowFromDraft,
+  submitAction,
+  createActionViewModel,
+  performActionStep,
+  startAction,
+  startActionFromDraft,
   type StructuredResult,
   type LiveNetworkId,
   type ResultStore,
-  type WriteFlowState,
+  type ActionState,
 } from '@initlabs/vibekit-explorer'
 import { useCallback, useRef, useState } from 'react'
 
@@ -16,7 +16,7 @@ import { resolvePaymentParties, type WalletAccount } from '../../commands'
 import type { Feed } from '../../feed/hooks'
 import type { ExplorerHost } from '../network/hooks'
 
-export function useWriteFlow({
+export function useAction({
   feed,
   storeRef,
   commitStore,
@@ -44,20 +44,20 @@ export function useWriteFlow({
   setStatus: (status: string) => void
 }) {
   const { appendBlock, appendNote, updateItem } = feed
-  const [flow, setFlow] = useState<WriteFlowState | null>(null)
-  const flowRef = useRef<WriteFlowState | null>(null)
+  const [flow, setFlow] = useState<ActionState | null>(null)
+  const flowRef = useRef<ActionState | null>(null)
   /** The host the open flow started on; a flow finishes where it began even if reachability flips. */
   const flowHostRef = useRef<ExplorerHost | null>(null)
   const flowBlockRef = useRef<{ sectionId: number; itemId: number } | null>(null)
 
   const commitFlow = useCallback(
-    (next: WriteFlowState | null) => {
+    (next: ActionState | null) => {
       flowRef.current = next
       setFlow(next)
       const block = flowBlockRef.current
       if (next && block) {
         updateItem(block.sectionId, block.itemId, (item) =>
-          item.kind === 'block' ? { ...item, block: { kind: 'write', flow: next } } : item,
+          item.kind === 'block' ? { ...item, block: { kind: 'action', flow: next } } : item,
         )
       }
     },
@@ -65,10 +65,10 @@ export function useWriteFlow({
   )
 
   const trackStep = useCallback(
-    (sectionId: number) => (store: ResultStore, next: WriteFlowState) => {
+    (sectionId: number) => (store: ResultStore, next: ActionState) => {
       commitStore(store)
       if (!flowBlockRef.current) {
-        flowBlockRef.current = { sectionId, itemId: appendBlock(sectionId, { kind: 'write', flow: next }) }
+        flowBlockRef.current = { sectionId, itemId: appendBlock(sectionId, { kind: 'action', flow: next }) }
       }
       commitFlow(next)
     },
@@ -101,7 +101,7 @@ export function useWriteFlow({
           ? `composing and simulating on ${networkRef.current}…`
           : `preparing a sample payment (${networkRef.current} is unreachable)…`,
       )
-      void startWriteFlow({
+      void startAction({
         host: current,
         store: storeRef.current,
         draftParams: { ...parties, amountMicroAlgos, note: 'Explorer live payment' },
@@ -134,7 +134,7 @@ export function useWriteFlow({
       flowHostRef.current = current
       setBusy(true)
       setStatus(`simulating on ${networkRef.current}…`)
-      void startWriteFlowFromDraft({
+      void startActionFromDraft({
         host: current,
         store: storeRef.current,
         draftRecord,
@@ -164,7 +164,7 @@ export function useWriteFlow({
       if (busyRef.current || !current || !flowHost || !block || current.stage !== 'awaiting-approval') return
       setBusy(true)
       void (async () => {
-        const outcome = await performWriteFlowStep({
+        const outcome = await performActionStep({
           host: flowHost,
           store: storeRef.current,
           flow: current,
@@ -185,7 +185,7 @@ export function useWriteFlow({
           return
         }
         setStatus(flowHost.signDraft ? 'signing…' : 'approved')
-        const run = await completeApprovedWriteFlow({
+        const run = await submitAction({
           host: flowHost,
           store: outcome.store,
           flow: outcome.flow,
@@ -204,7 +204,7 @@ export function useWriteFlow({
         } else if (run.pausedForSigner) {
           appendNote(block.sectionId, 'Approved — connect a wallet to sign; nothing was signed.')
         } else {
-          const derived = run.flow ? createWriteFlowViewModel(run.store, run.flow) : undefined
+          const derived = run.flow ? createActionViewModel(run.store, run.flow) : undefined
           const confirmation = derived?.ok ? derived.model.confirmation : undefined
           // Her line, bright-faced: the round and the transaction id, which copies.
           appendNote(

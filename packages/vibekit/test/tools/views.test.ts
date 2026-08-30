@@ -2,23 +2,23 @@ import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod'
-import { accountTools } from '../../src/tools/accounts/index.js'
-import { assetTools, assetWriteTools } from '../../src/tools/assets/index.js'
-import { contractTools, contractWriteTools } from '../../src/tools/contracts/index.js'
-import { networkTools } from '../../src/tools/network/index.js'
-import { transactionTools } from '../../src/tools/transactions/index.js'
-import { transactionWriteTools } from '../../src/tools/transactions/tools-write.js'
+import { accountQueries } from '../../src/tools/accounts/index.js'
+import { assetQueries, assetActions } from '../../src/tools/assets/index.js'
+import { contractQueries, contractActions } from '../../src/tools/contracts/index.js'
+import { networkQueries } from '../../src/tools/network/index.js'
+import { transactionQueries } from '../../src/tools/transactions/index.js'
+import { transactionActions } from '../../src/tools/transactions/actions.js'
 import { viewDataSchemas, type ViewData } from '../../src/tools/views.js'
 
 const allTools = [
-  ...accountTools,
-  ...assetTools,
-  ...assetWriteTools,
-  ...contractTools,
-  ...contractWriteTools,
-  ...networkTools,
-  ...transactionTools,
-  ...transactionWriteTools,
+  ...accountQueries,
+  ...assetQueries,
+  ...assetActions,
+  ...contractQueries,
+  ...contractActions,
+  ...networkQueries,
+  ...transactionQueries,
+  ...transactionActions,
 ]
 
 const dottedViewTools = allTools.filter((t) => typeof t.view === 'string' && t.view.includes('.'))

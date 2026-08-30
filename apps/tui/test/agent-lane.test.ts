@@ -12,7 +12,7 @@ import {
   FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_TRANSACTION_ID,
   PAYMENT_FIXTURE_UNSIGNED_TRANSACTION,
-  startWriteFlowFromDraft,
+  startActionFromDraft,
   type ToolResultEventLike,
 } from '@initlabs/vibekit-explorer'
 import { draftRecordFromComposeWire } from '@initlabs/vibekit-explorer/live'
@@ -97,6 +97,7 @@ const TXN_WIRE = {
 const stubLookup = defineTool({
   name: 'lookup_transaction',
   description: 'stub',
+  output: z.unknown(),
   parameters: z.object({ txid: z.string() }),
   view: 'transaction.detail',
   handler: async () => TXN_WIRE,
@@ -105,6 +106,7 @@ const stubLookup = defineTool({
 const stubSendPayment = defineTool({
   name: 'send_payment',
   description: 'stub',
+  output: z.unknown(),
   parameters: z.object({
     sender: z.string(),
     receiver: z.string(),
@@ -291,7 +293,7 @@ describe('TUI agent lane', () => {
       { resultId: newId('result-agent-draft'), toolCallId: 'call-1', network: 'localnet' },
       compose,
     )
-    const run = await startWriteFlowFromDraft({
+    const run = await startActionFromDraft({
       host: createSampleHost(),
       store: createFixtureResultStore(),
       draftRecord,
@@ -444,6 +446,7 @@ test('a known spec labels program selectors with names and args — inside the t
   const stubProgram = defineTool({
     name: 'get_application_program',
     description: 'stub',
+    output: z.unknown(),
     parameters: z.object({ applicationId: z.number() }),
     handler: async () => program,
   })
@@ -509,7 +512,7 @@ describe('planToolResult', () => {
       summary: 'pay 0.25 ALGO',
       network: 'localnet',
     })
-    expect(planToolResult(compose, ctx).kind).toBe('write')
+    expect(planToolResult(compose, ctx).kind).toBe('action')
     const second = planToolResult(compose, { ...ctx, paymentInFlight: true })
     if (second.kind !== 'cards') throw new Error(second.kind)
     expect(second.blocks[0]?.kind).toBe('raw')
@@ -678,7 +681,7 @@ describe('applyToolResultPlan', () => {
   test('a write goes to approval, cards to the store and feed, a drop to a note', () => {
     const toApproval = sinks()
     applyToolResultPlan(
-      { kind: 'write', draftRecord: {} as never, usedNetwork: 'localnet' } as never,
+      { kind: 'action', draftRecord: {} as never, usedNetwork: 'localnet' } as never,
       toApproval,
     )
     expect(toApproval.calls).toEqual(['draft'])

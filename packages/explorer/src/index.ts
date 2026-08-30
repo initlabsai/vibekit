@@ -1,6 +1,6 @@
 /**
  * The Explorer protocol and what the two apps build on: result records, view
- * ids and view models, the write flow, formatting, input classification, and
+ * ids and view models, the action flow, formatting, input classification, and
  * the recorded sample data. The live host is the separate `./live` subpath.
  */
 export { EXPLORER_PROTOCOL_VERSION, explorerProtocolVersionSchema } from './core/version.js'
@@ -166,15 +166,15 @@ export type {
   GraphVertical,
   TransactionsGraph,
 } from './views/transaction-graph.js'
-export { createWriteFlowViewModel, writeDraftDataSchema } from './flows/write-flow.js'
-export type { WriteFlowViewModel, WriteFlowState } from './flows/write-flow.js'
+export { createActionViewModel, writeDraftDataSchema } from './actions/reducer.js'
+export type { ActionViewModel, ActionState } from './actions/reducer.js'
 export {
-  completeApprovedWriteFlow,
-  performWriteFlowStep,
-  startWriteFlow,
-  startWriteFlowFromDraft,
-} from './flows/write-flow-host.js'
-export type { PaymentDraftParams, WriteFlowHost } from './flows/write-flow-host.js'
+  submitAction,
+  performActionStep,
+  startAction,
+  startActionFromDraft,
+} from './actions/host.js'
+export type { PaymentDraftParams, ActionHost } from './actions/host.js'
 export { bridgeToolResult, unsignedGroupFromToolResult } from './bridge.js'
 export type { ToolResultEventLike } from './bridge.js'
 export { lookupAmbiguousEntity } from './entity-lookup.js'

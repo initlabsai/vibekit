@@ -25,7 +25,7 @@ that route an agent to the right skill for the task. It preserves unrelated MCP
 servers in supported JSON configurations.
 
 The VibeKit MCP entry invokes your local `vibekit mcp` command over stdio. The
-agent receives the stock read and write tools for accounts, assets, contracts,
+agent receives the stock read and actions for accounts, assets, contracts,
 transactions, and network data, plus the default plugins (NFD, Alpha Arcade,
 Vestige, Pera, web search; Haystack swaps with a router key). It defaults to LocalNet while serving localnet, testnet, and
 mainnet, and signs through the local keystore daemon (`SIGNING=execute`),

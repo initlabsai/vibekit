@@ -2,7 +2,7 @@
 import type { BoxRenderable, ScrollBoxRenderable } from '@opentui/core'
 import { useCallback, useRef, useState } from 'react'
 
-import type { ViewSpec, WriteFlowState } from '@initlabs/vibekit-explorer'
+import type { ViewSpec, ActionState } from '@initlabs/vibekit-explorer'
 
 /** One rendered result inside a section — a request may compose several. */
 export type SectionBlock =
@@ -16,7 +16,7 @@ export type SectionBlock =
       facts: Array<[string, string]>
       rows: Array<Record<string, unknown>>
     }
-  | { kind: 'write'; flow: WriteFlowState }
+  | { kind: 'action'; flow: ActionState }
 
 /** One entry in a section's body, in arrival order. */
 export type SectionItem =

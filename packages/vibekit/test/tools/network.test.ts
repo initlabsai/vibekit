@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { networkTools } from '../../src/tools/network/index.js'
+import { networkQueries } from '../../src/tools/network/index.js'
 import { lookupBlock } from '../../src/tools/network/block.js'
 import { searchBlockHeaders } from '../../src/tools/network/block-headers.js'
 import { getNetworkStatus } from '../../src/tools/network/status.js'
@@ -7,13 +7,13 @@ import { chainable, fakeContext } from './fake-context.js'
 
 describe('registry', () => {
   test('exports 4 read-only tools with output schemas and display hints', () => {
-    expect(networkTools.map((t) => t.name)).toEqual([
+    expect(networkQueries.map((t) => t.name)).toEqual([
       'get_network',
       'get_network_status',
       'lookup_block',
       'search_block_headers',
     ])
-    for (const tool of networkTools) {
+    for (const tool of networkQueries) {
       expect(tool.requiresSigner ?? false).toBe(false)
       expect(tool.output).toBeDefined()
       expect(tool.view).toBeDefined()

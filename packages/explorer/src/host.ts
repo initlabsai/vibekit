@@ -1,7 +1,7 @@
 /**
  * What an Explorer app calls for results. Every read returns a versioned
- * StructuredResult; the write-flow and block-tail capabilities are added by
- * the hosts that have them (`WriteFlowHost`, `LiveHost`). The per-view
+ * StructuredResult; the action and block-tail capabilities are added by
+ * the hosts that have them (`ActionHost`, `LiveHost`). The per-view
  * aliases below let a module declare only the reads it needs.
  */
 import type { StructuredResult } from './core/results.js'

@@ -65,13 +65,13 @@ Stdio is the local-agent path:
 
 ```ts
 import { serveVibekitStdio } from "@initlabs/vibekit/mcp/stdio";
-import { accountTools, networkTools } from "@initlabs/vibekit/tools";
+import { accountQueries, networkQueries } from "@initlabs/vibekit/tools";
 
 const handle = serveVibekitStdio({
   name: "my-vibekit-mcp",
   network: "testnet",
   mode: "compose",
-  tools: [...networkTools, ...accountTools],
+  tools: [...networkQueries, ...accountQueries],
   plugins: [],
 });
 
@@ -92,13 +92,13 @@ factory is invoked once per request:
 
 ```ts
 import { createVibekitHttpHandler } from "@initlabs/vibekit/mcp/http";
-import { accountTools, networkTools } from "@initlabs/vibekit/tools";
+import { accountQueries, networkQueries } from "@initlabs/vibekit/tools";
 
 const handler = createVibekitHttpHandler({
   name: "my-vibekit-mcp",
   network: "testnet",
   mode: "compose",
-  tools: [...networkTools, ...accountTools],
+  tools: [...networkQueries, ...accountQueries],
 });
 
 Bun.serve({ port: 8788, fetch: (request) => handler.fetch(request) });
