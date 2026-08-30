@@ -23,6 +23,7 @@ ${pc.bold('Usage:')}
   vibekit dispenser <cmd>     TestNet dispenser session: login | status | logout
   vibekit keystore <args>     Managed keystore CLI (auto-provisioned, pinned — no global install)
   vibekit mcp                 Run the MCP server over stdio (for agent integration)
+  vibekit add <component…>    Copy a React component's source into ./components (add --list to browse)
 
 ${pc.bold('LocalNet Commands:')}
   localnet start              Start LocalNet
@@ -99,6 +100,11 @@ async function main(): Promise<boolean> {
     case 'tool': {
       const { commandTool } = await import('./commands/tool.js')
       await commandTool(args)
+      return true
+    }
+    case 'add': {
+      const { commandAdd } = await import('./commands/add.js')
+      await commandAdd(args)
       return true
     }
     case 'doctor': {

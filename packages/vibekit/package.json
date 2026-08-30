@@ -99,7 +99,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json && tsc -p examples/tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json && tsc -p examples/tsconfig.json --noEmit && tsc -p components/tsconfig.json",
     "test": "bun test",
     "clean": "rm -rf dist"
   },
@@ -175,10 +175,14 @@
     "@txnlab/haystack-router": "2.0.5",
     "@txnlab/nfd-sdk": "^1.1.0",
     "@types/bun": "^1.4.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
     "@x402/avm": "2.24.0",
     "@x402/core": "2.24.0",
     "ai": "^7.0.74",
     "algosdk": "3.7.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tweetnacl": "^1.0.3",
     "typescript": "^5.9.3",
     "zod": "^4.4.3"

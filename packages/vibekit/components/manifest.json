@@ -1,0 +1,9 @@
+{
+  "companion": { "files": ["companion.tsx", "companion.css"], "description": "qt314's face: a mood, a step, your own strings." },
+  "action": { "files": ["action.ts"], "description": "useAction: one action from draft to confirmed, headless." },
+  "approval": { "files": ["action-approval.tsx", "format.ts", "components.css"], "description": "The approve/deny decision for a draft: what the group does, the simulation's verdict." },
+  "tool-result": { "files": ["tool-result.tsx", "components.css"], "description": "Any tool result as JSON, errors handled." },
+  "transaction": { "files": ["transaction.tsx", "format.ts", "components.css"], "description": "One transaction from a transaction.detail result." },
+  "asset": { "files": ["asset.tsx", "format.ts", "components.css"], "description": "An asset (asset.detail) and the asset list (asset.list)." },
+  "account": { "files": ["account.tsx", "format.ts", "components.css"], "description": "An account from an account.summary result." }
+}

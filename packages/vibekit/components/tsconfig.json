@@ -1,0 +1,18 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "baseUrl": ".",
+    "types": ["react", "bun"],
+    "paths": {
+      "@initlabs/vibekit": ["../src/index.ts"],
+      "@initlabs/vibekit/actions": ["../src/actions/index.ts"],
+      "@initlabs/vibekit/agent": ["../src/agent/index.ts"],
+      "@initlabs/vibekit/tools/views": ["../src/tools/views.ts"]
+    }
+  },
+  "include": ["."]
+}

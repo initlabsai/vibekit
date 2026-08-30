@@ -1,0 +1,26 @@
+.companion { --neon: #f0b35e; color: var(--neon); display: inline-block; font-family: ui-monospace, monospace; position: relative; text-shadow: 0 0 .55rem color-mix(in srgb, var(--neon) 55%, transparent); transition: color .2s; white-space: nowrap; }
+.companion-thinking, .companion-working { --neon: #6ee7ff; }
+.companion-bright { --neon: #ffb454; }
+.companion-squint { --neon: #ff5c5c; }
+.companion-still { color: #6b6f78; text-shadow: none; }
+.companion.glitch::before, .companion.glitch::after { content: attr(data-text); inset: 0; opacity: 0; pointer-events: none; position: absolute; }
+.companion.glitch::before { animation: glitch-a 7s steps(1) infinite; color: #6ee7ff; }
+.companion.glitch::after { animation: glitch-b 7s steps(1) infinite; color: #ffb454; }
+.companion-working.glitch::before, .companion-working.glitch::after { animation-duration: 1.6s; }
+@keyframes glitch-a {
+  0%, 100% { opacity: 0; }
+  2% { clip-path: inset(20% 0 55% 0); opacity: 1; transform: translate(-.2rem, 0); }
+  4% { clip-path: inset(60% 0 10% 0); transform: translate(.15rem, .05rem); }
+  6% { opacity: 0; }
+  40% { clip-path: inset(5% 0 80% 0); opacity: 1; transform: translate(.15rem, 0); }
+  42% { opacity: 0; }
+}
+@keyframes glitch-b {
+  0%, 100% { opacity: 0; }
+  2% { clip-path: inset(50% 0 20% 0); opacity: 1; transform: translate(.2rem, 0); }
+  4% { clip-path: inset(10% 0 70% 0); transform: translate(-.15rem, -.05rem); }
+  6% { opacity: 0; }
+  40% { clip-path: inset(65% 0 5% 0); opacity: 1; transform: translate(-.15rem, 0); }
+  42% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .companion.glitch::before, .companion.glitch::after { animation: none; } }
