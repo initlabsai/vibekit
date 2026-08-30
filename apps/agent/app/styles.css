@@ -610,3 +610,18 @@ a.button-active { text-decoration: underline; }
 .web-highlight { color: var(--muted); font-size: .88rem; line-height: 1.5; margin: .3rem 0 0 1.4rem; }
 .web-page { font-family: inherit; font-size: .88rem; line-height: 1.55; margin: .8rem 0 0; max-height: 60vh; overflow: auto; white-space: pre-wrap; }
 .web-more { margin: .6rem 0 0; }
+
+/* Share: the glyph on a section's header row, and the /s/[hash] landing page. */
+.prompt-row { display: flex; align-items: stretch; }
+.prompt-row .prompt-line { flex: 1; min-width: 0; width: auto; }
+.share-glyph { background: rgba(17, 19, 24, .85); color: var(--faint); font-family: var(--font-mono); font-size: .95rem; padding: 0 .75rem; transition: color .15s, background .15s; }
+.share-glyph:hover:not(:disabled) { background: var(--card-lit); color: var(--brass-bright); }
+.share-page { display: flex; flex-direction: column; gap: 1.1rem; margin: 0 auto; max-width: 46rem; padding: 2.5rem 1.2rem 4rem; }
+.share-brand { color: var(--faint); font-family: var(--font-mono); font-size: .8rem; letter-spacing: .3em; margin: 0; }
+.share-brand b { color: var(--brass-bright); }
+.share-prompt { align-items: baseline; display: flex; font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; gap: .6rem; margin: 0; }
+.share-prompt .prompt-net { margin-left: auto; }
+.share-note { border-left: 2px solid var(--border-soft); padding-left: 1rem; }
+.share-face { color: var(--brass-bright); font-family: var(--font-mono); text-shadow: 0 0 14px rgba(255, 180, 84, .5); white-space: nowrap; }
+.share-marker { color: var(--faint); font-family: var(--font-mono); font-size: .72rem; font-style: italic; margin: .5rem 0 0; }
+.share-ask { align-items: center; display: flex; flex-wrap: wrap; gap: .8rem; margin: .6rem 0 0; }

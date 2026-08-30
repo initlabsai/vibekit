@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import { plainAgentText } from './feed'
+import { plainAgentText } from '../theme'
 
 describe('agent transcript text', () => {
   test('drops stray markdown styling without changing the answer', () => {
@@ -38,7 +38,7 @@ describe('out of turns', () => {
 
 describe('leaked tool markup', () => {
   test('is stripped, and an empty turn asks for a retry', async () => {
-    const { plainAgentText } = await import('./feed')
+    const { plainAgentText } = await import('../theme')
     const leaked = '<｜DSML｜tool_calls>\n<｜DSML｜invoke name="lookup_asset">\n<｜DSML｜parameter name="assetId" string="false">2582294183</｜DSML｜parameter>\n</｜DSML｜invoke>\n</｜DSML｜tool_calls>'
     expect(plainAgentText(leaked)).toMatch(/ask me again/)
     expect(plainAgentText(`looking that up. ${leaked}`)).toBe('looking that up.')

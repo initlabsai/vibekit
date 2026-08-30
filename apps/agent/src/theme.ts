@@ -30,6 +30,16 @@ export function errorMessage(error: unknown): string {
   return text.replace(/^Network request error\. Received status \d+ \([^)]*\): /, '')
 }
 
+/** A provider that fails to parse DeepSeek's native tool markup streams it as text; that is wiring, not words. */
+const TOOL_MARKUP = /<｜DSML｜tool_calls>[\s\S]*?(<\/｜DSML｜tool_calls>|$)|<\/?｜DSML｜[^>]*>/g
+
+/** Her line as she meant it: stray markdown styling removed, leaked tool markup removed. */
+export function plainAgentText(text: string): string {
+  const spoken = text.replace(TOOL_MARKUP, '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1').trim()
+  if (spoken === '' && TOOL_MARKUP.test(text)) return 'my tools slipped on that one — the provider garbled the call. ask me again?'
+  return spoken
+}
+
 /** A record's URL is only ever a link or image source when it is http(s); anything else renders as text. */
 export function safeHref(url: string | null | undefined): string | undefined {
   if (!url) return undefined

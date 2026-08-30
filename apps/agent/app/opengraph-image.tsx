@@ -1,29 +1,17 @@
 /**
- * The share card: qt314, large, on the ground color. Rendered once at build
- * by Next; JetBrains Mono is fetched from Google Fonts for the face and
- * the marks, with the renderer's fallback if that fetch fails.
+ * The app's card: qt314, large, on the ground color. Rendered once at build
+ * by Next, with the vendored JetBrains Mono.
  */
 import { ImageResponse } from 'next/og'
+
+import { ogFonts } from '../src/og-fonts'
 
 export const alt = 'qt314 — VibeKit Agent. She reads Algorand for you.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-async function mono(weight: 500 | 700): Promise<ArrayBuffer | undefined> {
-  try {
-    const css = await (await fetch(`https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@${weight}`, { headers: { 'user-agent': 'Mozilla/5.0' } })).text()
-    const url = /src: url\((https:[^)]+\.(?:ttf|woff))\)/.exec(css)?.[1]
-    return url ? (await fetch(url)).arrayBuffer() : undefined
-  } catch {
-    return undefined
-  }
-}
-
 export default async function Image() {
-  const [medium, bold] = await Promise.all([mono(500), mono(700)])
-  const fonts = [medium && { name: 'JetBrains Mono', data: medium, weight: 500 as const }, bold && { name: 'JetBrains Mono', data: bold, weight: 700 as const }].filter(
-    (font): font is { name: string; data: ArrayBuffer; weight: 500 | 700 } => Boolean(font),
-  )
+  const fonts = await ogFonts()
   return new ImageResponse(
     (
       <div

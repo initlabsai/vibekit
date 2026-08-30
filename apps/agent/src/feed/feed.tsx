@@ -1,22 +1,14 @@
 'use client'
 
 /** The transcript as DOM: the session nav, the feed of sections, and the composer. */
-import { useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
 
 import { CompanionFace, moodFor } from '../features/profile/companion'
 import { matchCommands } from '../commands'
 import { Button, Copyable } from '../primitives'
+import { stripShareText } from '../share'
+import { plainAgentText } from '../theme'
 import type { Section, SectionBlock } from './hooks'
-
-/** A provider that fails to parse DeepSeek's native tool markup streams it as text; that is wiring, not words. */
-const TOOL_MARKUP = /<｜DSML｜tool_calls>[\s\S]*?(<\/｜DSML｜tool_calls>|$)|<\/?｜DSML｜[^>]*>/g
-
-/** Her line as she meant it: stray markdown styling removed, leaked tool markup removed. */
-export function plainAgentText(text: string): string {
-  const spoken = text.replace(TOOL_MARKUP, '').replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/`([^`\n]+)`/g, '$1').trim()
-  if (spoken === '' && TOOL_MARKUP.test(text)) return 'my tools slipped on that one — the provider garbled the call. ask me again?'
-  return spoken
-}
 
 export function NavPane({
   sections,
@@ -97,6 +89,7 @@ export function FeedPane({
   empty,
   onToggle,
   streamingSection,
+  onShare,
 }: {
   sections: Section[]
   selectedId: number | null
@@ -106,6 +99,8 @@ export function FeedPane({
   onToggle: (id: number) => void
   /** The section the agent is still speaking into, if any. */
   streamingSection?: number | null
+  /** Turns the exchange into a URL; the glyph waits until her line is finished. */
+  onShare?: (section: Section) => void
 }) {
   // Only her newest line wears a live face; every earlier one is a still.
   const latest = latestAgentNote(sections)
@@ -118,21 +113,35 @@ export function FeedPane({
           data-section={section.id}
           className={`section${section.id === selectedId ? ' on' : ''}${section.collapsed ? ' collapsed' : ''}`}
         >
-          <button
-            type="button"
-            className="prompt-line"
-            onClick={() => onToggle(section.id)}
-            aria-expanded={!section.collapsed}
-            title={section.collapsed ? 'expand' : 'collapse'}
-          >
-            <span className="prompt-text">{section.prompt}</span>
-            <span className={`prompt-net net-${section.network}`}>{section.network}</span>
-            {section.collapsed ? (
-              <span className="prompt-count">
-                {section.items.filter((item) => item.kind === 'block').length || section.items.length} hidden
-              </span>
+          <div className="prompt-row">
+            <button
+              type="button"
+              className="prompt-line"
+              onClick={() => onToggle(section.id)}
+              aria-expanded={!section.collapsed}
+              title={section.collapsed ? 'expand' : 'collapse'}
+            >
+              <span className="prompt-text">{section.prompt}</span>
+              <span className={`prompt-net net-${section.network}`}>{section.network}</span>
+              {section.collapsed ? (
+                <span className="prompt-count">
+                  {section.items.filter((item) => item.kind === 'block').length || section.items.length} hidden
+                </span>
+              ) : null}
+            </button>
+            {onShare && section.items.some((item) => item.kind === 'note' && item.tone === 'agent') ? (
+              <button
+                type="button"
+                className="share-glyph"
+                disabled={streamingSection === section.id}
+                onClick={() => onShare(section)}
+                title="copy a share link for this exchange"
+                aria-label="share this exchange"
+              >
+                ⤴
+              </button>
             ) : null}
-          </button>
+          </div>
           {section.collapsed ? null : section.items.map((item, index) =>
             item.kind === 'note' && item.tone === 'agent' ? (
               <div key={item.id} className={`note-agent${item.pending ? ' pending' : ''}`}>
@@ -191,6 +200,11 @@ export function Composer({
 }) {
   const [input, setInput] = useState('')
   const [cursor, setCursor] = useState(0)
+  // A share page's "ask her yourself" arrives as ?ask=…; the question waits, it is never submitted.
+  useEffect(() => {
+    const ask = new URLSearchParams(window.location.search).get('ask')
+    if (ask) setInput(stripShareText(ask).slice(0, 400))
+  }, [])
   const matches = matchCommands(input)
   const active = matches[Math.min(cursor, matches.length - 1)]
   const submit = (event: FormEvent) => {
