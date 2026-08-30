@@ -28,6 +28,8 @@ export default defineConfig({
             { label: 'Add VibeKit to a project', slug: 'docs/guides/add-to-an-existing-project' },
             { label: 'Create a VibeKit plugin', slug: 'docs/guides/create-a-vibekit-plugin' },
             { label: 'Create a custom MCP', slug: 'docs/guides/create-a-custom-mcp' },
+            { label: 'Run an action', slug: 'docs/guides/run-an-action' },
+            { label: 'Compose a server', slug: 'docs/guides/compose-a-server' },
             { label: 'REST and x402', slug: 'docs/guides/rest-and-x402' },
             { label: 'Swap the model', slug: 'docs/guides/swap-the-model' },
             { label: 'Swap the signer', slug: 'docs/guides/swap-the-signer' },
@@ -39,8 +41,15 @@ export default defineConfig({
           label: 'Reference',
           items: [
             { label: 'Tools', slug: 'docs/reference/tools' },
+            { label: 'Examples', slug: 'docs/reference/examples' },
             { label: 'Installation', slug: 'docs/reference/installation' },
             { label: 'Configuration', slug: 'docs/reference/configuration' },
+          ],
+        },
+        {
+          label: 'Explanation',
+          items: [
+            { label: 'Why VibeKit', slug: 'docs/explanation/why-vibekit' },
             { label: 'How VibeKit works', slug: 'docs/explanation/how-vibekit-works' },
             { label: 'Queries and actions', slug: 'docs/explanation/queries-and-actions' },
           ],

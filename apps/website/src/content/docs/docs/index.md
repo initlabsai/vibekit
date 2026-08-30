@@ -22,24 +22,21 @@ out of model context.
 
 Pick a hatch:
 
-- [Build your first project](./tutorials/first-project/) — new TypeScript
-  project, configured agent, running LocalNet.
-- [Explore with VibeKit](./tutorials/explore-with-vibekit/) — ask the chain a
-  question, follow live blocks, or review a write.
-- [Add VibeKit to an existing project](./guides/add-to-an-existing-project/) —
-  bring the tools and skills to the codebase you already have.
+- **Building an agent?** [Build an agent](./tutorials/build-an-agent/) — your
+  own endpoint, the components, signing — then [compose a
+  server](./guides/compose-a-server/) and [run an
+  action](./guides/run-an-action/). The [examples](./reference/examples/) are
+  the reference; the [tools](./reference/tools/) page is generated from the
+  code.
+- **Using a coding agent?** [Build your first
+  project](./tutorials/first-project/) or [add VibeKit to an existing
+  one](./guides/add-to-an-existing-project/); [explore with
+  VibeKit](./tutorials/explore-with-vibekit/) to watch it work.
+- **Extending it?** [Make a plugin](./guides/create-a-vibekit-plugin/) or
+  [compose a custom MCP](./guides/create-a-custom-mcp/).
 
-Got your own capability? [Make it a plugin](./guides/create-a-vibekit-plugin/).
-Need a different tool mix? [Compose a custom MCP](./guides/create-a-custom-mcp/).
-
-## the toolkit
-
-The web agent is not the product; it is what the pieces build. Every one of
-them is yours: [build an agent](./tutorials/build-an-agent/) with its own
-endpoint, [charge for it](./guides/rest-and-x402/), [pick the
-model](./guides/swap-the-model/) and [the signer](./guides/swap-the-signer/),
-and [render what it says](./guides/components/). The full surface is the
-[tools reference](./reference/tools/), generated from the code.
+Why it is shaped this way: [Why VibeKit](./explanation/why-vibekit/), then
+[queries and actions](./explanation/queries-and-actions/).
 
 ## what's in the box
 
