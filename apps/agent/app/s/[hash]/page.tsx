@@ -6,7 +6,8 @@
  */
 import type { Metadata } from 'next'
 
-import { evidenceFor, type SharePayload } from '../../../src/share'
+import { ShareEvidence } from '../../../src/share-evidence'
+import type { SharePayload } from '../../../src/share'
 import { readShare } from '../../api/share/store'
 
 const HASH = /^[0-9a-f]{12}$/
@@ -27,32 +28,6 @@ export async function generateMetadata({ params }: { params: Promise<{ hash: str
     openGraph: { title, description, siteName: 'VibeKit Agent', type: 'article' },
     twitter: { card: 'summary_large_image', title, description },
   }
-}
-
-function Evidence({ block }: { block: SharePayload['blocks'][number] }) {
-  const evidence = evidenceFor(block)
-  return (
-    <section className="card">
-      <header className="card-header">
-        <span>
-          <span className="kicker">{evidence.kicker}</span>
-        </span>
-      </header>
-      <dl className="facts">
-        {evidence.facts.map(([label, value]) => (
-          <div key={label} className="fact">
-            <dt>{label}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
-      {evidence.listName ? (
-        <p className="footnote">
-          {evidence.listName} · {evidence.listCount} rows — ask her for the live list
-        </p>
-      ) : null}
-    </section>
-  )
 }
 
 export default async function SharePage({ params }: { params: Promise<{ hash: string }> }) {
@@ -81,9 +56,7 @@ export default async function SharePage({ params }: { params: Promise<{ hash: st
           <p className="share-marker">a shared exchange — she has not said this to you.</p>
         </div>
       </div>
-      {payload.blocks.map((block, index) => (
-        <Evidence key={index} block={block} />
-      ))}
+      <ShareEvidence blocks={payload.blocks} />
       <p className="share-ask">
         <a className="button button-primary" href={ask}>ask her yourself →</a>
         <span className="muted"> the question will be waiting in the composer; she answers live.</span>

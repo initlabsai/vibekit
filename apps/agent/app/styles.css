@@ -617,7 +617,7 @@ a.button-active { text-decoration: underline; }
 .share-button { background: rgba(17, 19, 24, .85); color: var(--faint); font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em; padding: 0 .8rem; transition: color .15s, background .15s; white-space: nowrap; }
 .share-button:hover:not(:disabled) { background: var(--card-lit); color: var(--brass-bright); }
 .share-button.copied { color: var(--signal); }
-.share-page { display: flex; flex-direction: column; gap: 1.1rem; margin: 0 auto; max-width: 46rem; padding: 2.5rem 1.2rem 4rem; }
+.share-page { display: flex; flex-direction: column; gap: 1.1rem; margin: 0 auto; max-width: 60rem; padding: 2.5rem 1.2rem 4rem; }
 .share-brand { color: var(--faint); font-family: var(--font-mono); font-size: .8rem; letter-spacing: .3em; margin: 0; }
 .share-brand b { color: var(--brass-bright); }
 .share-prompt { align-items: baseline; display: flex; font-family: var(--font-mono); font-size: 1.05rem; font-weight: 700; gap: .6rem; margin: 0; }
