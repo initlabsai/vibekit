@@ -54,9 +54,10 @@ function config(): { apiKey: string; baseUrl: string; model: string; provider: s
   let providerUrl: string | undefined
   try {
     // The label left of the TLD names the provider; the last two labels are its site:
-    // router.ai.nodely.io → nodely, https://nodely.io. api.together.xyz → together, https://together.xyz.
+    // router.ai.nodely.io → Nodely AI, https://nodely.io. api.together.xyz → together, https://together.xyz.
     const host = new URL(baseUrl).hostname
-    provider = host.split('.').at(-2) ?? host
+    const slug = host.split('.').at(-2) ?? host
+    provider = slug === 'nodely' ? 'Nodely AI' : slug
     providerUrl = host.includes('.') ? `https://${host.split('.').slice(-2).join('.')}` : undefined
   } catch {
     // an unparsable URL still names itself, and links nowhere

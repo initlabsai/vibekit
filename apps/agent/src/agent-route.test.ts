@@ -36,7 +36,7 @@ describe('agent route', () => {
     process.env.AGENT_MODEL = 'z-ai/glm-5.3-flash'
     expect(await (await GET()).json()).toMatchObject({ enabled: true, model: 'z-ai/glm-5.3-flash', provider: 'openrouter' })
     process.env.AGENT_BASE_URL = 'https://router.ai.nodely.io/v1'
-    expect(await (await GET()).json()).toMatchObject({ enabled: true, provider: 'nodely', providerUrl: 'https://nodely.io' })
+    expect(await (await GET()).json()).toMatchObject({ enabled: true, provider: 'Nodely AI', providerUrl: 'https://nodely.io' })
   })
 
   test('a turn is the package handler: validated, streamed as NDJSON, the model failure reported in-stream', async () => {
