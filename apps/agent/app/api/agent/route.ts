@@ -52,7 +52,9 @@ function config(): { apiKey: string; baseUrl: string; model: string; provider: s
   const model = process.env.AGENT_MODEL ?? process.env.TOGETHER_MODEL ?? DEFAULT_MODEL
   let provider = baseUrl
   try {
-    provider = new URL(baseUrl).hostname.replace(/^api\./, '').replace(/\.(com|ai|xyz)$/, '')
+    // The label left of the TLD: api.together.xyz → together, router.ai.nodely.io → nodely.
+    const host = new URL(baseUrl).hostname
+    provider = host.split('.').at(-2) ?? host
   } catch {
     // an unparsable URL still names itself
   }

@@ -19,7 +19,7 @@ export function welcomeExamples(network: string): string[] {
   return ['/blocks', '/status']
 }
 
-export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void; network: string }) {
+export function Welcome({ onSubmit, network, provider }: { onSubmit: (raw: string) => void; network: string; provider?: string }) {
   const EXAMPLES = welcomeExamples(network)
   return (
     <div className="note-agent intro">
@@ -27,6 +27,7 @@ export function Welcome({ onSubmit, network }: { onSubmit: (raw: string) => void
       <div className="note-agent-body">
         <p className="note-agent-text">
           hi. i'm <em>qt314</em>. i read algorand for you. i'm the helpfulest, but plz be specific. i'm in alpha i guess.
+          {provider ? <> {provider} lends me my brain. thx {provider}.</> : null}
         </p>
         <p className="intro-examples">
           try{' '}

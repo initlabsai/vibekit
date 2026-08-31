@@ -260,10 +260,9 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     status ||
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
+  const powered = agent.status.provider ? ` · powered by ${agent.status.provider}` : ''
   const idleLine = agent.status.enabled
-    ? credits.enabled
-      ? creditsLine(credits)
-      : 'early alpha'
+    ? (credits.enabled ? creditsLine(credits) : 'early alpha') + powered
     : 'no agent configured · the direct lane still works'
 
   const sheetRef = useRef<HTMLDetailsElement>(null)
