@@ -56,6 +56,7 @@ export function FeedScreen() {
         <Welcome
           network={network}
           provider={agent.provider}
+          providerUrl={agent.providerUrl}
           onSubmit={(raw) =>
             raw.includes('<address>')
               ? setStatus('Type /pay 0.5 to <an address or wallet label> — a connected wallet signs it.')

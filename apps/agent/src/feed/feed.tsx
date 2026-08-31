@@ -209,8 +209,8 @@ export function Composer({
   onSubmit: (raw: string) => void
   /** Something happening now: a copy, an error, sample data. Shown wherever there is room. */
   status: string
-  /** The standing line — turns and the offer. Phones keep it in the sheet instead. */
-  idle: string
+  /** The standing line — turns, the offer, the provider credit. Phones keep it in the sheet instead. */
+  idle: ReactNode
   placeholder: string
 }) {
   const [input, setInput] = useState('')

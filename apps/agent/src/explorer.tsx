@@ -80,7 +80,7 @@ export interface ExplorerContextValue {
   setStatus: (text: string) => void
   renderBlock: (block: SectionBlock, sectionId: number, itemId: number) => ReactNode
   /** The agent lane's status and its latest line, for the composer and the companion. */
-  agent: { enabled: boolean; model?: string; provider?: string; streamingSection: number | null }
+  agent: { enabled: boolean; model?: string; provider?: string; providerUrl?: string; streamingSection: number | null }
 }
 
 const ExplorerContext = createContext<ExplorerContextValue | null>(null)
@@ -260,10 +260,24 @@ function ExplorerApp({ children }: { children: ReactNode }) {
     status ||
     wallet.networkError ||
     (live === false ? `sample data — ${network} is unreachable; fixture tx and accounts only` : '')
-  const powered = agent.status.provider ? ` · powered by ${agent.status.provider}` : ''
-  const idleLine = agent.status.enabled
-    ? (credits.enabled ? creditsLine(credits) : 'early alpha') + powered
-    : 'no agent configured · the direct lane still works'
+  const powered = agent.status.provider ? (
+    <>
+      {' · powered by '}
+      {agent.status.providerUrl ? (
+        <a href={agent.status.providerUrl} target="_blank" rel="noreferrer">{agent.status.provider}</a>
+      ) : (
+        agent.status.provider
+      )}
+    </>
+  ) : null
+  const idleLine = agent.status.enabled ? (
+    <>
+      {credits.enabled ? creditsLine(credits) : 'early alpha'}
+      {powered}
+    </>
+  ) : (
+    'no agent configured · the direct lane still works'
+  )
 
   const sheetRef = useRef<HTMLDetailsElement>(null)
   const closeSheet = useCallback(() => sheetRef.current?.removeAttribute('open'), [])
@@ -295,6 +309,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
         enabled: agent.status.enabled,
         model: agent.status.model,
         provider: agent.status.provider,
+        providerUrl: agent.status.providerUrl,
         streamingSection: agent.streamingSection,
       },
     }),
@@ -304,6 +319,7 @@ function ExplorerApp({ children }: { children: ReactNode }) {
       agent.status.enabled,
       agent.status.model,
       agent.status.provider,
+      agent.status.providerUrl,
       busy,
       commitStore,
       feed,

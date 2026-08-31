@@ -93,6 +93,9 @@ code { font-family: var(--font-mono); color: var(--brass-bright); font-size: .92
 .composer .button { border: 1px solid var(--border-soft); padding: .3rem .7rem; }
 .composer input::placeholder { color: var(--faint); }
 .status-line { color: var(--muted); font-family: var(--font-mono); font-size: .68rem; min-height: 1rem; padding: 0 .2rem .3rem; }
+/* The provider credit, wherever it appears: brass like every other link. */
+.status-line a, .sheet-idle a, .note-agent-text a { color: var(--brass); text-decoration: none; }
+.status-line a:hover, .sheet-idle a:hover, .note-agent-text a:hover { color: var(--brass-bright); }
 .send-button { align-items: center; border: 1px solid var(--border-soft); color: var(--brass-bright); display: inline-flex; font-size: 1.25rem; height: 2.4rem; justify-content: center; line-height: 1; width: 2.4rem; }
 .composer .send-button { padding: 0; }
 .send-button:hover { background: var(--card); border-color: var(--brass); }

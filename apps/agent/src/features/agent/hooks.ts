@@ -29,6 +29,7 @@ export interface AgentStatus {
   enabled: boolean
   model?: string
   provider?: string
+  providerUrl?: string
   billing?: 'house' | 'x402'
 }
 

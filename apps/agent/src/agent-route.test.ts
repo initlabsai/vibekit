@@ -30,13 +30,13 @@ describe('agent route', () => {
   test('env names the model; the endpoint host is the provider shown', async () => {
     process.env.TOGETHER_API_KEY = 'test-key'
     process.env.TOGETHER_MODEL = 'test/model'
-    expect(await (await GET()).json()).toEqual({ enabled: true, model: 'test/model', provider: 'together', billing: 'house', private: false })
+    expect(await (await GET()).json()).toEqual({ enabled: true, model: 'test/model', provider: 'together', providerUrl: 'https://together.xyz', billing: 'house', private: false })
     process.env.AGENT_API_KEY = 'or-key'
     process.env.AGENT_BASE_URL = 'https://openrouter.ai/api/v1'
     process.env.AGENT_MODEL = 'z-ai/glm-5.3-flash'
     expect(await (await GET()).json()).toMatchObject({ enabled: true, model: 'z-ai/glm-5.3-flash', provider: 'openrouter' })
     process.env.AGENT_BASE_URL = 'https://router.ai.nodely.io/v1'
-    expect(await (await GET()).json()).toMatchObject({ enabled: true, provider: 'nodely' })
+    expect(await (await GET()).json()).toMatchObject({ enabled: true, provider: 'nodely', providerUrl: 'https://nodely.io' })
   })
 
   test('a turn is the package handler: validated, streamed as NDJSON, the model failure reported in-stream', async () => {

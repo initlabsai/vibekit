@@ -45,20 +45,23 @@ const HAYSTACK_FREE_TIER_KEY = '1b72df7e-1131-4449-8ce1-29b79dd3f51e'
  * alone still works as the shortest setup. The provider shown to the user is the
  * endpoint's host.
  */
-function config(): { apiKey: string; baseUrl: string; model: string; provider: string } | undefined {
+function config(): { apiKey: string; baseUrl: string; model: string; provider: string; providerUrl?: string } | undefined {
   const apiKey = process.env.AGENT_API_KEY ?? process.env.TOGETHER_API_KEY
   if (!apiKey) return undefined
   const baseUrl = process.env.AGENT_BASE_URL ?? DEFAULT_BASE_URL
   const model = process.env.AGENT_MODEL ?? process.env.TOGETHER_MODEL ?? DEFAULT_MODEL
   let provider = baseUrl
+  let providerUrl: string | undefined
   try {
-    // The label left of the TLD: api.together.xyz → together, router.ai.nodely.io → nodely.
+    // The label left of the TLD names the provider; the last two labels are its site:
+    // router.ai.nodely.io → nodely, https://nodely.io. api.together.xyz → together, https://together.xyz.
     const host = new URL(baseUrl).hostname
     provider = host.split('.').at(-2) ?? host
+    providerUrl = host.includes('.') ? `https://${host.split('.').slice(-2).join('.')}` : undefined
   } catch {
-    // an unparsable URL still names itself
+    // an unparsable URL still names itself, and links nowhere
   }
-  return { apiKey, baseUrl, model, provider }
+  return { apiKey, baseUrl, model, provider, ...(providerUrl ? { providerUrl } : {}) }
 }
 
 /** House mode bills nothing and rate-limits in production; a paywall bills turns. */
@@ -106,7 +109,14 @@ export async function GET(): Promise<Response> {
   const endpoint = config()
   return Response.json({
     enabled: endpoint !== undefined,
-    ...(endpoint ? { model: endpoint.model, provider: endpoint.provider, billing: paywall() ? ('x402' as const) : ('house' as const) } : {}),
+    ...(endpoint
+      ? {
+          model: endpoint.model,
+          provider: endpoint.provider,
+          ...(endpoint.providerUrl ? { providerUrl: endpoint.providerUrl } : {}),
+          billing: paywall() ? ('x402' as const) : ('house' as const),
+        }
+      : {}),
     private: false,
   })
 }
