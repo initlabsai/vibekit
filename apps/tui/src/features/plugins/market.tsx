@@ -213,7 +213,7 @@ export function DefiOverviewCard({
   return (
     <Frame width={width}>
       <Header kicker="DEFI" chip="VESTIGE" pill={network.toUpperCase()} />
-      <Hero value={compactUsd(data.totalTvlUsd)} unit="total value locked" />
+      <Hero value={compactUsd(data.totalTvlUsd)} unit="locked in dex pools" />
       <box marginTop={1} flexDirection="column">
         {active.map((p) => {
           const filled = Math.max(1, Math.round((p.tvlUsd / max) * bar))

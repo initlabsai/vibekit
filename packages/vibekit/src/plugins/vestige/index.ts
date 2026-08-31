@@ -194,7 +194,10 @@ interface WireProtocol {
   name: string
   version: string
   url: string | null
+  /** ALGO-denominated — /protocols has no denominating param. */
   tvl: number
+  /** 0 = DEX/AMM, 1 = vault, 2 = liquid staking. */
+  type: number
   active: boolean
 }
 
@@ -237,19 +240,30 @@ vestigeTools.push(
   defineTool({
     name: 'get_defi_overview',
     description:
-      'Algorand DeFi by protocol — TVL in USD per DEX and lending market (mainnet, Vestige). For "how big is DeFi" or "biggest protocol".',
+      'Algorand DEX liquidity in USD by protocol (mainnet, Vestige). For "how big is DeFi" or "biggest DEX". Liquid-staking rows are excluded — Vestige counts both the backing ALGO and the minted derivative.',
     parameters: z.object({}),
     output: defiProtocolsSchema,
     view: 'vestige.protocols',
     handler: async (ctx: ToolContext) => {
-      const rows = (await getVestige(ctx).get('/protocols', {})) as WireProtocol[]
+      // /protocols reports tvl in ALGO; converted here with Vestige's own ALGO/USD price.
+      const [rows, prices] = await Promise.all([
+        getVestige(ctx).get('/protocols', {}) as Promise<WireProtocol[]>,
+        getVestige(ctx).get('/assets/price', {
+          asset_ids: '0',
+          network_id: 0,
+          denominating_asset_id: USDC_ID,
+        }) as Promise<WirePrice[]>,
+      ])
+      const algoUsd = prices[0]?.price
+      if (!algoUsd) throw new Error('ALGO/USD price unavailable; cannot denominate TVL')
       const protocols = rows
+        .filter((p) => p.type === 0)
         .map((p) => ({
           id: p.id,
           name: p.name,
           version: p.version,
           url: p.url,
-          tvlUsd: p.tvl,
+          tvlUsd: p.tvl * algoUsd,
           active: p.active,
         }))
         .sort((a, b) => b.tvlUsd - a.tvlUsd)

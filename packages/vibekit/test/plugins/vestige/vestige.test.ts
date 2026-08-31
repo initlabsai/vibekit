@@ -75,34 +75,35 @@ describe('vestige plugin', () => {
     ])
   })
 
-  test('get_defi_overview sorts protocols by TVL and totals them', async () => {
+  test('get_defi_overview converts ALGO-denominated TVL to USD and drops liquid-staking rows', async () => {
+    // /protocols reports tvl in ALGO with no denominating param, and its LST rows
+    // count both the backing ALGO and the minted derivative — the $715M bug.
     const service = {
-      get: async () => [
-        {
-          id: 1,
-          name: 'Tinyman',
-          version: '1.1',
-          url: 'https://tinyman.org',
-          tvl: 5,
-          active: true,
-        },
-        {
-          id: 2,
-          name: 'Tinyman',
-          version: '2.0',
-          url: 'https://tinyman.org',
-          tvl: 50,
-          active: true,
-        },
-        { id: 3, name: 'Pact', version: '1.0', url: null, tvl: 20, active: false },
-      ],
+      get: async (path: string) =>
+        path === '/assets/price'
+          ? [{ asset_id: 0, price: 0.1, confidence: 1 }]
+          : [
+              { id: 1, name: 'Tinyman', version: '1.1', url: 'https://tinyman.org', tvl: 5, type: 0, active: true },
+              { id: 2, name: 'Tinyman', version: '2.0', url: 'https://tinyman.org', tvl: 50, type: 0, active: true },
+              { id: 3, name: 'Pact', version: '1.0', url: null, tvl: 20, type: 0, active: false },
+              { id: 14, name: 'xALGO LST', version: '1.0', url: null, tvl: 5000, type: 2, active: true },
+            ],
     }
     const tool = vestigeTools.find((t) => t.name === 'get_defi_overview')!
     const result = (await tool.handler(ctxFor('mainnet', service), {})) as {
       totalTvlUsd: number
-      protocols: Array<{ id: number }>
+      protocols: Array<{ id: number; tvlUsd: number }>
     }
-    expect(result.totalTvlUsd).toBe(75)
+    expect(result.totalTvlUsd).toBeCloseTo(7.5)
     expect(result.protocols.map((p) => p.id)).toEqual([2, 3, 1])
+    expect(result.protocols[0]?.tvlUsd).toBeCloseTo(5)
+  })
+
+  test('get_defi_overview refuses to report TVL without an ALGO/USD price', async () => {
+    const service = {
+      get: async (path: string) => (path === '/assets/price' ? [] : []),
+    }
+    const tool = vestigeTools.find((t) => t.name === 'get_defi_overview')!
+    expect(tool.handler(ctxFor('mainnet', service), {})).rejects.toThrow('ALGO/USD price unavailable')
   })
 })

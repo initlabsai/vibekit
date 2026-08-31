@@ -15,7 +15,7 @@ export function DefiOverviewCard({ data, network }: { data: DefiProtocols; netwo
       <Header kicker="DEFI" chip="VESTIGE" pill={network.toUpperCase()} tone="idle" />
       <p className="hero">
         <span className="hero-value">{compactUsd(data.totalTvlUsd)}</span>
-        <span className="hero-unit">total value locked</span>
+        <span className="hero-unit">locked in dex pools</span>
       </p>
       {active.length === 0 ? (
         <FooterNote text="No protocols reported." />
