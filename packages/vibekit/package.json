@@ -88,6 +88,10 @@
       "types": "./dist/plugins/nfd/index.d.ts",
       "import": "./dist/plugins/nfd/index.js"
     },
+    "./plugins/iomarkets": {
+      "types": "./dist/plugins/iomarkets/index.d.ts",
+      "import": "./dist/plugins/iomarkets/index.js"
+    },
     "./plugins/pera": {
       "types": "./dist/plugins/pera/index.d.ts",
       "import": "./dist/plugins/pera/index.js"
