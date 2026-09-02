@@ -32,3 +32,8 @@ export async function multiselect<T extends Parameters<typeof p.multiselect>[0]>
 ): Promise<T['options'][number]['value'][]> {
   return handleCancel(await p.multiselect(options)) as T['options'][number]['value'][]
 }
+
+/** Filesystem path input with tab completion. */
+export async function path(options: Parameters<typeof p.path>[0]): Promise<string> {
+  return handleCancel(await p.path(options)) as string
+}

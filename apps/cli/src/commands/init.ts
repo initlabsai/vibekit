@@ -39,7 +39,7 @@ import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/c
 import { appendIfMissing, ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
 import { expandPath, resolveVibekitPath } from '../utils/paths.js'
-import { confirm, handleCancel, multiselect, select, text } from '../utils/prompts.js'
+import { confirm, handleCancel, multiselect, path as pathPrompt, select } from '../utils/prompts.js'
 import { LOGO } from '../logo.js'
 
 export interface SetupContext {
@@ -202,10 +202,11 @@ async function selectSkillsStep(): Promise<string[]> {
 
 async function selectInstallPathStep(): Promise<string> {
   const cwd = process.cwd()
-  const inputPath = await text({
+  const inputPath = await pathPrompt({
     message: 'Where should VibeKit be installed?',
-    placeholder: cwd,
-    defaultValue: cwd,
+    root: cwd,
+    initialValue: cwd,
+    directory: true,
   })
   return expandPath(inputPath)
 }
