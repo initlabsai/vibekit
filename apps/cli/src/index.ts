@@ -146,6 +146,12 @@ Config via env: NETWORK (default localnet), NETWORKS (comma-separated), SIGNING=
   }
 }
 
-main().then((shouldExit) => {
-  if (shouldExit) process.exit(process.exitCode ?? 0)
+main().then(async (shouldExit) => {
+  // shouldExit is false only for the mcp server, whose stdio is protocol —
+  // the update nudge must never reach it.
+  if (shouldExit) {
+    const { notifyIfOutdated } = await import('./update-check.js')
+    await notifyIfOutdated().catch(() => {})
+    process.exit(process.exitCode ?? 0)
+  }
 })
