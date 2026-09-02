@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { mkdtempSync, readFileSync } from 'fs'
+import { existsSync, mkdtempSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
@@ -79,13 +79,34 @@ describe('headless runInitAt', () => {
     writeFileSync(join(dir, 'AGENTS.md'), 'CUSTOMIZED')
 
     await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none']))
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toBe('CUSTOMIZED')
+    // Merged, not replaced: their content survives, ours lands beside it.
+    const merged = readFileSync(join(dir, 'AGENTS.md'), 'utf-8')
+    expect(merged).toContain('CUSTOMIZED')
+    expect(merged).toContain('AGENTS.vibekit.md')
+    expect(readFileSync(join(dir, 'AGENTS.vibekit.md'), 'utf-8')).toContain('VibeKit')
+
+    // Re-running appends nothing new.
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none']))
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toBe(merged)
 
     await runInitAt(
       dir,
       parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none', '--overwrite']),
     )
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).not.toBe('CUSTOMIZED')
+    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).not.toContain('CUSTOMIZED')
+  })
+
+  test('an existing CLAUDE.md gains the AGENTS.md pointer, keeping its content', async () => {
+    const dir = makeDir()
+    const { writeFileSync } = await import('fs')
+    writeFileSync(join(dir, 'CLAUDE.md'), '# My rules\n\nAlways run the linter.\n')
+
+    await runInitAt(dir, parseInitArgs([dir, '--yes', '--agents', 'claude', '--skills', 'none']))
+    const claudeMd = readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')
+    expect(claudeMd).toContain('Always run the linter.')
+    expect(claudeMd).toContain('AGENTS.md')
+    // AGENTS.md was free, so it is ours in full — no chained file needed.
+    expect(existsSync(join(dir, 'AGENTS.vibekit.md'))).toBe(false)
   })
 })
 
@@ -152,6 +173,30 @@ describe('generateConfigs', () => {
     expect(Array.isArray(command)).toBe(true)
     expect(command[1]).toBe('mcp')
     expect(config.mcp.context7!.type).toBe('remote')
+  })
+
+  test('merges into an existing codex toml, keeping foreign settings', async () => {
+    const dir = makeDir()
+    const { writeFileSync, mkdirSync } = await import('fs')
+    mkdirSync(join(dir, '.codex'))
+    writeFileSync(
+      join(dir, '.codex', 'config.toml'),
+      'model = "gpt-5"\n\n[mcp_servers.mine]\ncommand = "my-mcp"\n',
+    )
+
+    await generateConfigs({
+      agents: ['codex'],
+      mcps: ['vibekit'],
+      installPath: dir,
+      selectedSkills: [],
+    })
+
+    const merged = Bun.TOML.parse(readFileSync(join(dir, '.codex', 'config.toml'), 'utf-8')) as {
+      model: string
+      mcp_servers: Record<string, unknown>
+    }
+    expect(merged.model).toBe('gpt-5')
+    expect(Object.keys(merged.mcp_servers).sort()).toEqual(['mine', 'vibekit'])
   })
 
   test('skips the config file when no MCPs are selected', async () => {

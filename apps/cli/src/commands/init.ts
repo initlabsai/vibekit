@@ -8,7 +8,7 @@
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
 import { amber, teal } from '../brand.js'
-import { basename, dirname, extname, join } from 'path'
+import { dirname, join } from 'path'
 import { existsSync, readFileSync } from 'fs'
 
 import {
@@ -36,7 +36,7 @@ import {
   type SkillDirectory,
 } from '../skills/index.js'
 import { CATALOGS, fetchCatalogSkills, splitCatalogSelection } from '../skills/catalogs.js'
-import { ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
+import { appendIfMissing, ensureDir, writeJsonFile, writeTextFile } from '../utils/files.js'
 import { writeTomlFile } from '../utils/toml.js'
 import { expandPath, resolveVibekitPath } from '../utils/paths.js'
 import { confirm, handleCancel, multiselect, select, text } from '../utils/prompts.js'
@@ -140,6 +140,8 @@ function welcome(): void {
       `${pc.dim('•')} Configure your AI coding tools (Claude Code, Cursor, ...)`,
       `${pc.dim('•')} Install Algorand development skills`,
       `${pc.dim('•')} Configure MCP servers for docs and on-chain interaction`,
+      '',
+      'Files you already have are merged, not replaced.',
     ].join('\n'),
     'Welcome',
   )
@@ -268,13 +270,17 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
   for (const agent of enabledHarnesses(context.agents)) {
     const outputPath = join(context.installPath, agent.configFile)
 
-    // Merge into an existing JSON config: foreign MCP servers survive, and
-    // v1's 'vibekit-mcp' entry is migrated out. (TOML configs are rewritten
-    // wholesale — we don't parse TOML.)
+    // Merge into an existing config: foreign MCP servers and settings survive,
+    // and v1's 'vibekit-mcp' entry is migrated out. (Re-serializing TOML drops
+    // the user's comments and formatting; keys are preserved.)
     let config = structuredClone(agent.baseConfigTemplate) as Record<string, unknown>
-    if (agent.configFormat !== 'toml' && existsSync(outputPath)) {
+    if (existsSync(outputPath)) {
       try {
-        config = JSON.parse(readFileSync(outputPath, 'utf-8')) as Record<string, unknown>
+        const raw = readFileSync(outputPath, 'utf-8')
+        config = (agent.configFormat === 'toml' ? Bun.TOML.parse(raw) : JSON.parse(raw)) as Record<
+          string,
+          unknown
+        >
       } catch {
         // unparseable existing config: fall back to the fresh template
       }
@@ -294,7 +300,15 @@ export async function generateConfigs(context: SetupContext): Promise<void> {
 
     const resolved = resolveTemplate(config) as Record<string, unknown>
     if (agent.configFormat === 'toml') {
-      await writeTomlFile(outputPath, resolved)
+      try {
+        await writeTomlFile(outputPath, resolved)
+      } catch {
+        // ponytail: our serializer covers the config subset, not full TOML
+        // (no array-of-tables); grow serializeToml if this warning shows up.
+        p.log.warn(
+          `Couldn't merge ${teal(agent.configFile)} (TOML shape we don't serialize) — left untouched. Add the MCP servers manually.`,
+        )
+      }
     } else {
       await writeJsonFile(outputPath, resolved)
     }
@@ -345,6 +359,21 @@ interface TemplateFile {
   content: string
 }
 
+/** Where VibeKit's AGENTS.md goes when the project already has one of its own. */
+const VIBEKIT_AGENTS_MD = 'AGENTS.vibekit.md'
+
+/** Drop the leading `# Heading` — a merged template is a section, not a file. */
+function asSection(content: string): string {
+  return content.replace(/^#[^\n]*\n+/, '')
+}
+
+/**
+ * Write AGENTS.md and each harness's pointer file. Existing files are merged by
+ * default, never destroyed: a pointer file gains the paragraph naming AGENTS.md,
+ * and a project that already has its own AGENTS.md keeps it — ours lands beside
+ * it as AGENTS.vibekit.md, chained from theirs by one appended line. Every
+ * append is guarded by a substring check, so re-running init changes nothing.
+ */
 async function installAgentFiles(context: SetupContext, flags?: InitFlags): Promise<void> {
   const templates: TemplateFile[] = [{ path: 'AGENTS.md', content: agentsMdContent }]
   for (const agent of enabledHarnesses(context.agents)) {
@@ -357,31 +386,56 @@ async function installAgentFiles(context: SetupContext, flags?: InitFlags): Prom
     .map((t) => t.path)
     .filter((path) => existsSync(join(context.installPath, path)))
 
-  let action: 'skip' | 'overwrite' = 'overwrite'
+  let action: 'merge' | 'skip' | 'overwrite' = 'overwrite'
   if (existingFiles.length > 0) {
     p.log.warn(`Found existing files: ${existingFiles.map((f) => teal(f)).join(', ')}`)
     if (flags?.yes) {
       // Headless: never destroy customizations unless --overwrite says so.
-      action = flags.overwrite ? 'overwrite' : 'skip'
+      action = flags.overwrite ? 'overwrite' : 'merge'
     } else {
       action = (await select({
         message: 'How would you like to handle existing files?',
         options: [
-          { value: 'skip', label: 'Skip existing files', hint: 'keep your customizations' },
+          { value: 'merge', label: 'Merge', hint: 'keep yours, add what VibeKit needs' },
+          { value: 'skip', label: 'Skip existing files', hint: 'change nothing' },
           { value: 'overwrite', label: 'Overwrite all', hint: 'replace with latest templates' },
         ],
-      })) as 'skip' | 'overwrite'
+        initialValue: 'merge',
+      })) as 'merge' | 'skip' | 'overwrite'
     }
   }
 
   for (const template of templates) {
     const filePath = join(context.installPath, template.path)
-    if (existingFiles.includes(template.path) && action === 'skip') {
+
+    if (!existingFiles.includes(template.path) || action === 'overwrite') {
+      await ensureDir(dirname(filePath))
+      await writeTextFile(filePath, template.content)
+      continue
+    }
+    if (action === 'skip') {
       p.log.info(`Skipped ${pc.dim(template.path)}`)
       continue
     }
-    await ensureDir(dirname(filePath))
-    await writeTextFile(filePath, template.content)
+
+    if (template.path === 'AGENTS.md') {
+      // Their AGENTS.md wins; ours sits alongside, reachable in one hop, so
+      // pointer files can keep naming AGENTS.md.
+      await writeTextFile(join(context.installPath, VIBEKIT_AGENTS_MD), template.content)
+      await appendIfMissing(
+        filePath,
+        VIBEKIT_AGENTS_MD,
+        `VibeKit's project guidance lives in [${VIBEKIT_AGENTS_MD}](./${VIBEKIT_AGENTS_MD}) — read it too.`,
+      )
+      p.log.info(`Kept ${pc.dim('AGENTS.md')}, wrote ${teal(VIBEKIT_AGENTS_MD)} beside it`)
+    } else {
+      const appended = await appendIfMissing(filePath, 'AGENTS.md', asSection(template.content))
+      p.log.info(
+        appended
+          ? `Merged into ${pc.dim(template.path)}`
+          : `${pc.dim(template.path)} already points at AGENTS.md`,
+      )
+    }
   }
 }
 
