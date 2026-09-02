@@ -37,6 +37,21 @@ function titleOf(card: EntityCardModel): string {
   }
 }
 
+function descriptionOf(card: EntityCardModel): string {
+  switch (card.kind) {
+    case 'transaction':
+      return card.round
+        ? `confirmed on ${card.network} in round ${card.round}`
+        : `confirmed on ${card.network}`
+    case 'asset':
+      return `ASA ${card.id} on ${card.network}`
+    case 'application':
+      return `application ${card.id} on ${card.network}`
+    case 'block':
+      return `${card.txnCount} transactions · ${card.time}`
+  }
+}
+
 /** Full values — the page renders these selectable; the OG card shortens its own. */
 function factsOf(card: EntityCardModel): Array<[string, string]> {
   switch (card.kind) {
@@ -113,10 +128,8 @@ export async function entityMetadata(
     }
   }
   const title = titleOf(resolution.card)
-  const description = factsOf(resolution.card)
-    .map(([label, value]) => `${label} ${value}`)
-    .join(' · ')
-    .slice(0, 300)
+  // One quiet line — the poster carries the details.
+  const description = descriptionOf(resolution.card)
   return {
     title: `qt314 — ${title}`,
     description,
