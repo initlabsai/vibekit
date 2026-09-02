@@ -19,13 +19,13 @@ async function payloadOf(params: Promise<{ hash: string }>): Promise<SharePayloa
 
 export async function generateMetadata({ params }: { params: Promise<{ hash: string }> }): Promise<Metadata> {
   const payload = await payloadOf(params)
-  if (!payload) return { title: 'VibeKit Agent — shared exchange' }
+  if (!payload) return { title: 'qt314 — shared exchange' }
   const title = payload.prompt.length > 70 ? `${payload.prompt.slice(0, 69)}…` : payload.prompt
   const description = payload.reply.length > 200 ? `${payload.reply.slice(0, 199)}…` : payload.reply
   return {
     title: `qt314 — ${title}`,
     description,
-    openGraph: { title, description, siteName: 'VibeKit Agent', type: 'article' },
+    openGraph: { title, description, siteName: 'qt314', type: 'article' },
     twitter: { card: 'summary_large_image', title, description },
   }
 }
@@ -35,7 +35,7 @@ export default async function SharePage({ params }: { params: Promise<{ hash: st
   if (!payload)
     return (
       <main className="share-page">
-        <p className="share-brand">◆ VIBEKIT <b>AGENT</b></p>
+        <p className="share-brand">◆ QT314 <b>AGENT</b></p>
         <h1 className="share-prompt">this link has expired.</h1>
         <p className="muted">shares live for 90 days. the exchange it named is gone; she is not.</p>
         <p><a className="button button-primary" href="/">open the explorer →</a></p>
@@ -44,7 +44,7 @@ export default async function SharePage({ params }: { params: Promise<{ hash: st
   const ask = `/?ask=${encodeURIComponent(payload.prompt.slice(0, 400))}`
   return (
     <main className="share-page">
-      <p className="share-brand">◆ VIBEKIT <b>AGENT</b></p>
+      <p className="share-brand">◆ QT314 <b>AGENT</b></p>
       <h1 className="share-prompt">
         › {payload.prompt}
         <span className={`prompt-net net-${payload.network}`}>{payload.network}</span>

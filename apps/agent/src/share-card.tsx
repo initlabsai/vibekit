@@ -110,10 +110,10 @@ export function ShareCard({ payload }: { payload: SharePayload }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 20, letterSpacing: 2, marginTop: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', color: COLORS.faint, letterSpacing: 5, fontSize: 19 }}>
           <span style={{ color: COLORS.brass, marginRight: 12 }}>◆</span>
-          <span>VIBEKIT</span>
+          <span>QT314</span>
           <span style={{ color: COLORS.brassBright, fontWeight: 700, marginLeft: 10 }}>AGENT</span>
         </div>
-        <div style={{ display: 'flex', color: COLORS.signal }}>agent.getvibekit.ai</div>
+        <div style={{ display: 'flex', color: COLORS.signal }}>qt314.ai</div>
       </div>
     </div>
   )

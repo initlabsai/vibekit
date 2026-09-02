@@ -18,7 +18,7 @@ import { defaultNetwork } from '../features/network/hooks'
 import { recordSigned } from './sign-draft'
 
 const manager = new WalletManager({
-  wallets: [pera(), lute({ siteName: 'VibeKit Agent' })],
+  wallets: [pera(), lute({ siteName: 'qt314' })],
   defaultNetwork: defaultNetwork(),
 })
 

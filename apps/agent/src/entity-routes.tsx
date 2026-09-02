@@ -123,7 +123,7 @@ export async function entityMetadata(
     return {
       title,
       description,
-      openGraph: { title, description, siteName: 'VibeKit Agent', images: [image] },
+      openGraph: { title, description, siteName: 'qt314', images: [image] },
       twitter: { card: 'summary_large_image', title, description },
     }
   }
@@ -133,7 +133,7 @@ export async function entityMetadata(
   return {
     title: `qt314 — ${title}`,
     description,
-    openGraph: { title, description, siteName: 'VibeKit Agent', images: [image] },
+    openGraph: { title, description, siteName: 'qt314', images: [image] },
     twitter: { card: 'summary_large_image', title, description },
   }
 }
@@ -155,7 +155,7 @@ export async function EntityPage({
     return (
       <main className="share-page">
         <p className="share-brand">
-          ◆ VIBEKIT <b>AGENT</b>
+          ◆ QT314 <b>AGENT</b>
         </p>
         <h1 className="share-prompt">
           {pending ? 'confirming…' : `no such ${kind} here.`}
@@ -179,7 +179,7 @@ export async function EntityPage({
   return (
     <main className="share-page">
       <p className="share-brand">
-        ◆ VIBEKIT <b>AGENT</b>
+        ◆ QT314 <b>AGENT</b>
       </p>
       <h1 className="share-prompt">
         {titleOf(card)}

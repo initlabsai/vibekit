@@ -6,7 +6,7 @@ import { ImageResponse } from 'next/og'
 
 import { ogFonts } from '../src/og-fonts'
 
-export const alt = 'qt314 — VibeKit Agent. She reads Algorand for you.'
+export const alt = 'qt314 Agent. She reads Algorand for you.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -37,7 +37,7 @@ export default async function Image() {
         ))}
         <div style={{ display: 'flex', alignItems: 'center', fontSize: 26, letterSpacing: 6, color: '#605c56' }}>
           <span style={{ color: '#c4a06a', marginRight: 14 }}>◆</span>
-          <span>VIBEKIT</span>
+          <span>QT314</span>
           <span style={{ color: '#ffb454', fontWeight: 700, marginLeft: 14 }}>AGENT</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 64 }}>
@@ -52,7 +52,7 @@ export default async function Image() {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 24, color: '#6fd3d3', letterSpacing: 2 }}>
-          <span>agent.getvibekit.ai</span>
+          <span>qt314.ai</span>
           <span style={{ color: '#605c56' }}>ask anything, paste an id, or / for commands</span>
         </div>
       </div>

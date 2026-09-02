@@ -5,17 +5,17 @@ import type { ReactNode } from 'react'
 import './styles.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://agent.getvibekit.ai'),
-  title: 'VibeKit Agent',
+  metadataBase: new URL('https://qt314.ai'),
+  title: 'qt314 Agent',
   description: 'qt314 reads Algorand for you: live chain data as cards, a compose-only write flow, your wallet signs.',
   openGraph: {
-    title: 'VibeKit Agent — qt314',
+    title: 'qt314 Agent',
     description: 'She reads Algorand for you. Ask anything, paste an id, or / for commands.',
-    url: 'https://agent.getvibekit.ai',
-    siteName: 'VibeKit Agent',
+    url: 'https://qt314.ai',
+    siteName: 'qt314',
     type: 'website',
   },
-  twitter: { card: 'summary_large_image', title: 'VibeKit Agent — qt314', description: 'She reads Algorand for you.' },
+  twitter: { card: 'summary_large_image', title: 'qt314 Agent', description: 'She reads Algorand for you.' },
 }
 
 /** The keyboard resizes the layout rather than covering it, so the composer stays in view and Safari has nothing to pan to. */
