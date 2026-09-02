@@ -104,7 +104,26 @@ export interface BlockCard {
   proposer?: string
 }
 
-export type EntityCardModel = TxnCard | AssetCard | AppCard | BlockCard
+/** One compact line of a group poster. */
+export interface GroupTxnRow {
+  typeLabel: string
+  amount?: string
+  sender: string
+  to?: string
+}
+
+export interface GroupCard {
+  kind: 'group'
+  network: LiveNetworkId
+  id: string
+  count: number
+  /** The first few transactions, enriched; the rest are only counted. */
+  rows: GroupTxnRow[]
+  round?: number
+  time?: string
+}
+
+export type EntityCardModel = TxnCard | AssetCard | AppCard | BlockCard | GroupCard
 
 // --- Shared plumbing ---
 
@@ -333,6 +352,61 @@ export async function resolveBlock(
   }
 }
 
+// --- Groups: an indexer search by group id; final once visible ---
+
+/** How many group rows the poster and page spell out; the rest are counted. */
+export const GROUP_ROWS = 5
+
+/** Accept base64url (what the bot should link — no '/' in a path) or plain base64; return padded base64. */
+export function normalizeGroupId(key: string): string | undefined {
+  const standard = key.replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/, '')
+  return /^[A-Za-z0-9+/]{43}$/.test(standard) ? `${standard}=` : undefined
+}
+
+async function toGroupRow(algod: algosdk.Algodv2, t: IndexerTxn): Promise<GroupTxnRow> {
+  const row: GroupTxnRow = { typeLabel: txnTypeLabel(t.txType ?? ''), sender: t.sender }
+  if (t.paymentTransaction) {
+    row.amount = algo(t.paymentTransaction.amount)
+    row.to = t.paymentTransaction.receiver
+  } else if (t.assetTransferTransaction) {
+    const { assetId, amount, receiver } = t.assetTransferTransaction
+    row.amount = await assetAmount(algod, assetId, amount)
+    row.to = receiver
+  } else if (t.applicationTransaction?.applicationId) {
+    row.to = `APP ${t.applicationTransaction.applicationId}`
+  } else if (t.assetConfigTransaction?.assetId) {
+    row.to = `ASA ${t.assetConfigTransaction.assetId}`
+  }
+  return row
+}
+
+export async function resolveGroup(
+  network: LiveNetworkId,
+  groupId: string,
+): Promise<Resolution<GroupCard>> {
+  const { algod, indexer } = clientsFor(network)
+  // No 404 here — an unknown group id is an empty result, and there is no
+  // per-group pending lookup on algod; the short miss TTL covers indexer lag.
+  const response = await indexer.searchForTransactions().groupid(groupId).limit(16).do()
+  const txns = response.transactions ?? []
+  if (txns.length === 0) return { state: 'missing', cacheControl: MISSING }
+  const rows = await Promise.all(txns.slice(0, GROUP_ROWS).map((t) => toGroupRow(algod, t)))
+  const first = txns[0]!
+  return {
+    state: 'found',
+    cacheControl: FOREVER,
+    card: {
+      kind: 'group',
+      network,
+      id: groupId,
+      count: txns.length,
+      rows,
+      round: first.confirmedRound === undefined ? undefined : Number(first.confirmedRound),
+      time: first.roundTime === undefined ? undefined : timeLabel(first.roundTime),
+    },
+  }
+}
+
 // --- Key-based wrappers: URL segment in, resolution out. ---
 // A malformed key is a miss without a network call; react's cache() dedupes
 // the generateMetadata + page pair inside one request.
@@ -359,4 +433,11 @@ export const resolveApplicationByKey = cache(
 export const resolveBlockByKey = cache(
   async (network: LiveNetworkId, key: string): Promise<Resolution<BlockCard>> =>
     NUMERIC_ID.test(key) ? resolveBlock(network, Number(key)) : INVALID,
+)
+
+export const resolveGroupByKey = cache(
+  async (network: LiveNetworkId, key: string): Promise<Resolution<GroupCard>> => {
+    const groupId = normalizeGroupId(key)
+    return groupId ? resolveGroup(network, groupId) : INVALID
+  },
 )

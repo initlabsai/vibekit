@@ -212,6 +212,50 @@ export function EntityOgCard({ card }: { card: EntityCardModel }) {
         />
       </Frame>
     )
+  if (card.kind === 'group')
+    return (
+      <Frame>
+        <Header kicker={`GROUP · ${card.count} TXNS · CONFIRMED`} network={card.network} />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+            background: 'rgba(17,19,24,.9)',
+            border: `1px solid ${COLORS.borderSoft}`,
+            borderLeft: `2px solid ${COLORS.brassBright}`,
+            padding: '18px 26px',
+            margin: '12px 0',
+          }}
+        >
+          {card.rows.map((row, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 18, fontSize: 22 }}>
+              <span style={{ display: 'flex', color: COLORS.brass, fontSize: 16, letterSpacing: 2, width: 190 }}>
+                {row.typeLabel}
+              </span>
+              {row.amount ? (
+                <span style={{ display: 'flex', color: COLORS.text, fontWeight: 700 }}>{row.amount}</span>
+              ) : null}
+              <span style={{ display: 'flex', color: COLORS.muted, fontSize: 19 }}>
+                {row.to ? `${shorten(row.sender, 12)} → ${row.to.length > 16 ? shorten(row.to, 12) : row.to}` : shorten(row.sender, 12)}
+              </span>
+            </div>
+          ))}
+          {card.count > card.rows.length ? (
+            <div style={{ display: 'flex', fontSize: 16, color: COLORS.faint, letterSpacing: 2 }}>
+              + {card.count - card.rows.length} more
+            </div>
+          ) : null}
+        </div>
+        <Facts
+          facts={[
+            card.round ? ['ROUND', String(card.round)] : undefined,
+            card.time ? ['TIME', card.time] : undefined,
+            ['GROUP', shorten(card.id, 16)],
+          ]}
+        />
+      </Frame>
+    )
   return (
     <Frame>
       <Header kicker="BLOCK" network={card.network} />

@@ -8,6 +8,7 @@ import {
   resolveApplicationByKey,
   resolveAssetByKey,
   resolveBlockByKey,
+  resolveGroupByKey,
   resolveTransactionByKey,
 } from '../../../src/entity-og'
 import { entityImage, type EntityKind, type Resolver } from '../../../src/entity-routes'
@@ -20,6 +21,7 @@ const RESOLVERS: Record<EntityKind, Resolver> = {
   asset: resolveAssetByKey,
   application: resolveApplicationByKey,
   block: resolveBlockByKey,
+  group: resolveGroupByKey,
 }
 
 export async function GET(

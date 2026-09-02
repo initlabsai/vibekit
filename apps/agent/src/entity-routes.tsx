@@ -17,7 +17,7 @@ import { EntityOgCard, EntityOgMiss } from './entity-og-card'
 import { ogFonts } from './og-fonts'
 import { shorten } from './theme'
 
-export type EntityKind = 'transaction' | 'asset' | 'application' | 'block'
+export type EntityKind = 'transaction' | 'asset' | 'application' | 'block' | 'group'
 export type Resolver = (network: LiveNetworkId, key: string) => Promise<Resolution<EntityCardModel>>
 
 const OG_SIZE = { width: 1200, height: 630 }
@@ -34,6 +34,8 @@ function titleOf(card: EntityCardModel): string {
       return `application ${card.id}`
     case 'block':
       return `block ${card.round}`
+    case 'group':
+      return `${card.count} transactions — group confirmed`
   }
 }
 
@@ -49,6 +51,10 @@ function descriptionOf(card: EntityCardModel): string {
       return `application ${card.id} on ${card.network}`
     case 'block':
       return `${card.txnCount} transactions · ${card.time}`
+    case 'group':
+      return card.round
+        ? `confirmed on ${card.network} in round ${card.round}`
+        : `confirmed on ${card.network}`
   }
 }
 
@@ -95,6 +101,24 @@ function factsOf(card: EntityCardModel): Array<[string, string]> {
           ['time', card.time],
           ['transactions', String(card.txnCount)],
           card.proposer ? ['proposer', card.proposer] : undefined,
+        ] as Array<[string, string] | undefined>
+      ).filter((fact): fact is [string, string] => !!fact)
+    case 'group':
+      return (
+        [
+          ['transactions', String(card.count)],
+          card.round ? ['round', String(card.round)] : undefined,
+          card.time ? ['time', card.time] : undefined,
+          ...card.rows.map(
+            (row, i): [string, string] => [
+              `#${i + 1}`,
+              [row.typeLabel.toLowerCase(), row.amount, row.to ? `${shorten(row.sender, 16)} → ${row.to.length > 20 ? shorten(row.to, 16) : row.to}` : shorten(row.sender, 16)]
+                .filter(Boolean)
+                .join(' · '),
+            ],
+          ),
+          card.count > card.rows.length ? [`…`, `+ ${card.count - card.rows.length} more`] : undefined,
+          ['group id', card.id],
         ] as Array<[string, string] | undefined>
       ).filter((fact): fact is [string, string] => !!fact)
   }

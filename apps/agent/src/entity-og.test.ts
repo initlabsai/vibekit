@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 
 import {
+  normalizeGroupId,
   parseEntityRef,
   resolveAssetByKey,
+  resolveGroupByKey,
   resolveTransactionByKey,
   timeLabel,
   txnTypeLabel,
@@ -49,5 +51,17 @@ describe('key validation', () => {
   test('a non-numeric asset key is a miss without a network call', async () => {
     expect((await resolveAssetByKey('mainnet', '12x45')).state).toBe('missing')
     expect((await resolveAssetByKey('mainnet', '')).state).toBe('missing')
+  })
+
+  test('group ids normalize from base64url or base64 to padded base64', () => {
+    const b64 = 'Ab+cD/EfGhIjKlMnOpQrStUvWxYz0123456789abcde'
+    const b64url = 'Ab-cD_EfGhIjKlMnOpQrStUvWxYz0123456789abcde'
+    expect(normalizeGroupId(b64url)).toBe(`${b64}=`)
+    expect(normalizeGroupId(`${b64}=`)).toBe(`${b64}=`)
+    expect(normalizeGroupId('too-short')).toBeUndefined()
+  })
+
+  test('a malformed group key is a miss without a network call', async () => {
+    expect((await resolveGroupByKey('mainnet', 'nope')).state).toBe('missing')
   })
 })
