@@ -212,6 +212,22 @@ export function EntityOgCard({ card }: { card: EntityCardModel }) {
         />
       </Frame>
     )
+  if (card.kind === 'address')
+    return (
+      <Frame>
+        <Header kicker={`ADDRESS · ${card.status.toUpperCase()}`} network={card.network} />
+        <Headline text={card.balance} sub={shorten(card.address, 24)} />
+        <Facts
+          facts={[
+            ['ASSETS', `${card.assetsOptedIn} opted in`],
+            ['APPS', `${card.appsOptedIn} opted in`],
+            card.createdAssets || card.createdApps
+              ? ['CREATED', `${card.createdAssets} assets · ${card.createdApps} apps`]
+              : undefined,
+          ]}
+        />
+      </Frame>
+    )
   if (card.kind === 'group')
     return (
       <Frame>

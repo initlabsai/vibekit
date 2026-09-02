@@ -17,7 +17,7 @@ import { EntityOgCard, EntityOgMiss } from './entity-og-card'
 import { ogFonts } from './og-fonts'
 import { shorten } from './theme'
 
-export type EntityKind = 'transaction' | 'asset' | 'application' | 'block' | 'group'
+export type EntityKind = 'transaction' | 'asset' | 'application' | 'block' | 'group' | 'address'
 export type Resolver = (network: LiveNetworkId, key: string) => Promise<Resolution<EntityCardModel>>
 
 const OG_SIZE = { width: 1200, height: 630 }
@@ -36,6 +36,8 @@ function titleOf(card: EntityCardModel): string {
       return `block ${card.round}`
     case 'group':
       return `${card.count} transactions — group confirmed`
+    case 'address':
+      return `${shorten(card.address, 16)} — ${card.balance}`
   }
 }
 
@@ -55,6 +57,8 @@ function descriptionOf(card: EntityCardModel): string {
       return card.round
         ? `confirmed on ${card.network} in round ${card.round}`
         : `confirmed on ${card.network}`
+    case 'address':
+      return `${card.status.toLowerCase()} account on ${card.network}`
   }
 }
 
@@ -119,6 +123,18 @@ function factsOf(card: EntityCardModel): Array<[string, string]> {
           ),
           card.count > card.rows.length ? [`…`, `+ ${card.count - card.rows.length} more`] : undefined,
           ['group id', card.id],
+        ] as Array<[string, string] | undefined>
+      ).filter((fact): fact is [string, string] => !!fact)
+    case 'address':
+      return (
+        [
+          ['balance', card.balance],
+          ['status', card.status],
+          ['assets opted in', String(card.assetsOptedIn)],
+          ['apps opted in', String(card.appsOptedIn)],
+          card.createdAssets ? ['created assets', String(card.createdAssets)] : undefined,
+          card.createdApps ? ['created apps', String(card.createdApps)] : undefined,
+          ['address', card.address],
         ] as Array<[string, string] | undefined>
       ).filter((fact): fact is [string, string] => !!fact)
   }

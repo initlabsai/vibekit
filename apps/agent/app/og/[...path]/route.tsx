@@ -5,6 +5,7 @@
  * Each response carries the cache-control its resolution earned.
  */
 import {
+  resolveAddressByKey,
   resolveApplicationByKey,
   resolveAssetByKey,
   resolveBlockByKey,
@@ -22,6 +23,7 @@ const RESOLVERS: Record<EntityKind, Resolver> = {
   application: resolveApplicationByKey,
   block: resolveBlockByKey,
   group: resolveGroupByKey,
+  address: resolveAddressByKey,
 }
 
 export async function GET(

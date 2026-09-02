@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   normalizeGroupId,
   parseEntityRef,
+  resolveAddressByKey,
   resolveAssetByKey,
   resolveGroupByKey,
   resolveTransactionByKey,
@@ -63,5 +64,10 @@ describe('key validation', () => {
 
   test('a malformed group key is a miss without a network call', async () => {
     expect((await resolveGroupByKey('mainnet', 'nope')).state).toBe('missing')
+  })
+
+  test('a bad-checksum address is a miss without a network call', async () => {
+    expect((await resolveAddressByKey('mainnet', 'A'.repeat(58))).state).toBe('missing')
+    expect((await resolveAddressByKey('mainnet', 'not-an-address')).state).toBe('missing')
   })
 })

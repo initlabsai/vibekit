@@ -10,6 +10,7 @@
 import { cache } from 'react'
 
 import { formatBaseUnits, formatMicroAlgos, type LiveNetworkId } from '@initlabs/vibekit/views'
+import { isValidAddress } from 'algosdk'
 import type algosdk from 'algosdk'
 
 import { clientsFor } from '../app/api/explorer/clients'
@@ -123,7 +124,21 @@ export interface GroupCard {
   time?: string
 }
 
-export type EntityCardModel = TxnCard | AssetCard | AppCard | BlockCard | GroupCard
+export interface AddressCard {
+  kind: 'address'
+  network: LiveNetworkId
+  address: string
+  /** Formatted, e.g. "1,234.56 ALGO". */
+  balance: string
+  /** Participation: Online / Offline / NotParticipating. */
+  status: string
+  assetsOptedIn: number
+  appsOptedIn: number
+  createdAssets: number
+  createdApps: number
+}
+
+export type EntityCardModel = TxnCard | AssetCard | AppCard | BlockCard | GroupCard | AddressCard
 
 // --- Shared plumbing ---
 
@@ -352,6 +367,37 @@ export async function resolveBlock(
   }
 }
 
+// --- Addresses: algod account state, totals only ---
+
+export async function resolveAddress(
+  network: LiveNetworkId,
+  address: string,
+): Promise<Resolution<AddressCard>> {
+  const { algod } = clientsFor(network)
+  try {
+    // exclude('all') skips the per-asset/app arrays — a busy account's are huge.
+    const account = await algod.accountInformation(address).exclude('all').do()
+    return {
+      state: 'found',
+      cacheControl: MUTABLE,
+      card: {
+        kind: 'address',
+        network,
+        address,
+        balance: algo(account.amount),
+        status: account.status,
+        assetsOptedIn: account.totalAssetsOptedIn,
+        appsOptedIn: account.totalAppsOptedIn,
+        createdAssets: account.totalCreatedAssets,
+        createdApps: account.totalCreatedApps,
+      },
+    }
+  } catch (error) {
+    if (!is404(error)) throw error
+    return { state: 'missing', cacheControl: MISSING }
+  }
+}
+
 // --- Groups: an indexer search by group id; final once visible ---
 
 /** How many group rows the poster and page spell out; the rest are counted. */
@@ -440,4 +486,9 @@ export const resolveGroupByKey = cache(
     const groupId = normalizeGroupId(key)
     return groupId ? resolveGroup(network, groupId) : INVALID
   },
+)
+
+export const resolveAddressByKey = cache(
+  async (network: LiveNetworkId, key: string): Promise<Resolution<AddressCard>> =>
+    isValidAddress(key) ? resolveAddress(network, key) : INVALID,
 )
