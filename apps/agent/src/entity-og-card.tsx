@@ -78,10 +78,10 @@ function Frame({ children, network }: { children: React.ReactNode; network?: str
           }}
         >
           <span style={{ color: COLORS.brass, marginRight: 12 }}>◆</span>
-          <span>VIBEKIT</span>
+          <span>QT314</span>
           <span style={{ color: COLORS.brassBright, fontWeight: 700, marginLeft: 10 }}>AGENT</span>
         </div>
-        <div style={{ display: 'flex', color: COLORS.signal }}>agent.getvibekit.ai</div>
+        <div style={{ display: 'flex', color: COLORS.signal }}>qt314.ai</div>
       </div>
     </div>
   )
