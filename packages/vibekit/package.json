@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit",
-  "version": "1.0.0-alpha.2",
-  "description": "VibeKit: Algorand capabilities as one tool contract \u2014 core, domain tools, plugins, keystore signing, the MCP adapter, and the agent loop.",
+  "version": "1.0.0-alpha.3",
+  "description": "VibeKit: Algorand capabilities as one tool contract — core, domain tools, plugins, keystore signing, the MCP adapter, and the agent loop.",
   "license": "MIT",
   "author": "Init Labs LLC",
   "type": "module",

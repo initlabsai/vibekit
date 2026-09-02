@@ -1,6 +1,6 @@
 {
   "name": "@initlabs/vibekit-reference",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "private": true,
   "description": "The reference agent: a Bun server mounting the toolkit, a React page over vibekit add components. ~200 lines of app.",
   "type": "module",

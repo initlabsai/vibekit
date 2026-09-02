@@ -1,5 +1,36 @@
 # @initlabs/vibekit-cli
 
+## 1.0.0-alpha.3
+
+### Minor Changes
+
+- 57a844d: The names, settled. `actions`: `draftDataSchema`/`DraftData`, `simulationDataSchema`, `stageEventSchema`/`createStageEvent`, `actionIntentSchema`, `actionResultSchema`, `createRecord`, `nextActionEvents`, `createActionHost(deployment)`, `signDraftWith`. `views` exports views only (records and the machine come from `actions`); fixtures are `views/sample`; `ReadHost`, `classifyInput`, `routeInput`, `InputRoute`, `formatTime`; `createDeploymentReadHost`, the block tail. `preset`: `createHost(network)` (the stock combined host) and the Explorer agent (`createExplorerAgent`, `explorerTools`, `explorerSystemPrompt`, `explorerPlugins`, `explainApplicationTool`). `live` is gone. `mcp`: `createMcpServer`, `createMcpServerFactory`, `createMcpHttpHandler`, `serveMcpStdio`. `rest`: `createRestHandler`, `POST …/tools/<name>`. The root exports the contract only; the compose engine is `@initlabs/vibekit/compose`; provider plumbing is `agent/providers`, the config file is `agent/config`.
+- 476e202: `vibekit add <component…>`: copies a React component's source into your project, ShadCN-style — `companion`, `action` (the headless useAction hook), `approval`, `tool-result`, `transaction`, `asset`, `account`. Each takes a tool's output type as props; the .css files are hooks to restyle. `--list` browses, `--dir` targets, `--force` overwrites. The source of truth is `packages/vibekit/components`, bundled at build time.
+
+### Patch Changes
+
+- `vibekit init` merges existing files instead of clobbering them. Pointer files
+  (CLAUDE.md, .cursorrules, copilot instructions) gain the AGENTS.md paragraph by
+  guarded append; a project's own AGENTS.md is kept, with VibeKit's written beside
+  it as AGENTS.vibekit.md and chained by one line. TOML configs (codex, grok) now
+  parse-and-merge like JSON, so your settings and MCP servers survive. The
+  install-path prompt is a real path picker with tab completion.
+- Updated dependencies [1d70e80]
+- Updated dependencies [2b93d31]
+- Updated dependencies [adac150]
+- Updated dependencies [a409e52]
+- Updated dependencies [9cc01db]
+- Updated dependencies [5cb65f3]
+- Updated dependencies [57a844d]
+- Updated dependencies [7cb1dfb]
+- Updated dependencies [29f2f7f]
+- Updated dependencies [c53d5ba]
+- Updated dependencies [306669d]
+- Updated dependencies [1de69fb]
+- Updated dependencies [34b9809]
+- Updated dependencies [6452c1d]
+  - @initlabs/vibekit@1.0.0-alpha.3
+
 ## 1.0.0-alpha.2
 
 ### Patch Changes

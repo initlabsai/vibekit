@@ -7,7 +7,29 @@
     "@initlabs/vibekit-explorer": "0.1.0",
     "@initlabs/vibekit-tui": "0.1.0",
     "@initlabs/vibekit-agent": "0.1.0",
-    "@initlabs/vibekit-website": "0.1.0"
+    "@initlabs/vibekit-website": "0.1.0",
+    "@initlabs/vibekit-reference": "0.0.0"
   },
-  "changesets": ["first-public-alpha", "flatten-and-format", "one-package"]
+  "changesets": [
+    "action-routes",
+    "actions-draft-any-tool",
+    "actions-subpath",
+    "agent-handler",
+    "cognitive-load-day1",
+    "cognitive-load-day2",
+    "cognitive-load-day3",
+    "first-public-alpha",
+    "flatten-and-format",
+    "init-merges",
+    "names",
+    "one-package",
+    "optional-peers",
+    "pay-and-rest",
+    "queries-and-actions",
+    "reference-app",
+    "tool-name-grammar",
+    "validate-args-and-file-grant",
+    "vibekit-add",
+    "views-and-live"
+  ]
 }

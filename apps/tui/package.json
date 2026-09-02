@@ -1,7 +1,7 @@
 {
   "name": "@initlabs/vibekit-tui",
   "private": true,
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "description": "The VibeKit OpenTUI/React Explorer.",
   "type": "module",
   "scripts": {
