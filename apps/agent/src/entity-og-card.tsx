@@ -216,7 +216,17 @@ export function EntityOgCard({ card }: { card: EntityCardModel }) {
     return (
       <Frame>
         <Header kicker={`ADDRESS · ${card.status.toUpperCase()}`} network={card.network} />
-        <Headline text={card.balance} sub={shorten(card.address, 24)} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '14px 0' }}>
+          <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, letterSpacing: -1, color: COLORS.text, textShadow: '0 0 32px rgba(255,180,84,.25)' }}>
+            {card.balance}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
+            {card.nfd ? (
+              <span style={{ display: 'flex', fontSize: 32, fontWeight: 700, color: COLORS.brassBright }}>{card.nfd}</span>
+            ) : null}
+            <span style={{ display: 'flex', fontSize: 24, color: COLORS.muted }}>{shorten(card.address, 24)}</span>
+          </div>
+        </div>
         <Facts
           facts={[
             ['ASSETS', `${card.assetsOptedIn} opted in`],

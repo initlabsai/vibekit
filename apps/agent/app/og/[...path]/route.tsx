@@ -6,6 +6,7 @@
  */
 import {
   resolveAddressByKey,
+  resolveNfdByKey,
   resolveApplicationByKey,
   resolveAssetByKey,
   resolveBlockByKey,
@@ -24,6 +25,7 @@ const RESOLVERS: Record<EntityKind, Resolver> = {
   block: resolveBlockByKey,
   group: resolveGroupByKey,
   address: resolveAddressByKey,
+  nfd: resolveNfdByKey,
 }
 
 export async function GET(

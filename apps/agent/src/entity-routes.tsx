@@ -17,7 +17,14 @@ import { EntityOgCard, EntityOgMiss } from './entity-og-card'
 import { ogFonts } from './og-fonts'
 import { shorten } from './theme'
 
-export type EntityKind = 'transaction' | 'asset' | 'application' | 'block' | 'group' | 'address'
+export type EntityKind =
+  | 'transaction'
+  | 'asset'
+  | 'application'
+  | 'block'
+  | 'group'
+  | 'address'
+  | 'nfd'
 export type Resolver = (network: LiveNetworkId, key: string) => Promise<Resolution<EntityCardModel>>
 
 const OG_SIZE = { width: 1200, height: 630 }
@@ -37,7 +44,7 @@ function titleOf(card: EntityCardModel): string {
     case 'group':
       return `${card.count} transactions — group confirmed`
     case 'address':
-      return `${shorten(card.address, 16)} — ${card.balance}`
+      return `${card.nfd ?? shorten(card.address, 16)} — ${card.balance}`
   }
 }
 
@@ -128,6 +135,7 @@ function factsOf(card: EntityCardModel): Array<[string, string]> {
     case 'address':
       return (
         [
+          card.nfd ? ['nfd', card.nfd] : undefined,
           ['balance', card.balance],
           ['status', card.status],
           ['assets opted in', String(card.assetsOptedIn)],

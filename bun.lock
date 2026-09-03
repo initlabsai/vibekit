@@ -13,10 +13,11 @@
     },
     "apps/agent": {
       "name": "@initlabs/vibekit-agent",
-      "version": "0.1.1-alpha.2",
+      "version": "0.1.1-alpha.3",
       "dependencies": {
         "@initlabs/vibekit": "workspace:*",
         "@txnlab/haystack-router": "2.0.5",
+        "@txnlab/nfd-sdk": "1.1.0",
         "@txnlab/use-wallet-lute": "5.0.0",
         "@txnlab/use-wallet-pera": "5.0.0",
         "@txnlab/use-wallet-react": "5.0.0",
@@ -42,7 +43,7 @@
     },
     "apps/cli": {
       "name": "@initlabs/vibekit-cli",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.4",
       "dependencies": {
         "@clack/prompts": "^1.7.0",
         "@initlabs/vibekit": "workspace:*",
@@ -57,7 +58,7 @@
     },
     "apps/reference": {
       "name": "@initlabs/vibekit-reference",
-      "version": "0.0.0",
+      "version": "0.0.1-alpha.0",
       "dependencies": {
         "@initlabs/vibekit": "workspace:*",
         "react": "19.2.8",
@@ -74,7 +75,7 @@
     },
     "apps/tui": {
       "name": "@initlabs/vibekit-tui",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.3",
       "dependencies": {
         "@initlabs/vibekit": "workspace:*",
         "@opentui/core": "0.5.6",
@@ -105,7 +106,7 @@
     },
     "packages/vibekit": {
       "name": "@initlabs/vibekit",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.3",
       "devDependencies": {
         "@ai-sdk/anthropic": "^4.0.40",
         "@ai-sdk/openai": "^4.0.45",

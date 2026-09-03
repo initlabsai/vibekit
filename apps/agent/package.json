@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@initlabs/vibekit": "workspace:*",
+    "@txnlab/nfd-sdk": "1.1.0",
     "@txnlab/haystack-router": "2.0.5",
     "@txnlab/use-wallet-lute": "5.0.0",
     "@txnlab/use-wallet-pera": "5.0.0",

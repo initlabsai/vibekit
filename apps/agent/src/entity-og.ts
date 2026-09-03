@@ -10,6 +10,7 @@
 import { cache } from 'react'
 
 import { formatBaseUnits, formatMicroAlgos, type LiveNetworkId } from '@initlabs/vibekit/views'
+import { NfdApiClient } from '@txnlab/nfd-sdk'
 import { isValidAddress } from 'algosdk'
 import type algosdk from 'algosdk'
 
@@ -128,6 +129,8 @@ export interface AddressCard {
   kind: 'address'
   network: LiveNetworkId
   address: string
+  /** The address's primary NFD name, when it has one (e.g. "gabe.algo"). */
+  nfd?: string
   /** Formatted, e.g. "1,234.56 ALGO". */
   balance: string
   /** Participation: Online / Offline / NotParticipating. */
@@ -367,16 +370,46 @@ export async function resolveBlock(
   }
 }
 
+// --- NFD: names for addresses, addresses for names (mainnet/testnet only) ---
+
+const nfdClients = new Map<string, NfdApiClient>()
+function nfdClientFor(network: LiveNetworkId): NfdApiClient | undefined {
+  if (network !== 'mainnet' && network !== 'testnet') return undefined
+  let client = nfdClients.get(network)
+  if (!client) {
+    client = network === 'testnet' ? NfdApiClient.testNet() : NfdApiClient.mainNet()
+    nfdClients.set(network, client)
+  }
+  return client
+}
+
+/** The address's primary NFD name, or undefined — never an error; the card renders without it. */
+async function nfdNameOf(network: LiveNetworkId, address: string): Promise<string | undefined> {
+  try {
+    const client = nfdClientFor(network)
+    if (!client) return undefined
+    const result = await client.reverseLookup([address], { view: 'tiny' })
+    return result[address]?.name ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 // --- Addresses: algod account state, totals only ---
 
 export async function resolveAddress(
   network: LiveNetworkId,
   address: string,
+  /** A name already resolved (the /nfd route) — skips the reverse lookup. */
+  knownNfd?: string,
 ): Promise<Resolution<AddressCard>> {
   const { algod } = clientsFor(network)
   try {
     // exclude('all') skips the per-asset/app arrays — a busy account's are huge.
-    const account = await algod.accountInformation(address).exclude('all').do()
+    const [account, nfd] = await Promise.all([
+      algod.accountInformation(address).exclude('all').do(),
+      knownNfd ? Promise.resolve(knownNfd) : nfdNameOf(network, address),
+    ])
     return {
       state: 'found',
       cacheControl: MUTABLE,
@@ -384,6 +417,7 @@ export async function resolveAddress(
         kind: 'address',
         network,
         address,
+        nfd,
         balance: algo(account.amount),
         status: account.status,
         assetsOptedIn: account.totalAssetsOptedIn,
@@ -396,6 +430,25 @@ export async function resolveAddress(
     if (!is404(error)) throw error
     return { state: 'missing', cacheControl: MISSING }
   }
+}
+
+/** `/nfd/gabe.algo`: forward-resolve the name, then borrow the address card wholesale. */
+export async function resolveNfd(
+  network: LiveNetworkId,
+  name: string,
+): Promise<Resolution<AddressCard>> {
+  const client = nfdClientFor(network)
+  if (!client) return { state: 'missing', cacheControl: MISSING }
+  let address: string | undefined
+  try {
+    const nfd = await client.resolve(name, { view: 'brief' })
+    address = nfd.depositAccount ?? nfd.owner
+  } catch {
+    // The SDK rejects with plain objects; any failure here is "no such name".
+    return { state: 'missing', cacheControl: MISSING }
+  }
+  if (!address) return { state: 'missing', cacheControl: MISSING }
+  return resolveAddress(network, address, name)
 }
 
 // --- Groups: an indexer search by group id; final once visible ---
@@ -491,4 +544,13 @@ export const resolveGroupByKey = cache(
 export const resolveAddressByKey = cache(
   async (network: LiveNetworkId, key: string): Promise<Resolution<AddressCard>> =>
     isValidAddress(key) ? resolveAddress(network, key) : INVALID,
+)
+
+export const resolveNfdByKey = cache(
+  async (network: LiveNetworkId, key: string): Promise<Resolution<AddressCard>> => {
+    const name = key.toLowerCase().trim()
+    if (!/^[^\s/]{1,120}$/.test(name)) return INVALID
+    // A bare label ("gabe") means the .algo name, same as the resolve_nfd tool.
+    return resolveNfd(network, name.includes('.') ? name : `${name}.algo`)
+  },
 )

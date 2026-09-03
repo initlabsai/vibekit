@@ -5,6 +5,7 @@ import {
   parseEntityRef,
   resolveAddressByKey,
   resolveAssetByKey,
+  resolveNfdByKey,
   resolveGroupByKey,
   resolveTransactionByKey,
   timeLabel,
@@ -69,5 +70,10 @@ describe('key validation', () => {
   test('a bad-checksum address is a miss without a network call', async () => {
     expect((await resolveAddressByKey('mainnet', 'A'.repeat(58))).state).toBe('missing')
     expect((await resolveAddressByKey('mainnet', 'not-an-address')).state).toBe('missing')
+  })
+
+  test('a malformed nfd key is a miss without a network call', async () => {
+    expect((await resolveNfdByKey('mainnet', 'has space')).state).toBe('missing')
+    expect((await resolveNfdByKey('localnet', 'gabe.algo')).state).toBe('missing')
   })
 })
